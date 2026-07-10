@@ -80,7 +80,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                     borderLeft: isActive ? '2px solid #5b6ef5' : '2px solid transparent',
                   }}
                 >
-                  <span style={{ color: isActive ? 'var(--n-primary)' : 'var(--n-fg-subtle)' }}>{item.icon}</span>
+                  <span style={{ color: isActive ? '#5b6ef5' : '#9ca3af' }}>{item.icon}</span>
                   <span className="truncate text-[13px]">{item.label}</span>
                 </Link>
               </li>
@@ -91,14 +91,14 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
 
       {/* User */}
       {profile && (
-        <div className="border-t px-3 py-3" style={{ borderColor: 'var(--n-border)' }}>
+        <div className="border-t border-gray-200 px-3 py-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: 'var(--n-primary-muted)', color: 'var(--n-primary)' }}>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 bg-blue-100 text-blue-600">
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-medium truncate" style={{ color: 'var(--n-fg)' }}>{profile.full_name || 'Usuario'}</div>
-              <div className="text-[10px] capitalize" style={{ color: 'var(--n-fg-subtle)' }}>{profile.role}</div>
+              <div className="text-xs font-medium truncate text-gray-900">{profile.full_name || 'Usuario'}</div>
+              <div className="text-[10px] capitalize text-gray-500">{profile.role}</div>
             </div>
           </div>
         </div>
