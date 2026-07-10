@@ -123,12 +123,20 @@ function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
 }
 
 // Intersection observer hook for scroll animations
-function useInView(threshold = 0.15) {
+function useInView(threshold = 0.05) {
   const ref = useRef<HTMLDivElement>(null)
   const [inView, setInView] = useState(false)
   useEffect(() => {
-    const observer = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true) }, { threshold })
-    if (ref.current) observer.observe(ref.current)
+    const el = ref.current
+    if (!el) return
+    // Check if already in viewport on mount
+    const rect = el.getBoundingClientRect()
+    if (rect.top < window.innerHeight) { setInView(true); return }
+    const observer = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setInView(true); observer.disconnect() } },
+      { threshold, rootMargin: '0px 0px -40px 0px' }
+    )
+    observer.observe(el)
     return () => observer.disconnect()
   }, [threshold])
   return { ref, inView }
