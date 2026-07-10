@@ -1,246 +1,434 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, BarChart3, TrendingUp, DollarSign, Zap, Database, Brain } from 'lucide-react'
+import { ArrowRight, BarChart3, TrendingUp, DollarSign } from 'lucide-react'
+
+// Animated canvas background — floating data particles
+function DataCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let width = canvas.offsetWidth
+    let height = canvas.offsetHeight
+    canvas.width = width
+    canvas.height = height
+
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number; color: string }[] = []
+    const colors = ['#8fb2aa', '#b89a7e', '#d8e5e2', '#10b981']
+
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        size: Math.random() * 3 + 1,
+        opacity: Math.random() * 0.5 + 0.1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      })
+    }
+
+    let animId: number
+    function draw() {
+      if (!ctx) return
+      ctx.clearRect(0, 0, width, height)
+
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x
+          const dy = particles[i].y - particles[j].y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < 120) {
+            ctx.beginPath()
+            ctx.strokeStyle = `rgba(143,178,170,${0.12 * (1 - dist / 120)})`
+            ctx.lineWidth = 0.5
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+
+      // Draw particles
+      for (const p of particles) {
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = p.color + Math.round(p.opacity * 255).toString(16).padStart(2, '0')
+        ctx.fill()
+
+        p.x += p.vx
+        p.y += p.vy
+        if (p.x < 0 || p.x > width) p.vx *= -1
+        if (p.y < 0 || p.y > height) p.vy *= -1
+      }
+
+      animId = requestAnimationFrame(draw)
+    }
+
+    draw()
+
+    const handleResize = () => {
+      width = canvas.offsetWidth
+      height = canvas.offsetHeight
+      canvas.width = width
+      canvas.height = height
+    }
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+}
+
+// Animated counter
+function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        let start = 0
+        const duration = 1600
+        const step = (timestamp: number) => {
+          if (!start) start = timestamp
+          const progress = Math.min((timestamp - start) / duration, 1)
+          const eased = 1 - Math.pow(1 - progress, 3)
+          setCount(Math.floor(eased * target))
+          if (progress < 1) requestAnimationFrame(step)
+          else setCount(target)
+        }
+        requestAnimationFrame(step)
+        observer.disconnect()
+      },
+      { threshold: 0.5 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [target])
+
+  return <span ref={ref}>{count.toLocaleString('es-CL')}{suffix}</span>
+}
+
+// Intersection observer hook for scroll animations
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    const observer = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true) }, { threshold })
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [threshold])
+  return { ref, inView }
+}
 
 export default function LandingPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulse-subtle {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
-        .animate-slide-in-left { animation: slideInLeft 0.8s ease-out forwards; }
-        .animate-slide-in-right { animation: slideInRight 0.8s ease-out forwards; }
-        .animate-pulse-subtle { animation: pulse-subtle 3s ease-in-out infinite; }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
-        .delay-400 { animation-delay: 400ms; }
-        .tech-card {
-          transition: all 0.3s ease;
-        }
-        .tech-card:hover {
-          transform: translateY(-4px);
-        }
-      `}</style>
+  const part2 = useInView(0.1)
+  const p1 = useInView(0.2)
+  const p2 = useInView(0.2)
+  const p3 = useInView(0.2)
+  const stats = useInView(0.3)
 
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white border-b" style={{ borderColor: '#d8e5e2' }}>
+  return (
+    <div className="min-h-screen font-sans" style={{ background: '#fbfbfa', color: '#173634' }}>
+
+      {/* ─── NAV ─── */}
+      <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: 'rgba(251,251,250,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #d8e5e2' }}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: '#8fb2aa' }}>
-              N3
-            </div>
+            <div className="w-8 h-8 rounded flex items-center justify-center text-white text-xs font-bold" style={{ background: '#8fb2aa' }}>N3</div>
             <div>
-              <div className="font-bold text-sm text-gray-900">Property Partners</div>
-              <div className="text-xs" style={{ color: '#9ca9a3' }}>Plataforma</div>
+              <div className="font-semibold text-sm" style={{ color: '#173634' }}>Property Partners</div>
+              <div className="text-xs" style={{ color: '#9ca9a3' }}>Plataforma Interna</div>
             </div>
           </div>
           <Link
             href="/auth/login"
-            className="px-6 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90 hover:scale-105"
             style={{ background: '#8fb2aa' }}
           >
-            Acceder
+            Acceder <ArrowRight size={14} />
           </Link>
         </div>
       </nav>
 
-      {/* PARTE 1: HERO + TECNOLOGÍA IA */}
-      <section className="min-h-screen flex items-center">
-        <div className="max-w-6xl mx-auto px-6 py-32 w-full">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Left: Hero */}
-            <div className="animate-slide-in-left">
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-                Inteligencia que genera resultados
+      {/* ─── PARTE 1: HERO ─── */}
+      <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
+        {/* Animated canvas background */}
+        <DataCanvas />
+
+        {/* Left dark panel */}
+        <div className="relative z-10 w-full grid md:grid-cols-2 min-h-screen">
+
+          {/* LEFT — dark editorial */}
+          <div className="flex flex-col justify-center px-10 py-24 md:py-0" style={{ background: '#173634' }}>
+            <div style={{ animation: 'slideUp 0.9s ease-out both' }}>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-6" style={{ color: '#8fb2aa' }}>
+                Property Partners — Plataforma 2026
+              </p>
+              <h1 className="font-bold leading-none mb-8" style={{ fontSize: 'clamp(2.8rem, 5vw, 4.5rem)', color: '#fbfbfa' }}>
+                Decisiones inmobiliarias respaldadas por datos.
               </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Property Partners utiliza machine learning para transformar datos inmobiliarios en decisiones inteligentes. Automatización real, no promesas.
+              <p className="text-lg leading-relaxed mb-10" style={{ color: '#9ca9a3', maxWidth: '38ch' }}>
+                Machine learning aplicado al mercado chileno. Reportes que se generan solos. Valuaciones que confías.
               </p>
               <Link
                 href="/auth/login"
-                className="inline-block px-8 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-                style={{ background: '#8fb2aa' }}
+                className="inline-flex items-center gap-3 px-7 py-3.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90 hover:gap-4"
+                style={{ background: '#8fb2aa', color: '#173634' }}
               >
-                Acceder a la plataforma <ArrowRight size={18} className="inline ml-2" />
+                Ingresar a la plataforma <ArrowRight size={16} />
               </Link>
             </div>
+          </div>
 
-            {/* Right: Technology Explanation */}
-            <div className="animate-slide-in-right space-y-6">
-              <div className="tech-card p-6 rounded-lg" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-                <div className="flex gap-4 items-start">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0 animate-pulse-subtle" style={{ background: '#8fb2aa' }}>
-                    <Database size={20} />
+          {/* RIGHT — light panel with animated tech stack */}
+          <div className="flex flex-col justify-center px-10 py-24 md:py-0 gap-6 relative" style={{ background: 'rgba(251,251,250,0.96)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>
+              La tecnología detrás
+            </p>
+
+            {[
+              {
+                label: 'Datos en tiempo real',
+                desc: 'Scraper de Portal Inmobiliario, ventas internas y barrios geo-ubicados (KMZ). Información limpia, estructurada y lista para analizar.',
+                color: '#8fb2aa',
+                delay: '0ms',
+                tag: 'Data Pipeline',
+              },
+              {
+                label: 'Machine Learning',
+                desc: 'Modelos de regresión entrenados sobre 5 años de transacciones. Cada venta nueva mejora la predicción. La IA aprende del mercado de Vitacura.',
+                color: '#b89a7e',
+                delay: '120ms',
+                tag: 'Predictive AI',
+              },
+              {
+                label: 'Automatización total',
+                desc: 'Reportes semanales y mensuales generados sin intervención humana. El sistema extrae, procesa y entrega el informe directo al director.',
+                color: '#10b981',
+                delay: '240ms',
+                tag: 'Auto Reports',
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="group p-5 rounded-xl transition-all cursor-default"
+                style={{
+                  border: '1px solid #d8e5e2',
+                  background: 'white',
+                  animation: `slideUp 0.7s ease-out ${item.delay} both`,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = item.color)}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = '#d8e5e2')}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white flex-shrink-0 text-xs font-bold" style={{ background: item.color }}>
+                    {item.tag.split(' ')[0].slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-2">Datos en tiempo real</h3>
-                    <p className="text-sm text-gray-600">Conectamos Vitacura, ventas internas y datos geo-ubicados. Información fresca cada trimestre.</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-sm" style={{ color: '#173634' }}>{item.label}</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: item.color + '22', color: item.color }}>{item.tag}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed" style={{ color: '#555a56' }}>{item.desc}</p>
                   </div>
                 </div>
               </div>
-
-              <div className="tech-card p-6 rounded-lg" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-                <div className="flex gap-4 items-start">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0 animate-pulse-subtle delay-100" style={{ background: '#b89a7e' }}>
-                    <Brain size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-2">Machine Learning avanzado</h3>
-                    <p className="text-sm text-gray-600">Modelos entrenados con histórico de ventas. Aprenden de cada transacción inmobiliaria.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="tech-card p-6 rounded-lg" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-                <div className="flex gap-4 items-start">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0 animate-pulse-subtle delay-200" style={{ background: '#10b981' }}>
-                    <Zap size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-2">Automatización inteligente</h3>
-                    <p className="text-sm text-gray-600">Reportes generados sin intervención. Alertas predictivas antes de que sea demasiado tarde.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* PARTE 2: LOS 3 PILARES OPERACIONALES */}
-      <section className="py-32" style={{ background: '#fbfbfa' }}>
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Tu operación, potenciada por IA</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Tres pilares que transforman cómo Property Partners gestiona, mide y crece
-            </p>
+      {/* ─── PARTE 2: 3 PILARES ─── */}
+      <section className="py-28" style={{ background: '#fbfbfa' }}>
+        <div ref={part2.ref} className="max-w-6xl mx-auto px-6">
+
+          {/* Section header */}
+          <div
+            className="mb-20 transition-all duration-700"
+            style={{ opacity: part2.inView ? 1 : 0, transform: part2.inView ? 'translateY(0)' : 'translateY(24px)' }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#8fb2aa' }}>Lo que construimos</p>
+            <h2 className="font-bold leading-tight" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#173634', maxWidth: '22ch' }}>
+              Tres herramientas. Un solo objetivo: vender mejor.
+            </h2>
           </div>
 
+          {/* Stats row */}
+          <div
+            ref={stats.ref}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20 pb-20 transition-all duration-700"
+            style={{
+              borderBottom: '1px solid #d8e5e2',
+              opacity: stats.inView ? 1 : 0,
+              transform: stats.inView ? 'translateY(0)' : 'translateY(20px)',
+            }}
+          >
+            {[
+              { value: 5, suffix: ' años', label: 'de datos históricos' },
+              { value: 88, suffix: '%', label: 'precisión en valuaciones' },
+              { value: 12, suffix: 'K+', label: 'propiedades analizadas' },
+              { value: 3, suffix: '', label: 'pilares operacionales' },
+            ].map((s) => (
+              <div key={s.label}>
+                <div className="text-4xl font-bold mb-1" style={{ color: '#173634' }}>
+                  <Counter target={s.value} suffix={s.suffix} />
+                </div>
+                <div className="text-sm" style={{ color: '#9ca9a3' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 3 Pilares */}
           <div className="grid md:grid-cols-3 gap-8">
             {/* Pilar 1 */}
-            <div className="animate-fade-in-up p-8 rounded-lg" style={{ border: '1px solid #d8e5e2', background: 'white' }}>
-              <div className="w-14 h-14 rounded-lg flex items-center justify-center text-white mb-6 flex-shrink-0 animate-float" style={{ background: '#8fb2aa' }}>
-                <BarChart3 size={28} />
+            <div
+              ref={p1.ref}
+              className="group p-8 rounded-2xl transition-all duration-700 cursor-default"
+              style={{
+                border: '1px solid #d8e5e2',
+                background: 'white',
+                opacity: p1.inView ? 1 : 0,
+                transform: p1.inView ? 'translateY(0)' : 'translateY(32px)',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 32px rgba(143,178,170,0.18)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+            >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-6" style={{ background: '#8fb2aa' }}>
+                <BarChart3 size={22} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Reportes Automáticos</h3>
-              <p className="text-gray-600 mb-6">
-                Mensuales para el CEO. Semanales para directores. Sin Excel, sin manuales. Control de gestión que se actualiza solo.
+              <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#8fb2aa' }}>Pilar 01</div>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Reportes Automáticos</h3>
+              <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
+                Mensuales para el CEO. Semanales para directores. El sistema genera el reporte completo sin que nadie lo pida.
               </p>
-              <ul className="space-y-3">
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#8fb2aa' }}>•</span>
-                  Ventas por ejecutivo
-                </li>
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#8fb2aa' }}>•</span>
-                  Desviaciones versus plan
-                </li>
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#8fb2aa' }}>•</span>
-                  Comisiones y KPIs
-                </li>
-              </ul>
+              <div className="space-y-2.5">
+                {['Ventas por ejecutivo', 'Desviación versus plan', 'Comisiones y velocidad', 'KPIs de conversión'].map(item => (
+                  <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8fb2aa' }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Pilar 2 */}
-            <div className="animate-fade-in-up delay-100 p-8 rounded-lg" style={{ border: '1px solid #d8e5e2', background: 'white' }}>
-              <div className="w-14 h-14 rounded-lg flex items-center justify-center text-white mb-6 flex-shrink-0 animate-float" style={{ background: '#b89a7e', animationDelay: '0.5s' }}>
-                <TrendingUp size={28} />
+            <div
+              ref={p2.ref}
+              className="group p-8 rounded-2xl transition-all duration-700 cursor-default"
+              style={{
+                border: '1px solid #d8e5e2',
+                background: 'white',
+                opacity: p2.inView ? 1 : 0,
+                transform: p2.inView ? 'translateY(0)' : 'translateY(32px)',
+                transitionDelay: '120ms',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 32px rgba(184,154,126,0.18)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+            >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-6" style={{ background: '#b89a7e' }}>
+                <TrendingUp size={22} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Market Intelligence</h3>
-              <p className="text-gray-600 mb-6">
-                Datos de Vitacura + ventas propias + barrios geo-ubicados. Entiende el mercado como nunca.
+              <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>Pilar 02</div>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Market Intelligence</h3>
+              <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
+                Datos de Portal Inmobiliario Vitacura + ventas internas + barrios geo-ubicados. Entiende cada cuadra del mercado.
               </p>
-              <ul className="space-y-3">
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#b89a7e' }}>•</span>
-                  Velocidad de venta por barrio
-                </li>
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#b89a7e' }}>•</span>
-                  Precios promedios y evolución
-                </li>
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#b89a7e' }}>•</span>
-                  Historia de 5 años
-                </li>
-              </ul>
+              <div className="space-y-2.5">
+                {['Velocidad de venta por barrio', 'Precio promedio UF/m²', 'Evolución de 5 años', 'Absorción por tipología'].map(item => (
+                  <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#b89a7e' }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Pilar 3 */}
-            <div className="animate-fade-in-up delay-200 p-8 rounded-lg" style={{ border: '1px solid #d8e5e2', background: 'white' }}>
-              <div className="w-14 h-14 rounded-lg flex items-center justify-center text-white mb-6 flex-shrink-0 animate-float" style={{ background: '#10b981', animationDelay: '1s' }}>
-                <DollarSign size={28} />
+            <div
+              ref={p3.ref}
+              className="group p-8 rounded-2xl transition-all duration-700 cursor-default"
+              style={{
+                border: '1px solid #d8e5e2',
+                background: 'white',
+                opacity: p3.inView ? 1 : 0,
+                transform: p3.inView ? 'translateY(0)' : 'translateY(32px)',
+                transitionDelay: '240ms',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,185,129,0.15)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+            >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-6" style={{ background: '#10b981' }}>
+                <DollarSign size={22} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Valorizador Inteligente</h3>
-              <p className="text-gray-600 mb-6">
-                Valuaciones sensibilizadas por calidad, estado y características específicas. Precisión en segundos.
+              <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#10b981' }}>Pilar 03</div>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Valorizador Inteligente</h3>
+              <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
+                Valuaciones sensibilizadas por calidad, estado y terminaciones. El modelo ajusta por factores reales, no promedios genéricos.
               </p>
-              <ul className="space-y-3">
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#10b981' }}>•</span>
-                  Factores de calidad
-                </li>
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#10b981' }}>•</span>
-                  Sensibilidad por barrio
-                </li>
-                <li className="flex gap-2 text-sm text-gray-700">
-                  <span style={{ color: '#10b981' }}>•</span>
-                  Estimaciones confiables
-                </li>
-              </ul>
+              <div className="space-y-2.5">
+                {['Calidad de terminaciones', 'Estado de conservación', 'Sensibilidad por barrio', 'Estimación en segundos'].map(item => (
+                  <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#10b981' }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section className="max-w-6xl mx-auto px-6 py-24 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6 animate-fade-in-up">
-          Accede ahora a tu plataforma
-        </h2>
-        <p className="text-gray-600 mb-8 animate-fade-in-up delay-100">
-          Todo el equipo de Property Partners ya tiene acceso.
-        </p>
-        <Link
-          href="/auth/login"
-          className="inline-block px-8 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity animate-fade-in-up delay-200"
-          style={{ background: '#8fb2aa' }}
-        >
-          Ingresar
-        </Link>
+      {/* ─── CTA FINAL ─── */}
+      <section className="py-28" style={{ background: '#173634' }}>
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#8fb2aa' }}>Listo para usar</p>
+            <h2 className="text-3xl font-bold leading-tight" style={{ color: '#fbfbfa' }}>
+              Tu plataforma ya está activa.
+            </h2>
+            <p className="mt-3 text-sm" style={{ color: '#9ca9a3' }}>Todo el equipo de Property Partners tiene acceso.</p>
+          </div>
+          <Link
+            href="/auth/login"
+            className="flex items-center gap-3 px-8 py-4 rounded-xl font-semibold text-sm whitespace-nowrap transition-all hover:opacity-90 hover:scale-105"
+            style={{ background: '#8fb2aa', color: '#173634' }}
+          >
+            Acceder ahora <ArrowRight size={16} />
+          </Link>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8 mt-20">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <p>Property Partners Platform | Powered by N3uralia</p>
+      {/* ─── FOOTER ─── */}
+      <footer style={{ background: '#111e1d', borderTop: '1px solid #1e2e2d' }}>
+        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold" style={{ background: '#8fb2aa' }}>N3</div>
+            <span className="text-xs" style={{ color: '#555a56' }}>Property Partners Platform</span>
+          </div>
+          <span className="text-xs" style={{ color: '#555a56' }}>Powered by N3uralia &mdash; 2026</span>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(28px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }
