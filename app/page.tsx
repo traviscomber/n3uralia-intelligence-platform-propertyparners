@@ -1,16 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { Building2, TrendingUp, Brain, BarChart3, Zap, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-white border-b" style={{ borderColor: '#d8e5e2' }}>
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #8fb2aa 0%, #b89a7e 100%)' }}>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: '#8fb2aa' }}>
               N3
             </div>
             <span className="font-bold text-lg text-gray-900">N3uralia</span>
@@ -25,151 +25,108 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          Inteligencia Inmobiliaria de Next-Gen
-        </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          Plataforma impulsada por IA que transforma datos de mercado en decisiones comerciales precisas. Control de gestión, valorizaciones automáticas y market intelligence en tiempo real.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Link
-            href="/dashboard"
-            className="px-8 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-2"
-            style={{ background: '#8fb2aa' }}
-          >
-            Ver Dashboard <ArrowRight size={20} />
-          </Link>
-          <Link
-            href="/auth/sign-up"
-            className="px-8 py-3 rounded-lg font-medium hover:opacity-70 transition-opacity"
-            style={{ border: '1px solid #d8e5e2', color: '#173634', background: '#f5f9f7' }}
-          >
-            Crear Cuenta
-          </Link>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Capacidades</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[
-            {
-              icon: Brain,
-              title: 'Valorizador IA',
-              desc: 'Estima precios de propiedades con precisión usando machine learning y datos de mercado.',
-            },
-            {
-              icon: BarChart3,
-              title: 'Control de Gestión',
-              desc: 'Monitorea KPIs en tiempo real: ventas, comisiones, velocidad de venta y conversiones.',
-            },
-            {
-              icon: TrendingUp,
-              title: 'Market Intelligence',
-              desc: 'Análisis de tendencias por barrio, absorción de inventario y precios competitivos.',
-            },
-            {
-              icon: Zap,
-              title: 'Reportes IA',
-              desc: 'Genera reportes ejecutivos automáticos con insights y recomendaciones estratégicas.',
-            },
-            {
-              icon: Building2,
-              title: 'Base de Conocimiento',
-              desc: 'Biblioteca centralizada de documentos, comparables y análisis de mercado.',
-            },
-            {
-              icon: BarChart3,
-              title: 'Fuentes de Datos',
-              desc: 'Pipeline integrado que sincroniza datos de múltiples fuentes en tiempo real.',
-            },
-          ].map((feature) => {
-            const Icon = feature.icon
-            return (
-              <div key={feature.title} className="bg-white p-6 rounded-lg transition-colors" style={{ border: '1px solid #d8e5e2', borderColor: '#d8e5e2' }} onMouseEnter={(e) => e.currentTarget.style.borderColor = '#8fb2aa'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#d8e5e2'}>
-                <Icon className="w-12 h-12 mb-4" style={{ color: '#8fb2aa' }} />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.desc}</p>
-              </div>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="text-white py-16" style={{ background: 'linear-gradient(90deg, #8fb2aa 0%, #b89a7e 100%)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            {[
-              { number: '7', label: 'Fuentes de Datos' },
-              { number: '12K+', label: 'Propiedades Analizadas' },
-              { number: '88%', label: 'Precisión IA' },
-              { number: '24/7', label: 'Monitoreo en Tiempo Real' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="text-4xl font-bold mb-2">{stat.number}</div>
-                <div className="text-white/80">{stat.label}</div>
-              </div>
-            ))}
+      {/* Hero */}
+      <section className="max-w-5xl mx-auto px-6 py-24">
+        <div className="text-center">
+          <p className="text-sm font-semibold mb-4" style={{ color: '#8fb2aa' }}>Para immobiliarias que venden más</p>
+          <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
+            Tu mejor vendedor es la IA
+          </h1>
+          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+            N3uralia analiza el mercado inmobiliario chileno en tiempo real. Valorizaciones precisas, seguimiento de conversiones, predicciones de ventas. Todo lo que necesitas para vender más, en un solo lugar.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link
+              href="/dashboard"
+              className="px-7 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+              style={{ background: '#8fb2aa' }}
+            >
+              Ver en acción <ArrowRight size={20} />
+            </Link>
+            <Link
+              href="/auth/sign-up"
+              className="px-7 py-3 rounded-lg font-medium transition-opacity"
+              style={{ border: '1px solid #d8e5e2', color: '#173634', background: '#f5f9f7' }}
+            >
+              Crear cuenta gratis
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">¿Listo para revolucionar tu inmobiliaria?</h2>
-        <p className="text-lg text-gray-600 mb-8">
-          Únete a las inmobiliarias chilenas que usan N3uralia para tomar decisiones más inteligentes.
-        </p>
+      {/* How It Works */}
+      <section className="max-w-5xl mx-auto px-6 py-20">
+        <h2 className="text-3xl font-bold text-gray-900 mb-16 text-center">3 problemas que resolvemos</h2>
+        <div className="space-y-12">
+          {/* Problem 1 */}
+          <div className="flex gap-8 items-start">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: '#8fb2aa' }}>1</div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">¿A qué precio vendo?</h3>
+              <p className="text-gray-600 mb-3">Cada propiedad es única. N3uralia analiza ubicación, tamaño, estado, y comparables del mercado en tiempo real. Te da el precio justo: ni regalas, ni pierdes clientes.</p>
+              <p className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>Resultado: 88% de precisión en valuaciones</p>
+            </div>
+          </div>
+
+          {/* Problem 2 */}
+          <div className="flex gap-8 items-start">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: '#b89a7e' }}>2</div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">¿Cómo controlo el equipo?</h3>
+              <p className="text-gray-600 mb-3">Tu directora de ventas está tomando demasiados días por propiedad. Un vendedor no cierra nunca. El mercado cambió. N3uralia monitorea cada métrica en tiempo real y te alerta cuando algo se desvía del plan.</p>
+              <p className="text-sm font-semibold" style={{ color: '#b89a7e' }}>Resultado: Control total en un dashboard intuitivo</p>
+            </div>
+          </div>
+
+          {/* Problem 3 */}
+          <div className="flex gap-8 items-start">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ background: '#10b981' }}>3</div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">¿Qué está pasando en el mercado?</h3>
+              <p className="text-gray-600 mb-3">Cada barrio es diferente. Cada mes cambia. Necesitas saber qué está vendiendo, a qué velocidad, a qué precio. N3uralia te da la inteligencia de mercado que necesitas para no quedarte atrás.</p>
+              <p className="text-sm font-semibold" style={{ color: '#10b981' }}>Resultado: Market intelligence automática</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="max-w-5xl mx-auto px-6 py-20 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div>
+          <div className="text-4xl font-bold text-gray-900 mb-2">12K+</div>
+          <div className="text-sm text-gray-600">Propiedades analizadas</div>
+        </div>
+        <div>
+          <div className="text-4xl font-bold text-gray-900 mb-2">88%</div>
+          <div className="text-sm text-gray-600">Precisión IA</div>
+        </div>
+        <div>
+          <div className="text-4xl font-bold text-gray-900 mb-2">24/7</div>
+          <div className="text-sm text-gray-600">Monitoreo automático</div>
+        </div>
+        <div>
+          <div className="text-4xl font-bold text-gray-900 mb-2">7</div>
+          <div className="text-sm text-gray-600">Fuentes de datos</div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="max-w-5xl mx-auto px-6 py-20 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">Comienza ahora. Gratis.</h2>
+        <p className="text-gray-600 mb-8">Sin tarjeta de crédito. Acceso completo a todas las funciones.</p>
         <Link
           href="/auth/sign-up"
           className="inline-block px-8 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
           style={{ background: '#8fb2aa' }}
         >
-          Comenzar Ahora
+          Crear cuenta
         </Link>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-white font-semibold mb-4">Producto</h3>
-              <ul className="space-y-2">
-                <li><Link href="#" className="hover:text-white transition-colors">Dashboard</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Características</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Precios</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4">Compañía</h3>
-              <ul className="space-y-2">
-                <li><Link href="#" className="hover:text-white transition-colors">Acerca de</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Blog</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Contacto</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><Link href="#" className="hover:text-white transition-colors">Privacidad</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Términos</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Cookies</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4">Contacto</h3>
-              <p>Email: info@n3uralia.com</p>
-              <p>Tel: +56 9 XXXX XXXX</p>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-center">
-            <p>&copy; 2026 N3uralia. Todos los derechos reservados.</p>
-          </div>
+      <footer className="bg-gray-900 text-gray-400 py-8 mt-20">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <p>&copy; 2026 N3uralia. Plataforma de inteligencia inmobiliaria para Chile.</p>
         </div>
       </footer>
     </div>
