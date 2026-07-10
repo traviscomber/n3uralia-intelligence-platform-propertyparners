@@ -57,11 +57,11 @@ export default function FuentesPage() {
       case 'active':
         return <CheckCircle className="w-4 h-4 text-green-600" />
       case 'syncing':
-        return <RefreshCw className="w-4 h-4 #8fb2aa animate-spin" />
+        return <RefreshCw className="w-4 h-4 animate-spin" style={{ color: '#8fb2aa' }} />
       case 'error':
         return <AlertCircle className="w-4 h-4 text-red-600" />
       default:
-        return <Activity className="w-4 h-4 text-gray-600" />
+        return <Activity className="w-4 h-4" style={{ color: '#9ca9a3' }} />
     }
   }
 
@@ -82,8 +82,8 @@ export default function FuentesPage() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando fuentes de datos...</p>
+          <div className="w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#d8e5e2', borderTopColor: '#8fb2aa' }}></div>
+          <p style={{ color: '#9ca9a3' }}>Cargando fuentes de datos...</p>
         </div>
       </div>
     )
@@ -91,42 +91,42 @@ export default function FuentesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-gray-200 pb-6">
+      <div className="pb-6" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <h1 className="text-3xl font-bold text-gray-900">Fuentes de Datos</h1>
-        <p className="text-sm text-gray-600 mt-2">Gestión y monitoreo de conexiones a fuentes de datos externas</p>
+        <p className="text-sm mt-2" style={{ color: '#9ca9a3' }}>Gestión y monitoreo de conexiones a fuentes de datos externas</p>
       </div>
 
       {/* Sources Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sources.map(source => (
-          <div key={source.id} className="bg-white rounded-lg border border-gray-200 p-5">
+          <div key={source.id} className="bg-white rounded-lg p-5" style={{ border: '1px solid #d8e5e2' }}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900">{source.name}</h3>
-                <p className="text-xs text-gray-500 mt-1">ID: {source.id.substring(0, 8)}</p>
+                <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>ID: {source.id.substring(0, 8)}</p>
               </div>
-              <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-gray-100">
+              <div className="flex items-center gap-2 px-2 py-1 rounded-full" style={{ background: '#e8f3f0' }}>
                 {getStatusIcon(source.status)}
-                <span className="text-xs font-medium text-gray-700">{getStatusLabel(source.status)}</span>
+                <span className="text-xs font-medium" style={{ color: '#555a56' }}>{getStatusLabel(source.status)}</span>
               </div>
             </div>
 
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Registros</span>
+                <span style={{ color: '#555a56' }}>Registros</span>
                 <span className="font-semibold text-gray-900">{source.records_count.toLocaleString('es-CL')}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Última sincronización</span>
-                <span className="text-xs text-gray-500">{new Date(source.last_sync).toLocaleDateString('es-CL')}</span>
+                <span style={{ color: '#555a56' }}>Última sincronización</span>
+                <span className="text-xs" style={{ color: '#9ca9a3' }}>{new Date(source.last_sync).toLocaleDateString('es-CL')}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Próxima sincronización</span>
-                <span className="text-xs text-gray-500">{new Date(source.next_sync).toLocaleDateString('es-CL')}</span>
+                <span style={{ color: '#555a56' }}>Próxima sincronización</span>
+                <span className="text-xs" style={{ color: '#9ca9a3' }}>{new Date(source.next_sync).toLocaleDateString('es-CL')}</span>
               </div>
             </div>
 
-            <button className="w-full mt-4 py-1.5 px-3 rounded border border-gray-300 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <button className="w-full mt-4 py-1.5 px-3 rounded text-xs font-medium transition-colors hover:opacity-80" style={{ border: '1px solid #d8e5e2', color: '#8fb2aa', background: '#f5f9f7' }}>
               Ver Detalles
             </button>
           </div>
@@ -134,20 +134,20 @@ export default function FuentesPage() {
       </div>
 
       {/* Statistics */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Estadísticas Generales</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-            <p className="text-xs font-semibold text-green-700 uppercase">Fuentes Activas</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">{sources.filter(s => s.status === 'active').length}</p>
+          <div className="p-4 rounded-lg" style={{ background: '#e8f3f0', border: '1px solid #8fb2aa' }}>
+            <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Fuentes Activas</p>
+            <p className="text-3xl font-bold mt-2" style={{ color: '#8fb2aa' }}>{sources.filter(s => s.status === 'active').length}</p>
           </div>
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-xs font-semibold text-blue-700 uppercase">Total Registros</p>
-            <p className="text-3xl font-bold #8fb2aa mt-2">{sources.reduce((sum, s) => sum + s.records_count, 0).toLocaleString('es-CL')}</p>
+          <div className="p-4 rounded-lg" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+            <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Total Registros</p>
+            <p className="text-3xl font-bold mt-2" style={{ color: '#8fb2aa' }}>{sources.reduce((sum, s) => sum + s.records_count, 0).toLocaleString('es-CL')}</p>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-xs font-semibold text-gray-700 uppercase">Última Actualización</p>
-            <p className="text-sm font-medium text-gray-600 mt-2">
+          <div className="p-4 rounded-lg" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+            <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Última Actualización</p>
+            <p className="text-sm font-medium mt-2" style={{ color: '#9ca9a3' }}>
               {new Date().toLocaleDateString('es-CL')} {new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
