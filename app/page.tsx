@@ -42,7 +42,7 @@ export default function LandingPage() {
         .tech-card:hover {
           transform: translateY(-4px);
         }
-      `}
+      `}</style>
 
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-white border-b" style={{ borderColor: '#d8e5e2' }}>
