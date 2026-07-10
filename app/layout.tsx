@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'dark',
-  themeColor: '#0a0c12',
+  colorScheme: 'light',
+  themeColor: '#5b6ef5',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className="dark" style={{ background: '#0a0c12', fontFamily: inter.style.fontFamily }}>
-      <body className="antialiased" style={{ background: '#0a0c12', color: '#f0f2ff' }}>
+    <html lang="es" style={{ fontFamily: inter.style.fontFamily }}>
+      <body className="antialiased bg-gray-50">
         {children}
       </body>
     </html>
