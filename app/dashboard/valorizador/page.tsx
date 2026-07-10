@@ -48,32 +48,23 @@ export default function ValorizadorPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--n-fg)' }}>
-          Valorizador IA
-        </h1>
-        <p style={{ color: 'var(--n-fg-muted)' }} className="text-sm mt-1">
-          Estimación automática de valores de propiedades
-        </p>
+      <div className="border-b border-gray-200 pb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Valorizador IA</h1>
+        <p className="text-sm text-gray-600 mt-2">Estimación automática de valores de propiedades</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form */}
-        <div className="n-card p-6">
-          <h2 style={{ color: 'var(--n-fg)' }} className="font-semibold mb-4">
-            Datos de la Propiedad
-          </h2>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="font-semibold text-gray-900 mb-4">Datos de la Propiedad</h2>
 
           <div className="space-y-4">
             <div>
-              <label style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium block mb-2">
-                Barrio
-              </label>
+              <label className="text-xs font-medium text-gray-700 block mb-2">Barrio</label>
               <select
                 value={formData.neighborhood}
                 onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                className="w-full px-3 py-2 rounded border text-sm"
-                style={{ background: 'var(--n-surface)', borderColor: 'var(--n-border)', color: 'var(--n-fg)' }}
+                className="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               >
                 {['Vitacura', 'La Dehesa', 'Chicureo', 'Lo Curro', 'Santa María'].map((n) => (
                   <option key={n} value={n}>
@@ -84,62 +75,49 @@ export default function ValorizadorPage() {
             </div>
 
             <div>
-              <label style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium block mb-2">
-                Área (m²)
-              </label>
+              <label className="text-xs font-medium text-gray-700 block mb-2">Área (m²)</label>
               <input
                 type="number"
                 value={formData.area_m2}
                 onChange={(e) => setFormData({ ...formData, area_m2: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 rounded border text-sm"
-                style={{ background: 'var(--n-surface)', borderColor: 'var(--n-border)', color: 'var(--n-fg)' }}
+                className="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium block mb-2">
-                  Dormitorios
-                </label>
+                <label className="text-xs font-medium text-gray-700 block mb-2">Dormitorios</label>
                 <input
                   type="number"
                   value={formData.bedrooms}
                   onChange={(e) => setFormData({ ...formData, bedrooms: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 rounded border text-sm"
-                  style={{ background: 'var(--n-surface)', borderColor: 'var(--n-border)', color: 'var(--n-fg)' }}
+                  className="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium block mb-2">
-                  Baños
-                </label>
+                <label className="text-xs font-medium text-gray-700 block mb-2">Baños</label>
                 <input
                   type="number"
                   value={formData.bathrooms}
                   onChange={(e) => setFormData({ ...formData, bathrooms: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 rounded border text-sm"
-                  style={{ background: 'var(--n-surface)', borderColor: 'var(--n-border)', color: 'var(--n-fg)' }}
+                  className="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium block mb-2">
-                Antigüedad (años)
-              </label>
+              <label className="text-xs font-medium text-gray-700 block mb-2">Antigüedad (años)</label>
               <input
                 type="number"
                 value={formData.age_years}
                 onChange={(e) => setFormData({ ...formData, age_years: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 rounded border text-sm"
-                style={{ background: 'var(--n-surface)', borderColor: 'var(--n-border)', color: 'var(--n-fg)' }}
+                className="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <button
               onClick={calculatePrice}
-              className="w-full py-2.5 rounded font-semibold text-sm transition-opacity hover:opacity-90"
-              style={{ background: 'var(--n-primary)', color: 'white' }}
+              className="w-full py-2.5 rounded font-semibold text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               Calcular Valorización
             </button>
@@ -148,45 +126,30 @@ export default function ValorizadorPage() {
 
         {/* Result */}
         {result && (
-          <div className="n-card p-6 border-l-4" style={{ borderLeftColor: 'var(--n-accent)' }}>
+          <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-cyan-500 p-6">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'var(--n-primary-muted)' }}>
-                <Home size={24} style={{ color: 'var(--n-primary)' }} />
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <Home size={24} className="text-blue-600" />
               </div>
               <div>
-                <p style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium">
-                  VALOR ESTIMADO
-                </p>
-                <p className="text-3xl font-bold mt-1" style={{ color: 'var(--n-primary)' }}>
-                  {result.price_uf.toLocaleString('es-CL')} UF
-                </p>
+                <p className="text-xs font-medium text-gray-500 uppercase">Valor Estimado</p>
+                <p className="text-3xl font-bold text-blue-600 mt-1">{result.price_uf.toLocaleString('es-CL')} UF</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
-                <p style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium mb-1">
-                  En Pesos Chilenos
-                </p>
-                <p style={{ color: 'var(--n-fg)' }} className="text-lg font-semibold">
-                  ${result.price_clp.toLocaleString('es-CL')}
-                </p>
+                <p className="text-xs font-medium text-gray-500 uppercase mb-1">En Pesos Chilenos</p>
+                <p className="text-lg font-semibold text-gray-900">${result.price_clp.toLocaleString('es-CL')}</p>
               </div>
 
               <div>
-                <p style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium mb-1">
-                  Confianza del Modelo
-                </p>
+                <p className="text-xs font-medium text-gray-500 uppercase mb-1">Confianza del Modelo</p>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--n-border)' }}>
-                    <div
-                      className="h-full"
-                      style={{ background: 'var(--n-success)', width: `${result.confidence}%` }}
-                    />
+                  <div className="flex-1 h-2 rounded-full overflow-hidden bg-gray-200">
+                    <div className="h-full bg-green-500" style={{ width: `${result.confidence}%` }}></div>
                   </div>
-                  <span style={{ color: 'var(--n-success)' }} className="text-sm font-semibold">
-                    {result.confidence}%
-                  </span>
+                  <span className="text-sm font-semibold text-green-600">{result.confidence}%</span>
                 </div>
               </div>
             </div>

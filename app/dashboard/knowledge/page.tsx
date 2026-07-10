@@ -71,25 +71,20 @@ export default function KnowledgePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--n-fg)' }}>
-          Base de Conocimiento
-        </h1>
-        <p style={{ color: 'var(--n-fg-muted)' }} className="text-sm mt-1">
-          Acceso a reportes, estudios y análisis del mercado
-        </p>
+      <div className="border-b border-gray-200 pb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Base de Conocimiento</h1>
+        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y análisis del mercado</p>
       </div>
 
       {/* Search & Filter */}
       <div className="flex gap-3 flex-wrap">
         <div className="flex-1 min-w-64 relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--n-fg-subtle)' }} />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             placeholder="Buscar documentos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded border text-sm"
-            style={{ background: 'var(--n-surface)', borderColor: 'var(--n-border)', color: 'var(--n-fg)' }}
+            className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -100,12 +95,8 @@ export default function KnowledgePage() {
           <button
             onClick={() => setSelectedTag(null)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              selectedTag === null ? 'text-white' : ''
+              selectedTag === null ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
             }`}
-            style={{
-              background: selectedTag === null ? 'var(--n-primary)' : 'var(--n-border)',
-              color: selectedTag === null ? 'white' : 'var(--n-fg-muted)',
-            }}
           >
             Todos
           </button>
@@ -113,11 +104,9 @@ export default function KnowledgePage() {
             <button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className="px-3 py-1 rounded-full text-xs font-medium transition-colors"
-              style={{
-                background: selectedTag === tag ? 'var(--n-primary)' : 'var(--n-border)',
-                color: selectedTag === tag ? 'white' : 'var(--n-fg-muted)',
-              }}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                selectedTag === tag ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
             >
               {tag}
             </button>
@@ -127,37 +116,29 @@ export default function KnowledgePage() {
 
       {/* Documents List */}
       {loading ? (
-        <div className="text-center py-12" style={{ color: 'var(--n-fg-muted)' }}>
-          Cargando documentos...
-        </div>
+        <div className="text-center py-12 text-gray-500">Cargando documentos...</div>
       ) : filtered.length === 0 ? (
-        <div className="n-card p-12 text-center" style={{ color: 'var(--n-fg-muted)' }}>
-          <BookOpen size={32} className="mx-auto mb-3 opacity-50" />
-          <p>No hay documentos que coincidan con tu búsqueda</p>
+        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <BookOpen size={32} className="mx-auto mb-3 text-gray-400" />
+          <p className="text-gray-500">No hay documentos que coincidan con tu búsqueda</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((doc) => (
-            <div key={doc.id} className="n-card p-4 n-card-hover cursor-pointer">
+            <div key={doc.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-cyan-300 cursor-pointer transition-colors">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--n-accent-muted)' }}>
-                  <BookOpen size={18} style={{ color: 'var(--n-accent)' }} />
+                <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
+                  <BookOpen size={18} className="text-cyan-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 style={{ color: 'var(--n-fg)' }} className="font-semibold text-sm">
-                    {doc.title}
-                  </h3>
-                  <p style={{ color: 'var(--n-fg-muted)' }} className="text-xs mt-1 line-clamp-2">
-                    {doc.content?.slice(0, 150)}...
-                  </p>
+                  <h3 className="font-semibold text-sm text-gray-900">{doc.title}</h3>
+                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">{doc.content?.slice(0, 150)}...</p>
                   <div className="flex gap-2 mt-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'var(--n-border)', color: 'var(--n-fg-subtle)' }}>
+                    <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
                       {docTypeLabels[doc.doc_type] || doc.doc_type}
                     </span>
                     {doc.neighborhood && (
-                      <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'var(--n-border)', color: 'var(--n-fg-subtle)' }}>
-                        {doc.neighborhood}
-                      </span>
+                      <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">{doc.neighborhood}</span>
                     )}
                   </div>
                 </div>
