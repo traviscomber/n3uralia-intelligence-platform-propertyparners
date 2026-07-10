@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react' // useState used by Counter
 import Link from 'next/link'
 import { ArrowRight, BarChart3, TrendingUp, DollarSign } from 'lucide-react'
 
@@ -122,33 +122,9 @@ function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
   return <span ref={ref}>{count.toLocaleString('es-CL')}{suffix}</span>
 }
 
-// Intersection observer hook for scroll animations
-function useInView(threshold = 0.05) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    // Check if already in viewport on mount
-    const rect = el.getBoundingClientRect()
-    if (rect.top < window.innerHeight) { setInView(true); return }
-    const observer = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setInView(true); observer.disconnect() } },
-      { threshold, rootMargin: '0px 0px -40px 0px' }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [threshold])
-  return { ref, inView }
-}
+
 
 export default function LandingPage() {
-  const part2 = useInView(0.1)
-  const p1 = useInView(0.2)
-  const p2 = useInView(0.2)
-  const p3 = useInView(0.2)
-  const stats = useInView(0.3)
-
   return (
     <div className="min-h-screen font-sans" style={{ background: '#fbfbfa', color: '#173634' }}>
 
@@ -262,13 +238,10 @@ export default function LandingPage() {
 
       {/* ─── PARTE 2: 3 PILARES ─── */}
       <section className="py-28" style={{ background: '#fbfbfa' }}>
-        <div ref={part2.ref} className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
 
           {/* Section header */}
-          <div
-            className="mb-20 transition-all duration-700"
-            style={{ opacity: part2.inView ? 1 : 0, transform: part2.inView ? 'translateY(0)' : 'translateY(24px)' }}
-          >
+          <div className="mb-20" style={{ animation: 'slideUp 0.8s ease-out 0.1s both' }}>
             <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#8fb2aa' }}>Lo que construimos</p>
             <h2 className="font-bold leading-tight" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#173634', maxWidth: '22ch' }}>
               Tres herramientas para tomar decisiones con datos reales.
@@ -277,13 +250,8 @@ export default function LandingPage() {
 
           {/* Stats row */}
           <div
-            ref={stats.ref}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20 pb-20 transition-all duration-700"
-            style={{
-              borderBottom: '1px solid #d8e5e2',
-              opacity: stats.inView ? 1 : 0,
-              transform: stats.inView ? 'translateY(0)' : 'translateY(20px)',
-            }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20 pb-20"
+            style={{ borderBottom: '1px solid #d8e5e2', animation: 'slideUp 0.8s ease-out 0.2s both' }}
           >
             {[
               { value: 5, suffix: ' años', label: 'de datos históricos' },
@@ -304,16 +272,10 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Pilar 1 */}
             <div
-              ref={p1.ref}
-              className="group p-8 rounded-2xl transition-all duration-700 cursor-default"
-              style={{
-                border: '1px solid #d8e5e2',
-                background: 'white',
-                opacity: p1.inView ? 1 : 0,
-                transform: p1.inView ? 'translateY(0)' : 'translateY(32px)',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 32px rgba(143,178,170,0.18)')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+              className="group p-8 rounded-2xl cursor-default"
+              style={{ border: '1px solid #d8e5e2', background: 'white', animation: 'slideUp 0.7s ease-out 0.3s both', transition: 'box-shadow 0.2s, border-color 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 32px rgba(143,178,170,0.22)'; e.currentTarget.style.borderColor = '#8fb2aa' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = '#d8e5e2' }}
             >
               <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-6" style={{ background: '#8fb2aa' }}>
                 <BarChart3 size={22} />
@@ -335,17 +297,10 @@ export default function LandingPage() {
 
             {/* Pilar 2 */}
             <div
-              ref={p2.ref}
-              className="group p-8 rounded-2xl transition-all duration-700 cursor-default"
-              style={{
-                border: '1px solid #d8e5e2',
-                background: 'white',
-                opacity: p2.inView ? 1 : 0,
-                transform: p2.inView ? 'translateY(0)' : 'translateY(32px)',
-                transitionDelay: '120ms',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 32px rgba(184,154,126,0.18)')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+              className="group p-8 rounded-2xl cursor-default"
+              style={{ border: '1px solid #d8e5e2', background: 'white', animation: 'slideUp 0.7s ease-out 0.45s both', transition: 'box-shadow 0.2s, border-color 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 32px rgba(184,154,126,0.22)'; e.currentTarget.style.borderColor = '#b89a7e' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = '#d8e5e2' }}
             >
               <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-6" style={{ background: '#b89a7e' }}>
                 <TrendingUp size={22} />
@@ -367,17 +322,10 @@ export default function LandingPage() {
 
             {/* Pilar 3 */}
             <div
-              ref={p3.ref}
-              className="group p-8 rounded-2xl transition-all duration-700 cursor-default"
-              style={{
-                border: '1px solid #d8e5e2',
-                background: 'white',
-                opacity: p3.inView ? 1 : 0,
-                transform: p3.inView ? 'translateY(0)' : 'translateY(32px)',
-                transitionDelay: '240ms',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,185,129,0.15)')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+              className="group p-8 rounded-2xl cursor-default"
+              style={{ border: '1px solid #d8e5e2', background: 'white', animation: 'slideUp 0.7s ease-out 0.6s both', transition: 'box-shadow 0.2s, border-color 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,185,129,0.18)'; e.currentTarget.style.borderColor = '#10b981' }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = '#d8e5e2' }}
             >
               <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-6" style={{ background: '#10b981' }}>
                 <DollarSign size={22} />
