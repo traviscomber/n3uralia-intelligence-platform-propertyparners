@@ -52,15 +52,15 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
 
   return (
-    <aside className="flex flex-col w-56 shrink-0 border-r h-full" style={{ background: 'var(--n-surface)', borderColor: 'var(--n-border)' }}>
+    <aside className="flex flex-col w-56 shrink-0 border-r h-full bg-white border-gray-200">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-4 border-b" style={{ borderColor: 'var(--n-border)' }}>
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--n-primary)' }}>
+      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-200">
+        <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
           <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" fill="white" /><circle cx="9" cy="9" r="7" stroke="white" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
         </div>
         <div>
-          <div className="text-sm font-semibold tracking-tight leading-none" style={{ color: 'var(--n-fg)' }}>N3uralia</div>
-          <div className="text-[10px] mt-0.5" style={{ color: 'var(--n-fg-subtle)' }}>Intelligence Platform</div>
+          <div className="text-sm font-semibold tracking-tight leading-none text-gray-900">N3uralia</div>
+          <div className="text-[10px] mt-0.5 text-gray-500">Intelligence Platform</div>
         </div>
       </div>
 
@@ -75,9 +75,9 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                   href={item.href}
                   className="flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all"
                   style={{
-                    color: isActive ? 'var(--n-fg)' : 'var(--n-fg-muted)',
-                    background: isActive ? 'var(--n-primary-muted)' : 'transparent',
-                    borderLeft: isActive ? '2px solid var(--n-primary)' : '2px solid transparent',
+                    color: isActive ? '#0f1419' : '#6b7280',
+                    background: isActive ? '#ede9fe' : 'transparent',
+                    borderLeft: isActive ? '2px solid #5b6ef5' : '2px solid transparent',
                   }}
                 >
                   <span style={{ color: isActive ? 'var(--n-primary)' : 'var(--n-fg-subtle)' }}>{item.icon}</span>
