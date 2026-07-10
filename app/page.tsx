@@ -240,8 +240,6 @@ export default function LandingPage() {
                   {s.label}
                 </div>
               </div>
-                <div className="text-sm" style={{ color: '#9ca9a3' }}>{s.label}</div>
-              </div>
             ))}
           </div>
 
