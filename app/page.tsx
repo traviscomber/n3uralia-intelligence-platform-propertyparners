@@ -182,7 +182,7 @@ export default function LandingPage() {
                 Decisiones inmobiliarias respaldadas por datos.
               </h1>
               <p className="text-lg leading-relaxed mb-10" style={{ color: '#9ca9a3', maxWidth: '38ch' }}>
-                Machine learning aplicado al mercado chileno. Reportes que se generan solos. Valuaciones que confías.
+                Automatización de reportes para CEO y directores, inteligencia de mercado por barrio en Vitacura, y un valorizador que pondera la calidad real de cada propiedad.
               </p>
               <Link
                 href="/auth/login"
@@ -202,22 +202,22 @@ export default function LandingPage() {
 
             {[
               {
-                label: 'Datos en tiempo real',
-                desc: 'Scraper de Portal Inmobiliario, ventas internas y barrios geo-ubicados (KMZ). Información limpia, estructurada y lista para analizar.',
+                  label: 'Pipeline de datos propio',
+                  desc: 'Scraper de Portal Inmobiliario Vitacura + base de ventas internas + archivos KMZ que asignan barrio a cada propiedad. Todo integrado y actualizado trimestralmente.',
                 color: '#8fb2aa',
                 delay: '0ms',
                 tag: 'Data Pipeline',
               },
               {
-                label: 'Machine Learning',
-                desc: 'Modelos de regresión entrenados sobre 5 años de transacciones. Cada venta nueva mejora la predicción. La IA aprende del mercado de Vitacura.',
+                  label: 'Modelos predictivos',
+                  desc: 'Regresión entrenada con 5 años de transacciones. El valorizador aprende a ponderar calidad, barrio y atributos específicos de cada inmueble.',
                 color: '#b89a7e',
                 delay: '120ms',
                 tag: 'Predictive AI',
               },
               {
-                label: 'Automatización total',
-                desc: 'Reportes semanales y mensuales generados sin intervención humana. El sistema extrae, procesa y entrega el informe directo al director.',
+                  label: 'Reportes sin intervención',
+                  desc: 'El sistema genera el reporte mensual para el CEO y el semanal para directores automáticamente. Sin Excel, sin armado manual, con los últimos datos disponibles.',
                 color: '#10b981',
                 delay: '240ms',
                 tag: 'Auto Reports',
@@ -263,7 +263,7 @@ export default function LandingPage() {
           >
             <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: '#8fb2aa' }}>Lo que construimos</p>
             <h2 className="font-bold leading-tight" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#173634', maxWidth: '22ch' }}>
-              Tres herramientas. Un solo objetivo: vender mejor.
+              Tres herramientas para tomar decisiones con datos reales.
             </h2>
           </div>
 
@@ -313,10 +313,10 @@ export default function LandingPage() {
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#8fb2aa' }}>Pilar 01</div>
               <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Reportes Automáticos</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Mensuales para el CEO. Semanales para directores. El sistema genera el reporte completo sin que nadie lo pida.
+                Ya tenemos el control de gestión mensual funcionando. El siguiente paso: un reporte semanal para directores que muestre el avance real versus el plan, sin que nadie lo tenga que armar.
               </p>
               <div className="space-y-2.5">
-                {['Ventas por ejecutivo', 'Desviación versus plan', 'Comisiones y velocidad', 'KPIs de conversión'].map(item => (
+                {['Control mensual para CEO', 'Seguimiento semanal para directores', 'Avance versus plan en tiempo real', 'KPIs de ventas y comisiones'].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8fb2aa' }} />
                     {item}
@@ -345,10 +345,10 @@ export default function LandingPage() {
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>Pilar 02</div>
               <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Market Intelligence</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Datos de Portal Inmobiliario Vitacura + ventas internas + barrios geo-ubicados. Entiende cada cuadra del mercado.
+                Scraper de Portal Inmobiliario Vitacura + base de ventas propias + KMZ con asignación de barrio. Un informe trimestral que muestra qué barrios venden rápido, a qué precio, y cómo han evolucionado en 5 años.
               </p>
               <div className="space-y-2.5">
-                {['Velocidad de venta por barrio', 'Precio promedio UF/m²', 'Evolución de 5 años', 'Absorción por tipología'].map(item => (
+                {['Velocidad de venta por barrio', 'Precio promedio UF/m²', 'Evolución de precios 5 años', 'Datos actualizados trimestralmente'].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#b89a7e' }} />
                     {item}
@@ -377,10 +377,10 @@ export default function LandingPage() {
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#10b981' }}>Pilar 03</div>
               <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Valorizador Inteligente</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Valuaciones sensibilizadas por calidad, estado y terminaciones. El modelo ajusta por factores reales, no promedios genéricos.
+                Un valorizador que no solo usa metros cuadrados y barrio — también pondera la calidad real del inmueble. Terminaciones, estado de conservación y atributos específicos que cambian el precio significativamente.
               </p>
               <div className="space-y-2.5">
-                {['Calidad de terminaciones', 'Estado de conservación', 'Sensibilidad por barrio', 'Estimación en segundos'].map(item => (
+                {['Sensibilización por calidad', 'Estado y conservación del inmueble', 'Precio ajustado por barrio', 'Valorización en segundos'].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#10b981' }} />
                     {item}
