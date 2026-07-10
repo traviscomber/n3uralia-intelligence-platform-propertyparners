@@ -171,8 +171,8 @@ export default function LandingPage() {
                 tag: 'Predictive AI',
               },
               {
-                  label: 'Reportes sin intervención',
-                  desc: 'El sistema genera el reporte mensual para el CEO y el semanal para directores automáticamente. Sin Excel, sin armado manual, con los últimos datos disponibles.',
+                  label: '3 directores + equipos',
+                  desc: 'El sistema genera el reporte mensual para el CEO y reportes semanales para los 3 directores automáticamente. Sin Excel, sin armado manual.',
                 color: '#10b981',
                 delay: '240ms',
                 tag: 'Auto Reports',
@@ -221,16 +221,13 @@ export default function LandingPage() {
 
           {/* Stats row */}
           <div
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-20 pb-20"
+            className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-20 pb-20"
             style={{ borderBottom: '1px solid #d8e5e2', animation: 'slideUp 0.8s ease-out 0.2s both' }}
           >
             {[
-              { value: 2800, suffix: '+', label: 'propiedades analizadas en Vitacura' },
-              { value: 12, suffix: '', label: 'sectores principales cubiertos' },
-              { value: 6, suffix: '', label: 'ejecutivos en la operación' },
-              { value: 52, suffix: ' días', label: 'promedio de venta en zona premium' },
-              { value: 92, suffix: '%', label: 'cobertura de datos completos' },
               { value: 5, suffix: ' años', label: 'de histórico en datos' },
+              { value: 12, suffix: '', label: 'sectores principales cubiertos' },
+              { value: 2800, suffix: '+', label: 'propiedades analizadas en Vitacura' },
             ].map((s) => (
               <div key={s.label}>
                 <div className="text-4xl md:text-5xl font-bold" style={{ color: '#173634' }}>
