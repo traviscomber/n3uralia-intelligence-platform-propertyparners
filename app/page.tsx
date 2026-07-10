@@ -91,36 +91,7 @@ function DataCanvas() {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 }
 
-// Animated counter
-function Counter({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef<HTMLSpanElement>(null)
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return
-        let start = 0
-        const duration = 1600
-        const step = (timestamp: number) => {
-          if (!start) start = timestamp
-          const progress = Math.min((timestamp - start) / duration, 1)
-          const eased = 1 - Math.pow(1 - progress, 3)
-          setCount(Math.floor(eased * target))
-          if (progress < 1) requestAnimationFrame(step)
-          else setCount(target)
-        }
-        requestAnimationFrame(step)
-        observer.disconnect()
-      },
-      { threshold: 0.5 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [target])
-
-  return <span ref={ref}>{count.toLocaleString('es-CL')}{suffix}</span>
-}
 
 
 
@@ -262,9 +233,13 @@ export default function LandingPage() {
               { value: 5, suffix: ' años', label: 'de histórico en datos' },
             ].map((s) => (
               <div key={s.label}>
-                <div className="text-4xl font-bold mb-1" style={{ color: '#173634' }}>
-                  <Counter target={s.value} suffix={s.suffix} />
+                <div className="text-4xl md:text-5xl font-bold" style={{ color: '#173634' }}>
+                  {s.value.toLocaleString('es-CL')}{s.suffix}
                 </div>
+                <div className="text-xs md:text-sm mt-2" style={{ color: '#9ca9a3' }}>
+                  {s.label}
+                </div>
+              </div>
                 <div className="text-sm" style={{ color: '#9ca9a3' }}>{s.label}</div>
               </div>
             ))}
