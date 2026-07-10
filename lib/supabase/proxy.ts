@@ -19,19 +19,22 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const isAuthPath = request.nextUrl.pathname.startsWith('/auth')
+  // Skip auth enforcement in development for faster iteration
+  if (process.env.NODE_ENV !== 'development') {
+    const { data: { user } } = await supabase.auth.getUser()
+    const isAuthPath = request.nextUrl.pathname.startsWith('/auth')
 
-  if (!user && !isAuthPath) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
-    return NextResponse.redirect(url)
-  }
+    if (!user && !isAuthPath) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
 
-  if (user && isAuthPath && !request.nextUrl.pathname.startsWith('/auth/callback')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    if (user && isAuthPath && !request.nextUrl.pathname.startsWith('/auth/callback')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse
