@@ -254,9 +254,7 @@ export default function LandingPage() {
             style={{ borderBottom: '1px solid #d8e5e2', animation: 'slideUp 0.8s ease-out 0.2s both' }}
           >
             {[
-              { value: 5, suffix: ' años', label: 'de datos históricos' },
-              { value: 88, suffix: '%', label: 'precisión en valuaciones' },
-              { value: 12, suffix: 'K+', label: 'propiedades analizadas' },
+              { value: 5, suffix: ' años', label: 'de histórico en datos' },
               { value: 3, suffix: '', label: 'pilares operacionales' },
             ].map((s) => (
               <div key={s.label}>
