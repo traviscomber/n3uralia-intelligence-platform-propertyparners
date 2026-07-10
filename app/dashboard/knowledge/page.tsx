@@ -95,7 +95,7 @@ export default function KnowledgePage() {
           <button
             onClick={() => setSelectedTag(null)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              selectedTag === null ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              selectedTag === null ? '#8fb2aa text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
             }`}
           >
             Todos
@@ -105,7 +105,7 @@ export default function KnowledgePage() {
               key={tag}
               onClick={() => setSelectedTag(tag)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                selectedTag === tag ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                selectedTag === tag ? '#8fb2aa text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
               }`}
             >
               {tag}
@@ -128,7 +128,7 @@ export default function KnowledgePage() {
             <div key={doc.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-cyan-300 cursor-pointer transition-colors">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
-                  <BookOpen size={18} className="text-cyan-600" />
+                  <BookOpen size={18} className="#b89a7e" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-gray-900">{doc.title}</h3>

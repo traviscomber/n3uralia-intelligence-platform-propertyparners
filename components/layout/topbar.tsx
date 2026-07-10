@@ -18,14 +18,14 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
   const dateStr = new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 border-b bg-white">
-      <p className="text-xs capitalize text-gray-500">{dateStr}</p>
+    <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 bg-white" style={{ borderBottom: '1px solid #d8e5e2' }}>
+      <p className="text-xs capitalize" style={{ color: '#9ca9a3' }}>{dateStr}</p>
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-green-100 text-green-700">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse inline-block" />
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs" style={{ background: '#e8f3f0', color: '#10b981' }}>
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: '#10b981' }} />
           IA Activa
         </div>
-        <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs text-gray-600 border border-gray-300 hover:bg-gray-50 transition-colors">
+        <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs transition-colors hover:opacity-70" style={{ color: '#555a56', border: '1px solid #d8e5e2' }}>
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M10 11l3-3-3-3M13 8H6" /></svg>
           {profile?.full_name?.split(' ')[0] || 'Salir'}
         </button>

@@ -54,13 +54,13 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   return (
     <aside className="flex flex-col w-56 shrink-0 border-r h-full bg-white border-gray-200">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-200">
-        <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-2.5 px-4 py-4" style={{ borderBottom: '1px solid #d8e5e2' }}>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#8fb2aa' }}>
           <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" fill="white" /><circle cx="9" cy="9" r="7" stroke="white" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
         </div>
         <div>
           <div className="text-sm font-semibold tracking-tight leading-none text-gray-900">N3uralia</div>
-          <div className="text-[10px] mt-0.5 text-gray-500">Intelligence Platform</div>
+          <div className="text-[10px] mt-0.5" style={{ color: '#9ca9a3' }}>Intelligence Platform</div>
         </div>
       </div>
 
@@ -75,12 +75,12 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                   href={item.href}
                   className="flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all"
                   style={{
-                    color: isActive ? '#0f1419' : '#6b7280',
-                    background: isActive ? '#ede9fe' : 'transparent',
-                    borderLeft: isActive ? '2px solid #5b6ef5' : '2px solid transparent',
+                    color: isActive ? '#173634' : '#9ca9a3',
+                    background: isActive ? '#e8f3f0' : 'transparent',
+                    borderLeft: isActive ? '2px solid #8fb2aa' : '2px solid transparent',
                   }}
                 >
-                  <span style={{ color: isActive ? '#5b6ef5' : '#9ca3af' }}>{item.icon}</span>
+                  <span style={{ color: isActive ? '#8fb2aa' : '#b9bfbc' }}>{item.icon}</span>
                   <span className="truncate text-[13px]">{item.label}</span>
                 </Link>
               </li>
@@ -91,14 +91,14 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
 
       {/* User */}
       {profile && (
-        <div className="border-t border-gray-200 px-3 py-3">
+        <div className="px-3 py-3" style={{ borderTop: '1px solid #d8e5e2' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 bg-blue-100 text-blue-600">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: '#e8f3f0', color: '#8fb2aa' }}>
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <div className="text-xs font-medium truncate text-gray-900">{profile.full_name || 'Usuario'}</div>
-              <div className="text-[10px] capitalize text-gray-500">{profile.role}</div>
+              <div className="text-[10px] capitalize" style={{ color: '#9ca9a3' }}>{profile.role}</div>
             </div>
           </div>
         </div>

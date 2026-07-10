@@ -66,14 +66,14 @@ export default function ReportesPage() {
           {reports.map((report) => (
             <div key={report.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 cursor-pointer transition-colors">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <FileText size={18} className="text-blue-600" />
+                <div className="w-10 h-10 rounded-lg #e8f3f0 flex items-center justify-center flex-shrink-0">
+                  <FileText size={18} className="#8fb2aa" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-gray-900">{report.title}</h3>
                   <p className="text-xs text-gray-600 mt-1 line-clamp-2">{report.summary}</p>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                    <span className="px-2 py-0.5 rounded text-xs font-medium #e8f3f0 text-blue-700">
                       {reportTypes[report.report_type] || report.report_type}
                     </span>
                     <span className="text-xs text-gray-500 flex items-center gap-1">

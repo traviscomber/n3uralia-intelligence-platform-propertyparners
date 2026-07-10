@@ -57,7 +57,7 @@ export default function FuentesPage() {
       case 'active':
         return <CheckCircle className="w-4 h-4 text-green-600" />
       case 'syncing':
-        return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />
+        return <RefreshCw className="w-4 h-4 #8fb2aa animate-spin" />
       case 'error':
         return <AlertCircle className="w-4 h-4 text-red-600" />
       default:
@@ -143,7 +143,7 @@ export default function FuentesPage() {
           </div>
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-xs font-semibold text-blue-700 uppercase">Total Registros</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">{sources.reduce((sum, s) => sum + s.records_count, 0).toLocaleString('es-CL')}</p>
+            <p className="text-3xl font-bold #8fb2aa mt-2">{sources.reduce((sum, s) => sum + s.records_count, 0).toLocaleString('es-CL')}</p>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-xs font-semibold text-gray-700 uppercase">Última Actualización</p>

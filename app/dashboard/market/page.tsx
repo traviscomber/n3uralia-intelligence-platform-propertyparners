@@ -84,7 +84,7 @@ export default function MarketPage() {
               <XAxis dataKey="neighborhood" stroke="#9ca3af" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={80} />
               <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
               <Tooltip contentStyle={{ background: '#f8f9fb', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-              <Bar dataKey="avg_price_m2_uf" fill="#5b6ef5" name="UF/m²" />
+              <Bar dataKey="avg_price_m2_uf" fill="#8fb2aa" name="UF/m²" />
             </BarChart>
           </ResponsiveContainer>
         </div>

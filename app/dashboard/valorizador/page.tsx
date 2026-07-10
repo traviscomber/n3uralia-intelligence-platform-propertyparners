@@ -117,7 +117,7 @@ export default function ValorizadorPage() {
 
             <button
               onClick={calculatePrice}
-              className="w-full py-2.5 rounded font-semibold text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              className="w-full py-2.5 rounded font-semibold text-sm #8fb2aa text-white hover:bg-blue-700 transition-colors"
             >
               Calcular Valorización
             </button>
@@ -128,12 +128,12 @@ export default function ValorizadorPage() {
         {result && (
           <div className="bg-white rounded-lg border border-gray-200 border-l-4 border-l-cyan-500 p-6">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <Home size={24} className="text-blue-600" />
+              <div className="w-12 h-12 rounded-lg #e8f3f0 flex items-center justify-center flex-shrink-0">
+                <Home size={24} className="#8fb2aa" />
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Valor Estimado</p>
-                <p className="text-3xl font-bold text-blue-600 mt-1">{result.price_uf.toLocaleString('es-CL')} UF</p>
+                <p className="text-3xl font-bold #8fb2aa mt-1">{result.price_uf.toLocaleString('es-CL')} UF</p>
               </div>
             </div>
 

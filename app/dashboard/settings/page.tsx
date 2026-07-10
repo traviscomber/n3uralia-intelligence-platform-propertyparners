@@ -15,13 +15,13 @@ export default async function SettingsPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Perfil de Usuario</h3>
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-xl font-bold text-blue-600">
+          <div className="w-14 h-14 rounded-full #e8f3f0 flex items-center justify-center text-xl font-bold #8fb2aa">
             {(profile?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
           </div>
           <div>
             <div className="font-medium text-gray-900">{profile?.full_name || 'Sin nombre'}</div>
             <div className="text-sm text-gray-600">{user?.email}</div>
-            <span className="text-[10px] mt-1 capitalize px-2 py-0.5 rounded-full inline-block bg-blue-100 text-blue-700">
+            <span className="text-[10px] mt-1 capitalize px-2 py-0.5 rounded-full inline-block #e8f3f0 text-blue-700">
               {profile?.role || 'seller'}
             </span>
           </div>
@@ -63,8 +63,8 @@ export default async function SettingsPage() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Paleta de Colores</h3>
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'Primary', color: '#5b6ef5' },
-            { label: 'Accent', color: '#00d9ff' },
+            { label: 'Primary', color: '#8fb2aa' },
+            { label: 'Accent', color: '#b89a7e' },
             { label: 'Success', color: '#10b981' },
             { label: 'Warning', color: '#f59e0b' },
           ].map(c => (

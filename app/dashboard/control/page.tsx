@@ -13,7 +13,7 @@ interface KPISnapshot {
   conversion_rate: number
 }
 
-const COLORS = ['#5b6ef5', '#00d9ff', '#10b981', '#f59e0b']
+const COLORS = ['#8fb2aa', '#b89a7e', '#10b981', '#f59e0b']
 
 export default function ControlPage() {
   const [kpis, setKpis] = useState<KPISnapshot[]>([])
@@ -76,20 +76,20 @@ export default function ControlPage() {
 
       {/* KPI Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Performance Promedio</p>
-          <p className="text-3xl font-bold text-blue-600 mt-3">{avgPerformance}%</p>
-          <p className="text-xs text-gray-500 mt-1">Cumplimiento vs objetivo</p>
+        <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Performance Promedio</p>
+          <p className="text-3xl font-bold mt-3" style={{ color: '#8fb2aa' }}>{avgPerformance}%</p>
+          <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>Cumplimiento vs objetivo</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Velocidad Promedio</p>
-          <p className="text-3xl font-bold text-cyan-600 mt-3">{avgVelocity}</p>
-          <p className="text-xs text-gray-500 mt-1">días promedio de venta</p>
+        <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Velocidad Promedio</p>
+          <p className="text-3xl font-bold mt-3" style={{ color: '#b89a7e' }}>{avgVelocity}</p>
+          <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>días promedio de venta</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Directores</p>
-          <p className="text-3xl font-bold text-green-600 mt-3">{directors.length}</p>
-          <p className="text-xs text-gray-500 mt-1">en seguimiento activo</p>
+        <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Directores</p>
+          <p className="text-3xl font-bold mt-3" style={{ color: '#10b981' }}>{directors.length}</p>
+          <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>en seguimiento activo</p>
         </div>
       </div>
 
@@ -101,28 +101,28 @@ export default function ControlPage() {
             const achievement = (director.actual / director.target * 100).toFixed(0)
             const onTrack = director.actual >= director.target
             return (
-              <div key={director.name} className="bg-white rounded-lg border border-gray-200 p-5">
+              <div key={director.name} className="bg-white rounded-lg p-5" style={{ border: '1px solid #d8e5e2' }}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <p className="font-semibold text-gray-900">{director.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">Director Comercial</p>
+                    <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>Director Comercial</p>
                   </div>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${onTrack ? 'bg-green-100' : 'bg-orange-100'}`}>
-                    <Target className={`w-4 h-4 ${onTrack ? 'text-green-600' : 'text-orange-600'}`} />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: onTrack ? '#e8f3f0' : '#fef3f2' }}>
+                    <Target className="w-4 h-4" style={{ color: onTrack ? '#10b981' : '#d97706' }} />
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Ventas Mes</p>
+                    <p className="text-xs uppercase font-semibold mb-1" style={{ color: '#555a56' }}>Ventas Mes</p>
                     <p className="text-2xl font-bold text-gray-900">{director.actual}/{director.target}</p>
-                    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                      <div className={`h-1.5 rounded-full ${onTrack ? 'bg-green-500' : 'bg-orange-500'}`} style={{ width: `${Math.min(parseInt(achievement), 100)}%` }}></div>
+                    <div className="w-full rounded-full h-1.5 mt-2" style={{ background: '#e5e7eb' }}>
+                      <div className="h-1.5 rounded-full" style={{ background: onTrack ? '#10b981' : '#f59e0b', width: `${Math.min(parseInt(achievement), 100)}%` }}></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{achievement}% del target</p>
+                    <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>{achievement}% del target</p>
                   </div>
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Conversión</p>
-                    <p className="text-lg font-bold text-cyan-600">{director.conversion}%</p>
+                  <div className="pt-2" style={{ borderTop: '1px solid #f0f0f0' }}>
+                    <p className="text-xs uppercase font-semibold mb-1" style={{ color: '#555a56' }}>Conversión</p>
+                    <p className="text-lg font-bold" style={{ color: '#b89a7e' }}>{director.conversion}%</p>
                   </div>
                 </div>
               </div>
@@ -133,42 +133,42 @@ export default function ControlPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Ventas vs Objetivo (12 meses)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={kpis}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="period_date" stroke="#9ca3af" tick={{ fontSize: 12 }} />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip contentStyle={{ background: '#f8f9fb', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
+              <XAxis dataKey="period_date" stroke="#9ca9a3" tick={{ fontSize: 12 }} />
+              <YAxis stroke="#9ca9a3" />
+              <Tooltip contentStyle={{ background: '#fbfbfa', border: '1px solid #d8e5e2', borderRadius: '8px' }} />
               <Legend />
-              <Bar dataKey="ventas_count" fill="#5b6ef5" name="Ventas Reales" />
-              <Bar dataKey="monthly_target" fill="#cbd5e1" name="Objetivo" />
+              <Bar dataKey="ventas_count" fill="#8fb2aa" name="Ventas Reales" />
+              <Bar dataKey="monthly_target" fill="#e5e7eb" name="Objetivo" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Conversión (Tendencia)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={kpis}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="period_date" stroke="#9ca3af" tick={{ fontSize: 12 }} />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip contentStyle={{ background: '#f8f9fb', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-              <Line type="monotone" dataKey="conversion_rate" stroke="#00d9ff" strokeWidth={2} name="Conversión %" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
+              <XAxis dataKey="period_date" stroke="#9ca9a3" tick={{ fontSize: 12 }} />
+              <YAxis stroke="#9ca9a3" />
+              <Tooltip contentStyle={{ background: '#fbfbfa', border: '1px solid #d8e5e2', borderRadius: '8px' }} />
+              <Line type="monotone" dataKey="conversion_rate" stroke="#b89a7e" strokeWidth={2} name="Conversión %" />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Sales Funnel */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Embudo de Ventas</h3>
         <ResponsiveContainer width="100%" height={250}>
           <FunnelChart>
-            <Tooltip contentStyle={{ background: '#f8f9fb', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-            <Funnel dataKey="value" data={funnelData} fill="#5b6ef5">
+            <Tooltip contentStyle={{ background: '#fbfbfa', border: '1px solid #d8e5e2', borderRadius: '8px' }} />
+            <Funnel dataKey="value" data={funnelData} fill="#8fb2aa">
               {funnelData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
