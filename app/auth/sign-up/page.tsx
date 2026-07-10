@@ -28,51 +28,53 @@ export default function SignUpPage() {
   }
 
   if (done) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--n-bg)' }}>
-      <div className="n-card p-8 max-w-sm w-full text-center">
-        <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--n-success-muted)' }}>
-          <svg width="24" height="24" fill="none" stroke="var(--n-success)" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white rounded-lg border border-gray-200 p-8 max-w-sm w-full text-center shadow-sm">
+        <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center bg-green-100">
+          <svg width="24" height="24" fill="none" stroke="#10b981" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h2 className="font-semibold mb-2" style={{ color: 'var(--n-fg)' }}>Revisa tu email</h2>
-        <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>Enviamos un enlace de confirmación a <strong style={{ color: 'var(--n-fg)' }}>{email}</strong></p>
-        <a href="/auth/login" className="mt-4 inline-block text-sm" style={{ color: 'var(--n-primary)' }}>Volver al login</a>
+        <h2 className="font-semibold mb-2 text-gray-900">Revisa tu email</h2>
+        <p className="text-sm text-gray-600">Enviamos un enlace de confirmación a <strong className="text-gray-900">{email}</strong></p>
+        <a href="/auth/login" className="mt-4 inline-block text-sm text-blue-600 hover:text-blue-700">Volver al login</a>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--n-bg)' }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--n-primary)' }}>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" fill="white" /><circle cx="9" cy="9" r="7" stroke="white" strokeWidth="1.5" strokeDasharray="3 2" /></svg>
             </div>
-            <span className="text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>N3uralia</span>
+            <span className="text-lg font-semibold text-gray-900">N3uralia</span>
           </div>
         </div>
-        <div className="n-card p-6">
-          {error && <div className="mb-4 p-3 rounded text-sm" style={{ background: 'var(--n-danger-muted)', color: 'var(--n-danger)' }}>{error}</div>}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <h1 className="text-base font-semibold mb-1 text-gray-900">Crear cuenta</h1>
+          <p className="text-sm mb-6 text-gray-600">Únete a N3uralia y accede a inteligencia inmobiliaria</p>
+          {error && <div className="mb-4 p-3 rounded text-sm bg-red-50 text-red-600 border border-red-200">{error}</div>}
           <form onSubmit={handleSignUp} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--n-fg-muted)' }}>Nombre completo</label>
-              <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ana García" className="w-full px-3 py-2.5 rounded text-sm outline-none" style={{ background: 'var(--n-surface-2)', border: '1px solid var(--n-border)', color: 'var(--n-fg)' }} />
+              <label className="block text-xs font-medium mb-1.5 text-gray-700">Nombre completo</label>
+              <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ana García" className="w-full px-3 py-2.5 rounded text-sm border border-gray-300 bg-white text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--n-fg-muted)' }}>Email</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" className="w-full px-3 py-2.5 rounded text-sm outline-none" style={{ background: 'var(--n-surface-2)', border: '1px solid var(--n-border)', color: 'var(--n-fg)' }} />
+              <label className="block text-xs font-medium mb-1.5 text-gray-700">Email</label>
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" className="w-full px-3 py-2.5 rounded text-sm border border-gray-300 bg-white text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--n-fg-muted)' }}>Contraseña</label>
-              <input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2.5 rounded text-sm outline-none" style={{ background: 'var(--n-surface-2)', border: '1px solid var(--n-border)', color: 'var(--n-fg)' }} />
+              <label className="block text-xs font-medium mb-1.5 text-gray-700">Contraseña</label>
+              <input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2.5 rounded text-sm border border-gray-300 bg-white text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
             </div>
-            <button type="submit" disabled={loading} className="w-full py-2.5 rounded text-sm font-medium disabled:opacity-60" style={{ background: 'var(--n-primary)', color: 'white' }}>
+            <button type="submit" disabled={loading} className="w-full py-2.5 rounded text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 transition-colors">
               {loading ? 'Creando cuenta…' : 'Crear cuenta'}
             </button>
           </form>
           <div className="mt-4 text-center">
-            <a href="/auth/login" className="text-xs" style={{ color: 'var(--n-fg-muted)' }}>
-              ¿Ya tienes cuenta? <span style={{ color: 'var(--n-primary)' }}>Iniciar sesión</span>
+            <a href="/auth/login" className="text-xs text-gray-600 hover:text-gray-900">
+              ¿Ya tienes cuenta? <span className="text-blue-600 font-medium">Iniciar sesión</span>
             </a>
           </div>
         </div>
