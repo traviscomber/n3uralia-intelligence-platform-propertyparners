@@ -15,11 +15,28 @@
 
 ## 📊 Current Status
 
-**Version:** 0.1.0 (MVP - Basic Dashboard)  
+**Version:** 0.2.0 (MVP + Property Partners Landing Page)  
 **Last Updated:** July 10, 2026  
 **Status:** Deployed to Production ✅
 
 ### ✅ Completed Features
+
+#### Landing Page (NEW - Phase 0)
+- [x] **Property Partners Premium Landing Page** 
+  - Split layout hero: dark editorial panel + light tech stack panel
+  - Animated canvas background with particle network
+  - 3 key indicators with real market data:
+    * 5 años de histórico en datos
+    * 12 sectores principales cubiertos
+    * 2.800+ propiedades analizadas en Vitacura
+  - Tech stack explanation with 3 core pillars:
+    * Pipeline de datos propio (scraper Portal Inmobiliario + KMZ)
+    * Modelos predictivos (regresión 5 años de transacciones)
+    * Reportes sin intervención (mensual CEO + semanal directores)
+  - CSS animations: slideUp, float, pulse-subtle with staggered delays
+  - Clean, focused copy referencing only real capabilities
+  - Navigation & CTA buttons pointing to internal platform login
+  - Footer with "Property Partners Platform | Powered by N3uralia"
 
 #### Core Infrastructure
 - [x] Supabase database with 8 tables (profiles, kpi_snapshots, properties, market_data, ai_reports, knowledge_documents, data_sources, recommendations)
@@ -48,6 +65,30 @@
 - [x] Auth callback route
 - [x] Error handling page
 - [x] User admin account (juan@n3uralia.com)
+
+---
+
+## ✅ Phase 0: Property Partners Landing Page (COMPLETED)
+
+**Priority:** Critical  
+**Estimated Effort:** 1 day  
+**Token Cost:** Minimal (design & CSS only)
+**Status:** ✅ COMPLETED
+
+### Deliverables
+- [x] Premium landing page for internal team
+- [x] Split hero layout with animated background (particle network)
+- [x] 3 key indicators with real market data
+- [x] Tech stack explanation (3 pillars)
+- [x] CSS animations with staggered delays
+- [x] Mobile-responsive design
+- [x] Clean, focused messaging (no marketing fluff)
+- [x] Login CTA pointing to internal platform
+
+### Completed on: July 10, 2026
+- Landing page URL: `/` (homepage route)
+- Production deployment: main branch
+- Design system: N3uralia brandbook (#8fb2aa primary, #b89a7e accent, #fbfbfa background)
 
 ---
 
@@ -256,13 +297,14 @@ AI/ML (Phase 3):
 
 | Phase | Timeline | Status |
 |-------|----------|--------|
-| **Phase 1: Design** | Jul 10-12 | 🔴 Not Started |
-| **Phase 2: Real Data** | Jul 13-20 | 🔴 Not Started |
-| **Phase 3: AI** | Jul 21-Aug 3 | 🔴 Not Started |
-| **Phase 4: Roles** | Aug 4-17 | 🔴 Not Started |
-| **Phase 5: Mobile** | Aug 18-24 | 🔴 Not Started |
-| **Phase 6: Security** | Aug 25-31 | 🔴 Not Started |
-| **Phase 7: Performance** | Sep 1-7 | 🔴 Not Started |
+| **Phase 0: Landing Page** | Jul 10 | ✅ COMPLETED |
+| **Phase 1: Design** | Jul 11-13 | 🔴 Not Started |
+| **Phase 2: Real Data** | Jul 14-21 | 🔴 Not Started |
+| **Phase 3: Dashboard Buildout** | Jul 22-Aug 4 | 🔴 Not Started |
+| **Phase 4: AI Integration** | Aug 5-18 | 🔴 Not Started |
+| **Phase 5: Role-Based Features** | Aug 19-Sep 1 | 🔴 Not Started |
+| **Phase 6: Security & Compliance** | Sep 2-8 | 🔴 Not Started |
+| **Phase 7: Performance & Scale** | Sep 9-15 | 🔴 Not Started |
 
 **Target Release:** Production-Ready v1.0 by September 30, 2026
 
@@ -374,4 +416,137 @@ git push origin feature/phase-1-design-improvements
 
 **Last Updated:** July 10, 2026  
 **Maintained By:** v0 AI + Travis Comber  
-**Version:** 0.1.0 MVP
+**Version:** 0.2.0 MVP + Landing Page
+
+---
+
+## 🎯 What's Next? — Immediate Action Items
+
+### Phase 1 Priority: Connect Dashboard to Real Data (July 11-13)
+
+**Why:** Landing page looks great, but internal platform needs to be fully functional with real Property Partners data.
+
+#### Task 1: Implement Reportes Automáticos (Weekly Director Reports)
+**Owner:** Backend/Frontend  
+**Effort:** 1-2 days
+
+Current state: Dashboard exists but shows mock data  
+Goal: Weekly reports automatically generated for 3 directors
+
+**Implementation:**
+1. Create `weekly_reports` table in Supabase (director_id, week_start, week_end, sales_count, commission_total, velocity_change, status)
+2. Add weekly report generation scheduled job (Supabase edge function)
+3. Build "Reportes" dashboard page to display weekly/monthly reports
+4. Add report filtering by date range and director
+5. Create email notification when new report generated
+
+**Technical:**
+- Supabase Edge Functions for scheduled report generation
+- SQL queries to aggregate sales by director
+- Report template with markdown/PDF export
+- Email via SendGrid/Resend
+
+---
+
+#### Task 2: Implement Market Intelligence Dashboard (July 12-14)
+**Owner:** Backend/Frontend  
+**Effort:** 2 days
+
+Current state: Market Intelligence page exists but loads mock data  
+Goal: Real neighborhood data from Vitacura with velocity, pricing, trends
+
+**Implementation:**
+1. Create/populate `neighborhood_market_data` table:
+   - neighborhood_id, quarter, velocity_days, price_per_sqm, price_trend_3yr, price_trend_5yr, absorption_rate, inventory_count, last_updated
+2. Build neighborhood comparison table with sorting/filtering
+3. Add price trend chart (5-year history per neighborhood)
+4. Create velocity heatmap showing fastest vs slowest moving areas
+5. Add market filters (date range, price range, property type)
+
+**Data source:**
+- Portal Inmobiliario scraper (already built)
+- KMZ files mapping properties to neighborhoods
+- Sales history from Property Partners database
+
+---
+
+#### Task 3: Connect Valorizador to Real Properties (July 14-15)
+**Owner:** Backend/Frontend  
+**Effort:** 1-2 days
+
+Current state: Valorizador works with random properties  
+Goal: Real valuation engine using actual inventory + ML model
+
+**Implementation:**
+1. Populate `properties` table with real listings from Vitacura
+2. Build ML valuation model:
+   - Input: property_id, sqm, neighborhood, rooms, bathrooms, quality_score, age
+   - Output: estimated_uf_price, confidence_range, comparable_properties
+3. Add "Get Valuation" form with property search
+4. Display comparable properties + price history
+5. Show confidence score and method explanation
+
+---
+
+#### Task 4: Setup Real KPI Dashboard (July 15)
+**Owner:** Backend  
+**Effort:** 1 day
+
+Current state: Home page loads demo KPIs  
+Goal: Live sales, conversion, commission metrics for CEO + directors
+
+**Implementation:**
+1. Connect KPI queries to real sales data:
+   - Total sales (last 30 days)
+   - UF vendidas (aggregate by director)
+   - Conversion rate (leads → sales)
+   - Commission pool (total + by director)
+2. Add real-time metrics updates (Supabase subscriptions)
+3. Build trend lines (7-day, 30-day, YTD)
+4. Create drill-down capability (CEO → Director → Seller)
+
+---
+
+### Phase 1 Completion Criteria
+- ✅ All 3 directors can log in and see their weekly reports
+- ✅ Market Intelligence shows real Vitacura neighborhoods
+- ✅ Valorizador provides accurate property valuations
+- ✅ CEO dashboard displays live sales KPIs
+- ✅ No mock data visible anywhere
+- ✅ All data sources documented and tested
+
+### Phase 1 Success Metrics
+- 100% uptime for dashboard
+- < 500ms page load time (measured from v0 preview)
+- Zero console errors
+- All 7 dashboard pages functional with real data
+
+---
+
+## 📋 Immediate Next Meeting Checklist
+
+Before starting Phase 1, confirm with Property Partners:
+
+- [ ] Database access: Can we query the sales database directly?
+- [ ] Data format: What's the schema of sales records?
+- [ ] Update frequency: How often should reports refresh?
+- [ ] User accounts: Create user accounts for 3 directors + team
+- [ ] Test data: Should we use real data or masked/test data?
+- [ ] Notifications: Which team members should get alerts?
+- [ ] Access control: Should directors see only their own team data?
+
+---
+
+## 💡 Phase 2 Preview: AI Enhancement (Beyond Phase 1)
+
+Once real data flows through the dashboard:
+
+1. **AI-Powered Weekly Summary** - Claude summarizes market trends + director performance
+2. **Smart Alerts** - Anomaly detection on KPIs (e.g., "Conversión dropped 15%")
+3. **Market Insights** - "El barrio Vitacura Centro has 3 new listings above UF 50K"
+4. **Comparable Property Analysis** - "Esta propiedad es 8% más cara que similares en el barrio"
+5. **Recommendation Engine** - "Próximas 3 propiedades más vendibles según datos"
+
+---
+
+**Next Action:** Update this roadmap after Phase 1 completion with actual metrics and lessons learned.
