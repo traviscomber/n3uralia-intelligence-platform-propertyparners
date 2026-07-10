@@ -127,7 +127,7 @@ export default function KnowledgePage() {
           {filtered.map((doc) => (
             <div key={doc.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-cyan-300 cursor-pointer transition-colors">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg #e8f3f0 flex items-center justify-center flex-shrink-0">
                   <BookOpen size={18} className="#b89a7e" />
                 </div>
                 <div className="flex-1 min-w-0">

@@ -117,7 +117,7 @@ export default function ValorizadorPage() {
 
             <button
               onClick={calculatePrice}
-              className="w-full py-2.5 rounded font-semibold text-sm #8fb2aa text-white hover:bg-blue-700 transition-colors"
+              className="w-full py-2.5 rounded font-semibold text-sm text-white hover:opacity-90 transition-opacity" style={{ background: "#8fb2aa" }}
             >
               Calcular Valorización
             </button>

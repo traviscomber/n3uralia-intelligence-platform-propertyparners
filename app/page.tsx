@@ -10,14 +10,15 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #8fb2aa 0%, #b89a7e 100%)' }}>
               N3
             </div>
             <span className="font-bold text-lg text-gray-900">N3uralia</span>
           </div>
           <Link
             href="/auth/login"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="px-6 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+            style={{ background: '#8fb2aa' }}
           >
             Acceder
           </Link>
@@ -35,13 +36,15 @@ export default function LandingPage() {
         <div className="flex gap-4 justify-center">
           <Link
             href="/dashboard"
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+            className="px-8 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+            style={{ background: '#8fb2aa' }}
           >
             Ver Dashboard <ArrowRight size={20} />
           </Link>
           <Link
             href="/auth/sign-up"
-            className="px-8 py-3 border border-gray-300 text-gray-900 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            className="px-8 py-3 rounded-lg font-medium hover:opacity-70 transition-opacity"
+            style={{ border: '1px solid #d8e5e2', color: '#173634', background: '#f5f9f7' }}
           >
             Crear Cuenta
           </Link>
@@ -86,8 +89,8 @@ export default function LandingPage() {
           ].map((feature) => {
             const Icon = feature.icon
             return (
-              <div key={feature.title} className="bg-white p-6 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                <Icon className="w-12 h-12 text-blue-600 mb-4" />
+              <div key={feature.title} className="bg-white p-6 rounded-lg transition-colors" style={{ border: '1px solid #d8e5e2', borderColor: '#d8e5e2' }} onMouseEnter={(e) => e.currentTarget.style.borderColor = '#8fb2aa'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#d8e5e2'}>
+                <Icon className="w-12 h-12 mb-4" style={{ color: '#8fb2aa' }} />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-gray-600">{feature.desc}</p>
               </div>
@@ -97,7 +100,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats */}
-      <section className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-16">
+      <section className="text-white py-16" style={{ background: 'linear-gradient(90deg, #8fb2aa 0%, #b89a7e 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             {[
@@ -123,7 +126,8 @@ export default function LandingPage() {
         </p>
         <Link
           href="/auth/sign-up"
-          className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          className="inline-block px-8 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+          style={{ background: '#8fb2aa' }}
         >
           Comenzar Ahora
         </Link>

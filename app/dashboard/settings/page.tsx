@@ -21,7 +21,7 @@ export default async function SettingsPage() {
           <div>
             <div className="font-medium text-gray-900">{profile?.full_name || 'Sin nombre'}</div>
             <div className="text-sm text-gray-600">{user?.email}</div>
-            <span className="text-[10px] mt-1 capitalize px-2 py-0.5 rounded-full inline-block #e8f3f0 text-blue-700">
+            <span className="text-[10px] mt-1 capitalize px-2 py-0.5 rounded-full inline-block" style={{ background: "#e8f3f0", color: "#555a56" }}>
               {profile?.role || 'seller'}
             </span>
           </div>

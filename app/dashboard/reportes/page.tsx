@@ -73,7 +73,7 @@ export default function ReportesPage() {
                   <h3 className="font-semibold text-sm text-gray-900">{report.title}</h3>
                   <p className="text-xs text-gray-600 mt-1 line-clamp-2">{report.summary}</p>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded text-xs font-medium #e8f3f0 text-blue-700">
+                    <span className="px-2 py-0.5 rounded text-xs font-medium" style={{ background: "#e8f3f0", color: "#555a56" }}>
                       {reportTypes[report.report_type] || report.report_type}
                     </span>
                     <span className="text-xs text-gray-500 flex items-center gap-1">
