@@ -42,13 +42,13 @@ export default function SourcesPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <Check size={16} style={{ color: 'var(--n-success)' }} />
+        return <Check size={16} style={{ color: '#10b981' }} />
       case 'syncing':
-        return <Clock size={16} style={{ color: 'var(--n-warning)', animation: 'spin 2s linear infinite' }} />
+        return <Clock size={16} style={{ color: '#f59e0b', animation: 'spin 2s linear infinite' }} />
       case 'error':
-        return <AlertCircle size={16} style={{ color: 'var(--n-danger)' }} />
+        return <AlertCircle size={16} style={{ color: '#d97706' }} />
       default:
-        return <Database size={16} style={{ color: 'var(--n-fg-subtle)' }} />
+        return <Database size={16} style={{ color: '#9ca9a3' }} />
     }
   }
 
@@ -78,17 +78,17 @@ export default function SourcesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--n-fg)' }}>
+        <h1 className="text-3xl font-bold text-gray-900">
           Fuentes de Datos
         </h1>
-        <p style={{ color: 'var(--n-fg-muted)' }} className="text-sm mt-1">
+        <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
           Pipeline de inteligencia con 7 fuentes integradas
         </p>
       </div>
 
       {/* Pipeline Overview */}
-      <div className="n-card p-6">
-        <h2 style={{ color: 'var(--n-fg)' }} className="font-semibold mb-4">
+      <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
+        <h2 className="font-semibold mb-4 text-gray-900">
           Pipeline de Datos
         </h2>
 
@@ -96,13 +96,13 @@ export default function SourcesPage() {
           <div className="space-y-2">
             {sources.map((source, idx) => (
               <div key={source.id}>
-                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--n-surface-2)' }}>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full font-semibold text-xs" style={{ background: 'var(--n-primary)', color: 'white' }}>
+                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#f5f9f7' }}>
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full font-semibold text-xs text-white" style={{ background: '#8fb2aa' }}>
                     {source.pipeline_order}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span style={{ color: 'var(--n-fg)' }} className="font-semibold text-sm">
+                      <span className="font-semibold text-sm text-gray-900">
                         {source.name}
                       </span>
                       {getStatusIcon(source.status)}
@@ -111,22 +111,22 @@ export default function SourcesPage() {
                         style={{
                           background:
                             source.status === 'active'
-                              ? 'var(--n-success-muted)'
+                              ? '#e8f3f0'
                               : source.status === 'syncing'
-                                ? 'var(--n-warning-muted)'
-                                : 'var(--n-danger-muted)',
+                                ? '#fef3e2'
+                                : '#fef3f2',
                           color:
                             source.status === 'active'
-                              ? 'var(--n-success)'
+                              ? '#10b981'
                               : source.status === 'syncing'
-                                ? 'var(--n-warning)'
-                                : 'var(--n-danger)',
+                                ? '#f59e0b'
+                                : '#d97706',
                         }}
                       >
                         {getStatusLabel(source.status)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--n-fg-muted)' }}>
+                    <div className="flex items-center gap-3 text-xs" style={{ color: '#9ca9a3' }}>
                       <span>{getSourceTypeLabel(source.source_type)}</span>
                       <span>•</span>
                       <span>{source.records_count.toLocaleString()} registros</span>
@@ -138,7 +138,7 @@ export default function SourcesPage() {
                       )}
                     </div>
                     {source.error_message && (
-                      <p className="text-xs mt-1" style={{ color: 'var(--n-danger)' }}>
+                      <p className="text-xs mt-1" style={{ color: '#d97706' }}>
                         {source.error_message}
                       </p>
                     )}
@@ -146,7 +146,7 @@ export default function SourcesPage() {
                 </div>
                 {idx < sources.length - 1 && (
                   <div className="flex justify-center py-1">
-                    <div className="w-0.5 h-4" style={{ background: 'var(--n-border)' }} />
+                    <div className="w-0.5 h-4" style={{ background: '#d8e5e2' }} />
                   </div>
                 )}
               </div>
@@ -158,27 +158,27 @@ export default function SourcesPage() {
       {/* Statistics */}
       {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="n-card p-4">
-            <p style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium mb-2">
+          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
+            <p className="text-xs font-medium mb-2" style={{ color: '#555a56' }}>
               FUENTES ACTIVAS
             </p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--n-success)' }}>
+            <p className="text-2xl font-bold" style={{ color: '#10b981' }}>
               {sources.filter((s) => s.status === 'active').length}
             </p>
           </div>
-          <div className="n-card p-4">
-            <p style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium mb-2">
+          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
+            <p className="text-xs font-medium mb-2" style={{ color: '#555a56' }}>
               REGISTROS TOTALES
             </p>
-            <p className="text-2xl font-bold" style={{ color: 'var(--n-primary)' }}>
+            <p className="text-2xl font-bold" style={{ color: '#8fb2aa' }}>
               {sources.reduce((sum, s) => sum + s.records_count, 0).toLocaleString()}
             </p>
           </div>
-          <div className="n-card p-4">
-            <p style={{ color: 'var(--n-fg-subtle)' }} className="text-xs font-medium mb-2">
+          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
+            <p className="text-xs font-medium mb-2" style={{ color: '#555a56' }}>
               ÚLTIMA SINCRONIZACIÓN
             </p>
-            <p className="text-sm" style={{ color: 'var(--n-fg)' }}>
+            <p className="text-sm text-gray-900">
               {sources[0]?.last_sync ? new Date(sources[0].last_sync).toLocaleString('es-CL') : 'N/A'}
             </p>
           </div>
