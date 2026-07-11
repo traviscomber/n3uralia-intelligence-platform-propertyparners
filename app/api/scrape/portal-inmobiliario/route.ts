@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+// Use service role key to bypass RLS for admin scraper operations
+function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 interface Property {
   address: string
@@ -89,7 +97,7 @@ function generateSyntheticProperties(count: number = 75): Property[] {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     console.log('[v0] Starting property generation (synthetic Vitacura data)...')
 
