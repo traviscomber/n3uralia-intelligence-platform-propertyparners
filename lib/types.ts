@@ -92,3 +92,17 @@ export interface ScrapeRun {
   finished_at: string
   created_at: string
 }
+
+export interface ExternalMarketBenchmark {
+  id: string
+  source: string
+  source_url: string
+  neighborhood: string
+  listing_title: string | null
+  offer_count: number
+  low_price_clp: number | null
+  high_price_clp: number | null
+  price_currency: string | null
+  recorded_at: string
+  created_at: string
+}
