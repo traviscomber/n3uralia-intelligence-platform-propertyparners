@@ -7,6 +7,7 @@
    - Market intelligence now exposes computed opportunity insights from `market_data`
    - Valorizador now accepts real properties from `properties` when available
    - Home dashboard now includes an AI-backed summary endpoint and live KPI comparison
+   - The property scraper now aggregates Portal Inmobiliario and TOCTOC listings and records source stats
 
 2. **NEXT IMPLEMENTATION BLOCK:**
    - Persist weekly director reports into a dedicated `weekly_reports` table

@@ -71,6 +71,7 @@ export default function SourcesPage() {
       vector_db: 'Base Vectorial',
       report_engine: 'Motor Reportes',
       ai_engine: 'Motor IA',
+      scraper: 'Scraper',
     }
     return labels[type] || type
   }
