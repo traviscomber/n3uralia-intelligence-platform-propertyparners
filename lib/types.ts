@@ -106,3 +106,31 @@ export interface ExternalMarketBenchmark {
   recorded_at: string
   created_at: string
 }
+
+export interface ScrapeHealthIssue {
+  severity: 'info' | 'warning' | 'critical'
+  title: string
+  detail: string
+}
+
+export interface ScrapeHealthSnapshot {
+  id: number
+  status: 'healthy' | 'warning' | 'critical' | 'unknown'
+  summary: {
+    recentRuns: number
+    averageScraped: number
+    averageInserted: number
+    activeSources: number
+    criticalCount: number
+    warningCount: number
+    successRate: number
+    staleSourceCount: number
+  }
+  latestRun: ScrapeRun | null
+  sources: DataSource[]
+  benchmark: ExternalMarketBenchmark | null
+  issues: ScrapeHealthIssue[]
+  runsWindow: ScrapeRun[]
+  generatedAt: string
+  created_at?: string
+}

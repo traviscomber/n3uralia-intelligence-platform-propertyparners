@@ -25,6 +25,8 @@ interface PropertyComparable {
   days_on_market: number
   created_at: string
   source?: string | null
+  latitude?: number | null
+  longitude?: number | null
 }
 
 interface ExternalBenchmark {
@@ -50,8 +52,10 @@ interface ComparableItem {
   status: string
   source?: string | null
   similarity: number
+  score: number
   price_per_m2: number
   delta_to_estimate_uf: number
+  match_label: string
 }
 
 interface ValorizationResult {
@@ -68,6 +72,30 @@ interface ValorizationResult {
 }
 
 const UF_VALUE = 37500
+
+function sourceQualityWeight(source?: string | null) {
+  switch ((source || '').toLowerCase()) {
+    case 'portal_inmobiliario':
+      return 14
+    case 'icasas_search':
+      return 12
+    case 'yapo_search':
+      return 10
+    case 'toctoc_search':
+      return 9
+    case 'manual':
+      return 6
+    default:
+      return 8
+  }
+}
+
+function daysSince(iso?: string | null) {
+  if (!iso) return Number.POSITIVE_INFINITY
+  const parsed = new Date(iso)
+  if (Number.isNaN(parsed.getTime())) return Number.POSITIVE_INFINITY
+  return (Date.now() - parsed.getTime()) / (1000 * 60 * 60 * 24)
+}
 
 export default function ValorizadorPage() {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
@@ -102,7 +130,7 @@ export default function ValorizadorPage() {
           .order('price_per_sqm_uf', { ascending: false }),
         supabase
           .from('properties')
-          .select('id, address, neighborhood, price_uf, area_m2, bedrooms, bathrooms, status, days_on_market, created_at, source')
+          .select('id, address, neighborhood, price_uf, area_m2, bedrooms, bathrooms, status, days_on_market, created_at, source, latitude, longitude')
           .order('created_at', { ascending: false })
           .limit(250),
         supabase
@@ -131,18 +159,64 @@ export default function ValorizadorPage() {
     [form.neighborhood, neighborhoods],
   )
 
-  function buildComparables(targetNeighborhood: string, targetArea: number, targetBedrooms: number, targetBathrooms: number, estimateUF: number) {
-    const sameNeighborhood = properties.filter((property) => property.neighborhood === targetNeighborhood)
-    const candidatePool = sameNeighborhood.length >= 3 ? sameNeighborhood : properties
+  function buildComparables(
+    targetNeighborhood: string,
+    targetArea: number,
+    targetBedrooms: number,
+    targetBathrooms: number,
+    baseUFm2: number,
+    estimateUF: number,
+  ) {
+    const neighborhoodPool = properties.filter((property) => property.neighborhood === targetNeighborhood)
+    const candidatePool = neighborhoodPool.length >= 3 ? neighborhoodPool : properties
+    const recentCutoffDays = 180
 
     return candidatePool
       .map((property) => {
-        const areaDelta = Math.abs(property.area_m2 - targetArea)
+        const areaDeltaRatio = Math.abs(property.area_m2 - targetArea) / Math.max(targetArea, property.area_m2, 1)
         const bedroomDelta = Math.abs(property.bedrooms - targetBedrooms)
         const bathroomDelta = Math.abs(property.bathrooms - targetBathrooms)
         const pricePerM2 = property.area_m2 > 0 ? property.price_uf / property.area_m2 : property.price_uf
-        const statusPenalty = property.status?.toLowerCase() === 'vendido' ? 2 : 0
-        const similarity = Math.max(0, 100 - areaDelta * 1.15 - bedroomDelta * 8 - bathroomDelta * 4 - statusPenalty)
+        const status = property.status?.toLowerCase() || 'activo'
+        const recencyDays = daysSince(property.created_at)
+        const marketAgePenalty = Number.isFinite(recencyDays) ? Math.min(14, recencyDays / 15) : 6
+        const onMarketPenalty = Math.min(8, (property.days_on_market || 0) / 18)
+        const sourceBonus = sourceQualityWeight(property.source)
+        const neighborhoodBonus = property.neighborhood === targetNeighborhood ? 18 : 0
+        const areaScore = Math.max(0, 28 - areaDeltaRatio * 35)
+        const bedroomScore = Math.max(0, 16 - bedroomDelta * 6)
+        const bathroomScore = Math.max(0, 12 - bathroomDelta * 5)
+        const priceMatchScore = baseUFm2 > 0
+          ? Math.max(0, 18 - (Math.abs(pricePerM2 - baseUFm2) / baseUFm2) * 18)
+          : 10
+        const freshnessScore = Number.isFinite(recencyDays) && recencyDays <= recentCutoffDays
+          ? Math.max(0, 12 - recencyDays / 16)
+          : 2
+        const soldPenalty = status.includes('vend') ? 10 : 0
+        const score = Math.max(
+          0,
+          Math.min(
+            100,
+            neighborhoodBonus
+              + areaScore
+              + bedroomScore
+              + bathroomScore
+              + priceMatchScore
+              + freshnessScore
+              + sourceBonus
+              - marketAgePenalty
+              - onMarketPenalty
+              - soldPenalty,
+          ),
+        )
+        const similarity = score
+        const reasons = [
+          property.neighborhood === targetNeighborhood ? 'same neighborhood' : 'nearby inventory',
+          sourceBonus >= 12 ? 'strong source' : 'market source',
+          areaDeltaRatio <= 0.15 ? 'area match' : 'area variance',
+          bedroomDelta === 0 ? 'bedroom match' : 'bedroom variance',
+          bathroomDelta === 0 ? 'bathroom match' : 'bathroom variance',
+        ]
 
         return {
           id: property.id,
@@ -155,13 +229,15 @@ export default function ValorizadorPage() {
           status: property.status,
           source: property.source,
           similarity,
+          score,
           price_per_m2: pricePerM2,
           delta_to_estimate_uf: property.price_uf - estimateUF,
+          match_label: reasons.slice(0, 3).join(' · '),
         }
       })
-      .filter((item) => item.similarity >= 45)
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 5)
+      .filter((item) => item.score >= 35)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
   }
 
   function calculate() {
@@ -190,34 +266,54 @@ export default function ValorizadorPage() {
     const poolBonus = form.has_pool ? 0.03 : 0
     const floorFactor = floorNum <= 1 ? 0.95 : floorNum <= 3 ? 0.98 : floorNum <= 8 ? 1.02 : 1.01
 
-    const benchmarkUF = externalBenchmark?.low_price_clp && externalBenchmark?.high_price_clp
+    const benchmarkTotalUF = externalBenchmark?.low_price_clp && externalBenchmark?.high_price_clp
       ? ((externalBenchmark.low_price_clp + externalBenchmark.high_price_clp) / 2) / UF_VALUE
       : null
 
-    const adjustedUFm2 = (benchmarkUF && benchmarkUF > 0
-      ? basePriceUFm2 * 0.7 + benchmarkUF / Math.max(area, 1) * 0.3
-      : basePriceUFm2)
+    const baselineUF = basePriceUFm2 * area
+    const initialUF = baselineUF
       * ageFactor
       * conditionFactor[form.condition]
       * bedroomFactor
       * floorFactor
       * (1 + parkingBonus + storageBonus + poolBonus)
 
-    const totalUF = adjustedUFm2 * area
-    const comparableMatches = buildComparables(nb.name, area, bedrooms, bathrooms, totalUF)
+    const comparableMatches = buildComparables(nb.name, area, bedrooms, bathrooms, basePriceUFm2, initialUF)
+    const weightedComparableUF = comparableMatches.length
+      ? comparableMatches.reduce((sum, item) => sum + item.price_uf * item.score, 0) / comparableMatches.reduce((sum, item) => sum + item.score, 0)
+      : null
+    const topComparableScores = comparableMatches.slice(0, 3)
+    const comparableLow = topComparableScores.length
+      ? Math.min(...topComparableScores.map((item) => item.price_uf))
+      : Math.round(initialUF * 0.92)
+    const comparableHigh = topComparableScores.length
+      ? Math.max(...topComparableScores.map((item) => item.price_uf))
+      : Math.round(initialUF * 1.08)
 
-    const baseConf = 70
-    const absConf = nb.absorption_rate > 0.85 ? 12 : nb.absorption_rate > 0.75 ? 8 : 4
+    const blendedUF = (() => {
+      const baselineWeight = comparableMatches.length ? 0.45 : 0.65
+      const comparableWeight = weightedComparableUF ? 0.35 : 0
+      const benchmarkWeight = benchmarkTotalUF ? 0.12 : 0
+      const fallbackWeight = Math.max(0, 1 - baselineWeight - comparableWeight - benchmarkWeight)
+      const comparableAnchor = weightedComparableUF || initialUF
+      const benchmarkAnchor = benchmarkTotalUF || initialUF
+      return (
+        initialUF * baselineWeight +
+        comparableAnchor * comparableWeight +
+        benchmarkAnchor * benchmarkWeight +
+        baselineUF * fallbackWeight
+      )
+    })()
+
+    const totalUF = Math.round(blendedUF)
+    const adjustedUFm2 = totalUF / Math.max(area, 1)
+
+    const baseConf = 68
+    const absConf = nb.absorption_rate > 0.85 ? 14 : nb.absorption_rate > 0.75 ? 10 : 5
     const invConf = nb.inventory_count > 30 ? 10 : nb.inventory_count > 15 ? 6 : 2
-    const sourceConf = externalBenchmark ? 5 : 0
-    const confidence = Math.min(96, baseConf + absConf + invConf + sourceConf)
-
-    const lowComparable = comparableMatches.length
-      ? Math.min(...comparableMatches.map((item) => item.price_uf))
-      : Math.round(totalUF * 0.92)
-    const highComparable = comparableMatches.length
-      ? Math.max(...comparableMatches.map((item) => item.price_uf))
-      : Math.round(totalUF * 1.08)
+    const sourceConf = externalBenchmark ? 6 : 0
+    const compConf = comparableMatches.length ? Math.min(12, Math.round(comparableMatches[0].score / 8)) : 0
+    const confidence = Math.min(97, baseConf + absConf + invConf + sourceConf + compConf)
 
     setTimeout(() => {
       setResult({
@@ -228,9 +324,9 @@ export default function ValorizadorPage() {
         comp_neighborhood: nb.name,
         market_velocity: nb.velocity_days,
         market_absorption: Math.round(nb.absorption_rate * 100),
-        comparable_properties: nb.inventory_count,
-        comparable_source: comparableMatches.length ? 'properties' : externalBenchmark ? 'external_benchmark' : 'neighborhood_index',
-        comparable_range_uf: `${lowComparable.toLocaleString('es-CL')} - ${highComparable.toLocaleString('es-CL')}`,
+        comparable_properties: comparableMatches.length,
+        comparable_source: comparableMatches.length ? 'weighted_properties' : externalBenchmark ? 'external_benchmark' : 'neighborhood_index',
+        comparable_range_uf: `${comparableLow.toLocaleString('es-CL')} - ${comparableHigh.toLocaleString('es-CL')}`,
       })
       setComparables(comparableMatches)
       setCalculating(false)
@@ -462,10 +558,11 @@ export default function ValorizadorPage() {
                             <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
                               {item.neighborhood} · {item.bedrooms}D/{item.bathrooms}B · {item.area_m2} m² · {item.source || 'properties'}
                             </p>
+                            <p className="text-xs mt-1" style={{ color: '#555a56' }}>{item.match_label}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-semibold text-gray-900">{item.price_uf.toLocaleString('es-CL')} UF</p>
-                            <p className="text-xs" style={{ color: '#9ca9a3' }}>Similarity {item.similarity.toFixed(0)}%</p>
+                            <p className="text-xs" style={{ color: '#9ca9a3' }}>Score {item.score.toFixed(0)}% · Similarity {item.similarity.toFixed(0)}%</p>
                           </div>
                         </div>
                       </div>

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import * as cheerio from 'cheerio'
 import puppeteer from 'puppeteer'
+import { persistScrapeHealthSnapshot } from '@/lib/scrape-health'
 
 type ScrapedProperty = {
   address: string
@@ -48,6 +50,7 @@ const SEARCH_URLS = [
 
 const TOCTOC_SEARCH_URL = 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
 const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
+const YAPO_SEARCH_URL = 'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.2-2'
 
 const SECTORS = [
   { keys: ['nueva costanera', 'costanera norte'], lat: -33.3885, lng: -70.5820, name: 'Nueva Costanera' },
@@ -365,7 +368,61 @@ async function scrapeIcasasListings(limit = 20) {
   return results
 }
 
-async function syncSourceStats(source: string, status: 'active' | 'error', recordsCount: number, errorMessage: string | null) {
+async function scrapeYapoListings(limit = 20) {
+  const response = await fetch(YAPO_SEARCH_URL, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Accept: 'text/html,application/xhtml+xml',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Yapo search failed (${response.status})`)
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+  const results: ScrapedProperty[] = []
+
+  $('.d3-ad-tile').each((_, element) => {
+    if (results.length >= limit) return false
+
+    const tile = $(element)
+    const title = tile.find('.d3-ad-tile__title').text().trim()
+    const description = tile.find('.d3-ad-tile__short-description').text().trim()
+    const location = tile.find('.d3-ad-tile__location').text().replace(/\s+/g, ' ').trim()
+    const priceText = tile.find('.d3-ad-tile__price').text().replace(/\s+/g, ' ').trim()
+    const href = tile.find('a.d3-ad-tile__description').attr('href')
+      || tile.find('.d3-ad-tile__cover a').last().attr('href')
+      || ''
+    const details = tile.find('.d3-ad-tile__details-item').map((__, node) => $(node).text().replace(/\s+/g, ' ').trim()).get()
+    const priceUf = parseUF(priceText)
+    const areaMatch = details[0]?.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
+    const bedroomsMatch = details[1]
+    const bathroomsMatch = details[3]
+    const sector = sectorFromText(`${title} ${description} ${location}`, results.length)
+
+    if (!priceUf || priceUf < 1000 || priceUf > 200000) return
+
+    results.push({
+      address: `${title || 'Yapo listing'} - ${location || sector.name}`.slice(0, 200),
+      price_uf: priceUf,
+      area_m2: areaMatch ? Math.max(25, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (results.length % 4) * 10, 500)),
+      bedrooms: Math.max(1, Math.min(Number.parseInt(bedroomsMatch || '2', 10) || 2, 6)),
+      bathrooms: Math.max(1, Math.min(Number.parseInt(bathroomsMatch || '2', 10) || 2, 6)),
+      neighborhood: sector.name,
+      lat: sector.lat + (Math.random() - 0.5) * 0.0012,
+      lng: sector.lng + (Math.random() - 0.5) * 0.0012,
+      days_on_market: Math.floor(Math.random() * 80) + 3,
+      source: 'yapo_search',
+      external_id: href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`),
+    })
+  })
+
+  return results
+}
+
+async function syncSourceStats(source: string, pipelineOrder: number, status: 'active' | 'error', recordsCount: number, errorMessage: string | null) {
   try {
     const supabase = getSupabaseClient()
     await supabase.from('data_sources').upsert(
@@ -377,7 +434,7 @@ async function syncSourceStats(source: string, status: 'active' | 'error', recor
           records_count: recordsCount,
           last_sync: new Date().toISOString(),
           error_message: errorMessage,
-          pipeline_order: source === 'Portal Inmobiliario' ? 1 : 2,
+          pipeline_order: pipelineOrder,
         },
       ],
       { onConflict: 'name' },
@@ -456,7 +513,7 @@ export async function POST(request: Request) {
       const { inserted, errors } = await insertProperties(uniquePortal)
       allRows.push(...uniquePortal)
       runs.push({ source: 'portal_inmobiliario', scraped: uniquePortal.length, inserted, skipped: uniquePortal.length - inserted, errors })
-      await syncSourceStats('Portal Inmobiliario', errors.length ? 'error' : 'active', uniquePortal.length, errors[0] || null)
+      await syncSourceStats('Portal Inmobiliario', 1, errors.length ? 'error' : 'active', uniquePortal.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'toctoc') {
@@ -465,7 +522,7 @@ export async function POST(request: Request) {
       const { inserted, errors } = await insertProperties(uniqueToctoc)
       allRows.push(...uniqueToctoc)
       runs.push({ source: 'toctoc_search', scraped: uniqueToctoc.length, inserted, skipped: uniqueToctoc.length - inserted, errors })
-      await syncSourceStats('TOCTOC Search', errors.length ? 'error' : 'active', uniqueToctoc.length, errors[0] || null)
+      await syncSourceStats('TOCTOC Search', 2, errors.length ? 'error' : 'active', uniqueToctoc.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'icasas') {
@@ -474,7 +531,16 @@ export async function POST(request: Request) {
       const { inserted, errors } = await insertProperties(uniqueIcasas)
       allRows.push(...uniqueIcasas)
       runs.push({ source: 'icasas_search', scraped: uniqueIcasas.length, inserted, skipped: uniqueIcasas.length - inserted, errors })
-      await syncSourceStats('icasas.cl', errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+      await syncSourceStats('icasas.cl', 3, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+    }
+
+    if (source === 'all' || source === 'yapo') {
+      const yapoRows = await scrapeYapoListings(20)
+      const uniqueYapo = dedupeProperties(yapoRows)
+      const { inserted, errors } = await insertProperties(uniqueYapo)
+      allRows.push(...uniqueYapo)
+      runs.push({ source: 'yapo_search', scraped: uniqueYapo.length, inserted, skipped: uniqueYapo.length - inserted, errors })
+      await syncSourceStats('Yapo Search', 4, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
     }
 
     const totalScraped = allRows.length
@@ -513,6 +579,7 @@ export async function POST(request: Request) {
       started_at: startedAt,
       finished_at: new Date().toISOString(),
     })
+    await persistScrapeHealthSnapshot()
 
     return NextResponse.json({
       success: true,
@@ -526,7 +593,7 @@ export async function POST(request: Request) {
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Scraper failed'
-    await syncSourceStats('Portal Inmobiliario', 'error', 0, message)
+    await syncSourceStats('Portal Inmobiliario', 1, 'error', 0, message)
     await logScrapeRun({
       source,
       status: 'error',
@@ -538,6 +605,7 @@ export async function POST(request: Request) {
       started_at: startedAt,
       finished_at: new Date().toISOString(),
     })
+    await persistScrapeHealthSnapshot()
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

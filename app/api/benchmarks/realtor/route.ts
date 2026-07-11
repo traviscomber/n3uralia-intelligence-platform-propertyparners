@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { persistScrapeHealthSnapshot } from '@/lib/scrape-health'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,7 +105,7 @@ async function persistBenchmark(snapshot: RealtorSnapshot) {
         records_count: snapshot.offer_count,
         last_sync: snapshot.recorded_at,
         error_message: null,
-        pipeline_order: 4,
+        pipeline_order: 5,
       },
     ],
     { onConflict: 'name' },
@@ -115,6 +116,7 @@ export async function GET() {
   try {
     const snapshot = await fetchRealtorSnapshot()
     await persistBenchmark(snapshot)
+    await persistScrapeHealthSnapshot()
 
     return NextResponse.json({
       benchmark: snapshot,

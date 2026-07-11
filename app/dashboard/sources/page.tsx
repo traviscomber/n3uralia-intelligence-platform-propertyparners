@@ -44,6 +44,16 @@ interface ScrapeHealth {
     warningCount: number
   }
   issues: ScrapeHealthIssue[]
+  history?: Array<{
+    id: number
+    status: string
+    generated_at: string
+    summary: {
+      successRate?: number
+      criticalCount?: number
+      warningCount?: number
+    }
+  }>
 }
 
 export default function SourcesPage() {
@@ -205,6 +215,24 @@ export default function SourcesPage() {
                   <p className="text-xs mt-1" style={{ color: '#555a56' }}>{issue.detail}</p>
                 </div>
               ))}
+            </div>
+          )}
+          {health.history && health.history.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#555a56' }}>Ultimos snapshots</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                {health.history.slice(0, 3).map((snapshot) => (
+                  <div key={snapshot.id} className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                    <p className="text-sm font-semibold text-gray-900 capitalize">{snapshot.status}</p>
+                    <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+                      {new Date(snapshot.generated_at).toLocaleString('es-CL')}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: '#555a56' }}>
+                      {snapshot.summary?.successRate ?? 0}% exito · {snapshot.summary?.warningCount ?? 0} alertas · {snapshot.summary?.criticalCount ?? 0} criticas
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
