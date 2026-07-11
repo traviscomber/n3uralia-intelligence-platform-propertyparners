@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 )
 
-// Fetch all features from ArcGIS paged by offset
+// Fetch all features from ArcGIS paged — uses f=json (Esri native, geojson not supported)
 async function fetchAllFeatures() {
   const features: any[] = []
   let offset = 0
@@ -18,30 +18,27 @@ async function fetchAllFeatures() {
   while (true) {
     const params = new URLSearchParams({
       where: '1=1',
-      outFields: 'ZONA,SUBZONA,USO_SUELO,SUPERFICIE',
-      geometryType: 'esriGeometryPolygon',
-      spatialRel: 'esriSpatialRelIntersects',
-      // Bounding box: Vitacura commune approx
-      inSR: '4326',
+      outFields: 'ZONA,NOMBRE,UPREF,SECTOR,SHAPE_Area',
       outSR: '4326',
-      f: 'geojson',
+      f: 'json',               // ← Esri JSON (this server doesn't support geojson)
       resultOffset: String(offset),
       resultRecordCount: String(batchSize),
       returnGeometry: 'true',
     })
 
     const res = await fetch(`${ARCGIS_URL}?${params}`, {
-      headers: { 'Accept': 'application/json' },
+      headers: { Accept: 'application/json' },
       next: { revalidate: 0 },
     })
 
     if (!res.ok) throw new Error(`ArcGIS HTTP ${res.status}`)
 
     const json = await res.json()
+    if (json.error) throw new Error(`ArcGIS error: ${json.error.message}`)
+
     const batch = json.features || []
     features.push(...batch)
 
-    // Stop if we got fewer results than we asked for (last page)
     if (batch.length < batchSize) break
     offset += batchSize
   }
@@ -49,30 +46,20 @@ async function fetchAllFeatures() {
   return features
 }
 
-// Convert ArcGIS GeoJSON geometry to WKT POLYGON
-function geojsonToWkt(geometry: any): string | null {
-  if (!geometry) return null
-  const type = geometry.type
-  const coords = geometry.coordinates
+// Convert Esri rings geometry → WKT POLYGON / MULTIPOLYGON
+function esriToWkt(geometry: any): string | null {
+  if (!geometry || !geometry.rings || !geometry.rings.length) return null
 
-  if (type === 'Polygon') {
-    const rings = coords.map((ring: number[][]) =>
-      ring.map((pt: number[]) => `${pt[0]} ${pt[1]}`).join(',')
-    )
-    return `POLYGON(${rings.map((r: string) => `(${r})`).join(',')})`
+  const rings: string[] = geometry.rings.map((ring: number[][]) =>
+    '(' + ring.map((pt: number[]) => `${pt[0]} ${pt[1]}`).join(',') + ')'
+  )
+
+  if (rings.length === 1) {
+    return `POLYGON(${rings[0]})`
   }
 
-  if (type === 'MultiPolygon') {
-    const polys = coords.map((poly: number[][][]) => {
-      const rings = poly.map((ring: number[][]) =>
-        ring.map((pt: number[]) => `${pt[0]} ${pt[1]}`).join(',')
-      )
-      return `(${rings.map((r: string) => `(${r})`).join(',')})`
-    })
-    return `MULTIPOLYGON(${polys.join(',')})`
-  }
-
-  return null
+  // Multiple rings → use first as outer, rest as inner (holes)
+  return `POLYGON(${rings.join(',')})`
 }
 
 export async function POST() {
@@ -80,16 +67,19 @@ export async function POST() {
     const features = await fetchAllFeatures()
 
     if (features.length === 0) {
-      return NextResponse.json({ ok: false, message: 'No features returned from ArcGIS' }, { status: 502 })
+      return NextResponse.json(
+        { ok: false, message: 'No features returned from ArcGIS' },
+        { status: 502 },
+      )
     }
 
-    let inserted = 0
+    let synced = 0
     let skipped = 0
     const errors: string[] = []
 
     for (const feature of features) {
-      const props = feature.properties || {}
-      const wkt = geojsonToWkt(feature.geometry)
+      const props = feature.attributes || {}
+      const wkt = esriToWkt(feature.geometry)
 
       if (!wkt || !props.ZONA) {
         skipped++
@@ -97,10 +87,10 @@ export async function POST() {
       }
 
       const { error } = await supabase.rpc('upsert_prc_zone', {
-        p_zona: props.ZONA,
-        p_subzona: props.SUBZONA || null,
-        p_uso_suelo: props.USO_SUELO || null,
-        p_superficie: props.SUPERFICIE || null,
+        p_zona: String(props.ZONA),
+        p_subzona: props.NOMBRE ? String(props.NOMBRE).slice(0, 100) : null,
+        p_uso_suelo: props.UPREF ? String(props.UPREF) : null,
+        p_superficie: props.SHAPE_Area ? Number(props.SHAPE_Area) : null,
         p_geometry_wkt: wkt,
       })
 
@@ -108,14 +98,17 @@ export async function POST() {
         errors.push(`${props.ZONA}: ${error.message}`)
         skipped++
       } else {
-        inserted++
+        synced++
       }
     }
+
+    // After sync: enrich neighborhood zona_prc from official PRC polygons
+    await supabase.rpc('enrich_neighborhoods_zona_prc')
 
     return NextResponse.json({
       ok: true,
       total: features.length,
-      inserted,
+      synced,
       skipped,
       errors: errors.slice(0, 10),
     })
@@ -124,7 +117,7 @@ export async function POST() {
   }
 }
 
-// GET: preview — how many features are available in ArcGIS
+// GET: preview — how many PRC features are available in ArcGIS
 export async function GET() {
   try {
     const params = new URLSearchParams({
