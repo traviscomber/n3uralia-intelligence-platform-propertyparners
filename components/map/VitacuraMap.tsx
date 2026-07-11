@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Neighborhood {
   id: number
@@ -12,7 +12,7 @@ interface Neighborhood {
   inventory_count: number
   zona_prc: string
   tipo: string
-  geometry?: any
+  geometry?: { type: string; coordinates: number[][][] }
 }
 
 interface PrcZone {
@@ -20,7 +20,7 @@ interface PrcZone {
   zona: string
   subzona: string
   uso_suelo: string
-  geometry?: any
+  geometry?: { type: string; coordinates: number[][][] }
 }
 
 interface Props {
@@ -39,37 +39,40 @@ const TIPO_COLOR: Record<string, string> = {
 }
 
 export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelect, showPrc }: Props) {
-  const mapRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const layersRef = useRef<any[]>([])
+  const mapRef       = useRef<any>(null)
+  const LRef         = useRef<any>(null)
+  const layersRef    = useRef<any[]>([])
   const prcLayersRef = useRef<any[]>([])
+  const [mapReady, setMapReady] = useState(false)
 
+  // ── Init map once ──────────────────────────────────────────────
   useEffect(() => {
-    if (!containerRef.current) return
-    if (mapRef.current) return // already initialized
+    if (!containerRef.current || mapRef.current) return
 
-    // Load Leaflet CSS
+    // Inject Leaflet CSS
     if (!document.getElementById('leaflet-css')) {
       const link = document.createElement('link')
-      link.id = 'leaflet-css'
-      link.rel = 'stylesheet'
+      link.id   = 'leaflet-css'
+      link.rel  = 'stylesheet'
       link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
       document.head.appendChild(link)
     }
 
-    // Dynamically import leaflet (SSR safe)
     import('leaflet').then((L) => {
-      // Fix default icon paths
+      if (mapRef.current) return // guard against double-init in React strict mode
+
+      // Fix broken default icon URLs in webpack builds
       delete (L.Icon.Default.prototype as any)._getIconUrl
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       })
 
       const map = L.map(containerRef.current!, {
-        center: [-33.395, -70.593],
-        zoom: 14,
+        center:      [-33.395, -70.593],
+        zoom:        14,
         zoomControl: true,
       })
 
@@ -79,93 +82,127 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
       }).addTo(map)
 
       mapRef.current = map
+      LRef.current   = L
+      setMapReady(true)
     })
 
     return () => {
       if (mapRef.current) {
         mapRef.current.remove()
         mapRef.current = null
+        LRef.current   = null
       }
     }
   }, [])
 
-  // Draw neighborhood polygons
+  // ── Draw neighborhood polygons whenever map is ready or data changes ──
   useEffect(() => {
-    if (!mapRef.current || !neighborhoods.length) return
-    import('leaflet').then((L) => {
-      // Clear existing layers
-      layersRef.current.forEach(l => l.remove())
-      layersRef.current = []
+    const map = mapRef.current
+    const L   = LRef.current
+    if (!map || !L || !neighborhoods.length) return
 
-      const allBounds: any[] = []
+    layersRef.current.forEach(l => l.remove())
+    layersRef.current = []
 
-      neighborhoods.forEach((n) => {
-        if (!n.geometry) return
-        const color = TIPO_COLOR[n.tipo] || '#8fb2aa'
-        const isSelected = n.barrio_id === selected
-        const layer = L.geoJSON(n.geometry, {
-          style: {
-            color: isSelected ? '#1a3a35' : color,
-            weight: isSelected ? 2.5 : 1.5,
-            fillColor: color,
-            fillOpacity: isSelected ? 0.55 : 0.35,
-          },
-        })
-        .bindTooltip(`
-          <div style="font-family:sans-serif;min-width:160px">
-            <strong style="font-size:13px">${n.name}</strong><br/>
-            <span style="color:#666;font-size:11px">Zona ${n.zona_prc ?? '—'} · ${(n.tipo ?? '').replace(/_/g,' ')}</span><br/>
-            <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px">
-              <span>UF/m²: <strong>${n.price_per_sqm_uf?.toFixed(1) ?? '—'}</strong></span>
-              <span>Vel: <strong>${n.velocity_days ?? '—'}d</strong></span>
-              <span>Abs: <strong>${n.absorption_rate != null ? (n.absorption_rate*100).toFixed(0) : '—'}%</strong></span>
-              <span>Inv: <strong>${n.inventory_count ?? '—'}</strong></span>
-            </div>
+    const allBounds: any[] = []
+
+    neighborhoods.forEach((n) => {
+      if (!n.geometry) return
+      const color      = TIPO_COLOR[n.tipo] || '#8fb2aa'
+      const isSelected = n.barrio_id === selected
+
+      // Wrap raw geometry as a GeoJSON Feature so L.geoJSON handles it reliably
+      const feature = { type: 'Feature', geometry: n.geometry, properties: {} }
+
+      const layer = L.geoJSON(feature, {
+        style: {
+          color:       isSelected ? '#1a3a35' : '#fff',
+          weight:      isSelected ? 3 : 1,
+          fillColor:   color,
+          fillOpacity: isSelected ? 0.65 : 0.45,
+        },
+      })
+      .bindTooltip(`
+        <div style="font-family:sans-serif;min-width:160px">
+          <strong style="font-size:13px">${n.name}</strong><br/>
+          <span style="color:#666;font-size:11px">Zona ${n.zona_prc ?? '—'} · ${(n.tipo ?? '').replace(/_/g,' ')}</span>
+          <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px">
+            <span>UF/m²: <strong>${n.price_per_sqm_uf?.toFixed(1) ?? '—'}</strong></span>
+            <span>Vel: <strong>${n.velocity_days ?? '—'}d</strong></span>
+            <span>Abs: <strong>${n.absorption_rate != null ? (n.absorption_rate * 100).toFixed(0) : '—'}%</strong></span>
+            <span>Inv: <strong>${n.inventory_count ?? '—'}</strong></span>
           </div>
-        `, { sticky: true })
-        .on('click', () => onSelect(n.barrio_id === selected ? null : n.barrio_id))
-        .addTo(mapRef.current)
+        </div>
+      `, { sticky: true })
+      .on('click', () => onSelect(n.barrio_id === selected ? null : n.barrio_id))
+      .addTo(map)
 
-        try { allBounds.push(layer.getBounds()) } catch {}
-        layersRef.current.push(layer)
-      })
-
-      // Fit map to all polygon bounds on first draw
-      if (allBounds.length > 0) {
-        const combined = allBounds.reduce((acc, b) => acc.extend(b))
-        mapRef.current.fitBounds(combined, { padding: [24, 24] })
-      }
+      try { allBounds.push(layer.getBounds()) } catch {}
+      layersRef.current.push(layer)
     })
-  }, [neighborhoods, selected])
 
-  // Draw PRC zones overlay
+    // Zoom to fit all polygons on first draw
+    if (allBounds.length > 0) {
+      const combined = allBounds.reduce((acc, b) => acc.extend(b))
+      map.fitBounds(combined, { padding: [32, 32] })
+    }
+  }, [mapReady, neighborhoods, selected])
+
+  // ── Draw PRC overlay ──────────────────────────────────────────
   useEffect(() => {
-    if (!mapRef.current) return
-    import('leaflet').then((L) => {
-      prcLayersRef.current.forEach(l => l.remove())
-      prcLayersRef.current = []
+    const map = mapRef.current
+    const L   = LRef.current
+    if (!map || !L) return
 
-      if (!showPrc || !prcZones.length) return
+    prcLayersRef.current.forEach(l => l.remove())
+    prcLayersRef.current = []
 
-      prcZones.forEach((z) => {
-        if (!z.geometry) return
-        const layer = L.geoJSON(z.geometry, {
-          style: {
-            color: '#7c3aed',
-            weight: 1,
-            fillColor: '#7c3aed',
-            fillOpacity: 0.08,
-            dashArray: '4 4',
-          },
-        }).bindTooltip(`
-          <strong>${z.zona}</strong>${z.subzona ? ` / ${z.subzona}` : ''}<br/>
-          <span style="font-size:11px;color:#666">${z.uso_suelo || ''}</span>
-        `, { sticky: true })
-        .addTo(mapRef.current)
-        prcLayersRef.current.push(layer)
+    if (!showPrc || !prcZones.length) return
+
+    prcZones.forEach((z) => {
+      if (!z.geometry) return
+      const feature = { type: 'Feature', geometry: z.geometry, properties: {} }
+      const layer = L.geoJSON(feature, {
+        style: {
+          color:       '#7c3aed',
+          weight:      1.5,
+          fillColor:   '#7c3aed',
+          fillOpacity: 0.08,
+          dashArray:   '5 5',
+        },
       })
-    })
-  }, [prcZones, showPrc])
+      .bindTooltip(`
+        <strong>${z.zona}</strong>${z.subzona ? ` / ${z.subzona}` : ''}<br/>
+        <span style="font-size:11px;color:#666">${z.uso_suelo || ''}</span>
+      `, { sticky: true })
+      .addTo(map)
 
-  return <div ref={containerRef} style={{ height: '100%', width: '100%', borderRadius: '8px', zIndex: 0 }} />
+      prcLayersRef.current.push(layer)
+    })
+  }, [mapReady, prcZones, showPrc])
+
+  return (
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+      <div ref={containerRef} style={{ height: '100%', width: '100%', borderRadius: '8px', zIndex: 0 }} />
+      {/* Legend */}
+      <div style={{
+        position: 'absolute', bottom: 24, right: 12, zIndex: 999,
+        background: 'rgba(255,255,255,0.92)', borderRadius: 8, padding: '8px 12px',
+        fontSize: 11, boxShadow: '0 1px 6px rgba(0,0,0,0.12)', pointerEvents: 'none',
+      }}>
+        {Object.entries(TIPO_COLOR).map(([tipo, color]) => (
+          <div key={tipo} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 2, background: color, display: 'inline-block' }} />
+            <span style={{ color: '#555' }}>{tipo.replace(/_/g, ' ')}</span>
+          </div>
+        ))}
+        {showPrc && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, borderTop: '1px solid #eee', paddingTop: 4 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 2, background: '#7c3aed', display: 'inline-block', opacity: 0.4 }} />
+            <span style={{ color: '#555' }}>Zona PRC</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
