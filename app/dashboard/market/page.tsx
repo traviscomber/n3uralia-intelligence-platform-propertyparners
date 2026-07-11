@@ -1,12 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ScatterChart, Scatter, ZAxis, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import { TrendingUp, TrendingDown, Minus, MapPin, Clock, Package } from 'lucide-react'
+
+const VitacuraMap = dynamic(() => import('@/components/map/VitacuraMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full text-sm" style={{ color: '#9ca9a3' }}>
+      Cargando mapa...
+    </div>
+  ),
+})
 
 interface Neighborhood {
   id: number
@@ -19,6 +28,15 @@ interface Neighborhood {
   inventory_count: number
   zona_prc: string
   tipo: string
+  geometry?: { type: string; coordinates: number[][][] }
+}
+
+interface PrcZone {
+  id: number
+  zona: string
+  subzona: string
+  uso_suelo: string
+  geometry?: { type: string; coordinates: number[][][] }
 }
 
 interface MarketRow {
@@ -52,24 +70,60 @@ function TrendBadge({ value }: { value: number }) {
 
 export default function MarketPage() {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
+  const [prcZones, setPrcZones] = useState<PrcZone[]>([])
   const [marketRows, setMarketRows] = useState<MarketRow[]>([])
   const [selected, setSelected] = useState<string | null>(null)
+  const [showPrc, setShowPrc] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'prices' | 'velocity'>('overview')
+  const [activeTab, setActiveTab] = useState<'mapa' | 'overview' | 'prices' | 'velocity'>('mapa')
+
+  const supabase = createClient()
+
+  const loadNeighborhoods = useCallback(async () => {
+    const [nRes, mRes] = await Promise.all([
+      supabase.rpc('get_neighborhoods_geojson'),
+      supabase.from('market_data').select('neighborhood,avg_price_uf,avg_price_m2_uf,inventory_count,absorption_rate,avg_days_on_market').order('avg_price_m2_uf', { ascending: false }),
+    ])
+    setNeighborhoods((nRes.data as Neighborhood[]) || [])
+    setMarketRows(mRes.data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { loadNeighborhoods() }, [loadNeighborhoods])
+
+  const loadPrcZones = useCallback(async () => {
+    const res = await fetch('/api/prc/zones')
+    const json = await res.json()
+    if (json.zones) setPrcZones(json.zones as PrcZone[])
+  }, [])
 
   useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const [nRes, mRes] = await Promise.all([
-        supabase.from('neighborhoods').select('id,name,barrio_id,sector_name,velocity_days,price_per_sqm_uf,absorption_rate,inventory_count,zona_prc,tipo').not('barrio_id', 'is', null).order('absorption_rate', { ascending: false }),
-        supabase.from('market_data').select('neighborhood,avg_price_uf,avg_price_m2_uf,inventory_count,absorption_rate,avg_days_on_market').order('avg_price_m2_uf', { ascending: false }),
-      ])
-      setNeighborhoods(nRes.data || [])
-      setMarketRows(mRes.data || [])
-      setLoading(false)
+    if (showPrc && prcZones.length === 0) loadPrcZones()
+  }, [showPrc, prcZones.length, loadPrcZones])
+
+  const handleSyncPrc = async () => {
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/prc/sync', { method: 'POST' })
+      const json = await res.json()
+      if (res.ok) {
+        setSyncMsg(`Sync completado: ${json.synced ?? 0} zonas PRC importadas desde ArcGIS.`)
+        await loadPrcZones()
+        await supabase.rpc('enrich_neighborhoods_zona_prc')
+        await loadNeighborhoods()
+        setShowPrc(true)
+      } else {
+        setSyncMsg(`Error: ${json.error || 'Fallo al sincronizar PRC'}`)
+      }
+    } catch {
+      setSyncMsg('Error de red al contactar ArcGIS')
+    } finally {
+      setSyncing(false)
     }
-    load()
-  }, [])
+  }
 
   const selectedNeighborhood = neighborhoods.find(n => n.barrio_id === selected)
   const selectedMarket = marketRows.find(m => m.neighborhood === selectedNeighborhood?.name)
@@ -105,10 +159,31 @@ export default function MarketPage() {
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
-        <h1 className="text-3xl font-bold text-gray-900">Market Intelligence</h1>
-        <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Vitacura — {neighborhoods.length} barrios activos · datos en tiempo real</p>
+      <div className="pb-5 flex items-start justify-between" style={{ borderBottom: '1px solid #d8e5e2' }}>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Market Intelligence</h1>
+          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Vitacura — {neighborhoods.length} barrios activos · datos en tiempo real</p>
+        </div>
+        <div className="flex items-center gap-3 mt-1">
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: '#555a56' }}>
+            <input type="checkbox" checked={showPrc} onChange={e => setShowPrc(e.target.checked)} className="accent-green-600" />
+            Overlay PRC
+          </label>
+          <button
+            onClick={handleSyncPrc}
+            disabled={syncing}
+            className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
+            style={{ background: '#8fb2aa', color: '#fff' }}
+          >
+            {syncing ? 'Sincronizando...' : 'Sync PRC ArcGIS'}
+          </button>
+        </div>
       </div>
+      {syncMsg && (
+        <div className="text-sm px-4 py-2 rounded-md" style={{ background: syncMsg.startsWith('Error') ? '#fef2f2' : '#f0fdf4', color: syncMsg.startsWith('Error') ? '#991b1b' : '#166534' }}>
+          {syncMsg}
+        </div>
+      )}
 
       {/* KPI Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -134,7 +209,7 @@ export default function MarketPage() {
 
       {/* Tab Nav */}
       <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-        {(['overview', 'prices', 'velocity'] as const).map(tab => (
+        {(['mapa', 'overview', 'prices', 'velocity'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -144,10 +219,23 @@ export default function MarketPage() {
               color: activeTab === tab ? '#ffffff' : '#9ca9a3',
             }}
           >
-            {tab === 'overview' ? 'Tabla General' : tab === 'prices' ? 'Precios' : 'Velocidad'}
+            {tab === 'mapa' ? 'Mapa' : tab === 'overview' ? 'Tabla General' : tab === 'prices' ? 'Precios' : 'Velocidad'}
           </button>
         ))}
       </div>
+
+      {/* Tab: Mapa */}
+      {activeTab === 'mapa' && (
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: '1px solid #d8e5e2', height: '520px' }}>
+          <VitacuraMap
+            neighborhoods={neighborhoods as Parameters<typeof VitacuraMap>[0]['neighborhoods']}
+            prcZones={prcZones as Parameters<typeof VitacuraMap>[0]['prcZones']}
+            selected={selected}
+            onSelect={setSelected}
+            showPrc={showPrc}
+          />
+        </div>
+      )}
 
       {/* Tab: Overview Table */}
       {activeTab === 'overview' && (

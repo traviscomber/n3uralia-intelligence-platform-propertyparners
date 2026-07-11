@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Search, X, Home, CheckCircle, AlertCircle } from 'lucide-react'
+import { Plus, Search, X, Home, CheckCircle, AlertCircle, Download } from 'lucide-react'
 
 interface Property {
   id: string
@@ -48,6 +48,9 @@ export default function PropertiesPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<typeof EMPTY_FORM>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [tagging, setTagging] = useState(false)
+  const [tagResult, setTagResult] = useState<{ barrio_nombre: string; zona_prc: string } | null>(null)
+  const [scraping, setScraping] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -57,6 +60,24 @@ export default function PropertiesPage() {
   useEffect(() => {
     loadProperties()
   }, [])
+
+  async function autoTagFromCoords(lat: string, lng: string) {
+    if (!lat || !lng) return
+    const latN = parseFloat(lat)
+    const lngN = parseFloat(lng)
+    if (isNaN(latN) || isNaN(lngN)) return
+    setTagging(true)
+    setTagResult(null)
+    const { data, error } = await supabase.rpc('tag_vitacura_point', { p_lat: latN, p_lng: lngN })
+    setTagging(false)
+    if (!error && data && data.length > 0) {
+      const tag = data[0]
+      setTagResult({ barrio_nombre: tag.barrio_nombre, zona_prc: tag.zona_prc })
+      setForm(prev => ({ ...prev, neighborhood: tag.barrio_nombre }))
+    } else {
+      setTagResult(null)
+    }
+  }
 
   async function loadProperties() {
     setLoading(true)
@@ -111,6 +132,24 @@ export default function PropertiesPage() {
     }
   }
 
+  async function handleScrapePortal() {
+    setScraping(true)
+    try {
+      const res = await fetch('/api/scrape/portal-inmobiliario', { method: 'POST' })
+      const json = await res.json()
+      if (res.ok) {
+        showToast('success', `✅ Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas de Portal Inmobiliario`)
+        await loadProperties()
+      } else {
+        showToast('error', `Error: ${json.error || 'Fallo al scraping'}`)
+      }
+    } catch (err) {
+      showToast('error', `Error de red: ${(err as Error).message}`)
+    } finally {
+      setScraping(false)
+    }
+  }
+
   const filtered = properties.filter(p => {
     const matchSearch = search === '' || p.address.toLowerCase().includes(search.toLowerCase()) || p.neighborhood.toLowerCase().includes(search.toLowerCase())
     const matchStatus = filterStatus === 'all' || p.status === filterStatus
@@ -125,14 +164,25 @@ export default function PropertiesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
           <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          style={{ background: '#8fb2aa' }}
-        >
-          <Plus size={16} />
-          Nueva Propiedad
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleScrapePortal}
+            disabled={scraping}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#6b8e85' }}
+          >
+            <Download size={16} />
+            {scraping ? 'Scrapeando...' : 'Scrape Portal'}
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: '#8fb2aa' }}
+          >
+            <Plus size={16} />
+            Nueva Propiedad
+          </button>
+        </div>
       </div>
 
       {/* Toast */}
@@ -224,18 +274,45 @@ export default function PropertiesPage() {
             </div>
             {/* Lat */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Latitud (opcional)</label>
-              <input type="number" step="any" value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })}
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>
+                Latitud (opcional)
+              </label>
+              <input
+                type="number" step="any" value={form.lat}
+                onChange={e => setForm({ ...form, lat: e.target.value })}
+                onBlur={e => autoTagFromCoords(e.target.value, form.lng)}
                 placeholder="-33.4172"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
             {/* Lng */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Longitud (opcional)</label>
-              <input type="number" step="any" value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })}
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>
+                Longitud (opcional)
+              </label>
+              <input
+                type="number" step="any" value={form.lng}
+                onChange={e => setForm({ ...form, lng: e.target.value })}
+                onBlur={e => autoTagFromCoords(form.lat, e.target.value)}
                 placeholder="-70.6060"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
+            {/* Auto-tag result */}
+            {(tagging || tagResult) && (
+              <div className="lg:col-span-3 flex items-center gap-2 text-xs px-3 py-2 rounded-md"
+                style={{ background: tagResult ? '#e8f3f0' : '#f5f9f7', border: '1px solid #d8e5e2', color: '#173634' }}>
+                {tagging ? (
+                  <span style={{ color: '#9ca9a3' }}>Detectando barrio desde coordenadas...</span>
+                ) : tagResult ? (
+                  <>
+                    <span style={{ color: '#8fb2aa' }}>Auto-detectado:</span>
+                    <strong>{tagResult.barrio_nombre}</strong>
+                    {tagResult.zona_prc && <span style={{ color: '#9ca9a3' }}>· Zona {tagResult.zona_prc}</span>}
+                  </>
+                ) : null}
+              </div>
+            )}
           </div>
           <div className="flex gap-3 mt-5">
             <button
