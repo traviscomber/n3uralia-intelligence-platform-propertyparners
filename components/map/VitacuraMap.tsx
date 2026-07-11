@@ -48,6 +48,15 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
     if (!containerRef.current) return
     if (mapRef.current) return // already initialized
 
+    // Load Leaflet CSS
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link')
+      link.id = 'leaflet-css'
+      link.rel = 'stylesheet'
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+      document.head.appendChild(link)
+    }
+
     // Dynamically import leaflet (SSR safe)
     import('leaflet').then((L) => {
       // Fix default icon paths
@@ -88,6 +97,8 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
       layersRef.current.forEach(l => l.remove())
       layersRef.current = []
 
+      const allBounds: any[] = []
+
       neighborhoods.forEach((n) => {
         if (!n.geometry) return
         const color = TIPO_COLOR[n.tipo] || '#8fb2aa'
@@ -97,26 +108,33 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
             color: isSelected ? '#1a3a35' : color,
             weight: isSelected ? 2.5 : 1.5,
             fillColor: color,
-            fillOpacity: isSelected ? 0.55 : 0.30,
+            fillOpacity: isSelected ? 0.55 : 0.35,
           },
         })
         .bindTooltip(`
           <div style="font-family:sans-serif;min-width:160px">
             <strong style="font-size:13px">${n.name}</strong><br/>
-            <span style="color:#666;font-size:11px">Zona ${n.zona_prc} · ${n.tipo?.replace(/_/g,' ')}</span><br/>
+            <span style="color:#666;font-size:11px">Zona ${n.zona_prc ?? '—'} · ${(n.tipo ?? '').replace(/_/g,' ')}</span><br/>
             <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px">
-              <span>UF/m²: <strong>${n.price_per_sqm_uf?.toFixed(1)}</strong></span>
-              <span>Vel: <strong>${n.velocity_days}d</strong></span>
-              <span>Abs: <strong>${(n.absorption_rate*100).toFixed(0)}%</strong></span>
-              <span>Inv: <strong>${n.inventory_count}</strong></span>
+              <span>UF/m²: <strong>${n.price_per_sqm_uf?.toFixed(1) ?? '—'}</strong></span>
+              <span>Vel: <strong>${n.velocity_days ?? '—'}d</strong></span>
+              <span>Abs: <strong>${n.absorption_rate != null ? (n.absorption_rate*100).toFixed(0) : '—'}%</strong></span>
+              <span>Inv: <strong>${n.inventory_count ?? '—'}</strong></span>
             </div>
           </div>
         `, { sticky: true })
         .on('click', () => onSelect(n.barrio_id === selected ? null : n.barrio_id))
         .addTo(mapRef.current)
 
+        try { allBounds.push(layer.getBounds()) } catch {}
         layersRef.current.push(layer)
       })
+
+      // Fit map to all polygon bounds on first draw
+      if (allBounds.length > 0) {
+        const combined = allBounds.reduce((acc, b) => acc.extend(b))
+        mapRef.current.fitBounds(combined, { padding: [24, 24] })
+      }
     })
   }, [neighborhoods, selected])
 
