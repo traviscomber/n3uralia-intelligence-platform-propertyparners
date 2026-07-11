@@ -138,6 +138,30 @@ function generateProposalPDF() {
 
   doc.addPage();
 
+  // PÁGINA 6.5: GIS Map Screenshot
+  addSection('Mapa GIS Interactivo');
+  addParagraph('Mapa Leaflet que visualiza los 11 barrios de Vitacura como polígonos coloreados por tipo de zona. Cada polígono es clickeable para ver KPIs del barrio: precio promedio, velocidad, absorción e inventario en tiempo real.');
+  try {
+    doc.image('/tmp/ss_mapa_gis.png', { width: 500, align: 'center' });
+    doc.fontSize(9).fillColor('#666').font('Helvetica-Oblique').text('Figura 4: Mapa GIS Leaflet con 11 barrios de Vitacura', { align: 'center' });
+  } catch (e) {
+    doc.text('[Screenshot no disponible]', { align: 'center' });
+  }
+
+  doc.addPage();
+
+  // PÁGINA 6.7: Executive Dashboard Screenshot
+  addSection('Executive Dashboard');
+  addParagraph('Panel ejecutivo con métricas clave en tiempo real: Ventas mes (28), UF vendidas (42.5K), Tasa conversión (9%), Stock activo (184 propiedades). Incluye gráficos de tendencia y KPIs históricos.');
+  try {
+    doc.image('/tmp/ss_dashboard.png', { width: 500, align: 'center' });
+    doc.fontSize(9).fillColor('#666').font('Helvetica-Oblique').text('Figura 5: Executive Dashboard con KPIs en tiempo real', { align: 'center' });
+  } catch (e) {
+    doc.text('[Screenshot no disponible]', { align: 'center' });
+  }
+
+  doc.addPage();
+
   // PÁGINA 7: ARCHITECTURE
   addSection('Arquitectura Técnica');
   addSubsection('Stack Tecnológico');
