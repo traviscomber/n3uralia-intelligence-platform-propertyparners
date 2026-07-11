@@ -46,6 +46,22 @@ const getAbsorptionBadge = (rate: number | null) => {
   return { label: 'Bajo', color: '#ef4444' }
 }
 
+// Función para calcular opacidad del heatmap basado en absorción
+const getHeatmapOpacity = (rate: number | null): number => {
+  if (rate === null || rate === undefined) return 0.35
+  if (rate >= 0.85) return 0.65  // Verde intenso
+  if (rate >= 0.70) return 0.50  // Naranja medio
+  return 0.35  // Rojo suave
+}
+
+// Función para obtener color de heatmap basado en absorción
+const getHeatmapColor = (rate: number | null): string => {
+  if (rate === null || rate === undefined) return '#9ca3af'  // Gris
+  if (rate >= 0.85) return '#10b981'  // Verde
+  if (rate >= 0.70) return '#f59e0b'  // Naranja
+  return '#ef4444'  // Rojo
+}
+
 // Función para renderizar tooltip mejorado como HTML
 const getTooltipHtml = (neighborhood: Neighborhood): string => {
   const absorptionBadge = getAbsorptionBadge(neighborhood.absorption_rate)
@@ -84,12 +100,23 @@ const getTooltipHtml = (neighborhood: Neighborhood): string => {
   `
 }
 
-// Inject global styles for Leaflet tooltips
+// Inject global styles for Leaflet tooltips and animations
 const injectTooltipStyles = () => {
   if (document.getElementById('leaflet-tooltip-styles')) return
   const style = document.createElement('style')
   style.id = 'leaflet-tooltip-styles'
   style.innerHTML = `
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
     .leaflet-tooltip-custom {
       background: rgba(255, 255, 255, 0.98) !important;
       border: 1px solid #e5e7eb !important;
@@ -98,12 +125,18 @@ const injectTooltipStyles = () => {
       padding: 0 !important;
       font-family: 'Segoe UI', sans-serif !important;
       backdrop-filter: blur(8px);
+      animation: fadeInScale 200ms ease-out;
     }
     .leaflet-tooltip-custom::before {
       border-top-color: rgba(255, 255, 255, 0.98) !important;
     }
     .leaflet-tooltip-custom-right::before {
       border-right-color: rgba(255, 255, 255, 0.98) !important;
+    }
+
+    /* Smooth transitions for polygon fills */
+    .leaflet-path {
+      transition: fill-opacity 300ms ease, fill 300ms ease, stroke 300ms ease, stroke-width 300ms ease !important;
     }
   `
   document.head.appendChild(style)
@@ -184,18 +217,20 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
 
     neighborhoods.forEach((n) => {
       if (!n.geometry) return
-      const color      = TIPO_COLOR[n.tipo] || '#8fb2aa'
-      const isSelected = n.barrio_id === selected
+      const color           = TIPO_COLOR[n.tipo] || '#8fb2aa'
+      const isSelected      = n.barrio_id === selected
+      const heatmapOpacity  = getHeatmapOpacity(n.absorption_rate)
+      const heatmapColor    = getHeatmapColor(n.absorption_rate)
 
       // Wrap raw geometry as a GeoJSON Feature so L.geoJSON handles it reliably
       const feature = { type: 'Feature', geometry: n.geometry, properties: {} }
 
       const layer = L.geoJSON(feature, {
         style: {
-          color:       isSelected ? color : '#e5e7eb',
-          weight:      isSelected ? 3 : 2,
-          fillColor:   color,
-          fillOpacity: isSelected ? 0.75 : 0.45,
+          color:       isSelected ? color : '#d1d5db',
+          weight:      isSelected ? 3 : 2.5,
+          fillColor:   isSelected ? color : heatmapColor,
+          fillOpacity: isSelected ? 0.75 : heatmapOpacity,
           dashArray:   isSelected ? 'none' : 'none',
           lineCap:     'round',
           lineJoin:    'round',
@@ -208,31 +243,36 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
       })
       .on('click', () => {
         onSelect(n.barrio_id === selected ? null : n.barrio_id)
-        // Ripple effect on click
+        // Pulse effect on click with animated transition
         layer.setStyle({
-          weight: isSelected ? 3 : 4,
+          weight: isSelected ? 3 : 3.5,
           fillOpacity: 0.85,
+          fillColor: color,
         })
         setTimeout(() => {
           layer.setStyle({
-            weight: selected === n.barrio_id ? 3 : 2,
-            fillOpacity: selected === n.barrio_id ? 0.75 : 0.45,
+            weight: selected === n.barrio_id ? 3 : 2.5,
+            fillOpacity: selected === n.barrio_id ? 0.75 : heatmapOpacity,
+            fillColor: selected === n.barrio_id ? color : heatmapColor,
           })
-        }, 200)
+        }, 250)
       })
       .on('mouseover', () => {
+        // Smooth hover with animated opacity increase
         layer.setStyle({
           weight: isSelected ? 3 : 3,
-          fillOpacity: isSelected ? 0.75 : 0.65,
+          fillOpacity: isSelected ? 0.8 : Math.min(heatmapOpacity + 0.2, 0.85),
           color: color,
         })
         map.getContainer().style.cursor = 'pointer'
       })
       .on('mouseout', () => {
+        // Smooth return to base state with animation
         layer.setStyle({
-          weight: isSelected ? 3 : 2,
-          fillOpacity: isSelected ? 0.75 : 0.45,
-          color: isSelected ? color : '#e5e7eb',
+          weight: isSelected ? 3 : 2.5,
+          fillOpacity: isSelected ? 0.75 : heatmapOpacity,
+          fillColor: isSelected ? color : heatmapColor,
+          color: isSelected ? color : '#d1d5db',
         })
         map.getContainer().style.cursor = 'grab'
       })
@@ -266,16 +306,32 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
       const layer = L.geoJSON(feature, {
         style: {
           color:       '#7c3aed',
-          weight:      1.5,
+          weight:      2,
           fillColor:   '#7c3aed',
-          fillOpacity: 0.08,
-          dashArray:   '5 5',
+          fillOpacity: 0.12,
+          dashArray:   '8 4',
+          lineCap:     'round',
+          lineJoin:    'round',
         },
       })
       .bindTooltip(`
-        <strong>${z.zona}</strong>${z.subzona ? ` / ${z.subzona}` : ''}<br/>
-        <span style="font-size:11px;color:#666">${z.uso_suelo || ''}</span>
-      `, { sticky: true })
+        <div style="font-family: 'Segoe UI', sans-serif;">
+          <strong style="color: #7c3aed; font-size: 12px;">${z.zona}</strong>${z.subzona ? `<span style="color: #999; font-size: 11px;"> / ${z.subzona}</span>` : ''}<br/>
+          <span style="font-size:11px;color:#666;margin-top:4px;display:block;">${z.uso_suelo || 'Zona PRC'}</span>
+        </div>
+      `, { sticky: true, className: 'leaflet-tooltip-custom' })
+      .on('mouseover', () => {
+        layer.setStyle({
+          weight: 2.5,
+          fillOpacity: 0.20,
+        })
+      })
+      .on('mouseout', () => {
+        layer.setStyle({
+          weight: 2,
+          fillOpacity: 0.12,
+        })
+      })
       .addTo(map)
 
       prcLayersRef.current.push(layer)
