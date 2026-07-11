@@ -177,7 +177,7 @@ export default function SourcesPage() {
         </div>
       </div>
 
-      {!loading && health && (
+      {!loading && health && health.summary && (
         <div className="rounded-lg p-5 bg-white" style={{ border: '1px solid #d8e5e2' }}>
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
@@ -186,17 +186,17 @@ export default function SourcesPage() {
                 Estado actual: <span style={{ color: healthColor }}>{healthLabel}</span>
               </h2>
               <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                {health.summary.activeSources} fuentes activas · {health.summary.averageScraped} props/corrida · {health.summary.averageInserted} insertadas/corrida
+                {health.summary?.activeSources || 0} fuentes activas · {health.summary?.averageScraped || 0} props/corrida · {health.summary?.averageInserted || 0} insertadas/corrida
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
                 <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Alertas</p>
-                <p className="text-lg font-bold text-gray-900">{health.summary.warningCount}</p>
+                <p className="text-lg font-bold text-gray-900">{health.summary?.warningCount || 0}</p>
               </div>
               <div className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
                 <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Críticas</p>
-                <p className="text-lg font-bold text-gray-900">{health.summary.criticalCount}</p>
+                <p className="text-lg font-bold text-gray-900">{health.summary?.criticalCount || 0}</p>
               </div>
             </div>
           </div>
