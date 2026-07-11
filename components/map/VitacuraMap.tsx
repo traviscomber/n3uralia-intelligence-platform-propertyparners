@@ -38,6 +38,77 @@ const TIPO_COLOR: Record<string, string> = {
   comercial_servicios:    '#f59e0b',
 }
 
+// Función para obtener badge de status basado en absorption rate
+const getAbsorptionBadge = (rate: number | null) => {
+  if (rate === null || rate === undefined) return { label: 'Sin dato', color: '#9ca3af' }
+  if (rate >= 0.85) return { label: 'Bueno', color: '#10b981' }
+  if (rate >= 0.70) return { label: 'Medio', color: '#f59e0b' }
+  return { label: 'Bajo', color: '#ef4444' }
+}
+
+// Función para renderizar tooltip mejorado como HTML
+const getTooltipHtml = (neighborhood: Neighborhood): string => {
+  const absorptionBadge = getAbsorptionBadge(neighborhood.absorption_rate)
+  const absorptionPct = neighborhood.absorption_rate != null ? (neighborhood.absorption_rate * 100).toFixed(0) : '—'
+  
+  return `
+    <div style="font-family: 'Segoe UI', sans-serif; min-width: 200px; padding: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+        <strong style="font-size: 14px; color: #1f2937;">${neighborhood.name}</strong>
+        <span style="background-color: ${absorptionBadge.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">${absorptionBadge.label}</span>
+      </div>
+      
+      <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 10px; padding-bottom: 8px;">
+        <span style="color: #666; font-size: 12px;">Zona ${neighborhood.zona_prc ?? '—'} · ${(neighborhood.tipo ?? '').replace(/_/g, ' ')}</span>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+        <div>
+          <span style="color: #9ca3af; font-size: 11px;">UF/m²</span><br/>
+          <strong style="color: #8fb2aa; font-size: 13px;">${neighborhood.price_per_sqm_uf?.toFixed(1) ?? '—'}</strong>
+        </div>
+        <div>
+          <span style="color: #9ca3af; font-size: 11px;">Velocidad</span><br/>
+          <strong style="color: #8fb2aa; font-size: 13px;">${neighborhood.velocity_days ?? '—'}d</strong>
+        </div>
+        <div>
+          <span style="color: #9ca3af; font-size: 11px;">Absorción</span><br/>
+          <strong style="color: #8fb2aa; font-size: 13px;">${absorptionPct}%</strong>
+        </div>
+        <div>
+          <span style="color: #9ca3af; font-size: 11px;">Inventario</span><br/>
+          <strong style="color: #8fb2aa; font-size: 13px;">${neighborhood.inventory_count ?? '—'}</strong>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+// Inject global styles for Leaflet tooltips
+const injectTooltipStyles = () => {
+  if (document.getElementById('leaflet-tooltip-styles')) return
+  const style = document.createElement('style')
+  style.id = 'leaflet-tooltip-styles'
+  style.innerHTML = `
+    .leaflet-tooltip-custom {
+      background: rgba(255, 255, 255, 0.98) !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 8px !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+      padding: 0 !important;
+      font-family: 'Segoe UI', sans-serif !important;
+      backdrop-filter: blur(8px);
+    }
+    .leaflet-tooltip-custom::before {
+      border-top-color: rgba(255, 255, 255, 0.98) !important;
+    }
+    .leaflet-tooltip-custom-right::before {
+      border-right-color: rgba(255, 255, 255, 0.98) !important;
+    }
+  `
+  document.head.appendChild(style)
+}
+
 export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelect, showPrc }: VitacuraMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef       = useRef<any>(null)
@@ -45,6 +116,11 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
   const layersRef    = useRef<any[]>([])
   const prcLayersRef = useRef<any[]>([])
   const [mapReady, setMapReady] = useState(false)
+
+  // Inject tooltip styles on component mount
+  useEffect(() => {
+    injectTooltipStyles()
+  }, [])
 
   // ── Init map once ──────────────────────────────────────────────
   useEffect(() => {
@@ -116,25 +192,50 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
 
       const layer = L.geoJSON(feature, {
         style: {
-          color:       isSelected ? '#1a3a35' : '#fff',
-          weight:      isSelected ? 3 : 1,
+          color:       isSelected ? color : '#e5e7eb',
+          weight:      isSelected ? 3 : 2,
           fillColor:   color,
-          fillOpacity: isSelected ? 0.65 : 0.45,
+          fillOpacity: isSelected ? 0.75 : 0.45,
+          dashArray:   isSelected ? 'none' : 'none',
+          lineCap:     'round',
+          lineJoin:    'round',
         },
       })
-      .bindTooltip(`
-        <div style="font-family:sans-serif;min-width:160px">
-          <strong style="font-size:13px">${n.name}</strong><br/>
-          <span style="color:#666;font-size:11px">Zona ${n.zona_prc ?? '—'} · ${(n.tipo ?? '').replace(/_/g,' ')}</span>
-          <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px">
-            <span>UF/m²: <strong>${n.price_per_sqm_uf?.toFixed(1) ?? '—'}</strong></span>
-            <span>Vel: <strong>${n.velocity_days ?? '—'}d</strong></span>
-            <span>Abs: <strong>${n.absorption_rate != null ? (n.absorption_rate * 100).toFixed(0) : '—'}%</strong></span>
-            <span>Inv: <strong>${n.inventory_count ?? '—'}</strong></span>
-          </div>
-        </div>
-      `, { sticky: true })
-      .on('click', () => onSelect(n.barrio_id === selected ? null : n.barrio_id))
+      .bindTooltip(getTooltipHtml(n), { 
+        sticky: true,
+        className: 'leaflet-tooltip-custom',
+        offset: [0, 10]
+      })
+      .on('click', () => {
+        onSelect(n.barrio_id === selected ? null : n.barrio_id)
+        // Ripple effect on click
+        layer.setStyle({
+          weight: isSelected ? 3 : 4,
+          fillOpacity: 0.85,
+        })
+        setTimeout(() => {
+          layer.setStyle({
+            weight: selected === n.barrio_id ? 3 : 2,
+            fillOpacity: selected === n.barrio_id ? 0.75 : 0.45,
+          })
+        }, 200)
+      })
+      .on('mouseover', () => {
+        layer.setStyle({
+          weight: isSelected ? 3 : 3,
+          fillOpacity: isSelected ? 0.75 : 0.65,
+          color: color,
+        })
+        map.getContainer().style.cursor = 'pointer'
+      })
+      .on('mouseout', () => {
+        layer.setStyle({
+          weight: isSelected ? 3 : 2,
+          fillOpacity: isSelected ? 0.75 : 0.45,
+          color: isSelected ? color : '#e5e7eb',
+        })
+        map.getContainer().style.cursor = 'grab'
+      })
       .addTo(map)
 
       try { allBounds.push(layer.getBounds()) } catch {}
@@ -184,24 +285,103 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
       <div ref={containerRef} style={{ height: '100%', width: '100%', borderRadius: '8px', zIndex: 0 }} />
+      
       {/* Legend */}
       <div style={{
         position: 'absolute', bottom: 24, right: 12, zIndex: 999,
-        background: 'rgba(255,255,255,0.92)', borderRadius: 8, padding: '8px 12px',
-        fontSize: 11, boxShadow: '0 1px 6px rgba(0,0,0,0.12)', pointerEvents: 'none',
+        background: 'rgba(255, 255, 255, 0.96)', borderRadius: 10, padding: '14px 16px',
+        fontSize: 11, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', pointerEvents: 'auto',
+        backdropFilter: 'blur(4px)',
+        border: '1px solid rgba(229, 231, 235, 0.5)',
       }}>
+        <div style={{ marginBottom: 10, fontWeight: 600, fontSize: 12, color: '#1f2937' }}>Tipos de Zona</div>
         {Object.entries(TIPO_COLOR).map(([tipo, color]) => (
-          <div key={tipo} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <span style={{ width: 12, height: 12, borderRadius: 2, background: color, display: 'inline-block' }} />
-            <span style={{ color: '#555' }}>{tipo.replace(/_/g, ' ')}</span>
+          <div key={tipo} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginBottom: 6,
+            padding: '6px',
+            borderRadius: 6,
+            transition: 'background-color 0.2s ease',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(143, 178, 170, 0.05)')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          >
+            <span style={{
+              width: 14,
+              height: 14,
+              borderRadius: 3,
+              background: color,
+              display: 'inline-block',
+              border: '1px solid rgba(0,0,0,0.1)',
+              boxShadow: `0 2px 4px ${color}33`
+            }} />
+            <span style={{ color: '#555', fontSize: 12 }}>{tipo.replace(/_/g, ' ')}</span>
           </div>
         ))}
+        
         {showPrc && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, borderTop: '1px solid #eee', paddingTop: 4 }}>
-            <span style={{ width: 12, height: 12, borderRadius: 2, background: '#7c3aed', display: 'inline-block', opacity: 0.4 }} />
-            <span style={{ color: '#555' }}>Zona PRC</span>
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #e5e7eb' }}>
+            <div style={{ marginBottom: 8, fontWeight: 600, fontSize: 11, color: '#6b7280' }}>Overlay</div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '6px',
+              borderRadius: 6,
+            }}>
+              <span style={{
+                width: 14,
+                height: 14,
+                borderRadius: 3,
+                background: '#7c3aed',
+                display: 'inline-block',
+                opacity: 0.5,
+                border: '2px dashed #7c3aed',
+              }} />
+              <span style={{ color: '#666', fontSize: 12 }}>Zona PRC</span>
+            </div>
           </div>
         )}
+      </div>
+
+      {/* Status legend */}
+      <div style={{
+        position: 'absolute', bottom: 24, left: 12, zIndex: 999,
+        background: 'rgba(255, 255, 255, 0.96)', borderRadius: 10, padding: '14px 16px',
+        fontSize: 11, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', pointerEvents: 'auto',
+        backdropFilter: 'blur(4px)',
+        border: '1px solid rgba(229, 231, 235, 0.5)',
+      }}>
+        <div style={{ marginBottom: 10, fontWeight: 600, fontSize: 12, color: '#1f2937' }}>Absorción</div>
+        {[
+          { label: 'Bueno', color: '#10b981', range: '≥85%' },
+          { label: 'Medio', color: '#f59e0b', range: '70-84%' },
+          { label: 'Bajo', color: '#ef4444', range: '<70%' },
+        ].map(item => (
+          <div key={item.label} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginBottom: 6,
+            padding: '6px',
+            borderRadius: 6,
+          }}>
+            <span style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: item.color,
+              display: 'inline-block',
+            }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#1f2937' }}>{item.label}</div>
+              <div style={{ fontSize: 10, color: '#9ca3af' }}>{item.range}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
