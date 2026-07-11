@@ -15,20 +15,33 @@ interface DataSource {
   pipeline_order: number
 }
 
+interface ScrapeRun {
+  id: string
+  source: string
+  status: 'success' | 'partial' | 'error'
+  scraped_count: number
+  inserted_count: number
+  skipped_count: number
+  error_count: number
+  created_at: string
+}
+
 export default function SourcesPage() {
   const [sources, setSources] = useState<DataSource[]>([])
+  const [runs, setRuns] = useState<ScrapeRun[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchSources = async () => {
       try {
         const supabase = createClient()
-        const { data } = await supabase
-          .from('data_sources')
-          .select('*')
-          .order('pipeline_order', { ascending: true })
+        const [sourcesRes, runsRes] = await Promise.all([
+          supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
+          fetch('/api/scrape/runs').then((res) => res.json()),
+        ])
 
-        setSources(data || [])
+        setSources(sourcesRes.data || [])
+        setRuns((runsRes.runs || []) as ScrapeRun[])
       } catch (err) {
         console.error('Error:', err)
       } finally {
@@ -183,6 +196,41 @@ export default function SourcesPage() {
               {sources[0]?.last_sync ? new Date(sources[0].last_sync).toLocaleString('es-CL') : 'N/A'}
             </p>
           </div>
+        </div>
+      )}
+
+      {!loading && (
+        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
+          <h2 className="font-semibold mb-4 text-gray-900">
+            Últimas corridas del scraper
+          </h2>
+          {runs.length ? (
+            <div className="space-y-2">
+              {runs.slice(0, 5).map((run) => (
+                <div key={run.id} className="flex items-center justify-between gap-4 rounded-lg px-3 py-2" style={{ background: '#f5f9f7' }}>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{run.source}</p>
+                    <p className="text-xs" style={{ color: '#9ca9a3' }}>
+                      {new Date(run.created_at).toLocaleString('es-CL')} · {run.scraped_count} scraped · {run.inserted_count} inserted · {run.error_count} errors
+                    </p>
+                  </div>
+                  <span
+                    className="text-xs font-medium px-2 py-0.5 rounded capitalize"
+                    style={{
+                      background: run.status === 'success' ? '#e8f3f0' : run.status === 'partial' ? '#fef3e2' : '#fef3f2',
+                      color: run.status === 'success' ? '#10b981' : run.status === 'partial' ? '#f59e0b' : '#d97706',
+                    }}
+                  >
+                    {run.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm" style={{ color: '#9ca9a3' }}>
+              Todavía no hay ejecuciones registradas.
+            </p>
+          )}
         </div>
       )}
     </div>

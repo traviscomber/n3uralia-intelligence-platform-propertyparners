@@ -24,6 +24,18 @@ type SourceRun = {
   errors: string[]
 }
 
+type ScrapeRunPayload = {
+  source: string
+  status: 'success' | 'partial' | 'error'
+  scraped_count: number
+  inserted_count: number
+  skipped_count: number
+  error_count: number
+  source_breakdown: Record<string, unknown>
+  started_at: string
+  finished_at: string
+}
+
 type MarketBenchmark = {
   neighborhood: string
   avg_price_m2_uf: number | null
@@ -304,6 +316,15 @@ async function syncSourceStats(source: string, status: 'active' | 'error', recor
   }
 }
 
+async function logScrapeRun(payload: ScrapeRunPayload) {
+  try {
+    const supabase = getSupabaseClient()
+    await supabase.from('scrape_runs').insert(payload)
+  } catch {
+    // Best effort only.
+  }
+}
+
 async function insertProperties(rows: ScrapedProperty[]) {
   const supabase = getSupabaseClient()
   let inserted = 0
@@ -353,6 +374,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({})) as { source?: string }
   const source = body.source || new URL(request.url).searchParams.get('source') || 'all'
   const runs: SourceRun[] = []
+  const startedAt = new Date().toISOString()
 
   try {
     const allRows: ScrapedProperty[] = []
@@ -379,8 +401,21 @@ export async function POST(request: Request) {
     const totalInserted = runs.reduce((sum, run) => sum + run.inserted, 0)
     const totalSkipped = runs.reduce((sum, run) => sum + run.skipped, 0)
     const allErrors = runs.flatMap((run) => run.errors)
+    const scrapeStatus: ScrapeRunPayload['status'] =
+      allErrors.length > 0 ? (totalInserted > 0 ? 'partial' : 'error') : 'success'
 
     if (totalScraped === 0) {
+      await logScrapeRun({
+        source,
+        status: 'error',
+        scraped_count: 0,
+        inserted_count: 0,
+        skipped_count: 0,
+        error_count: 1,
+        source_breakdown: { runs, message: 'No se encontraron propiedades.' },
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+      })
       return NextResponse.json(
         { error: 'No se encontraron propiedades. La estructura de las fuentes puede haber cambiado.' },
         { status: 422 },
@@ -397,9 +432,31 @@ export async function POST(request: Request) {
       errors: allErrors.slice(0, 10),
       message: `Importadas ${totalInserted} propiedades desde las fuentes activas`,
     })
+    await logScrapeRun({
+      source,
+      status: scrapeStatus,
+      scraped_count: totalScraped,
+      inserted_count: totalInserted,
+      skipped_count: totalSkipped,
+      error_count: allErrors.length,
+      source_breakdown: { runs, errors: allErrors.slice(0, 10) },
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Scraper failed'
     await syncSourceStats('Portal Inmobiliario', 'error', 0, message)
+    await logScrapeRun({
+      source,
+      status: 'error',
+      scraped_count: 0,
+      inserted_count: 0,
+      skipped_count: 0,
+      error_count: 1,
+      source_breakdown: { runs, error: message },
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+    })
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

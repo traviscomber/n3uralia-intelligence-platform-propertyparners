@@ -78,3 +78,17 @@ export interface Recommendation {
   status: 'pending' | 'in_progress' | 'done' | 'dismissed'
   created_at: string
 }
+
+export interface ScrapeRun {
+  id: string
+  source: string
+  status: 'success' | 'partial' | 'error'
+  scraped_count: number
+  inserted_count: number
+  skipped_count: number
+  error_count: number
+  source_breakdown: Record<string, unknown> | null
+  started_at: string
+  finished_at: string
+  created_at: string
+}
