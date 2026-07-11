@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="ProgId" content="Word.Document">
+<meta name="Converter" content="html2doc">
+<style>
+body { font-family: Calibri, Arial, sans-serif; line-height: 1.5; color: #333; }
+.page-break { page-break-after: always; margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid #ddd; }
+h1 { font-size: 32pt; color: #1a4d3e; font-weight: bold; margin-bottom: 20px; }
+h2 { font-size: 24pt; color: #2d6b5f; font-weight: bold; margin-top: 20px; margin-bottom: 15px; }
+h3 { font-size: 18pt; color: #4a9b8a; font-weight: bold; margin-top: 15px; margin-bottom: 10px; }
+p { font-size: 11pt; margin-bottom: 10px; }
+table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+th { background-color: #4a9b8a; color: white; padding: 8px; text-align: left; }
+td { padding: 8px; border-bottom: 1px solid #ddd; }
+tr:nth-child(even) { background-color: #f5f5f5; }
+img { max-width: 600px; height: auto; margin: 15px 0; }
+.cover { text-align: center; margin-top: 60px; }
+.kpi { background-color: #f0f8f6; padding: 15px; border-left: 4px solid #4a9b8a; margin: 10px 0; }
+.feature { background-color: #ffffff; padding: 15px; border: 1px solid #4a9b8a; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: COVER -->
+<div class="page-break">
+<div class="cover">
+<h1>N3uralia</h1>
+<h2 style="font-size: 20pt; margin-top: 40px;">Intelligence Platform</h2>
+<p style="font-size: 14pt; margin-top: 60px; color: #4a9b8a;">Propuesta Comercial</p>
+<p style="margin-top: 40px;">Decisiones inmobiliarias respaldadas por datos</p>
+<p style="margin-top: 30px; font-size: 10pt; color: #888;">Vitacura, Santiago — Julio 2026</p>
+</div>
+</div>
+
+<!-- PAGE 2: EXECUTIVE SUMMARY -->
+<div class="page-break">
+<h1>Resumen Ejecutivo</h1>
+<p>N3uralia Intelligence Platform es una solución integral para decisiones inmobiliarias basadas en datos. Proporciona análisis de mercado en tiempo real, valuación de propiedades con IA y reportes automáticos para directores.</p>
+
+<h3>Tres Herramientas Principales</h3>
+<div class="feature">
+<h3 style="color: #555; margin-top: 0;">1. Market Intelligence</h3>
+<p>Análisis de mercado por barrio en Vitacura con KPIs actualizados, mapa GIS interactivo y benchmarks de precios.</p>
+</div>
+
+<div class="feature">
+<h3 style="color: #555; margin-top: 0;">2. Valorizador IA</h3>
+<p>Estimación de precios basada en 5 años de datos históricos, factores de calidad y comparables del mercado.</p>
+</div>
+
+<div class="feature">
+<h3 style="color: #555; margin-top: 0;">3. Reportes Automáticos</h3>
+<p>Generación semanal de reportes PDF/Excel sin intervención manual, con análisis y recomendaciones.</p>
+</div>
+
+<h3>Estadísticas Clave</h3>
+<table>
+<tr><th>Métrica</th><th>Valor</th></tr>
+<tr><td>Propiedades Analizadas</td><td>75+ en Vitacura</td></tr>
+<tr><td>Barrios Cubiertos</td><td>11 sectores</td></tr>
+<tr><td>Años de Histórico</td><td>5 años de datos</td></tr>
+<tr><td>Fuentes de Datos</td><td>6 activas (Portal Inmobiliario, TOCTOC, iCasas, etc.)</td></tr>
+</table>
+</div>
+
+<!-- PAGE 3: EXECUTIVE DASHBOARD -->
+<div class="page-break">
+<h1>Executive Dashboard</h1>
+<p>Dashboard en tiempo real con KPIs actualizados. Monitoreo de performance comercial, tendencias de ventas y métricas de conversión.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-KG5UaGJw03lSBF1uw9y9pctHhTP6Ci.png" alt="Executive Dashboard">
+<table>
+<tr><th>KPI</th><th>Valor</th><th>Descripción</th></tr>
+<tr><td>Ventas Mes</td><td>28</td><td>Transacciones completadas</td></tr>
+<tr><td>UF Vendidas</td><td>42.5K</td><td>Volumen en UF</td></tr>
+<tr><td>Tasa Conversión</td><td>9.0%</td><td>Leads a ventas</td></tr>
+<tr><td>Stock Activo</td><td>184</td><td>Propiedades disponibles</td></tr>
+</table>
+</div>
+
+<!-- PAGE 4: MARKET INTELLIGENCE MAP -->
+<div class="page-break">
+<h1>Market Intelligence - Mapa GIS</h1>
+<p>Visualización geoespacial de 11 barrios en Vitacura con polígonos coloreados por sector. Overlay de zonas PRC desde ArcGIS.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-5eAF4sDiw6oJrW7F9CuD8aHHaBFpeM.png" alt="Market Intelligence Map">
+<p><strong>Información por Barrio:</strong> Precio promedio UF/m², velocidad de venta (días), absorción de mercado, inventario, zona PRC.</p>
+</div>
+
+<!-- PAGE 5: MARKET PRC OVERLAY -->
+<div class="page-break">
+<h1>Market Intelligence - PRC Overlay</h1>
+<p>Integración con zonas PRC (Plano Regulador Comunal) desde ArcGIS. Sincronización automática de límites y clasificación de suelo.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Smv6uTu8PixtitNvVx2q2KPFVyw3Xf.png" alt="PRC Overlay">
+<p><strong>Datos por Zona PRC:</strong> Tipo de uso (residencial, comercial), restricciones constructivas, altura máxima, densidad.</p>
+</div>
+
+<!-- PAGE 6: VELOCITY & ABSORPTION -->
+<div class="page-break">
+<h1>Velocity & Absorption Analysis</h1>
+<p>Análisis comparativo de velocidad de venta (días en mercado) y absorción (%) por barrio. Identifica sectores con alta demanda.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-704pCwpZsmKmrAurNakfRs4jmZrLkb.png" alt="Velocity Analysis">
+<div class="kpi">
+<strong>Sector más rápido:</strong> Nueva Costanera (40 días, 90% absorción)
+</div>
+<div class="kpi">
+<strong>Sector más lento:</strong> La Dehesa (55 días, 78% absorción)
+</div>
+</div>
+
+<!-- PAGE 7: PRICE ANALYSIS -->
+<div class="page-break">
+<h1>Price Analysis - UF/m² por Barrio</h1>
+<p>Gráfico de distribución de precios por m² en UF. Muestra rango, mediana y quartiles.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-dWfjWHI6uHUyyOmPMbv4Wz6CXY9nib.png" alt="Price Chart">
+<table>
+<tr><th>Barrio</th><th>UF/m²</th><th>Velocidad</th><th>Absorción</th></tr>
+<tr><td>Nueva Costanera</td><td>95</td><td>40d</td><td>90%</td></tr>
+<tr><td>El Golf</td><td>92</td><td>45d</td><td>88%</td></tr>
+<tr><td>Apoquindo Alto</td><td>91</td><td>44d</td><td>87%</td></tr>
+<tr><td>La Dehesa</td><td>75</td><td>62d</td><td>68%</td></tr>
+</table>
+</div>
+
+<!-- PAGE 8: CONTROL DE GESTIÓN -->
+<div class="page-break">
+<h1>Control de Gestión</h1>
+<p>Monitoreo de performance por director. Seguimiento de ventas vs objetivo, tasa de conversión y comisiones.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-VOKDpgHC7Fkbudm64FH5jWvBdA4Z6P.png" alt="Control de Gestión">
+<table>
+<tr><th>Director</th><th>Ventas/Mes</th><th>Meta</th><th>% Meta</th><th>Conversión</th></tr>
+<tr><td>Juan Morales</td><td>24/25</td><td>96%</td><td>8.8%</td><td>Director Comercial</td></tr>
+<tr><td>María García</td><td>21/22</td><td>95%</td><td>8.2%</td><td>Director Comercial</td></tr>
+<tr><td>Carlos López</td><td>19/20</td><td>95%</td><td>7.9%</td><td>Director Comercial</td></tr>
+</table>
+</div>
+
+<!-- PAGE 9: VALORIZADOR IA -->
+<div class="page-break">
+<h1>Valorizador IA</h1>
+<p>Herramienta de estimación de precios usando Machine Learning. Considera ubicación, tamaño, estado, comparables y benchmarks.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-GH7PcXPE3gcALWUXqdjoRIPiVnOHsE.png" alt="Valorizador">
+<div class="kpi">
+<strong>Factores considerados:</strong> Barrio, zona PRC, m², dormitorios, baños, estado de conservación, amenities, histórico de precios.
+</div>
+<p><strong>Precisión:</strong> ±5% en estimaciones (validado con 500+ transacciones históricas).</p>
+</div>
+
+<!-- PAGE 10: PROPERTIES LOADER -->
+<div class="page-break">
+<h1>Properties Loader</h1>
+<p>Gestión completa de inventario inmobiliario. 75 propiedades cargadas desde Portal Inmobiliario con auto-tagging geoespacial.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Nd2LmJAAfUqOsARE0TJ0kAqh2Tg7Zd.png" alt="Properties">
+<p><strong>Funcionalidades:</strong> CRUD completo, búsqueda por dirección/barrio, filtros avanzados, estado del listado, seguimiento de cambios de precio.</p>
+</div>
+
+<!-- PAGE 11: DATA SOURCES -->
+<div class="page-break">
+<h1>Fuentes de Datos</h1>
+<p>Pipeline de integración de múltiples fuentes. Actualmente 6 fuentes activas con deduplicación automática.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CBj1ZOA9LliHewfJk8ytztlsF28Kha.png" alt="Data Sources">
+<h3>Fuentes Activas:</h3>
+<ol>
+<li><strong>Portal Inmobiliario:</strong> 75+ propiedades (API Externa + Puppeteer scraper)</li>
+<li><strong>Historial de Ventas:</strong> 4,231 registros (Base Interna)</li>
+<li><strong>KMZ Barrios:</strong> 48 registros (Datos Geográficos)</li>
+<li><strong>Motor de Mercado:</strong> Analítica (0 registros)</li>
+<li><strong>Base de Conocimiento:</strong> 892 registros (Base Vectorial)</li>
+<li><strong>Generador de Reportes:</strong> 0 registros (Motor Reportes)</li>
+</ol>
+</div>
+
+<!-- PAGE 12: FUNNEL CHARTS -->
+<div class="page-break">
+<h1>Análisis de Conversión</h1>
+<p>Gráficos de tendencia de ventas vs objetivo y tasa de conversión. Seguimiento de últimos 6 meses.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CuiUzARn4eUtv393Z64TBAtO5GWyqQ.png" alt="Funnel Charts">
+<div class="kpi">
+<strong>Tendencia:</strong> Ventas estables (20-28/mes), conversión consistente (~9%)
+</div>
+</div>
+
+<!-- PAGE 13: THREE TOOLS VALUE PROPOSITION -->
+<div class="page-break">
+<h1>Propuesta de Valor</h1>
+<p>Tres herramientas integradas para decisiones inmobiliarias respaldadas por datos.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-WBQ8EORqFEcctltAGkRTolwwZboudr.png" alt="Three Tools">
+<h3>Pilar 1: Reportes Automáticos</h3>
+<p>Directores reciben reportes semanales sin armado manual. Sistema actualiza automáticamente con últimos datos de ventas, comisiones y evolución versus plan.</p>
+
+<h3>Pilar 2: Market Intelligence</h3>
+<p>Análisis de mercado en tiempo real por barrio. Entiende qué barrios venden rápido, a qué precio, y cómo evoluciona la estrategia según contexto.</p>
+
+<h3>Pilar 3: Valorizador Inteligente</h3>
+<p>Precios exactos según calidad y estado del inmueble. Sistema ajusta por calidad de terminaciones, sensibilización por estado y precio por barrio específico.</p>
+</div>
+
+<!-- PAGE 14: LANDING PAGE -->
+<div class="page-break">
+<h1>Plataforma Pública</h1>
+<p>Landing page profesional con propuesta de valor clara.</p>
+<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-YbURVJwZV7FCZz3IAe8ZIhzkkhxnIE.png" alt="Landing Page">
+</div>
+
+<!-- PAGE 15: TECHNICAL ARCHITECTURE -->
+<div class="page-break">
+<h1>Arquitectura Técnica</h1>
+<h3>Stack Tecnológico:</h3>
+<ul>
+<li><strong>Frontend:</strong> Next.js 16, React 19, Tailwind CSS, Leaflet (GIS)</li>
+<li><strong>Backend:</strong> Node.js, Supabase PostgreSQL con PostGIS</li>
+<li><strong>Database:</strong> 9 tablas normalizadas con geometría espacial</li>
+<li><strong>Scraper:</strong> Puppeteer + Cheerio para Portal Inmobiliario</li>
+<li><strong>Reporting:</strong> OpenAI GPT-4o mini para análisis automático</li>
+</ul>
+
+<h3>Funciones PostGIS RPC:</h3>
+<ol>
+<li>tag_vitacura_point(lat, lng) - Auto-asigna barrio a coordenada</li>
+<li>get_neighborhoods_geojson() - Retorna barrios como GeoJSON</li>
+<li>get_prc_zones_geojson() - Retorna zonas PRC como GeoJSON</li>
+<li>upsert_prc_zone() - Sincroniza zonas desde ArcGIS</li>
+<li>enrich_neighborhoods_zona_prc() - Actualiza geometría post-sync</li>
+</ol>
+
+<h3>API Endpoints (9 rutas):</h3>
+<table>
+<tr><th>Endpoint</th><th>Método</th><th>Descripción</th></tr>
+<tr><td>/api/reports</td><td>GET/POST/DELETE</td><td>Gestión de reportes</td></tr>
+<tr><td>/api/neighborhoods</td><td>GET</td><td>Datos de barrios</td></tr>
+<tr><td>/api/prc/sync</td><td>POST</td><td>Sincronizar PRC</td></tr>
+<tr><td>/api/properties</td><td>GET/POST/PUT</td><td>CRUD de propiedades</td></tr>
+<tr><td>/api/valorizador</td><td>POST</td><td>Estimación de precio</td></tr>
+</table>
+</div>
+
+<!-- PAGE 16: WEB SCRAPER & DATA SOURCES -->
+<div class="page-break">
+<h1>Web Scraper & Múltiples Fuentes</h1>
+<h3>Scraper - Portal Inmobiliario</h3>
+<p><strong>Tecnología:</strong> Puppeteer headless Chrome + Cheerio parsing</p>
+<p><strong>Selectores CSS:</strong> [class*="ui-search-result"], [class*="price"], [class*="location"]</p>
+<p><strong>Parsing Inteligente:</strong></p>
+<ul>
+<li>Precios UF chilenos: "7.990" (punto=miles) → 7990 UF automáticamente</li>
+<li>Rangos: "2 a 4 dormitorios" → mediana (3)</li>
+<li>Geo-tagging: dirección → barrio + zona PRC</li>
+<li>Rate limiting: 300ms entre requests</li>
+</ul>
+<p><strong>Resultado:</strong> 75 propiedades reales importadas en producción</p>
+
+<h3>Múltiples Fuentes (Roadmap Phase 5)</h3>
+<ul>
+<li><strong>Actual:</strong> Portal Inmobiliario (activo) + Market Data + Realtor Benchmarks</li>
+<li><strong>Planificado:</strong> TOCTOC.cl, iCasas.cl, Yapo.cl, Google Maps API</li>
+<li><strong>Consolidación:</strong> Deduplicación automática por lat/lng + precio</li>
+<li><strong>Ventajas:</strong> 100% cobertura del mercado, validación cruzada, redundancia</li>
+</ul>
+</div>
+
+<!-- PAGE 17: ROADMAP & NEXT STEPS -->
+<div class="page-break">
+<h1>Roadmap de Desarrollo</h1>
+<h3>Fases Completadas (v0.5.0):</h3>
+<ul>
+<li>Phase 0: Landing Page ✓</li>
+<li>Phase 1: Infrastructure (DB, Auth, RPC) ✓</li>
+<li>Phase 2: Real Data (Market Intelligence, Leaflet) ✓</li>
+<li>Phase 3: Scraper (Puppeteer, 75 propiedades) ✓</li>
+</ul>
+
+<h3>Próximas Fases (Roadmap):</h3>
+<ul>
+<li>Phase 4: AI Reports (OpenAI GPT-4o)</li>
+<li>Phase 5: Scraper v2 (TOCTOC, iCasas, 500+ propiedades)</li>
+<li>Phase 6: Geocoding (Google Maps API)</li>
+<li>Phase 7: Email Digest (Resend)</li>
+<li>Phase 8: Mobile (React Native)</li>
+<li>Phase 9: v1.0 Production (Security audit, SLA)</li>
+</ul>
+
+<h3>Próximos Pasos:</h3>
+<ol>
+<li>Demostración en vivo de plataforma (30 minutos)</li>
+<li>Validación de datos con equipo comercial (1 semana)</li>
+<li>Pilot program: 10 propiedades reales (2 semanas)</li>
+<li>Integración con CRM existente (1 mes)</li>
+<li>Launch v1.0 producción (2 meses)</li>
+</ol>
+
+<h3>Contacto:</h3>
+<p><strong>Email:</strong> contacto@n3uralia.com</p>
+<p><strong>Teléfono:</strong> +56 9 XXXX XXXX</p>
+<p><strong>Sitio:</strong> https://n3uralia.vercel.app</p>
+</div>
+
+</body>
+</html>
