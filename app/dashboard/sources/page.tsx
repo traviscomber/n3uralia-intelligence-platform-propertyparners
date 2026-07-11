@@ -30,6 +30,8 @@ export default function SourcesPage() {
   const [sources, setSources] = useState<DataSource[]>([])
   const [runs, setRuns] = useState<ScrapeRun[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshingAll, setRefreshingAll] = useState(false)
+  const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchSources = async () => {
@@ -51,6 +53,30 @@ export default function SourcesPage() {
 
     fetchSources()
   }, [])
+
+  async function handleRefreshAll() {
+    setRefreshingAll(true)
+    setRefreshMsg(null)
+    try {
+      const res = await fetch('/api/cron/refresh-sources', { method: 'GET' })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json.error || 'No pudimos refrescar las fuentes.')
+      }
+      setRefreshMsg(`Refresco completado: scraping y benchmark actualizados a ${new Date(json.refreshedAt).toLocaleTimeString('es-CL')}`)
+      const supabase = createClient()
+      const [sourcesRes, runsRes] = await Promise.all([
+        supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
+        fetch('/api/scrape/runs').then((r) => r.json()),
+      ])
+      setSources(sourcesRes.data || [])
+      setRuns((runsRes.runs || []) as ScrapeRun[])
+    } catch (err) {
+      setRefreshMsg(err instanceof Error ? err.message : 'No pudimos refrescar las fuentes.')
+    } finally {
+      setRefreshingAll(false)
+    }
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -98,6 +124,19 @@ export default function SourcesPage() {
         <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
           Pipeline de inteligencia con 7 fuentes integradas
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => void handleRefreshAll()}
+            disabled={refreshingAll}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#8fb2aa' }}
+          >
+            {refreshingAll ? 'Refrescando...' : 'Refrescar scraper + benchmark'}
+          </button>
+          {refreshMsg && (
+            <span className="text-sm" style={{ color: '#555a56' }}>{refreshMsg}</span>
+          )}
+        </div>
       </div>
 
       {/* Pipeline Overview */}
