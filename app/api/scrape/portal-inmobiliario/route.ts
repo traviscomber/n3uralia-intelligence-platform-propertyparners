@@ -12,19 +12,19 @@ interface Property {
   days_on_market: number
 }
 
-// Vitacura sector definitions with realistic pricing and location
+// Vitacura sector definitions with realistic pricing, location, and barrio_id mapping
 const VITACURA_SECTORS = [
-  { name: 'Nueva Costanera', lat_base: -33.3885, lng_base: -70.5820, price_base: 95 },
-  { name: 'El Golf', lat_base: -33.3840, lng_base: -70.5900, price_base: 92 },
-  { name: 'La Dehesa', lat_base: -33.3750, lng_base: -70.5770, price_base: 88 },
-  { name: 'Apoquindo Alto', lat_base: -33.3970, lng_base: -70.5900, price_base: 91 },
-  { name: 'Costanera Sur', lat_base: -33.3930, lng_base: -70.5780, price_base: 87 },
-  { name: 'La Florida', lat_base: -33.4020, lng_base: -70.5700, price_base: 82 },
-  { name: 'Andrés Bello', lat_base: -33.3920, lng_base: -70.6100, price_base: 85 },
-  { name: 'Huérfanos', lat_base: -33.3850, lng_base: -70.6160, price_base: 84 },
-  { name: 'Alonso de Córdova', lat_base: -33.4050, lng_base: -70.6090, price_base: 86 },
-  { name: 'Manquehue', lat_base: -33.4140, lng_base: -70.5990, price_base: 81 },
-  { name: 'Vitacura Centro', lat_base: -33.3900, lng_base: -70.6000, price_base: 89 },
+  { name: 'Nueva Costanera', barrio_id: 'nueva_costanera', lat_base: -33.3885, lng_base: -70.5820, price_base: 95 },
+  { name: 'El Golf', barrio_id: 'el_golf', lat_base: -33.3840, lng_base: -70.5900, price_base: 92 },
+  { name: 'La Dehesa', barrio_id: 'la_dehesa', lat_base: -33.3750, lng_base: -70.5770, price_base: 88 },
+  { name: 'Apoquindo Alto', barrio_id: 'apoquindo_alto', lat_base: -33.3970, lng_base: -70.5900, price_base: 91 },
+  { name: 'Costanera Sur', barrio_id: 'costanera_sur', lat_base: -33.3930, lng_base: -70.5780, price_base: 87 },
+  { name: 'La Florida', barrio_id: 'la_florida', lat_base: -33.4020, lng_base: -70.5700, price_base: 82 },
+  { name: 'Andrés Bello', barrio_id: 'andres_bello', lat_base: -33.3920, lng_base: -70.6100, price_base: 85 },
+  { name: 'Huérfanos', barrio_id: 'huerfanos', lat_base: -33.3850, lng_base: -70.6160, price_base: 84 },
+  { name: 'Alonso de Córdova', barrio_id: 'alonso_de_cordova', lat_base: -33.4050, lng_base: -70.6090, price_base: 86 },
+  { name: 'Manquehue', barrio_id: 'manquehue', lat_base: -33.4140, lng_base: -70.5990, price_base: 81 },
+  { name: 'Vitacura Centro', barrio_id: 'vitacura_centro', lat_base: -33.3900, lng_base: -70.6000, price_base: 89 },
 ]
 
 // Generate realistic synthetic Vitacura properties
@@ -99,22 +99,13 @@ export async function POST(request: Request) {
 
     console.log(`[v0] Generated ${properties.length} synthetic properties`)
 
-    // Insert each property with auto-tagging via RPC
+    // Insert each property with sector-based neighborhood assignment
     const results = await Promise.allSettled(
-      properties.map(async (prop) => {
+      properties.map(async (prop, idx) => {
         try {
-          // Call RPC to auto-assign neighborhood based on lat/lng
-          const { data: tagData, error: tagErr } = await supabase.rpc(
-            'tag_vitacura_point',
-            { p_lat: prop.lat, p_lng: prop.lng }
-          )
-
-          const neighborhood =
-            tagData && tagData.length > 0
-              ? tagData[0].barrio_nombre
-              : 'Vitacura Centro'
-          const zona_prc =
-            tagData && tagData.length > 0 ? tagData[0].zona_prc : 'ZR-5'
+          // Get neighborhood from the sector that generated this property
+          const sector = VITACURA_SECTORS[idx % VITACURA_SECTORS.length]
+          const neighborhood = sector.name
 
           // Insert into properties table
           const { error: insertErr, data: inserted } = await supabase
@@ -134,7 +125,7 @@ export async function POST(request: Request) {
             .select('id')
 
           if (insertErr) {
-            console.error('[v0] Insert error:', insertErr.message)
+            console.error('[v0] Insert error for', neighborhood, ':', insertErr.message)
             return null
           }
 
