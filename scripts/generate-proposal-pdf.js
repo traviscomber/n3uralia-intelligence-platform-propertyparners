@@ -102,67 +102,67 @@ function generateProposalPDF() {
 
   doc.addPage();
 
-  // PÁGINA 4: Landing Screenshot
-  addSection('Landing Page');
-  addParagraph('La landing page presenta la propuesta de valor: automatización de reportes, inteligencia de mercado, y un valorizador que pondera la calidad real de cada propiedad.');
+  // PÁGINA 4: Landing Screenshot - Página dedicada a foto
+  doc.fontSize(18).fillColor(darkGreen).font('Helvetica-Bold').text('Landing Page', 40, 40);
+  doc.fontSize(10).fillColor('#666').font('Helvetica').text('Propuesta de valor: automatización de reportes, inteligencia de mercado, valorizador IA', 40, 65);
   try {
-    doc.image('/tmp/ss_landing.png', { width: 500, align: 'center' });
-    doc.fontSize(9).fillColor('#666').font('Helvetica-Oblique').text('Figura 1: Landing Page con propuesta de valor y 3 pilares', { align: 'center' });
+    doc.image('/tmp/ss_landing.png', 30, 100, { width: 550, height: 650 });
   } catch (e) {
-    doc.text('[Screenshot no disponible]', { align: 'center' });
+    doc.fontSize(12).fillColor('#999').text('[Screenshot no disponible]', { align: 'center' });
   }
+  doc.fontSize(9).fillColor('#999').font('Helvetica-Oblique').text('Figura 1: Landing Page', 40, 760);
 
   doc.addPage();
 
-  // PÁGINA 5: Market Intelligence Screenshot
-  addSection('Market Intelligence');
-  addParagraph('Dashboard con KPIs en tiempo real: 84 UF/m², 50 días de velocidad, 472 propiedades en inventario, 82% de absorción. Incluye mapa Leaflet interactivo y tabs de análisis.');
+  // PÁGINA 5: Market Intelligence Screenshot - Página dedicada a foto
+  doc.fontSize(18).fillColor(darkGreen).font('Helvetica-Bold').text('Market Intelligence', 40, 40);
+  doc.fontSize(10).fillColor('#666').font('Helvetica').text('KPIs en tiempo real: 84 UF/m², 50 días velocidad, 472 propiedades, 82% absorción', 40, 65);
   try {
-    doc.image('/tmp/ss_market_real.png', { width: 500, align: 'center' });
-    doc.fontSize(9).fillColor('#666').font('Helvetica-Oblique').text('Figura 2: Market Intelligence con KPIs y mapa interactivo', { align: 'center' });
+    doc.image('/tmp/ss_market_real.png', 30, 100, { width: 550, height: 650 });
   } catch (e) {
-    doc.text('[Screenshot no disponible]', { align: 'center' });
+    doc.fontSize(12).fillColor('#999').text('[Screenshot no disponible]', { align: 'center' });
   }
+  doc.fontSize(9).fillColor('#999').font('Helvetica-Oblique').text('Figura 2: Market Intelligence con KPIs y mapa Leaflet', 40, 760);
 
   doc.addPage();
 
-  // PÁGINA 6: Properties Screenshot
-  addSection('Property Loader');
-  addParagraph('75 propiedades reales de Portal Inmobiliario con auto-tagging por barrio. Cada propiedad incluye dirección, precio UF, área, dormitorios y días en el mercado.');
+  // PÁGINA 6: Property Loader Screenshot - Página dedicada a foto
+  doc.fontSize(18).fillColor(darkGreen).font('Helvetica-Bold').text('Property Loader', 40, 40);
+  doc.fontSize(10).fillColor('#666').font('Helvetica').text('75 propiedades reales de Portal Inmobiliario con auto-tagging por barrio', 40, 65);
   try {
-    doc.image('/tmp/ss_properties_real.png', { width: 500, align: 'center' });
-    doc.fontSize(9).fillColor('#666').font('Helvetica-Oblique').text('Figura 3: Property Loader con datos reales', { align: 'center' });
+    doc.image('/tmp/ss_properties_real.png', 30, 100, { width: 550, height: 650 });
   } catch (e) {
-    doc.text('[Screenshot no disponible]', { align: 'center' });
+    doc.fontSize(12).fillColor('#999').text('[Screenshot no disponible]', { align: 'center' });
   }
+  doc.fontSize(9).fillColor('#999').font('Helvetica-Oblique').text('Figura 3: Property Loader con datos reales', 40, 760);
 
   doc.addPage();
 
-  // PÁGINA 6.5: GIS Map Screenshot
-  addSection('Mapa GIS Interactivo');
-  addParagraph('Mapa Leaflet que visualiza los 11 barrios de Vitacura como polígonos coloreados por tipo de zona. Cada polígono es clickeable para ver KPIs del barrio: precio promedio, velocidad, absorción e inventario en tiempo real.');
+  // PÁGINA 7: GIS Map Screenshot - Página dedicada a foto
+  doc.fontSize(18).fillColor(darkGreen).font('Helvetica-Bold').text('Mapa GIS Interactivo', 40, 40);
+  doc.fontSize(10).fillColor('#666').font('Helvetica').text('11 barrios de Vitacura como polígonos coloreados por tipo de zona', 40, 65);
   try {
-    doc.image('/tmp/ss_mapa_gis.png', { width: 500, align: 'center' });
-    doc.fontSize(9).fillColor('#666').font('Helvetica-Oblique').text('Figura 4: Mapa GIS Leaflet con 11 barrios de Vitacura', { align: 'center' });
+    doc.image('/tmp/ss_mapa_gis.png', 30, 100, { width: 550, height: 650 });
   } catch (e) {
-    doc.text('[Screenshot no disponible]', { align: 'center' });
+    doc.fontSize(12).fillColor('#999').text('[Screenshot no disponible]', { align: 'center' });
   }
+  doc.fontSize(9).fillColor('#999').font('Helvetica-Oblique').text('Figura 4: Mapa GIS Leaflet con 11 barrios', 40, 760);
 
   doc.addPage();
 
-  // PÁGINA 6.7: Executive Dashboard Screenshot
-  addSection('Executive Dashboard');
-  addParagraph('Panel ejecutivo con métricas clave en tiempo real: Ventas mes (28), UF vendidas (42.5K), Tasa conversión (9%), Stock activo (184 propiedades). Incluye gráficos de tendencia y KPIs históricos.');
+  // PÁGINA 8: Executive Dashboard Screenshot - Página dedicada a foto
+  doc.fontSize(18).fillColor(darkGreen).font('Helvetica-Bold').text('Executive Dashboard', 40, 40);
+  doc.fontSize(10).fillColor('#666').font('Helvetica').text('Métricas en tiempo real: 28 ventas/mes, 42.5K UF volumen, 9% conversión', 40, 65);
   try {
-    doc.image('/tmp/ss_dashboard.png', { width: 500, align: 'center' });
-    doc.fontSize(9).fillColor('#666').font('Helvetica-Oblique').text('Figura 5: Executive Dashboard con KPIs en tiempo real', { align: 'center' });
+    doc.image('/tmp/ss_dashboard.png', 30, 100, { width: 550, height: 650 });
   } catch (e) {
-    doc.text('[Screenshot no disponible]', { align: 'center' });
+    doc.fontSize(12).fillColor('#999').text('[Screenshot no disponible]', { align: 'center' });
   }
+  doc.fontSize(9).fillColor('#999').font('Helvetica-Oblique').text('Figura 5: Executive Dashboard con KPIs', 40, 760);
 
   doc.addPage();
 
-  // PÁGINA 7: ARCHITECTURE
+  // PÁGINA 9: ARCHITECTURE
   addSection('Arquitectura Técnica');
   addSubsection('Stack Tecnológico');
   doc.fontSize(10).fillColor('#555').font('Helvetica').text('Frontend: Next.js 16, React 19, Tailwind CSS');
@@ -184,7 +184,7 @@ function generateProposalPDF() {
 
   doc.addPage();
 
-  // PÁGINA 8: ROADMAP
+  // PÁGINA 10: ROADMAP
   addSection('Roadmap — Fases de Desarrollo');
   
   addSubsection('Completadas (Julio 2026)');
@@ -203,7 +203,7 @@ function generateProposalPDF() {
 
   doc.addPage();
 
-  // PÁGINA 9: CLOSING
+  // PÁGINA 11: CLOSING
   addSection('Siguiente Paso');
   addSubsection('Demo Interactiva');
   addParagraph('Te invitamos a acceder a la plataforma en vivo y explorar las 3 herramientas principales:');
