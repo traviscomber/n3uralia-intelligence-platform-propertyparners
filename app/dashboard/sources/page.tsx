@@ -26,24 +26,47 @@ interface ScrapeRun {
   created_at: string
 }
 
+interface ScrapeHealthIssue {
+  severity: 'info' | 'warning' | 'critical'
+  title: string
+  detail: string
+}
+
+interface ScrapeHealth {
+  status: 'healthy' | 'warning' | 'critical' | 'unknown'
+  generatedAt: string
+  summary: {
+    recentRuns: number
+    averageScraped: number
+    averageInserted: number
+    activeSources: number
+    criticalCount: number
+    warningCount: number
+  }
+  issues: ScrapeHealthIssue[]
+}
+
 export default function SourcesPage() {
   const [sources, setSources] = useState<DataSource[]>([])
   const [runs, setRuns] = useState<ScrapeRun[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshingAll, setRefreshingAll] = useState(false)
   const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
+  const [health, setHealth] = useState<ScrapeHealth | null>(null)
 
   useEffect(() => {
     const fetchSources = async () => {
       try {
         const supabase = createClient()
-        const [sourcesRes, runsRes] = await Promise.all([
+        const [sourcesRes, runsRes, healthRes] = await Promise.all([
           supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
           fetch('/api/scrape/runs').then((res) => res.json()),
+          fetch('/api/scrape/health').then((res) => res.json()),
         ])
 
         setSources(sourcesRes.data || [])
         setRuns((runsRes.runs || []) as ScrapeRun[])
+        setHealth(healthRes as ScrapeHealth)
       } catch (err) {
         console.error('Error:', err)
       } finally {
@@ -65,12 +88,14 @@ export default function SourcesPage() {
       }
       setRefreshMsg(`Refresco completado: scraping y benchmark actualizados a ${new Date(json.refreshedAt).toLocaleTimeString('es-CL')}`)
       const supabase = createClient()
-      const [sourcesRes, runsRes] = await Promise.all([
+      const [sourcesRes, runsRes, healthRes] = await Promise.all([
         supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
         fetch('/api/scrape/runs').then((r) => r.json()),
+        fetch('/api/scrape/health').then((r) => r.json()),
       ])
       setSources(sourcesRes.data || [])
       setRuns((runsRes.runs || []) as ScrapeRun[])
+      setHealth(healthRes as ScrapeHealth)
     } catch (err) {
       setRefreshMsg(err instanceof Error ? err.message : 'No pudimos refrescar las fuentes.')
     } finally {
@@ -115,6 +140,9 @@ export default function SourcesPage() {
     return labels[type] || type
   }
 
+  const healthLabel = health?.status === 'healthy' ? 'Saludable' : health?.status === 'warning' ? 'Con alertas' : health?.status === 'critical' ? 'Crítico' : 'Sin datos'
+  const healthColor = health?.status === 'healthy' ? '#10b981' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#9ca9a3'
+
   return (
     <div className="space-y-6">
       <div>
@@ -122,7 +150,7 @@ export default function SourcesPage() {
           Fuentes de Datos
         </h1>
         <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-          Pipeline de inteligencia con 7 fuentes integradas
+          Pipeline de inteligencia con fuentes integradas en tiempo real
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
@@ -138,6 +166,49 @@ export default function SourcesPage() {
           )}
         </div>
       </div>
+
+      {!loading && health && (
+        <div className="rounded-lg p-5 bg-white" style={{ border: '1px solid #d8e5e2' }}>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Health del pipeline</p>
+              <h2 className="mt-1 text-lg font-semibold text-gray-900">
+                Estado actual: <span style={{ color: healthColor }}>{healthLabel}</span>
+              </h2>
+              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+                {health.summary.activeSources} fuentes activas · {health.summary.averageScraped} props/corrida · {health.summary.averageInserted} insertadas/corrida
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Alertas</p>
+                <p className="text-lg font-bold text-gray-900">{health.summary.warningCount}</p>
+              </div>
+              <div className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Críticas</p>
+                <p className="text-lg font-bold text-gray-900">{health.summary.criticalCount}</p>
+              </div>
+            </div>
+          </div>
+          {health.issues.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {health.issues.slice(0, 4).map((issue) => (
+                <div
+                  key={`${issue.title}-${issue.detail}`}
+                  className="rounded-lg px-3 py-2"
+                  style={{
+                    background: issue.severity === 'critical' ? '#fef2f2' : issue.severity === 'warning' ? '#fffbeb' : '#f0f9ff',
+                    border: `1px solid ${issue.severity === 'critical' ? '#fecaca' : issue.severity === 'warning' ? '#fde68a' : '#bfdbfe'}`,
+                  }}
+                >
+                  <p className="text-sm font-semibold text-gray-900">{issue.title}</p>
+                  <p className="text-xs mt-1" style={{ color: '#555a56' }}>{issue.detail}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pipeline Overview */}
       <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>

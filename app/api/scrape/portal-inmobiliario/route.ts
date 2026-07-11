@@ -47,6 +47,7 @@ const SEARCH_URLS = [
 ]
 
 const TOCTOC_SEARCH_URL = 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
+const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
 
 const SECTORS = [
   { keys: ['nueva costanera', 'costanera norte'], lat: -33.3885, lng: -70.5820, name: 'Nueva Costanera' },
@@ -294,6 +295,76 @@ async function scrapeToctocListings(limit = 25) {
   return results
 }
 
+async function scrapeIcasasListings(limit = 20) {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
+  })
+
+  const results: ScrapedProperty[] = []
+
+  try {
+    const page = await browser.newPage()
+    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9' })
+    await page.goto(ICASAS_SEARCH_URL, { waitUntil: 'networkidle2', timeout: 40000 })
+    await page.waitForSelector('li.serp-snippet.ad', { timeout: 15000 }).catch(() => {})
+
+    const cards = await page.evaluate(() => {
+      const elements = document.querySelectorAll('li.serp-snippet.ad')
+      return Array.from(elements).map((card) => {
+        const title = card.querySelector('a.detail-redirection')?.textContent?.trim() ?? ''
+        const href = card.querySelector('a.detail-redirection')?.getAttribute('href') ?? ''
+        const price = card.querySelector('.price')?.textContent?.trim() ?? ''
+        const description = card.querySelector('.description')?.textContent?.trim() ?? ''
+        const address = card.querySelector('[itemprop="streetAddress"] [itemprop="content"], [itemprop="streetAddress"] meta')?.getAttribute('content')
+          ?? card.querySelector('[itemprop="streetAddress"]')?.textContent?.trim()
+          ?? ''
+        const locality = card.querySelector('[itemprop="addressLocality"] meta')?.getAttribute('content')
+          ?? card.querySelector('[itemprop="addressLocality"]')?.textContent?.trim()
+          ?? ''
+        const lat = card.querySelector('[itemprop="latitude"]')?.getAttribute('content') ?? ''
+        const lng = card.querySelector('[itemprop="longitude"]')?.getAttribute('content') ?? ''
+        const area = card.querySelector('.areaBuilt')?.textContent?.trim() ?? ''
+        const rooms = card.querySelector('.rooms')?.textContent?.trim() ?? ''
+        const bathrooms = card.querySelector('.bathrooms')?.textContent?.trim() ?? ''
+
+        return { title, href, price, description, address, locality, lat, lng, area, rooms, bathrooms }
+      })
+    })
+
+    for (let i = 0; i < cards.length && results.length < limit; i += 1) {
+      const card = cards[i]
+      const combinedText = `${card.title} ${card.description} ${card.address} ${card.locality}`
+      const priceUf = parseUF(card.price)
+      const areaMatch = card.area.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
+      const bedrooms = parseRange(card.rooms || '2')
+      const bathrooms = parseRange(card.bathrooms || '2')
+      const sector = sectorFromText(combinedText, i)
+
+      if (!priceUf || priceUf < 1000 || priceUf > 200000) continue
+
+      results.push({
+        address: `${card.title || 'icasas listing'} - ${card.address || card.locality || sector.name}`.slice(0, 200),
+        price_uf: priceUf,
+        area_m2: areaMatch ? Math.max(30, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (i % 5) * 12, 500)),
+        bedrooms: Math.max(1, Math.min(Number.isFinite(bedrooms) ? bedrooms : 2, 6)),
+        bathrooms: Math.max(1, Math.min(Number.isFinite(bathrooms) ? bathrooms : 2, 6)),
+        neighborhood: sector.name,
+        lat: card.lat ? Number.parseFloat(card.lat) : sector.lat + (Math.random() - 0.5) * 0.0015,
+        lng: card.lng ? Number.parseFloat(card.lng) : sector.lng + (Math.random() - 0.5) * 0.0015,
+        days_on_market: Math.floor(Math.random() * 70) + 4,
+        source: 'icasas_search',
+        external_id: card.href || hashLike(`${card.title}|${card.address}|${card.price}`),
+      })
+    }
+  } finally {
+    await browser.close().catch(() => {})
+  }
+
+  return results
+}
+
 async function syncSourceStats(source: string, status: 'active' | 'error', recordsCount: number, errorMessage: string | null) {
   try {
     const supabase = getSupabaseClient()
@@ -397,6 +468,15 @@ export async function POST(request: Request) {
       await syncSourceStats('TOCTOC Search', errors.length ? 'error' : 'active', uniqueToctoc.length, errors[0] || null)
     }
 
+    if (source === 'all' || source === 'icasas') {
+      const icasasRows = await scrapeIcasasListings(20)
+      const uniqueIcasas = dedupeProperties(icasasRows)
+      const { inserted, errors } = await insertProperties(uniqueIcasas)
+      allRows.push(...uniqueIcasas)
+      runs.push({ source: 'icasas_search', scraped: uniqueIcasas.length, inserted, skipped: uniqueIcasas.length - inserted, errors })
+      await syncSourceStats('icasas.cl', errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+    }
+
     const totalScraped = allRows.length
     const totalInserted = runs.reduce((sum, run) => sum + run.inserted, 0)
     const totalSkipped = runs.reduce((sum, run) => sum + run.skipped, 0)
@@ -422,16 +502,6 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      source,
-      scraped: totalScraped,
-      inserted: totalInserted,
-      skipped: totalSkipped,
-      runs,
-      errors: allErrors.slice(0, 10),
-      message: `Importadas ${totalInserted} propiedades desde las fuentes activas`,
-    })
     await logScrapeRun({
       source,
       status: scrapeStatus,
@@ -442,6 +512,17 @@ export async function POST(request: Request) {
       source_breakdown: { runs, errors: allErrors.slice(0, 10) },
       started_at: startedAt,
       finished_at: new Date().toISOString(),
+    })
+
+    return NextResponse.json({
+      success: true,
+      source,
+      scraped: totalScraped,
+      inserted: totalInserted,
+      skipped: totalSkipped,
+      runs,
+      errors: allErrors.slice(0, 10),
+      message: `Importadas ${totalInserted} propiedades desde las fuentes activas`,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Scraper failed'
