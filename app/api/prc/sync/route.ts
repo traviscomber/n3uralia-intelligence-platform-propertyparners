@@ -4,10 +4,16 @@ import { createClient } from '@supabase/supabase-js'
 const ARCGIS_URL =
   'https://ideserver.sma.gob.cl/arcgis/rest/services/IDE/PRC/MapServer/312/query'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase credentials')
+  }
+
+  return createClient(supabaseUrl, supabaseKey)
+}
 
 // Fetch all features from ArcGIS paged — uses f=json (Esri native, geojson not supported)
 async function fetchAllFeatures() {
@@ -64,6 +70,7 @@ function esriToWkt(geometry: any): string | null {
 
 export async function POST() {
   try {
+    const supabase = getSupabaseClient()
     const features = await fetchAllFeatures()
 
     if (features.length === 0) {

@@ -213,7 +213,7 @@ export default function PropertiesPage() {
                 onChange={e => setForm({ ...form, address: e.target.value })}
                 placeholder="Av. Vitacura 1234, Dpto 502"
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900 outline-none focus:ring-2"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7', focusRingColor: '#8fb2aa' }}
+                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
               />
             </div>
             {/* Status */}

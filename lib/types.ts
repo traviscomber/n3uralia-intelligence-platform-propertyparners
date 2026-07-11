@@ -48,6 +48,14 @@ export interface KnowledgeDocument {
   created_at: string
 }
 
+export interface MarketData {
+  neighborhood: string
+  avg_price_uf: number | null
+  avg_price_m2_uf: number | null
+  absorption_rate: number | null
+  inventory_count: number
+}
+
 export interface DataSource {
   id: string
   name: string

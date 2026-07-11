@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-interface Neighborhood {
+export interface Neighborhood {
   id: number
   name: string
   barrio_id: string
@@ -15,7 +15,7 @@ interface Neighborhood {
   geometry?: { type: string; coordinates: number[][][] }
 }
 
-interface PrcZone {
+export interface PrcZone {
   id: number
   zona: string
   subzona: string
@@ -23,7 +23,7 @@ interface PrcZone {
   geometry?: { type: string; coordinates: number[][][] }
 }
 
-interface Props {
+export interface VitacuraMapProps {
   neighborhoods: Neighborhood[]
   prcZones: PrcZone[]
   selected: string | null
@@ -38,7 +38,7 @@ const TIPO_COLOR: Record<string, string> = {
   comercial_servicios:    '#f59e0b',
 }
 
-export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelect, showPrc }: Props) {
+export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelect, showPrc }: VitacuraMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef       = useRef<any>(null)
   const LRef         = useRef<any>(null)
