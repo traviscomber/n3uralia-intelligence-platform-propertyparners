@@ -1,10 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
 
-// Server-side client uses service role — never exposed to browser
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase credentials')
+  }
+
+  return createClient(supabaseUrl, supabaseKey)
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,6 +56,7 @@ export async function tagVitacuraPoint(
   lat: number,
   lng: number
 ): Promise<TagResult | null> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .rpc('tag_vitacura_point', { lat, lng })
     .single();
@@ -69,6 +75,7 @@ export async function tagVitacuraPoint(
  * Get all market neighborhoods — used by Market Intelligence dashboard
  */
 export async function getAllMarketNeighborhoods(): Promise<MarketNeighborhood[]> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('vitacura_market_neighborhoods')
     .select('barrio_id, barrio_nombre, velocity_days, price_per_sqm, price_trend_3yr, price_trend_5yr, absorption_rate, inventory_count, geometry')
@@ -86,6 +93,7 @@ export async function getAllMarketNeighborhoods(): Promise<MarketNeighborhood[]>
  * Get a single market neighborhood by barrio_id
  */
 export async function getMarketNeighborhoodById(barrio_id: string): Promise<MarketNeighborhood | null> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('vitacura_market_neighborhoods')
     .select('*')
@@ -106,6 +114,7 @@ export async function getMarketNeighborhoodById(barrio_id: string): Promise<Mark
  * Get all PRC zones — used to paint regulatory layers on map
  */
 export async function getAllPrcZones(): Promise<PrcZone[]> {
+  const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('vitacura_prc_zones')
     .select('zona_prc, subzona, geometry');
@@ -128,6 +137,7 @@ export async function assignBarrioToProperty(
   lat: number,
   lng: number
 ): Promise<TagResult | null> {
+  const supabase = getSupabaseClient()
   const tag = await tagVitacuraPoint(lat, lng);
   if (!tag) return null;
 

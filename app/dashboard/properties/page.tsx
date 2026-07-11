@@ -135,10 +135,10 @@ export default function PropertiesPage() {
   async function handleScrapePortal() {
     setScraping(true)
     try {
-      const res = await fetch('/api/scrape/portal-inmobiliario', { method: 'POST' })
+      const res = await fetch('/api/scrape/portal-inmobiliario?source=all', { method: 'POST' })
       const json = await res.json()
       if (res.ok) {
-        showToast('success', `✅ Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas de Portal Inmobiliario`)
+        showToast('success', `Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas desde Portal Inmobiliario y TOCTOC`)
         await loadProperties()
       } else {
         showToast('error', `Error: ${json.error || 'Fallo al scraping'}`)
@@ -162,7 +162,7 @@ export default function PropertiesPage() {
       <div className="flex items-start justify-between pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario</p>
+          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario + TOCTOC</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -172,7 +172,7 @@ export default function PropertiesPage() {
             style={{ background: '#6b8e85' }}
           >
             <Download size={16} />
-            {scraping ? 'Scrapeando...' : 'Scrape Portal'}
+            {scraping ? 'Scrapeando...' : 'Scrape Portal + TOCTOC'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
@@ -213,7 +213,7 @@ export default function PropertiesPage() {
                 onChange={e => setForm({ ...form, address: e.target.value })}
                 placeholder="Av. Vitacura 1234, Dpto 502"
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900 outline-none focus:ring-2"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7', focusRingColor: '#8fb2aa' }}
+                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
               />
             </div>
             {/* Status */}

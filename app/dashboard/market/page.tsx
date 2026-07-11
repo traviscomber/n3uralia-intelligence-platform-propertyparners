@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
+import type { Neighborhood as MapNeighborhood, PrcZone as MapPrcZone } from '@/components/map/VitacuraMap'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
@@ -48,6 +49,18 @@ interface MarketRow {
   avg_days_on_market: number
 }
 
+interface RealtorBenchmark {
+  source: string
+  source_url: string
+  neighborhood: string
+  listing_title: string | null
+  offer_count: number
+  low_price_clp: number | null
+  high_price_clp: number | null
+  price_currency: string | null
+  recorded_at: string
+}
+
 const TIPO_LABEL: Record<string, string> = {
   residencial_alto: 'Res. Alto',
   residencial_medio_alto: 'Res. Medio-Alto',
@@ -76,6 +89,9 @@ export default function MarketPage() {
   const [showPrc, setShowPrc] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
+  const [realtorBenchmark, setRealtorBenchmark] = useState<RealtorBenchmark | null>(null)
+  const [realtorLoading, setRealtorLoading] = useState(false)
+  const [realtorError, setRealtorError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'mapa' | 'overview' | 'prices' | 'velocity'>('mapa')
 
@@ -92,6 +108,25 @@ export default function MarketPage() {
   }, [])
 
   useEffect(() => { loadNeighborhoods() }, [loadNeighborhoods])
+
+  const loadRealtorBenchmark = useCallback(async () => {
+    setRealtorLoading(true)
+    setRealtorError(null)
+    try {
+      const res = await fetch('/api/benchmarks/realtor', { cache: 'no-store' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'No pudimos actualizar el benchmark externo.')
+      setRealtorBenchmark(json.benchmark as RealtorBenchmark)
+    } catch (err) {
+      setRealtorError(err instanceof Error ? err.message : 'No pudimos actualizar el benchmark externo.')
+    } finally {
+      setRealtorLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadRealtorBenchmark()
+  }, [loadRealtorBenchmark])
 
   const loadPrcZones = useCallback(async () => {
     const res = await fetch('/api/prc/zones')
@@ -185,6 +220,53 @@ export default function MarketPage() {
         </div>
       )}
 
+      {(realtorBenchmark || realtorError) && (
+        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmark externo</p>
+              <h2 className="mt-1 text-lg font-semibold text-gray-900">Realtor International</h2>
+              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+                {realtorBenchmark
+                  ? `${realtorBenchmark.offer_count} ofertas detectadas en ${realtorBenchmark.neighborhood} · ${new Date(realtorBenchmark.recorded_at).toLocaleString('es-CL')}`
+                  : realtorError || 'No disponible'}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => void loadRealtorBenchmark()}
+                disabled={realtorLoading}
+                className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
+                style={{ background: '#8fb2aa', color: '#fff' }}
+              >
+                {realtorLoading ? 'Actualizando...' : 'Actualizar benchmark'}
+              </button>
+              {realtorBenchmark && (
+                <a href={realtorBenchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                  Abrir fuente
+                </a>
+              )}
+            </div>
+          </div>
+          {realtorBenchmark && (
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta mínima</p>
+                <p className="mt-2 text-xl font-semibold text-gray-900">{realtorBenchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{realtorBenchmark.price_currency || 'CLP'}</span></p>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta máxima</p>
+                <p className="mt-2 text-xl font-semibold text-gray-900">{realtorBenchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{realtorBenchmark.price_currency || 'CLP'}</span></p>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Título fuente</p>
+                <p className="mt-2 text-sm font-medium text-gray-900 line-clamp-2">{realtorBenchmark.listing_title || 'Sin título'}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* KPI Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
@@ -228,8 +310,8 @@ export default function MarketPage() {
       {activeTab === 'mapa' && (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: '1px solid #d8e5e2', height: '520px' }}>
           <VitacuraMap
-            neighborhoods={neighborhoods as Parameters<typeof VitacuraMap>[0]['neighborhoods']}
-            prcZones={prcZones as Parameters<typeof VitacuraMap>[0]['prcZones']}
+            neighborhoods={neighborhoods as MapNeighborhood[]}
+            prcZones={prcZones as MapPrcZone[]}
             selected={selected}
             onSelect={setSelected}
             showPrc={showPrc}
@@ -292,7 +374,7 @@ export default function MarketPage() {
               <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} tickFormatter={v => `${v} UF`} />
               <Tooltip
                 contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }}
-                formatter={(val: number) => [`${val.toFixed(1)} UF/m²`, 'Precio']}
+                formatter={(val) => [typeof val === 'number' ? `${val.toFixed(1)} UF/m²` : String(val ?? '—'), 'Precio']}
                 labelFormatter={(label) => `Sector: ${label}`}
               />
               <Bar dataKey="precio" fill="#8fb2aa" radius={[4, 4, 0, 0]} name="UF/m²" />
