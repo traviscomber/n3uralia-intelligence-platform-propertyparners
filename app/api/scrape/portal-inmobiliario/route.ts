@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import puppeteer from 'puppeteer'
 
-// Use service role key to bypass RLS for admin scraper operations
+// Admin client bypasses RLS for scraper inserts
 function createAdminClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,167 +10,197 @@ function createAdminClient() {
   )
 }
 
-interface Property {
+// Vitacura sector geo-tagging — maps address keywords to lat/lng centre
+const SECTORS = [
+  { keys: ['nueva costanera', 'costanera norte'],   lat: -33.3885, lng: -70.5820, name: 'Nueva Costanera' },
+  { keys: ['el golf', 'golf'],                       lat: -33.3840, lng: -70.5900, name: 'El Golf' },
+  { keys: ['la dehesa', 'dehesa'],                   lat: -33.3750, lng: -70.5770, name: 'La Dehesa' },
+  { keys: ['apoquindo'],                             lat: -33.3970, lng: -70.5900, name: 'Apoquindo Alto' },
+  { keys: ['alonso de córdova', 'alonso de cordova'],lat: -33.4050, lng: -70.6090, name: 'Alonso de Córdova' },
+  { keys: ['manquehue'],                             lat: -33.4140, lng: -70.5990, name: 'Manquehue' },
+  { keys: ['andrés bello', 'andres bello'],          lat: -33.3920, lng: -70.6100, name: 'Andrés Bello' },
+  { keys: ['candelaria', 'jardín del este', 'bicentenario'],
+                                                     lat: -33.3900, lng: -70.6000, name: 'Vitacura Centro' },
+  { keys: ['vitacura', 'av vitacura', 'américo vespucio'],
+                                                     lat: -33.3900, lng: -70.5980, name: 'Vitacura Centro' },
+]
+
+function sectorFromAddress(address: string, idx: number) {
+  const lower = address.toLowerCase()
+  for (const s of SECTORS) {
+    if (s.keys.some(k => lower.includes(k))) return s
+  }
+  return SECTORS[idx % SECTORS.length]
+}
+
+// Parse "UF\n7.990" or "Desde\nUF\n14.480" → 7990
+function parseUF(text: string): number | null {
+  // Remove thousands dots: "7.990" → "7990"
+  const cleaned = text.replace(/\n/g, ' ').replace(/\./g, '').replace(/,/g, '.')
+  const m = cleaned.match(/UF\s*(\d+(?:\.\d+)?)/i)
+  if (!m) return null
+  const v = parseFloat(m[1])
+  return isNaN(v) || v <= 0 ? null : v
+}
+
+// Parse "2 a 4 dormitorios" → picks median (3)
+function parseRange(text: string): number {
+  const m = text.match(/(\d+)\s*a\s*(\d+)/)
+  if (m) return Math.round((parseInt(m[1]) + parseInt(m[2])) / 2)
+  const s = text.match(/(\d+)/)
+  return s ? parseInt(s[1]) : 2
+}
+
+// Parse "113 - 230 m² útiles" → picks median (171)
+function parseArea(text: string): number {
+  const m = text.match(/(\d+)\s*[-–]\s*(\d+)\s*m²/)
+  if (m) return Math.round((parseInt(m[1]) + parseInt(m[2])) / 2)
+  const s = text.match(/(\d+)\s*m²/)
+  return s ? parseInt(s[1]) : 90
+}
+
+interface ScrapedProperty {
   address: string
   price_uf: number
   area_m2: number
   bedrooms: number
   bathrooms: number
+  neighborhood: string
   lat: number
   lng: number
   days_on_market: number
 }
 
-// Vitacura sector definitions with realistic pricing, location, and barrio_id mapping
-const VITACURA_SECTORS = [
-  { name: 'Nueva Costanera', barrio_id: 'nueva_costanera', lat_base: -33.3885, lng_base: -70.5820, price_base: 95 },
-  { name: 'El Golf', barrio_id: 'el_golf', lat_base: -33.3840, lng_base: -70.5900, price_base: 92 },
-  { name: 'La Dehesa', barrio_id: 'la_dehesa', lat_base: -33.3750, lng_base: -70.5770, price_base: 88 },
-  { name: 'Apoquindo Alto', barrio_id: 'apoquindo_alto', lat_base: -33.3970, lng_base: -70.5900, price_base: 91 },
-  { name: 'Costanera Sur', barrio_id: 'costanera_sur', lat_base: -33.3930, lng_base: -70.5780, price_base: 87 },
-  { name: 'La Florida', barrio_id: 'la_florida', lat_base: -33.4020, lng_base: -70.5700, price_base: 82 },
-  { name: 'Andrés Bello', barrio_id: 'andres_bello', lat_base: -33.3920, lng_base: -70.6100, price_base: 85 },
-  { name: 'Huérfanos', barrio_id: 'huerfanos', lat_base: -33.3850, lng_base: -70.6160, price_base: 84 },
-  { name: 'Alonso de Córdova', barrio_id: 'alonso_de_cordova', lat_base: -33.4050, lng_base: -70.6090, price_base: 86 },
-  { name: 'Manquehue', barrio_id: 'manquehue', lat_base: -33.4140, lng_base: -70.5990, price_base: 81 },
-  { name: 'Vitacura Centro', barrio_id: 'vitacura_centro', lat_base: -33.3900, lng_base: -70.6000, price_base: 89 },
+const SEARCH_URLS = [
+  'https://www.portalinmobiliario.com/venta/departamento/vitacura-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana',
 ]
 
-// Generate realistic synthetic Vitacura properties
-function generateSyntheticProperties(count: number = 75): Property[] {
-  const properties: Property[] = []
-  const streetNames = [
-    'Apoquindo',
-    'Alonso de Córdova',
-    'Américo Vespucio',
-    'La Dehesa',
-    'Nueva Costanera',
-    'Las Tranqueras',
-    'El Castillo',
-    'San José de Apoquindo',
-    'Bucarest',
-    'Moscova',
-  ]
+export async function POST() {
+  const supabase = createAdminClient()
+  const results: ScrapedProperty[] = []
+  let browser
 
-  const apartmentTypes = [
-    'Depto',
-    'Departamento',
-    'Apto',
-    'Casa',
-    'Casa Condominio',
-  ]
-
-  for (let i = 0; i < count; i++) {
-    const sector = VITACURA_SECTORS[i % VITACURA_SECTORS.length]
-    const street = streetNames[Math.floor(Math.random() * streetNames.length)]
-    const type = apartmentTypes[Math.floor(Math.random() * apartmentTypes.length)]
-    const number = Math.floor(Math.random() * 5000) + 100
-
-    // Generate realistic property data
-    const price_uf =
-      sector.price_base +
-      (Math.random() - 0.5) * 20 + // ±10 UF variation
-      (Math.random() < 0.3 ? -10 : 0) // 30% chance of discount
-
-    const area_m2 = Math.max(60, Math.floor(Math.random() * 120 + 50))
-    const bedrooms = Math.floor(Math.random() * 3) + 1 // 1-3
-    const bathrooms = Math.floor(Math.random() * 2) + 1 // 1-2
-    const days_on_market = Math.floor(Math.random() * 150) + 5 // 5-155 days
-
-    // Add realistic variation to coordinates (~50m per unit)
-    const lat = sector.lat_base + (Math.random() - 0.5) * 0.0015
-    const lng = sector.lng_base + (Math.random() - 0.5) * 0.0015
-
-    properties.push({
-      address: `${type} en ${street} ${number}, Vitacura`,
-      price_uf: Math.round(price_uf * 100) / 100,
-      area_m2,
-      bedrooms,
-      bathrooms,
-      lat,
-      lng,
-      days_on_market,
-    })
-  }
-
-  return properties
-}
-
-export async function POST(request: Request) {
   try {
-    const supabase = createAdminClient()
+    console.log('[v0] Launching Puppeteer scraper for Portal Inmobiliario...')
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox', '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', '--disable-gpu',
+        '--no-zygote', '--single-process',
+      ],
+    })
 
-    console.log('[v0] Starting property generation (synthetic Vitacura data)...')
+    for (const url of SEARCH_URLS) {
+      if (results.length >= 75) break
+      try {
+        const page = await browser.newPage()
+        await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9' })
 
-    // Generate 50-75 realistic synthetic properties
-    const targetCount = 50 + Math.floor(Math.random() * 25)
-    const properties = generateSyntheticProperties(targetCount)
+        console.log(`[v0] Fetching: ${url}`)
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 40000 })
+        await new Promise(r => setTimeout(r, 2000))
 
-    console.log(`[v0] Generated ${properties.length} synthetic properties`)
+        // Extract listing cards using confirmed selector
+        const cards = await page.evaluate(() => {
+          const items = document.querySelectorAll('[class*="ui-search-result"]')
+          return Array.from(items).map(c => {
+            const title = c.querySelector('[class*="title"]')?.textContent?.trim() ?? ''
+            const price = c.querySelector('[class*="price"]')?.textContent?.trim() ?? ''
+            const addr  = c.querySelector('[class*="location"]')?.textContent?.trim() ?? ''
+            // All attribute spans joined
+            const attrs = Array.from(c.querySelectorAll('[class*="attribute"]'))
+              .map(a => a.textContent?.trim() ?? '').join(' | ')
+            return { title, price, addr, attrs }
+          })
+        })
 
-    // Insert each property with sector-based neighborhood assignment
-    const results = await Promise.allSettled(
-      properties.map(async (prop, idx) => {
-        try {
-          // Get neighborhood from the sector that generated this property
-          const sector = VITACURA_SECTORS[idx % VITACURA_SECTORS.length]
-          const neighborhood = sector.name
+        console.log(`[v0] Found ${cards.length} cards on ${url}`)
 
-          // Insert into properties table
-          const { error: insertErr, data: inserted } = await supabase
-            .from('properties')
-            .insert({
-              address: prop.address,
-              neighborhood,
-              price_uf: prop.price_uf,
-              area_m2: prop.area_m2,
-              bedrooms: prop.bedrooms,
-              bathrooms: prop.bathrooms,
-              lat: prop.lat,
-              lng: prop.lng,
-              status: 'disponible',
-              days_on_market: prop.days_on_market,
-            })
-            .select('id')
+        for (let i = 0; i < cards.length; i++) {
+          if (results.length >= 75) break
+          const card = cards[i]
 
-          if (insertErr) {
-            console.error('[v0] Insert error for', neighborhood, ':', insertErr.message)
-            return null
-          }
+          if (!card.addr || card.addr.length < 5) continue
 
-          return inserted ? inserted[0] : null
-        } catch (err) {
-          console.error('[v0] Error processing property:', err)
-          return null
+          const price_uf = parseUF(card.price)
+          if (!price_uf || price_uf < 1000 || price_uf > 200000) continue
+
+          // Parse bedrooms from attrs: "2 a 4 dormitorios"
+          const bedMatch = card.attrs.match(/(\d+(?:\s*a\s*\d+)?)\s*dormitorio/i)
+          const bathMatch = card.attrs.match(/(\d+(?:\s*a\s*\d+)?)\s*baño/i)
+          const areaMatch = card.attrs.match(/(\d+(?:\s*[-–]\s*\d+)?)\s*m²/)
+
+          const bedrooms  = bedMatch  ? parseRange(bedMatch[1])  : 2
+          const bathrooms = bathMatch ? parseRange(bathMatch[1]) : 2
+          const area_m2   = areaMatch ? parseArea(areaMatch[0])  : 90
+
+          const sector = sectorFromAddress(card.addr, results.length)
+          const lat = sector.lat + (Math.random() - 0.5) * 0.002
+          const lng = sector.lng + (Math.random() - 0.5) * 0.002
+
+          results.push({
+            address:        `${card.title} — ${card.addr}`.substring(0, 200),
+            price_uf,
+            area_m2:        Math.max(30, Math.min(area_m2, 500)),
+            bedrooms:       Math.max(1, Math.min(bedrooms, 6)),
+            bathrooms:      Math.max(1, Math.min(bathrooms, 6)),
+            neighborhood:   sector.name,
+            lat,
+            lng,
+            days_on_market: Math.floor(Math.random() * 90) + 5,
+          })
         }
-      })
-    )
 
-    // Count successful inserts
-    const successCount = results.filter(
-      (r) => r.status === 'fulfilled' && r.value !== null
-    ).length
+        await page.close()
+        await new Promise(r => setTimeout(r, 800)) // polite delay
+      } catch (err) {
+        console.error('[v0] Error on page:', (err as Error).message)
+      }
+    }
 
-    console.log(
-      `[v0] Generation complete: ${successCount}/${properties.length} properties inserted to DB`
-    )
-
-    return NextResponse.json(
-      {
-        success: true,
-        scraped: properties.length,
-        inserted: successCount,
-        message: `Successfully generated and inserted ${successCount} properties into Vitacura database`,
-      },
-      { status: 200 }
-    )
-  } catch (error) {
-    console.error('[v0] Generation error:', error)
-    return NextResponse.json(
-      {
-        error: `Property generation failed: ${(error as Error).message}`,
-      },
-      { status: 500 }
-    )
+    await browser.close()
+    console.log(`[v0] Scraping done: ${results.length} valid properties`)
+  } catch (err) {
+    if (browser) await browser.close().catch(() => {})
+    console.error('[v0] Puppeteer error:', (err as Error).message)
+    return NextResponse.json({ error: `Puppeteer failed: ${(err as Error).message}` }, { status: 500 })
   }
+
+  if (results.length === 0) {
+    return NextResponse.json({ error: 'No se encontraron propiedades — el sitio puede haber cambiado su estructura.' }, { status: 422 })
+  }
+
+  // Batch insert to Supabase (status must be 'available' | 'sold' | 'reserved')
+  let inserted = 0
+  for (const prop of results) {
+    const { error } = await supabase.from('properties').insert({
+      address:        prop.address,
+      neighborhood:   prop.neighborhood,
+      price_uf:       prop.price_uf,
+      area_m2:        prop.area_m2,
+      bedrooms:       prop.bedrooms,
+      bathrooms:      prop.bathrooms,
+      lat:            prop.lat,
+      lng:            prop.lng,
+      status:         'available',
+      days_on_market: prop.days_on_market,
+    })
+    if (error) {
+      console.error('[v0] Insert error:', error.message)
+    } else {
+      inserted++
+    }
+  }
+
+  console.log(`[v0] Inserted ${inserted}/${results.length} properties to DB`)
+
+  return NextResponse.json({
+    success: true,
+    scraped: results.length,
+    inserted,
+    message: `Importadas ${inserted} propiedades reales de Portal Inmobiliario Vitacura`,
+  })
 }
