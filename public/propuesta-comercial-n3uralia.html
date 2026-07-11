@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>N3uralia - Propuesta Comercial</title>
+  <title>N3uralia Intelligence Platform - Propuesta Comercial</title>
   <style>
     * { margin: 0; padding: 0; }
     body {
@@ -220,7 +220,59 @@
   </ul>
 </div>
 
-<!-- PAGE 9: API ROUTES -->
+<!-- PAGE 9: WEB SCRAPER TECHNICAL -->
+<div class="page">
+  <h2>Web Scraper — Portal Inmobiliario</h2>
+  
+  <h3>Tecnología</h3>
+  <p><strong>Puppeteer + Cheerio:</strong> Headless Chrome automation que navega portalinmobiliario.com. Extrae 75+ propiedades por ejecución usando selectores CSS confirmados en producción.</p>
+
+  <h3>Selectores Confirmados</h3>
+  <ul style="margin-left: 20px; font-size: 13px;">
+    <li>[class*="ui-search-result"] — Cards de propiedades (49 por página)</li>
+    <li>[class*="title"] — Nombre/proyecto del inmueble</li>
+    <li>[class*="price"] — Precio en UF (ej: "7.990")</li>
+    <li>[class*="location"] — Dirección y zona</li>
+    <li>[class*="attribute"] — Bedrooms, bathrooms, área m²</li>
+  </ul>
+
+  <h3>Parsing Inteligente</h3>
+  <ul style="margin-left: 20px; font-size: 13px;">
+    <li><strong>Precios UF:</strong> "7.990" (punto = miles) → 7990 UF automáticamente</li>
+    <li><strong>Rangos:</strong> "2 a 4 dormitorios" → mediana (3)</li>
+    <li><strong>Geo-tagging:</strong> Dirección → sector Vitacura → barrio + zona PRC</li>
+    <li><strong>Validación:</strong> Verifica precio, área, coordenadas antes de insertar</li>
+    <li><strong>Rate Limiting:</strong> 300ms entre requests, User-Agent rotativo</li>
+  </ul>
+
+  <h3>Seguridad & Confiabilidad</h3>
+  <p>Service role key bypasea RLS para batch inserts. Fallback automático a retry si falla parsing. Resultados: <strong>75 propiedades reales</strong> importadas en producción.</p>
+</div>
+
+<!-- PAGE 10: MÚLTIPLES FUENTES DE DATOS -->
+<div class="page">
+  <h2>Múltiples Fuentes de Datos</h2>
+  
+  <h3>Fase Actual (v0.5.0 - Julio 2026)</h3>
+  <ul style="margin-left: 20px; font-size: 13px;">
+    <li><strong>Portal Inmobiliario:</strong> 75+ propiedades Vitacura (en producción)</li>
+    <li><strong>Market Data Manual:</strong> 11 barrios con KPIs validados</li>
+    <li><strong>Realtor Benchmarks:</strong> Precios internacionales (preparado)</li>
+  </ul>
+
+  <h3>Roadmap — Phase 5 (Agosto 2026)</h3>
+  <ul style="margin-left: 20px; font-size: 13px;">
+    <li><strong>TOCTOC.cl:</strong> 200+ propiedades Vitacura</li>
+    <li><strong>iCasas.cl:</strong> 150+ propiedades (cobertura redundante)</li>
+    <li><strong>Yapo.cl:</strong> Validación cruzada de precios</li>
+    <li><strong>Google Maps API:</strong> Geocodificación real automática</li>
+  </ul>
+
+  <h3>Consolidación & Ventajas</h3>
+  <p><strong>Deduplicación:</strong> Mismo inmueble puede aparecer en múltiples fuentes. Sistema automático de detección por lat/lng + precio. <strong>Ventajas:</strong> 100% cobertura del mercado, validación cruzada de precios, redundancia, detección de manipulación de precios en tiempo real.</p>
+</div>
+
+<!-- PAGE 11: API ROUTES -->
 <div class="page">
   <h2>API Routes & Endpoints</h2>
   <p>La plataforma expone 9 endpoints REST para integración:</p>
