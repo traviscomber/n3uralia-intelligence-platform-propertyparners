@@ -255,10 +255,10 @@ export default function LandingPage() {
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#8fb2aa' }}>Pilar 01</div>
               <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Reportes Automáticos</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Ya tenemos el control de gestión mensual funcionando. El siguiente paso: un reporte semanal para directores que muestre el avance real versus el plan, sin que nadie lo tenga que armar.
+                Los directores reciben sus reportes semanales sin tener que armarlos. Sistema actualiza automáticamente con los últimos datos de ventas, comisiones y evolución versus plan.
               </p>
               <div className="space-y-2.5">
-                {['Control mensual para CEO', 'Seguimiento semanal para directores', 'Avance versus plan en tiempo real', 'KPIs de ventas y comisiones'].map(item => (
+                {['Reportes semanales para directores', 'Actualización automática cada lunes', 'Avance real versus meta', 'Sin intervención manual'].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8fb2aa' }} />
                     {item}
@@ -280,10 +280,10 @@ export default function LandingPage() {
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>Pilar 02</div>
               <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Market Intelligence</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Scraper de Portal Inmobiliario Vitacura + base de ventas propias + KMZ con asignación de barrio. Un informe trimestral que muestra qué barrios venden rápido, a qué precio, y cómo han evolucionado en 5 años.
+                Análisis de mercado en tiempo real por barrio en Vitacura. Entiendes qué barrios venden rápido, a qué precio, y cómo evolucionar la estrategia según el contexto.
               </p>
               <div className="space-y-2.5">
-                {['Velocidad de venta por barrio', 'Precio promedio UF/m²', 'Evolución de precios 5 años', 'Datos actualizados trimestralmente'].map(item => (
+                {['Velocidad de venta por barrio', 'Precio actual UF/m²', 'Tendencias de mercado', 'Datos actualizados regularmente'].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#b89a7e' }} />
                     {item}
@@ -305,10 +305,10 @@ export default function LandingPage() {
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#10b981' }}>Pilar 03</div>
               <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Valorizador Inteligente</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Un valorizador que no solo usa metros cuadrados y barrio — también pondera la calidad real del inmueble. Terminaciones, estado de conservación y atributos específicos que cambian el precio significativamente.
+                Precios exactos según calidad y estado del inmueble. No es solo barrio y metros cuadrados — el sistema ajusta por terminaciones, conservación y otros factores que importan.
               </p>
               <div className="space-y-2.5">
-                {['Sensibilización por calidad', 'Estado y conservación del inmueble', 'Precio ajustado por barrio', 'Valorización en segundos'].map(item => (
+                {['Ajuste por calidad de terminaciones', 'Sensibilización por estado', 'Precio por barrio específico', 'Valorización instantánea'].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#10b981' }} />
                     {item}
