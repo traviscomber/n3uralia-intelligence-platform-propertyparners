@@ -48,6 +48,8 @@ export default function PropertiesPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<typeof EMPTY_FORM>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [tagging, setTagging] = useState(false)
+  const [tagResult, setTagResult] = useState<{ barrio_nombre: string; zona_prc: string } | null>(null)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -57,6 +59,24 @@ export default function PropertiesPage() {
   useEffect(() => {
     loadProperties()
   }, [])
+
+  async function autoTagFromCoords(lat: string, lng: string) {
+    if (!lat || !lng) return
+    const latN = parseFloat(lat)
+    const lngN = parseFloat(lng)
+    if (isNaN(latN) || isNaN(lngN)) return
+    setTagging(true)
+    setTagResult(null)
+    const { data, error } = await supabase.rpc('tag_vitacura_point', { p_lat: latN, p_lng: lngN })
+    setTagging(false)
+    if (!error && data && data.length > 0) {
+      const tag = data[0]
+      setTagResult({ barrio_nombre: tag.barrio_nombre, zona_prc: tag.zona_prc })
+      setForm(prev => ({ ...prev, neighborhood: tag.barrio_nombre }))
+    } else {
+      setTagResult(null)
+    }
+  }
 
   async function loadProperties() {
     setLoading(true)
@@ -224,18 +244,45 @@ export default function PropertiesPage() {
             </div>
             {/* Lat */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Latitud (opcional)</label>
-              <input type="number" step="any" value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })}
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>
+                Latitud (opcional)
+              </label>
+              <input
+                type="number" step="any" value={form.lat}
+                onChange={e => setForm({ ...form, lat: e.target.value })}
+                onBlur={e => autoTagFromCoords(e.target.value, form.lng)}
                 placeholder="-33.4172"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
             {/* Lng */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Longitud (opcional)</label>
-              <input type="number" step="any" value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })}
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>
+                Longitud (opcional)
+              </label>
+              <input
+                type="number" step="any" value={form.lng}
+                onChange={e => setForm({ ...form, lng: e.target.value })}
+                onBlur={e => autoTagFromCoords(form.lat, e.target.value)}
                 placeholder="-70.6060"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
+            {/* Auto-tag result */}
+            {(tagging || tagResult) && (
+              <div className="lg:col-span-3 flex items-center gap-2 text-xs px-3 py-2 rounded-md"
+                style={{ background: tagResult ? '#e8f3f0' : '#f5f9f7', border: '1px solid #d8e5e2', color: '#173634' }}>
+                {tagging ? (
+                  <span style={{ color: '#9ca9a3' }}>Detectando barrio desde coordenadas...</span>
+                ) : tagResult ? (
+                  <>
+                    <span style={{ color: '#8fb2aa' }}>Auto-detectado:</span>
+                    <strong>{tagResult.barrio_nombre}</strong>
+                    {tagResult.zona_prc && <span style={{ color: '#9ca9a3' }}>· Zona {tagResult.zona_prc}</span>}
+                  </>
+                ) : null}
+              </div>
+            )}
           </div>
           <div className="flex gap-3 mt-5">
             <button
