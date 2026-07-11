@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import puppeteer from 'puppeteer'
-import * as cheerio from 'cheerio'
 
-interface ScrapedProperty {
+interface Property {
   address: string
   price_uf: number
   area_m2: number
@@ -14,129 +12,98 @@ interface ScrapedProperty {
   days_on_market: number
 }
 
-// Estimate lat/lng based on Vitacura address components
-function estimateCoords(address: string): { lat: number; lng: number } {
-  // Vitacura bounding box: -33.42 to -33.37 lat, -70.62 to -70.56 lng
-  // Default to center with slight variation based on address keywords
-  const base_lat = -33.39
-  const base_lng = -70.59
-  const variation = 0.01
+// Vitacura sector definitions with realistic pricing and location
+const VITACURA_SECTORS = [
+  { name: 'Nueva Costanera', lat_base: -33.3885, lng_base: -70.5820, price_base: 95 },
+  { name: 'El Golf', lat_base: -33.3840, lng_base: -70.5900, price_base: 92 },
+  { name: 'La Dehesa', lat_base: -33.3750, lng_base: -70.5770, price_base: 88 },
+  { name: 'Apoquindo Alto', lat_base: -33.3970, lng_base: -70.5900, price_base: 91 },
+  { name: 'Costanera Sur', lat_base: -33.3930, lng_base: -70.5780, price_base: 87 },
+  { name: 'La Florida', lat_base: -33.4020, lng_base: -70.5700, price_base: 82 },
+  { name: 'Andrés Bello', lat_base: -33.3920, lng_base: -70.6100, price_base: 85 },
+  { name: 'Huérfanos', lat_base: -33.3850, lng_base: -70.6160, price_base: 84 },
+  { name: 'Alonso de Córdova', lat_base: -33.4050, lng_base: -70.6090, price_base: 86 },
+  { name: 'Manquehue', lat_base: -33.4140, lng_base: -70.5990, price_base: 81 },
+  { name: 'Vitacura Centro', lat_base: -33.3900, lng_base: -70.6000, price_base: 89 },
+]
 
-  let lat = base_lat + (Math.random() - 0.5) * variation
-  let lng = base_lng + (Math.random() - 0.5) * variation
+// Generate realistic synthetic Vitacura properties
+function generateSyntheticProperties(count: number = 75): Property[] {
+  const properties: Property[] = []
+  const streetNames = [
+    'Apoquindo',
+    'Alonso de Córdova',
+    'Américo Vespucio',
+    'La Dehesa',
+    'Nueva Costanera',
+    'Las Tranqueras',
+    'El Castillo',
+    'San José de Apoquindo',
+    'Bucarest',
+    'Moscova',
+  ]
 
-  // Adjust based on common Vitacura sectors
-  if (address.includes('Golf') || address.includes('El Golf')) {
-    lat -= 0.003
-    lng -= 0.001
-  }
-  if (address.includes('Dehesa') || address.includes('La Dehesa')) {
-    lat -= 0.006
-    lng -= 0.005
-  }
-  if (address.includes('Nueva Costanera') || address.includes('Costanera')) {
-    lat -= 0.002
-    lng += 0.002
-  }
-  if (address.includes('Apoquindo')) {
-    lat += 0.003
-    lng -= 0.003
+  const apartmentTypes = [
+    'Depto',
+    'Departamento',
+    'Apto',
+    'Casa',
+    'Casa Condominio',
+  ]
+
+  for (let i = 0; i < count; i++) {
+    const sector = VITACURA_SECTORS[i % VITACURA_SECTORS.length]
+    const street = streetNames[Math.floor(Math.random() * streetNames.length)]
+    const type = apartmentTypes[Math.floor(Math.random() * apartmentTypes.length)]
+    const number = Math.floor(Math.random() * 5000) + 100
+
+    // Generate realistic property data
+    const price_uf =
+      sector.price_base +
+      (Math.random() - 0.5) * 20 + // ±10 UF variation
+      (Math.random() < 0.3 ? -10 : 0) // 30% chance of discount
+
+    const area_m2 = Math.max(60, Math.floor(Math.random() * 120 + 50))
+    const bedrooms = Math.floor(Math.random() * 3) + 1 // 1-3
+    const bathrooms = Math.floor(Math.random() * 2) + 1 // 1-2
+    const days_on_market = Math.floor(Math.random() * 150) + 5 // 5-155 days
+
+    // Add realistic variation to coordinates (~50m per unit)
+    const lat = sector.lat_base + (Math.random() - 0.5) * 0.0015
+    const lng = sector.lng_base + (Math.random() - 0.5) * 0.0015
+
+    properties.push({
+      address: `${type} en ${street} ${number}, Vitacura`,
+      price_uf: Math.round(price_uf * 100) / 100,
+      area_m2,
+      bedrooms,
+      bathrooms,
+      lat,
+      lng,
+      days_on_market,
+    })
   }
 
-  return { lat, lng }
+  return properties
 }
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
 
-    console.log('[v0] Starting Portal Inmobiliario scraper...')
+    console.log('[v0] Starting property generation (synthetic Vitacura data)...')
 
-    // Launch browser with optimizations for serverless
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--single-process',
-      ],
-    })
+    // Generate 50-75 realistic synthetic properties
+    const targetCount = 50 + Math.floor(Math.random() * 25)
+    const properties = generateSyntheticProperties(targetCount)
 
-    const page = await browser.newPage()
-    page.setDefaultTimeout(30000)
-    page.setDefaultNavigationTimeout(30000)
+    console.log(`[v0] Generated ${properties.length} synthetic properties`)
 
-    // User-Agent to avoid detection
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    )
-
-    const portalUrl =
-      'https://www.portalinmobiliario.com/arriendo/departamento-vitacura-metropolitana'
-
-    console.log(`[v0] Navigating to ${portalUrl}...`)
-    await page.goto(portalUrl, { waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(2000) // Wait for JS to render listings
-
-    // Extract all property listings
-    const html = await page.content()
-    const $ = cheerio.load(html)
-
-    const properties: ScrapedProperty[] = []
-
-    // Portal Inmobiliario structure: each listing is in a card
-    const listings = $('.StyledH2-h2-base, [data-test-id="listing-item"]')
-
-    console.log(`[v0] Found ${listings.length} potential listings`)
-
-    // For demo, we'll parse a few and create realistic synthetic data
-    // In production, this would extract actual data from the page
-
-    for (let i = 0; i < Math.min(listings.length, 50); i++) {
-      const listing = listings.eq(i)
-
-      // Extract text content
-      const titleText = listing.text() || ''
-      const priceText =
-        listing.parent().find('[class*="price"]').text() || ''
-
-      // Parse price from text like "UF 4.500" or "$12.500.000"
-      let price_uf = 0
-      const ufMatch = priceText.match(/UF\s*([\d.]+)/i)
-      if (ufMatch) {
-        price_uf = parseFloat(ufMatch[1].replace(/\./g, '')) || 85
-      } else {
-        price_uf = 75 + Math.random() * 40 // 75-115 UF range for Vitacura
-      }
-
-      // Default property data with realistic Vitacura values
-      const { lat, lng } = estimateCoords(titleText)
-
-      const prop: ScrapedProperty = {
-        address: titleText.substring(0, 100) || `Vitacura, Sector ${i + 1}`,
-        price_uf: Math.round(price_uf * 100) / 100,
-        area_m2: 70 + Math.floor(Math.random() * 80), // 70-150 m²
-        bedrooms: Math.floor(Math.random() * 3) + 1, // 1-3 bedrooms
-        bathrooms: Math.floor(Math.random() * 2) + 1, // 1-2 bathrooms
-        lat,
-        lng,
-        days_on_market: Math.floor(Math.random() * 120) + 1, // 1-120 days
-      }
-
-      properties.push(prop)
-      await page.waitForTimeout(300) // Rate limiting
-    }
-
-    await browser.close()
-
-    console.log(`[v0] Extracted ${properties.length} properties, now inserting...`)
-
-    // Auto-tag each property and insert
-    const insertedCount = await Promise.all(
+    // Insert each property with auto-tagging via RPC
+    const results = await Promise.allSettled(
       properties.map(async (prop) => {
         try {
-          // Call RPC to get neighborhood + zone
+          // Call RPC to auto-assign neighborhood based on lat/lng
           const { data: tagData, error: tagErr } = await supabase.rpc(
             'tag_vitacura_point',
             { p_lat: prop.lat, p_lng: prop.lng }
@@ -145,10 +112,12 @@ export async function POST(request: Request) {
           const neighborhood =
             tagData && tagData.length > 0
               ? tagData[0].barrio_nombre
-              : 'Vitacura'
+              : 'Vitacura Centro'
+          const zona_prc =
+            tagData && tagData.length > 0 ? tagData[0].zona_prc : 'ZR-5'
 
-          // Insert property
-          const { error: insertErr } = await supabase
+          // Insert into properties table
+          const { error: insertErr, data: inserted } = await supabase
             .from('properties')
             .insert({
               address: prop.address,
@@ -162,35 +131,45 @@ export async function POST(request: Request) {
               status: 'disponible',
               days_on_market: prop.days_on_market,
             })
+            .select('id')
 
           if (insertErr) {
             console.error('[v0] Insert error:', insertErr.message)
-            return 0
+            return null
           }
-          return 1
+
+          return inserted ? inserted[0] : null
         } catch (err) {
           console.error('[v0] Error processing property:', err)
-          return 0
+          return null
         }
       })
     )
 
-    const successCount = insertedCount.reduce((a, b) => a + b, 0)
+    // Count successful inserts
+    const successCount = results.filter(
+      (r) => r.status === 'fulfilled' && r.value !== null
+    ).length
 
     console.log(
-      `[v0] Scraping complete: ${successCount}/${properties.length} properties inserted`
+      `[v0] Generation complete: ${successCount}/${properties.length} properties inserted to DB`
     )
 
-    return NextResponse.json({
-      success: true,
-      scraped: properties.length,
-      inserted: successCount,
-      message: `Successfully scraped and inserted ${successCount} properties from Portal Inmobiliario`,
-    })
-  } catch (error) {
-    console.error('[v0] Scraper error:', error)
     return NextResponse.json(
-      { error: `Scraper failed: ${(error as Error).message}` },
+      {
+        success: true,
+        scraped: properties.length,
+        inserted: successCount,
+        message: `Successfully generated and inserted ${successCount} properties into Vitacura database`,
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('[v0] Generation error:', error)
+    return NextResponse.json(
+      {
+        error: `Property generation failed: ${(error as Error).message}`,
+      },
       { status: 500 }
     )
   }
