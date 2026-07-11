@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Search, X, Home, CheckCircle, AlertCircle } from 'lucide-react'
+import { Plus, Search, X, Home, CheckCircle, AlertCircle, Download } from 'lucide-react'
 
 interface Property {
   id: string
@@ -50,6 +50,7 @@ export default function PropertiesPage() {
   const [saving, setSaving] = useState(false)
   const [tagging, setTagging] = useState(false)
   const [tagResult, setTagResult] = useState<{ barrio_nombre: string; zona_prc: string } | null>(null)
+  const [scraping, setScraping] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -131,6 +132,24 @@ export default function PropertiesPage() {
     }
   }
 
+  async function handleScrapePortal() {
+    setScraping(true)
+    try {
+      const res = await fetch('/api/scrape/portal-inmobiliario', { method: 'POST' })
+      const json = await res.json()
+      if (res.ok) {
+        showToast('success', `✅ Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas de Portal Inmobiliario`)
+        await loadProperties()
+      } else {
+        showToast('error', `Error: ${json.error || 'Fallo al scraping'}`)
+      }
+    } catch (err) {
+      showToast('error', `Error de red: ${(err as Error).message}`)
+    } finally {
+      setScraping(false)
+    }
+  }
+
   const filtered = properties.filter(p => {
     const matchSearch = search === '' || p.address.toLowerCase().includes(search.toLowerCase()) || p.neighborhood.toLowerCase().includes(search.toLowerCase())
     const matchStatus = filterStatus === 'all' || p.status === filterStatus
@@ -145,14 +164,25 @@ export default function PropertiesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
           <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          style={{ background: '#8fb2aa' }}
-        >
-          <Plus size={16} />
-          Nueva Propiedad
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleScrapePortal}
+            disabled={scraping}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#6b8e85' }}
+          >
+            <Download size={16} />
+            {scraping ? 'Scrapeando...' : 'Scrape Portal'}
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: '#8fb2aa' }}
+          >
+            <Plus size={16} />
+            Nueva Propiedad
+          </button>
+        </div>
       </div>
 
       {/* Toast */}
