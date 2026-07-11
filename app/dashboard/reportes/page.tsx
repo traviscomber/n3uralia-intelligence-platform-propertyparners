@@ -20,6 +20,15 @@ type WeeklyReport = {
 type WeeklyReportResponse = {
   reports: WeeklyReport[]
   directors: WeeklyReport[]
+  history?: Array<{
+    id: number
+    report_scope: string
+    week_start: string
+    week_end: string
+    director_id: string | null
+    status: string
+    generated_at: string
+  }>
   generatedAt: string
 }
 
@@ -137,7 +146,7 @@ export default function ReportesPage() {
           <div className="h-8 w-64 rounded-xl bg-white/8" />
           <div className="h-4 w-96 max-w-full rounded-xl bg-white/6" />
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="n-card p-4">
               <div className="h-3 w-24 rounded-full bg-white/8" />
@@ -252,6 +261,37 @@ export default function ReportesPage() {
             </button>
           ))}
         </div>
+
+        {weekly?.history?.length ? (
+          <div className="mt-4 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                  Historial persistido
+                </p>
+                <h3 className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                  Weekly reports guardados en `weekly_reports`
+                </h3>
+              </div>
+              <span className="n-chip">{weekly.history.length} snapshots</span>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
+              {weekly.history.slice(0, 3).map((item) => (
+                <div key={item.id} className="rounded-2xl border p-3" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                    {item.report_scope}
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-muted)' }}>
+                    {formatDate(item.week_start)} - {formatDate(item.week_end)}
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
+                    {item.director_id || 'all'} · {item.status} · {new Date(item.generated_at).toLocaleDateString('es-CL')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {generateError && (
           <div className="mt-4 rounded-2xl border-l-4 p-4" style={{ borderLeftColor: 'var(--n-warning)', background: 'var(--n-surface-2)' }}>

@@ -12,11 +12,11 @@
    - Scraper health snapshots are now persisted with anomaly history and surfaced in `Fuentes de Datos`
    - Realtor International benchmark snapshots now feed `Market Intelligence` through a persisted external source
    - Valorizador now uses weighted real property comparables and external benchmark snapshots for its estimate range
+   - Weekly director and summary reports are now persisted in `weekly_reports` and surfaced in `Reportes IA`
    - Automated nightly refresh route now updates scraper and benchmark data via Vercel cron
    - Scraper health now exposes anomaly detection for stale sources, repeated errors, and low-volume runs
 
 2. **NEXT IMPLEMENTATION BLOCK:**
-   - Persist weekly director reports into a dedicated `weekly_reports` table
    - Add a scheduled job for automatic report generation and email delivery
    - Build historical neighborhood analytics with `neighborhood_market_data`
    - Add comparable property matching and scoring to the valorizador
@@ -25,6 +25,7 @@
 3. **FOLLOW-UP ROADMAP:**
    - Add director/seller drill-down views and exportable report PDFs
    - Expand anomaly detection on KPIs and market changes using the persisted health history
+   - Add automatic report delivery when the scheduled weekly generator is in place
    - Keep tightening accessibility, responsiveness, and loading states
 
 ---
@@ -40,4 +41,4 @@
 
 **Last Updated:** July 10, 2026  
 **Maintained By:** v0 AI + Travis Comber  
-**Version:** 0.6.2 (MVP + Real Data + AI Reports + Scraper Health + New Sources)
+**Version:** 0.6.3 (MVP + Real Data + AI Reports + Scraper Health + New Sources + Weekly Persistence)

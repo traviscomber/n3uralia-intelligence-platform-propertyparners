@@ -48,6 +48,24 @@ export interface KnowledgeDocument {
   created_at: string
 }
 
+export interface WeeklyReport {
+  id: number
+  report_key: string
+  report_scope: 'weekly_directors' | 'weekly_summary' | 'director'
+  week_start: string
+  week_end: string
+  director_id: string | null
+  sales_count: number
+  commission_total: number
+  conversion_rate: number
+  target_progress: number
+  velocity_change: number
+  status: 'on_track' | 'warning' | 'behind'
+  content: Record<string, unknown>
+  generated_at: string
+  created_at: string
+}
+
 export interface MarketData {
   neighborhood: string
   avg_price_uf: number | null
