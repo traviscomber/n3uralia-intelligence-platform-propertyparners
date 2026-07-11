@@ -17,6 +17,11 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,12 5,8 8,10 11,5 14,7" /><line x1="2" y1="14" x2="14" y2="14" /></svg>,
   },
   {
+    label: 'Propiedades',
+    href: '/dashboard/properties',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7L8 2l6 5v7H10v-4H6v4H2z" /></svg>,
+  },
+  {
     label: 'Market Intelligence',
     href: '/dashboard/market',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><line x1="8" y1="2" x2="8" y2="14" /><line x1="2" y1="8" x2="14" y2="8" /><path d="M4.5 4.5c1 .4 2.3.8 3.5.8s2.5-.4 3.5-.8" /><path d="M4.5 11.5c1-.4 2.3-.8 3.5-.8s2.5.4 3.5.8" /></svg>,
