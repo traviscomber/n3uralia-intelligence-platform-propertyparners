@@ -23,9 +23,23 @@ export interface PrcZone {
   geometry?: { type: string; coordinates: number[][][] }
 }
 
+export interface Property {
+  id: number
+  lat: number
+  lng: number
+  price_uf: number
+  area_m2: number
+  bedrooms: number
+  bathrooms: number
+  status: 'available' | 'sold' | 'reserved'
+  days_on_market: number
+  barrio_id: string
+}
+
 export interface VitacuraMapProps {
   neighborhoods: Neighborhood[]
   prcZones: PrcZone[]
+  properties: Property[]
   selected: string | null
   onSelect: (barrio_id: string | null) => void
   showPrc: boolean
@@ -63,15 +77,16 @@ const getHeatmapColor = (rate: number | null): string => {
 }
 
 // Función para renderizar tooltip mejorado como HTML
-const getTooltipHtml = (neighborhood: Neighborhood): string => {
+const getTooltipHtml = (neighborhood: Neighborhood, propertyCount: number = 0): string => {
   const absorptionBadge = getAbsorptionBadge(neighborhood.absorption_rate)
   const absorptionPct = neighborhood.absorption_rate != null ? (neighborhood.absorption_rate * 100).toFixed(0) : '—'
   
   return `
-    <div style="font-family: 'Segoe UI', sans-serif; min-width: 200px; padding: 12px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-        <strong style="font-size: 14px; color: #1f2937;">${neighborhood.name}</strong>
-        <span style="background-color: ${absorptionBadge.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">${absorptionBadge.label}</span>
+    <div style="font-family: 'Segoe UI', sans-serif; min-width: 220px; padding: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px;">
+        <strong style="font-size: 14px; color: #1f2937; flex: 1;">${neighborhood.name}</strong>
+        <span style="background-color: ${absorptionBadge.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; white-space: nowrap;">${absorptionBadge.label}</span>
+        ${propertyCount > 0 ? `<span style="background-color: #8fb2aa; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; white-space: nowrap;">🏠 ${propertyCount}</span>` : ''}
       </div>
       
       <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 10px; padding-bottom: 8px;">
@@ -142,12 +157,13 @@ const injectTooltipStyles = () => {
   document.head.appendChild(style)
 }
 
-export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelect, showPrc }: VitacuraMapProps) {
+export default function VitacuraMap({ neighborhoods, prcZones, properties, selected, onSelect, showPrc }: VitacuraMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef       = useRef<any>(null)
   const LRef         = useRef<any>(null)
   const layersRef    = useRef<any[]>([])
   const prcLayersRef = useRef<any[]>([])
+  const propertyLayersRef = useRef<any[]>([])
   const [mapReady, setMapReady] = useState(false)
 
   // Inject tooltip styles on component mount
@@ -225,18 +241,21 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
       // Wrap raw geometry as a GeoJSON Feature so L.geoJSON handles it reliably
       const feature = { type: 'Feature', geometry: n.geometry, properties: {} }
 
+      // Count properties in this neighborhood
+      const propCount = properties.filter(p => p.barrio_id === n.barrio_id).length
+
       const layer = L.geoJSON(feature, {
         style: {
-          color:       isSelected ? color : '#d1d5db',
-          weight:      isSelected ? 3 : 2.5,
+          color:       isSelected ? color : color + '60',
+          weight:      isSelected ? 3.5 : 2.5,
           fillColor:   isSelected ? color : heatmapColor,
-          fillOpacity: isSelected ? 0.75 : heatmapOpacity,
-          dashArray:   isSelected ? 'none' : 'none',
+          fillOpacity: isSelected ? 0.8 : heatmapOpacity,
+          dashArray:   'none',
           lineCap:     'round',
           lineJoin:    'round',
         },
       })
-      .bindTooltip(getTooltipHtml(n), { 
+      .bindTooltip(getTooltipHtml(n, propCount), { 
         sticky: true,
         className: 'leaflet-tooltip-custom',
         offset: [0, 10]
@@ -337,6 +356,97 @@ export default function VitacuraMap({ neighborhoods, prcZones, selected, onSelec
       prcLayersRef.current.push(layer)
     })
   }, [mapReady, prcZones, showPrc])
+
+  // ── Draw property markers ────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current
+    const L   = LRef.current
+    if (!map || !L) return
+
+    propertyLayersRef.current.forEach(l => l.remove())
+    propertyLayersRef.current = []
+
+    if (!properties.length) return
+
+    properties.forEach((p) => {
+      if (!p.lat || !p.lng) return
+
+      // Create custom property marker with beautiful styling
+      const markerHtml = `
+        <div style="
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #8fb2aa 0%, #6b9e98 100%);
+          border: 2px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          cursor: pointer;
+          transition: all 200ms ease;
+          font-size: 16px;
+          font-weight: bold;
+          color: white;
+        ">
+          🏠
+        </div>
+      `
+
+      const marker = L.marker([p.lat, p.lng], {
+        icon: L.divIcon({
+          html: markerHtml,
+          className: 'property-marker',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        }),
+      })
+
+      // Property tooltip with better styling
+      const tooltipHtml = `
+        <div style="font-family: 'Segoe UI', sans-serif; min-width: 180px; padding: 12px;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 600; color: #1f2937;">🏠 Propiedad</span>
+            <span style="background-color: #8fb2aa; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 600;">Disponible</span>
+          </div>
+          
+          <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 8px; padding-bottom: 8px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+              <div>
+                <span style="color: #9ca3af;">Precio</span><br/>
+                <strong style="color: #8fb2aa; font-size: 12px;">${p.price_uf?.toFixed(0) ?? '—'} UF</strong>
+              </div>
+              <div>
+                <span style="color: #9ca3af;">Área</span><br/>
+                <strong style="color: #8fb2aa; font-size: 12px;">${p.area_m2?.toFixed(0) ?? '—'}m²</strong>
+              </div>
+              <div>
+                <span style="color: #9ca3af;">Dormir</span><br/>
+                <strong style="color: #8fb2aa; font-size: 12px;">${p.bedrooms ?? '—'}</strong>
+              </div>
+              <div>
+                <span style="color: #9ca3af;">Baños</span><br/>
+                <strong style="color: #8fb2aa; font-size: 12px;">${p.bathrooms ?? '—'}</strong>
+              </div>
+            </div>
+          </div>
+          
+          <div style="font-size: 10px; color: #9ca3af;">
+            Tiempo en mercado: <strong style="color: #555a56;">${p.days_on_market ?? '—'} días</strong>
+          </div>
+        </div>
+      `
+
+      marker.bindTooltip(tooltipHtml, {
+        sticky: true,
+        className: 'leaflet-tooltip-custom property-tooltip',
+        offset: [0, 15],
+      })
+
+      marker.addTo(map)
+      propertyLayersRef.current.push(marker)
+    })
+  }, [mapReady, properties])
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>

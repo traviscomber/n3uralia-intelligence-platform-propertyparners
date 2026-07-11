@@ -40,6 +40,19 @@ interface PrcZone {
   geometry?: { type: string; coordinates: number[][][] }
 }
 
+interface Property {
+  id: number
+  lat: number
+  lng: number
+  price_uf: number
+  area_m2: number
+  bedrooms: number
+  bathrooms: number
+  status: 'available' | 'sold' | 'reserved'
+  days_on_market: number
+  barrio_id: string
+}
+
 interface MarketRow {
   neighborhood: string
   avg_price_uf: number
@@ -84,6 +97,7 @@ function TrendBadge({ value }: { value: number }) {
 export default function MarketPage() {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
   const [prcZones, setPrcZones] = useState<PrcZone[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
   const [marketRows, setMarketRows] = useState<MarketRow[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [showPrc, setShowPrc] = useState(false)
@@ -98,12 +112,14 @@ export default function MarketPage() {
   const supabase = createClient()
 
   const loadNeighborhoods = useCallback(async () => {
-    const [nRes, mRes] = await Promise.all([
+    const [nRes, mRes, pRes] = await Promise.all([
       supabase.rpc('get_neighborhoods_geojson'),
       supabase.from('market_data').select('neighborhood,avg_price_uf,avg_price_m2_uf,inventory_count,absorption_rate,avg_days_on_market').order('avg_price_m2_uf', { ascending: false }),
+      supabase.from('properties').select('id,lat,lng,price_uf,area_m2,bedrooms,bathrooms,status,days_on_market,barrio_id').eq('status', 'available'),
     ])
     setNeighborhoods((nRes.data as Neighborhood[]) || [])
     setMarketRows(mRes.data || [])
+    setProperties((pRes.data as Property[]) || [])
     setLoading(false)
   }, [])
 
@@ -312,6 +328,7 @@ export default function MarketPage() {
           <VitacuraMap
             neighborhoods={neighborhoods as MapNeighborhood[]}
             prcZones={prcZones as MapPrcZone[]}
+            properties={properties}
             selected={selected}
             onSelect={setSelected}
             showPrc={showPrc}
