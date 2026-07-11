@@ -1,99 +1,68 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  tagVitacuraPoint,
+  getAllMarketNeighborhoods,
+  getMarketNeighborhoodById,
+  getAllPrcZones,
+} from '@/lib/neighborhoods';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
+/**
+ * GET /api/neighborhoods
+ *
+ * ?action=all           → all vitacura_market_neighborhoods
+ * ?action=prc           → all vitacura_prc_zones
+ * ?action=tag&lat=&lng= → tag_vitacura_point RPC
+ * ?action=by-id&id=     → single neighborhood by barrio_id
+ */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const action = searchParams.get('action');
 
   try {
     if (action === 'all') {
-      // Get all neighborhoods with market intelligence
-      const { data, error } = await supabase
-        .from('market_intelligence_summary')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
+      const data = await getAllMarketNeighborhoods();
       return NextResponse.json(data);
     }
 
-    if (action === 'by-point') {
-      // Get neighborhood by lat/lng
+    if (action === 'prc') {
+      const data = await getAllPrcZones();
+      return NextResponse.json(data);
+    }
+
+    if (action === 'tag') {
       const lat = searchParams.get('lat');
       const lng = searchParams.get('lng');
 
       if (!lat || !lng) {
-        return NextResponse.json(
-          { error: 'Missing lat and lng parameters' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Missing lat and lng' }, { status: 400 });
       }
 
-      const { data, error } = await supabase.rpc('get_neighborhood_by_point', {
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
-      });
-
-      if (error) throw error;
-      return NextResponse.json(data || null);
-    }
-
-    if (action === 'by-name') {
-      // Get neighborhood by name
-      const name = searchParams.get('name');
-
-      if (!name) {
-        return NextResponse.json(
-          { error: 'Missing name parameter' },
-          { status: 400 }
-        );
+      const data = await tagVitacuraPoint(parseFloat(lat), parseFloat(lng));
+      if (!data) {
+        return NextResponse.json({ error: 'Point not found in any barrio' }, { status: 404 });
       }
-
-      const { data, error } = await supabase
-        .from('neighborhoods')
-        .select('*')
-        .eq('name', name)
-        .single();
-
-      if (error) throw error;
-      return NextResponse.json(data || null);
+      return NextResponse.json(data);
     }
 
-    if (action === 'market-data') {
-      // Get market intelligence for specific neighborhood
+    if (action === 'by-id') {
       const id = searchParams.get('id');
-
       if (!id) {
-        return NextResponse.json(
-          { error: 'Missing id parameter' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Missing id' }, { status: 400 });
       }
 
-      const { data, error } = await supabase
-        .from('market_intelligence_summary')
-        .select('*')
-        .eq('id', parseInt(id))
-        .single();
-
-      if (error) throw error;
-      return NextResponse.json(data || null);
+      const data = await getMarketNeighborhoodById(id);
+      if (!data) {
+        return NextResponse.json({ error: 'Neighborhood not found' }, { status: 404 });
+      }
+      return NextResponse.json(data);
     }
 
     return NextResponse.json(
-      { error: 'Invalid action. Use: all, by-point, by-name, or market-data' },
+      { error: 'Invalid action. Use: all, prc, tag, or by-id' },
       { status: 400 }
     );
-  } catch (error) {
-    console.error('[v0] Neighborhoods API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error('[neighborhoods API] error:', error?.message || error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
