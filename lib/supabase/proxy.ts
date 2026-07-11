@@ -23,8 +23,11 @@ export async function updateSession(request: NextRequest) {
   if (process.env.NODE_ENV !== 'development') {
     const { data: { user } } = await supabase.auth.getUser()
     const isAuthPath = request.nextUrl.pathname.startsWith('/auth')
+    const isLandingPage = request.nextUrl.pathname === '/'
+    const isPublicPath = isLandingPage || request.nextUrl.pathname.startsWith('/about') || request.nextUrl.pathname.startsWith('/contact')
 
-    if (!user && !isAuthPath) {
+    // Allow public access to landing page and public routes
+    if (!user && !isAuthPath && !isPublicPath) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       return NextResponse.redirect(url)
