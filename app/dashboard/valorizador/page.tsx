@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, Home, DollarSign, BarChart2, RefreshCw } from 'lucide-react'
 
@@ -13,6 +13,47 @@ interface Neighborhood {
   zona_prc: string
 }
 
+interface PropertyComparable {
+  id: string
+  address: string
+  neighborhood: string
+  price_uf: number
+  area_m2: number
+  bedrooms: number
+  bathrooms: number
+  status: string
+  days_on_market: number
+  created_at: string
+  source?: string | null
+}
+
+interface ExternalBenchmark {
+  source: string
+  source_url: string
+  neighborhood: string
+  listing_title: string | null
+  offer_count: number
+  low_price_clp: number | null
+  high_price_clp: number | null
+  price_currency: string | null
+  recorded_at: string
+}
+
+interface ComparableItem {
+  id: string
+  address: string
+  neighborhood: string
+  price_uf: number
+  area_m2: number
+  bedrooms: number
+  bathrooms: number
+  status: string
+  source?: string | null
+  similarity: number
+  price_per_m2: number
+  delta_to_estimate_uf: number
+}
+
 interface ValorizationResult {
   price_uf: number
   price_uf_m2: number
@@ -22,15 +63,20 @@ interface ValorizationResult {
   market_velocity: number
   market_absorption: number
   comparable_properties: number
+  comparable_source: string
+  comparable_range_uf: string
 }
 
-const UF_VALUE = 37500 // CLP por UF (referencia)
+const UF_VALUE = 37500
 
 export default function ValorizadorPage() {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
+  const [properties, setProperties] = useState<PropertyComparable[]>([])
+  const [externalBenchmark, setExternalBenchmark] = useState<ExternalBenchmark | null>(null)
   const [loading, setLoading] = useState(true)
   const [calculating, setCalculating] = useState(false)
   const [result, setResult] = useState<ValorizationResult | null>(null)
+  const [comparables, setComparables] = useState<ComparableItem[]>([])
 
   const [form, setForm] = useState({
     neighborhood: '',
@@ -48,65 +94,130 @@ export default function ValorizadorPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('neighborhoods')
-        .select('name, price_per_sqm_uf, velocity_days, absorption_rate, inventory_count, zona_prc')
-        .not('barrio_id', 'is', null)
-        .order('price_per_sqm_uf', { ascending: false })
-      setNeighborhoods(data || [])
-      if (data && data.length > 0) setForm(f => ({ ...f, neighborhood: data[0].name }))
+      const [nRes, pRes, bRes] = await Promise.all([
+        supabase
+          .from('neighborhoods')
+          .select('name, price_per_sqm_uf, velocity_days, absorption_rate, inventory_count, zona_prc')
+          .not('barrio_id', 'is', null)
+          .order('price_per_sqm_uf', { ascending: false }),
+        supabase
+          .from('properties')
+          .select('id, address, neighborhood, price_uf, area_m2, bedrooms, bathrooms, status, days_on_market, created_at, source')
+          .order('created_at', { ascending: false })
+          .limit(250),
+        supabase
+          .from('external_market_benchmarks')
+          .select('source, source_url, neighborhood, listing_title, offer_count, low_price_clp, high_price_clp, price_currency, recorded_at')
+          .order('recorded_at', { ascending: false })
+          .limit(1),
+      ])
+
+      setNeighborhoods((nRes.data || []) as Neighborhood[])
+      setProperties((pRes.data || []) as PropertyComparable[])
+      setExternalBenchmark((bRes.data?.[0] || null) as ExternalBenchmark | null)
+
+      if (nRes.data && nRes.data.length > 0) {
+        setForm((f) => ({ ...f, neighborhood: nRes.data[0].name }))
+      }
+
       setLoading(false)
     }
-    load()
+
+    void load()
   }, [])
 
+  const selectedNb = useMemo(
+    () => neighborhoods.find((n) => n.name === form.neighborhood) || null,
+    [form.neighborhood, neighborhoods],
+  )
+
+  function buildComparables(targetNeighborhood: string, targetArea: number, targetBedrooms: number, targetBathrooms: number, estimateUF: number) {
+    const sameNeighborhood = properties.filter((property) => property.neighborhood === targetNeighborhood)
+    const candidatePool = sameNeighborhood.length >= 3 ? sameNeighborhood : properties
+
+    return candidatePool
+      .map((property) => {
+        const areaDelta = Math.abs(property.area_m2 - targetArea)
+        const bedroomDelta = Math.abs(property.bedrooms - targetBedrooms)
+        const bathroomDelta = Math.abs(property.bathrooms - targetBathrooms)
+        const pricePerM2 = property.area_m2 > 0 ? property.price_uf / property.area_m2 : property.price_uf
+        const statusPenalty = property.status?.toLowerCase() === 'vendido' ? 2 : 0
+        const similarity = Math.max(0, 100 - areaDelta * 1.15 - bedroomDelta * 8 - bathroomDelta * 4 - statusPenalty)
+
+        return {
+          id: property.id,
+          address: property.address,
+          neighborhood: property.neighborhood,
+          price_uf: property.price_uf,
+          area_m2: property.area_m2,
+          bedrooms: property.bedrooms,
+          bathrooms: property.bathrooms,
+          status: property.status,
+          source: property.source,
+          similarity,
+          price_per_m2: pricePerM2,
+          delta_to_estimate_uf: property.price_uf - estimateUF,
+        }
+      })
+      .filter((item) => item.similarity >= 45)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 5)
+  }
+
   function calculate() {
-    const nb = neighborhoods.find(n => n.name === form.neighborhood)
+    const nb = selectedNb
     if (!nb || !nb.price_per_sqm_uf) return
 
     setCalculating(true)
 
-    // Base price from real neighborhood data
-    let basePriceUFm2 = nb.price_per_sqm_uf
+    const area = Number.parseFloat(form.area_m2)
+    const ageYears = Number.parseInt(form.age_years, 10)
+    const bedrooms = Number.parseInt(form.bedrooms, 10)
+    const bathrooms = Number.parseInt(form.bathrooms, 10)
+    const floorNum = Number.parseInt(form.floor, 10)
 
-    // Age depreciation (2% per year, max 25%)
-    const ageFactor = Math.max(0.75, 1 - (parseInt(form.age_years) * 0.02))
-
-    // Condition factor
+    const basePriceUFm2 = nb.price_per_sqm_uf
+    const ageFactor = Math.max(0.75, 1 - ageYears * 0.02)
     const conditionFactor: Record<string, number> = {
-      excelente: 1.08, bueno: 1.0, regular: 0.90, a_renovar: 0.78
+      excelente: 1.08,
+      bueno: 1.0,
+      regular: 0.9,
+      a_renovar: 0.78,
     }
-
-    // Bedroom size factor (optimal is 3 bedrooms)
-    const bedroomFactor = parseInt(form.bedrooms) <= 1 ? 0.92 :
-      parseInt(form.bedrooms) === 2 ? 0.97 :
-      parseInt(form.bedrooms) === 3 ? 1.0 :
-      parseInt(form.bedrooms) === 4 ? 1.03 : 1.05
-
-    // Amenities
+    const bedroomFactor = bedrooms <= 1 ? 0.92 : bedrooms === 2 ? 0.97 : bedrooms === 3 ? 1.0 : bedrooms === 4 ? 1.03 : 1.05
     const parkingBonus = form.has_parking ? 0.04 : 0
     const storageBonus = form.has_storage ? 0.02 : 0
     const poolBonus = form.has_pool ? 0.03 : 0
-
-    // Floor premium (floors 4-10 command premium in Vitacura)
-    const floorNum = parseInt(form.floor)
     const floorFactor = floorNum <= 1 ? 0.95 : floorNum <= 3 ? 0.98 : floorNum <= 8 ? 1.02 : 1.01
 
-    const adjustedUFm2 = basePriceUFm2
+    const benchmarkUF = externalBenchmark?.low_price_clp && externalBenchmark?.high_price_clp
+      ? ((externalBenchmark.low_price_clp + externalBenchmark.high_price_clp) / 2) / UF_VALUE
+      : null
+
+    const adjustedUFm2 = (benchmarkUF && benchmarkUF > 0
+      ? basePriceUFm2 * 0.7 + benchmarkUF / Math.max(area, 1) * 0.3
+      : basePriceUFm2)
       * ageFactor
       * conditionFactor[form.condition]
       * bedroomFactor
       * floorFactor
       * (1 + parkingBonus + storageBonus + poolBonus)
 
-    const area = parseFloat(form.area_m2)
     const totalUF = adjustedUFm2 * area
+    const comparableMatches = buildComparables(nb.name, area, bedrooms, bathrooms, totalUF)
 
-    // Confidence: higher when absorption is high and inventory is healthy
     const baseConf = 70
     const absConf = nb.absorption_rate > 0.85 ? 12 : nb.absorption_rate > 0.75 ? 8 : 4
     const invConf = nb.inventory_count > 30 ? 10 : nb.inventory_count > 15 ? 6 : 2
-    const confidence = Math.min(96, baseConf + absConf + invConf)
+    const sourceConf = externalBenchmark ? 5 : 0
+    const confidence = Math.min(96, baseConf + absConf + invConf + sourceConf)
+
+    const lowComparable = comparableMatches.length
+      ? Math.min(...comparableMatches.map((item) => item.price_uf))
+      : Math.round(totalUF * 0.92)
+    const highComparable = comparableMatches.length
+      ? Math.max(...comparableMatches.map((item) => item.price_uf))
+      : Math.round(totalUF * 1.08)
 
     setTimeout(() => {
       setResult({
@@ -118,12 +229,13 @@ export default function ValorizadorPage() {
         market_velocity: nb.velocity_days,
         market_absorption: Math.round(nb.absorption_rate * 100),
         comparable_properties: nb.inventory_count,
+        comparable_source: comparableMatches.length ? 'properties' : externalBenchmark ? 'external_benchmark' : 'neighborhood_index',
+        comparable_range_uf: `${lowComparable.toLocaleString('es-CL')} - ${highComparable.toLocaleString('es-CL')}`,
       })
+      setComparables(comparableMatches)
       setCalculating(false)
-    }, 600)
+    }, 450)
   }
-
-  const selectedNb = neighborhoods.find(n => n.name === form.neighborhood)
 
   if (loading) {
     return (
@@ -135,103 +247,137 @@ export default function ValorizadorPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Header */}
       <div className="pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <h1 className="text-3xl font-bold text-gray-900">Valorizador IA</h1>
-        <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Precio estimado basado en datos reales de mercado Vitacura · {neighborhoods.length} barrios indexados</p>
+        <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+          Price estimate based on real Vitacura market data, recent comparables and an external benchmark when available.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Form */}
         <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm space-y-4" style={{ border: '1px solid #d8e5e2' }}>
-          <h2 className="font-semibold text-gray-900">Datos de la Propiedad</h2>
+          <h2 className="font-semibold text-gray-900">Property data</h2>
 
-          {/* Neighborhood */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Barrio</label>
+            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Neighborhood</label>
             <select
               value={form.neighborhood}
-              onChange={e => { setForm({ ...form, neighborhood: e.target.value }); setResult(null) }}
+              onChange={(e) => { setForm({ ...form, neighborhood: e.target.value }); setResult(null) }}
               className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
               style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
             >
-              {neighborhoods.map(n => <option key={n.name} value={n.name}>{n.name}</option>)}
+              {neighborhoods.map((n) => <option key={n.name} value={n.name}>{n.name}</option>)}
             </select>
             {selectedNb && (
               <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
-                Precio ref: <strong>{selectedNb.price_per_sqm_uf} UF/m²</strong> · Zona {selectedNb.zona_prc}
+                Reference price: <strong>{selectedNb.price_per_sqm_uf} UF/m²</strong> · Zone {selectedNb.zona_prc}
               </p>
             )}
           </div>
 
-          {/* Area & Age */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Superficie m²</label>
-              <input type="number" min="20" value={form.area_m2} onChange={e => { setForm({ ...form, area_m2: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Area m²</label>
+              <input
+                type="number"
+                min="20"
+                value={form.area_m2}
+                onChange={(e) => { setForm({ ...form, area_m2: e.target.value }); setResult(null) }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
+                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Antigüedad (años)</label>
-              <input type="number" min="0" max="50" value={form.age_years} onChange={e => { setForm({ ...form, age_years: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Age</label>
+              <input
+                type="number"
+                min="0"
+                max="50"
+                value={form.age_years}
+                onChange={(e) => { setForm({ ...form, age_years: e.target.value }); setResult(null) }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
+                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
           </div>
 
-          {/* Dorm / Baños / Piso */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Dorm.</label>
-              <input type="number" min="1" max="8" value={form.bedrooms} onChange={e => { setForm({ ...form, bedrooms: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Beds</label>
+              <input
+                type="number"
+                min="1"
+                max="8"
+                value={form.bedrooms}
+                onChange={(e) => { setForm({ ...form, bedrooms: e.target.value }); setResult(null) }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
+                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Baños</label>
-              <input type="number" min="1" max="6" value={form.bathrooms} onChange={e => { setForm({ ...form, bathrooms: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Baths</label>
+              <input
+                type="number"
+                min="1"
+                max="6"
+                value={form.bathrooms}
+                onChange={(e) => { setForm({ ...form, bathrooms: e.target.value }); setResult(null) }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
+                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Piso</label>
-              <input type="number" min="1" max="30" value={form.floor} onChange={e => { setForm({ ...form, floor: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Floor</label>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                value={form.floor}
+                onChange={(e) => { setForm({ ...form, floor: e.target.value }); setResult(null) }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
+                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              />
             </div>
           </div>
 
-          {/* Condition */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Estado</label>
+            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Condition</label>
             <div className="grid grid-cols-2 gap-2">
-              {(['excelente', 'bueno', 'regular', 'a_renovar'] as const).map(c => (
-                <button key={c} onClick={() => { setForm({ ...form, condition: c }); setResult(null) }}
+              {(['excelente', 'bueno', 'regular', 'a_renovar'] as const).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => { setForm({ ...form, condition: c }); setResult(null) }}
                   className="px-3 py-1.5 rounded text-xs font-medium capitalize transition-all"
                   style={{
                     background: form.condition === c ? '#8fb2aa' : '#f5f9f7',
                     color: form.condition === c ? '#fff' : '#555a56',
                     border: `1px solid ${form.condition === c ? '#8fb2aa' : '#d8e5e2'}`,
-                  }}>
+                  }}
+                >
                   {c.replace('_', ' ')}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Amenities */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Extras</label>
             <div className="flex gap-2 flex-wrap">
               {[
-                { key: 'has_parking', label: 'Estacionamiento' },
-                { key: 'has_storage', label: 'Bodega' },
-                { key: 'has_pool', label: 'Piscina' },
+                { key: 'has_parking', label: 'Parking' },
+                { key: 'has_storage', label: 'Storage' },
+                { key: 'has_pool', label: 'Pool' },
               ].map(({ key, label }) => (
-                <button key={key}
-                  onClick={() => { setForm(f => ({ ...f, [key]: !f[key as keyof typeof f] })); setResult(null) }}
+                <button
+                  key={key}
+                  onClick={() => { setForm((f) => ({ ...f, [key]: !f[key as keyof typeof f] })); setResult(null) }}
                   className="px-3 py-1.5 rounded text-xs font-medium transition-all"
                   style={{
                     background: form[key as keyof typeof form] ? '#e8f3f0' : '#f5f9f7',
                     color: form[key as keyof typeof form] ? '#173634' : '#9ca9a3',
                     border: `1px solid ${form[key as keyof typeof form] ? '#8fb2aa' : '#d8e5e2'}`,
-                  }}>
+                  }}
+                >
                   {label}
                 </button>
               ))}
@@ -244,48 +390,45 @@ export default function ValorizadorPage() {
             className="w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
             style={{ background: '#8fb2aa' }}
           >
-            {calculating ? <><RefreshCw size={15} className="animate-spin" /> Calculando...</> : <><BarChart2 size={15} /> Calcular Valorización</>}
+            {calculating ? <><RefreshCw size={15} className="animate-spin" /> Calculating...</> : <><BarChart2 size={15} /> Calculate value</>}
           </button>
         </div>
 
-        {/* Result */}
         <div className="lg:col-span-3 space-y-4">
           {result ? (
             <>
-              {/* Main price card */}
               <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #8fb2aa', borderLeft: '4px solid #8fb2aa' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#555a56' }}>Valor Estimado</p>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#555a56' }}>Estimated value</p>
                 <p className="text-4xl font-bold text-gray-900">{result.price_uf.toLocaleString('es-CL')} <span className="text-xl font-semibold" style={{ color: '#8fb2aa' }}>UF</span></p>
-                <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>≈ ${result.price_clp.toLocaleString('es-CL')} CLP</p>
+                <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>~ ${result.price_clp.toLocaleString('es-CL')} CLP</p>
 
                 <div className="flex items-center gap-2 mt-4">
                   <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#d8e5e2' }}>
                     <div className="h-full rounded-full transition-all" style={{ width: `${result.confidence}%`, background: result.confidence > 85 ? '#10b981' : result.confidence > 70 ? '#f59e0b' : '#d97706' }} />
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? '#10b981' : '#f59e0b' }}>{result.confidence}% confianza</span>
+                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? '#10b981' : '#f59e0b' }}>{result.confidence}% confidence</span>
                 </div>
               </div>
 
-              {/* Detail grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={15} style={{ color: '#8fb2aa' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Precio por m²</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Price / m²</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{result.price_uf_m2} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>UF/m²</span></p>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp size={15} style={{ color: '#b89a7e' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Velocidad Barrio</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Neighborhood velocity</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.market_velocity} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>días</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{result.market_velocity} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>days</span></p>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <BarChart2 size={15} style={{ color: '#10b981' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Absorción</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Absorption</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{result.market_absorption}<span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>%</span></p>
                 </div>
@@ -298,9 +441,43 @@ export default function ValorizadorPage() {
                 </div>
               </div>
 
-              {/* Disclaimer */}
+              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Comparable range</p>
+                    <p className="text-lg font-semibold text-gray-900">{result.comparable_range_uf} UF</p>
+                  </div>
+                  <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                    Source: {result.comparable_source}
+                  </span>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  {comparables.length ? (
+                    comparables.map((item) => (
+                      <div key={item.id} className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{item.address}</p>
+                            <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+                              {item.neighborhood} · {item.bedrooms}D/{item.bathrooms}B · {item.area_m2} m² · {item.source || 'properties'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-gray-900">{item.price_uf.toLocaleString('es-CL')} UF</p>
+                            <p className="text-xs" style={{ color: '#9ca9a3' }}>Similarity {item.similarity.toFixed(0)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm" style={{ color: '#9ca9a3' }}>No sufficient comparables in `properties` yet.</p>
+                  )}
+                </div>
+              </div>
+
               <p className="text-xs px-1" style={{ color: '#9ca9a3' }}>
-                Estimación basada en datos reales de mercado del barrio {result.comp_neighborhood}. Los precios son referenciales y pueden variar según condiciones específicas de la propiedad.
+                Estimate based on real market data for {result.comp_neighborhood}, recent comparables from `properties`, and the external benchmark when available.
               </p>
             </>
           ) : (
@@ -308,37 +485,69 @@ export default function ValorizadorPage() {
               <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: '#e8f3f0' }}>
                 <Home size={26} style={{ color: '#8fb2aa' }} />
               </div>
-              <p className="font-semibold text-gray-900">Ingresa los datos de la propiedad</p>
-              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>El modelo usará precios reales de {neighborhoods.length} barrios de Vitacura</p>
+              <p className="font-semibold text-gray-900">Enter the property data</p>
+              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>The model will use real prices from {neighborhoods.length} Vitacura neighborhoods</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Market reference table */}
+      {externalBenchmark && (
+        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>External benchmark</p>
+              <h3 className="mt-1 text-lg font-semibold text-gray-900">Realtor International</h3>
+              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+                {externalBenchmark.offer_count} offers detected in {externalBenchmark.neighborhood} · {new Date(externalBenchmark.recorded_at).toLocaleString('es-CL')}
+              </p>
+            </div>
+            <a href={externalBenchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+              Open source
+            </a>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Low price</p>
+              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
+            </div>
+            <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>High price</p>
+              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
+            </div>
+            <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Title</p>
+              <p className="mt-2 text-sm font-medium text-gray-900">{externalBenchmark.listing_title || 'No title'}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {neighborhoods.length > 0 && (
         <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
           <div className="px-5 py-3" style={{ borderBottom: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-            <h3 className="text-sm font-semibold text-gray-900">Precios de Referencia por Barrio</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Reference prices by neighborhood</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid #d8e5e2' }}>
-                  {['Barrio', 'UF/m²', 'Velocidad', 'Absorción', 'Inventario'].map(h => (
+                  {['Neighborhood', 'UF/m²', 'Velocity', 'Absorption', 'Inventory'].map((h) => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {neighborhoods.map(n => (
-                  <tr key={n.name}
-                    onClick={() => { setForm(f => ({ ...f, neighborhood: n.name })); setResult(null) }}
+                {neighborhoods.map((n) => (
+                  <tr
+                    key={n.name}
+                    onClick={() => { setForm((f) => ({ ...f, neighborhood: n.name })); setResult(null) }}
                     className="cursor-pointer transition-colors"
                     style={{
                       borderBottom: '1px solid #f5f5f5',
                       background: form.neighborhood === n.name ? '#e8f3f0' : undefined,
-                    }}>
+                    }}
+                  >
                     <td className="px-4 py-2.5 font-medium text-gray-900">{n.name}</td>
                     <td className="px-4 py-2.5 font-semibold" style={{ color: '#8fb2aa' }}>{n.price_per_sqm_uf}</td>
                     <td className="px-4 py-2.5 text-gray-600">{n.velocity_days}d</td>
