@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, MessageCircle, RefreshCw, Send, TriangleAlert } from 'lucide-react'
+import { CheckCircle2, MessageCircle, RefreshCw, Send, TriangleAlert, Link2 } from 'lucide-react'
 
 type DeliveryRow = {
   id: number
   report_type: string
-  channel: 'email' | 'whatsapp_web'
+  channel: 'email' | 'whatsapp_web' | 'webhook'
   recipient: string | null
   delivery_url: string | null
   status: 'queued' | 'sent' | 'failed' | 'escalated'
@@ -22,6 +22,7 @@ type DeliverySummary = {
   queued: number
   email: number
   whatsappWeb: number
+  webhook: number
   recentSuccessRate: number
   lastSentAt: string | null
 }
@@ -38,6 +39,7 @@ const channelOptions = [
   { value: '', label: 'Todos' },
   { value: 'email', label: 'Email' },
   { value: 'whatsapp_web', label: 'WhatsApp Web' },
+  { value: 'webhook', label: 'Webhook' },
 ]
 
 export default function DeliveryTelemetryPanel() {
@@ -92,7 +94,7 @@ export default function DeliveryTelemetryPanel() {
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-medium text-gray-900">Telemetría de entregas</p>
-          <p className="text-sm text-gray-600">Historial de email y WhatsApp Web generado por el cron semanal.</p>
+          <p className="text-sm text-gray-600">Historial de email, WhatsApp Web y webhooks generado por el cron semanal.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <select
@@ -129,12 +131,13 @@ export default function DeliveryTelemetryPanel() {
       </div>
 
       {summary && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           {[
             { label: 'Total', value: summary.total, icon: Send },
             { label: 'Exitos', value: summary.sent, icon: CheckCircle2 },
             { label: 'Fallos', value: summary.failed, icon: TriangleAlert },
             { label: 'WhatsApp', value: summary.whatsappWeb, icon: MessageCircle },
+            { label: 'Webhook', value: summary.webhook, icon: Link2 },
           ].map((item) => {
             const Icon = item.icon
             return (
@@ -179,7 +182,7 @@ export default function DeliveryTelemetryPanel() {
                   className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium"
                   style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#555a56' }}
                 >
-                  Abrir WhatsApp Web
+                  {delivery.channel === 'whatsapp_web' ? 'Abrir WhatsApp Web' : delivery.channel === 'webhook' ? 'Abrir webhook' : 'Abrir entrega'}
                 </a>
               )}
             </div>

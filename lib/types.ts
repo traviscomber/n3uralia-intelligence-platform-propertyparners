@@ -70,7 +70,7 @@ export interface ReportDelivery {
   id: number
   report_type: string
   report_id: number | null
-  channel: 'email' | 'whatsapp_web'
+  channel: 'email' | 'whatsapp_web' | 'webhook'
   recipient: string | null
   delivery_url: string | null
   status: 'queued' | 'sent' | 'failed' | 'escalated'
@@ -187,7 +187,7 @@ export interface NeighborhoodMarketSnapshot {
 export interface ReportDeliveryTarget {
   id: number
   label: string
-  channel: 'email' | 'whatsapp_web'
+  channel: 'email' | 'whatsapp_web' | 'webhook'
   recipient: string
   active: boolean
   notify_weekly: boolean

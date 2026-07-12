@@ -7,7 +7,7 @@ type ReportDeliveryRow = {
   id: number
   report_type: string
   report_id: number | null
-  channel: 'email' | 'whatsapp_web'
+  channel: 'email' | 'whatsapp_web' | 'webhook'
   recipient: string | null
   delivery_url: string | null
   status: 'queued' | 'sent' | 'failed' | 'escalated'
@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
         queued: summarySource.filter((row) => row.status === 'queued').length,
         email: summarySource.filter((row) => row.channel === 'email').length,
         whatsappWeb: summarySource.filter((row) => row.channel === 'whatsapp_web').length,
+        webhook: summarySource.filter((row) => row.channel === 'webhook').length,
         recentSuccessRate: summarySource.length ? Math.round((sentCount / summarySource.length) * 100) : 0,
         lastSentAt: summarySource.find((row) => row.sent_at)?.sent_at || null,
       },

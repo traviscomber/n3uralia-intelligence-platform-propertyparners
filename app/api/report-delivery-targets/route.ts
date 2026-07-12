@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 type DeliveryTarget = {
   id: number
   label: string
-  channel: 'email' | 'whatsapp_web'
+  channel: 'email' | 'whatsapp_web' | 'webhook'
   recipient: string
   active: boolean
   notify_weekly: boolean
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const channel = body.channel
     const recipient = cleanRecipient(body.recipient || '')
 
-    if (!label || !recipient || (channel !== 'email' && channel !== 'whatsapp_web')) {
+    if (!label || !recipient || (channel !== 'email' && channel !== 'whatsapp_web' && channel !== 'webhook')) {
       return NextResponse.json({ error: 'label, channel y recipient son requeridos.' }, { status: 400 })
     }
 
@@ -96,7 +96,7 @@ export async function PATCH(req: NextRequest) {
     const updates: Record<string, unknown> = {}
 
     if (typeof body.label === 'string') updates.label = cleanRecipient(body.label)
-    if (body.channel === 'email' || body.channel === 'whatsapp_web') updates.channel = body.channel
+    if (body.channel === 'email' || body.channel === 'whatsapp_web' || body.channel === 'webhook') updates.channel = body.channel
     if (typeof body.recipient === 'string') updates.recipient = cleanRecipient(body.recipient)
     if (typeof body.active === 'boolean') updates.active = body.active
     if (typeof body.notify_weekly === 'boolean') updates.notify_weekly = body.notify_weekly

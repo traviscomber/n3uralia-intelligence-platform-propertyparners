@@ -6,7 +6,7 @@ import { Plus, RefreshCw, Trash2 } from 'lucide-react'
 type DeliveryTarget = {
   id: number
   label: string
-  channel: 'email' | 'whatsapp_web'
+  channel: 'email' | 'whatsapp_web' | 'webhook'
   recipient: string
   active: boolean
   notify_weekly: boolean
@@ -15,7 +15,7 @@ type DeliveryTarget = {
 
 const initialForm = {
   label: '',
-  channel: 'email' as 'email' | 'whatsapp_web',
+  channel: 'email' as 'email' | 'whatsapp_web' | 'webhook',
   recipient: '',
   active: true,
   notify_weekly: true,
@@ -118,17 +118,18 @@ export default function ReportDeliveryTargetsManager() {
         />
         <select
           value={form.channel}
-          onChange={(e) => setForm({ ...form, channel: e.target.value as 'email' | 'whatsapp_web' })}
+          onChange={(e) => setForm({ ...form, channel: e.target.value as 'email' | 'whatsapp_web' | 'webhook' })}
           className="rounded-lg border px-3 py-2 text-sm text-gray-900"
           style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
         >
           <option value="email">Email</option>
           <option value="whatsapp_web">WhatsApp Web</option>
+          <option value="webhook">Webhook</option>
         </select>
         <input
           value={form.recipient}
           onChange={(e) => setForm({ ...form, recipient: e.target.value })}
-          placeholder={form.channel === 'email' ? 'correo@empresa.com' : '+56912345678'}
+          placeholder={form.channel === 'email' ? 'correo@empresa.com' : form.channel === 'whatsapp_web' ? '+56912345678' : 'https://hooks.example.com/report'}
           className="rounded-lg border px-3 py-2 text-sm text-gray-900 md:col-span-2"
           style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
         />

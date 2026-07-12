@@ -101,10 +101,63 @@ async function sendResendEmailWithRetry(subject: string, message: string, recipi
   }
 }
 
+async function sendWebhookWithRetry(payload: Record<string, unknown>, webhookUrl: string, attempts = 3) {
+  const errors: string[] = []
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const responseText = await response.text().catch(() => '')
+      let parsedBody: Record<string, unknown> | string | null = null
+      if (responseText) {
+        try {
+          parsedBody = JSON.parse(responseText) as Record<string, unknown>
+        } catch {
+          parsedBody = responseText
+        }
+      }
+
+      if (!response.ok) {
+        const detail =
+          (parsedBody && typeof parsedBody === 'object' && (parsedBody.message || parsedBody.error)) ||
+          (typeof parsedBody === 'string' ? parsedBody : '') ||
+          response.statusText
+        throw new Error(`Webhook request failed (${response.status}): ${detail}`)
+      }
+
+      return {
+        ok: true,
+        attempts: attempt,
+        response: parsedBody,
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown webhook error'
+      errors.push(errorMessage)
+      if (attempt < attempts) {
+        await delay(attempt * 600)
+      }
+    }
+  }
+
+  return {
+    ok: false,
+    attempts,
+    error: new Error(errors[errors.length - 1] || 'Webhook delivery failed'),
+    errors,
+  }
+}
+
 type DeliveryTarget = {
   id: number
   label: string
-  channel: 'email' | 'whatsapp_web'
+  channel: 'email' | 'whatsapp_web' | 'webhook'
   recipient: string
   active: boolean
   notify_weekly: boolean
@@ -170,14 +223,18 @@ export async function GET(request: Request) {
 
     const emailTargets = targets.filter((target) => target.channel === 'email')
     const whatsappTargets = targets.filter((target) => target.channel === 'whatsapp_web')
+    const webhookTargets = targets.filter((target) => target.channel === 'webhook')
 
     const fallbackEmails = splitRecipients(process.env.REPORT_EMAIL_TO)
     const fallbackWhatsApp = splitRecipients(process.env.REPORT_WHATSAPP_PHONE)
+    const fallbackWebhooks = splitRecipients(process.env.REPORT_WEBHOOK_URL)
     const escalationEmails = splitRecipients(process.env.REPORT_ESCALATION_EMAIL_TO)
     const escalationWhatsApp = splitRecipients(process.env.REPORT_ESCALATION_WHATSAPP_PHONE)
+    const escalationWebhooks = splitRecipients(process.env.REPORT_ESCALATION_WEBHOOK_URL)
 
     const emailRecipients = emailTargets.length ? emailTargets.map((target) => target.recipient) : fallbackEmails
     const whatsappRecipients = whatsappTargets.length ? whatsappTargets.map((target) => target.recipient) : fallbackWhatsApp
+    const webhookRecipients = webhookTargets.length ? webhookTargets.map((target) => target.recipient) : fallbackWebhooks
     const needsEscalation = !emailRecipients.length
 
     let emailDelivered = false
@@ -219,6 +276,47 @@ export async function GET(request: Request) {
         recipient: whatsappPhone,
       })
     })
+
+    for (const webhookUrl of webhookRecipients) {
+      const webhookDelivery = await sendWebhookWithRetry(
+        {
+          reportType: 'weekly_directors',
+          subject,
+          message,
+          report: latestWeekly,
+          director: latestDirector,
+          generatedAt: new Date().toISOString(),
+        },
+        webhookUrl,
+        3,
+      )
+
+      if (webhookDelivery.ok) {
+        deliveries.push({
+          channel: 'webhook',
+          status: 'sent',
+          delivery_url: webhookUrl,
+          recipient: webhookUrl,
+          provider_response: {
+            attempts: webhookDelivery.attempts,
+            response: webhookDelivery.response,
+          },
+        })
+      } else {
+        const webhookError = webhookDelivery.error?.message || 'Webhook delivery failed'
+        warnings.push(`Webhook fallido: ${webhookError}`)
+        deliveries.push({
+          channel: 'webhook',
+          status: 'failed',
+          delivery_url: webhookUrl,
+          recipient: webhookUrl,
+          provider_response: {
+            attempts: webhookDelivery.attempts,
+            errors: webhookDelivery.errors || [webhookError],
+          },
+        })
+      }
+    }
 
     const shouldEscalate = !emailDelivered && (emailRecipients.length > 0 || needsEscalation)
 
@@ -270,6 +368,52 @@ export async function GET(request: Request) {
       })
     }
 
+    if (shouldEscalate && escalationWebhooks.length) {
+      for (const webhookUrl of escalationWebhooks) {
+        const escalationDelivery = await sendWebhookWithRetry(
+          {
+            reportType: 'weekly_directors',
+            subject: `[ESCALATION] ${subject}`,
+            message: `ALERTA: ${message}`,
+            report: latestWeekly,
+            director: latestDirector,
+            escalated: true,
+            generatedAt: new Date().toISOString(),
+          },
+          webhookUrl,
+          2,
+        )
+
+        if (escalationDelivery.ok) {
+          deliveries.push({
+            channel: 'webhook',
+            status: 'escalated',
+            delivery_url: webhookUrl,
+            recipient: webhookUrl,
+            provider_response: {
+              attempts: escalationDelivery.attempts,
+              response: escalationDelivery.response,
+              escalation: true,
+            },
+          })
+        } else {
+          const escalationWebhookError = escalationDelivery.error?.message || 'Escalated webhook delivery failed'
+          warnings.push(`Escalamiento webhook fallido: ${escalationWebhookError}`)
+          deliveries.push({
+            channel: 'webhook',
+            status: 'failed',
+            delivery_url: webhookUrl,
+            recipient: webhookUrl,
+            provider_response: {
+              attempts: escalationDelivery.attempts,
+              errors: escalationDelivery.errors || [escalationWebhookError],
+              escalation: true,
+            },
+          })
+        }
+      }
+    }
+
     if (deliveries.length) {
       const deliveredAt = new Date().toISOString()
       await supabase.from('report_deliveries').insert(
@@ -294,6 +438,7 @@ export async function GET(request: Request) {
       report: latestWeekly,
       deliveries,
       whatsappUrls: whatsappRecipients.map((phone) => buildWhatsAppWebUrl(phone, message)),
+      webhookUrls: webhookRecipients,
       emailDelivered,
       escalationTriggered: shouldEscalate,
       warnings,
