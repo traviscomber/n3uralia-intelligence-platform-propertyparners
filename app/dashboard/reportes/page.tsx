@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { Calendar, FileText, RefreshCw, Sparkles, TriangleAlert, TrendingUp, Users } from 'lucide-react'
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime-query'
 import type { AiReport } from '@/lib/types'
@@ -497,13 +498,22 @@ export default function ReportesPage() {
                         {report.sales_count} ventas, {report.conversion_rate.toFixed(1)}% conversión, +{report.velocity_change.toFixed(1)} velocidad
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: tone.bg, color: tone.fg }}>
                         {report.status === 'on_track' ? 'En línea' : report.status === 'warning' ? 'En observación' : 'Bajo objetivo'}
                       </span>
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: 'var(--n-primary-muted)', color: 'var(--n-primary)' }}>
                         {report.target_progress}% objetivo
                       </span>
+                      {report.director_id && (
+                        <Link
+                          href={`/dashboard/reportes/${encodeURIComponent(report.director_id)}`}
+                          className="rounded-full border px-3 py-1 text-xs font-medium"
+                          style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg-muted)' }}
+                        >
+                          Ver detalle
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>

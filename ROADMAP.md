@@ -8,6 +8,7 @@
 - Scraper pipeline tracks Portal Inmobiliario, TOCTOC, icasas.cl, and Yapo
 - Scrape health snapshots are persisted and surfaced in `Fuentes de Datos`
 - Weekly delivery now supports email and WhatsApp Web links
+- Weekly delivery now retries primary email and escalates to backup recipients when needed
 
 ## Project Links
 
@@ -38,16 +39,17 @@
 15. Market intelligence persists historical neighborhood snapshots in `neighborhood_market_data`.
 16. Valorizador scoring now weights comparable properties with market alignment and recency signals.
 17. Scraper redundancy now includes Chilepropiedades as an additional public listing source.
+18. Director drill-down views and PDF exports are available from `Reportes IA`.
 
 ## Next Implementation Block
 
-1. Add automatic report delivery escalation and retry handling.
-2. Add director/seller drill-down views and exportable report PDFs.
+1. Expand anomaly detection on KPIs and market changes using the persisted health history.
+2. Keep tightening accessibility, responsiveness, and loading states.
 
 ## Follow-Up Roadmap
 
-1. Expand anomaly detection on KPIs and market changes using the persisted health history.
-2. Keep tightening accessibility, responsiveness, and loading states.
+1. Add director/seller export variants with week selection and filters.
+2. Add more delivery channels and richer delivery telemetry.
 
 ## Notes
 
