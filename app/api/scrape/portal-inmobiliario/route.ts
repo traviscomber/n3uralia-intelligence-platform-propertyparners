@@ -47,13 +47,11 @@ const SEARCH_URLS = [
   'https://www.portalinmobiliario.com/venta/departamento/vitacura-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana',
 ]
-const RENTALS_SEARCH_URLS = [
-  'https://www.portalinmobiliario.com/arriendo/departamento/vitacura-metropolitana',
-  'https://www.portalinmobiliario.com/arriendo/casa/vitacura-metropolitana',
-]
 
 const TOCTOC_SEARCH_URL = 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
+const TOCTOC_HOUSES_SEARCH_URL = 'https://www.toctoc.com/venta/casa/metropolitana/vitacura'
 const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
+const ICASAS_HOUSES_SEARCH_URL = 'https://www.icasas.cl/venta/casas/santiago/vitacura'
 const YAPO_SEARCH_URL = 'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.2-2'
 const CHILEPROPIEDADES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta/departamento/vitacura'
 
@@ -242,8 +240,8 @@ async function scrapePortalListings(maxResults = 60, urls = SEARCH_URLS, source 
   return results
 }
 
-async function scrapeToctocListings(limit = 25) {
-  const res = await fetch(TOCTOC_SEARCH_URL, {
+async function scrapeToctocListings(limit = 25, searchUrl = TOCTOC_SEARCH_URL, source = 'toctoc_search') {
+  const res = await fetch(searchUrl, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       Accept: 'text/html,application/xhtml+xml',
@@ -312,7 +310,7 @@ async function scrapeToctocListings(limit = 25) {
       lat: sector.lat + (Math.random() - 0.5) * 0.0015,
       lng: sector.lng + (Math.random() - 0.5) * 0.0015,
       days_on_market: Math.floor(Math.random() * 60) + 3,
-      source: 'toctoc_search',
+      source,
       external_id: item.url || hashLike(`${item.name || ''}|${neighborhood}`),
     })
   }
@@ -320,7 +318,7 @@ async function scrapeToctocListings(limit = 25) {
   return results
 }
 
-async function scrapeIcasasListings(limit = 20) {
+async function scrapeIcasasListings(limit = 20, searchUrl = ICASAS_SEARCH_URL, source = 'icasas_search') {
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
@@ -332,7 +330,7 @@ async function scrapeIcasasListings(limit = 20) {
     const page = await browser.newPage()
     await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9' })
-    await page.goto(ICASAS_SEARCH_URL, { waitUntil: 'networkidle2', timeout: 40000 })
+    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 40000 })
     await page.waitForSelector('li.serp-snippet.ad', { timeout: 15000 }).catch(() => {})
 
     const cards = await page.evaluate(() => {
@@ -379,7 +377,7 @@ async function scrapeIcasasListings(limit = 20) {
         lat: card.lat ? Number.parseFloat(card.lat) : sector.lat + (Math.random() - 0.5) * 0.0015,
         lng: card.lng ? Number.parseFloat(card.lng) : sector.lng + (Math.random() - 0.5) * 0.0015,
         days_on_market: Math.floor(Math.random() * 70) + 4,
-        source: 'icasas_search',
+        source,
         external_id: card.href || hashLike(`${card.title}|${card.address}|${card.price}`),
       })
     }
@@ -660,15 +658,6 @@ export async function POST(request: Request) {
       await syncSourceStats('Portal Inmobiliario', 1, errors.length ? 'error' : 'active', uniquePortal.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'portal-rentals') {
-      const rentalRows = await scrapePortalListings(30, RENTALS_SEARCH_URLS, 'portal_inmobiliario_rentals')
-      const uniqueRentals = dedupeProperties(rentalRows)
-      const { inserted, errors } = await insertProperties(uniqueRentals)
-      allRows.push(...uniqueRentals)
-      runs.push({ source: 'portal_inmobiliario_rentals', scraped: uniqueRentals.length, inserted, skipped: uniqueRentals.length - inserted, errors })
-      await syncSourceStats('Portal Inmobiliario Arriendos', 6, errors.length ? 'error' : 'active', uniqueRentals.length, errors[0] || null)
-    }
-
     if (source === 'all' || source === 'toctoc') {
       const toctocRows = await scrapeToctocListings(20)
       const uniqueToctoc = dedupeProperties(toctocRows)
@@ -678,13 +667,31 @@ export async function POST(request: Request) {
       await syncSourceStats('TOCTOC Search', 2, errors.length ? 'error' : 'active', uniqueToctoc.length, errors[0] || null)
     }
 
+    if (source === 'all' || source === 'toctoc-houses') {
+      const houseToctocRows = await scrapeToctocListings(20, TOCTOC_HOUSES_SEARCH_URL, 'toctoc_houses_search')
+      const uniqueHouseToctoc = dedupeProperties(houseToctocRows)
+      const { inserted, errors } = await insertProperties(uniqueHouseToctoc)
+      allRows.push(...uniqueHouseToctoc)
+      runs.push({ source: 'toctoc_houses_search', scraped: uniqueHouseToctoc.length, inserted, skipped: uniqueHouseToctoc.length - inserted, errors })
+      await syncSourceStats('TOCTOC Casas', 3, errors.length ? 'error' : 'active', uniqueHouseToctoc.length, errors[0] || null)
+    }
+
     if (source === 'all' || source === 'icasas') {
       const icasasRows = await scrapeIcasasListings(20)
       const uniqueIcasas = dedupeProperties(icasasRows)
       const { inserted, errors } = await insertProperties(uniqueIcasas)
       allRows.push(...uniqueIcasas)
       runs.push({ source: 'icasas_search', scraped: uniqueIcasas.length, inserted, skipped: uniqueIcasas.length - inserted, errors })
-      await syncSourceStats('icasas.cl', 3, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+      await syncSourceStats('icasas.cl', 4, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+    }
+
+    if (source === 'all' || source === 'icasas-houses') {
+      const houseIcasasRows = await scrapeIcasasListings(20, ICASAS_HOUSES_SEARCH_URL, 'icasas_houses_search')
+      const uniqueHouseIcasas = dedupeProperties(houseIcasasRows)
+      const { inserted, errors } = await insertProperties(uniqueHouseIcasas)
+      allRows.push(...uniqueHouseIcasas)
+      runs.push({ source: 'icasas_houses_search', scraped: uniqueHouseIcasas.length, inserted, skipped: uniqueHouseIcasas.length - inserted, errors })
+      await syncSourceStats('icasas.cl Casas', 5, errors.length ? 'error' : 'active', uniqueHouseIcasas.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'yapo') {
@@ -693,7 +700,7 @@ export async function POST(request: Request) {
       const { inserted, errors } = await insertProperties(uniqueYapo)
       allRows.push(...uniqueYapo)
       runs.push({ source: 'yapo_search', scraped: uniqueYapo.length, inserted, skipped: uniqueYapo.length - inserted, errors })
-      await syncSourceStats('Yapo Search', 4, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
+      await syncSourceStats('Yapo Search', 6, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'chilepropiedades') {
@@ -703,11 +710,11 @@ export async function POST(request: Request) {
         const { inserted, errors } = await insertProperties(uniqueChile)
         allRows.push(...uniqueChile)
         runs.push({ source: 'chilepropiedades_search', scraped: uniqueChile.length, inserted, skipped: uniqueChile.length - inserted, errors })
-        await syncSourceStats('Chilepropiedades', 5, errors.length ? 'error' : 'active', uniqueChile.length, errors[0] || null)
+        await syncSourceStats('Chilepropiedades', 7, errors.length ? 'error' : 'active', uniqueChile.length, errors[0] || null)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Chilepropiedades scrape failed'
         runs.push({ source: 'chilepropiedades_search', scraped: 0, inserted: 0, skipped: 0, errors: [message] })
-        await syncSourceStats('Chilepropiedades', 5, 'error', 0, message)
+        await syncSourceStats('Chilepropiedades', 7, 'error', 0, message)
       }
     }
 
