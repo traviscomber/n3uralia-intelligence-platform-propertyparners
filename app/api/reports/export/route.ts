@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
+type ExportDataset = 'ai_reports' | 'weekly_reports' | 'profiles'
+type ExportFormat = 'csv' | 'json'
+
 type AiReportRow = {
   id: string
   report_type: string
@@ -10,6 +13,31 @@ type AiReportRow = {
   summary: string | null
   period_date: string | null
   generated_by: string | null
+  created_at: string
+}
+
+type WeeklyReportRow = {
+  id: number
+  report_key: string
+  report_scope: string
+  week_start: string
+  week_end: string
+  director_id: string | null
+  sales_count: number
+  commission_total: number
+  conversion_rate: number
+  target_progress: number
+  velocity_change: number
+  status: string
+  generated_at: string
+}
+
+type ProfileRow = {
+  id: string
+  full_name: string | null
+  role: string
+  team: string | null
+  avatar_url: string | null
   created_at: string
 }
 
@@ -32,36 +60,162 @@ function csvEscape(value: unknown) {
   return text
 }
 
-function toCsv(rows: AiReportRow[]) {
-  const headers = ['id', 'report_type', 'title', 'summary', 'period_date', 'generated_by', 'created_at']
+function toCsv(headers: string[], rows: Array<Record<string, unknown>>) {
+  if (!rows.length) {
+    return `${headers.join(',')}\n`
+  }
+
   const lines = [
     headers.join(','),
-    ...rows.map((row) => [
-      row.id,
-      row.report_type,
-      row.title,
-      row.summary || '',
-      row.period_date || '',
-      row.generated_by || '',
-      row.created_at,
-    ].map(csvEscape).join(',')),
+    ...rows.map((row) => headers.map((header) => csvEscape(row[header])).join(',')),
   ]
+
   return `${lines.join('\n')}\n`
+}
+
+function getFormat(value: string | null): ExportFormat {
+  return value?.toLowerCase() === 'json' ? 'json' : 'csv'
+}
+
+function getDataset(value: string | null): ExportDataset {
+  if (value === 'weekly_reports' || value === 'profiles') return value
+  return 'ai_reports'
+}
+
+function parseLimit(value: string | null, fallback = 100) {
+  const parsed = Number.parseInt(value || String(fallback), 10)
+  return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 200) : fallback
 }
 
 export async function GET(req: NextRequest) {
   try {
     const supabase = getServiceClient()
     const { searchParams } = new URL(req.url)
+    const dataset = getDataset(searchParams.get('dataset'))
+    const format = getFormat(searchParams.get('format'))
+    const limit = parseLimit(searchParams.get('limit'))
+
+    if (dataset === 'profiles') {
+      const role = searchParams.get('role')
+      const team = searchParams.get('team')
+
+      let query = supabase
+        .from('profiles')
+        .select('id, full_name, role, team, avatar_url, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      if (role) query = query.eq('role', role)
+      if (team) query = query.ilike('team', `%${team}%`)
+
+      const { data, error } = await query
+      if (error) throw error
+
+      const rows = (data || []) as ProfileRow[]
+      const payload = {
+        dataset,
+        filters: {
+          role,
+          team,
+          limit,
+        },
+        records: rows,
+        count: rows.length,
+        exportedAt: new Date().toISOString(),
+      }
+
+      if (format === 'json') {
+        return NextResponse.json(payload)
+      }
+
+      const csv = toCsv(
+        ['id', 'full_name', 'role', 'team', 'avatar_url', 'created_at'],
+        rows.map((row) => ({
+          id: row.id,
+          full_name: row.full_name || '',
+          role: row.role,
+          team: row.team || '',
+          avatar_url: row.avatar_url || '',
+          created_at: row.created_at,
+        })),
+      )
+
+      return new NextResponse(csv, {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="profiles_${role || 'all'}.csv"`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      })
+    }
+
+    if (dataset === 'weekly_reports') {
+      const reportScope = searchParams.get('report_scope')
+      const directorId = searchParams.get('director_id')
+      const weekStart = searchParams.get('week_start')
+
+      let query = supabase
+        .from('weekly_reports')
+        .select('id, report_key, report_scope, week_start, week_end, director_id, sales_count, commission_total, conversion_rate, target_progress, velocity_change, status, generated_at')
+        .order('generated_at', { ascending: false })
+        .limit(limit)
+
+      if (reportScope) query = query.eq('report_scope', reportScope)
+      if (directorId) query = query.eq('director_id', directorId)
+      if (weekStart) query = query.eq('week_start', weekStart)
+
+      const { data, error } = await query
+      if (error) throw error
+
+      const rows = (data || []) as WeeklyReportRow[]
+      const payload = {
+        dataset,
+        filters: {
+          report_scope: reportScope,
+          director_id: directorId,
+          week_start: weekStart,
+          limit,
+        },
+        records: rows,
+        count: rows.length,
+        exportedAt: new Date().toISOString(),
+      }
+
+      if (format === 'json') {
+        return NextResponse.json(payload)
+      }
+
+      const csv = toCsv(
+        ['id', 'report_key', 'report_scope', 'week_start', 'week_end', 'director_id', 'sales_count', 'commission_total', 'conversion_rate', 'target_progress', 'velocity_change', 'status', 'generated_at'],
+        rows.map((row) => ({
+          ...row,
+          director_id: row.director_id || '',
+        })),
+      )
+
+      const fileName = [
+        'weekly_reports',
+        reportScope || 'all',
+        directorId || 'all',
+        weekStart || 'all',
+      ].join('_')
+
+      return new NextResponse(csv, {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${fileName}.csv"`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      })
+    }
+
     const reportType = searchParams.get('type')
-    const format = (searchParams.get('format') || 'csv').toLowerCase()
-    const limit = Number.parseInt(searchParams.get('limit') || '100', 10)
 
     let query = supabase
       .from('ai_reports')
       .select('id, report_type, title, summary, period_date, generated_by, created_at')
       .order('created_at', { ascending: false })
-      .limit(Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 200) : 100)
+      .limit(limit)
 
     if (reportType) query = query.eq('report_type', reportType)
 
@@ -69,16 +223,30 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     const rows = (data || []) as AiReportRow[]
-
-    if (format === 'json') {
-      return NextResponse.json({
-        reports: rows,
-        count: rows.length,
-        exportedAt: new Date().toISOString(),
-      })
+    const payload = {
+      dataset,
+      filters: {
+        type: reportType,
+        limit,
+      },
+      records: rows,
+      count: rows.length,
+      exportedAt: new Date().toISOString(),
     }
 
-    const csv = toCsv(rows)
+    if (format === 'json') {
+      return NextResponse.json(payload)
+    }
+
+    const csv = toCsv(
+      ['id', 'report_type', 'title', 'summary', 'period_date', 'generated_by', 'created_at'],
+      rows.map((row) => ({
+        ...row,
+        summary: row.summary || '',
+        period_date: row.period_date || '',
+        generated_by: row.generated_by || '',
+      })),
+    )
     const fileNameBase = reportType ? `ai_reports_${reportType}` : 'ai_reports_all'
 
     return new NextResponse(csv, {

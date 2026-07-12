@@ -35,6 +35,7 @@ type WeeklyReportResponse = {
 }
 
 type ReportTypeChoice = 'weekly_directors' | 'monthly_ceo' | 'market_brief' | 'captation_alert'
+type ExportDataset = 'ai_reports' | 'weekly_reports' | 'profiles'
 
 type ScrapeHealthIssue = {
   severity: 'info' | 'warning' | 'critical'
@@ -89,6 +90,11 @@ export default function ReportesPage() {
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [generatedReport, setGeneratedReport] = useState<AiReport | null>(null)
   const [reportFilter, setReportFilter] = useState<string>('')
+  const [exportDataset, setExportDataset] = useState<ExportDataset>('ai_reports')
+  const [exportWeekStart, setExportWeekStart] = useState('')
+  const [exportDirectorId, setExportDirectorId] = useState('')
+  const [exportProfileRole, setExportProfileRole] = useState('seller')
+  const [exportProfileTeam, setExportProfileTeam] = useState('')
   const [health, setHealth] = useState<ScrapeHealthSnapshot | null>(null)
   const [healthAnomalies, setHealthAnomalies] = useState<OperationalAnomaly[]>([])
   const [healthLoading, setHealthLoading] = useState(true)
@@ -213,9 +219,25 @@ export default function ReportesPage() {
 
   const exportBaseUrl = useMemo(() => {
     const params = new URLSearchParams()
-    if (reportFilter) params.set('type', reportFilter)
+    params.set('dataset', exportDataset)
+
+    if (exportDataset === 'ai_reports' && reportFilter) {
+      params.set('type', reportFilter)
+    }
+
+    if (exportDataset === 'weekly_reports') {
+      if (exportWeekStart) params.set('week_start', exportWeekStart)
+      if (exportDirectorId) params.set('director_id', exportDirectorId)
+      params.set('report_scope', exportDirectorId ? 'director' : 'weekly_summary')
+    }
+
+    if (exportDataset === 'profiles') {
+      if (exportProfileRole) params.set('role', exportProfileRole)
+      if (exportProfileTeam) params.set('team', exportProfileTeam)
+    }
+
     return `/api/reports/export${params.toString() ? `?${params.toString()}` : ''}`
-  }, [reportFilter])
+  }, [exportDataset, exportDirectorId, exportProfileRole, exportProfileTeam, exportWeekStart, reportFilter])
 
   const generatedWhatsappUrl =
     whatsappPhone && generatedReport
@@ -699,20 +721,101 @@ export default function ReportesPage() {
               Limpiar filtro
             </button>
           )}
-          <a
-            href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=csv`}
-            className="n-button border"
-            style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
-          >
-            Exportar CSV
-          </a>
-          <a
-            href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=json`}
-            className="n-button border"
-            style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
-          >
-            Exportar JSON
-          </a>
+        </div>
+
+        <div className="mb-4 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Exportaciones
+              </p>
+              <h3 className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                Variantes por biblioteca, reporte semanal y perfiles sellers
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+              <select
+                value={exportDataset}
+                onChange={(e) => setExportDataset(e.target.value as ExportDataset)}
+                className="rounded-2xl border px-3 py-2 text-sm"
+                style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+              >
+                <option value="ai_reports">Biblioteca AI</option>
+                <option value="weekly_reports">Reportes semanales</option>
+                <option value="profiles">Perfiles sellers</option>
+              </select>
+
+              {exportDataset === 'weekly_reports' && (
+                <>
+                  <select
+                    value={exportWeekStart}
+                    onChange={(e) => setExportWeekStart(e.target.value)}
+                    className="rounded-2xl border px-3 py-2 text-sm"
+                    style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                  >
+                    <option value="">Todas las semanas</option>
+                    {weekly?.reports?.map((report) => (
+                      <option key={report.week_start} value={report.week_start}>
+                        {formatDate(report.week_start)} - {formatDate(report.week_end)}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={exportDirectorId}
+                    onChange={(e) => setExportDirectorId(e.target.value)}
+                    className="rounded-2xl border px-3 py-2 text-sm"
+                    style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                  >
+                    <option value="">Resumen general</option>
+                    {weekly?.directors?.map((report) => (
+                      <option key={report.director_id || 'all'} value={report.director_id || ''}>
+                        {report.director_id || 'Sin director'}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+
+              {exportDataset === 'profiles' && (
+                <>
+                  <select
+                    value={exportProfileRole}
+                    onChange={(e) => setExportProfileRole(e.target.value)}
+                    className="rounded-2xl border px-3 py-2 text-sm"
+                    style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                  >
+                    <option value="">Todos los roles</option>
+                    <option value="seller">Seller</option>
+                    <option value="director">Director</option>
+                    <option value="admin">Admin</option>
+                    <option value="ceo">CEO</option>
+                  </select>
+                  <input
+                    value={exportProfileTeam}
+                    onChange={(e) => setExportProfileTeam(e.target.value)}
+                    placeholder="Filtrar por equipo"
+                    className="rounded-2xl border px-3 py-2 text-sm"
+                    style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                  />
+                </>
+              )}
+
+              <a
+                href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=csv`}
+                className="n-button border"
+                style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+              >
+                Exportar CSV
+              </a>
+              <a
+                href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=json`}
+                className="n-button border"
+                style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+              >
+                Exportar JSON
+              </a>
+            </div>
+          </div>
         </div>
 
         {filteredAiReports.length ? (
