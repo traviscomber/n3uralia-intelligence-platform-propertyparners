@@ -13,7 +13,8 @@ type ScrapedProperty = {
   neighborhood: string
   lat: number
   lng: number
-  days_on_market: number
+  days_on_market?: number
+  status?: string
   source: string
   external_id: string
 }
@@ -485,15 +486,13 @@ async function insertProperties(rows: ScrapedProperty[]) {
   for (const row of rows) {
     const { error } = await supabase.from('properties').insert({
       address: row.address,
-      neighborhood: row.neighborhood,
-      price_uf: row.price_uf,
-      area_m2: row.area_m2,
+      latitude: row.lat,
+      longitude: row.lng,
+      list_price_uf: row.price_uf,
+      sqm: row.area_m2,
       bedrooms: row.bedrooms,
       bathrooms: row.bathrooms,
-      lat: row.lat,
-      lng: row.lng,
-      status: 'activo',
-      days_on_market: row.days_on_market,
+      status: row.status || 'available',
       source: row.source,
       external_id: row.external_id,
     })
