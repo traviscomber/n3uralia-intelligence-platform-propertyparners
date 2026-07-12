@@ -149,14 +149,17 @@ function benchmarkPriceForNeighborhood(
 }
 
 async function scrapePortalListings(maxResults = 60) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
-  })
-
   const results: ScrapedProperty[] = []
+  let browser: any = null
 
   try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
+    }).catch((err: Error) => {
+      console.error('[v0] Puppeteer launch failed:', err.message)
+      throw new Error(`Chromium unavailable: ${err.message}`)
+    })
     for (const url of SEARCH_URLS) {
       if (results.length >= maxResults) break
 
@@ -213,8 +216,12 @@ async function scrapePortalListings(maxResults = 60) {
       await page.close()
       await new Promise((resolve) => setTimeout(resolve, 800))
     }
+  } catch (err) {
+    console.error('[v0] Portal scraper error:', err instanceof Error ? err.message : 'Unknown error')
   } finally {
-    await browser.close().catch(() => {})
+    if (browser) {
+      await browser.close().catch(() => {})
+    }
   }
 
   return results
@@ -299,14 +306,17 @@ async function scrapeToctocListings(limit = 25) {
 }
 
 async function scrapeIcasasListings(limit = 20) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
-  })
-
   const results: ScrapedProperty[] = []
+  let browser: any = null
 
   try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
+    }).catch((err: Error) => {
+      console.error('[v0] Puppeteer launch failed for iCasas:', err.message)
+      throw new Error(`Chromium unavailable: ${err.message}`)
+    })
     const page = await browser.newPage()
     await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9' })
@@ -361,8 +371,12 @@ async function scrapeIcasasListings(limit = 20) {
         external_id: card.href || hashLike(`${card.title}|${card.address}|${card.price}`),
       })
     }
+  } catch (err) {
+    console.error('[v0] iCasas scraper error:', err instanceof Error ? err.message : 'Unknown error')
   } finally {
-    await browser.close().catch(() => {})
+    if (browser) {
+      await browser.close().catch(() => {})
+    }
   }
 
   return results
@@ -508,39 +522,67 @@ export async function POST(request: Request) {
     const allRows: ScrapedProperty[] = []
 
     if (source === 'all' || source === 'portal') {
-      const portalRows = await scrapePortalListings(60)
-      const uniquePortal = dedupeProperties(portalRows)
-      const { inserted, errors } = await insertProperties(uniquePortal)
-      allRows.push(...uniquePortal)
-      runs.push({ source: 'portal_inmobiliario', scraped: uniquePortal.length, inserted, skipped: uniquePortal.length - inserted, errors })
-      await syncSourceStats('Portal Inmobiliario', 1, errors.length ? 'error' : 'active', uniquePortal.length, errors[0] || null)
+      try {
+        const portalRows = await scrapePortalListings(60)
+        const uniquePortal = dedupeProperties(portalRows)
+        const { inserted, errors } = await insertProperties(uniquePortal)
+        allRows.push(...uniquePortal)
+        runs.push({ source: 'portal_inmobiliario', scraped: uniquePortal.length, inserted, skipped: uniquePortal.length - inserted, errors })
+        await syncSourceStats('Portal Inmobiliario', 1, errors.length ? 'error' : 'active', uniquePortal.length, errors[0] || null)
+      } catch (err) {
+        console.error('[v0] Portal Inmobiliario scraper failed:', err instanceof Error ? err.message : 'Unknown error')
+        const msg = err instanceof Error ? err.message : 'Portal Inmobiliario scraper failed'
+        runs.push({ source: 'portal_inmobiliario', scraped: 0, inserted: 0, skipped: 0, errors: [msg] })
+        await syncSourceStats('Portal Inmobiliario', 1, 'error', 0, msg)
+      }
     }
 
     if (source === 'all' || source === 'toctoc') {
-      const toctocRows = await scrapeToctocListings(20)
-      const uniqueToctoc = dedupeProperties(toctocRows)
-      const { inserted, errors } = await insertProperties(uniqueToctoc)
-      allRows.push(...uniqueToctoc)
-      runs.push({ source: 'toctoc_search', scraped: uniqueToctoc.length, inserted, skipped: uniqueToctoc.length - inserted, errors })
-      await syncSourceStats('TOCTOC Search', 2, errors.length ? 'error' : 'active', uniqueToctoc.length, errors[0] || null)
+      try {
+        const toctocRows = await scrapeToctocListings(20)
+        const uniqueToctoc = dedupeProperties(toctocRows)
+        const { inserted, errors } = await insertProperties(uniqueToctoc)
+        allRows.push(...uniqueToctoc)
+        runs.push({ source: 'toctoc_search', scraped: uniqueToctoc.length, inserted, skipped: uniqueToctoc.length - inserted, errors })
+        await syncSourceStats('TOCTOC Search', 2, errors.length ? 'error' : 'active', uniqueToctoc.length, errors[0] || null)
+      } catch (err) {
+        console.error('[v0] TOCTOC scraper failed:', err instanceof Error ? err.message : 'Unknown error')
+        const msg = err instanceof Error ? err.message : 'TOCTOC scraper failed'
+        runs.push({ source: 'toctoc_search', scraped: 0, inserted: 0, skipped: 0, errors: [msg] })
+        await syncSourceStats('TOCTOC Search', 2, 'error', 0, msg)
+      }
     }
 
     if (source === 'all' || source === 'icasas') {
-      const icasasRows = await scrapeIcasasListings(20)
-      const uniqueIcasas = dedupeProperties(icasasRows)
-      const { inserted, errors } = await insertProperties(uniqueIcasas)
-      allRows.push(...uniqueIcasas)
-      runs.push({ source: 'icasas_search', scraped: uniqueIcasas.length, inserted, skipped: uniqueIcasas.length - inserted, errors })
-      await syncSourceStats('icasas.cl', 3, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+      try {
+        const icasasRows = await scrapeIcasasListings(20)
+        const uniqueIcasas = dedupeProperties(icasasRows)
+        const { inserted, errors } = await insertProperties(uniqueIcasas)
+        allRows.push(...uniqueIcasas)
+        runs.push({ source: 'icasas_search', scraped: uniqueIcasas.length, inserted, skipped: uniqueIcasas.length - inserted, errors })
+        await syncSourceStats('icasas.cl', 3, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+      } catch (err) {
+        console.error('[v0] iCasas scraper failed:', err instanceof Error ? err.message : 'Unknown error')
+        const msg = err instanceof Error ? err.message : 'iCasas scraper failed'
+        runs.push({ source: 'icasas_search', scraped: 0, inserted: 0, skipped: 0, errors: [msg] })
+        await syncSourceStats('icasas.cl', 3, 'error', 0, msg)
+      }
     }
 
     if (source === 'all' || source === 'yapo') {
-      const yapoRows = await scrapeYapoListings(20)
-      const uniqueYapo = dedupeProperties(yapoRows)
-      const { inserted, errors } = await insertProperties(uniqueYapo)
-      allRows.push(...uniqueYapo)
-      runs.push({ source: 'yapo_search', scraped: uniqueYapo.length, inserted, skipped: uniqueYapo.length - inserted, errors })
-      await syncSourceStats('Yapo Search', 4, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
+      try {
+        const yapoRows = await scrapeYapoListings(20)
+        const uniqueYapo = dedupeProperties(yapoRows)
+        const { inserted, errors } = await insertProperties(uniqueYapo)
+        allRows.push(...uniqueYapo)
+        runs.push({ source: 'yapo_search', scraped: uniqueYapo.length, inserted, skipped: uniqueYapo.length - inserted, errors })
+        await syncSourceStats('Yapo Search', 4, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
+      } catch (err) {
+        console.error('[v0] Yapo scraper failed:', err instanceof Error ? err.message : 'Unknown error')
+        const msg = err instanceof Error ? err.message : 'Yapo scraper failed'
+        runs.push({ source: 'yapo_search', scraped: 0, inserted: 0, skipped: 0, errors: [msg] })
+        await syncSourceStats('Yapo Search', 4, 'error', 0, msg)
+      }
     }
 
     const totalScraped = allRows.length
