@@ -502,14 +502,16 @@ async function insertProperties(rows: ScrapedProperty[]) {
         },
         body: JSON.stringify({
           address: row.address,
-          latitude: row.lat,
-          longitude: row.lng,
-          sqm: row.area_m2,
+          price_uf: row.price_uf,
+          area_m2: row.area_m2,
           bedrooms: row.bedrooms,
           bathrooms: row.bathrooms,
+          neighborhood: row.neighborhood,
+          lat: row.lat,
+          lng: row.lng,
           status: row.status || 'available',
+          days_on_market: row.days_on_market || 0,
           source: row.source,
-          list_price_uf: row.price_uf,
         }),
       })
 
