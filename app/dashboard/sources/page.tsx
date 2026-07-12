@@ -63,8 +63,62 @@ interface ScrapeHealth {
 
 interface PropertyTelemetry {
   total: number
-  neighborhoods: Array<{ name: string; count: number }>
-  sources: Array<{ name: string; count: number }>
+  neighborhoods: Array<{ name: string; count: number; previousCount: number; delta: number }>
+  sources: Array<{ name: string; count: number; previousCount: number; delta: number }>
+  daily: Array<{ date: string; count: number }>
+}
+
+function buildPropertyTelemetry(rows: Array<{ neighborhood: string | null; source: string | null; created_at: string | null }>): PropertyTelemetry {
+  const now = new Date()
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const currentWindowStart = new Date(today)
+  currentWindowStart.setUTCDate(currentWindowStart.getUTCDate() - 7)
+  const previousWindowStart = new Date(today)
+  previousWindowStart.setUTCDate(previousWindowStart.getUTCDate() - 14)
+
+  const neighborhoodCurrent = new Map<string, number>()
+  const neighborhoodPrevious = new Map<string, number>()
+  const sourceCurrent = new Map<string, number>()
+  const sourcePrevious = new Map<string, number>()
+  const dailyCounts = new Map<string, number>()
+
+  for (const row of rows) {
+    if (!row.created_at) continue
+    const created = new Date(row.created_at)
+    if (Number.isNaN(created.getTime())) continue
+
+    const key = created.toISOString().slice(0, 10)
+    if (created >= currentWindowStart) {
+      dailyCounts.set(key, (dailyCounts.get(key) || 0) + 1)
+      if (row.neighborhood) neighborhoodCurrent.set(row.neighborhood, (neighborhoodCurrent.get(row.neighborhood) || 0) + 1)
+      if (row.source) sourceCurrent.set(row.source, (sourceCurrent.get(row.source) || 0) + 1)
+    } else if (created >= previousWindowStart) {
+      if (row.neighborhood) neighborhoodPrevious.set(row.neighborhood, (neighborhoodPrevious.get(row.neighborhood) || 0) + 1)
+      if (row.source) sourcePrevious.set(row.source, (sourcePrevious.get(row.source) || 0) + 1)
+    }
+  }
+
+  const buildRows = (
+    current: Map<string, number>,
+    previous: Map<string, number>,
+  ) => [...current.entries()]
+    .map(([name, count]) => ({
+      name,
+      count,
+      previousCount: previous.get(name) || 0,
+      delta: count - (previous.get(name) || 0),
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6)
+
+  return {
+    total: rows.length,
+    neighborhoods: buildRows(neighborhoodCurrent, neighborhoodPrevious),
+    sources: buildRows(sourceCurrent, sourcePrevious),
+    daily: [...dailyCounts.entries()]
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date)),
+  }
 }
 
 export default function SourcesPage() {
@@ -86,29 +140,12 @@ export default function SourcesPage() {
         const [sourcesRes, healthRes, propertiesRes] = await Promise.all([
           supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
           fetch('/api/scrape/health').then((res) => res.json()),
-          supabase.from('properties').select('neighborhood,source'),
+          supabase.from('properties').select('neighborhood,source,created_at'),
         ])
 
         setSources(sourcesRes.data || [])
         setHealth(healthRes as ScrapeHealth)
-        const propertyRows = (propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null }>
-        const neighborhoodCounts = new Map<string, number>()
-        const sourceCounts = new Map<string, number>()
-        for (const row of propertyRows) {
-          if (row.neighborhood) neighborhoodCounts.set(row.neighborhood, (neighborhoodCounts.get(row.neighborhood) || 0) + 1)
-          if (row.source) sourceCounts.set(row.source, (sourceCounts.get(row.source) || 0) + 1)
-        }
-        setPropertyTelemetry({
-          total: propertyRows.length,
-          neighborhoods: [...neighborhoodCounts.entries()]
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 6),
-          sources: [...sourceCounts.entries()]
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 6),
-        })
+        setPropertyTelemetry(buildPropertyTelemetry((propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null; created_at: string | null }>))
       } catch (err) {
         console.error('Error:', err)
       } finally {
@@ -154,28 +191,11 @@ export default function SourcesPage() {
       const [sourcesRes, healthRes, propertiesRes] = await Promise.all([
         supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
         fetch('/api/scrape/health').then((r) => r.json()),
-        supabase.from('properties').select('neighborhood,source'),
+        supabase.from('properties').select('neighborhood,source,created_at'),
       ])
       setSources(sourcesRes.data || [])
       setHealth(healthRes as ScrapeHealth)
-      const propertyRows = (propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null }>
-      const neighborhoodCounts = new Map<string, number>()
-      const sourceCounts = new Map<string, number>()
-      for (const row of propertyRows) {
-        if (row.neighborhood) neighborhoodCounts.set(row.neighborhood, (neighborhoodCounts.get(row.neighborhood) || 0) + 1)
-        if (row.source) sourceCounts.set(row.source, (sourceCounts.get(row.source) || 0) + 1)
-      }
-      setPropertyTelemetry({
-        total: propertyRows.length,
-        neighborhoods: [...neighborhoodCounts.entries()]
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 6),
-        sources: [...sourceCounts.entries()]
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 6),
-      })
+      setPropertyTelemetry(buildPropertyTelemetry((propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null; created_at: string | null }>))
       const runsParams = new URLSearchParams()
       runsParams.set('limit', '20')
       if (runSourceFilter) runsParams.set('source', runSourceFilter)
@@ -353,8 +373,11 @@ export default function SourcesPage() {
               <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Barrios más activos</p>
               <div className="space-y-2">
                 {propertyTelemetry.neighborhoods.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
-                    <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                  <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev · {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
+                    </div>
                     <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
                   </div>
                 ))}
@@ -364,14 +387,30 @@ export default function SourcesPage() {
               <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Fuentes con más volumen</p>
               <div className="space-y-2">
                 {propertyTelemetry.sources.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
-                    <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                  <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev · {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
+                    </div>
                     <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
+          {propertyTelemetry.daily.length > 0 && (
+            <div className="mt-4 rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Actividad diaria última semana</p>
+              <div className="flex flex-wrap gap-2">
+                {propertyTelemetry.daily.map((item) => (
+                  <div key={item.date} className="rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
+                    <p className="text-xs" style={{ color: '#9ca9a3' }}>{item.date}</p>
+                    <p className="text-sm font-semibold text-gray-900">{item.count}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

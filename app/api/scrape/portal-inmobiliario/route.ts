@@ -50,6 +50,14 @@ const SEARCH_URLS = [
 
 const TOCTOC_SEARCH_URL = 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
 const TOCTOC_HOUSES_SEARCH_URL = 'https://www.toctoc.com/venta/casa/metropolitana/vitacura'
+const TOCTOC_VITACURA_BARRIOS_URLS = [
+  'https://www.toctoc.com/venta/casa/metropolitana/vitacura/lo-curro',
+  'https://www.toctoc.com/venta/casa/metropolitana/vitacura/las-tranqueras',
+  'https://www.toctoc.com/venta/casa/metropolitana/vitacura/las-hualtatas',
+  'https://www.toctoc.com/venta/casa/metropolitana/vitacura/luis-pasteur',
+  'https://www.toctoc.com/venta/casa/metropolitana/vitacura/santa-maria-de-manquehue',
+  'https://www.toctoc.com/venta/casa/metropolitana/vitacura/nueva-costanera',
+]
 const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
 const ICASAS_HOUSES_SEARCH_URL = 'https://www.icasas.cl/venta/casas/santiago/vitacura'
 const YAPO_SEARCH_URL = 'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.2-2'
@@ -241,20 +249,8 @@ async function scrapePortalListings(maxResults = 60, urls = SEARCH_URLS, source 
   return results
 }
 
-async function scrapeToctocListings(limit = 25, searchUrl = TOCTOC_SEARCH_URL, source = 'toctoc_search') {
-  const res = await fetch(searchUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: 'text/html,application/xhtml+xml',
-    },
-  })
-
-  if (!res.ok) {
-    throw new Error(`TOCTOC search failed (${res.status})`)
-  }
-
-  const html = await res.text()
-  const scripts = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
+async function scrapeToctocListings(limit = 25, searchUrls: string | string[] = TOCTOC_SEARCH_URL, source = 'toctoc_search') {
+  const urls = Array.isArray(searchUrls) ? searchUrls : [searchUrls]
   const listings: Array<{
     name?: string
     url?: string
@@ -263,27 +259,43 @@ async function scrapeToctocListings(limit = 25, searchUrl = TOCTOC_SEARCH_URL, s
     address?: { addressLocality?: string }
   }> = []
 
-  for (const match of scripts) {
-    const parsed = safeJsonParse(match[1].trim())
-    if (!parsed || typeof parsed !== 'object') continue
-    const page = parsed as {
-      '@type'?: string
-      about?: unknown
+  for (const searchUrl of urls) {
+    const res = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+    })
+
+    if (!res.ok) {
+      throw new Error(`TOCTOC search failed (${res.status})`)
     }
 
-    if (page['@type'] !== 'SearchResultsPage' || !Array.isArray(page.about)) continue
+    const html = await res.text()
+    const scripts = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
 
-    for (const group of page.about) {
-      if (!Array.isArray(group)) continue
-      for (const item of group) {
-        if (item && typeof item === 'object') {
-          listings.push(item as {
-            name?: string
-            url?: string
-            numberOfBedrooms?: string
-            numberOfBathroomsTotal?: string
-            address?: { addressLocality?: string }
-          })
+    for (const match of scripts) {
+      const parsed = safeJsonParse(match[1].trim())
+      if (!parsed || typeof parsed !== 'object') continue
+      const page = parsed as {
+        '@type'?: string
+        about?: unknown
+      }
+
+      if (page['@type'] !== 'SearchResultsPage' || !Array.isArray(page.about)) continue
+
+      for (const group of page.about) {
+        if (!Array.isArray(group)) continue
+        for (const item of group) {
+          if (item && typeof item === 'object') {
+            listings.push(item as {
+              name?: string
+              url?: string
+              numberOfBedrooms?: string
+              numberOfBathroomsTotal?: string
+              address?: { addressLocality?: string }
+            })
+          }
         }
       }
     }
@@ -677,13 +689,22 @@ export async function POST(request: Request) {
       await syncSourceStats('TOCTOC Casas', 3, errors.length ? 'error' : 'active', uniqueHouseToctoc.length, errors[0] || null)
     }
 
+    if (source === 'all' || source === 'toctoc-vitacura-barrio') {
+      const barrioRows = await scrapeToctocListings(30, TOCTOC_VITACURA_BARRIOS_URLS, 'toctoc_vitacura_barrio_search')
+      const uniqueBarrioRows = dedupeProperties(barrioRows)
+      const { inserted, errors } = await insertProperties(uniqueBarrioRows)
+      allRows.push(...uniqueBarrioRows)
+      runs.push({ source: 'toctoc_vitacura_barrio_search', scraped: uniqueBarrioRows.length, inserted, skipped: uniqueBarrioRows.length - inserted, errors })
+      await syncSourceStats('TOCTOC Barrios Vitacura', 4, errors.length ? 'error' : 'active', uniqueBarrioRows.length, errors[0] || null)
+    }
+
     if (source === 'all' || source === 'icasas') {
       const icasasRows = await scrapeIcasasListings(20)
       const uniqueIcasas = dedupeProperties(icasasRows)
       const { inserted, errors } = await insertProperties(uniqueIcasas)
       allRows.push(...uniqueIcasas)
       runs.push({ source: 'icasas_search', scraped: uniqueIcasas.length, inserted, skipped: uniqueIcasas.length - inserted, errors })
-      await syncSourceStats('icasas.cl', 4, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
+      await syncSourceStats('icasas.cl', 5, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'icasas-houses') {
@@ -692,7 +713,7 @@ export async function POST(request: Request) {
       const { inserted, errors } = await insertProperties(uniqueHouseIcasas)
       allRows.push(...uniqueHouseIcasas)
       runs.push({ source: 'icasas_houses_search', scraped: uniqueHouseIcasas.length, inserted, skipped: uniqueHouseIcasas.length - inserted, errors })
-      await syncSourceStats('icasas.cl Casas', 5, errors.length ? 'error' : 'active', uniqueHouseIcasas.length, errors[0] || null)
+      await syncSourceStats('icasas.cl Casas', 6, errors.length ? 'error' : 'active', uniqueHouseIcasas.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'yapo') {
@@ -701,7 +722,7 @@ export async function POST(request: Request) {
       const { inserted, errors } = await insertProperties(uniqueYapo)
       allRows.push(...uniqueYapo)
       runs.push({ source: 'yapo_search', scraped: uniqueYapo.length, inserted, skipped: uniqueYapo.length - inserted, errors })
-      await syncSourceStats('Yapo Search', 6, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
+      await syncSourceStats('Yapo Search', 7, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'chilepropiedades') {
@@ -711,11 +732,11 @@ export async function POST(request: Request) {
         const { inserted, errors } = await insertProperties(uniqueChile)
         allRows.push(...uniqueChile)
         runs.push({ source: 'chilepropiedades_search', scraped: uniqueChile.length, inserted, skipped: uniqueChile.length - inserted, errors })
-        await syncSourceStats('Chilepropiedades', 7, errors.length ? 'error' : 'active', uniqueChile.length, errors[0] || null)
+        await syncSourceStats('Chilepropiedades', 8, errors.length ? 'error' : 'active', uniqueChile.length, errors[0] || null)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Chilepropiedades scrape failed'
         runs.push({ source: 'chilepropiedades_search', scraped: 0, inserted: 0, skipped: 0, errors: [message] })
-        await syncSourceStats('Chilepropiedades', 7, 'error', 0, message)
+        await syncSourceStats('Chilepropiedades', 8, 'error', 0, message)
       }
     }
 
@@ -726,11 +747,11 @@ export async function POST(request: Request) {
         const { inserted, errors } = await insertProperties(uniqueHouse)
         allRows.push(...uniqueHouse)
         runs.push({ source: 'chilepropiedades_houses_search', scraped: uniqueHouse.length, inserted, skipped: uniqueHouse.length - inserted, errors })
-        await syncSourceStats('Chilepropiedades Casas', 8, errors.length ? 'error' : 'active', uniqueHouse.length, errors[0] || null)
+        await syncSourceStats('Chilepropiedades Casas', 9, errors.length ? 'error' : 'active', uniqueHouse.length, errors[0] || null)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Chilepropiedades casas scrape failed'
         runs.push({ source: 'chilepropiedades_houses_search', scraped: 0, inserted: 0, skipped: 0, errors: [message] })
-        await syncSourceStats('Chilepropiedades Casas', 8, 'error', 0, message)
+        await syncSourceStats('Chilepropiedades Casas', 9, 'error', 0, message)
       }
     }
 
