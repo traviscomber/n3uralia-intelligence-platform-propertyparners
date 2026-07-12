@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Database, Clock, Check, AlertCircle } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface DataSource {
   id: string
@@ -111,13 +112,19 @@ function buildPropertyTelemetry(rows: Array<{ neighborhood: string | null; sourc
     .sort((a, b) => b.count - a.count)
     .slice(0, 6)
 
+  const dailySeries: Array<{ date: string; count: number }> = []
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const cursor = new Date(today)
+    cursor.setUTCDate(cursor.getUTCDate() - offset)
+    const date = cursor.toISOString().slice(0, 10)
+    dailySeries.push({ date, count: dailyCounts.get(date) || 0 })
+  }
+
   return {
     total: rows.length,
     neighborhoods: buildRows(neighborhoodCurrent, neighborhoodPrevious),
     sources: buildRows(sourceCurrent, sourcePrevious),
-    daily: [...dailyCounts.entries()]
-      .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date.localeCompare(b.date)),
+    daily: dailySeries,
   }
 }
 
@@ -399,15 +406,35 @@ export default function SourcesPage() {
             </div>
           </div>
           {propertyTelemetry.daily.length > 0 && (
-            <div className="mt-4 rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Actividad diaria última semana</p>
-              <div className="flex flex-wrap gap-2">
-                {propertyTelemetry.daily.map((item) => (
-                  <div key={item.date} className="rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
-                    <p className="text-xs" style={{ color: '#9ca9a3' }}>{item.date}</p>
-                    <p className="text-sm font-semibold text-gray-900">{item.count}</p>
-                  </div>
-                ))}
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Actividad diaria última semana</p>
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={propertyTelemetry.daily}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }} />
+                    <Line type="monotone" dataKey="count" stroke="#8fb2aa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Top barrios y fuentes</p>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart
+                    data={[
+                      ...propertyTelemetry.neighborhoods.slice(0, 3).map((item) => ({ label: `B: ${item.name}`, value: item.count })),
+                      ...propertyTelemetry.sources.slice(0, 3).map((item) => ({ label: `F: ${item.name}`, value: item.count })),
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
+                    <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="#9ca3af" interval={0} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }} />
+                    <Bar dataKey="value" fill="#b89a7e" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
           )}
