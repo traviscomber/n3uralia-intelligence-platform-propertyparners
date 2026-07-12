@@ -186,7 +186,7 @@ export default function SourcesPage() {
   const healthColor = health?.status === 'healthy' ? '#10b981' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#9ca9a3'
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" aria-busy={loading || runsLoading}>
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
           Fuentes de Datos
@@ -198,6 +198,7 @@ export default function SourcesPage() {
           <button
             onClick={() => void handleRefreshAll()}
             disabled={refreshingAll}
+            aria-label="Refrescar scraper y benchmark"
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             style={{ background: '#8fb2aa' }}
           >
@@ -406,6 +407,7 @@ export default function SourcesPage() {
               <select
                 value={runSourceFilter}
                 onChange={(e) => setRunSourceFilter(e.target.value)}
+                aria-label="Filtrar corridas por fuente"
                 className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
               >
@@ -417,6 +419,7 @@ export default function SourcesPage() {
               <select
                 value={runStatusFilter}
                 onChange={(e) => setRunStatusFilter(e.target.value)}
+                aria-label="Filtrar corridas por estado"
                 className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
               >
@@ -441,7 +444,14 @@ export default function SourcesPage() {
             </div>
           </div>
           {runsLoading ? (
-            <p className="text-sm" style={{ color: '#9ca9a3' }}>Cargando corridas...</p>
+            <div className="space-y-2" aria-live="polite">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="rounded-lg px-3 py-3" style={{ background: '#eef7f4' }}>
+                  <div className="h-4 w-40 rounded-full bg-gray-200 animate-pulse" />
+                  <div className="mt-2 h-3 w-64 max-w-full rounded-full bg-gray-200 animate-pulse" />
+                </div>
+              ))}
+            </div>
           ) : runs.length ? (
             <div className="space-y-2">
               {runs.slice(0, 5).map((run) => (

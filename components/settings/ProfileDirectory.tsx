@@ -53,6 +53,7 @@ export default function ProfileDirectory() {
     if (team) params.set('team', team)
     return `/api/reports/export${params.toString() ? `?${params.toString()}` : ''}`
   }, [role, team])
+  const hasFilters = Boolean(role || team || search)
 
   async function loadProfiles() {
     setRefreshing(true)
@@ -80,7 +81,7 @@ export default function ProfileDirectory() {
   }, [queryString])
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" aria-busy={loading || refreshing}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium" style={{ background: '#e8f3f0', color: '#555a56' }}>
@@ -96,6 +97,7 @@ export default function ProfileDirectory() {
             type="button"
             onClick={() => void loadProfiles()}
             disabled={refreshing}
+            aria-label="Refrescar directorio de perfiles"
             className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
             style={{ background: '#8fb2aa' }}
           >
@@ -104,6 +106,7 @@ export default function ProfileDirectory() {
           </button>
           <a
             href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=csv`}
+            aria-label="Exportar perfiles en CSV"
             className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold"
             style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
           >
@@ -112,6 +115,7 @@ export default function ProfileDirectory() {
           </a>
           <a
             href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=json`}
+            aria-label="Exportar perfiles en JSON"
             className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold"
             style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
           >
@@ -150,6 +154,7 @@ export default function ProfileDirectory() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Nombre, email o equipo"
+              aria-label="Buscar perfiles por nombre, email o equipo"
               className="w-full bg-transparent text-sm outline-none"
               style={{ color: '#111827' }}
             />
@@ -162,7 +167,13 @@ export default function ProfileDirectory() {
           </span>
           <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
             <Filter size={14} style={{ color: '#8fb2aa' }} />
-            <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full bg-transparent text-sm outline-none" style={{ color: '#111827' }}>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              aria-label="Filtrar perfiles por rol"
+              className="w-full bg-transparent text-sm outline-none"
+              style={{ color: '#111827' }}
+            >
               <option value="">Todos</option>
               <option value="seller">Seller</option>
               <option value="director">Director</option>
@@ -180,17 +191,32 @@ export default function ProfileDirectory() {
             value={team}
             onChange={(e) => setTeam(e.target.value)}
             placeholder="Ventas, operaciones..."
+            aria-label="Filtrar perfiles por equipo"
             className="w-full rounded-2xl border px-3 py-2 text-sm outline-none"
             style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
           />
         </label>
       </div>
 
+      {hasFilters && (
+        <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          Filtros activos
+        </p>
+      )}
+
       {error && <p className="text-sm" style={{ color: '#b45309' }}>{error}</p>}
 
       <div className="space-y-2">
         {loading ? (
-          <p className="text-sm text-gray-500">Cargando perfiles...</p>
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="animate-pulse rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
+                <div className="h-4 w-40 rounded-full bg-gray-200" />
+                <div className="mt-3 h-3 w-56 rounded-full bg-gray-200" />
+                <div className="mt-3 h-3 w-32 rounded-full bg-gray-200" />
+              </div>
+            ))}
+          </div>
         ) : profiles.length ? (
           profiles.map((profile) => (
             <div key={profile.id} className="flex flex-col gap-3 rounded-2xl border p-4 md:flex-row md:items-center md:justify-between" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
