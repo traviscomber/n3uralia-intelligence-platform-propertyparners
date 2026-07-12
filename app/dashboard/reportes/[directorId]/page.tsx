@@ -17,18 +17,32 @@ function statusTone(status: string) {
   return { bg: '#fee2e2', fg: '#991b1b', label: 'Bajo objetivo' }
 }
 
-export default async function DirectorReportDetailPage({ params }: { params: { directorId: string } }) {
+export default async function DirectorReportDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { directorId: string }
+  searchParams?: { week_start?: string }
+}) {
   const directorId = decodeURIComponent(params.directorId)
   const supabase = await createClient()
   const bundle = await loadDirectorReportBundle(supabase, directorId)
+  const requestedWeekStart = searchParams?.week_start ? decodeURIComponent(searchParams.week_start) : null
 
   if (!bundle.latestReport && !bundle.reports.length) {
     notFound()
   }
 
-  const pdfHref = bundle.latestReport
-    ? `/api/reports/directors/${encodeURIComponent(directorId)}/pdf?week_start=${encodeURIComponent(bundle.latestReport.week_start)}`
+  const selectedReport = requestedWeekStart
+    ? bundle.reports.find((report) => report.week_start === requestedWeekStart) || bundle.latestReport
+    : bundle.latestReport
+  const selectedWeekStart = selectedReport?.week_start || null
+  const pdfHref = selectedWeekStart
+    ? `/api/reports/directors/${encodeURIComponent(directorId)}/pdf?week_start=${encodeURIComponent(selectedWeekStart)}`
     : `/api/reports/directors/${encodeURIComponent(directorId)}/pdf`
+  const weekOptions = bundle.reports
+    .slice()
+    .sort((a, b) => b.week_start.localeCompare(a.week_start))
 
   return (
     <div className="space-y-6 pb-8">
@@ -44,13 +58,20 @@ export default async function DirectorReportDetailPage({ params }: { params: { d
             Drill-down del director con historico persistido en `weekly_reports` y exportacion PDF.
           </p>
         </div>
-        <a
-          href={pdfHref}
-          className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
-          style={{ background: '#8fb2aa' }}
-        >
-          Descargar PDF
-        </a>
+        <div className="flex flex-wrap gap-2">
+          {selectedReport && (
+            <span className="inline-flex items-center rounded-lg px-3 py-2 text-xs font-medium" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+              Corte activo {formatDate(selectedReport.week_start)}
+            </span>
+          )}
+          <a
+            href={pdfHref}
+            className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
+            style={{ background: '#8fb2aa' }}
+          >
+            Descargar PDF
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -67,25 +88,25 @@ export default async function DirectorReportDetailPage({ params }: { params: { d
         ))}
       </div>
 
-      {bundle.latestReport && (
+      {selectedReport && (
         <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ultimo corte</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Corte seleccionado</p>
               <h2 className="mt-1 text-lg font-semibold text-gray-900">
-                {formatDate(bundle.latestReport.week_start)} - {formatDate(bundle.latestReport.week_end)}
+                {formatDate(selectedReport.week_start)} - {formatDate(selectedReport.week_end)}
               </h2>
             </div>
-            <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: statusTone(bundle.latestReport.status).bg, color: statusTone(bundle.latestReport.status).fg }}>
-              {statusTone(bundle.latestReport.status).label}
+            <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: statusTone(selectedReport.status).bg, color: statusTone(selectedReport.status).fg }}>
+              {statusTone(selectedReport.status).label}
             </span>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { label: 'Ventas', value: bundle.latestReport.sales_count.toLocaleString('es-CL') },
-              { label: 'Conversion', value: `${bundle.latestReport.conversion_rate.toFixed(1)}%` },
-              { label: 'Objetivo', value: `${bundle.latestReport.target_progress}%` },
-              { label: 'Velocidad', value: `${bundle.latestReport.velocity_change.toFixed(1)} dias` },
+              { label: 'Ventas', value: selectedReport.sales_count.toLocaleString('es-CL') },
+              { label: 'Conversion', value: `${selectedReport.conversion_rate.toFixed(1)}%` },
+              { label: 'Objetivo', value: `${selectedReport.target_progress}%` },
+              { label: 'Velocidad', value: `${selectedReport.velocity_change.toFixed(1)} dias` },
             ].map((item) => (
               <div key={item.label} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>{item.label}</p>
@@ -95,6 +116,40 @@ export default async function DirectorReportDetailPage({ params }: { params: { d
           </div>
         </div>
       )}
+
+      <div className="rounded-lg bg-white p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Seleccionar semana</h2>
+            <p className="text-sm" style={{ color: '#9ca9a3' }}>
+              Elige el corte a revisar y exporta ese snapshot exacto en PDF.
+            </p>
+          </div>
+          <form method="get" className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <label className="sr-only" htmlFor="week_start">Semana</label>
+            <select
+              id="week_start"
+              name="week_start"
+              defaultValue={selectedWeekStart || ''}
+              className="rounded-lg border px-3 py-2 text-sm"
+              style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+            >
+              {weekOptions.map((report) => (
+                <option key={report.week_start} value={report.week_start}>
+                  {formatDate(report.week_start)} - {formatDate(report.week_end)}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+              style={{ background: '#8fb2aa' }}
+            >
+              Ver corte
+            </button>
+          </form>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
@@ -113,7 +168,14 @@ export default async function DirectorReportDetailPage({ params }: { params: { d
               const tone = statusTone(report.status)
               const reportHref = `/api/reports/directors/${encodeURIComponent(directorId)}/pdf?week_start=${encodeURIComponent(report.week_start)}`
               return (
-                <div key={report.id} className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <div
+                  key={report.id}
+                  className="rounded-lg p-4"
+                  style={{
+                    background: report.week_start === selectedWeekStart ? '#eef7f4' : '#f5f9f7',
+                    border: `1px solid ${report.week_start === selectedWeekStart ? '#8fb2aa' : '#d8e5e2'}`,
+                  }}
+                >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-sm font-semibold text-gray-900">
@@ -127,6 +189,13 @@ export default async function DirectorReportDetailPage({ params }: { params: { d
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: tone.bg, color: tone.fg }}>
                         {tone.label}
                       </span>
+                      <Link
+                        href={`/dashboard/reportes/${encodeURIComponent(directorId)}?week_start=${encodeURIComponent(report.week_start)}`}
+                        className="rounded-md border px-3 py-1.5 text-xs font-medium"
+                        style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
+                      >
+                        Ver semana
+                      </Link>
                       <a
                         href={reportHref}
                         className="rounded-md border px-3 py-1.5 text-xs font-medium"
