@@ -163,6 +163,7 @@ export async function GET(req: NextRequest) {
       const reportScope = searchParams.get('report_scope')
       const directorId = searchParams.get('director_id')
       const weekStart = searchParams.get('week_start')
+      const reportType = searchParams.get('type')
 
       let query = supabase
         .from('weekly_reports')
@@ -173,6 +174,7 @@ export async function GET(req: NextRequest) {
       if (reportScope) query = query.eq('report_scope', reportScope)
       if (directorId) query = query.eq('director_id', directorId)
       if (weekStart) query = query.eq('week_start', weekStart)
+      if (reportType) query = query.eq('report_key', reportType)
       if (from) query = query.gte('generated_at', `${from}T00:00:00.000Z`)
       if (to) query = query.lte('generated_at', `${to}T23:59:59.999Z`)
 
@@ -186,6 +188,7 @@ export async function GET(req: NextRequest) {
           report_scope: reportScope,
           director_id: directorId,
           week_start: weekStart,
+          type: reportType,
           limit,
           from,
           to,
@@ -212,6 +215,7 @@ export async function GET(req: NextRequest) {
         reportScope || 'all',
         directorId || 'all',
         weekStart || 'all',
+        reportType || 'all',
       ].join('_')
 
       return new NextResponse(csv, {

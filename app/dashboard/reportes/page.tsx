@@ -93,6 +93,7 @@ export default function ReportesPage() {
   const [exportDataset, setExportDataset] = useState<ExportDataset>('ai_reports')
   const [exportWeekStart, setExportWeekStart] = useState('')
   const [exportDirectorId, setExportDirectorId] = useState('')
+  const [exportWeeklyType, setExportWeeklyType] = useState('')
   const [exportProfileRole, setExportProfileRole] = useState('seller')
   const [exportProfileTeam, setExportProfileTeam] = useState('')
   const [exportFromDate, setExportFromDate] = useState('')
@@ -235,6 +236,7 @@ export default function ReportesPage() {
     if (exportDataset === 'weekly_reports') {
       if (exportWeekStart) params.set('week_start', exportWeekStart)
       if (exportDirectorId) params.set('director_id', exportDirectorId)
+      if (exportWeeklyType) params.set('type', exportWeeklyType)
       params.set('report_scope', exportDirectorId ? 'director' : 'weekly_summary')
     }
 
@@ -244,7 +246,7 @@ export default function ReportesPage() {
     }
 
     return `/api/reports/export${params.toString() ? `?${params.toString()}` : ''}`
-  }, [exportDataset, exportDirectorId, exportFromDate, exportProfileRole, exportProfileTeam, exportToDate, exportWeekStart, reportFilter])
+  }, [exportDataset, exportDirectorId, exportFromDate, exportProfileRole, exportProfileTeam, exportToDate, exportWeeklyType, exportWeekStart, reportFilter])
 
   const generatedWhatsappUrl =
     whatsappPhone && generatedReport
@@ -779,6 +781,17 @@ export default function ReportesPage() {
                         {report.director_id || 'Sin director'}
                       </option>
                     ))}
+                  </select>
+                  <select
+                    value={exportWeeklyType}
+                    onChange={(e) => setExportWeeklyType(e.target.value)}
+                    className="rounded-2xl border px-3 py-2 text-sm"
+                    style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                  >
+                    <option value="">Todos los tipos</option>
+                    <option value="weekly_directors">Weekly Directors</option>
+                    <option value="weekly_summary">Weekly Summary</option>
+                    <option value="director">Director</option>
                   </select>
                 </>
               )}

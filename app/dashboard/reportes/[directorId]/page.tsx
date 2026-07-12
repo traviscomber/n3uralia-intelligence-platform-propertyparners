@@ -64,7 +64,7 @@ export default async function DirectorReportDetailPage({
             Drill-down del director con historico persistido en `weekly_reports` y exportacion PDF.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {selectedReport && (
             <span className="inline-flex items-center rounded-lg px-3 py-2 text-xs font-medium" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
               Corte activo {formatDate(selectedReport.week_start)}
@@ -94,7 +94,7 @@ export default async function DirectorReportDetailPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: 'Ventas acumuladas', value: bundle.metrics.totalSales.toLocaleString('es-CL') },
           { label: 'Comision total', value: `${bundle.metrics.totalCommission.toLocaleString('es-CL')} UF` },
@@ -121,7 +121,7 @@ export default async function DirectorReportDetailPage({
               {statusTone(selectedReport.status).label}
             </span>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
               { label: 'Ventas', value: selectedReport.sales_count.toLocaleString('es-CL') },
               { label: 'Conversion', value: `${selectedReport.conversion_rate.toFixed(1)}%` },
@@ -151,7 +151,7 @@ export default async function DirectorReportDetailPage({
               id="week_start"
               name="week_start"
               defaultValue={selectedWeekStart || ''}
-              className="rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-lg border px-3 py-2 text-sm sm:w-auto"
               style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
             >
               {weekOptions.map((report) => (
@@ -205,7 +205,7 @@ export default async function DirectorReportDetailPage({
                         {report.sales_count} ventas · {report.conversion_rate.toFixed(1)}% conversion · {report.target_progress}% objetivo
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: tone.bg, color: tone.fg }}>
                         {tone.label}
                       </span>

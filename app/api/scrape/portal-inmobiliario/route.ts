@@ -618,12 +618,14 @@ function dedupeProperties(rows: ScrapedProperty[]) {
   const unique: ScrapedProperty[] = []
 
   for (const row of rows) {
+    const roundedPrice = Math.round(row.price_uf / 5) * 5
+    const roundedArea = Math.round(row.area_m2 / 2) * 2
     const key = row.external_id
       || [
         normalizeText(row.address),
         normalizeText(row.neighborhood),
-        row.price_uf,
-        row.area_m2,
+        roundedPrice,
+        roundedArea,
         row.bedrooms,
         row.bathrooms,
         row.source,
