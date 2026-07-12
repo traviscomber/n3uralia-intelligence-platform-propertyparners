@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import ReportDeliveryTargetsManager from '@/components/settings/ReportDeliveryTargetsManager'
 import ProfileEditor from '@/components/settings/ProfileEditor'
 import DeliveryTelemetryPanel from '@/components/settings/DeliveryTelemetryPanel'
+import ProfileDirectory from '@/components/settings/ProfileDirectory'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -18,6 +19,14 @@ export default async function SettingsPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Perfil de Usuario</h3>
         <ProfileEditor profile={profile} email={user?.email} />
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Directorio de perfiles</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Busca sellers, directores y equipos, y exporta la base completa con filtros.
+        </p>
+        <ProfileDirectory />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
