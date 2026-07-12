@@ -138,7 +138,7 @@ export default function PropertiesPage() {
       const res = await fetch('/api/scrape/portal-inmobiliario?source=all', { method: 'POST' })
       const json = await res.json()
       if (res.ok) {
-        showToast('success', `Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas desde Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo y Chilepropiedades`)
+        showToast('success', `Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas desde Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo, Chilepropiedades y Chilepropiedades Casas`)
         await loadProperties()
       } else {
         showToast('error', `Error: ${json.error || 'Fallo al scraping'}`)
@@ -162,7 +162,7 @@ export default function PropertiesPage() {
       <div className="flex items-start justify-between pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo y Chilepropiedades</p>
+          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo, Chilepropiedades y Chilepropiedades Casas</p>
         </div>
         <div className="flex items-center gap-3">
           <button

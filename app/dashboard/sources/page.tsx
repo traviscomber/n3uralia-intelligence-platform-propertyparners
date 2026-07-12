@@ -61,6 +61,12 @@ interface ScrapeHealth {
   }>
 }
 
+interface PropertyTelemetry {
+  total: number
+  neighborhoods: Array<{ name: string; count: number }>
+  sources: Array<{ name: string; count: number }>
+}
+
 export default function SourcesPage() {
   const [sources, setSources] = useState<DataSource[]>([])
   const [runs, setRuns] = useState<ScrapeRun[]>([])
@@ -69,6 +75,7 @@ export default function SourcesPage() {
   const [refreshingAll, setRefreshingAll] = useState(false)
   const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
   const [health, setHealth] = useState<ScrapeHealth | null>(null)
+  const [propertyTelemetry, setPropertyTelemetry] = useState<PropertyTelemetry | null>(null)
   const [runSourceFilter, setRunSourceFilter] = useState('')
   const [runStatusFilter, setRunStatusFilter] = useState('')
 
@@ -76,13 +83,32 @@ export default function SourcesPage() {
     const fetchSources = async () => {
       try {
         const supabase = createClient()
-        const [sourcesRes, healthRes] = await Promise.all([
+        const [sourcesRes, healthRes, propertiesRes] = await Promise.all([
           supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
           fetch('/api/scrape/health').then((res) => res.json()),
+          supabase.from('properties').select('neighborhood,source'),
         ])
 
         setSources(sourcesRes.data || [])
         setHealth(healthRes as ScrapeHealth)
+        const propertyRows = (propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null }>
+        const neighborhoodCounts = new Map<string, number>()
+        const sourceCounts = new Map<string, number>()
+        for (const row of propertyRows) {
+          if (row.neighborhood) neighborhoodCounts.set(row.neighborhood, (neighborhoodCounts.get(row.neighborhood) || 0) + 1)
+          if (row.source) sourceCounts.set(row.source, (sourceCounts.get(row.source) || 0) + 1)
+        }
+        setPropertyTelemetry({
+          total: propertyRows.length,
+          neighborhoods: [...neighborhoodCounts.entries()]
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 6),
+          sources: [...sourceCounts.entries()]
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 6),
+        })
       } catch (err) {
         console.error('Error:', err)
       } finally {
@@ -125,12 +151,31 @@ export default function SourcesPage() {
       }
       setRefreshMsg(`Refresco completado: scraping y benchmark actualizados a ${new Date(json.refreshedAt).toLocaleTimeString('es-CL')}`)
       const supabase = createClient()
-      const [sourcesRes, healthRes] = await Promise.all([
+      const [sourcesRes, healthRes, propertiesRes] = await Promise.all([
         supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
         fetch('/api/scrape/health').then((r) => r.json()),
+        supabase.from('properties').select('neighborhood,source'),
       ])
       setSources(sourcesRes.data || [])
       setHealth(healthRes as ScrapeHealth)
+      const propertyRows = (propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null }>
+      const neighborhoodCounts = new Map<string, number>()
+      const sourceCounts = new Map<string, number>()
+      for (const row of propertyRows) {
+        if (row.neighborhood) neighborhoodCounts.set(row.neighborhood, (neighborhoodCounts.get(row.neighborhood) || 0) + 1)
+        if (row.source) sourceCounts.set(row.source, (sourceCounts.get(row.source) || 0) + 1)
+      }
+      setPropertyTelemetry({
+        total: propertyRows.length,
+        neighborhoods: [...neighborhoodCounts.entries()]
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 6),
+        sources: [...sourceCounts.entries()]
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 6),
+      })
       const runsParams = new URLSearchParams()
       runsParams.set('limit', '20')
       if (runSourceFilter) runsParams.set('source', runSourceFilter)
@@ -290,6 +335,43 @@ export default function SourcesPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {!loading && propertyTelemetry && (
+        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="font-semibold text-gray-900">Telemetría por barrio y fuente</h2>
+              <p className="text-sm" style={{ color: '#9ca9a3' }}>
+                {propertyTelemetry.total.toLocaleString()} propiedades normalizadas en el catálogo.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Barrios más activos</p>
+              <div className="space-y-2">
+                {propertyTelemetry.neighborhoods.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
+                    <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Fuentes con más volumen</p>
+              <div className="space-y-2">
+                {propertyTelemetry.sources.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
+                    <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -54,6 +54,7 @@ const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vi
 const ICASAS_HOUSES_SEARCH_URL = 'https://www.icasas.cl/venta/casas/santiago/vitacura'
 const YAPO_SEARCH_URL = 'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.2-2'
 const CHILEPROPIEDADES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta/departamento/vitacura'
+const CHILEPROPIEDADES_HOUSES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta/casa/vitacura'
 
 const SECTORS = [
   { keys: ['nueva costanera', 'costanera norte'], lat: -33.3885, lng: -70.5820, name: 'Nueva Costanera' },
@@ -442,7 +443,7 @@ async function scrapeYapoListings(limit = 20) {
   return results
 }
 
-async function scrapeChilePropiedadesDetail(url: string, fallbackName: string, idx: number) {
+async function scrapeChilePropiedadesDetail(url: string, fallbackName: string, idx: number, source = 'chilepropiedades_search') {
   const response = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -508,16 +509,16 @@ async function scrapeChilePropiedadesDetail(url: string, fallbackName: string, i
     lat: sector.lat + (Math.random() - 0.5) * 0.0013,
     lng: sector.lng + (Math.random() - 0.5) * 0.0013,
     days_on_market: daysOnMarket,
-    source: 'chilepropiedades_search',
+    source,
     external_id: url,
   } satisfies ScrapedProperty
 }
 
-async function scrapeChilePropiedadesListings(limit = 20) {
+async function scrapeChilePropiedadesListings(limit = 20, baseUrl = CHILEPROPIEDADES_BASE_URL, source = 'chilepropiedades_search') {
   const results: ScrapedProperty[] = []
 
   for (let pageIndex = 0; pageIndex < 4 && results.length < limit; pageIndex += 1) {
-    const pageUrl = `${CHILEPROPIEDADES_BASE_URL}/${pageIndex}`
+    const pageUrl = `${baseUrl}/${pageIndex}`
     const response = await fetch(pageUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -545,7 +546,7 @@ async function scrapeChilePropiedadesListings(limit = 20) {
       const itemUrl = String(item.url || '').trim()
       if (!itemUrl) continue
 
-      const detail = await scrapeChilePropiedadesDetail(itemUrl, String(item.name || ''), results.length)
+      const detail = await scrapeChilePropiedadesDetail(itemUrl, String(item.name || ''), results.length, source)
       results.push(detail)
     }
   }
@@ -715,6 +716,21 @@ export async function POST(request: Request) {
         const message = error instanceof Error ? error.message : 'Chilepropiedades scrape failed'
         runs.push({ source: 'chilepropiedades_search', scraped: 0, inserted: 0, skipped: 0, errors: [message] })
         await syncSourceStats('Chilepropiedades', 7, 'error', 0, message)
+      }
+    }
+
+    if (source === 'all' || source === 'chilepropiedades-houses') {
+      try {
+        const houseRows = await scrapeChilePropiedadesListings(20, CHILEPROPIEDADES_HOUSES_BASE_URL, 'chilepropiedades_houses_search')
+        const uniqueHouse = dedupeProperties(houseRows)
+        const { inserted, errors } = await insertProperties(uniqueHouse)
+        allRows.push(...uniqueHouse)
+        runs.push({ source: 'chilepropiedades_houses_search', scraped: uniqueHouse.length, inserted, skipped: uniqueHouse.length - inserted, errors })
+        await syncSourceStats('Chilepropiedades Casas', 8, errors.length ? 'error' : 'active', uniqueHouse.length, errors[0] || null)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Chilepropiedades casas scrape failed'
+        runs.push({ source: 'chilepropiedades_houses_search', scraped: 0, inserted: 0, skipped: 0, errors: [message] })
+        await syncSourceStats('Chilepropiedades Casas', 8, 'error', 0, message)
       }
     }
 
