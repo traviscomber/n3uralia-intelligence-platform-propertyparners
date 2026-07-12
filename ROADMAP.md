@@ -40,11 +40,11 @@
 16. Valorizador scoring now weights comparable properties with market alignment and recency signals.
 17. Scraper redundancy now includes Chilepropiedades as an additional public listing source.
 18. Director drill-down views and PDF exports are available from `Reportes IA`.
+19. Operational anomaly detection now compares KPI, market, and scraper history snapshots.
 
 ## Next Implementation Block
 
-1. Expand anomaly detection on KPIs and market changes using the persisted health history.
-2. Keep tightening accessibility, responsiveness, and loading states.
+1. Keep tightening accessibility, responsiveness, and loading states.
 
 ## Follow-Up Roadmap
 

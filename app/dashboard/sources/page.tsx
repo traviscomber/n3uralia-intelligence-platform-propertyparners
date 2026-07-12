@@ -32,6 +32,10 @@ interface ScrapeHealthIssue {
   detail: string
 }
 
+interface OperationalAnomaly extends ScrapeHealthIssue {
+  area: 'kpi' | 'market' | 'health'
+}
+
 interface ScrapeHealth {
   status: 'healthy' | 'warning' | 'critical' | 'unknown'
   generatedAt: string
@@ -44,6 +48,7 @@ interface ScrapeHealth {
     warningCount: number
   }
   issues: ScrapeHealthIssue[]
+  anomalies?: OperationalAnomaly[]
   history?: Array<{
     id: number
     status: string
@@ -215,6 +220,28 @@ export default function SourcesPage() {
                   <p className="text-xs mt-1" style={{ color: '#555a56' }}>{issue.detail}</p>
                 </div>
               ))}
+            </div>
+          )}
+          {health.anomalies && health.anomalies.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#555a56' }}>Anomalias operativas</p>
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {health.anomalies.slice(0, 4).map((anomaly) => (
+                  <div
+                    key={`${anomaly.area}-${anomaly.title}-${anomaly.detail}`}
+                    className="rounded-lg px-3 py-2"
+                    style={{
+                      background: anomaly.severity === 'critical' ? '#fef2f2' : anomaly.severity === 'warning' ? '#fffbeb' : '#f0f9ff',
+                      border: `1px solid ${anomaly.severity === 'critical' ? '#fecaca' : anomaly.severity === 'warning' ? '#fde68a' : '#bfdbfe'}`,
+                    }}
+                  >
+                    <p className="text-sm font-semibold text-gray-900">{anomaly.title}</p>
+                    <p className="text-xs mt-1" style={{ color: '#555a56' }}>
+                      {anomaly.area.toUpperCase()} · {anomaly.detail}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           {health.history && health.history.length > 0 && (

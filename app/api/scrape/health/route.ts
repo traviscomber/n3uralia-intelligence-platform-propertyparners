@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import {
   evaluateScrapeHealth,
+  loadOperationalAnomalies,
   type DataSourceSummary,
   type ExternalBenchmarkSummary,
   type ScrapeRunSummary,
@@ -68,14 +69,16 @@ export async function GET() {
       (sourcesRes.data || []) as DataSourceSummary[],
       (benchmarkRes.data?.[0] || null) as ExternalBenchmarkSummary | null,
     )
+    const anomalies = await loadOperationalAnomalies(supabase).catch(() => [])
 
     return NextResponse.json({
       ...health,
+      anomalies,
       history: (historyRes.data || []) as ScrapeHealthSnapshotRow[],
     })
   } catch (err) {
     return NextResponse.json(
-      { status: 'unknown', history: [], issues: [], error: err instanceof Error ? err.message : 'No pudimos evaluar la salud del scraper.' },
+      { status: 'unknown', history: [], issues: [], anomalies: [], error: err instanceof Error ? err.message : 'No pudimos evaluar la salud del scraper.' },
       { status: 200 },
     )
   }

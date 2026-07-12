@@ -30,6 +30,10 @@ export type ScrapeHealthIssue = {
   detail: string
 }
 
+export type OperationalAnomaly = ScrapeHealthIssue & {
+  area: 'kpi' | 'market' | 'health'
+}
+
 export type ScrapeHealthSummary = {
   recentRuns: number
   averageScraped: number
@@ -56,6 +60,25 @@ export type PersistedScrapeHealthSnapshot = ScrapeHealthSnapshot & {
   runsWindow: ScrapeRunSummary[]
 }
 
+type KpiSnapshotRow = {
+  period_date: string
+  ventas_count: number
+  conversion_rate: number
+  velocidad_venta: number | null
+  monthly_target: number | null
+  director_id: string | null
+}
+
+type NeighborhoodMarketHistoryRow = {
+  snapshot_date: string
+  neighborhood: string
+  avg_price_m2_uf: number | null
+  absorption_rate: number | null
+  inventory_count: number
+  avg_days_on_market: number | null
+  opportunity_score: number
+}
+
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -72,6 +95,183 @@ export function hoursBetween(from: string | null | undefined, to = new Date()) {
   const date = new Date(from)
   if (Number.isNaN(date.getTime())) return Number.POSITIVE_INFINITY
   return (to.getTime() - date.getTime()) / (1000 * 60 * 60)
+}
+
+function average(values: number[]) {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
+}
+
+function percentDelta(current: number, previous: number) {
+  if (previous === 0) return current === 0 ? 0 : 100
+  return ((current - previous) / Math.abs(previous)) * 100
+}
+
+export async function loadOperationalAnomalies(supabase: ReturnType<typeof getSupabaseClient>) {
+  const anomalies: OperationalAnomaly[] = []
+
+  const [kpiRes, marketRes, historyRes] = await Promise.all([
+    supabase
+      .from('kpi_snapshots')
+      .select('period_date,ventas_count,conversion_rate,velocidad_venta,monthly_target,director_id')
+      .order('period_date', { ascending: false })
+      .limit(12),
+    supabase
+      .from('neighborhood_market_data')
+      .select('snapshot_date,neighborhood,avg_price_m2_uf,absorption_rate,inventory_count,avg_days_on_market,opportunity_score')
+      .order('snapshot_date', { ascending: false })
+      .limit(40),
+    supabase
+      .from('scrape_health_snapshots')
+      .select('generated_at,status,summary,issues')
+      .order('generated_at', { ascending: false })
+      .limit(2),
+  ])
+
+  if (kpiRes.error) throw kpiRes.error
+  if (marketRes.error) throw marketRes.error
+  if (historyRes.error) throw historyRes.error
+
+  const kpis = (kpiRes.data || []) as KpiSnapshotRow[]
+  const marketRows = (marketRes.data || []) as NeighborhoodMarketHistoryRow[]
+  const healthHistory = (historyRes.data || []) as Array<{
+    generated_at: string
+    status: string
+    summary: ScrapeHealthSummary
+    issues: ScrapeHealthIssue[]
+  }>
+
+  if (kpis.length >= 6) {
+    const latestWindow = kpis.slice(0, 3)
+    const previousWindow = kpis.slice(3, 6)
+    const latestSales = average(latestWindow.map((row) => row.ventas_count))
+    const previousSales = average(previousWindow.map((row) => row.ventas_count))
+    const salesDelta = percentDelta(latestSales, previousSales)
+    const latestConversion = average(latestWindow.map((row) => row.conversion_rate))
+    const previousConversion = average(previousWindow.map((row) => row.conversion_rate))
+    const conversionDelta = latestConversion - previousConversion
+    const latestVelocity = average(latestWindow.map((row) => row.velocidad_venta || 0))
+    const previousVelocity = average(previousWindow.map((row) => row.velocidad_venta || 0))
+    const velocityDelta = percentDelta(latestVelocity, previousVelocity)
+    const targetGapRows = latestWindow.filter((row) => row.monthly_target && row.monthly_target > row.ventas_count * 1.2)
+
+    if (salesDelta <= -25) {
+      anomalies.push({
+        area: 'kpi',
+        severity: 'warning',
+        title: 'Caida de ventas reciente',
+        detail: `Las ventas promedio de las ultimas 3 muestras bajaron ${Math.abs(salesDelta).toFixed(0)}% vs el bloque previo.`,
+      })
+    }
+
+    if (conversionDelta <= -1.2) {
+      anomalies.push({
+        area: 'kpi',
+        severity: 'warning',
+        title: 'Conversion en retroceso',
+        detail: `La conversion promedio bajo ${Math.abs(conversionDelta).toFixed(1)} puntos en el tramo reciente.`,
+      })
+    }
+
+    if (velocityDelta >= 18) {
+      anomalies.push({
+        area: 'kpi',
+        severity: 'critical',
+        title: 'Velocidad de venta empeoro',
+        detail: `La velocidad promedio subio ${velocityDelta.toFixed(0)}% frente al bloque anterior.`,
+      })
+    }
+
+    if (targetGapRows.length >= 2) {
+      anomalies.push({
+        area: 'kpi',
+        severity: 'warning',
+        title: 'Objetivo semanal por debajo del ritmo',
+        detail: `Hay ${targetGapRows.length} snapshots recientes por debajo del ritmo esperado vs monthly_target.`,
+      })
+    }
+  }
+
+  if (marketRows.length >= 8) {
+    const byNeighborhood = new Map<string, NeighborhoodMarketHistoryRow[]>()
+    for (const row of marketRows) {
+      const list = byNeighborhood.get(row.neighborhood) || []
+      list.push(row)
+      byNeighborhood.set(row.neighborhood, list)
+    }
+
+    const marketAlerts = [...byNeighborhood.entries()]
+      .flatMap(([neighborhood, rows]) => {
+        if (rows.length < 2) return []
+        const latest = rows[0]
+        const previous = rows[1]
+        const alerts: OperationalAnomaly[] = []
+        const absorptionDelta = ((latest.absorption_rate || 0) - (previous.absorption_rate || 0)) * 100
+        const inventoryDelta = percentDelta(latest.inventory_count || 0, previous.inventory_count || 0)
+        const priceDelta = percentDelta(latest.avg_price_m2_uf || 0, previous.avg_price_m2_uf || 0)
+        const opportunityDelta = (latest.opportunity_score || 0) - (previous.opportunity_score || 0)
+        const daysDelta = (latest.avg_days_on_market || 0) - (previous.avg_days_on_market || 0)
+
+        if (absorptionDelta <= -10 && inventoryDelta >= 20) {
+          alerts.push({
+            area: 'market',
+            severity: 'warning',
+            title: `Presion de mercado en ${neighborhood}`,
+            detail: `Absorcion cayendo ${Math.abs(absorptionDelta).toFixed(0)} pts e inventario subiendo ${inventoryDelta.toFixed(0)}% en el ultimo snapshot.`,
+          })
+        }
+
+        if (priceDelta >= 12 && opportunityDelta <= -8) {
+          alerts.push({
+            area: 'market',
+            severity: 'warning',
+            title: `Desacople precio/oportunidad en ${neighborhood}`,
+            detail: `Precio UF/m² subio ${priceDelta.toFixed(0)}% mientras el opportunity score bajo ${Math.abs(opportunityDelta).toFixed(0)} pts.`,
+          })
+        }
+
+        if (daysDelta >= 10) {
+          alerts.push({
+            area: 'market',
+            severity: 'critical',
+            title: `Enfriamiento de ${neighborhood}`,
+            detail: `Los dias en mercado aumentaron ${daysDelta.toFixed(0)} dias vs el snapshot previo.`,
+          })
+        }
+
+        return alerts
+      })
+      .slice(0, 4)
+
+    anomalies.push(...marketAlerts)
+  }
+
+  if (healthHistory.length >= 2) {
+    const latest = healthHistory[0]
+    const previous = healthHistory[1]
+    const latestSuccess = latest.summary?.successRate || 0
+    const previousSuccess = previous.summary?.successRate || 0
+    const successDelta = latestSuccess - previousSuccess
+
+    if (successDelta <= -20) {
+      anomalies.push({
+        area: 'health',
+        severity: 'warning',
+        title: 'Salud del pipeline retrocedio',
+        detail: `El success rate bajo ${Math.abs(successDelta).toFixed(0)} pts vs el snapshot anterior.`,
+      })
+    }
+
+    if ((latest.summary?.criticalCount || 0) > (previous.summary?.criticalCount || 0)) {
+      anomalies.push({
+        area: 'health',
+        severity: 'critical',
+        title: 'Mas alertas criticas que antes',
+        detail: `El snapshot mas reciente tiene ${(latest.summary?.criticalCount || 0)} criticas vs ${(previous.summary?.criticalCount || 0)} en el anterior.`,
+      })
+    }
+  }
+
+  return anomalies
 }
 
 export function evaluateScrapeHealth(
@@ -227,6 +427,8 @@ export async function persistScrapeHealthSnapshot() {
       (sourcesRes.data || []) as DataSourceSummary[],
       (benchmarkRes.data?.[0] || null) as ExternalBenchmarkSummary | null,
     )
+    const anomalies = await loadOperationalAnomalies(supabase).catch(() => [])
+    const mergedIssues = [...health.issues, ...anomalies]
 
     const { error } = await supabase.from('scrape_health_snapshots').insert({
       status: health.status,
@@ -234,7 +436,7 @@ export async function persistScrapeHealthSnapshot() {
       latest_run: health.latestRun,
       sources: health.sources,
       benchmark: health.benchmark,
-      issues: health.issues,
+      issues: mergedIssues,
       runs_window: health.runsWindow,
       generated_at: health.generatedAt,
     })
