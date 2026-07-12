@@ -612,7 +612,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
       bathrooms: row.bathrooms,
       lat: row.lat,
       lng: row.lng,
-      status: 'activo',
+      status: 'available',
       days_on_market: row.days_on_market,
       source: row.source,
       external_id: row.external_id,
