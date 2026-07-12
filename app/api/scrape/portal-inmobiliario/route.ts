@@ -47,6 +47,10 @@ const SEARCH_URLS = [
   'https://www.portalinmobiliario.com/venta/departamento/vitacura-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana',
 ]
+const RENTALS_SEARCH_URLS = [
+  'https://www.portalinmobiliario.com/arriendo/departamento/vitacura-metropolitana',
+  'https://www.portalinmobiliario.com/arriendo/casa/vitacura-metropolitana',
+]
 
 const TOCTOC_SEARCH_URL = 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
 const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
@@ -166,7 +170,7 @@ function benchmarkPriceForNeighborhood(
   return Math.max(900, Math.round(areaM2 * normalizedBase + (sector.lat + sector.lng) * 0))
 }
 
-async function scrapePortalListings(maxResults = 60) {
+async function scrapePortalListings(maxResults = 60, urls = SEARCH_URLS, source = 'portal_inmobiliario') {
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
@@ -175,7 +179,7 @@ async function scrapePortalListings(maxResults = 60) {
   const results: ScrapedProperty[] = []
 
   try {
-    for (const url of SEARCH_URLS) {
+    for (const url of urls) {
       if (results.length >= maxResults) break
 
       const page = await browser.newPage()
@@ -223,7 +227,7 @@ async function scrapePortalListings(maxResults = 60) {
           lat: sector.lat + (Math.random() - 0.5) * 0.002,
           lng: sector.lng + (Math.random() - 0.5) * 0.002,
           days_on_market: Math.floor(Math.random() * 90) + 5,
-          source: 'portal_inmobiliario',
+          source,
           external_id: hashLike(`${url}|${card.title}|${card.address}|${priceUf}`),
         })
       }
@@ -654,6 +658,15 @@ export async function POST(request: Request) {
       allRows.push(...uniquePortal)
       runs.push({ source: 'portal_inmobiliario', scraped: uniquePortal.length, inserted, skipped: uniquePortal.length - inserted, errors })
       await syncSourceStats('Portal Inmobiliario', 1, errors.length ? 'error' : 'active', uniquePortal.length, errors[0] || null)
+    }
+
+    if (source === 'all' || source === 'portal-rentals') {
+      const rentalRows = await scrapePortalListings(30, RENTALS_SEARCH_URLS, 'portal_inmobiliario_rentals')
+      const uniqueRentals = dedupeProperties(rentalRows)
+      const { inserted, errors } = await insertProperties(uniqueRentals)
+      allRows.push(...uniqueRentals)
+      runs.push({ source: 'portal_inmobiliario_rentals', scraped: uniqueRentals.length, inserted, skipped: uniqueRentals.length - inserted, errors })
+      await syncSourceStats('Portal Inmobiliario Arriendos', 6, errors.length ? 'error' : 'active', uniqueRentals.length, errors[0] || null)
     }
 
     if (source === 'all' || source === 'toctoc') {

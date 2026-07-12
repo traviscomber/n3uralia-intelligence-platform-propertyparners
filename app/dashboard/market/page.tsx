@@ -62,7 +62,7 @@ interface MarketRow {
   avg_days_on_market: number
 }
 
-interface RealtorBenchmark {
+interface ExternalBenchmark {
   source: string
   source_url: string
   neighborhood: string
@@ -116,9 +116,11 @@ export default function MarketPage() {
   const [showPrc, setShowPrc] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
-  const [realtorBenchmark, setRealtorBenchmark] = useState<RealtorBenchmark | null>(null)
-  const [realtorLoading, setRealtorLoading] = useState(false)
+  const [realtorBenchmark, setRealtorBenchmark] = useState<ExternalBenchmark | null>(null)
+  const [portalBenchmark, setPortalBenchmark] = useState<ExternalBenchmark | null>(null)
+  const [benchmarksLoading, setBenchmarksLoading] = useState(false)
   const [realtorError, setRealtorError] = useState<string | null>(null)
+  const [portalError, setPortalError] = useState<string | null>(null)
   const [marketHistory, setMarketHistory] = useState<MarketHistoryRow[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'mapa' | 'overview' | 'prices' | 'velocity'>('mapa')
@@ -155,24 +157,43 @@ export default function MarketPage() {
     void loadMarketInsights()
   }, [])
 
-  const loadRealtorBenchmark = useCallback(async () => {
-    setRealtorLoading(true)
+  const loadBenchmarks = useCallback(async () => {
+    setBenchmarksLoading(true)
     setRealtorError(null)
+    setPortalError(null)
     try {
-      const res = await fetch('/api/benchmarks/realtor', { cache: 'no-store' })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'No pudimos actualizar el benchmark externo.')
-      setRealtorBenchmark(json.benchmark as RealtorBenchmark)
-    } catch (err) {
-      setRealtorError(err instanceof Error ? err.message : 'No pudimos actualizar el benchmark externo.')
+      const [realtorResult, portalResult] = await Promise.allSettled([
+        fetch('/api/benchmarks/realtor', { cache: 'no-store' }).then(async (res) => {
+          const json = await res.json()
+          if (!res.ok) throw new Error(json.error || 'No pudimos actualizar el benchmark de Realtor.')
+          return json.benchmark as ExternalBenchmark
+        }),
+        fetch('/api/benchmarks/portal-inmobiliario', { cache: 'no-store' }).then(async (res) => {
+          const json = await res.json()
+          if (!res.ok) throw new Error(json.error || 'No pudimos actualizar el benchmark de Portal Inmobiliario.')
+          return json.benchmark as ExternalBenchmark
+        }),
+      ])
+
+      if (realtorResult.status === 'fulfilled') {
+        setRealtorBenchmark(realtorResult.value)
+      } else {
+        setRealtorError(realtorResult.reason instanceof Error ? realtorResult.reason.message : 'No pudimos actualizar el benchmark de Realtor.')
+      }
+
+      if (portalResult.status === 'fulfilled') {
+        setPortalBenchmark(portalResult.value)
+      } else {
+        setPortalError(portalResult.reason instanceof Error ? portalResult.reason.message : 'No pudimos actualizar el benchmark de Portal Inmobiliario.')
+      }
     } finally {
-      setRealtorLoading(false)
+      setBenchmarksLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    void loadRealtorBenchmark()
-  }, [loadRealtorBenchmark])
+    void loadBenchmarks()
+  }, [loadBenchmarks])
 
   const loadPrcZones = useCallback(async () => {
     const res = await fetch('/api/prc/zones')
@@ -266,50 +287,66 @@ export default function MarketPage() {
         </div>
       )}
 
-      {(realtorBenchmark || realtorError) && (
+      {(realtorBenchmark || portalBenchmark || realtorError || portalError || benchmarksLoading) && (
         <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmark externo</p>
-              <h2 className="mt-1 text-lg font-semibold text-gray-900">Realtor International</h2>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmarks externos</p>
+              <h2 className="mt-1 text-lg font-semibold text-gray-900">Realtor International + Portal Inmobiliario</h2>
               <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                {realtorBenchmark
-                  ? `${realtorBenchmark.offer_count} ofertas detectadas en ${realtorBenchmark.neighborhood} · ${new Date(realtorBenchmark.recorded_at).toLocaleString('es-CL')}`
-                  : realtorError || 'No disponible'}
+                Comparación de fuentes externas para reforzar `Market Intelligence`.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => void loadRealtorBenchmark()}
-                disabled={realtorLoading}
-                className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
-                style={{ background: '#8fb2aa', color: '#fff' }}
-              >
-                {realtorLoading ? 'Actualizando...' : 'Actualizar benchmark'}
-              </button>
-              {realtorBenchmark && (
-                <a href={realtorBenchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
-                  Abrir fuente
-                </a>
-              )}
-            </div>
+            <button
+              onClick={() => void loadBenchmarks()}
+              disabled={benchmarksLoading}
+              className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
+              style={{ background: '#8fb2aa', color: '#fff' }}
+            >
+              {benchmarksLoading ? 'Actualizando...' : 'Actualizar benchmarks'}
+            </button>
           </div>
-          {realtorBenchmark && (
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta mínima</p>
-                <p className="mt-2 text-xl font-semibold text-gray-900">{realtorBenchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{realtorBenchmark.price_currency || 'CLP'}</span></p>
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {[
+              { title: 'Realtor International', benchmark: realtorBenchmark, error: realtorError },
+              { title: 'Portal Inmobiliario Benchmark', benchmark: portalBenchmark, error: portalError },
+            ].map(({ title, benchmark, error }) => (
+              <div key={title} className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmark externo</p>
+                    <h3 className="mt-1 text-base font-semibold text-gray-900">{title}</h3>
+                    <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+                      {benchmark
+                        ? `${benchmark.offer_count} ofertas detectadas en ${benchmark.neighborhood} · ${new Date(benchmark.recorded_at).toLocaleString('es-CL')}`
+                        : error || 'No disponible'}
+                    </p>
+                  </div>
+                  {benchmark && (
+                    <a href={benchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-xs rounded-md font-medium transition-colors" style={{ background: '#fff', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                      Abrir fuente
+                    </a>
+                  )}
+                </div>
+                {benchmark && (
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta mínima</p>
+                      <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{benchmark.price_currency || 'CLP'}</span></p>
+                    </div>
+                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta máxima</p>
+                      <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{benchmark.price_currency || 'CLP'}</span></p>
+                    </div>
+                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Título fuente</p>
+                      <p className="mt-2 text-sm font-medium text-gray-900 line-clamp-2">{benchmark.listing_title || 'Sin título'}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta máxima</p>
-                <p className="mt-2 text-xl font-semibold text-gray-900">{realtorBenchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{realtorBenchmark.price_currency || 'CLP'}</span></p>
-              </div>
-              <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Título fuente</p>
-                <p className="mt-2 text-sm font-medium text-gray-900 line-clamp-2">{realtorBenchmark.listing_title || 'Sin título'}</p>
-              </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       )}
 
