@@ -26,9 +26,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [scrapeResult, benchmarkResult] = await Promise.all([
+    const [scrapeResult, realtorBenchmarkResult, portalBenchmarkResult] = await Promise.all([
       callEndpoint(request, '/api/scrape/portal-inmobiliario?source=all', { method: 'POST' }),
       callEndpoint(request, '/api/benchmarks/realtor'),
+      callEndpoint(request, '/api/benchmarks/portal-inmobiliario'),
     ])
     const marketResult = await callEndpoint(request, '/api/market/insights')
 
@@ -37,7 +38,8 @@ export async function GET(request: Request) {
       refreshedAt: new Date().toISOString(),
       sources: {
         scrape: scrapeResult,
-        benchmark: benchmarkResult,
+        benchmark: realtorBenchmarkResult,
+        benchmarkPortal: portalBenchmarkResult,
         market: marketResult,
       },
     })

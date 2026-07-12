@@ -45,7 +45,7 @@ export async function GET() {
       supabase
         .from('data_sources')
         .select('name,status,records_count,last_sync,error_message')
-        .in('name', ['Portal Inmobiliario', 'TOCTOC Search', 'icasas.cl', 'Yapo Search', 'Chilepropiedades', 'Realtor International'])
+        .in('name', ['Portal Inmobiliario', 'TOCTOC Search', 'icasas.cl', 'Yapo Search', 'Chilepropiedades', 'Realtor International', 'Portal Inmobiliario Benchmark'])
         .order('pipeline_order', { ascending: true }),
       supabase
         .from('external_market_benchmarks')
