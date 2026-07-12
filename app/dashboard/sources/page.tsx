@@ -65,22 +65,23 @@ export default function SourcesPage() {
   const [sources, setSources] = useState<DataSource[]>([])
   const [runs, setRuns] = useState<ScrapeRun[]>([])
   const [loading, setLoading] = useState(true)
+  const [runsLoading, setRunsLoading] = useState(true)
   const [refreshingAll, setRefreshingAll] = useState(false)
   const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
   const [health, setHealth] = useState<ScrapeHealth | null>(null)
+  const [runSourceFilter, setRunSourceFilter] = useState('')
+  const [runStatusFilter, setRunStatusFilter] = useState('')
 
   useEffect(() => {
     const fetchSources = async () => {
       try {
         const supabase = createClient()
-        const [sourcesRes, runsRes, healthRes] = await Promise.all([
+        const [sourcesRes, healthRes] = await Promise.all([
           supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
-          fetch('/api/scrape/runs').then((res) => res.json()),
           fetch('/api/scrape/health').then((res) => res.json()),
         ])
 
         setSources(sourcesRes.data || [])
-        setRuns((runsRes.runs || []) as ScrapeRun[])
         setHealth(healthRes as ScrapeHealth)
       } catch (err) {
         console.error('Error:', err)
@@ -91,6 +92,27 @@ export default function SourcesPage() {
 
     fetchSources()
   }, [])
+
+  useEffect(() => {
+    const fetchRuns = async () => {
+      try {
+        setRunsLoading(true)
+        const params = new URLSearchParams()
+        params.set('limit', '20')
+        if (runSourceFilter) params.set('source', runSourceFilter)
+        if (runStatusFilter) params.set('status', runStatusFilter)
+
+        const runsRes = await fetch(`/api/scrape/runs?${params.toString()}`).then((res) => res.json())
+        setRuns((runsRes.runs || []) as ScrapeRun[])
+      } catch (err) {
+        console.error('Error:', err)
+      } finally {
+        setRunsLoading(false)
+      }
+    }
+
+    fetchRuns()
+  }, [runSourceFilter, runStatusFilter])
 
   async function handleRefreshAll() {
     setRefreshingAll(true)
@@ -103,14 +125,18 @@ export default function SourcesPage() {
       }
       setRefreshMsg(`Refresco completado: scraping y benchmark actualizados a ${new Date(json.refreshedAt).toLocaleTimeString('es-CL')}`)
       const supabase = createClient()
-      const [sourcesRes, runsRes, healthRes] = await Promise.all([
+      const [sourcesRes, healthRes] = await Promise.all([
         supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
-        fetch('/api/scrape/runs').then((r) => r.json()),
         fetch('/api/scrape/health').then((r) => r.json()),
       ])
       setSources(sourcesRes.data || [])
-      setRuns((runsRes.runs || []) as ScrapeRun[])
       setHealth(healthRes as ScrapeHealth)
+      const runsParams = new URLSearchParams()
+      runsParams.set('limit', '20')
+      if (runSourceFilter) runsParams.set('source', runSourceFilter)
+      if (runStatusFilter) runsParams.set('status', runStatusFilter)
+      const runsRes = await fetch(`/api/scrape/runs?${runsParams.toString()}`).then((r) => r.json())
+      setRuns((runsRes.runs || []) as ScrapeRun[])
     } catch (err) {
       setRefreshMsg(err instanceof Error ? err.message : 'No pudimos refrescar las fuentes.')
     } finally {
@@ -155,6 +181,7 @@ export default function SourcesPage() {
     return labels[type] || type
   }
 
+  const runSourceOptions = Array.from(new Set(sources.map((source) => source.name)))
   const healthLabel = health?.status === 'healthy' ? 'Saludable' : health?.status === 'warning' ? 'Con alertas' : health?.status === 'critical' ? 'Crítico' : 'Sin datos'
   const healthColor = health?.status === 'healthy' ? '#10b981' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#9ca9a3'
 
@@ -366,10 +393,56 @@ export default function SourcesPage() {
 
       {!loading && (
         <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
-          <h2 className="font-semibold mb-4 text-gray-900">
-            Últimas corridas del scraper
-          </h2>
-          {runs.length ? (
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">
+                Últimas corridas del scraper
+              </h2>
+              <p className="text-sm" style={{ color: '#9ca9a3' }}>
+                Filtra por fuente y estado para revisar el pipeline con más precisión.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={runSourceFilter}
+                onChange={(e) => setRunSourceFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm"
+                style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+              >
+                <option value="">Todas las fuentes</option>
+                {runSourceOptions.map((sourceName) => (
+                  <option key={sourceName} value={sourceName}>{sourceName}</option>
+                ))}
+              </select>
+              <select
+                value={runStatusFilter}
+                onChange={(e) => setRunStatusFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm"
+                style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+              >
+                <option value="">Todos los estados</option>
+                <option value="success">Success</option>
+                <option value="partial">Partial</option>
+                <option value="error">Error</option>
+              </select>
+              {(runSourceFilter || runStatusFilter) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRunSourceFilter('')
+                    setRunStatusFilter('')
+                  }}
+                  className="rounded-lg border px-3 py-2 text-sm font-semibold"
+                  style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+          </div>
+          {runsLoading ? (
+            <p className="text-sm" style={{ color: '#9ca9a3' }}>Cargando corridas...</p>
+          ) : runs.length ? (
             <div className="space-y-2">
               {runs.slice(0, 5).map((run) => (
                 <div key={run.id} className="flex items-center justify-between gap-4 rounded-lg px-3 py-2" style={{ background: '#f5f9f7' }}>
