@@ -30,6 +30,7 @@ export async function GET(request: Request) {
       callEndpoint(request, '/api/scrape/portal-inmobiliario?source=all', { method: 'POST' }),
       callEndpoint(request, '/api/benchmarks/realtor'),
     ])
+    const marketResult = await callEndpoint(request, '/api/market/insights')
 
     return NextResponse.json({
       success: true,
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
       sources: {
         scrape: scrapeResult,
         benchmark: benchmarkResult,
+        market: marketResult,
       },
     })
   } catch (err) {

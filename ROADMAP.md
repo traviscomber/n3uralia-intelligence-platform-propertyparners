@@ -34,24 +34,23 @@
 11. Automated nightly refresh route updates scraper and benchmark data via Vercel cron.
 12. Scrape health detects stale sources, repeated errors, and low-volume runs.
 13. Weekly report distribution supports email delivery and WhatsApp Web links for manual sending.
+14. Automatic weekly delivery targets can now be managed from Settings for email and WhatsApp Web.
+15. Market intelligence persists historical neighborhood snapshots in `neighborhood_market_data`.
+16. Valorizador scoring now weights comparable properties with market alignment and recency signals.
 
 ## Next Implementation Block
 
-1. Add recipient management for automatic weekly delivery targets.
-2. Build historical neighborhood analytics with `neighborhood_market_data`.
-3. Add comparable property matching and scoring to the valorizador.
-4. Add a second stable public listing source beyond Yapo for coverage redundancy.
+1. Add a second stable public listing source beyond Yapo for coverage redundancy.
+2. Add automatic report delivery escalation and retry handling.
+3. Add director/seller drill-down views and exportable report PDFs.
 
 ## Follow-Up Roadmap
 
-1. Add director/seller drill-down views and exportable report PDFs.
-2. Expand anomaly detection on KPIs and market changes using the persisted health history.
-3. Add automatic report delivery escalation and retry handling.
-4. Keep tightening accessibility, responsiveness, and loading states.
+1. Expand anomaly detection on KPIs and market changes using the persisted health history.
+2. Keep tightening accessibility, responsiveness, and loading states.
 
 ## Notes
 
 - `OPENAI_API_KEY` is used directly for report generation.
 - WhatsApp delivery currently opens `web.whatsapp.com` with a prefilled message.
 - The weekly delivery cron is scheduled for Monday at 06:00 in Vercel.
-

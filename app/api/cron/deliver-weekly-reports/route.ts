@@ -25,21 +25,13 @@ function getSupabaseClient() {
   return createSupabaseClient(supabaseUrl, supabaseKey)
 }
 
-async function sendResendEmail(subject: string, message: string) {
+async function sendResendEmail(subject: string, message: string, recipients: string[]) {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.REPORT_EMAIL_FROM
-  const recipients = process.env.REPORT_EMAIL_TO
 
-  if (!apiKey || !from || !recipients) {
+  if (!apiKey || !from || !recipients.length) {
     return null
   }
-
-  const to = recipients
-    .split(/[,;]+/)
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-
-  if (!to.length) return null
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -49,7 +41,7 @@ async function sendResendEmail(subject: string, message: string) {
     },
     body: JSON.stringify({
       from,
-      to,
+      to: recipients,
       subject,
       text: message,
     }),
@@ -62,6 +54,28 @@ async function sendResendEmail(subject: string, message: string) {
   }
 
   return payload as Record<string, unknown>
+}
+
+type DeliveryTarget = {
+  id: number
+  label: string
+  channel: 'email' | 'whatsapp_web'
+  recipient: string
+  active: boolean
+  notify_weekly: boolean
+  notes: string | null
+}
+
+async function loadDeliveryTargets(supabase: ReturnType<typeof getSupabaseClient>) {
+  const { data, error } = await supabase
+    .from('report_delivery_targets')
+    .select('*')
+    .eq('active', true)
+    .eq('notify_weekly', true)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data || []) as DeliveryTarget[]
 }
 
 export async function GET(request: Request) {
@@ -105,20 +119,33 @@ export async function GET(request: Request) {
     })
     const subject = `Reporte semanal ${latestWeekly.week_start} - ${latestWeekly.week_end}`
 
+    const targets = await loadDeliveryTargets(supabase)
     const deliveries: Array<Record<string, unknown>> = []
 
-    const emailDelivery = await sendResendEmail(subject, message)
-    if (emailDelivery) {
-      deliveries.push({
-        channel: 'email',
-        status: 'sent',
-        provider_response: emailDelivery,
-        recipient: process.env.REPORT_EMAIL_TO,
-      })
+    const emailTargets = targets.filter((target) => target.channel === 'email')
+    const whatsappTargets = targets.filter((target) => target.channel === 'whatsapp_web')
+
+    const fallbackEmails = process.env.REPORT_EMAIL_TO
+      ? process.env.REPORT_EMAIL_TO.split(/[,;]+/).map((entry) => entry.trim()).filter(Boolean)
+      : []
+    const fallbackWhatsApp = process.env.REPORT_WHATSAPP_PHONE ? [process.env.REPORT_WHATSAPP_PHONE] : []
+
+    const emailRecipients = emailTargets.length ? emailTargets.map((target) => target.recipient) : fallbackEmails
+    const whatsappRecipients = whatsappTargets.length ? whatsappTargets.map((target) => target.recipient) : fallbackWhatsApp
+
+    if (emailRecipients.length) {
+      const emailDelivery = await sendResendEmail(subject, message, emailRecipients)
+      if (emailDelivery) {
+        deliveries.push({
+          channel: 'email',
+          status: 'sent',
+          provider_response: emailDelivery,
+          recipient: emailRecipients.join(', '),
+        })
+      }
     }
 
-    const whatsappPhone = process.env.REPORT_WHATSAPP_PHONE
-    if (whatsappPhone) {
+    whatsappRecipients.forEach((whatsappPhone) => {
       const whatsappUrl = buildWhatsAppWebUrl(whatsappPhone, message)
       deliveries.push({
         channel: 'whatsapp_web',
@@ -126,7 +153,7 @@ export async function GET(request: Request) {
         delivery_url: whatsappUrl,
         recipient: whatsappPhone,
       })
-    }
+    })
 
     if (deliveries.length) {
       await supabase.from('report_deliveries').insert(
@@ -150,8 +177,8 @@ export async function GET(request: Request) {
       generatedAt: new Date().toISOString(),
       report: latestWeekly,
       deliveries,
-      whatsappUrl: whatsappPhone ? buildWhatsAppWebUrl(whatsappPhone, message) : null,
-      emailDelivered: Boolean(emailDelivery),
+      whatsappUrls: whatsappRecipients.map((phone) => buildWhatsAppWebUrl(phone, message)),
+      emailDelivered: Boolean(emailRecipients.length),
     })
   } catch (err) {
     return NextResponse.json(

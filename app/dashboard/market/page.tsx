@@ -74,6 +74,19 @@ interface RealtorBenchmark {
   recorded_at: string
 }
 
+interface MarketHistoryRow {
+  id: number
+  snapshot_date: string
+  neighborhood: string
+  avg_price_uf: number | null
+  avg_price_m2_uf: number | null
+  absorption_rate: number | null
+  inventory_count: number
+  avg_days_on_market: number | null
+  opportunity_score: number
+  created_at: string
+}
+
 const TIPO_LABEL: Record<string, string> = {
   residencial_alto: 'Res. Alto',
   residencial_medio_alto: 'Res. Medio-Alto',
@@ -106,6 +119,7 @@ export default function MarketPage() {
   const [realtorBenchmark, setRealtorBenchmark] = useState<RealtorBenchmark | null>(null)
   const [realtorLoading, setRealtorLoading] = useState(false)
   const [realtorError, setRealtorError] = useState<string | null>(null)
+  const [marketHistory, setMarketHistory] = useState<MarketHistoryRow[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'mapa' | 'overview' | 'prices' | 'velocity'>('mapa')
 
@@ -124,6 +138,22 @@ export default function MarketPage() {
   }, [])
 
   useEffect(() => { loadNeighborhoods() }, [loadNeighborhoods])
+
+  useEffect(() => {
+    const loadMarketInsights = async () => {
+      try {
+        const res = await fetch('/api/market/insights', { cache: 'no-store' })
+        const json = await res.json()
+        if (json.history) {
+          setMarketHistory((json.history || []) as MarketHistoryRow[])
+        }
+      } catch {
+        // best effort only
+      }
+    }
+
+    void loadMarketInsights()
+  }, [])
 
   const loadRealtorBenchmark = useCallback(async () => {
     setRealtorLoading(true)
@@ -449,6 +479,38 @@ export default function MarketPage() {
               Precio promedio propiedad: <strong>{selectedMarket.avg_price_uf?.toLocaleString('es-CL')} UF</strong> · Días en mercado: <strong>{selectedMarket.avg_days_on_market?.toFixed(0)} días</strong>
             </p>
           )}
+        </div>
+      )}
+
+      {marketHistory.length > 0 && (
+        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Historial de barrio</p>
+              <h3 className="mt-1 text-lg font-semibold text-gray-900">Neighborhood market snapshots</h3>
+            </div>
+            <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+              {marketHistory.length} snapshots
+            </span>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {marketHistory.slice(0, 3).map((row) => (
+              <div key={row.id} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-gray-900">{row.neighborhood}</p>
+                  <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#e8f3f0', color: '#166534' }}>
+                    {row.opportunity_score}/100
+                  </span>
+                </div>
+                <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+                  {new Date(row.snapshot_date).toLocaleDateString('es-CL')} · {row.inventory_count} inventario · {(row.absorption_rate || 0) * 100}% absorción
+                </p>
+                <p className="text-xs mt-1" style={{ color: '#555a56' }}>
+                  {row.avg_price_m2_uf?.toFixed(1) || 'N/A'} UF/m² · {row.avg_days_on_market ? `${row.avg_days_on_market.toFixed(0)} días` : 'sin días'}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

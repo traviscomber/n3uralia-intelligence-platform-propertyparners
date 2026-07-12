@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import ReportDeliveryTargetsManager from '@/components/settings/ReportDeliveryTargetsManager'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -57,6 +58,14 @@ export default async function SettingsPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Destinatarios de reportes</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Define quién recibe los reportes semanales por email o WhatsApp Web.
+        </p>
+        <ReportDeliveryTargetsManager />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
