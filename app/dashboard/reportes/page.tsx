@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Calendar, FileText, RefreshCw, Sparkles, TriangleAlert, TrendingUp, Users } from 'lucide-react'
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime-query'
 import type { AiReport } from '@/lib/types'
+import { buildWhatsAppWebUrl } from '@/lib/whatsapp-web'
 
 type WeeklyReport = {
   week_start: string
@@ -56,6 +57,7 @@ export default function ReportesPage() {
   const [generateLoading, setGenerateLoading] = useState<ReportTypeChoice | null>(null)
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [generatedReport, setGeneratedReport] = useState<AiReport | null>(null)
+  const whatsappPhone = process.env.NEXT_PUBLIC_REPORT_WHATSAPP_PHONE || ''
 
   const { data: aiReports, loading: aiLoading, error: aiError, lastUpdated, refresh: refreshAiReports } = useRealtimeQuery<AiReport>(
     async (supabase) => {
@@ -138,6 +140,14 @@ export default function ReportesPage() {
       aiCount: aiReports.length,
     }
   }, [aiReports.length, weekly])
+
+  const generatedWhatsappUrl =
+    whatsappPhone && generatedReport
+      ? buildWhatsAppWebUrl(
+          whatsappPhone,
+          `${generatedReport.title}\n\n${generatedReport.summary || 'Sin resumen disponible'}`,
+        )
+      : null
 
   if (weeklyLoading && aiLoading) {
     return (
@@ -317,6 +327,19 @@ export default function ReportesPage() {
             <p className="mt-3 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
               {generatedReport.summary || 'Sin resumen disponible'}
             </p>
+            {generatedWhatsappUrl && (
+              <div className="mt-4">
+                <a
+                  href={generatedWhatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="n-button border"
+                  style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                >
+                  Abrir en WhatsApp Web
+                </a>
+              </div>
+            )}
           </div>
         )}
       </div>
