@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Calendar, FileText, RefreshCw, Sparkles, TriangleAlert, TrendingUp, Users } from 'lucide-react'
+import { Calendar, FileText, RefreshCw, Sparkles, TriangleAlert, Users } from 'lucide-react'
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime-query'
 import type { AiReport } from '@/lib/types'
 import { buildWhatsAppWebUrl } from '@/lib/whatsapp-web'
@@ -36,6 +36,36 @@ type WeeklyReportResponse = {
 
 type ReportTypeChoice = 'weekly_directors' | 'monthly_ceo' | 'market_brief' | 'captation_alert'
 
+type ScrapeHealthIssue = {
+  severity: 'info' | 'warning' | 'critical'
+  title: string
+  detail: string
+}
+
+type OperationalAnomaly = ScrapeHealthIssue & {
+  area: 'kpi' | 'market' | 'health'
+}
+
+type ScrapeHealthSnapshot = {
+  status: 'healthy' | 'warning' | 'critical' | 'unknown'
+  summary: {
+    recentRuns: number
+    averageScraped: number
+    averageInserted: number
+    activeSources: number
+    criticalCount: number
+    warningCount: number
+    successRate: number
+    staleSourceCount: number
+  }
+}
+
+type ScrapeHealthResponse = {
+  status: ScrapeHealthSnapshot['status']
+  summary: ScrapeHealthSnapshot['summary']
+  anomalies: OperationalAnomaly[]
+}
+
 function formatDate(value: string | null) {
   if (!value) return 'Sin fecha'
   return new Date(value).toLocaleDateString('es-CL', {
@@ -58,6 +88,10 @@ export default function ReportesPage() {
   const [generateLoading, setGenerateLoading] = useState<ReportTypeChoice | null>(null)
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [generatedReport, setGeneratedReport] = useState<AiReport | null>(null)
+  const [health, setHealth] = useState<ScrapeHealthSnapshot | null>(null)
+  const [healthAnomalies, setHealthAnomalies] = useState<OperationalAnomaly[]>([])
+  const [healthLoading, setHealthLoading] = useState(true)
+  const [healthError, setHealthError] = useState<string | null>(null)
   const whatsappPhone = process.env.NEXT_PUBLIC_REPORT_WHATSAPP_PHONE || ''
 
   const { data: aiReports, loading: aiLoading, error: aiError, lastUpdated, refresh: refreshAiReports } = useRealtimeQuery<AiReport>(
@@ -97,6 +131,35 @@ export default function ReportesPage() {
     }
 
     void loadWeekly()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const loadHealth = async () => {
+      try {
+        setHealthLoading(true)
+        const response = await fetch('/api/scrape/health', { cache: 'no-store' })
+        if (!response.ok) throw new Error('No pudimos cargar la salud del scraper.')
+        const data = (await response.json()) as ScrapeHealthResponse
+        if (!active) return
+        setHealth(data)
+        setHealthAnomalies(data.anomalies || [])
+        setHealthError(null)
+      } catch (err) {
+        if (active) {
+          setHealthError(err instanceof Error ? err.message : 'No pudimos cargar la salud del scraper.')
+        }
+      } finally {
+        if (active) setHealthLoading(false)
+      }
+    }
+
+    void loadHealth()
 
     return () => {
       active = false
@@ -467,6 +530,71 @@ export default function ReportesPage() {
           </div>
         </div>
       )}
+
+      <div className="n-card p-6">
+        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
+              Salud operativa del scraper
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+              Cruza ejecuciones recientes, fuentes activas y anomalías detectadas para el sistema de reportes.
+            </p>
+          </div>
+          <span className="n-chip">{health?.status || 'unknown'}</span>
+        </div>
+
+        {healthLoading ? (
+          <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+            Cargando salud operativa...
+          </p>
+        ) : healthError ? (
+          <p className="text-sm" style={{ color: 'var(--n-warning)' }}>
+            {healthError}
+          </p>
+        ) : health ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-4">
+              {[
+                ['Fuentes activas', health.summary.activeSources],
+                ['Tasa de exito', `${health.summary.successRate}%`],
+                ['Alertas criticas', health.summary.criticalCount],
+                ['Alertas warning', health.summary.warningCount],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="rounded-2xl border p-3" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+                  <p className="text-xs uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                    {label}
+                  </p>
+                  <p className="mt-2 text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {healthAnomalies.slice(0, 4).map((anomaly, index) => (
+                <div key={`${anomaly.title}-${index}`} className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                        {anomaly.area}
+                      </p>
+                      <h3 className="mt-1 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                        {anomaly.title}
+                      </h3>
+                    </div>
+                    <span className="n-chip">{anomaly.severity}</span>
+                  </div>
+                  <p className="mt-3 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                    {anomaly.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       {weekly?.directors?.length ? (
         <div className="n-card p-6">
