@@ -69,7 +69,9 @@ interface PropertyTelemetry {
   daily: Array<{ date: string; count: number }>
 }
 
-function buildPropertyTelemetry(rows: Array<{ neighborhood: string | null; source: string | null; created_at: string | null }>): PropertyTelemetry {
+type PropertyRow = { neighborhood: string | null; source: string | null; created_at: string | null }
+
+function buildPropertyTelemetry(rows: PropertyRow[]): PropertyTelemetry {
   const now = new Date()
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const currentWindowStart = new Date(today)
@@ -128,6 +130,32 @@ function buildPropertyTelemetry(rows: Array<{ neighborhood: string | null; sourc
   }
 }
 
+function buildFilteredSeries(rows: PropertyRow[], neighborhood: string, source: string) {
+  const now = new Date()
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const counts = new Map<string, number>()
+
+  for (const row of rows) {
+    if (!row.created_at) continue
+    if (neighborhood !== 'all' && row.neighborhood !== neighborhood) continue
+    if (source !== 'all' && row.source !== source) continue
+    const created = new Date(row.created_at)
+    if (Number.isNaN(created.getTime())) continue
+    const key = created.toISOString().slice(0, 10)
+    counts.set(key, (counts.get(key) || 0) + 1)
+  }
+
+  const series: Array<{ date: string; count: number }> = []
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const cursor = new Date(today)
+    cursor.setUTCDate(cursor.getUTCDate() - offset)
+    const date = cursor.toISOString().slice(0, 10)
+    series.push({ date, count: counts.get(date) || 0 })
+  }
+
+  return series
+}
+
 export default function SourcesPage() {
   const [sources, setSources] = useState<DataSource[]>([])
   const [runs, setRuns] = useState<ScrapeRun[]>([])
@@ -137,6 +165,9 @@ export default function SourcesPage() {
   const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
   const [health, setHealth] = useState<ScrapeHealth | null>(null)
   const [propertyTelemetry, setPropertyTelemetry] = useState<PropertyTelemetry | null>(null)
+  const [propertyRows, setPropertyRows] = useState<PropertyRow[]>([])
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState('all')
+  const [selectedSource, setSelectedSource] = useState('all')
   const [runSourceFilter, setRunSourceFilter] = useState('')
   const [runStatusFilter, setRunStatusFilter] = useState('')
 
@@ -152,7 +183,9 @@ export default function SourcesPage() {
 
         setSources(sourcesRes.data || [])
         setHealth(healthRes as ScrapeHealth)
-        setPropertyTelemetry(buildPropertyTelemetry((propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null; created_at: string | null }>))
+        const rows = (propertiesRes.data || []) as PropertyRow[]
+        setPropertyRows(rows)
+        setPropertyTelemetry(buildPropertyTelemetry(rows))
       } catch (err) {
         console.error('Error:', err)
       } finally {
@@ -202,7 +235,9 @@ export default function SourcesPage() {
       ])
       setSources(sourcesRes.data || [])
       setHealth(healthRes as ScrapeHealth)
-      setPropertyTelemetry(buildPropertyTelemetry((propertiesRes.data || []) as Array<{ neighborhood: string | null; source: string | null; created_at: string | null }>))
+      const rows = (propertiesRes.data || []) as PropertyRow[]
+      setPropertyRows(rows)
+      setPropertyTelemetry(buildPropertyTelemetry(rows))
       const runsParams = new URLSearchParams()
       runsParams.set('limit', '20')
       if (runSourceFilter) runsParams.set('source', runSourceFilter)
@@ -254,6 +289,9 @@ export default function SourcesPage() {
   }
 
   const runSourceOptions = Array.from(new Set(sources.map((source) => source.name)))
+  const neighborhoodOptions = Array.from(new Set(propertyRows.map((row) => row.neighborhood).filter(Boolean) as string[])).sort()
+  const sourceOptions = Array.from(new Set(propertyRows.map((row) => row.source).filter(Boolean) as string[])).sort()
+  const filteredSeries = buildFilteredSeries(propertyRows, selectedNeighborhood, selectedSource)
   const healthLabel = health?.status === 'healthy' ? 'Saludable' : health?.status === 'warning' ? 'Con alertas' : health?.status === 'critical' ? 'Crítico' : 'Sin datos'
   const healthColor = health?.status === 'healthy' ? '#10b981' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#9ca9a3'
 
@@ -367,13 +405,66 @@ export default function SourcesPage() {
 
       {!loading && propertyTelemetry && (
         <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
-          <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="font-semibold text-gray-900">Telemetría por barrio y fuente</h2>
               <p className="text-sm" style={{ color: '#9ca9a3' }}>
                 {propertyTelemetry.total.toLocaleString()} propiedades normalizadas en el catálogo.
               </p>
             </div>
+            <div className="grid grid-cols-2 gap-3 lg:min-w-[520px]">
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                  Barrio
+                </span>
+                <select
+                  value={selectedNeighborhood}
+                  onChange={(event) => setSelectedNeighborhood(event.target.value)}
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900"
+                  style={{ borderColor: '#d8e5e2' }}
+                >
+                  <option value="all">Todos los barrios</option>
+                  {neighborhoodOptions.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                  Fuente
+                </span>
+                <select
+                  value={selectedSource}
+                  onChange={(event) => setSelectedSource(event.target.value)}
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900"
+                  style={{ borderColor: '#d8e5e2' }}
+                >
+                  <option value="all">Todas las fuentes</option>
+                  {sourceOptions.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedNeighborhood('all')
+                setSelectedSource('all')
+              }}
+              className="rounded-full border px-3 py-1.5 text-xs font-semibold text-gray-900 transition-opacity hover:opacity-90"
+              style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
+            >
+              Limpiar filtros
+            </button>
+            <span className="text-xs" style={{ color: '#9ca9a3' }}>
+              Vista filtrada sobre los últimos 7 días.
+            </span>
+            <span className="text-xs font-semibold" style={{ color: '#8fb2aa' }}>
+              {filteredSeries.reduce((sum, item) => sum + item.count, 0).toLocaleString()} registros en la selección
+            </span>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
@@ -405,42 +496,30 @@ export default function SourcesPage() {
               </div>
             </div>
           </div>
-          {propertyTelemetry.daily.length > 0 && (
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Actividad diaria última semana</p>
-                <ResponsiveContainer width="100%" height={240}>
-                  <LineChart data={propertyTelemetry.daily}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }} />
-                    <Line type="monotone" dataKey="count" stroke="#8fb2aa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+          <div className="mt-4 rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Actividad filtrada</p>
+                <p className="text-sm" style={{ color: '#9ca9a3' }}>
+                  Últimos 7 días para la combinación seleccionada.
+                </p>
               </div>
-              <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Top barrios y fuentes</p>
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart
-                    data={[
-                      ...propertyTelemetry.neighborhoods.slice(0, 3).map((item) => ({ label: `B: ${item.name}`, value: item.count })),
-                      ...propertyTelemetry.sources.slice(0, 3).map((item) => ({ label: `F: ${item.name}`, value: item.count })),
-                    ]}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
-                    <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="#9ca3af" interval={0} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }} />
-                    <Bar dataKey="value" fill="#b89a7e" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <p className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>
+                {filteredSeries[filteredSeries.length - 1]?.count ?? 0} hoy
+              </p>
             </div>
-          )}
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={filteredSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }} />
+                <Line type="monotone" dataKey="count" stroke="#8fb2aa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
-
       {/* Pipeline Overview */}
       <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
         <h2 className="font-semibold mb-4 text-gray-900">
