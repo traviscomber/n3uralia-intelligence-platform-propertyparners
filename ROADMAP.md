@@ -37,12 +37,12 @@
 14. Automatic weekly delivery targets can now be managed from Settings for email and WhatsApp Web.
 15. Market intelligence persists historical neighborhood snapshots in `neighborhood_market_data`.
 16. Valorizador scoring now weights comparable properties with market alignment and recency signals.
+17. Scraper redundancy now includes Chilepropiedades as an additional public listing source.
 
 ## Next Implementation Block
 
-1. Add a second stable public listing source beyond Yapo for coverage redundancy.
-2. Add automatic report delivery escalation and retry handling.
-3. Add director/seller drill-down views and exportable report PDFs.
+1. Add automatic report delivery escalation and retry handling.
+2. Add director/seller drill-down views and exportable report PDFs.
 
 ## Follow-Up Roadmap
 

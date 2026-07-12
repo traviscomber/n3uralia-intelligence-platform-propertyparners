@@ -51,6 +51,7 @@ const SEARCH_URLS = [
 const TOCTOC_SEARCH_URL = 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
 const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
 const YAPO_SEARCH_URL = 'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.2-2'
+const CHILEPROPIEDADES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta/departamento/vitacura'
 
 const SECTORS = [
   { keys: ['nueva costanera', 'costanera norte'], lat: -33.3885, lng: -70.5820, name: 'Nueva Costanera' },
@@ -103,6 +104,14 @@ function parseArea(text: string): number {
   if (match) return Math.round((Number.parseInt(match[1], 10) + Number.parseInt(match[2], 10)) / 2)
   const fallback = text.match(/(\d+)\s*m²/)
   return fallback ? Number.parseInt(fallback[1], 10) : 90
+}
+
+function parseNumberish(text: string | null | undefined) {
+  if (!text) return null
+  const match = text.replace(/\./g, '').replace(/,/g, '.').match(/(\d+(?:\.\d+)?)/)
+  if (!match) return null
+  const value = Number.parseFloat(match[1])
+  return Number.isFinite(value) ? value : null
 }
 
 function safeJsonParse(text: string): unknown | null {
@@ -422,6 +431,117 @@ async function scrapeYapoListings(limit = 20) {
   return results
 }
 
+async function scrapeChilePropiedadesDetail(url: string, fallbackName: string, idx: number) {
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Accept: 'text/html,application/xhtml+xml',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Chilepropiedades detail failed (${response.status})`)
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+  const jsonMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/i)
+  const parsed = jsonMatch ? safeJsonParse(jsonMatch[1]) : null
+  const graph = parsed && typeof parsed === 'object' && Array.isArray((parsed as { '@graph'?: unknown[] })['@graph'])
+    ? (parsed as { '@graph': Array<Record<string, unknown>> })['@graph']
+    : []
+  const listing = graph.find((entry) => entry['@type'] === 'RealEstateListing')
+
+  if (!listing) {
+    throw new Error('Chilepropiedades listing payload missing')
+  }
+
+  const about = (listing.about && typeof listing.about === 'object' ? listing.about : {}) as Record<string, unknown>
+  const address = (about.address && typeof about.address === 'object' ? about.address : {}) as Record<string, unknown>
+  const additionalProperties = Array.isArray(about.additionalProperty) ? about.additionalProperty : []
+  const title = String(listing.name || fallbackName || 'Chilepropiedades listing')
+  const description = String(listing.description || '')
+  const metaDescription = $('meta[name="description"]').attr('content') || description
+  const offer = (listing.offers && typeof listing.offers === 'object' ? listing.offers : {}) as Record<string, unknown>
+  const priceUf = parseNumberish(String(offer.price ?? '')) || parseUF(metaDescription) || parseUF(description)
+  const usefulArea = parseNumberish(String((about.floorSize && typeof about.floorSize === 'object'
+    ? (about.floorSize as Record<string, unknown>).value
+    : '') ?? ''))
+  const getAdditionalValue = (name: string) => {
+    const match = additionalProperties.find((item) => {
+      if (!item || typeof item !== 'object') return false
+      return String((item as Record<string, unknown>).name || '').toLowerCase().includes(name.toLowerCase())
+    }) as Record<string, unknown> | undefined
+    return match ? String(match.value || '') : ''
+  }
+  const totalArea = parseNumberish(getAdditionalValue('Superficie total'))
+  const bedrooms = parseRange(getAdditionalValue('Dormitorios') || '2')
+  const bathrooms = parseRange(getAdditionalValue('Baños') || '2')
+  const datePosted = String(listing.datePosted || '')
+  const daysOnMarket = datePosted
+    ? Math.max(1, Math.round((Date.now() - new Date(datePosted).getTime()) / (1000 * 60 * 60 * 24)))
+    : 18
+  const sector = sectorFromText(`${title} ${address.streetAddress || ''} ${address.addressLocality || ''} ${metaDescription}`, idx)
+
+  if (!priceUf || priceUf < 1000 || priceUf > 200000) {
+    throw new Error(`Chilepropiedades price missing for ${url}`)
+  }
+
+  return {
+    address: `${title} - ${String(address.streetAddress || address.addressLocality || sector.name)}`.slice(0, 200),
+    price_uf: priceUf,
+    area_m2: Math.max(30, Math.min(Math.round(usefulArea || totalArea || 90), 500)),
+    bedrooms: Math.max(1, Math.min(bedrooms, 6)),
+    bathrooms: Math.max(1, Math.min(bathrooms, 6)),
+    neighborhood: sector.name,
+    lat: sector.lat + (Math.random() - 0.5) * 0.0013,
+    lng: sector.lng + (Math.random() - 0.5) * 0.0013,
+    days_on_market: daysOnMarket,
+    source: 'chilepropiedades_search',
+    external_id: url,
+  } satisfies ScrapedProperty
+}
+
+async function scrapeChilePropiedadesListings(limit = 20) {
+  const results: ScrapedProperty[] = []
+
+  for (let pageIndex = 0; pageIndex < 4 && results.length < limit; pageIndex += 1) {
+    const pageUrl = `${CHILEPROPIEDADES_BASE_URL}/${pageIndex}`
+    const response = await fetch(pageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Chilepropiedades search failed (${response.status})`)
+    }
+
+    const html = await response.text()
+    const jsonMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/i)
+    const parsed = jsonMatch ? safeJsonParse(jsonMatch[1]) : null
+    const graph = parsed && typeof parsed === 'object' && Array.isArray((parsed as { '@graph'?: unknown[] })['@graph'])
+      ? (parsed as { '@graph': Array<Record<string, unknown>> })['@graph']
+      : []
+    const itemList = graph.find((entry) => entry['@type'] === 'ItemList') as { itemListElement?: Array<Record<string, unknown>> } | undefined
+    const items = itemList?.itemListElement || []
+
+    if (!items.length) break
+
+    for (let i = 0; i < items.length && results.length < limit; i += 1) {
+      const item = items[i]
+      const itemUrl = String(item.url || '').trim()
+      if (!itemUrl) continue
+
+      const detail = await scrapeChilePropiedadesDetail(itemUrl, String(item.name || ''), results.length)
+      results.push(detail)
+    }
+  }
+
+  return results
+}
+
 async function syncSourceStats(source: string, pipelineOrder: number, status: 'active' | 'error', recordsCount: number, errorMessage: string | null) {
   try {
     const supabase = getSupabaseClient()
@@ -541,6 +661,21 @@ export async function POST(request: Request) {
       allRows.push(...uniqueYapo)
       runs.push({ source: 'yapo_search', scraped: uniqueYapo.length, inserted, skipped: uniqueYapo.length - inserted, errors })
       await syncSourceStats('Yapo Search', 4, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
+    }
+
+    if (source === 'all' || source === 'chilepropiedades') {
+      try {
+        const chileRows = await scrapeChilePropiedadesListings(20)
+        const uniqueChile = dedupeProperties(chileRows)
+        const { inserted, errors } = await insertProperties(uniqueChile)
+        allRows.push(...uniqueChile)
+        runs.push({ source: 'chilepropiedades_search', scraped: uniqueChile.length, inserted, skipped: uniqueChile.length - inserted, errors })
+        await syncSourceStats('Chilepropiedades', 5, errors.length ? 'error' : 'active', uniqueChile.length, errors[0] || null)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Chilepropiedades scrape failed'
+        runs.push({ source: 'chilepropiedades_search', scraped: 0, inserted: 0, skipped: 0, errors: [message] })
+        await syncSourceStats('Chilepropiedades', 5, 'error', 0, message)
+      }
     }
 
     const totalScraped = allRows.length
