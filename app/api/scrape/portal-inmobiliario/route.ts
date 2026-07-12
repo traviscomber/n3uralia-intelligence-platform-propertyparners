@@ -484,23 +484,42 @@ async function insertProperties(rows: ScrapedProperty[]) {
   const errors: string[] = []
 
   for (const row of rows) {
-    const { error } = await supabase.from('properties').insert({
-      address: row.address,
-      latitude: row.lat,
-      longitude: row.lng,
-      list_price_uf: row.price_uf,
-      sqm: row.area_m2,
-      bedrooms: row.bedrooms,
-      bathrooms: row.bathrooms,
-      status: row.status || 'available',
-      source: row.source,
-      external_id: row.external_id,
-    })
+    try {
+      // Use RPC or raw SQL to bypass schema cache issues
+      const { error } = await supabase.rpc('insert_property', {
+        p_address: row.address,
+        p_latitude: row.lat,
+        p_longitude: row.lng,
+        p_list_price_uf: row.price_uf,
+        p_sqm: row.area_m2,
+        p_bedrooms: row.bedrooms,
+        p_bathrooms: row.bathrooms,
+        p_status: row.status || 'available',
+        p_source: row.source,
+        p_external_id: row.external_id,
+      }).catch(async () => {
+        // Fallback: try direct insert if RPC doesn't exist
+        return await supabase.from('properties').insert({
+          address: row.address,
+          latitude: row.lat,
+          longitude: row.lng,
+          list_price_uf: row.price_uf,
+          sqm: row.area_m2,
+          bedrooms: row.bedrooms,
+          bathrooms: row.bathrooms,
+          status: row.status || 'available',
+          source: row.source,
+          external_id: row.external_id,
+        })
+      })
 
-    if (error) {
-      errors.push(`${row.external_id}: ${error.message}`)
-    } else {
-      inserted += 1
+      if (error) {
+        errors.push(`${row.external_id}: ${error.message}`)
+      } else {
+        inserted += 1
+      }
+    } catch (err) {
+      errors.push(`${row.external_id}: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
