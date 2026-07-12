@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import * as cheerio from 'cheerio'
+import { parse } from 'node-html-parser'
 import puppeteer from 'puppeteer'
 import { persistScrapeHealthSnapshot } from '@/lib/scrape-health'
 
@@ -414,21 +414,20 @@ async function scrapeYapoListings(limit = 20) {
   }
 
   const html = await response.text()
-  const $ = cheerio.load(html)
+  const root = parse(html)
   const results: ScrapedProperty[] = []
 
-  $('.d3-ad-tile').each((_, element) => {
-    if (results.length >= limit) return false
+  root.querySelectorAll('.d3-ad-tile').some((tile) => {
+    if (results.length >= limit) return true
 
-    const tile = $(element)
-    const title = tile.find('.d3-ad-tile__title').text().trim()
-    const description = tile.find('.d3-ad-tile__short-description').text().trim()
-    const location = tile.find('.d3-ad-tile__location').text().replace(/\s+/g, ' ').trim()
-    const priceText = tile.find('.d3-ad-tile__price').text().replace(/\s+/g, ' ').trim()
-    const href = tile.find('a.d3-ad-tile__description').attr('href')
-      || tile.find('.d3-ad-tile__cover a').last().attr('href')
+    const title = tile.querySelector('.d3-ad-tile__title')?.text.trim() || ''
+    const description = tile.querySelector('.d3-ad-tile__short-description')?.text.trim() || ''
+    const location = tile.querySelector('.d3-ad-tile__location')?.text.replace(/\s+/g, ' ').trim() || ''
+    const priceText = tile.querySelector('.d3-ad-tile__price')?.text.replace(/\s+/g, ' ').trim() || ''
+    const href = tile.querySelector('a.d3-ad-tile__description')?.getAttribute('href')
+      || tile.querySelector('.d3-ad-tile__cover a')?.getAttribute('href')
       || ''
-    const details = tile.find('.d3-ad-tile__details-item').map((__, node) => $(node).text().replace(/\s+/g, ' ').trim()).get()
+    const details = tile.querySelectorAll('.d3-ad-tile__details-item').map((node) => node.text.replace(/\s+/g, ' ').trim())
     const priceUf = parseUF(priceText)
     const areaMatch = details[0]?.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
     const bedroomsMatch = details[1]
@@ -450,6 +449,7 @@ async function scrapeYapoListings(limit = 20) {
       source: 'yapo_search',
       external_id: href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`),
     })
+    return false
   })
 
   return results
@@ -468,7 +468,7 @@ async function scrapeChilePropiedadesDetail(url: string, fallbackName: string, i
   }
 
   const html = await response.text()
-  const $ = cheerio.load(html)
+  const root = parse(html)
   const jsonMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/i)
   const parsed = jsonMatch ? safeJsonParse(jsonMatch[1]) : null
   const graph = parsed && typeof parsed === 'object' && Array.isArray((parsed as { '@graph'?: unknown[] })['@graph'])
@@ -485,7 +485,7 @@ async function scrapeChilePropiedadesDetail(url: string, fallbackName: string, i
   const additionalProperties = Array.isArray(about.additionalProperty) ? about.additionalProperty : []
   const title = String(listing.name || fallbackName || 'Chilepropiedades listing')
   const description = String(listing.description || '')
-  const metaDescription = $('meta[name="description"]').attr('content') || description
+  const metaDescription = root.querySelector('meta[name="description"]')?.getAttribute('content') || description
   const offer = (listing.offers && typeof listing.offers === 'object' ? listing.offers : {}) as Record<string, unknown>
   const priceUf = parseNumberish(String(offer.price ?? '')) || parseUF(metaDescription) || parseUF(description)
   const usefulArea = parseNumberish(String((about.floorSize && typeof about.floorSize === 'object'
