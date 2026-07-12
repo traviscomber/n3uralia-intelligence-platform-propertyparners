@@ -211,6 +211,12 @@ export default function ReportesPage() {
     return aiReports.filter((report) => report.report_type === reportFilter)
   }, [aiReports, reportFilter])
 
+  const exportBaseUrl = useMemo(() => {
+    const params = new URLSearchParams()
+    if (reportFilter) params.set('type', reportFilter)
+    return `/api/reports/export${params.toString() ? `?${params.toString()}` : ''}`
+  }, [reportFilter])
+
   const generatedWhatsappUrl =
     whatsappPhone && generatedReport
       ? buildWhatsAppWebUrl(
@@ -693,6 +699,20 @@ export default function ReportesPage() {
               Limpiar filtro
             </button>
           )}
+          <a
+            href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=csv`}
+            className="n-button border"
+            style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+          >
+            Exportar CSV
+          </a>
+          <a
+            href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=json`}
+            className="n-button border"
+            style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+          >
+            Exportar JSON
+          </a>
         </div>
 
         {filteredAiReports.length ? (
