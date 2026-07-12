@@ -228,81 +228,86 @@ async function scrapePortalListings(maxResults = 60) {
 }
 
 async function scrapeToctocListings(limit = 25) {
-  const res = await fetch(TOCTOC_SEARCH_URL, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: 'text/html,application/xhtml+xml',
-    },
-  })
+  try {
+    const res = await fetch(TOCTOC_SEARCH_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+    })
 
-  if (!res.ok) {
-    throw new Error(`TOCTOC search failed (${res.status})`)
-  }
-
-  const html = await res.text()
-  const scripts = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
-  const listings: Array<{
-    name?: string
-    url?: string
-    numberOfBedrooms?: string
-    numberOfBathroomsTotal?: string
-    address?: { addressLocality?: string }
-  }> = []
-
-  for (const match of scripts) {
-    const parsed = safeJsonParse(match[1].trim())
-    if (!parsed || typeof parsed !== 'object') continue
-    const page = parsed as {
-      '@type'?: string
-      about?: unknown
+    if (!res.ok) {
+      throw new Error(`TOCTOC search failed (${res.status})`)
     }
 
-    if (page['@type'] !== 'SearchResultsPage' || !Array.isArray(page.about)) continue
+    const html = await res.text()
+    const scripts = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
+    const listings: Array<{
+      name?: string
+      url?: string
+      numberOfBedrooms?: string
+      numberOfBathroomsTotal?: string
+      address?: { addressLocality?: string }
+    }> = []
 
-    for (const group of page.about) {
-      if (!Array.isArray(group)) continue
-      for (const item of group) {
-        if (item && typeof item === 'object') {
-          listings.push(item as {
-            name?: string
-            url?: string
-            numberOfBedrooms?: string
-            numberOfBathroomsTotal?: string
-            address?: { addressLocality?: string }
-          })
+    for (const match of scripts) {
+      const parsed = safeJsonParse(match[1].trim())
+      if (!parsed || typeof parsed !== 'object') continue
+      const page = parsed as {
+        '@type'?: string
+        about?: unknown
+      }
+
+      if (page['@type'] !== 'SearchResultsPage' || !Array.isArray(page.about)) continue
+
+      for (const group of page.about) {
+        if (!Array.isArray(group)) continue
+        for (const item of group) {
+          if (item && typeof item === 'object') {
+            listings.push(item as {
+              name?: string
+              url?: string
+              numberOfBedrooms?: string
+              numberOfBathroomsTotal?: string
+              address?: { addressLocality?: string }
+            })
+          }
         }
       }
     }
+
+    const benchmarks = await loadMarketBenchmarks()
+    const results: ScrapedProperty[] = []
+
+    for (let i = 0; i < listings.length && results.length < limit; i += 1) {
+      const item = listings[i]
+      const neighborhood = item.address?.addressLocality || 'Vitacura Centro'
+      const sector = sectorFromText(`${neighborhood} ${item.name || ''}`, i)
+      const bedrooms = item.numberOfBedrooms ? Number.parseInt(item.numberOfBedrooms, 10) || 2 : 2
+      const bathrooms = item.numberOfBathroomsTotal ? Number.parseInt(item.numberOfBathroomsTotal, 10) || 2 : 2
+      const areaM2 = Math.max(45, bedrooms * 35 + bathrooms * 10 + (i % 3) * 7)
+      const priceUf = benchmarkPriceForNeighborhood(sector.name, benchmarks, areaM2, i)
+
+      results.push({
+        address: `${item.name || 'TOCTOC listing'} - ${neighborhood}`.slice(0, 200),
+        price_uf: priceUf,
+        area_m2: areaM2,
+        bedrooms,
+        bathrooms,
+        neighborhood: sector.name,
+        lat: sector.lat + (Math.random() - 0.5) * 0.0015,
+        lng: sector.lng + (Math.random() - 0.5) * 0.0015,
+        days_on_market: Math.floor(Math.random() * 60) + 3,
+        source: 'toctoc_search',
+        external_id: item.url || hashLike(`${item.name || ''}|${neighborhood}`),
+      })
+    }
+
+    return results
+  } catch (err) {
+    console.error('[v0] TOCTOC scraper error:', err instanceof Error ? err.message : 'Unknown error')
+    return []
   }
-
-  const benchmarks = await loadMarketBenchmarks()
-  const results: ScrapedProperty[] = []
-
-  for (let i = 0; i < listings.length && results.length < limit; i += 1) {
-    const item = listings[i]
-    const neighborhood = item.address?.addressLocality || 'Vitacura Centro'
-    const sector = sectorFromText(`${neighborhood} ${item.name || ''}`, i)
-    const bedrooms = item.numberOfBedrooms ? Number.parseInt(item.numberOfBedrooms, 10) || 2 : 2
-    const bathrooms = item.numberOfBathroomsTotal ? Number.parseInt(item.numberOfBathroomsTotal, 10) || 2 : 2
-    const areaM2 = Math.max(45, bedrooms * 35 + bathrooms * 10 + (i % 3) * 7)
-    const priceUf = benchmarkPriceForNeighborhood(sector.name, benchmarks, areaM2, i)
-
-    results.push({
-      address: `${item.name || 'TOCTOC listing'} - ${neighborhood}`.slice(0, 200),
-      price_uf: priceUf,
-      area_m2: areaM2,
-      bedrooms,
-      bathrooms,
-      neighborhood: sector.name,
-      lat: sector.lat + (Math.random() - 0.5) * 0.0015,
-      lng: sector.lng + (Math.random() - 0.5) * 0.0015,
-      days_on_market: Math.floor(Math.random() * 60) + 3,
-      source: 'toctoc_search',
-      external_id: item.url || hashLike(`${item.name || ''}|${neighborhood}`),
-    })
-  }
-
-  return results
 }
 
 async function scrapeIcasasListings(limit = 20) {
@@ -383,57 +388,62 @@ async function scrapeIcasasListings(limit = 20) {
 }
 
 async function scrapeYapoListings(limit = 20) {
-  const response = await fetch(YAPO_SEARCH_URL, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: 'text/html,application/xhtml+xml',
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Yapo search failed (${response.status})`)
-  }
-
-  const html = await response.text()
-  const $ = cheerio.load(html)
-  const results: ScrapedProperty[] = []
-
-  $('.d3-ad-tile').each((_, element) => {
-    if (results.length >= limit) return false
-
-    const tile = $(element)
-    const title = tile.find('.d3-ad-tile__title').text().trim()
-    const description = tile.find('.d3-ad-tile__short-description').text().trim()
-    const location = tile.find('.d3-ad-tile__location').text().replace(/\s+/g, ' ').trim()
-    const priceText = tile.find('.d3-ad-tile__price').text().replace(/\s+/g, ' ').trim()
-    const href = tile.find('a.d3-ad-tile__description').attr('href')
-      || tile.find('.d3-ad-tile__cover a').last().attr('href')
-      || ''
-    const details = tile.find('.d3-ad-tile__details-item').map((__, node) => $(node).text().replace(/\s+/g, ' ').trim()).get()
-    const priceUf = parseUF(priceText)
-    const areaMatch = details[0]?.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
-    const bedroomsMatch = details[1]
-    const bathroomsMatch = details[3]
-    const sector = sectorFromText(`${title} ${description} ${location}`, results.length)
-
-    if (!priceUf || priceUf < 1000 || priceUf > 200000) return
-
-    results.push({
-      address: `${title || 'Yapo listing'} - ${location || sector.name}`.slice(0, 200),
-      price_uf: priceUf,
-      area_m2: areaMatch ? Math.max(25, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (results.length % 4) * 10, 500)),
-      bedrooms: Math.max(1, Math.min(Number.parseInt(bedroomsMatch || '2', 10) || 2, 6)),
-      bathrooms: Math.max(1, Math.min(Number.parseInt(bathroomsMatch || '2', 10) || 2, 6)),
-      neighborhood: sector.name,
-      lat: sector.lat + (Math.random() - 0.5) * 0.0012,
-      lng: sector.lng + (Math.random() - 0.5) * 0.0012,
-      days_on_market: Math.floor(Math.random() * 80) + 3,
-      source: 'yapo_search',
-      external_id: href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`),
+  try {
+    const response = await fetch(YAPO_SEARCH_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
     })
-  })
 
-  return results
+    if (!response.ok) {
+      throw new Error(`Yapo search failed (${response.status})`)
+    }
+
+    const html = await response.text()
+    const $ = cheerio.load(html)
+    const results: ScrapedProperty[] = []
+
+    $('.d3-ad-tile').each((_, element) => {
+      if (results.length >= limit) return false
+
+      const tile = $(element)
+      const title = tile.find('.d3-ad-tile__title').text().trim()
+      const description = tile.find('.d3-ad-tile__short-description').text().trim()
+      const location = tile.find('.d3-ad-tile__location').text().replace(/\s+/g, ' ').trim()
+      const priceText = tile.find('.d3-ad-tile__price').text().replace(/\s+/g, ' ').trim()
+      const href = tile.find('a.d3-ad-tile__description').attr('href')
+        || tile.find('.d3-ad-tile__cover a').last().attr('href')
+        || ''
+      const details = tile.find('.d3-ad-tile__details-item').map((__, node) => $(node).text().replace(/\s+/g, ' ').trim()).get()
+      const priceUf = parseUF(priceText)
+      const areaMatch = details[0]?.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
+      const bedroomsMatch = details[1]
+      const bathroomsMatch = details[3]
+      const sector = sectorFromText(`${title} ${description} ${location}`, results.length)
+
+      if (!priceUf || priceUf < 1000 || priceUf > 200000) return
+
+      results.push({
+        address: `${title || 'Yapo listing'} - ${location || sector.name}`.slice(0, 200),
+        price_uf: priceUf,
+        area_m2: areaMatch ? Math.max(25, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (results.length % 4) * 10, 500)),
+        bedrooms: Math.max(1, Math.min(Number.parseInt(bedroomsMatch || '2', 10) || 2, 6)),
+        bathrooms: Math.max(1, Math.min(Number.parseInt(bathroomsMatch || '2', 10) || 2, 6)),
+        neighborhood: sector.name,
+        lat: sector.lat + (Math.random() - 0.5) * 0.0012,
+        lng: sector.lng + (Math.random() - 0.5) * 0.0012,
+        days_on_market: Math.floor(Math.random() * 80) + 3,
+        source: 'yapo_search',
+        external_id: href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`),
+      })
+    })
+
+    return results
+  } catch (err) {
+    console.error('[v0] Yapo scraper error:', err instanceof Error ? err.message : 'Unknown error')
+    return []
+  }
 }
 
 async function syncSourceStats(source: string, pipelineOrder: number, status: 'active' | 'error', recordsCount: number, errorMessage: string | null) {

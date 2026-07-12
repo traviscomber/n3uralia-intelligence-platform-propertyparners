@@ -138,7 +138,22 @@ export default function PropertiesPage() {
       const res = await fetch('/api/scrape/portal-inmobiliario?source=all', { method: 'POST' })
       const json = await res.json()
       if (res.ok) {
-        showToast('success', `Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas desde Portal Inmobiliario y TOCTOC`)
+        let sourcesList = []
+        if (json.runs && Array.isArray(json.runs)) {
+          sourcesList = json.runs
+            .filter((r: any) => r.scraped > 0)
+            .map((r: any) => {
+              const sourceNames: Record<string, string> = {
+                'portal_inmobiliario': 'Portal Inmobiliario',
+                'toctoc_search': 'TOCTOC',
+                'icasas_search': 'iCasas',
+                'yapo_search': 'Yapo',
+              }
+              return `${sourceNames[r.source] || r.source}: ${r.inserted} props`
+            })
+        }
+        const details = sourcesList.length > 0 ? ` (${sourcesList.join(', ')})` : ''
+        showToast('success', `Actualización completada: ${json.inserted}/${json.scraped} propiedades importadas${details}`)
         await loadProperties()
       } else {
         showToast('error', `Error: ${json.error || 'Fallo al scraping'}`)
@@ -162,7 +177,7 @@ export default function PropertiesPage() {
       <div className="flex items-start justify-between pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario + TOCTOC</p>
+          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal, TOCTOC, iCasas, Yapo</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -172,7 +187,7 @@ export default function PropertiesPage() {
             style={{ background: '#6b8e85' }}
           >
             <Download size={16} />
-            {scraping ? 'Scrapeando...' : 'Scrape Portal + TOCTOC'}
+            {scraping ? 'Actualizando...' : 'Actualizar Propiedades'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
