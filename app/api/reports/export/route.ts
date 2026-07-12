@@ -87,6 +87,12 @@ function parseLimit(value: string | null, fallback = 100) {
   return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 200) : fallback
 }
 
+function parseIsoDate(value: string | null) {
+  if (!value) return null
+  const normalized = new Date(value)
+  return Number.isNaN(normalized.getTime()) ? null : normalized.toISOString().slice(0, 10)
+}
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = getServiceClient()
@@ -94,6 +100,8 @@ export async function GET(req: NextRequest) {
     const dataset = getDataset(searchParams.get('dataset'))
     const format = getFormat(searchParams.get('format'))
     const limit = parseLimit(searchParams.get('limit'))
+    const from = parseIsoDate(searchParams.get('from'))
+    const to = parseIsoDate(searchParams.get('to'))
 
     if (dataset === 'profiles') {
       const role = searchParams.get('role')
@@ -118,6 +126,8 @@ export async function GET(req: NextRequest) {
           role,
           team,
           limit,
+          from,
+          to,
         },
         records: rows,
         count: rows.length,
@@ -163,6 +173,8 @@ export async function GET(req: NextRequest) {
       if (reportScope) query = query.eq('report_scope', reportScope)
       if (directorId) query = query.eq('director_id', directorId)
       if (weekStart) query = query.eq('week_start', weekStart)
+      if (from) query = query.gte('generated_at', `${from}T00:00:00.000Z`)
+      if (to) query = query.lte('generated_at', `${to}T23:59:59.999Z`)
 
       const { data, error } = await query
       if (error) throw error
@@ -175,6 +187,8 @@ export async function GET(req: NextRequest) {
           director_id: directorId,
           week_start: weekStart,
           limit,
+          from,
+          to,
         },
         records: rows,
         count: rows.length,
@@ -218,6 +232,8 @@ export async function GET(req: NextRequest) {
       .limit(limit)
 
     if (reportType) query = query.eq('report_type', reportType)
+    if (from) query = query.gte('created_at', `${from}T00:00:00.000Z`)
+    if (to) query = query.lte('created_at', `${to}T23:59:59.999Z`)
 
     const { data, error } = await query
     if (error) throw error
@@ -228,6 +244,8 @@ export async function GET(req: NextRequest) {
       filters: {
         type: reportType,
         limit,
+        from,
+        to,
       },
       records: rows,
       count: rows.length,

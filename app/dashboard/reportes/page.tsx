@@ -95,6 +95,8 @@ export default function ReportesPage() {
   const [exportDirectorId, setExportDirectorId] = useState('')
   const [exportProfileRole, setExportProfileRole] = useState('seller')
   const [exportProfileTeam, setExportProfileTeam] = useState('')
+  const [exportFromDate, setExportFromDate] = useState('')
+  const [exportToDate, setExportToDate] = useState('')
   const [health, setHealth] = useState<ScrapeHealthSnapshot | null>(null)
   const [healthAnomalies, setHealthAnomalies] = useState<OperationalAnomaly[]>([])
   const [healthLoading, setHealthLoading] = useState(true)
@@ -225,6 +227,11 @@ export default function ReportesPage() {
       params.set('type', reportFilter)
     }
 
+    if (exportDataset === 'ai_reports' || exportDataset === 'weekly_reports') {
+      if (exportFromDate) params.set('from', exportFromDate)
+      if (exportToDate) params.set('to', exportToDate)
+    }
+
     if (exportDataset === 'weekly_reports') {
       if (exportWeekStart) params.set('week_start', exportWeekStart)
       if (exportDirectorId) params.set('director_id', exportDirectorId)
@@ -237,7 +244,7 @@ export default function ReportesPage() {
     }
 
     return `/api/reports/export${params.toString() ? `?${params.toString()}` : ''}`
-  }, [exportDataset, exportDirectorId, exportProfileRole, exportProfileTeam, exportWeekStart, reportFilter])
+  }, [exportDataset, exportDirectorId, exportFromDate, exportProfileRole, exportProfileTeam, exportToDate, exportWeekStart, reportFilter])
 
   const generatedWhatsappUrl =
     whatsappPhone && generatedReport
@@ -249,22 +256,22 @@ export default function ReportesPage() {
 
   if (weeklyLoading && aiLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="space-y-2">
-          <div className="h-8 w-64 rounded-xl bg-white/8" />
+      <div className="space-y-6" aria-busy="true">
+        <div className="space-y-2 animate-pulse">
+          <div className="h-8 w-56 max-w-full rounded-xl bg-white/8" />
           <div className="h-4 w-96 max-w-full rounded-xl bg-white/6" />
         </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="n-card p-4">
+            <div key={index} className="n-card p-4 animate-pulse">
               <div className="h-3 w-24 rounded-full bg-white/8" />
               <div className="mt-4 h-8 w-20 rounded-xl bg-white/8" />
             </div>
           ))}
         </div>
-        <div className="n-card p-6">
+        <div className="n-card p-6 animate-pulse">
           <div className="h-5 w-48 rounded-full bg-white/8" />
-          <div className="mt-6 space-y-3">
+          <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
             {Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="h-24 rounded-2xl bg-white/6" />
             ))}
@@ -275,7 +282,7 @@ export default function ReportesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" aria-busy={weeklyLoading || aiLoading || healthLoading}>
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="n-chip">
@@ -773,6 +780,27 @@ export default function ReportesPage() {
                       </option>
                     ))}
                   </select>
+                </>
+              )}
+
+              {(exportDataset === 'ai_reports' || exportDataset === 'weekly_reports') && (
+                <>
+                  <input
+                    type="date"
+                    value={exportFromDate}
+                    onChange={(e) => setExportFromDate(e.target.value)}
+                    aria-label="Fecha inicial de exportacion"
+                    className="rounded-2xl border px-3 py-2 text-sm"
+                    style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                  />
+                  <input
+                    type="date"
+                    value={exportToDate}
+                    onChange={(e) => setExportToDate(e.target.value)}
+                    aria-label="Fecha final de exportacion"
+                    className="rounded-2xl border px-3 py-2 text-sm"
+                    style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                  />
                 </>
               )}
 

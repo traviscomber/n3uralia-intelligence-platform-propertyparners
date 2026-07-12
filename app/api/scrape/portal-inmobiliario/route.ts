@@ -130,6 +130,15 @@ function hashLike(input: string) {
   return hash.toString(36)
 }
 
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 async function loadMarketBenchmarks() {
   try {
     const supabase = getSupabaseClient()
@@ -609,7 +618,16 @@ function dedupeProperties(rows: ScrapedProperty[]) {
   const unique: ScrapedProperty[] = []
 
   for (const row of rows) {
-    const key = row.external_id || `${row.address}|${row.price_uf}|${row.area_m2}`
+    const key = row.external_id
+      || [
+        normalizeText(row.address),
+        normalizeText(row.neighborhood),
+        row.price_uf,
+        row.area_m2,
+        row.bedrooms,
+        row.bathrooms,
+        row.source,
+      ].join('|')
     if (seen.has(key)) continue
     seen.add(key)
     unique.push(row)
