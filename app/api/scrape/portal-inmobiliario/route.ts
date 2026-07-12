@@ -479,29 +479,45 @@ async function logScrapeRun(payload: ScrapeRunPayload) {
 }
 
 async function insertProperties(rows: ScrapedProperty[]) {
-  const supabase = getSupabaseClient()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    return { inserted: 0, errors: ['Missing Supabase credentials'] }
+  }
+
   let inserted = 0
   const errors: string[] = []
 
   for (const row of rows) {
     try {
-      // Insert only the core columns that are guaranteed to exist
-      const { error } = await supabase.from('properties').insert({
-        address: row.address,
-        latitude: row.lat,
-        longitude: row.lng,
-        sqm: row.area_m2,
-        bedrooms: row.bedrooms,
-        bathrooms: row.bathrooms,
-        status: row.status || 'available',
-        source: row.source,
-        list_price_uf: row.price_uf,
+      // Use REST API with raw SQL to bypass schema cache issues
+      const response = await fetch(`${supabaseUrl}/rest/v1/properties`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          address: row.address,
+          latitude: row.lat,
+          longitude: row.lng,
+          sqm: row.area_m2,
+          bedrooms: row.bedrooms,
+          bathrooms: row.bathrooms,
+          status: row.status || 'available',
+          source: row.source,
+          list_price_uf: row.price_uf,
+        }),
       })
 
-      if (error) {
-        errors.push(`${row.address}: ${error.message}`)
-      } else {
+      if (response.ok) {
         inserted += 1
+      } else {
+        const errorText = await response.text()
+        errors.push(`${row.address}: ${response.status} - ${errorText}`)
       }
     } catch (err) {
       errors.push(`${row.address}: ${err instanceof Error ? err.message : 'Unknown error'}`)
