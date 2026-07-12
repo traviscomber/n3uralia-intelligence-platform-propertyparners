@@ -40,6 +40,12 @@ export default async function DirectorReportDetailPage({
   const pdfHref = selectedWeekStart
     ? `/api/reports/directors/${encodeURIComponent(directorId)}/pdf?week_start=${encodeURIComponent(selectedWeekStart)}`
     : `/api/reports/directors/${encodeURIComponent(directorId)}/pdf`
+  const csvHref = selectedWeekStart
+    ? `/api/reports/directors/${encodeURIComponent(directorId)}/export?week_start=${encodeURIComponent(selectedWeekStart)}&format=csv`
+    : `/api/reports/directors/${encodeURIComponent(directorId)}/export?format=csv`
+  const jsonHref = selectedWeekStart
+    ? `/api/reports/directors/${encodeURIComponent(directorId)}/export?week_start=${encodeURIComponent(selectedWeekStart)}&format=json`
+    : `/api/reports/directors/${encodeURIComponent(directorId)}/export?format=json`
   const weekOptions = bundle.reports
     .slice()
     .sort((a, b) => b.week_start.localeCompare(a.week_start))
@@ -70,6 +76,20 @@ export default async function DirectorReportDetailPage({
             style={{ background: '#8fb2aa' }}
           >
             Descargar PDF
+          </a>
+          <a
+            href={csvHref}
+            className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold"
+            style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
+          >
+            CSV
+          </a>
+          <a
+            href={jsonHref}
+            className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold"
+            style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
+          >
+            JSON
           </a>
         </div>
       </div>
@@ -202,6 +222,13 @@ export default async function DirectorReportDetailPage({
                         style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
                       >
                         PDF
+                      </a>
+                      <a
+                        href={`/api/reports/directors/${encodeURIComponent(directorId)}/export?week_start=${encodeURIComponent(report.week_start)}&format=csv`}
+                        className="rounded-md border px-3 py-1.5 text-xs font-medium"
+                        style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
+                      >
+                        CSV
                       </a>
                     </div>
                   </div>
