@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import ReportDeliveryTargetsManager from '@/components/settings/ReportDeliveryTargetsManager'
 import ProfileEditor from '@/components/settings/ProfileEditor'
+import DeliveryTelemetryPanel from '@/components/settings/DeliveryTelemetryPanel'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -43,6 +44,14 @@ export default async function SettingsPage() {
           Define quiÃ©n recibe los reportes semanales por email o WhatsApp Web.
         </p>
         <ReportDeliveryTargetsManager />
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">TelemetrÃ­a de entregas</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Revisa el historial real de email y WhatsApp generado por el cron semanal.
+        </p>
+        <DeliveryTelemetryPanel />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">

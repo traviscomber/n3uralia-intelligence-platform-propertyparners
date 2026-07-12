@@ -88,6 +88,7 @@ export default function ReportesPage() {
   const [generateLoading, setGenerateLoading] = useState<ReportTypeChoice | null>(null)
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [generatedReport, setGeneratedReport] = useState<AiReport | null>(null)
+  const [reportFilter, setReportFilter] = useState<string>('')
   const [health, setHealth] = useState<ScrapeHealthSnapshot | null>(null)
   const [healthAnomalies, setHealthAnomalies] = useState<OperationalAnomaly[]>([])
   const [healthLoading, setHealthLoading] = useState(true)
@@ -204,6 +205,11 @@ export default function ReportesPage() {
       aiCount: aiReports.length,
     }
   }, [aiReports.length, weekly])
+
+  const filteredAiReports = useMemo(() => {
+    if (!reportFilter) return aiReports
+    return aiReports.filter((report) => report.report_type === reportFilter)
+  }, [aiReports, reportFilter])
 
   const generatedWhatsappUrl =
     whatsappPhone && generatedReport
@@ -664,9 +670,34 @@ export default function ReportesPage() {
           <span className="n-chip">Supabase</span>
         </div>
 
-        {aiReports.length ? (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <select
+            value={reportFilter}
+            onChange={(e) => setReportFilter(e.target.value)}
+            className="rounded-2xl border px-3 py-2 text-sm"
+            style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg)' }}
+          >
+            <option value="">Todos los reportes</option>
+            <option value="weekly_directors">Weekly Directors</option>
+            <option value="monthly_ceo">Monthly CEO</option>
+            <option value="market_brief">Market Brief</option>
+            <option value="captation_alert">Captation Alert</option>
+          </select>
+          {reportFilter && (
+            <button
+              type="button"
+              onClick={() => setReportFilter('')}
+              className="n-button border"
+              style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+            >
+              Limpiar filtro
+            </button>
+          )}
+        </div>
+
+        {filteredAiReports.length ? (
           <div className="space-y-3">
-            {aiReports.map((report) => (
+            {filteredAiReports.map((report) => (
               <div key={report.id} className="n-card n-card-hover cursor-pointer p-4 transition-all">
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: 'var(--n-primary-muted)' }}>

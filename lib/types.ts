@@ -66,6 +66,21 @@ export interface WeeklyReport {
   created_at: string
 }
 
+export interface ReportDelivery {
+  id: number
+  report_type: string
+  report_id: number | null
+  channel: 'email' | 'whatsapp_web'
+  recipient: string | null
+  delivery_url: string | null
+  status: 'queued' | 'sent' | 'failed' | 'escalated'
+  subject: string | null
+  message: string | null
+  provider_response: Record<string, unknown> | null
+  sent_at: string | null
+  created_at: string
+}
+
 export interface MarketData {
   neighborhood: string
   avg_price_uf: number | null
