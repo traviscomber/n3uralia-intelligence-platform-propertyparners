@@ -32,7 +32,7 @@ LOGO_PATH = PUBLIC_DIR / "n3uralia-logo.webp"
 OUTPUTS = [
     PUBLIC_DIR / "propuesta-profesional-completa.pdf",
     PUBLIC_DIR / "propuesta-comercial-n3uralia.pdf",
-    DOCS_DIR / "propuesta-comercial-vitacura-juan-2026-07-13-v4.pdf",
+    DOCS_DIR / "2026-07-13_propuesta-comercial-vitacura-juan-v4.pdf",
 ]
 
 IMAGE_OUTPUTS = [
