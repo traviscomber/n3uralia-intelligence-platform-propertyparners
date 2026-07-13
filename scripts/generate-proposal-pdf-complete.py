@@ -32,7 +32,7 @@ LOGO_PATH = PUBLIC_DIR / "n3uralia-logo.webp"
 OUTPUTS = [
     PUBLIC_DIR / "propuesta-profesional-completa.pdf",
     PUBLIC_DIR / "propuesta-comercial-n3uralia.pdf",
-    DOCS_DIR / "2026-07-13_property-partners-vitacura.pdf",
+    DOCS_DIR / "2026-07-13_PC_PropertyPartners.pdf",
 ]
 
 IMAGE_OUTPUTS = [
@@ -211,49 +211,19 @@ def make_styles():
 
 def build_cover_story(styles, logo_image_path: Path):
     logo_width, logo_height = scale_image(logo_image_path, 2.8 * inch, 0.9 * inch)
-    chip_data = [
-        [
-            Paragraph("Ventas de casas", styles["SmallLabel"]),
-            Paragraph("Vitacura", styles["SmallLabel"]),
-            Paragraph("Datos reales", styles["SmallLabel"]),
-            Paragraph("Reportes automaticos", styles["SmallLabel"]),
-            Paragraph("Valorizador IA", styles["SmallLabel"]),
-        ]
-    ]
-
-    chips = Table(chip_data, colWidths=[1.18 * inch] * 5, rowHeights=[0.36 * inch])
-    chips.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#1f5d54")),
-                ("TEXTCOLOR", (0, 0), (-1, -1), colors.white),
-                ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#eaf4f1")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#eaf4f1")),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 4),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-            ]
-        )
-    )
-
     story = [
         Spacer(1, 0.5 * inch),
         Image(str(logo_image_path), width=logo_width, height=logo_height),
         Spacer(1, 0.42 * inch),
-        Paragraph("Property Partners Vitacura", styles["CoverTitle"]),
+        Paragraph("Propuesta comercial formal", styles["CoverTitle"]),
         Spacer(1, 0.02 * inch),
-        Paragraph("Propuesta comercial para Property Partners Vitacura", styles["CoverSub"]),
+        Paragraph("Property Partners Vitacura", styles["CoverSub"]),
         Spacer(1, 0.12 * inch),
         Paragraph(
-            "N3uralia entrega una plataforma de inteligencia de mercado enfocada en ventas de casas, con analisis real de barrios, valorizacion, reportes ejecutivos y monitoreo continuo de oportunidades comerciales.",
+            "N3uralia presenta una propuesta formal para el desarrollo de una plataforma comercial enfocada en ventas de casas en Vitacura, con informacion de mercado, automatizacion de reportes y soporte para la gestion comercial.",
             styles["CoverSub"],
         ),
-        Spacer(1, 0.18 * inch),
-        chips,
-        Spacer(1, 0.3 * inch),
+        Spacer(1, 0.28 * inch),
         Paragraph("Vitacura, Santiago - Julio 2026", styles["CoverSub"]),
     ]
     return story
@@ -643,11 +613,11 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
 
     story.extend(
         text_page_story(
-            "Resumen comercial",
+            "Resumen ejecutivo",
             [
-                "Esta propuesta presenta una plataforma comercial pensada para equipos que necesitan vender casas en Vitacura con respaldo de datos, lectura territorial y una narrativa ejecutiva clara para clientes, corredores y directores comerciales.",
-                "El alcance queda concentrado en ventas de casas. El modulo de arriendo se mantiene fuera de esta propuesta para proteger el foco comercial y evitar dispersion operativa.",
-                "La solucion combina inteligencia de mercado, valorizacion automatica, reporterias y visualizacion ejecutiva para convertir informacion dispersa en decisiones accionables.",
+                "Esta propuesta formal presenta una plataforma comercial pensada para apoyar la venta de casas en Vitacura con respaldo de datos, lectura territorial y una narrativa ejecutiva clara.",
+                "El alcance queda concentrado exclusivamente en ventas de casas. El modulo de arriendo se mantiene fuera de este documento para conservar foco comercial y consistencia en la propuesta.",
+                "La solucion integra captura de datos, validacion, analisis, valorizacion y reportes automaticos para convertir informacion dispersa en material util para reuniones, seguimiento y presentaciones comerciales.",
             ],
             [],
             styles,
@@ -655,184 +625,18 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     )
     story.append(Spacer(1, 0.2 * inch))
     story.append(
-        metric_grid(
-            [
-                ("11", "barrios de Vitacura analizados de forma continua", "75+", "propiedades cargadas como base comercial"),
-                ("6", "fuentes integradas para enriquecer el mercado", "100%", "foco en ventas de casas y lectura por barrio"),
-            ],
-            styles,
-        )
-    )
-    story.append(Spacer(1, 0.2 * inch))
-    story.append(
         Paragraph(
-            "Objetivo comercial: entregar a Property Partners Vitacura una propuesta diferencial que permita presentar el producto como una solucion de valor para clientes de alto ticket, con discurso comercial, evidencia visual y una experiencia profesional lista para compartir.",
+            "Objetivo comercial: entregar a Property Partners Vitacura una herramienta de presentacion clara, ordenada y profesional, orientada a clientes y equipos comerciales que necesitan una lectura consistente del mercado.",
             styles["BodyCommercial"],
         )
     )
     story.append(PageBreak())
     story.extend(
         text_page_story(
-            "Conexiones de datos",
+            "Fuentes y alcance de datos",
             [
-                "La plataforma se conecta directamente a los puntos que hacen operativa la inteligencia comercial. Esto deja claro donde entra la data y como se sostiene la actualizacion continua.",
-                "La integracion no es manual: se apoya en rutas y procesos ya definidos para scraping, benchmarking, refresco y monitoreo.",
-            ],
-            [
-                "Conexion directa al scraper principal de propiedades.",
-                "Benchmarks separados para Portal y fuentes externas.",
-                "Cron jobs para refresco y distribucion automatica.",
-            ],
-            styles,
-        )
-    )
-    story.append(Spacer(1, 0.12 * inch))
-    story.append(data_connections_page(styles))
-    story.append(PageBreak())
-
-    page_specs = [
-        (
-            "Executive dashboard",
-            [
-                "El dashboard ejecutivo resume el estado del negocio con indicadores simples de leer y utiles para reuniones comerciales, seguimiento interno y presentaciones con clientes.",
-                "La pagina esta pensada para mostrar volumen, conversion y ritmo comercial sin saturar la vista, manteniendo una jerarquia visual limpia y directa.",
-            ],
-            [
-                "Visibilidad rapida de ventas, volumen y conversion.",
-                "Formato ideal para comites comerciales y seguimiento semanal.",
-                "Lectura ejecutiva enfocada en casas y oportunidades de cierre.",
-            ],
-            "Figura 1: dashboard ejecutivo para lectura rapida de resultados comerciales.",
-        ),
-        (
-            "Market intelligence por barrio",
-            [
-                "La capa territorial ordena Vitacura por barrios y convierte el mapa en una herramienta comercial, no solo geoespacial. Esto facilita comparaciones, priorizacion y discurso de valor frente al cliente.",
-                "Cada zona ayuda a entender donde hay mas presion de mercado, mejor posicionamiento y mayor potencial de cierre en casas.",
-            ],
-            [
-                "Mapa de barrios con lectura comercial inmediata.",
-                "Soporte para comparar zonas y ajustar estrategia.",
-                "Base solida para conversaciones de pricing y posicionamiento.",
-            ],
-            "Figura 2: mapa de Vitacura con lectura por barrios y criterios comerciales.",
-        ),
-        (
-            "Benchmark de mercado",
-            [
-                "La tabla de comparacion permite pasar de una percepcion general a una lectura concreta del mercado. Esto ayuda a justificar precios, detectar brechas y explicar porque una casa esta bien o mal posicionada.",
-                "El texto previo a la imagen se amplifico para que la pagina funcione como una pieza comercial y no como un recorte comprimido.",
-            ],
-            [
-                "Precio por metro cuadrado y velocidad de salida.",
-                "Comparacion entre barrios con criterio homogeno.",
-                "Apoyo directo a evaluaciones comerciales y propuestas.",
-            ],
-            "Figura 3: benchmarks por barrio para sostener argumentacion comercial.",
-        ),
-        (
-            "Velocidad y absorcion",
-            [
-                "Este bloque muestra dinamica de mercado y ayuda a distinguir los barrios con mayor rotacion de aquellos donde el inventario tarda mas en moverse.",
-                "La lectura es util para ajustar expectativas de venta, definir urgencia y decidir que propiedades conviene priorizar.",
-            ],
-            [
-                "Indicadores de ritmo real del mercado.",
-                "Soporte para priorizacion de leads y visitas.",
-                "Base para conversaciones de urgencia y ventana de oportunidad.",
-            ],
-            "Figura 4: velocidad y absorcion como senales de salud comercial.",
-        ),
-        (
-            "Control de gestion",
-            [
-                "El control de gestion permite bajar la estrategia a seguimiento operativo, con foco en cumplimiento, conversion y performance comercial por responsable.",
-                "Esta pagina le da al cliente la sensacion de una solucion completa: no solo datos, sino disciplina de gestion y seguimiento continuo.",
-            ],
-            [
-                "Monitoreo por director o ejecutivo comercial.",
-                "Control de metas y desvio respecto a objetivo.",
-                "Ideal para reportes mensuales y revision de pipeline.",
-            ],
-            "Figura 5: tablero de gestion para controlar el desempeno comercial.",
-        ),
-        (
-            "Valorizador inteligente",
-            [
-                "La valorizacion automatica transforma datos comparables en un precio sugerido mas defendible. Esto reduce friccion en la definicion de oferta y hace mas consistente el discurso comercial.",
-                "El objetivo es ayudar a vender casas en Vitacura con mayor precision, mejor narrativa y menor dependencia de estimaciones manuales.",
-            ],
-            [
-                "Precio sugerido basado en multiples variables.",
-                "Apoyo para tasacion comercial y presentacion al cliente.",
-                "Alineado con el foco exclusivo en ventas de casas.",
-            ],
-            "Figura 6: valorizador para estimar precios con una base mas objetiva.",
-        ),
-        (
-            "Property loader",
-            [
-                "La carga de propiedades organiza el inventario con estructura comercial y lo prepara para analisis, comparacion y seguimiento. Esto vuelve la propuesta mas tangible porque muestra datos reales trabajando dentro de la plataforma.",
-                "La pagina sirve como prueba de traccion y de capacidad operativa del sistema.",
-            ],
-            [
-                "Inventario real cargado y listo para consulta.",
-                "Base util para filtros, analitica y reportes.",
-                "Soporte para mostrar que la plataforma ya opera con data concreta.",
-            ],
-            "Figura 7: inventario cargado para respaldo comercial y analitico.",
-        ),
-        (
-            "Fuentes de datos",
-            [
-                "El valor de la plataforma aumenta cuando el mercado se alimenta desde varias fuentes y no depende de una sola vista. La integracion de datos hace mas robusta la lectura y mejora la confianza en el resultado.",
-                "Esta pagina deja visibles las fuentes de scraping reales para que el cliente entienda de donde sale la data y como se refuerza la cobertura comercial.",
-            ],
-            [
-                "Fuentes activas de scraping y validacion cruzada.",
-                "Base para historicidad y consolidacion de mercado.",
-                "Mejor calidad de contexto para decisiones comerciales.",
-            ],
-            "Figura 8: pipeline de fuentes para sostener una vista de mercado mas completa.",
-        ),
-        (
-            "Analytics de conversion",
-            [
-                "El seguimiento de conversion ayuda a mostrar avance, detectar caidas y sostener una cultura de resultados. Tambien sirve como puente entre analitica y accion comercial diaria.",
-                "La pagina esta redactada para sonar a propuesta de negocio y no a documento tecnico.",
-            ],
-            [
-                "Embudo comercial y tendencia de resultados.",
-                "Lectura de conversion para equipos de venta.",
-                "Apoyo para reportes automaticos y seguimiento semanal.",
-            ],
-            "Figura 9: conversion y seguimiento para comites comerciales.",
-        ),
-        (
-            "Interfaz publica",
-            [
-                "La landing sintetiza el valor de la plataforma para una audiencia ejecutiva. Funciona como primera puerta de entrada y ordena el relato comercial con una promesa simple, directa y memorable.",
-                "Con el logo visible y la jerarquia de texto ampliada, la pieza queda lista para ser presentada a prospectos o socios.",
-            ],
-            [
-                "Primera impresion clara y profesional.",
-                "Soporte para presentacion comercial y demo.",
-                "Enfoque en valor, no en complejidad tecnica.",
-            ],
-            "Figura 10: landing de presentacion para comunicar la propuesta de valor.",
-        ),
-    ]
-
-    for image_path, spec in zip(image_paths, page_specs):
-        title, paragraphs, bullets, caption = spec
-        story.extend(image_page_story(title, paragraphs, bullets, image_path, caption, styles))
-
-    story.extend(
-        text_page_story(
-            "Fuentes de scraping visibles",
-            [
-                "El pipeline actual se apoya en un conjunto de fuentes externas que cubren casas, barrios y referencia de mercado en Vitacura. Esta seccion hace explicito que la plataforma no depende de una sola pagina.",
-                "La combinacion de fuentes permite comparar, deduplicar y sostener la propuesta comercial con evidencia mas amplia.",
+                "La plataforma se apoya en fuentes de mercado y procesos de scraping para sostener una lectura actualizada del segmento. Esto permite comparar casas, barrios y referencias comerciales sin depender de una sola fuente.",
+                "El documento expone la procedencia de la informacion de manera simple para que el cliente entienda de donde sale la data y como se valida antes de presentarse.",
             ],
             [
                 "Portal Inmobiliario como fuente principal de inventario.",
@@ -843,15 +647,12 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
         )
     )
     story.append(Spacer(1, 0.12 * inch))
-    story.append(source_table_page(styles))
-    story.append(PageBreak())
-
     story.extend(
         text_page_story(
-            "Agentes y automatizacion",
+            "Operacion y automatizacion",
             [
-                "El trabajo de los agentes automatizados ya esta presente en la operacion: scraping, validacion, reportes, refresco de fuentes y monitoreo de salud. Esta pagina lo vuelve visible para que el valor de la plataforma no quede oculto.",
-                "En una propuesta comercial, los agentes ayudan a explicar que el sistema no solo muestra datos, sino que trabaja de forma continua para mantener la informacion util y vigente.",
+                "El trabajo automatizado cubre captura, validacion, analisis y generacion de reportes. De este modo la informacion puede mantenerse actualizada sin depender de procesos manuales repetitivos.",
+                "Los agentes trabajan en segundo plano para ordenar la data, detectar inconsistencias y transformar el resultado en una salida util para uso comercial.",
             ],
             [
                 "Agente de scraping para capturar nuevas propiedades.",
@@ -862,28 +663,6 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
         )
     )
     story.append(Spacer(1, 0.12 * inch))
-    story.append(agent_table_page(styles))
-    story.append(PageBreak())
-
-    story.extend(
-        text_page_story(
-            "Reportes automaticos",
-            [
-                "Los reportes no se arman a mano. Un flujo automatizado toma la data, la sintetiza y la transforma en una pieza ejecutiva que puede salir cada semana o cada ciclo definido por el cliente.",
-                "El resultado es una entrega consistente, con la misma estructura, pero alimentada por datos reales y actualizados.",
-            ],
-            [
-                "Reporte semanal para directores y equipo comercial.",
-                "Narrativa resumida, indicadores y lectura por barrio.",
-                "Salida automatica desde el motor de reportes.",
-            ],
-            styles,
-        )
-    )
-    story.append(Spacer(1, 0.12 * inch))
-    story.append(report_flow_page(styles))
-    story.append(PageBreak())
-
     story.extend(
         text_page_story(
             "Inversion y condiciones comerciales",
@@ -900,141 +679,35 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
             styles,
         )
     )
-    story.append(Spacer(1, 0.15 * inch))
-
-    pricing_data = [
-        [
-            Paragraph("Concepto", styles["RoadmapTitle"]),
-            Paragraph("Definicion comercial", styles["RoadmapTitle"]),
-        ],
-        [
-            Paragraph("Valor del proyecto", styles["BodyCommercial"]),
-            Paragraph("CLP $5.000.000", styles["BodyCommercial"]),
-        ],
-        [
-            Paragraph("Plazo de ejecucion", styles["BodyCommercial"]),
-            Paragraph("2 meses", styles["BodyCommercial"]),
-        ],
-        [
-            Paragraph("Forma de pago", styles["BodyCommercial"]),
-            Paragraph("50% al inicio y 50% contra entrega", styles["BodyCommercial"]),
-        ],
-    ]
-
-    pricing_table = Table(pricing_data, colWidths=[2.45 * inch, 4.4 * inch])
-    pricing_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
-                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING", (0, 0), (-1, -1), 10),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-            ]
-        )
-    )
-    story.append(pricing_table)
     story.append(PageBreak())
 
     story.extend(
         text_page_story(
             "Cierre comercial",
             [
-                "Esta propuesta presenta a Property Partners Vitacura como una herramienta comercial lista para apoyar la venta de casas en Vitacura con una lectura de mercado clara, respaldo visual y narrativa ejecutiva.",
-                "El documento sintetiza el valor de la plataforma sin entrar en detalle tecnico y deja una base solida para reuniones, seguimiento y presentaciones comerciales.",
+                "Esta propuesta presenta a Property Partners Vitacura como una herramienta comercial clara, ordenada y lista para apoyar la venta de casas en Vitacura.",
+                "El documento sintetiza la propuesta de valor sin entrar en detalle tecnico, para que pueda ser compartido con prospectos, socios o equipos comerciales de forma directa y profesional.",
             ],
             [
                 "Enfoque exclusivo en ventas de casas en Vitacura.",
                 "Lectura clara por barrio, oportunidad y posicionamiento.",
-                "Soporte visual y narrativo para conversaciones comerciales.",
-                "Base preparada para seguir creciendo con nuevas fuentes y reportes.",
+                "Base preparada para evolucionar con nuevas fuentes y reportes.",
             ],
             styles,
         )
     )
-    story.append(Spacer(1, 0.15 * inch))
-
-    closing_data = [
-        [
-            Paragraph("Lo que recibe", styles["RoadmapTitle"]),
-            Paragraph("Aporte comercial", styles["RoadmapTitle"]),
-        ],
-        [
-            Paragraph("Propuesta comercial profesional", styles["BodyCommercial"]),
-            Paragraph("Un documento listo para compartir con presentacion y respaldo visual.", styles["BodyCommercial"]),
-        ],
-        [
-            Paragraph("Lectura de mercado en Vitacura", styles["BodyCommercial"]),
-            Paragraph("Una narrativa clara para explicar oportunidades por barrio y posicionamiento.", styles["BodyCommercial"]),
-        ],
-        [
-            Paragraph("Soporte para ventas de casas", styles["BodyCommercial"]),
-            Paragraph("Herramientas para ordenar oferta, comparables y argumento comercial.", styles["BodyCommercial"]),
-        ],
-        [
-            Paragraph("Seguimiento continuo", styles["BodyCommercial"]),
-            Paragraph("Una base que permite continuar la relacion comercial con nuevos reportes y actualizaciones.", styles["BodyCommercial"]),
-        ],
-    ]
-
-    closing_table = Table(closing_data, colWidths=[2.55 * inch, 4.3 * inch])
-    closing_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
-                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING", (0, 0), (-1, -1), 10),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-            ]
-        )
-    )
-    story.append(closing_table)
-    story.append(Spacer(1, 0.18 * inch))
     story.append(
         Paragraph(
             "Agradecemos la oportunidad de presentar esta propuesta. N3uralia queda disponible para coordinar la validacion, el kickoff y el inicio del trabajo una vez aprobado el alcance.",
             styles["BodyCommercial"],
         )
     )
-    story.append(Spacer(1, 0.16 * inch))
-    contact_box = Table(
-        [
-            [
-                Paragraph("Datos de contacto", styles["RoadmapTitle"]),
-                Paragraph(
-                    "Juan Vial Comber<br/>CEO de N3uralia<br/>juan@n3uralia.com<br/>WhatsApp: +56 9 9382 6127",
-                    styles["BodyCommercial"],
-                ),
-            ]
-        ],
-        colWidths=[2.0 * inch, 4.85 * inch],
-    )
-    contact_box.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f4faf7")),
-                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING", (0, 0), (-1, -1), 10),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-            ]
-        )
-    )
-    story.append(contact_box)
+    story.append(Spacer(1, 0.12 * inch))
+    story.append(Paragraph("Datos de contacto", styles["RoadmapTitle"]))
+    story.append(Paragraph("Juan Vial Comber", styles["BodyCommercial"]))
+    story.append(Paragraph("CEO de N3uralia", styles["BodyCommercial"]))
+    story.append(Paragraph("juan@n3uralia.com", styles["BodyCommercial"]))
+    story.append(Paragraph("WhatsApp: +56 9 9382 6127", styles["BodyCommercial"]))
 
     return story
 
@@ -1044,9 +717,6 @@ def draw_cover(canvas_obj, doc):
 
 
 def build_pdf() -> None:
-    ensure_parent(SOURCE_PDF)
-    if not SOURCE_PDF.exists():
-        raise FileNotFoundError(f"Source PDF not found: {SOURCE_PDF}")
     if not LOGO_PATH.exists():
         raise FileNotFoundError(f"Logo not found: {LOGO_PATH}")
 
@@ -1061,10 +731,7 @@ def build_pdf() -> None:
         global RENDER_LOGO_PATH
         RENDER_LOGO_PATH = render_logo_path
 
-        extracted = extract_images(SOURCE_PDF, temp_dir)
-        image_paths = extracted[: len(IMAGE_OUTPUTS)]
-
-        story = build_story(image_paths, styles, render_logo_path)
+        story = build_story([], styles, render_logo_path)
 
         tmp_pdf = temp_dir / "propuesta-comercial-vitacura.pdf"
         doc = SimpleDocTemplate(
