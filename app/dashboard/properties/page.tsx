@@ -55,6 +55,7 @@ export default function PropertiesPage() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [generalBackfillEnabled, setGeneralBackfillEnabled] = useState(false)
+  const [showAdvancedScraping, setShowAdvancedScraping] = useState(false)
 
   const supabase = createClient()
 
@@ -179,27 +180,11 @@ export default function PropertiesPage() {
             {scraping ? 'Scrapeando...' : 'Scrape Casas Vitacura'}
           </button>
           <button
-            onClick={() => handleScrapeMode('all')}
-            disabled={scraping || !generalBackfillEnabled}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+            onClick={() => setShowAdvancedScraping((prev) => !prev)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
             style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
           >
-            <Download size={16} />
-            {scraping ? 'Scrapeando...' : generalBackfillEnabled ? 'Backfill General' : 'Backfill General (off)'}
-          </button>
-          <button
-            onClick={() => setGeneralBackfillEnabled((prev) => !prev)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
-            style={{
-              background: generalBackfillEnabled ? '#e8f3f0' : '#f5f9f7',
-              color: '#555a56',
-              border: '1px solid #d8e5e2',
-            }}
-          >
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full" style={{ background: generalBackfillEnabled ? '#6b8e85' : '#d8e5e2' }}>
-              <span className="h-2 w-2 rounded-full" style={{ background: '#fff' }} />
-            </span>
-            {generalBackfillEnabled ? 'General ON' : 'General OFF'}
+            {showAdvancedScraping ? 'Avanzado ▲' : 'Avanzado ▼'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
@@ -211,6 +196,33 @@ export default function PropertiesPage() {
           </button>
         </div>
       </div>
+      {showAdvancedScraping && (
+        <div className="flex items-center gap-3 rounded-lg px-4 py-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+          <button
+            onClick={() => setGeneralBackfillEnabled((prev) => !prev)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
+            style={{
+              background: generalBackfillEnabled ? '#e8f3f0' : '#fff',
+              color: '#555a56',
+              border: '1px solid #d8e5e2',
+            }}
+          >
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full" style={{ background: generalBackfillEnabled ? '#6b8e85' : '#d8e5e2' }}>
+              <span className="h-2 w-2 rounded-full" style={{ background: '#fff' }} />
+            </span>
+            {generalBackfillEnabled ? 'General ON' : 'General OFF'}
+          </button>
+          <button
+            onClick={() => handleScrapeMode('all')}
+            disabled={scraping || !generalBackfillEnabled}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#fff', color: '#555a56', border: '1px solid #d8e5e2' }}
+          >
+            <Download size={16} />
+            {scraping ? 'Scrapeando...' : generalBackfillEnabled ? 'Backfill General' : 'Backfill General (off)'}
+          </button>
+        </div>
+      )}
 
       {/* Toast */}
       {toast && (
