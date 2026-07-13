@@ -150,6 +150,7 @@ function getAudienceLabel(report: AiReport | null) {
 export default function ReportesPage() {
   const [weekly, setWeekly] = useState<WeeklyReportResponse | null>(null)
   const [weeklyLoading, setWeeklyLoading] = useState(true)
+  const [weeklyRefreshing, setWeeklyRefreshing] = useState(false)
   const [weeklyError, setWeeklyError] = useState<string | null>(null)
   const [generateLoading, setGenerateLoading] = useState<ReportTypeChoice | null>(null)
   const [generateError, setGenerateError] = useState<string | null>(null)
@@ -166,6 +167,7 @@ export default function ReportesPage() {
   const [health, setHealth] = useState<ScrapeHealthSnapshot | null>(null)
   const [healthAnomalies, setHealthAnomalies] = useState<OperationalAnomaly[]>([])
   const [healthLoading, setHealthLoading] = useState(true)
+  const [healthRefreshing, setHealthRefreshing] = useState(false)
   const [healthError, setHealthError] = useState<string | null>(null)
   const whatsappPhone = process.env.NEXT_PUBLIC_REPORT_WHATSAPP_PHONE || ''
 
@@ -212,6 +214,21 @@ export default function ReportesPage() {
     }
   }, [])
 
+  const refreshWeekly = async () => {
+    try {
+      setWeeklyRefreshing(true)
+      setWeeklyError(null)
+      const response = await fetch('/api/reports/weekly', { cache: 'no-store' })
+      if (!response.ok) throw new Error('No pudimos generar los reportes semanales.')
+      const data = (await response.json()) as WeeklyReportResponse
+      setWeekly(data)
+    } catch (err) {
+      setWeeklyError(err instanceof Error ? err.message : 'No pudimos generar los reportes semanales.')
+    } finally {
+      setWeeklyRefreshing(false)
+    }
+  }
+
   useEffect(() => {
     let active = true
 
@@ -241,6 +258,22 @@ export default function ReportesPage() {
     }
   }, [])
 
+  const refreshHealth = async () => {
+    try {
+      setHealthRefreshing(true)
+      setHealthError(null)
+      const response = await fetch('/api/scrape/health', { cache: 'no-store' })
+      if (!response.ok) throw new Error('No pudimos cargar la salud del scraper.')
+      const data = (await response.json()) as ScrapeHealthResponse
+      setHealth(data)
+      setHealthAnomalies(data.anomalies || [])
+    } catch (err) {
+      setHealthError(err instanceof Error ? err.message : 'No pudimos cargar la salud del scraper.')
+    } finally {
+      setHealthRefreshing(false)
+    }
+  }
+
   const handleGenerateReport = async (reportType: ReportTypeChoice) => {
     try {
       setGenerateLoading(reportType)
@@ -267,6 +300,9 @@ export default function ReportesPage() {
       setGenerateLoading(null)
     }
   }
+
+  const isInitialLoading = weeklyLoading && aiLoading && healthLoading
+  const isAnyBusy = weeklyLoading || aiLoading || healthLoading || weeklyRefreshing || healthRefreshing || Boolean(generateLoading)
 
   const stats = useMemo(() => {
     const reports = weekly?.reports || []
@@ -321,7 +357,7 @@ export default function ReportesPage() {
         )
       : null
 
-  if (weeklyLoading && aiLoading) {
+  if (isInitialLoading) {
     return (
       <div className="space-y-6" aria-busy="true">
         <div className="space-y-2 animate-pulse">
@@ -349,7 +385,7 @@ export default function ReportesPage() {
   }
 
   return (
-    <div className="space-y-6" aria-busy={weeklyLoading || aiLoading || healthLoading}>
+    <div className="space-y-6" aria-busy={isAnyBusy}>
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="n-chip">
@@ -377,25 +413,25 @@ export default function ReportesPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => void refreshAiReports()} className="n-button border" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}>
-              <RefreshCw size={14} />
-              Refrescar AI
+            <button
+              onClick={() => void refreshAiReports()}
+              className="n-button border w-full md:w-auto"
+              style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+              disabled={Boolean(generateLoading) || aiLoading}
+              aria-disabled={Boolean(generateLoading) || aiLoading}
+            >
+              <RefreshCw size={14} className={aiLoading ? 'animate-spin' : ''} />
+              {aiLoading ? 'Actualizando AI' : 'Refrescar AI'}
             </button>
             <button
-              onClick={() => {
-                void (async () => {
-                  setWeeklyLoading(true)
-                  const response = await fetch('/api/reports/weekly', { cache: 'no-store' })
-                  const data = (await response.json()) as WeeklyReportResponse
-                  setWeekly(data)
-                  setWeeklyLoading(false)
-                })()
-              }}
-              className="n-button border"
+              onClick={() => void refreshWeekly()}
+              className="n-button border w-full md:w-auto"
               style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+              disabled={weeklyRefreshing || weeklyLoading}
+              aria-disabled={weeklyRefreshing || weeklyLoading}
             >
-              <RefreshCw size={14} />
-              Refrescar semanal
+              <RefreshCw size={14} className={weeklyRefreshing ? 'animate-spin' : ''} />
+              {weeklyRefreshing ? 'Refrescando semanal' : 'Refrescar semanal'}
             </button>
           </div>
         </div>
@@ -421,6 +457,8 @@ export default function ReportesPage() {
               className="rounded-2xl border p-4 text-left transition-all hover:translate-y-[-1px]"
               style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg)' }}
               disabled={Boolean(generateLoading)}
+              aria-busy={generateLoading === item.id}
+              aria-disabled={Boolean(generateLoading)}
             >
               <div className="flex items-center justify-between gap-2">
                 <div>
@@ -454,6 +492,8 @@ export default function ReportesPage() {
                 className="rounded-2xl border p-4 text-left transition-all hover:translate-y-[-1px]"
                 style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
                 disabled={Boolean(generateLoading)}
+                aria-busy={generateLoading === item.id}
+                aria-disabled={Boolean(generateLoading)}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div>
@@ -508,14 +548,14 @@ export default function ReportesPage() {
         ) : null}
 
         {generateError && (
-          <div className="mt-4 rounded-2xl border-l-4 p-4" style={{ borderLeftColor: 'var(--n-warning)', background: 'var(--n-surface-2)' }}>
+          <div className="mt-4 rounded-2xl border-l-4 p-4" style={{ borderLeftColor: 'var(--n-warning)', background: 'var(--n-surface-2)' }} aria-live="polite">
             <p className="text-sm" style={{ color: 'var(--n-fg)' }}>
               {generateError}
             </p>
           </div>
         )}
         {generatedReport && (
-          <div className="mt-4 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+          <div className="mt-4 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }} aria-live="polite">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
@@ -539,7 +579,7 @@ export default function ReportesPage() {
                   href={generatedWhatsappUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="n-button border"
+                  className="n-button border w-full md:w-auto"
                   style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
                 >
                   Abrir en WhatsApp Web
@@ -566,19 +606,8 @@ export default function ReportesPage() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => {
-                void (async () => {
-                  setWeeklyLoading(true)
-                  const response = await fetch('/api/reports/weekly', { cache: 'no-store' })
-                  const data = (await response.json()) as WeeklyReportResponse
-                  setWeekly(data)
-                  setWeeklyLoading(false)
-                })()
-              }}
-              className="n-button n-button-primary"
-            >
-              <RefreshCw size={14} />
+            <button onClick={() => void refreshWeekly()} className="n-button n-button-primary w-full md:w-auto">
+              <RefreshCw size={14} className={weeklyRefreshing ? 'animate-spin' : ''} />
               Reintentar
             </button>
           </div>
@@ -601,8 +630,8 @@ export default function ReportesPage() {
                 </p>
               </div>
             </div>
-            <button onClick={() => void refreshAiReports()} className="n-button n-button-primary">
-              <RefreshCw size={14} />
+            <button onClick={() => void refreshAiReports()} className="n-button n-button-primary w-full md:w-auto">
+              <RefreshCw size={14} className={aiLoading ? 'animate-spin' : ''} />
               Reintentar AI
             </button>
           </div>
@@ -687,13 +716,27 @@ export default function ReportesPage() {
         </div>
 
         {healthLoading ? (
-          <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-            Cargando salud operativa...
-          </p>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-16 rounded-2xl bg-white/6 animate-pulse" />
+            ))}
+          </div>
         ) : healthError ? (
-          <p className="text-sm" style={{ color: 'var(--n-warning)' }}>
-            {healthError}
-          </p>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p className="text-sm" style={{ color: 'var(--n-warning)' }}>
+              {healthError}
+            </p>
+            <button
+              onClick={() => void refreshHealth()}
+              className="n-button border w-full md:w-auto"
+              style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg-muted)' }}
+              disabled={healthRefreshing}
+              aria-disabled={healthRefreshing}
+            >
+              <RefreshCw size={14} className={healthRefreshing ? 'animate-spin' : ''} />
+              Reintentar salud
+            </button>
+          </div>
         ) : health ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-4">
