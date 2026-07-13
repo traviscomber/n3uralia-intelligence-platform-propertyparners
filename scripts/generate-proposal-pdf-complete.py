@@ -32,7 +32,7 @@ LOGO_PATH = PUBLIC_DIR / "n3uralia-logo.webp"
 OUTPUTS = [
     PUBLIC_DIR / "propuesta-profesional-completa.pdf",
     PUBLIC_DIR / "propuesta-comercial-n3uralia.pdf",
-    DOCS_DIR / "2026-07-13_propuesta-comercial-vitacura-juan-v4.pdf",
+    DOCS_DIR / "2026-07-13_property-partners-vitacura.pdf",
 ]
 
 IMAGE_OUTPUTS = [
@@ -243,7 +243,9 @@ def build_cover_story(styles, logo_image_path: Path):
         Spacer(1, 0.5 * inch),
         Image(str(logo_image_path), width=logo_width, height=logo_height),
         Spacer(1, 0.42 * inch),
-        Paragraph("Propuesta comercial para ventas de casas en Vitacura", styles["CoverTitle"]),
+        Paragraph("Property Partners Vitacura", styles["CoverTitle"]),
+        Spacer(1, 0.02 * inch),
+        Paragraph("Propuesta comercial para Property Partners Vitacura", styles["CoverSub"]),
         Spacer(1, 0.12 * inch),
         Paragraph(
             "N3uralia entrega una plataforma de inteligencia de mercado enfocada en ventas de casas, con analisis real de barrios, valorizacion, reportes ejecutivos y monitoreo continuo de oportunidades comerciales.",
@@ -548,7 +550,7 @@ def report_flow_page(styles):
         [
             Paragraph("3. Analisis", styles["BodyCommercial"]),
             Paragraph("El motor comercial calcula tendencias, conversion, velocidad y posicionamiento.", styles["BodyCommercial"]),
-            Paragraph("Insigths ejecutivos por barrio", styles["BodyCommercial"]),
+            Paragraph("Insights ejecutivos por barrio", styles["BodyCommercial"]),
         ],
         [
             Paragraph("4. Redaccion", styles["BodyCommercial"]),
@@ -625,7 +627,7 @@ def draw_content_chrome(canvas_obj, doc):
     canvas_obj.drawRightString(
         width - doc.rightMargin,
         height - 0.35 * inch,
-        "N3uralia - Ventas de casas en Vitacura",
+        "N3uralia - Property Partners Vitacura",
     )
     canvas_obj.setFont("Helvetica", 8)
     canvas_obj.setFillColor(colors.HexColor("#6e837c"))
@@ -664,7 +666,7 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     story.append(Spacer(1, 0.2 * inch))
     story.append(
         Paragraph(
-            "Objetivo comercial: entregar a N3uralia una propuesta diferencial que permita presentar el producto como una solucion de valor para clientes de alto ticket, con discurso comercial, evidencia visual y una experiencia profesional lista para compartir.",
+            "Objetivo comercial: entregar a Property Partners Vitacura una propuesta diferencial que permita presentar el producto como una solucion de valor para clientes de alto ticket, con discurso comercial, evidencia visual y una experiencia profesional lista para compartir.",
             styles["BodyCommercial"],
         )
     )
@@ -884,42 +886,47 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
 
     story.extend(
         text_page_story(
-            "Arquitectura y cierre",
+            "Inversion y condiciones comerciales",
             [
-                "La propuesta se apoya en una arquitectura simple de explicar: datos, analitica, visualizacion y reportes. Esa simplicidad ayuda a vender la solucion a clientes que quieren resultados claros sin necesidad de entrar en detalles tecnicos complejos.",
-                "La plataforma queda lista para seguir creciendo con nuevas fuentes y nuevos reportes, manteniendo el foco en Vitacura y en la venta de casas como eje central.",
+                "La propuesta se presenta con una inversion cerrada y facil de explicar, alineada con el alcance comercial y el tipo de entrega esperado para Property Partners Vitacura.",
+                "El objetivo es dejar clara la estructura economica del proyecto desde el inicio, con un valor unico, un plazo definido y una forma de pago simple de administrar.",
             ],
             [
-                "Entrada desde fuentes reales y actualizacion periodica.",
-                "Analisis por barrio con foco en ventas de casas.",
-                "Valorizacion y reportes para acelerar decisiones.",
-                "Visualizacion ejecutiva para reuniones y seguimiento.",
+                "Valor del proyecto: CLP $5.000.000.",
+                "Plazo de ejecucion: 2 meses.",
+                "Forma de pago: 50% al inicio y 50% contra entrega.",
             ],
             styles,
         )
     )
     story.append(Spacer(1, 0.15 * inch))
 
-    roadmap_data = [
+    pricing_data = [
         [
-            Paragraph("1. Validacion comercial", styles["RoadmapTitle"]),
-            Paragraph("Alinear mensajes, publico objetivo y alcance final de la propuesta.", styles["BodyCommercial"]),
+            Paragraph("Concepto", styles["RoadmapTitle"]),
+            Paragraph("Definicion comercial", styles["RoadmapTitle"]),
         ],
         [
-            Paragraph("2. Ajuste visual", styles["RoadmapTitle"]),
-            Paragraph("Consolidar el logo, el tono y la version final de la propuesta comercial.", styles["BodyCommercial"]),
+            Paragraph("Valor del proyecto", styles["BodyCommercial"]),
+            Paragraph("CLP $5.000.000", styles["BodyCommercial"]),
         ],
         [
-            Paragraph("3. Entrega y seguimiento", styles["RoadmapTitle"]),
-            Paragraph("Publicar la pieza final, compartirla y continuar con la siguiente fase del roadmap.", styles["BodyCommercial"]),
+            Paragraph("Plazo de ejecucion", styles["BodyCommercial"]),
+            Paragraph("2 meses", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Forma de pago", styles["BodyCommercial"]),
+            Paragraph("50% al inicio y 50% contra entrega", styles["BodyCommercial"]),
         ],
     ]
 
-    roadmap = Table(roadmap_data, colWidths=[2.3 * inch, 4.55 * inch])
-    roadmap.setStyle(
+    pricing_table = Table(pricing_data, colWidths=[2.45 * inch, 4.4 * inch])
+    pricing_table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
                 ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
                 ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -930,14 +937,103 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
             ]
         )
     )
-    story.append(roadmap)
+    story.append(pricing_table)
+    story.append(PageBreak())
+
+    story.extend(
+        text_page_story(
+            "Cierre comercial",
+            [
+                "Esta propuesta presenta a Property Partners Vitacura como una herramienta comercial lista para apoyar la venta de casas en Vitacura con una lectura de mercado clara, respaldo visual y narrativa ejecutiva.",
+                "El documento sintetiza el valor de la plataforma sin entrar en detalle tecnico y deja una base solida para reuniones, seguimiento y presentaciones comerciales.",
+            ],
+            [
+                "Enfoque exclusivo en ventas de casas en Vitacura.",
+                "Lectura clara por barrio, oportunidad y posicionamiento.",
+                "Soporte visual y narrativo para conversaciones comerciales.",
+                "Base preparada para seguir creciendo con nuevas fuentes y reportes.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.15 * inch))
+
+    closing_data = [
+        [
+            Paragraph("Lo que recibe", styles["RoadmapTitle"]),
+            Paragraph("Aporte comercial", styles["RoadmapTitle"]),
+        ],
+        [
+            Paragraph("Propuesta comercial profesional", styles["BodyCommercial"]),
+            Paragraph("Un documento listo para compartir con presentacion y respaldo visual.", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Lectura de mercado en Vitacura", styles["BodyCommercial"]),
+            Paragraph("Una narrativa clara para explicar oportunidades por barrio y posicionamiento.", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Soporte para ventas de casas", styles["BodyCommercial"]),
+            Paragraph("Herramientas para ordenar oferta, comparables y argumento comercial.", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Seguimiento continuo", styles["BodyCommercial"]),
+            Paragraph("Una base que permite continuar la relacion comercial con nuevos reportes y actualizaciones.", styles["BodyCommercial"]),
+        ],
+    ]
+
+    closing_table = Table(closing_data, colWidths=[2.55 * inch, 4.3 * inch])
+    closing_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING", (0, 0), (-1, -1), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+            ]
+        )
+    )
+    story.append(closing_table)
     story.append(Spacer(1, 0.18 * inch))
     story.append(
         Paragraph(
-            "Conclusion: N3uralia queda posicionada como una propuesta seria, comercial y util para vender casas en Vitacura con mejores argumentos, mejor visualizacion y una historia de valor mas convincente para el cliente final.",
+            "Agradecemos la oportunidad de presentar esta propuesta. N3uralia queda disponible para coordinar la validacion, el kickoff y el inicio del trabajo una vez aprobado el alcance.",
             styles["BodyCommercial"],
         )
     )
+    story.append(Spacer(1, 0.16 * inch))
+    contact_box = Table(
+        [
+            [
+                Paragraph("Datos de contacto", styles["RoadmapTitle"]),
+                Paragraph(
+                    "Juan Vial Comber<br/>CEO de N3uralia<br/>juan@n3uralia.com<br/>WhatsApp: +56 9 9382 6127",
+                    styles["BodyCommercial"],
+                ),
+            ]
+        ],
+        colWidths=[2.0 * inch, 4.85 * inch],
+    )
+    contact_box.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f4faf7")),
+                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING", (0, 0), (-1, -1), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+            ]
+        )
+    )
+    story.append(contact_box)
 
     return story
 
@@ -977,8 +1073,8 @@ def build_pdf() -> None:
             rightMargin=0.62 * inch,
             topMargin=0.86 * inch,
             bottomMargin=0.75 * inch,
-            title="Propuesta Comercial N3uralia",
-            author="N3uralia",
+            title="Property Partners Vitacura",
+            author="Property Partners Vitacura",
         )
         doc.build(story, onFirstPage=draw_cover, onLaterPages=draw_content_chrome)
 
