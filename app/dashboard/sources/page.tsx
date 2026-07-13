@@ -329,7 +329,7 @@ export default function SourcesPage() {
                 Estado actual: <span style={{ color: healthColor }}>{healthLabel}</span>
               </h2>
               <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                {health.summary?.activeSources || 0} fuentes activas Â· {health.summary?.averageScraped || 0} props/corrida Â· {health.summary?.averageInserted || 0} insertadas/corrida
+                {health.summary?.activeSources || 0} fuentes activas · {health.summary?.averageScraped || 0} casas/corrida · {health.summary?.averageInserted || 0} insertadas/corrida
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -407,9 +407,9 @@ export default function SourcesPage() {
         <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
           <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="font-semibold text-gray-900">TelemetrÃ­a por barrio y fuente</h2>
+              <h2 className="font-semibold text-gray-900">Telemetría de casas por barrio y fuente</h2>
               <p className="text-sm" style={{ color: '#9ca9a3' }}>
-                {propertyTelemetry.total.toLocaleString()} propiedades normalizadas en el catÃ¡logo.
+                {propertyTelemetry.total.toLocaleString()} casas normalizadas en el catálogo.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 lg:min-w-[520px]">
@@ -711,3 +711,6 @@ export default function SourcesPage() {
     </div>
   )
 }
+
+
+

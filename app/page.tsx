@@ -131,13 +131,13 @@ export default function LandingPage() {
           <div className="flex flex-col justify-center px-10 py-24 md:py-0" style={{ background: '#173634' }}>
             <div style={{ animation: 'slideUp 0.9s ease-out both' }}>
               <p className="text-xs font-semibold uppercase tracking-widest mb-6" style={{ color: '#8fb2aa' }}>
-                Property Partners — Plataforma 2026
+                Property Partners - Plataforma 2026
               </p>
               <h1 className="font-bold leading-none mb-8" style={{ fontSize: 'clamp(2.8rem, 5vw, 4.5rem)', color: '#fbfbfa' }}>
-                Decisiones inmobiliarias respaldadas por datos.
+                Casas en Vitacura respaldadas por datos.
               </h1>
               <p className="text-lg leading-relaxed mb-10" style={{ color: '#9ca9a3', maxWidth: '38ch' }}>
-                Automatización de reportes para CEO y directores, inteligencia de mercado por barrio en Vitacura, y un valorizador que pondera la calidad real de cada propiedad.
+                Automatización de reportes para CEO y directores, inteligencia de mercado por barrio en Vitacura, y un valorizador que pondera la calidad real de cada casa.
               </p>
               <Link
                 href="/auth/login"
@@ -158,7 +158,7 @@ export default function LandingPage() {
             {[
               {
                   label: 'Pipeline de datos propio',
-                  desc: 'Scraper de Portal Inmobiliario Vitacura + base de ventas internas + archivos KMZ que asignan barrio a cada propiedad. Todo integrado y actualizado trimestralmente.',
+                  desc: 'Scraper de Portal Inmobiliario Vitacura + base de ventas internas + archivos KMZ que asignan barrio a cada casa. Todo integrado y actualizado trimestralmente.',
                 color: '#8fb2aa',
                 delay: '0ms',
                 tag: 'Data Pipeline',
@@ -227,7 +227,7 @@ export default function LandingPage() {
             {[
               { value: 5, suffix: ' años', label: 'de histórico en datos' },
               { value: 12, suffix: '', label: 'sectores principales cubiertos' },
-              { value: 2800, suffix: '+', label: 'propiedades analizadas en Vitacura' },
+              { value: 2800, suffix: '+', label: 'casas analizadas en Vitacura' },
             ].map((s) => (
               <div key={s.label}>
                 <div className="text-4xl md:text-5xl font-bold" style={{ color: '#173634' }}>
@@ -278,7 +278,7 @@ export default function LandingPage() {
                 <TrendingUp size={22} />
               </div>
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>Pilar 02</div>
-              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Market Intelligence</h3>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Inteligencia de Mercado</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
                 Análisis de mercado en tiempo real por barrio en Vitacura. Entiendes qué barrios venden rápido, a qué precio, y cómo evolucionar la estrategia según el contexto.
               </p>
@@ -360,3 +360,6 @@ export default function LandingPage() {
     </div>
   )
 }
+
+
+

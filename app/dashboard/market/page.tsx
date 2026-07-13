@@ -294,7 +294,7 @@ export default function MarketPage() {
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmarks externos</p>
               <h2 className="mt-1 text-lg font-semibold text-gray-900">Realtor International + Portal Inmobiliario</h2>
               <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                ComparaciÃ³n de fuentes externas para reforzar `Market Intelligence`.
+                Comparación de fuentes externas para reforzar `Inteligencia de Mercado`.
               </p>
             </div>
             <button
@@ -553,4 +553,6 @@ export default function MarketPage() {
     </div>
   )
 }
+
+
 

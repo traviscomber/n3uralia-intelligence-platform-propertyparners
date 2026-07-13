@@ -63,7 +63,7 @@ export default function KnowledgePage() {
   const docTypeLabels: { [key: string]: string } = {
     report: 'Reporte',
     market: 'Market',
-    property: 'Propiedad',
+    property: 'Casa',
     trend: 'Tendencia',
     comparable: 'Comparable',
     document: 'Documento',
@@ -73,7 +73,7 @@ export default function KnowledgePage() {
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-6">
         <h1 className="text-3xl font-bold text-gray-900">Base de Conocimiento</h1>
-        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y an√°lisis del mercado</p>
+        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y an·lisis del mercado de casas en Vitacura</p>
       </div>
 
       {/* Search & Filter */}
@@ -150,3 +150,4 @@ export default function KnowledgePage() {
     </div>
   )
 }
+

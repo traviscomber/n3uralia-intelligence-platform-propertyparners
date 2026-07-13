@@ -73,7 +73,7 @@ function reportMeta(reportType: ReportType) {
     case 'captation_alert':
       return {
         title: 'Captation Alert',
-        systemFocus: 'Prioriza captaciones, velocidad y propiedades con potencial inmediato.',
+        systemFocus: 'Prioriza captaciones, velocidad y casas con potencial inmediato.',
       }
     case 'weekly_directors':
     default:
@@ -117,11 +117,11 @@ function deterministicSummary(reportType: ReportType, kpis: KpiSnapshot[], marke
     },
     market_brief: {
       title: 'Market Brief',
-      summary: `${topMarket?.neighborhood || 'Mercado'} lidera con ${topMarket?.absorption_rate?.toFixed(1) ?? '0.0'}% de absorción y ${topMarket?.inventory_count ?? 0} propiedades en inventario.`,
+      summary: `${topMarket?.neighborhood || 'Mercado'} lidera con ${topMarket?.absorption_rate?.toFixed(1) ?? '0.0'}% de absorción y ${topMarket?.inventory_count ?? 0} casas en inventario.`,
     },
     captation_alert: {
       title: 'Captation Alert',
-      summary: `${weakestStock} propiedades siguen disponibles; prioriza captaciones en zonas con mejor absorción y menor inventario.`,
+      summary: `${weakestStock} casas siguen disponibles; prioriza captaciones en zonas con mejor absorción y menor inventario.`,
     },
   }[reportType]
 
@@ -299,3 +299,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

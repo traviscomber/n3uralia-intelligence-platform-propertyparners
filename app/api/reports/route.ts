@@ -85,14 +85,14 @@ export async function POST(req: NextRequest) {
 
     const title =
       reportType === 'weekly_executive'
-        ? `Reporte Ejecutivo Semanal — ${dateLabel}`
+        ? `Reporte Ejecutivo de Casas Semanal - ${dateLabel}`
         : reportType === 'monthly_executive'
-          ? `Reporte Ejecutivo Mensual — ${now.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}`
+          ? `Reporte Ejecutivo de Casas Mensual - ${now.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}`
           : reportType === 'market'
-            ? `Market Analysis Vitacura — ${dateLabel}`
-            : `Reporte ${reportType} — ${dateLabel}`
+            ? `Inteligencia de Casas Vitacura - ${dateLabel}`
+            : `Reporte ${reportType} - ${dateLabel}`
 
-    const summary = `Semana con ${kpi.ventas_count ?? 0} ventas (${(kpi.ventas_uf ?? 0).toLocaleString('es-CL')} UF) y tasa de conversión del ${(kpi.conversion_rate ?? 0).toFixed(1)}%. Mercado Vitacura con precio promedio ${avgPrice} UF/m². Barrio más activo: ${topBarrio?.neighborhood ?? '—'} (absorción ${((topBarrio?.absorption_rate ?? 0) * 100).toFixed(0)}%).`
+    const summary = `Semana con ${kpi.ventas_count ?? 0} ventas (${(kpi.ventas_uf ?? 0).toLocaleString('es-CL')} UF) y tasa de conversión del ${(kpi.conversion_rate ?? 0).toFixed(1)}%. Mercado Vitacura de casas con precio promedio ${avgPrice} UF/m². Barrio más activo: ${topBarrio?.neighborhood ?? '—'} (absorción ${((topBarrio?.absorption_rate ?? 0) * 100).toFixed(0)}%).`
 
     const content = {
       kpis: {
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       highlights: [
         `${kpi.ventas_count ?? 0} transacciones completadas esta semana`,
         `Velocidad promedio de venta: ${(kpi.velocidad_venta ?? 0).toFixed(0)} días`,
-        `Stock activo: ${kpi.stock_count ?? 0} propiedades disponibles`,
+        `Stock activo: ${kpi.stock_count ?? 0} casas disponibles`,
         `Barrio con mayor absorción: ${topBarrio?.neighborhood ?? '—'} (${((topBarrio?.absorption_rate ?? 0) * 100).toFixed(0)}%)`,
         `Precio promedio mercado Vitacura: ${avgPrice} UF/m²`,
       ],
@@ -146,3 +146,6 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ success: true, deleted_id: id })
 }
+
+
+
