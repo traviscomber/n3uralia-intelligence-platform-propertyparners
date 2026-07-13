@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { loadDirectorReportBundle } from '@/lib/director-reports'
@@ -56,7 +56,7 @@ export default async function DirectorReportDetailPage({
         <div>
           <div className="mb-3">
             <Link href="/dashboard/reportes" className="text-sm font-medium" style={{ color: '#8fb2aa' }}>
-              ← Volver a Reportes IA
+              Volver a Reportes Pro
             </Link>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">{directorId}</h1>
@@ -98,7 +98,7 @@ export default async function DirectorReportDetailPage({
         {[
           { label: 'Ventas acumuladas', value: bundle.metrics.totalSales.toLocaleString('es-CL') },
           { label: 'Comision total', value: `${bundle.metrics.totalCommission.toLocaleString('es-CL')} UF` },
-          { label: 'Conversion promedio', value: `${bundle.metrics.avgConversion.toFixed(1)}%` },
+          { label: 'conversion promedio', value: `${bundle.metrics.avgconversion.toFixed(1)}%` },
           { label: 'Snapshots', value: bundle.metrics.reportCount.toString() },
         ].map((item) => (
           <div key={item.label} className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
@@ -124,7 +124,7 @@ export default async function DirectorReportDetailPage({
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
               { label: 'Ventas', value: selectedReport.sales_count.toLocaleString('es-CL') },
-              { label: 'Conversion', value: `${selectedReport.conversion_rate.toFixed(1)}%` },
+              { label: 'conversion', value: `${selectedReport.conversion_rate.toFixed(1)}%` },
               { label: 'Objetivo', value: `${selectedReport.target_progress}%` },
               { label: 'Velocidad', value: `${selectedReport.velocity_change.toFixed(1)} dias` },
             ].map((item) => (
@@ -269,3 +269,9 @@ export default async function DirectorReportDetailPage({
     </div>
   )
 }
+
+
+
+
+
+

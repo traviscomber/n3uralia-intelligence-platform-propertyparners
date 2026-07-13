@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -409,7 +409,7 @@ export default function ReportesPage() {
               Reportes Pro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 md:text-[15px]" style={{ color: 'var(--n-fg-muted)' }}>
-              Reportes semanales derivados de KPIs reales y biblioteca histórica de reportes automáticos.
+              Reportes semanales derivados de KPIs reales y biblioteca histÃ³rica de reportes automÃ¡ticos.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -539,7 +539,7 @@ export default function ReportesPage() {
                     {formatDate(item.week_start)} - {formatDate(item.week_end)}
                   </p>
                   <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
-                    {item.director_id || 'all'} · {item.status} · {new Date(item.generated_at).toLocaleDateString('es-CL')}
+                    {item.director_id || 'all'} Â· {item.status} Â· {new Date(item.generated_at).toLocaleDateString('es-CL')}
                   </p>
                 </div>
               ))}
@@ -559,7 +559,7 @@ export default function ReportesPage() {
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-                  Último reporte generado
+                  Ãšltimo reporte generado
                 </p>
                 <h3 className="mt-2 text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>
                   {generatedReport.title}
@@ -602,7 +602,7 @@ export default function ReportesPage() {
                   No pudimos actualizar los reportes semanales.
                 </p>
                 <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                  Mostramos la biblioteca histórica mientras vuelve la fuente calculada.
+                  Mostramos la biblioteca histÃ³rica mientras vuelve la fuente calculada.
                 </p>
               </div>
             </div>
@@ -626,7 +626,7 @@ export default function ReportesPage() {
                   No pudimos actualizar la biblioteca AI.
                 </p>
                 <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                  Conservamos el último estado visible.
+                  Conservamos el Ãºltimo estado visible.
                 </p>
               </div>
             </div>
@@ -665,7 +665,7 @@ export default function ReportesPage() {
         </div>
         <div className="n-card p-4">
           <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-            Última semana
+            Ãšltima semana
           </p>
           <p className="mt-3 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
             {stats.latestWeek ? `${formatDate(stats.latestWeek.week_start)} - ${formatDate(stats.latestWeek.week_end)}` : 'Sin datos'}
@@ -677,7 +677,7 @@ export default function ReportesPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="n-card p-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-              Ventas de la última semana
+              Ventas de la Ãºltima semana
             </p>
             <p className="mt-3 text-3xl font-semibold" style={{ color: 'var(--n-primary)' }}>
               {stats.latestWeek.sales_count}
@@ -685,7 +685,7 @@ export default function ReportesPage() {
           </div>
           <div className="n-card p-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-              Conversión promedio
+              conversion promedio
             </p>
             <p className="mt-3 text-3xl font-semibold" style={{ color: 'var(--n-success)' }}>
               {stats.latestWeek.conversion_rate.toFixed(1)}%
@@ -709,7 +709,7 @@ export default function ReportesPage() {
               Salud operativa del scraper
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Cruza ejecuciones recientes, fuentes activas y anomalías detectadas para el sistema de reportes.
+              Cruza ejecuciones recientes, fuentes activas y anomalÃ­as detectadas para el sistema de reportes.
             </p>
           </div>
           <span className="n-chip">{health?.status || 'unknown'}</span>
@@ -789,7 +789,7 @@ export default function ReportesPage() {
                 Reportes por director
               </h2>
               <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                Consolidado automático por `director_id` usando los KPIs cargados
+                Consolidado automÃ¡tico por `director_id` usando los KPIs cargados
               </p>
             </div>
             <span className="n-chip">
@@ -808,12 +808,12 @@ export default function ReportesPage() {
                         {report.director_id || 'Sin director asignado'}
                       </p>
                       <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                        {report.sales_count} ventas, {report.conversion_rate.toFixed(1)}% conversión, +{report.velocity_change.toFixed(1)} velocidad
+                        {report.sales_count} ventas, {report.conversion_rate.toFixed(1)}% conversion, +{report.velocity_change.toFixed(1)} velocidad
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: tone.bg, color: tone.fg }}>
-                        {report.status === 'on_track' ? 'En línea' : report.status === 'warning' ? 'En observación' : 'Bajo objetivo'}
+                        {report.status === 'on_track' ? 'En lÃ­nea' : report.status === 'warning' ? 'En observaciÃ³n' : 'Bajo objetivo'}
                       </span>
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: 'var(--n-primary-muted)', color: 'var(--n-primary)' }}>
                         {report.target_progress}% objetivo
@@ -843,7 +843,7 @@ export default function ReportesPage() {
               Biblioteca de reportes pro
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Historico de reportes almacenados en `ai_reports`
+              Historial de reportes almacenados en `ai_reports`
             </p>
           </div>
           <span className="n-chip">Supabase</span>
@@ -1028,7 +1028,7 @@ export default function ReportesPage() {
                         <Calendar size={12} />
                         {formatDate(report.period_date || report.created_at)}
                       </span>
-                      <span>•</span>
+                      <span>â€¢</span>
                       <span>ID {report.id.slice(0, 8)}</span>
                     </div>
                   </div>
@@ -1038,10 +1038,14 @@ export default function ReportesPage() {
           </div>
         ) : (
           <div className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-            Todavía no hay reportes guardados en `ai_reports`.
+            TodavÃ­a no hay reportes guardados en `ai_reports`.
           </div>
         )}
       </div>
     </div>
   )
 }
+
+
+
+
