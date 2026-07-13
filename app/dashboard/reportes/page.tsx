@@ -34,7 +34,61 @@ type WeeklyReportResponse = {
   generatedAt: string
 }
 
-type ReportTypeChoice = 'weekly_directors' | 'monthly_ceo' | 'market_brief' | 'captation_alert'
+type ReportTypeChoice =
+  | 'ceo_brief'
+  | 'director_accounts'
+  | 'seller_playbook'
+  | 'weekly_directors'
+  | 'monthly_ceo'
+  | 'market_brief'
+  | 'captation_alert'
+
+type ReportChoice = {
+  id: ReportTypeChoice
+  label: string
+  description: string
+}
+
+const PRO_REPORT_CHOICES: ReportChoice[] = [
+  {
+    id: 'ceo_brief',
+    label: 'CEO',
+    description: 'Sintesis ejecutiva para decisiones, riesgos y crecimiento.',
+  },
+  {
+    id: 'director_accounts',
+    label: 'Directores de cuenta',
+    description: 'Cartera, metas, conversion y acciones de seguimiento.',
+  },
+  {
+    id: 'seller_playbook',
+    label: 'Vendedores',
+    description: 'Playbook diario para priorizar cierres y seguimiento.',
+  },
+]
+
+const SUPPORT_REPORT_CHOICES: ReportChoice[] = [
+  {
+    id: 'market_brief',
+    label: 'Lectura de mercado',
+    description: 'Barrios, absorcion e inventario con lectura comercial.',
+  },
+  {
+    id: 'captation_alert',
+    label: 'Alerta de captacion',
+    description: 'Casas con oportunidad inmediata para activar.',
+  },
+]
+
+const REPORT_TYPE_LABELS: Record<ReportTypeChoice, string> = {
+  ceo_brief: 'CEO',
+  director_accounts: 'Directores de cuenta',
+  seller_playbook: 'Vendedores',
+  weekly_directors: 'Semanal directores',
+  monthly_ceo: 'Mensual CEO',
+  market_brief: 'Lectura de mercado',
+  captation_alert: 'Alerta de captacion',
+}
 type ExportDataset = 'ai_reports' | 'weekly_reports' | 'profiles'
 
 type ScrapeHealthIssue = {
@@ -76,10 +130,21 @@ function formatDate(value: string | null) {
   })
 }
 
+function formatReportTypeLabel(reportType: string) {
+  return REPORT_TYPE_LABELS[reportType as ReportTypeChoice] || reportType
+}
+
 function statusTone(status: WeeklyReport['status']) {
   if (status === 'on_track') return { bg: 'var(--n-success-muted)', fg: 'var(--n-success)' }
   if (status === 'warning') return { bg: 'var(--n-warning-muted)', fg: 'var(--n-warning)' }
   return { bg: 'var(--n-danger-muted)', fg: 'var(--n-danger)' }
+}
+
+function getAudienceLabel(report: AiReport | null) {
+  if (!report) return 'Reporte'
+  const content = report.content as Record<string, unknown> | null
+  const audience = content && typeof content.audience === 'string' ? content.audience : ''
+  return audience || formatReportTypeLabel(report.report_type)
 }
 
 export default function ReportesPage() {
@@ -236,8 +301,8 @@ export default function ReportesPage() {
     if (exportDataset === 'weekly_reports') {
       if (exportWeekStart) params.set('week_start', exportWeekStart)
       if (exportDirectorId) params.set('director_id', exportDirectorId)
-      if (exportWeeklyType) params.set('type', exportWeeklyType)
-      params.set('report_scope', exportDirectorId ? 'director' : 'weekly_summary')
+      if (exportWeeklyType) params.set('report_scope', exportWeeklyType)
+      if (!exportWeeklyType) params.set('report_scope', exportDirectorId ? 'director' : 'weekly_summary')
     }
 
     if (exportDataset === 'profiles') {
@@ -305,7 +370,7 @@ export default function ReportesPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight md:text-4xl" style={{ color: 'var(--n-fg)' }}>
-              Reportes IA
+              Reportes Pro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 md:text-[15px]" style={{ color: 'var(--n-fg-muted)' }}>
               Reportes semanales derivados de KPIs reales y biblioteca histórica de reportes automáticos.
@@ -340,24 +405,19 @@ export default function ReportesPage() {
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
-              Generar reporte AI
+              Reportes Pro
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Usa `OPENAI_API_KEY` si está disponible. Si no, deja un reporte determinista con contexto real.
+              Genera una version distinta segun la audiencia: CEO, directores de cuenta o vendedores.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            { id: 'weekly_directors', label: 'Semanal Directores' },
-            { id: 'monthly_ceo', label: 'Mensual CEO' },
-            { id: 'market_brief', label: 'Market Brief' },
-            { id: 'captation_alert', label: 'Captation Alert' },
-          ].map((item) => (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {PRO_REPORT_CHOICES.map((item) => (
             <button
               key={item.id}
-              onClick={() => void handleGenerateReport(item.id as ReportTypeChoice)}
+              onClick={() => void handleGenerateReport(item.id)}
               className="rounded-2xl border p-4 text-left transition-all hover:translate-y-[-1px]"
               style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg)' }}
               disabled={Boolean(generateLoading)}
@@ -368,6 +428,9 @@ export default function ReportesPage() {
                     Generar
                   </p>
                   <p className="mt-2 text-sm font-semibold">{item.label}</p>
+                  <p className="mt-1 text-xs leading-5" style={{ color: 'var(--n-fg-muted)' }}>
+                    {item.description}
+                  </p>
                 </div>
                 {generateLoading === item.id ? (
                   <RefreshCw size={14} className="animate-spin" />
@@ -377,6 +440,40 @@ export default function ReportesPage() {
               </div>
             </button>
           ))}
+        </div>
+
+        <div className="mt-4">
+          <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+            Vistas complementarias
+          </p>
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+            {SUPPORT_REPORT_CHOICES.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => void handleGenerateReport(item.id)}
+                className="rounded-2xl border p-4 text-left transition-all hover:translate-y-[-1px]"
+                style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                disabled={Boolean(generateLoading)}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                      Generar
+                    </p>
+                    <p className="mt-2 text-sm font-semibold">{item.label}</p>
+                    <p className="mt-1 text-xs leading-5" style={{ color: 'var(--n-fg-muted)' }}>
+                      {item.description}
+                    </p>
+                  </div>
+                  {generateLoading === item.id ? (
+                    <RefreshCw size={14} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={14} style={{ color: 'var(--n-primary)' }} />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {weekly?.history?.length ? (
@@ -417,7 +514,6 @@ export default function ReportesPage() {
             </p>
           </div>
         )}
-
         {generatedReport && (
           <div className="mt-4 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -428,8 +524,11 @@ export default function ReportesPage() {
                 <h3 className="mt-2 text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>
                   {generatedReport.title}
                 </h3>
+                <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                  Perfil: {getAudienceLabel(generatedReport)}
+                </p>
               </div>
-              <span className="n-chip">{generatedReport.report_type}</span>
+              <span className="n-chip">{formatReportTypeLabel(generatedReport.report_type)}</span>
             </div>
             <p className="mt-3 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
               {generatedReport.summary || 'Sin resumen disponible'}
@@ -521,7 +620,7 @@ export default function ReportesPage() {
         </div>
         <div className="n-card p-4">
           <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-            Directorios activos
+            Directores activos
           </p>
           <p className="mt-3 text-3xl font-semibold" style={{ color: 'var(--n-success)' }}>
             {stats.directorCount}
@@ -529,7 +628,7 @@ export default function ReportesPage() {
         </div>
         <div className="n-card p-4">
           <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-            Biblioteca AI
+            Biblioteca de reportes
           </p>
           <p className="mt-3 text-3xl font-semibold" style={{ color: 'var(--n-accent)' }}>
             {stats.aiCount}
@@ -698,10 +797,10 @@ export default function ReportesPage() {
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
-              Biblioteca de reportes IA
+              Biblioteca de reportes pro
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Histórico de reportes almacenados en `ai_reports`
+              Historico de reportes almacenados en `ai_reports`
             </p>
           </div>
           <span className="n-chip">Supabase</span>
@@ -715,10 +814,13 @@ export default function ReportesPage() {
             style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg)' }}
           >
             <option value="">Todos los reportes</option>
-            <option value="weekly_directors">Weekly Directors</option>
-            <option value="monthly_ceo">Monthly CEO</option>
-            <option value="market_brief">Market Brief</option>
-            <option value="captation_alert">Captation Alert</option>
+            <option value="ceo_brief">CEO</option>
+            <option value="director_accounts">Directores de cuenta</option>
+            <option value="seller_playbook">Vendedores</option>
+            <option value="weekly_directors">Semanal directores</option>
+            <option value="monthly_ceo">Mensual CEO</option>
+            <option value="market_brief">Lectura de mercado</option>
+            <option value="captation_alert">Alerta de captacion</option>
           </select>
           {reportFilter && (
             <button
@@ -749,7 +851,7 @@ export default function ReportesPage() {
                 className="rounded-2xl border px-3 py-2 text-sm"
                 style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
               >
-                <option value="ai_reports">Biblioteca AI</option>
+                <option value="ai_reports">Biblioteca de reportes</option>
                 <option value="weekly_reports">Reportes semanales</option>
                 <option value="profiles">Perfiles sellers</option>
               </select>
@@ -788,10 +890,9 @@ export default function ReportesPage() {
                     className="rounded-2xl border px-3 py-2 text-sm"
                     style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
                   >
-                    <option value="">Todos los tipos</option>
-                    <option value="weekly_directors">Weekly Directors</option>
-                    <option value="weekly_summary">Weekly Summary</option>
-                    <option value="director">Director</option>
+                    <option value="">Todos los resumenes</option>
+                    <option value="weekly_summary">Resumen semanal</option>
+                    <option value="director">Resumen por director</option>
                   </select>
                 </>
               )}
@@ -877,7 +978,7 @@ export default function ReportesPage() {
                           {report.summary || 'Sin resumen disponible'}
                         </p>
                       </div>
-                      <span className="n-chip w-fit">{report.report_type}</span>
+                      <span className="n-chip w-fit">{formatReportTypeLabel(report.report_type)}</span>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
                       <span className="flex items-center gap-1">
