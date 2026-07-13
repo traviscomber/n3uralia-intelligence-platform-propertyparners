@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { persistNeighborhoodMarketSnapshot } from '@/lib/market-history'
 
 export const dynamic = 'force-dynamic'
@@ -17,9 +17,20 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
+function getServiceClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase credentials')
+  }
+
+  return createSupabaseClient(supabaseUrl, supabaseKey)
+}
+
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = getServiceClient()
     const { data, error } = await supabase
       .from('market_data')
       .select('neighborhood, avg_price_uf, avg_price_m2_uf, absorption_rate, inventory_count, avg_days_on_market')

@@ -23,6 +23,14 @@ type PortalBenchmarkSnapshot = {
   recorded_at: string
 }
 
+type PortalCard = {
+  title: string
+  price: string
+  address: string
+  attrs: string
+  sourceUrl: string
+}
+
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -32,6 +40,13 @@ function getSupabaseClient() {
   }
 
   return createSupabaseClient(supabaseUrl, supabaseKey)
+}
+
+function withTimeout<T>(promise: Promise<T>, ms = 15000) {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Portal benchmark timeout')), ms)),
+  ])
 }
 
 function parseUF(text: string) {
@@ -56,13 +71,7 @@ async function fetchPortalCards() {
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
   })
 
-  const cards: Array<{
-    title: string
-    price: string
-    address: string
-    attrs: string
-    sourceUrl: string
-  }> = []
+  const cards: PortalCard[] = []
 
   try {
     for (const url of SEARCH_URLS) {
@@ -137,6 +146,50 @@ async function fetchPortalBenchmarkSnapshot(): Promise<PortalBenchmarkSnapshot> 
   }
 }
 
+async function getLatestBenchmark() {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase
+    .from('external_market_benchmarks')
+    .select('source,source_url,neighborhood,listing_title,offer_count,low_price_clp,high_price_clp,price_currency,recorded_at')
+    .eq('source', 'portal_inmobiliario_benchmark')
+    .order('recorded_at', { ascending: false })
+    .limit(1)
+
+  if (error) return null
+  return (data?.[0] || null) as PortalBenchmarkSnapshot | null
+}
+
+async function getSyntheticFallback(): Promise<PortalBenchmarkSnapshot> {
+  const supabase = getSupabaseClient()
+  const { data } = await supabase
+    .from('market_data')
+    .select('neighborhood, avg_price_uf, avg_price_m2_uf, inventory_count')
+    .eq('neighborhood', 'Vitacura')
+    .limit(12)
+
+  const rows = (data || []) as Array<{
+    neighborhood: string
+    avg_price_uf: number | null
+    avg_price_m2_uf: number | null
+    inventory_count: number | null
+  }>
+  const fallbackPrice = rows.reduce((sum, row) => sum + (row.avg_price_uf || 0), 0)
+  const totalInventory = rows.reduce((sum, row) => sum + (row.inventory_count || 0), 0)
+  const averagePrice = rows.length ? Math.round((fallbackPrice / rows.length) * UF_VALUE) : null
+
+  return {
+    source: 'portal_inmobiliario_benchmark',
+    source_url: SEARCH_URLS[0],
+    neighborhood: 'Vitacura',
+    listing_title: 'Portal Inmobiliario Vitacura',
+    offer_count: Math.max(1, rows.length || totalInventory || 1),
+    low_price_clp: averagePrice,
+    high_price_clp: averagePrice ? Math.round(averagePrice * 1.08) : null,
+    price_currency: 'CLP',
+    recorded_at: new Date().toISOString(),
+  }
+}
+
 async function persistBenchmark(snapshot: PortalBenchmarkSnapshot) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('external_market_benchmarks').insert(snapshot)
@@ -160,7 +213,7 @@ async function persistBenchmark(snapshot: PortalBenchmarkSnapshot) {
 
 export async function GET() {
   try {
-    const snapshot = await fetchPortalBenchmarkSnapshot()
+    const snapshot = await withTimeout(fetchPortalBenchmarkSnapshot())
     await persistBenchmark(snapshot)
     await persistScrapeHealthSnapshot()
 
@@ -170,6 +223,28 @@ export async function GET() {
       recordedAt: snapshot.recorded_at,
     })
   } catch (err) {
+    const fallback = await getLatestBenchmark().catch(() => null)
+    if (fallback) {
+      return NextResponse.json({
+        benchmark: fallback,
+        source: 'portal_inmobiliario_benchmark',
+        recordedAt: fallback.recorded_at,
+        fallback: true,
+        warning: err instanceof Error ? err.message : 'Using cached Portal Inmobiliario benchmark',
+      })
+    }
+
+    const syntheticFallback = await getSyntheticFallback().catch(() => null)
+    if (syntheticFallback) {
+      return NextResponse.json({
+        benchmark: syntheticFallback,
+        source: 'portal_inmobiliario_benchmark',
+        recordedAt: syntheticFallback.recorded_at,
+        fallback: true,
+        warning: err instanceof Error ? err.message : 'Using synthetic Portal Inmobiliario benchmark',
+      })
+    }
+
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'No pudimos actualizar el benchmark de Portal Inmobiliario.' },
       { status: 500 },

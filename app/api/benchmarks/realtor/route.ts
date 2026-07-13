@@ -47,6 +47,26 @@ function parseNumber(value: unknown) {
   return null
 }
 
+function withTimeout<T>(promise: Promise<T>, ms = 15000) {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Realtor benchmark timeout')), ms)),
+  ])
+}
+
+async function getLatestBenchmark() {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase
+    .from('external_market_benchmarks')
+    .select('source,source_url,neighborhood,listing_title,offer_count,low_price_clp,high_price_clp,price_currency,recorded_at')
+    .eq('source', 'realtor_international')
+    .order('recorded_at', { ascending: false })
+    .limit(1)
+
+  if (error) return null
+  return (data?.[0] || null) as RealtorSnapshot | null
+}
+
 async function fetchRealtorSnapshot(): Promise<RealtorSnapshot> {
   const response = await fetch(REALTOR_URL, {
     headers: {
@@ -114,7 +134,7 @@ async function persistBenchmark(snapshot: RealtorSnapshot) {
 
 export async function GET() {
   try {
-    const snapshot = await fetchRealtorSnapshot()
+    const snapshot = await withTimeout(fetchRealtorSnapshot())
     await persistBenchmark(snapshot)
     await persistScrapeHealthSnapshot()
 
@@ -124,6 +144,16 @@ export async function GET() {
       recordedAt: snapshot.recorded_at,
     })
   } catch (err) {
+    const fallback = await getLatestBenchmark().catch(() => null)
+    if (fallback) {
+      return NextResponse.json({
+        benchmark: fallback,
+        source: 'realtor_international',
+        recordedAt: fallback.recorded_at,
+        fallback: true,
+        warning: err instanceof Error ? err.message : 'Using cached Realtor benchmark',
+      })
+    }
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'No pudimos actualizar el benchmark de Realtor.' },
       { status: 500 },
