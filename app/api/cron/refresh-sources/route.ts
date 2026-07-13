@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   try {
     const [scrapeResult, realtorBenchmarkResult, portalBenchmarkResult] = await Promise.all([
-      callEndpoint(request, '/api/scrape/portal-inmobiliario?source=all', { method: 'POST' }),
+      callEndpoint(request, '/api/scrape/portal-inmobiliario?source=houses', { method: 'POST' }),
       callEndpoint(request, '/api/benchmarks/realtor'),
       callEndpoint(request, '/api/benchmarks/portal-inmobiliario'),
     ])
