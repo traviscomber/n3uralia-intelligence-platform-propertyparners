@@ -44,8 +44,16 @@ type MarketBenchmark = {
 }
 
 const SEARCH_URLS = [
-  'https://www.portalinmobiliario.com/venta/departamento/vitacura-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/lo-curro-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/santa-maria-de-manquehue-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/la-llaveria-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/estadio-croata-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/jardin-del-este-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/borde-rio-casa-piedra-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/nuestra-senora-del-rosario-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/juan-xxiii-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/estadio-manquehue-vitacura-santiago-metropolitana',
 ]
 
 const TOCTOC_SEARCH_URL = 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
@@ -60,7 +68,12 @@ const TOCTOC_VITACURA_BARRIOS_URLS = [
 ]
 const ICASAS_SEARCH_URL = 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
 const ICASAS_HOUSES_SEARCH_URL = 'https://www.icasas.cl/venta/casas/santiago/vitacura'
-const YAPO_SEARCH_URL = 'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.2-2'
+const YAPO_SEARCH_URLS = [
+  'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.1-1',
+  'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.2-2',
+  'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.3-3',
+  'https://public-api.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura?q=f_rooms.4-4',
+]
 const CHILEPROPIEDADES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta/departamento/vitacura'
 const CHILEPROPIEDADES_HOUSES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta/casa/vitacura'
 
@@ -177,17 +190,21 @@ function benchmarkPriceForNeighborhood(
   return Math.max(900, Math.round(areaM2 * normalizedBase + (sector.lat + sector.lng) * 0))
 }
 
-async function scrapePortalListings(maxResults = 60, urls = SEARCH_URLS, source = 'portal_inmobiliario') {
+async function scrapePortalListings(maxResults = 120, urls = SEARCH_URLS, source = 'portal_inmobiliario') {
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process'],
   })
 
   const results: ScrapedProperty[] = []
+  const visited = new Set<string>()
+  const queue = [...urls]
 
   try {
-    for (const url of urls) {
-      if (results.length >= maxResults) break
+    while (queue.length > 0 && visited.size < 24 && results.length < maxResults) {
+      const url = queue.shift()
+      if (!url || visited.has(url)) continue
+      visited.add(url)
 
       const page = await browser.newPage()
       await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
@@ -237,6 +254,20 @@ async function scrapePortalListings(maxResults = 60, urls = SEARCH_URLS, source 
           source,
           external_id: hashLike(`${url}|${card.title}|${card.address}|${priceUf}`),
         })
+      }
+
+      const paginationLinks = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('a[href]'))
+          .map((anchor) => anchor.getAttribute('href') || '')
+          .filter((href) => href.includes('/venta/casa/') && href.includes('_Desde_'))
+      )
+
+      for (const href of paginationLinks) {
+        if (results.length >= maxResults) break
+        const nextUrl = new URL(href, url).href
+        if (!visited.has(nextUrl) && !queue.includes(nextUrl)) {
+          queue.push(nextUrl)
+        }
       }
 
       await page.close()
@@ -402,55 +433,60 @@ async function scrapeIcasasListings(limit = 20, searchUrl = ICASAS_SEARCH_URL, s
 }
 
 async function scrapeYapoListings(limit = 20) {
-  const response = await fetch(YAPO_SEARCH_URL, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: 'text/html,application/xhtml+xml',
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Yapo search failed (${response.status})`)
-  }
-
-  const html = await response.text()
-  const root = parse(html)
   const results: ScrapedProperty[] = []
 
-  root.querySelectorAll('.d3-ad-tile').some((tile) => {
-    if (results.length >= limit) return true
+  for (const searchUrl of YAPO_SEARCH_URLS) {
+    if (results.length >= limit) break
 
-    const title = tile.querySelector('.d3-ad-tile__title')?.text.trim() || ''
-    const description = tile.querySelector('.d3-ad-tile__short-description')?.text.trim() || ''
-    const location = tile.querySelector('.d3-ad-tile__location')?.text.replace(/\s+/g, ' ').trim() || ''
-    const priceText = tile.querySelector('.d3-ad-tile__price')?.text.replace(/\s+/g, ' ').trim() || ''
-    const href = tile.querySelector('a.d3-ad-tile__description')?.getAttribute('href')
-      || tile.querySelector('.d3-ad-tile__cover a')?.getAttribute('href')
-      || ''
-    const details = tile.querySelectorAll('.d3-ad-tile__details-item').map((node) => node.text.replace(/\s+/g, ' ').trim())
-    const priceUf = parseUF(priceText)
-    const areaMatch = details[0]?.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
-    const bedroomsMatch = details[1]
-    const bathroomsMatch = details[3]
-    const sector = sectorFromText(`${title} ${description} ${location}`, results.length)
-
-    if (!priceUf || priceUf < 1000 || priceUf > 200000) return
-
-    results.push({
-      address: `${title || 'Yapo listing'} - ${location || sector.name}`.slice(0, 200),
-      price_uf: priceUf,
-      area_m2: areaMatch ? Math.max(25, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (results.length % 4) * 10, 500)),
-      bedrooms: Math.max(1, Math.min(Number.parseInt(bedroomsMatch || '2', 10) || 2, 6)),
-      bathrooms: Math.max(1, Math.min(Number.parseInt(bathroomsMatch || '2', 10) || 2, 6)),
-      neighborhood: sector.name,
-      lat: sector.lat + (Math.random() - 0.5) * 0.0012,
-      lng: sector.lng + (Math.random() - 0.5) * 0.0012,
-      days_on_market: Math.floor(Math.random() * 80) + 3,
-      source: 'yapo_search',
-      external_id: href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`),
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
     })
-    return false
-  })
+
+    if (!response.ok) {
+      throw new Error(`Yapo search failed (${response.status})`)
+    }
+
+    const html = await response.text()
+    const root = parse(html)
+
+    root.querySelectorAll('.d3-ad-tile').some((tile) => {
+      if (results.length >= limit) return true
+
+      const title = tile.querySelector('.d3-ad-tile__title')?.text.trim() || ''
+      const description = tile.querySelector('.d3-ad-tile__short-description')?.text.trim() || ''
+      const location = tile.querySelector('.d3-ad-tile__location')?.text.replace(/\s+/g, ' ').trim() || ''
+      const priceText = tile.querySelector('.d3-ad-tile__price')?.text.replace(/\s+/g, ' ').trim() || ''
+      const href = tile.querySelector('a.d3-ad-tile__description')?.getAttribute('href')
+        || tile.querySelector('.d3-ad-tile__cover a')?.getAttribute('href')
+        || ''
+      const details = tile.querySelectorAll('.d3-ad-tile__details-item').map((node) => node.text.replace(/\s+/g, ' ').trim())
+      const priceUf = parseUF(priceText)
+      const areaMatch = details[0]?.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
+      const bedroomsMatch = details[1]
+      const bathroomsMatch = details[3]
+      const sector = sectorFromText(`${title} ${description} ${location}`, results.length)
+
+      if (!priceUf || priceUf < 1000 || priceUf > 200000) return
+
+      results.push({
+        address: `${title || 'Yapo listing'} - ${location || sector.name}`.slice(0, 200),
+        price_uf: priceUf,
+        area_m2: areaMatch ? Math.max(25, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (results.length % 4) * 10, 500)),
+        bedrooms: Math.max(1, Math.min(Number.parseInt(bedroomsMatch || '2', 10) || 2, 6)),
+        bathrooms: Math.max(1, Math.min(Number.parseInt(bathroomsMatch || '2', 10) || 2, 6)),
+        neighborhood: sector.name,
+        lat: sector.lat + (Math.random() - 0.5) * 0.0012,
+        lng: sector.lng + (Math.random() - 0.5) * 0.0012,
+        days_on_market: Math.floor(Math.random() * 80) + 3,
+        source: 'yapo_search',
+        external_id: href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`),
+      })
+      return false
+    })
+  }
 
   return results
 }
@@ -529,7 +565,7 @@ async function scrapeChilePropiedadesDetail(url: string, fallbackName: string, i
 async function scrapeChilePropiedadesListings(limit = 20, baseUrl = CHILEPROPIEDADES_BASE_URL, source = 'chilepropiedades_search') {
   const results: ScrapedProperty[] = []
 
-  for (let pageIndex = 0; pageIndex < 4 && results.length < limit; pageIndex += 1) {
+  for (let pageIndex = 0; pageIndex < 10 && results.length < limit; pageIndex += 1) {
     const pageUrl = `${baseUrl}/${pageIndex}`
     const response = await fetch(pageUrl, {
       headers: {
@@ -663,7 +699,7 @@ export async function POST(request: Request) {
     const allRows: ScrapedProperty[] = []
 
     if (source === 'all' || source === 'portal') {
-      const portalRows = await scrapePortalListings(60)
+      const portalRows = await scrapePortalListings(120)
       const uniquePortal = dedupeProperties(portalRows)
       const { inserted, errors } = await insertProperties(uniquePortal)
       allRows.push(...uniquePortal)
