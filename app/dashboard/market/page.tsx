@@ -107,6 +107,10 @@ function TrendBadge({ value }: { value: number }) {
   return <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded"><TrendingDown size={11} />{(value * 100).toFixed(0)}%</span>
 }
 
+function formatNumber(value: number) {
+  return new Intl.NumberFormat('es-CL').format(value)
+}
+
 export default function MarketPage() {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
   const [prcZones, setPrcZones] = useState<PrcZone[]>([])
@@ -249,6 +253,15 @@ export default function MarketPage() {
   const avgVelocity = neighborhoods.length ? Math.round(neighborhoods.reduce((s, n) => s + (n.velocity_days || 0), 0) / neighborhoods.length) : 0
   const totalInventory = neighborhoods.reduce((s, n) => s + (n.inventory_count || 0), 0)
   const avgAbsorption = neighborhoods.length ? (neighborhoods.reduce((s, n) => s + (n.absorption_rate || 0), 0) / neighborhoods.length) : 0
+  const executiveBarrios = [...neighborhoods]
+    .sort((a, b) => b.absorption_rate - a.absorption_rate)
+    .slice(0, 3)
+  const velocityLeader = [...neighborhoods].sort((a, b) => a.velocity_days - b.velocity_days)[0] || null
+  const inventoryLeader = [...neighborhoods].sort((a, b) => b.inventory_count - a.inventory_count)[0] || null
+  const priceLeader = [...neighborhoods].sort((a, b) => b.price_per_sqm_uf - a.price_per_sqm_uf)[0] || null
+  const topMarketRow = [...marketRows].sort((a, b) => (b.absorption_rate || 0) - (a.absorption_rate || 0))[0] || null
+  const slowMarketRow = [...marketRows].sort((a, b) => (b.avg_days_on_market || 0) - (a.avg_days_on_market || 0))[0] || null
+  const focusNeighborhood = selectedNeighborhood || neighborhoods[0] || null
 
   if (loading) {
     return (
@@ -366,6 +379,87 @@ export default function MarketPage() {
               </div>
               <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${kpi.color}18`, color: kpi.color }}>
                 {kpi.icon}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>CEO</p>
+          <h2 className="mt-1 text-lg font-semibold text-gray-900">Lectura de direccion</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            {topMarketRow
+              ? `${topMarketRow.neighborhood} lidera la absorcion con ${((topMarketRow.absorption_rate || 0) * 100).toFixed(0)}% y ${topMarketRow.inventory_count} casas en inventario.`
+              : 'Sin datos suficientes para consolidar una lectura ejecutiva.'}
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-gray-700">
+            <li>Foco principal: ventas de casas en Vitacura.</li>
+            <li>Decision clave: priorizar zonas con mejor absorcion.</li>
+            <li>Riesgo: inventario alto con velocidad lenta.</li>
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Directores</p>
+          <h2 className="mt-1 text-lg font-semibold text-gray-900">Prioridad comercial por barrio</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            {velocityLeader
+              ? `${velocityLeader.name} es el barrio mas rapido con ${velocityLeader.velocity_days} dias, mientras ${inventoryLeader?.name || 'el mercado'} concentra el mayor inventario.`
+              : 'No hay referencia de velocidad suficiente para priorizar.'}
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-gray-700">
+            <li>Seguimiento por barrio y no solo por propiedad.</li>
+            <li>Comparar velocidad, absorcion y precio por metro.</li>
+            <li>Activar la cartera donde el cierre es mas probable.</li>
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ejecutivos de venta</p>
+          <h2 className="mt-1 text-lg font-semibold text-gray-900">Accion diaria recomendada</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            {priceLeader
+              ? `${priceLeader.name} marca el precio mas alto por m2 con ${priceLeader.price_per_sqm_uf.toFixed(1)} UF/m2.`
+              : 'No hay referencia de precio suficiente para orientar la accion.'}
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-gray-700">
+            <li>Enfocar llamadas y visitas donde la absorcion ya responde.</li>
+            <li>Usar el ranking de mercado como playbook diario.</li>
+            <li>Documentar cada objecion y proxima accion comercial.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {executiveBarrios.map((neighborhood, index) => (
+          <div key={neighborhood.id} className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                  Top {index + 1}
+                </p>
+                <h3 className="mt-1 text-base font-semibold text-gray-900">{neighborhood.name}</h3>
+              </div>
+              <TrendBadge value={neighborhood.absorption_rate} />
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>Velocidad</p>
+                <p className="mt-1 font-semibold text-gray-900">{neighborhood.velocity_days} dias</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>Inventario</p>
+                <p className="mt-1 font-semibold text-gray-900">{formatNumber(neighborhood.inventory_count)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>UF/m2</p>
+                <p className="mt-1 font-semibold text-gray-900">{neighborhood.price_per_sqm_uf.toFixed(1)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>Tipo</p>
+                <p className="mt-1 font-semibold text-gray-900">{TIPO_LABEL[neighborhood.tipo] || neighborhood.tipo}</p>
               </div>
             </div>
           </div>
@@ -548,6 +642,25 @@ export default function MarketPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {focusNeighborhood && (
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Barrio foco</p>
+              <h3 className="mt-1 text-lg font-semibold text-gray-900">{focusNeighborhood.name}</h3>
+            </div>
+            <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+              {selected ? 'Seleccionado' : 'Sugerido por lectura general'}
+            </span>
+          </div>
+          <p className="mt-3 text-sm text-gray-600">
+            {topMarketRow
+              ? `${topMarketRow.neighborhood} marca la mejor absorcion comercial, mientras ${slowMarketRow?.neighborhood || 'otro barrio'} tiene la lectura mas lenta.`
+              : 'No hay suficiente data de mercado para consolidar una sugerencia ejecutiva.'}
+          </p>
         </div>
       )}
     </div>

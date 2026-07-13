@@ -57,12 +57,12 @@ const PRO_REPORT_CHOICES: ReportChoice[] = [
   },
   {
     id: 'director_accounts',
-    label: 'Directores de cuenta',
+    label: 'Directores de venta',
     description: 'Cartera, metas, conversion y acciones de seguimiento.',
   },
   {
     id: 'seller_playbook',
-    label: 'Vendedores',
+    label: 'Ejecutivos de venta',
     description: 'Playbook diario para priorizar cierres y seguimiento.',
   },
 ]
@@ -82,8 +82,8 @@ const SUPPORT_REPORT_CHOICES: ReportChoice[] = [
 
 const REPORT_TYPE_LABELS: Record<ReportTypeChoice, string> = {
   ceo_brief: 'CEO',
-  director_accounts: 'Directores de cuenta',
-  seller_playbook: 'Vendedores',
+  director_accounts: 'Directores de venta',
+  seller_playbook: 'Ejecutivos de venta',
   weekly_directors: 'Semanal directores',
   monthly_ceo: 'Mensual CEO',
   market_brief: 'Lectura de mercado',
@@ -390,7 +390,7 @@ export default function ReportesPage() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="n-chip">
             <FileText size={14} />
-            Weekly reports
+            Reportes semanales
           </span>
           {weekly?.generatedAt && (
             <span className="n-chip" style={{ background: 'var(--n-success-muted)', color: 'var(--n-success)' }}>
@@ -399,7 +399,7 @@ export default function ReportesPage() {
           )}
           {lastUpdated && (
             <span className="n-chip">
-              AI sync {lastUpdated.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+              Sincronizacion AI {lastUpdated.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>
@@ -409,7 +409,7 @@ export default function ReportesPage() {
               Reportes Pro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 md:text-[15px]" style={{ color: 'var(--n-fg-muted)' }}>
-              Reportes semanales derivados de KPIs reales y biblioteca histÃ³rica de reportes automÃ¡ticos.
+              Reportes semanales derivados de KPIs reales y biblioteca historica de reportes automaticos.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -444,7 +444,7 @@ export default function ReportesPage() {
               Reportes Pro
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Genera una version distinta segun la audiencia: CEO, directores de cuenta o vendedores.
+              Genera una version distinta segun la audiencia: CEO, directores de venta o ejecutivos de venta.
             </p>
           </div>
         </div>
@@ -524,7 +524,7 @@ export default function ReportesPage() {
                   Historial persistido
                 </p>
                 <h3 className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
-                  Weekly reports guardados en `weekly_reports`
+                  Reportes semanales guardados en `weekly_reports`
                 </h3>
               </div>
               <span className="n-chip">{weekly.history.length} snapshots</span>
@@ -539,7 +539,7 @@ export default function ReportesPage() {
                     {formatDate(item.week_start)} - {formatDate(item.week_end)}
                   </p>
                   <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
-                    {item.director_id || 'all'} Â· {item.status} Â· {new Date(item.generated_at).toLocaleDateString('es-CL')}
+                    {item.director_id || 'all'} · {item.status} · {new Date(item.generated_at).toLocaleDateString('es-CL')}
                   </p>
                 </div>
               ))}
@@ -559,7 +559,7 @@ export default function ReportesPage() {
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-                  Ãšltimo reporte generado
+                  Ultimo reporte generado
                 </p>
                 <h3 className="mt-2 text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>
                   {generatedReport.title}
@@ -602,7 +602,7 @@ export default function ReportesPage() {
                   No pudimos actualizar los reportes semanales.
                 </p>
                 <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                  Mostramos la biblioteca histÃ³rica mientras vuelve la fuente calculada.
+                  Mostramos la biblioteca historica mientras vuelve la fuente calculada.
                 </p>
               </div>
             </div>
@@ -626,7 +626,7 @@ export default function ReportesPage() {
                   No pudimos actualizar la biblioteca AI.
                 </p>
                 <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                  Conservamos el Ãºltimo estado visible.
+                  Conservamos el ultimo estado visible.
                 </p>
               </div>
             </div>
@@ -665,7 +665,7 @@ export default function ReportesPage() {
         </div>
         <div className="n-card p-4">
           <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-            Ãšltima semana
+            Ultima semana
           </p>
           <p className="mt-3 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
             {stats.latestWeek ? `${formatDate(stats.latestWeek.week_start)} - ${formatDate(stats.latestWeek.week_end)}` : 'Sin datos'}
@@ -677,7 +677,7 @@ export default function ReportesPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="n-card p-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-              Ventas de la Ãºltima semana
+              Ventas de la ultima semana
             </p>
             <p className="mt-3 text-3xl font-semibold" style={{ color: 'var(--n-primary)' }}>
               {stats.latestWeek.sales_count}
@@ -709,7 +709,7 @@ export default function ReportesPage() {
               Salud operativa del scraper
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Cruza ejecuciones recientes, fuentes activas y anomalÃ­as detectadas para el sistema de reportes.
+              Cruza ejecuciones recientes, fuentes activas y anomalias detectadas para el sistema de reportes.
             </p>
           </div>
           <span className="n-chip">{health?.status || 'unknown'}</span>
@@ -789,7 +789,7 @@ export default function ReportesPage() {
                 Reportes por director
               </h2>
               <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                Consolidado automÃ¡tico por `director_id` usando los KPIs cargados
+                Consolidado automatico por `director_id` usando los KPIs cargados
               </p>
             </div>
             <span className="n-chip">
@@ -813,7 +813,7 @@ export default function ReportesPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: tone.bg, color: tone.fg }}>
-                        {report.status === 'on_track' ? 'En lÃ­nea' : report.status === 'warning' ? 'En observaciÃ³n' : 'Bajo objetivo'}
+                        {report.status === 'on_track' ? 'En linea' : report.status === 'warning' ? 'En observacion' : 'Bajo objetivo'}
                       </span>
                       <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: 'var(--n-primary-muted)', color: 'var(--n-primary)' }}>
                         {report.target_progress}% objetivo
@@ -842,7 +842,7 @@ export default function ReportesPage() {
             <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
               Biblioteca de reportes pro
             </h2>
-            <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
               Historial de reportes almacenados en `ai_reports`
             </p>
           </div>
@@ -858,8 +858,8 @@ export default function ReportesPage() {
           >
             <option value="">Todos los reportes</option>
             <option value="ceo_brief">CEO</option>
-            <option value="director_accounts">Directores de cuenta</option>
-            <option value="seller_playbook">Vendedores</option>
+            <option value="director_accounts">Directores de venta</option>
+            <option value="seller_playbook">Ejecutivos de venta</option>
             <option value="weekly_directors">Semanal directores</option>
             <option value="monthly_ceo">Mensual CEO</option>
             <option value="market_brief">Lectura de mercado</option>
@@ -884,7 +884,7 @@ export default function ReportesPage() {
                 Exportaciones
               </p>
               <h3 className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
-                Variantes por biblioteca, reporte semanal y perfiles sellers
+                Variantes por biblioteca, reporte semanal y perfiles comerciales
               </h3>
             </div>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
@@ -896,7 +896,7 @@ export default function ReportesPage() {
               >
                 <option value="ai_reports">Biblioteca de reportes</option>
                 <option value="weekly_reports">Reportes semanales</option>
-                <option value="profiles">Perfiles sellers</option>
+                <option value="profiles">Perfiles comerciales</option>
               </select>
 
               {exportDataset === 'weekly_reports' && (
@@ -970,8 +970,8 @@ export default function ReportesPage() {
                     style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
                   >
                     <option value="">Todos los roles</option>
-                    <option value="seller">Seller</option>
-                    <option value="director">Director</option>
+                    <option value="seller">Ejecutivo de venta</option>
+                    <option value="director">Director de venta</option>
                     <option value="admin">Admin</option>
                     <option value="ceo">CEO</option>
                   </select>
@@ -1028,7 +1028,7 @@ export default function ReportesPage() {
                         <Calendar size={12} />
                         {formatDate(report.period_date || report.created_at)}
                       </span>
-                      <span>â€¢</span>
+                      <span>·</span>
                       <span>ID {report.id.slice(0, 8)}</span>
                     </div>
                   </div>
@@ -1038,7 +1038,7 @@ export default function ReportesPage() {
           </div>
         ) : (
           <div className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-            TodavÃ­a no hay reportes guardados en `ai_reports`.
+            Todavia no hay reportes guardados en `ai_reports`.
           </div>
         )}
       </div>
