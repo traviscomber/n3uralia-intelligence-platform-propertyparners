@@ -336,6 +336,134 @@ def text_page_story(title, paragraphs, bullets, styles):
     return story
 
 
+def source_table_page(styles):
+    data = [
+        [
+            Paragraph("Fuente", styles["RoadmapTitle"]),
+            Paragraph("Cobertura", styles["RoadmapTitle"]),
+            Paragraph("Rol comercial", styles["RoadmapTitle"]),
+        ],
+        [
+            Paragraph("Portal Inmobiliario", styles["BodyCommercial"]),
+            Paragraph("Casas y propiedades activas en Vitacura", styles["BodyCommercial"]),
+            Paragraph("Base principal de inventario y comparables", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("TOCTOC Search", styles["BodyCommercial"]),
+            Paragraph("Exploracion general del mercado local", styles["BodyCommercial"]),
+            Paragraph("Expande cobertura y detecta oportunidades", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("TOCTOC Casas", styles["BodyCommercial"]),
+            Paragraph("Filtro orientado a casas", styles["BodyCommercial"]),
+            Paragraph("Alinea el pipeline con el foco de esta propuesta", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("TOCTOC Barrios Vitacura", styles["BodyCommercial"]),
+            Paragraph("Lectura por barrio y sector", styles["BodyCommercial"]),
+            Paragraph("Mejora segmentacion y argumentacion comercial", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("icasas.cl", styles["BodyCommercial"]),
+            Paragraph("Busqueda complementaria de mercado", styles["BodyCommercial"]),
+            Paragraph("Aporta validacion cruzada de precios", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("icasas.cl Casas", styles["BodyCommercial"]),
+            Paragraph("Casas filtradas por zona", styles["BodyCommercial"]),
+            Paragraph("Mantiene coherencia con ventas de casas", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Yapo", styles["BodyCommercial"]),
+            Paragraph("Señales de oferta y referencia de mercado", styles["BodyCommercial"]),
+            Paragraph("Suma amplitud y comparacion de mercado", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Chilepropiedades", styles["BodyCommercial"]),
+            Paragraph("Cobertura adicional del mercado", styles["BodyCommercial"]),
+            Paragraph("Ayuda a robustecer la lectura de precios", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Chilepropiedades Casas", styles["BodyCommercial"]),
+            Paragraph("Filtro directo sobre casas", styles["BodyCommercial"]),
+            Paragraph("Refuerza la vertical de este documento", styles["BodyCommercial"]),
+        ],
+    ]
+
+    table = Table(data, colWidths=[1.65 * inch, 2.35 * inch, 2.95 * inch], repeatRows=1)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    return table
+
+
+def agent_table_page(styles):
+    data = [
+        [
+            Paragraph("Agente", styles["RoadmapTitle"]),
+            Paragraph("Funcion", styles["RoadmapTitle"]),
+            Paragraph("Resultado para negocio", styles["RoadmapTitle"]),
+        ],
+        [
+            Paragraph("Agente de scraping", styles["BodyCommercial"]),
+            Paragraph("Orquesta la captura de propiedades y fuentes externas", styles["BodyCommercial"]),
+            Paragraph("Mantiene el inventario actualizado y comparable", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Agente de validacion", styles["BodyCommercial"]),
+            Paragraph("Revisa duplicados, precios, barrio y coherencia", styles["BodyCommercial"]),
+            Paragraph("Reduce ruido y mejora la calidad del dato", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Agente de reportes", styles["BodyCommercial"]),
+            Paragraph("Genera reportes semanales y resuelve distribucion", styles["BodyCommercial"]),
+            Paragraph("Convierte datos en entregables listos para el cliente", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Agente de refresco", styles["BodyCommercial"]),
+            Paragraph("Ejecuta cron jobs de actualizacion de fuentes", styles["BodyCommercial"]),
+            Paragraph("Sostiene continuidad operativa sin trabajo manual", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Agente de monitoreo", styles["BodyCommercial"]),
+            Paragraph("Observa salud de fuentes, runs y anomalías", styles["BodyCommercial"]),
+            Paragraph("Permite reaccionar antes de que el pipeline se degrade", styles["BodyCommercial"]),
+        ],
+    ]
+
+    table = Table(data, colWidths=[1.55 * inch, 2.7 * inch, 2.65 * inch], repeatRows=1)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    return table
+
+
 def draw_cover_background(canvas_obj, doc):
     width, height = A4
     canvas_obj.saveState()
@@ -520,10 +648,10 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
             "Fuentes de datos",
             [
                 "El valor de la plataforma aumenta cuando el mercado se alimenta desde varias fuentes y no depende de una sola vista. La integracion de datos hace mas robusta la lectura y mejora la confianza en el resultado.",
-                "En una propuesta comercial, esta pagina transmite cobertura, continuidad y capacidad de escalar.",
+                "Esta pagina deja visibles las fuentes de scraping reales para que el cliente entienda de donde sale la data y como se refuerza la cobertura comercial.",
             ],
             [
-                "Estructura pensada para sumar mas fuentes en el tiempo.",
+                "Fuentes activas de scraping y validacion cruzada.",
                 "Base para historicidad y consolidacion de mercado.",
                 "Mejor calidad de contexto para decisiones comerciales.",
             ],
@@ -560,6 +688,44 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     for image_path, spec in zip(image_paths, page_specs):
         title, paragraphs, bullets, caption = spec
         story.extend(image_page_story(title, paragraphs, bullets, image_path, caption, styles))
+
+    story.extend(
+        text_page_story(
+            "Fuentes de scraping visibles",
+            [
+                "El pipeline actual se apoya en un conjunto de fuentes externas que cubren casas, barrios y referencia de mercado en Vitacura. Esta seccion hace explicito que la plataforma no depende de una sola pagina.",
+                "La combinacion de fuentes permite comparar, deduplicar y sostener la propuesta comercial con evidencia mas amplia.",
+            ],
+            [
+                "Portal Inmobiliario como fuente principal de inventario.",
+                "TOCTOC, icasas.cl, Yapo y Chilepropiedades como validacion cruzada.",
+                "Enfoque exclusivo en ventas de casas para este documento.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.12 * inch))
+    story.append(source_table_page(styles))
+    story.append(PageBreak())
+
+    story.extend(
+        text_page_story(
+            "Agentes y automatizacion",
+            [
+                "El trabajo de los agentes automatizados ya esta presente en la operacion: scraping, validacion, reportes, refresco de fuentes y monitoreo de salud. Esta pagina lo vuelve visible para que el valor de la plataforma no quede oculto.",
+                "En una propuesta comercial, los agentes ayudan a explicar que el sistema no solo muestra datos, sino que trabaja de forma continua para mantener la informacion util y vigente.",
+            ],
+            [
+                "Agente de scraping para capturar nuevas propiedades.",
+                "Agente de validacion para controlar duplicados y consistencia.",
+                "Agente de reportes para generar entregables semanales.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.12 * inch))
+    story.append(agent_table_page(styles))
+    story.append(PageBreak())
 
     story.extend(
         text_page_story(
