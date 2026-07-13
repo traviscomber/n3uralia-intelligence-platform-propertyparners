@@ -166,8 +166,8 @@ export default function PropertiesPage() {
       {/* Header */}
       <div className="flex items-start justify-between pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo, Chilepropiedades y Chilepropiedades Casas</p>
+          <h1 className="text-3xl font-bold text-gray-900">Casas Vitacura</h1>
+          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} casas cargadas � foco operativo en Vitacura</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -177,14 +177,14 @@ export default function PropertiesPage() {
             style={{ background: '#6b8e85' }}
           >
             <Download size={16} />
-            {scraping ? 'Scrapeando...' : 'Scrape Casas Vitacura'}
+            {scraping ? 'Scrapeando...' : 'Sincronizar Casas'}
           </button>
           <button
             onClick={() => setShowAdvancedScraping((prev) => !prev)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
             style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
           >
-            {showAdvancedScraping ? 'Avanzado ▲' : 'Avanzado ▼'}
+            {showAdvancedScraping ? 'Avanzado ^' : 'Avanzado v'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
@@ -461,3 +461,4 @@ export default function PropertiesPage() {
     </div>
   )
 }
+
