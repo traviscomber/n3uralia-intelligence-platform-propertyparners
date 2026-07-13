@@ -169,22 +169,22 @@ export default function PropertiesPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => handleScrapeMode('all')}
+            onClick={() => handleScrapeMode('houses')}
             disabled={scraping}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             style={{ background: '#6b8e85' }}
           >
             <Download size={16} />
-            {scraping ? 'Scrapeando...' : 'Scrape Completo'}
+            {scraping ? 'Scrapeando...' : 'Scrape Casas Vitacura'}
           </button>
           <button
-            onClick={() => handleScrapeMode('houses')}
+            onClick={() => handleScrapeMode('all')}
             disabled={scraping}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: '#5f7f78' }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
           >
-            <Home size={16} />
-            {scraping ? 'Scrapeando...' : 'Scrape Casas Vitacura'}
+            <Download size={16} />
+            {scraping ? 'Scrapeando...' : 'Backfill General'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
