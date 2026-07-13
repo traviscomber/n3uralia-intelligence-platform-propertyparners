@@ -341,56 +341,56 @@ def source_table_page(styles):
         [
             Paragraph("Fuente", styles["RoadmapTitle"]),
             Paragraph("Cobertura", styles["RoadmapTitle"]),
-            Paragraph("Rol comercial", styles["RoadmapTitle"]),
+            Paragraph("Rol", styles["RoadmapTitle"]),
         ],
         [
             Paragraph("Portal Inmobiliario", styles["BodyCommercial"]),
             Paragraph("Casas y propiedades activas en Vitacura", styles["BodyCommercial"]),
-            Paragraph("Base principal de inventario y comparables", styles["BodyCommercial"]),
+            Paragraph("Inventario base", styles["BodyCommercial"]),
         ],
         [
             Paragraph("TOCTOC Search", styles["BodyCommercial"]),
             Paragraph("Exploracion general del mercado local", styles["BodyCommercial"]),
-            Paragraph("Expande cobertura y detecta oportunidades", styles["BodyCommercial"]),
+            Paragraph("Cobertura extra", styles["BodyCommercial"]),
         ],
         [
             Paragraph("TOCTOC Casas", styles["BodyCommercial"]),
             Paragraph("Filtro orientado a casas", styles["BodyCommercial"]),
-            Paragraph("Alinea el pipeline con el foco de esta propuesta", styles["BodyCommercial"]),
+            Paragraph("Foco casas", styles["BodyCommercial"]),
         ],
         [
             Paragraph("TOCTOC Barrios Vitacura", styles["BodyCommercial"]),
             Paragraph("Lectura por barrio y sector", styles["BodyCommercial"]),
-            Paragraph("Mejora segmentacion y argumentacion comercial", styles["BodyCommercial"]),
+            Paragraph("Segmentacion", styles["BodyCommercial"]),
         ],
         [
             Paragraph("icasas.cl", styles["BodyCommercial"]),
             Paragraph("Busqueda complementaria de mercado", styles["BodyCommercial"]),
-            Paragraph("Aporta validacion cruzada de precios", styles["BodyCommercial"]),
+            Paragraph("Validacion cruzada", styles["BodyCommercial"]),
         ],
         [
             Paragraph("icasas.cl Casas", styles["BodyCommercial"]),
             Paragraph("Casas filtradas por zona", styles["BodyCommercial"]),
-            Paragraph("Mantiene coherencia con ventas de casas", styles["BodyCommercial"]),
+            Paragraph("Foco casas", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Yapo", styles["BodyCommercial"]),
             Paragraph("Señales de oferta y referencia de mercado", styles["BodyCommercial"]),
-            Paragraph("Suma amplitud y comparacion de mercado", styles["BodyCommercial"]),
+            Paragraph("Referencia externa", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Chilepropiedades", styles["BodyCommercial"]),
             Paragraph("Cobertura adicional del mercado", styles["BodyCommercial"]),
-            Paragraph("Ayuda a robustecer la lectura de precios", styles["BodyCommercial"]),
+            Paragraph("Cobertura extra", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Chilepropiedades Casas", styles["BodyCommercial"]),
             Paragraph("Filtro directo sobre casas", styles["BodyCommercial"]),
-            Paragraph("Refuerza la vertical de este documento", styles["BodyCommercial"]),
+            Paragraph("Foco casas", styles["BodyCommercial"]),
         ],
     ]
 
-    table = Table(data, colWidths=[1.65 * inch, 2.35 * inch, 2.95 * inch], repeatRows=1)
+    table = Table(data, colWidths=[1.7 * inch, 2.5 * inch, 2.75 * inch], repeatRows=1)
     table.setStyle(
         TableStyle(
             [
@@ -402,8 +402,8 @@ def source_table_page(styles):
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("LEFTPADDING", (0, 0), (-1, -1), 10),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                ("TOPPADDING", (0, 0), (-1, -1), 8),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
             ]
         )
     )
@@ -444,7 +444,7 @@ def agent_table_page(styles):
         ],
     ]
 
-    table = Table(data, colWidths=[1.55 * inch, 2.7 * inch, 2.65 * inch], repeatRows=1)
+    table = Table(data, colWidths=[1.45 * inch, 2.75 * inch, 2.7 * inch], repeatRows=1)
     table.setStyle(
         TableStyle(
             [
@@ -458,6 +458,124 @@ def agent_table_page(styles):
                 ("RIGHTPADDING", (0, 0), (-1, -1), 10),
                 ("TOPPADDING", (0, 0), (-1, -1), 8),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    return table
+
+
+def data_connections_page(styles):
+    data = [
+        [
+            Paragraph("Conexion", styles["RoadmapTitle"]),
+            Paragraph("Punto tecnico", styles["RoadmapTitle"]),
+            Paragraph("Uso comercial", styles["RoadmapTitle"]),
+        ],
+        [
+            Paragraph("Scraping principal", styles["BodyCommercial"]),
+            Paragraph("/api/scrape/portal-inmobiliario", styles["BodyCommercial"]),
+            Paragraph("Captura casas y comparables en Vitacura", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Benchmark Portal", styles["BodyCommercial"]),
+            Paragraph("/api/benchmarks/portal-inmobiliario", styles["BodyCommercial"]),
+            Paragraph("Actualiza referencia de precios y señales del mercado", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Benchmark externo", styles["BodyCommercial"]),
+            Paragraph("/api/benchmarks/realtor", styles["BodyCommercial"]),
+            Paragraph("Cruza evidencia externa para robustecer el pricing", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Refresco de fuentes", styles["BodyCommercial"]),
+            Paragraph("/api/cron/refresh-sources", styles["BodyCommercial"]),
+            Paragraph("Dispara recoleccion periodica sin trabajo manual", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Reporte semanal", styles["BodyCommercial"]),
+            Paragraph("/api/reports/weekly", styles["BodyCommercial"]),
+            Paragraph("Genera el reporte base para cada director", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Distribucion automatica", styles["BodyCommercial"]),
+            Paragraph("/api/cron/deliver-weekly-reports", styles["BodyCommercial"]),
+            Paragraph("Entrega reportes por canal definido por el cliente", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("Salud del pipeline", styles["BodyCommercial"]),
+            Paragraph("/api/scrape/health", styles["BodyCommercial"]),
+            Paragraph("Monitorea estado, errores y continuidad operativa", styles["BodyCommercial"]),
+        ],
+    ]
+
+    table = Table(data, colWidths=[1.55 * inch, 2.65 * inch, 2.7 * inch], repeatRows=1)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ]
+        )
+    )
+    return table
+
+
+def report_flow_page(styles):
+    data = [
+        [
+            Paragraph("Paso", styles["RoadmapTitle"]),
+            Paragraph("Que hace", styles["RoadmapTitle"]),
+            Paragraph("Salida", styles["RoadmapTitle"]),
+        ],
+        [
+            Paragraph("1. Captura", styles["BodyCommercial"]),
+            Paragraph("Los agentes recorren las fuentes y levantan nuevas propiedades o cambios relevantes.", styles["BodyCommercial"]),
+            Paragraph("Inventario actualizado y limpio", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("2. Validacion", styles["BodyCommercial"]),
+            Paragraph("Se revisan duplicados, barrio, precio, tipo de propiedad y consistencia comercial.", styles["BodyCommercial"]),
+            Paragraph("Base depurada para analisis", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("3. Analisis", styles["BodyCommercial"]),
+            Paragraph("El motor comercial calcula tendencias, conversion, velocidad y posicionamiento.", styles["BodyCommercial"]),
+            Paragraph("Insigths ejecutivos por barrio", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("4. Redaccion", styles["BodyCommercial"]),
+            Paragraph("El agente de reportes transforma el analisis en narrativa comercial lista para compartir.", styles["BodyCommercial"]),
+            Paragraph("Reporte semanal en formato cliente", styles["BodyCommercial"]),
+        ],
+        [
+            Paragraph("5. Distribucion", styles["BodyCommercial"]),
+            Paragraph("Los reportes salen por el canal definido y quedan preparados para seguimiento.", styles["BodyCommercial"]),
+            Paragraph("Entrega automatica al equipo", styles["BodyCommercial"]),
+        ],
+    ]
+
+    table = Table(data, colWidths=[1.2 * inch, 3.25 * inch, 2.45 * inch], repeatRows=1)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#143f38")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d7e6e0")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#d7e6e0")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
             ]
         )
     )
@@ -550,6 +668,24 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
             styles["BodyCommercial"],
         )
     )
+    story.append(PageBreak())
+    story.extend(
+        text_page_story(
+            "Conexiones de datos",
+            [
+                "La plataforma se conecta directamente a los puntos que hacen operativa la inteligencia comercial. Esto deja claro donde entra la data y como se sostiene la actualizacion continua.",
+                "La integracion no es manual: se apoya en rutas y procesos ya definidos para scraping, benchmarking, refresco y monitoreo.",
+            ],
+            [
+                "Conexion directa al scraper principal de propiedades.",
+                "Benchmarks separados para Portal y fuentes externas.",
+                "Cron jobs para refresco y distribucion automatica.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.12 * inch))
+    story.append(data_connections_page(styles))
     story.append(PageBreak())
 
     page_specs = [
@@ -725,6 +861,25 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     )
     story.append(Spacer(1, 0.12 * inch))
     story.append(agent_table_page(styles))
+    story.append(PageBreak())
+
+    story.extend(
+        text_page_story(
+            "Reportes automaticos",
+            [
+                "Los reportes no se arman a mano. Un flujo automatizado toma la data, la sintetiza y la transforma en una pieza ejecutiva que puede salir cada semana o cada ciclo definido por el cliente.",
+                "El resultado es una entrega consistente, con la misma estructura, pero alimentada por datos reales y actualizados.",
+            ],
+            [
+                "Reporte semanal para directores y equipo comercial.",
+                "Narrativa resumida, indicadores y lectura por barrio.",
+                "Salida automatica desde el motor de reportes.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.12 * inch))
+    story.append(report_flow_page(styles))
     story.append(PageBreak())
 
     story.extend(
