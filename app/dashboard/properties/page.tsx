@@ -132,13 +132,16 @@ export default function PropertiesPage() {
     }
   }
 
-  async function handleScrapePortal() {
+  async function handleScrapeMode(mode: 'all' | 'houses') {
     setScraping(true)
     try {
-      const res = await fetch('/api/scrape/portal-inmobiliario?source=all', { method: 'POST' })
+      const res = await fetch(`/api/scrape/portal-inmobiliario?source=${mode}`, { method: 'POST' })
       const json = await res.json()
       if (res.ok) {
-        showToast('success', `Scraping completo: ${json.inserted}/${json.scraped} propiedades importadas desde Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo, Chilepropiedades y Chilepropiedades Casas`)
+        const label = mode === 'houses'
+          ? 'casas de Vitacura desde Portal Inmobiliario, TOCTOC Casas, TOCTOC Barrios Vitacura, icasas.cl Casas y Chilepropiedades Casas'
+          : 'Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo, Chilepropiedades y Chilepropiedades Casas'
+        showToast('success', `Scraping ${mode === 'houses' ? 'casas' : 'completo'}: ${json.inserted}/${json.scraped} propiedades importadas desde ${label}`)
         await loadProperties()
       } else {
         showToast('error', `Error: ${json.error || 'Fallo al scraping'}`)
@@ -166,13 +169,22 @@ export default function PropertiesPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={handleScrapePortal}
+            onClick={() => handleScrapeMode('all')}
             disabled={scraping}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             style={{ background: '#6b8e85' }}
           >
             <Download size={16} />
-            {scraping ? 'Scrapeando...' : 'Scrape Portal + TOCTOC'}
+            {scraping ? 'Scrapeando...' : 'Scrape Completo'}
+          </button>
+          <button
+            onClick={() => handleScrapeMode('houses')}
+            disabled={scraping}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#5f7f78' }}
+          >
+            <Home size={16} />
+            {scraping ? 'Scrapeando...' : 'Scrape Casas Vitacura'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}

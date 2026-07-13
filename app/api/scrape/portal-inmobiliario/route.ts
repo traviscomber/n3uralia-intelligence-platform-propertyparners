@@ -692,13 +692,15 @@ function dedupeProperties(rows: ScrapedProperty[]) {
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({})) as { source?: string }
   const source = body.source || new URL(request.url).searchParams.get('source') || 'all'
+  const isAllMode = source === 'all'
+  const shouldRun = (...modes: string[]) => isAllMode || modes.includes(source)
   const runs: SourceRun[] = []
   const startedAt = new Date().toISOString()
 
   try {
     const allRows: ScrapedProperty[] = []
 
-    if (source === 'all' || source === 'portal') {
+    if (shouldRun('portal', 'houses')) {
       const portalRows = await scrapePortalListings(120)
       const uniquePortal = dedupeProperties(portalRows)
       const { inserted, errors } = await insertProperties(uniquePortal)
@@ -707,7 +709,7 @@ export async function POST(request: Request) {
       await syncSourceStats('Portal Inmobiliario', 1, errors.length ? 'error' : 'active', uniquePortal.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'toctoc') {
+    if (shouldRun('toctoc')) {
       const toctocRows = await scrapeToctocListings(20)
       const uniqueToctoc = dedupeProperties(toctocRows)
       const { inserted, errors } = await insertProperties(uniqueToctoc)
@@ -716,7 +718,7 @@ export async function POST(request: Request) {
       await syncSourceStats('TOCTOC Search', 2, errors.length ? 'error' : 'active', uniqueToctoc.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'toctoc-houses') {
+    if (shouldRun('toctoc-houses', 'houses')) {
       const houseToctocRows = await scrapeToctocListings(20, TOCTOC_HOUSES_SEARCH_URL, 'toctoc_houses_search')
       const uniqueHouseToctoc = dedupeProperties(houseToctocRows)
       const { inserted, errors } = await insertProperties(uniqueHouseToctoc)
@@ -725,7 +727,7 @@ export async function POST(request: Request) {
       await syncSourceStats('TOCTOC Casas', 3, errors.length ? 'error' : 'active', uniqueHouseToctoc.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'toctoc-vitacura-barrio') {
+    if (shouldRun('toctoc-vitacura-barrio', 'houses')) {
       const barrioRows = await scrapeToctocListings(30, TOCTOC_VITACURA_BARRIOS_URLS, 'toctoc_vitacura_barrio_search')
       const uniqueBarrioRows = dedupeProperties(barrioRows)
       const { inserted, errors } = await insertProperties(uniqueBarrioRows)
@@ -734,7 +736,7 @@ export async function POST(request: Request) {
       await syncSourceStats('TOCTOC Barrios Vitacura', 4, errors.length ? 'error' : 'active', uniqueBarrioRows.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'icasas') {
+    if (shouldRun('icasas')) {
       const icasasRows = await scrapeIcasasListings(20)
       const uniqueIcasas = dedupeProperties(icasasRows)
       const { inserted, errors } = await insertProperties(uniqueIcasas)
@@ -743,7 +745,7 @@ export async function POST(request: Request) {
       await syncSourceStats('icasas.cl', 5, errors.length ? 'error' : 'active', uniqueIcasas.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'icasas-houses') {
+    if (shouldRun('icasas-houses', 'houses')) {
       const houseIcasasRows = await scrapeIcasasListings(20, ICASAS_HOUSES_SEARCH_URL, 'icasas_houses_search')
       const uniqueHouseIcasas = dedupeProperties(houseIcasasRows)
       const { inserted, errors } = await insertProperties(uniqueHouseIcasas)
@@ -752,7 +754,7 @@ export async function POST(request: Request) {
       await syncSourceStats('icasas.cl Casas', 6, errors.length ? 'error' : 'active', uniqueHouseIcasas.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'yapo') {
+    if (shouldRun('yapo')) {
       const yapoRows = await scrapeYapoListings(20)
       const uniqueYapo = dedupeProperties(yapoRows)
       const { inserted, errors } = await insertProperties(uniqueYapo)
@@ -761,7 +763,7 @@ export async function POST(request: Request) {
       await syncSourceStats('Yapo Search', 7, errors.length ? 'error' : 'active', uniqueYapo.length, errors[0] || null)
     }
 
-    if (source === 'all' || source === 'chilepropiedades') {
+    if (shouldRun('chilepropiedades')) {
       try {
         const chileRows = await scrapeChilePropiedadesListings(20)
         const uniqueChile = dedupeProperties(chileRows)
@@ -776,7 +778,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (source === 'all' || source === 'chilepropiedades-houses') {
+    if (shouldRun('chilepropiedades-houses', 'houses')) {
       try {
         const houseRows = await scrapeChilePropiedadesListings(20, CHILEPROPIEDADES_HOUSES_BASE_URL, 'chilepropiedades_houses_search')
         const uniqueHouse = dedupeProperties(houseRows)
