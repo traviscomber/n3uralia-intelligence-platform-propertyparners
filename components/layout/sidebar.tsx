@@ -53,6 +53,24 @@ const navItems = [
   },
 ]
 
+const roleNavItems = [
+  {
+    label: 'Vista CEO',
+    href: '/dashboard/ceo',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="8,2 14,6 14,10 8,14 2,10 2,6" /><circle cx="8" cy="8" r="2" /></svg>,
+  },
+  {
+    label: 'Vista Director',
+    href: '/dashboard/director',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><circle cx="13" cy="5" r="1.5" /><path d="M14.5 12c0-1.7 1.3-3 3-3" strokeWidth="1.2" /></svg>,
+  },
+  {
+    label: 'Vista Agente',
+    href: '/dashboard/agente',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><polyline points="6,10 8,12 11,9" /></svg>,
+  },
+]
+
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
 
@@ -86,6 +104,33 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                   }}
                 >
                   <span style={{ color: isActive ? '#8fb2aa' : '#b9bfbc' }}>{item.icon}</span>
+                  <span className="truncate text-[13px]">{item.label}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+
+        {/* Role dashboards separator */}
+        <div className="mt-4 mb-1 px-3 flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#c4cfc9' }}>Dashboards</span>
+          <div className="flex-1 h-px" style={{ background: '#e8f0ed' }} />
+        </div>
+        <ul className="flex flex-col gap-0.5">
+          {roleNavItems.map(item => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all"
+                  style={{
+                    color: isActive ? '#173634' : '#9ca9a3',
+                    background: isActive ? '#f0f7f4' : 'transparent',
+                    borderLeft: isActive ? '2px solid #b89a7e' : '2px solid transparent',
+                  }}
+                >
+                  <span style={{ color: isActive ? '#b89a7e' : '#b9bfbc' }}>{item.icon}</span>
                   <span className="truncate text-[13px]">{item.label}</span>
                 </Link>
               </li>

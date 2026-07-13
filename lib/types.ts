@@ -131,6 +131,19 @@ export interface ScrapeHealthIssue {
   detail: string
 }
 
+export interface AgentActivity {
+  id: string
+  agent_id: string
+  activity_type: 'llamada' | 'visita' | 'oferta' | 'cierre'
+  property_id: string | null
+  description: string | null
+  value_uf: number | null
+  status: 'pending' | 'done' | 'lost'
+  scheduled_at: string | null
+  completed_at: string | null
+  created_at: string
+}
+
 export interface ScrapeHealthSnapshot {
   id: number
   status: 'healthy' | 'warning' | 'critical' | 'unknown'
