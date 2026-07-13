@@ -28,11 +28,12 @@ PUBLIC_DIR = ROOT / "public"
 DOCS_DIR = ROOT / "docs"
 SOURCE_PDF = DOCS_DIR / "propuesta-comercial-vitacura-juan-2026-07-13-v2.pdf"
 LOGO_PATH = PUBLIC_DIR / "n3uralia-logo.webp"
+REPORT_STAMP = "2026-07-13"
+REPORT_FILENAME = f"{REPORT_STAMP}_PC_PropertyPartners.pdf"
 
 OUTPUTS = [
-    PUBLIC_DIR / "propuesta-profesional-completa.pdf",
-    PUBLIC_DIR / "propuesta-comercial-n3uralia.pdf",
-    DOCS_DIR / "2026-07-13_PC_PropertyPartners.pdf",
+    PUBLIC_DIR / REPORT_FILENAME,
+    DOCS_DIR / REPORT_FILENAME,
 ]
 
 IMAGE_OUTPUTS = [
@@ -615,9 +616,9 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
         text_page_story(
             "Resumen ejecutivo",
             [
-                "Esta propuesta formal presenta una plataforma comercial pensada para apoyar la venta de casas en Vitacura con respaldo de datos, lectura territorial y una narrativa ejecutiva clara.",
+                "Esta propuesta formal presenta una plataforma comercial pensada para apoyar la venta de casas en Vitacura con una lectura de mercado clara, ordenada y util para el trabajo comercial diario.",
                 "El alcance queda concentrado exclusivamente en ventas de casas. El modulo de arriendo se mantiene fuera de este documento para conservar foco comercial y consistencia en la propuesta.",
-                "La solucion integra captura de datos, validacion, analisis, valorizacion y reportes automaticos para convertir informacion dispersa en material util para reuniones, seguimiento y presentaciones comerciales.",
+                "La solucion integra cobertura de mercado, validacion de informacion, valorizacion y reportes automaticos para convertir informacion dispersa en material util para reuniones, seguimiento y presentaciones comerciales.",
             ],
             [],
             styles,
@@ -633,13 +634,13 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     story.append(PageBreak())
     story.extend(
         text_page_story(
-            "Fuentes y alcance de datos",
+            "Cobertura de mercado",
             [
-                "La plataforma se apoya en fuentes de mercado y procesos de scraping para sostener una lectura actualizada del segmento. Esto permite comparar casas, barrios y referencias comerciales sin depender de una sola fuente.",
-                "El documento expone la procedencia de la informacion de manera simple para que el cliente entienda de donde sale la data y como se valida antes de presentarse.",
+                "La plataforma se alimenta de varias fuentes de mercado para sostener una lectura actualizada del segmento. Esto permite comparar casas, barrios y referencias comerciales sin depender de una sola fuente.",
+                "El documento expone la procedencia de la informacion de forma simple para que el cliente entienda de donde sale la informacion y como se valida antes de presentarse.",
             ],
             [
-                "Portal Inmobiliario como fuente principal de inventario.",
+                "Portal Inmobiliario como referencia principal de inventario.",
                 "TOCTOC, icasas.cl, Yapo y Chilepropiedades como validacion cruzada.",
                 "Enfoque exclusivo en ventas de casas para este documento.",
             ],
@@ -649,15 +650,15 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     story.append(Spacer(1, 0.12 * inch))
     story.extend(
         text_page_story(
-            "Operacion y automatizacion",
+            "Operacion comercial",
             [
-                "El trabajo automatizado cubre captura, validacion, analisis y generacion de reportes. De este modo la informacion puede mantenerse actualizada sin depender de procesos manuales repetitivos.",
-                "Los agentes trabajan en segundo plano para ordenar la data, detectar inconsistencias y transformar el resultado en una salida util para uso comercial.",
+                "El trabajo automatizado cubre actualizacion, validacion y generacion de reportes. De este modo la informacion puede mantenerse actualizada sin depender de procesos manuales repetitivos.",
+                "Los procesos en segundo plano ordenan la informacion, detectan inconsistencias y transforman el resultado en una salida util para uso comercial.",
             ],
             [
-                "Agente de scraping para capturar nuevas propiedades.",
-                "Agente de validacion para controlar duplicados y consistencia.",
-                "Agente de reportes para generar entregables semanales.",
+                "Actualizacion continua del inventario.",
+                "Control de duplicados, barrio y coherencia comercial.",
+                "Reportes semanales listos para compartir con clientes y equipo.",
             ],
             styles,
         )
@@ -733,7 +734,7 @@ def build_pdf() -> None:
 
         story = build_story([], styles, render_logo_path)
 
-        tmp_pdf = temp_dir / "propuesta-comercial-vitacura.pdf"
+        tmp_pdf = temp_dir / REPORT_FILENAME
         doc = SimpleDocTemplate(
             str(tmp_pdf),
             pagesize=A4,
@@ -750,7 +751,7 @@ def build_pdf() -> None:
             ensure_parent(output)
             shutil.copyfile(tmp_pdf, output)
 
-    print("PDF generado y sincronizado en public/ y docs/")
+        print(f"PDF generado y sincronizado como {REPORT_FILENAME} en public/ y docs/")
 
 
 if __name__ == "__main__":
