@@ -45,13 +45,12 @@ type MarketBenchmark = {
 
 const SEARCH_URLS = [
   'https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/lo-castillo-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/villa-el-dorado-vitacura-santiago-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/lo-curro-vitacura-santiago-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/santa-maria-de-manquehue-vitacura-santiago-metropolitana',
-  'https://www.portalinmobiliario.com/venta/casa/la-llaveria-vitacura-santiago-metropolitana',
-  'https://www.portalinmobiliario.com/venta/casa/estadio-croata-vitacura-santiago-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/jardin-del-este-vitacura-santiago-metropolitana',
-  'https://www.portalinmobiliario.com/venta/casa/borde-rio-casa-piedra-vitacura-santiago-metropolitana',
-  'https://www.portalinmobiliario.com/venta/casa/nuestra-senora-del-rosario-vitacura-santiago-metropolitana',
+  'https://www.portalinmobiliario.com/venta/casa/luis-pasteur-vitacura-santiago-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/juan-xxiii-vitacura-santiago-metropolitana',
   'https://www.portalinmobiliario.com/venta/casa/estadio-manquehue-vitacura-santiago-metropolitana',
 ]
@@ -78,14 +77,17 @@ const CHILEPROPIEDADES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta
 const CHILEPROPIEDADES_HOUSES_BASE_URL = 'https://chilepropiedades.cl/propiedades/venta/casa/vitacura'
 
 const SECTORS = [
+  { keys: ['lo castillo'], lat: -33.3790, lng: -70.5930, name: 'Lo Castillo' },
+  { keys: ['villa el dorado'], lat: -33.3765, lng: -70.5945, name: 'Villa El Dorado' },
   { keys: ['nueva costanera', 'costanera norte'], lat: -33.3885, lng: -70.5820, name: 'Nueva Costanera' },
-  { keys: ['el golf', 'golf'], lat: -33.3840, lng: -70.5900, name: 'El Golf' },
-  { keys: ['la dehesa', 'dehesa'], lat: -33.3750, lng: -70.5770, name: 'La Dehesa' },
-  { keys: ['apoquindo'], lat: -33.3970, lng: -70.5900, name: 'Apoquindo Alto' },
-  { keys: ['alonso de cordova', 'alonso de córdova'], lat: -33.4050, lng: -70.6090, name: 'Alonso de Cordova' },
-  { keys: ['manquehue'], lat: -33.4140, lng: -70.5990, name: 'Manquehue' },
-  { keys: ['andres bello', 'andrés bello'], lat: -33.3920, lng: -70.6100, name: 'Andres Bello' },
-  { keys: ['candelaria', 'jardin del este', 'bicentenario'], lat: -33.3900, lng: -70.6000, name: 'Vitacura Centro' },
+  { keys: ['lo curro'], lat: -33.3780, lng: -70.5890, name: 'Lo Curro' },
+  { keys: ['santa maria de manquehue'], lat: -33.3750, lng: -70.5950, name: 'Santa Maria de Manquehue' },
+  { keys: ['jardin del este', 'candelaria', 'bicentenario'], lat: -33.3810, lng: -70.6000, name: 'Jardin del Este' },
+  { keys: ['luis pasteur'], lat: -33.3890, lng: -70.5890, name: 'Luis Pasteur' },
+  { keys: ['juan xxiii'], lat: -33.3880, lng: -70.5970, name: 'Juan XXIII' },
+  { keys: ['las hualtatas'], lat: -33.3910, lng: -70.5880, name: 'Las Hualtatas' },
+  { keys: ['las tranqueras'], lat: -33.3930, lng: -70.5990, name: 'Las Tranqueras' },
+  { keys: ['estadio manquehue'], lat: -33.3940, lng: -70.5940, name: 'Estadio Manquehue' },
   { keys: ['vitacura', 'av vitacura', 'americo vespucio'], lat: -33.3900, lng: -70.5980, name: 'Vitacura Centro' },
 ]
 

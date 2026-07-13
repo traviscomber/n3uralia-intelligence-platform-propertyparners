@@ -210,7 +210,7 @@ export default function DashboardHome() {
               <p className="text-xs font-semibold uppercase" style={{ color: '#8fb2aa' }}>Próximas Acciones:</p>
               <ul className="mt-2 space-y-1 text-xs" style={{ color: '#555a56' }}>
                 <li>• Aumentar prospección en Nueva Costanera (90% absorción)</li>
-                <li>• Optimizar timing de venta en La Dehesa (velocidad: 62 días)</li>
+                <li>• Optimizar timing de venta en Lo Curro (velocidad: 62 días)</li>
               </ul>
             </div>
           </div>

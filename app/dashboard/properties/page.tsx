@@ -21,9 +21,9 @@ interface Property {
 }
 
 const NEIGHBORHOODS = [
-  'Vitacura Centro', 'El Golf', 'La Dehesa', 'Nueva Costanera',
-  'Costanera Sur', 'La Florida', 'Andres Bello', 'Huerfanos',
-  'Apoquindo Alto', 'Alonso de Cordova', 'Manquehue',
+  'Vitacura Centro', 'Lo Castillo', 'Villa El Dorado', 'Lo Curro',
+  'Santa Maria de Manquehue', 'Nueva Costanera', 'Jardin del Este', 'Las Hualtatas',
+  'Las Tranqueras', 'Luis Pasteur', 'Juan XXIII', 'Estadio Manquehue',
 ]
 
 const PROPERTY_TYPES = ['departamento', 'casa', 'oficina', 'local_comercial']
