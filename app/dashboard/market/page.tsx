@@ -263,8 +263,8 @@ export default function MarketPage() {
       {/* Header */}
       <div className="pb-5 flex items-start justify-between" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Market Intelligence</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Vitacura — {neighborhoods.length} barrios activos · datos en tiempo real</p>
+          <h1 className="text-3xl font-bold text-gray-900">Inteligencia de Mercado Vitacura</h1>
+          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Vitacura - {neighborhoods.length} barrios activos - datos en tiempo real</p>
         </div>
         <div className="flex items-center gap-3 mt-1">
           <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: '#555a56' }}>
@@ -553,3 +553,4 @@ export default function MarketPage() {
     </div>
   )
 }
+
