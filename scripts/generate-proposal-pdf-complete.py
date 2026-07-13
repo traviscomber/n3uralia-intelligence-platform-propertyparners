@@ -895,6 +895,7 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
                 "Valor del proyecto: CLP $5.000.000.",
                 "Plazo de ejecucion: 2 meses.",
                 "Forma de pago: 50% al inicio y 50% contra entrega.",
+                "Soporte mensual opcional disponible por CLP $500.000 + IVA / mes para ajustes, mantenimiento y mejoras menores.",
             ],
             styles,
         )
