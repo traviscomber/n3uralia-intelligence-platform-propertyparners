@@ -156,6 +156,19 @@ function hashLike(input: string) {
   return hash.toString(36)
 }
 
+function canonicalPropertyKey(row: ScrapedProperty) {
+  const roundedPrice = Math.round(row.price_uf / 5) * 5
+  const roundedArea = Math.round(row.area_m2 / 2) * 2
+  return [
+    normalizeText(row.address),
+    normalizeText(row.neighborhood),
+    roundedPrice,
+    roundedArea,
+    row.bedrooms,
+    row.bathrooms,
+  ].join('|')
+}
+
 function normalizeText(value: string) {
   return value
     .toLowerCase()
@@ -666,26 +679,17 @@ async function insertProperties(rows: ScrapedProperty[]) {
   return { inserted, errors }
 }
 
-function dedupeProperties(rows: ScrapedProperty[]) {
-  const seen = new Set<string>()
+function dedupeProperties(rows: ScrapedProperty[], seen = new Set<string>()) {
   const unique: ScrapedProperty[] = []
 
   for (const row of rows) {
-    const roundedPrice = Math.round(row.price_uf / 5) * 5
-    const roundedArea = Math.round(row.area_m2 / 2) * 2
-    const key = row.external_id
-      || [
-        normalizeText(row.address),
-        normalizeText(row.neighborhood),
-        roundedPrice,
-        roundedArea,
-        row.bedrooms,
-        row.bathrooms,
-        row.source,
-      ].join('|')
+    const key = canonicalPropertyKey(row)
     if (seen.has(key)) continue
     seen.add(key)
-    unique.push(row)
+    unique.push({
+      ...row,
+      external_id: row.external_id || hashLike(key),
+    })
   }
 
   return unique
@@ -701,10 +705,11 @@ export async function POST(request: Request) {
 
   try {
     const allRows: ScrapedProperty[] = []
+    const seen = new Set<string>()
 
     if (shouldRun('portal', 'houses')) {
       const portalRows = await scrapePortalListings(120)
-      const uniquePortal = dedupeProperties(portalRows)
+      const uniquePortal = dedupeProperties(portalRows, seen)
       const { inserted, errors } = await insertProperties(uniquePortal)
       allRows.push(...uniquePortal)
       runs.push({ source: 'portal_inmobiliario', scraped: uniquePortal.length, inserted, skipped: uniquePortal.length - inserted, errors })
@@ -713,7 +718,7 @@ export async function POST(request: Request) {
 
     if (shouldRun('toctoc')) {
       const toctocRows = await scrapeToctocListings(20)
-      const uniqueToctoc = dedupeProperties(toctocRows)
+      const uniqueToctoc = dedupeProperties(toctocRows, seen)
       const { inserted, errors } = await insertProperties(uniqueToctoc)
       allRows.push(...uniqueToctoc)
       runs.push({ source: 'toctoc_search', scraped: uniqueToctoc.length, inserted, skipped: uniqueToctoc.length - inserted, errors })
@@ -722,7 +727,7 @@ export async function POST(request: Request) {
 
     if (shouldRun('toctoc-houses', 'houses')) {
       const houseToctocRows = await scrapeToctocListings(20, TOCTOC_HOUSES_SEARCH_URL, 'toctoc_houses_search')
-      const uniqueHouseToctoc = dedupeProperties(houseToctocRows)
+      const uniqueHouseToctoc = dedupeProperties(houseToctocRows, seen)
       const { inserted, errors } = await insertProperties(uniqueHouseToctoc)
       allRows.push(...uniqueHouseToctoc)
       runs.push({ source: 'toctoc_houses_search', scraped: uniqueHouseToctoc.length, inserted, skipped: uniqueHouseToctoc.length - inserted, errors })
@@ -731,7 +736,7 @@ export async function POST(request: Request) {
 
     if (shouldRun('toctoc-vitacura-barrio', 'houses')) {
       const barrioRows = await scrapeToctocListings(30, TOCTOC_VITACURA_BARRIOS_URLS, 'toctoc_vitacura_barrio_search')
-      const uniqueBarrioRows = dedupeProperties(barrioRows)
+      const uniqueBarrioRows = dedupeProperties(barrioRows, seen)
       const { inserted, errors } = await insertProperties(uniqueBarrioRows)
       allRows.push(...uniqueBarrioRows)
       runs.push({ source: 'toctoc_vitacura_barrio_search', scraped: uniqueBarrioRows.length, inserted, skipped: uniqueBarrioRows.length - inserted, errors })
@@ -740,7 +745,7 @@ export async function POST(request: Request) {
 
     if (shouldRun('icasas')) {
       const icasasRows = await scrapeIcasasListings(20)
-      const uniqueIcasas = dedupeProperties(icasasRows)
+      const uniqueIcasas = dedupeProperties(icasasRows, seen)
       const { inserted, errors } = await insertProperties(uniqueIcasas)
       allRows.push(...uniqueIcasas)
       runs.push({ source: 'icasas_search', scraped: uniqueIcasas.length, inserted, skipped: uniqueIcasas.length - inserted, errors })
@@ -749,7 +754,7 @@ export async function POST(request: Request) {
 
     if (shouldRun('icasas-houses', 'houses')) {
       const houseIcasasRows = await scrapeIcasasListings(20, ICASAS_HOUSES_SEARCH_URL, 'icasas_houses_search')
-      const uniqueHouseIcasas = dedupeProperties(houseIcasasRows)
+      const uniqueHouseIcasas = dedupeProperties(houseIcasasRows, seen)
       const { inserted, errors } = await insertProperties(uniqueHouseIcasas)
       allRows.push(...uniqueHouseIcasas)
       runs.push({ source: 'icasas_houses_search', scraped: uniqueHouseIcasas.length, inserted, skipped: uniqueHouseIcasas.length - inserted, errors })
@@ -758,7 +763,7 @@ export async function POST(request: Request) {
 
     if (shouldRun('yapo')) {
       const yapoRows = await scrapeYapoListings(20)
-      const uniqueYapo = dedupeProperties(yapoRows)
+      const uniqueYapo = dedupeProperties(yapoRows, seen)
       const { inserted, errors } = await insertProperties(uniqueYapo)
       allRows.push(...uniqueYapo)
       runs.push({ source: 'yapo_search', scraped: uniqueYapo.length, inserted, skipped: uniqueYapo.length - inserted, errors })
@@ -768,7 +773,7 @@ export async function POST(request: Request) {
     if (shouldRun('chilepropiedades')) {
       try {
         const chileRows = await scrapeChilePropiedadesListings(20)
-        const uniqueChile = dedupeProperties(chileRows)
+        const uniqueChile = dedupeProperties(chileRows, seen)
         const { inserted, errors } = await insertProperties(uniqueChile)
         allRows.push(...uniqueChile)
         runs.push({ source: 'chilepropiedades_search', scraped: uniqueChile.length, inserted, skipped: uniqueChile.length - inserted, errors })
@@ -783,7 +788,7 @@ export async function POST(request: Request) {
     if (shouldRun('chilepropiedades-houses', 'houses')) {
       try {
         const houseRows = await scrapeChilePropiedadesListings(20, CHILEPROPIEDADES_HOUSES_BASE_URL, 'chilepropiedades_houses_search')
-        const uniqueHouse = dedupeProperties(houseRows)
+        const uniqueHouse = dedupeProperties(houseRows, seen)
         const { inserted, errors } = await insertProperties(uniqueHouse)
         allRows.push(...uniqueHouse)
         runs.push({ source: 'chilepropiedades_houses_search', scraped: uniqueHouse.length, inserted, skipped: uniqueHouse.length - inserted, errors })
