@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, MessageCircle, RefreshCw, Send, TriangleAlert, Link2 } from 'lucide-react'
@@ -134,7 +134,7 @@ export default function DeliveryTelemetryPanel() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           {[
             { label: 'Total', value: summary.total, icon: Send },
-            { label: 'Exitos', value: summary.sent, icon: CheckCircle2 },
+            { label: 'Éxitos', value: summary.sent, icon: CheckCircle2 },
             { label: 'Fallos', value: summary.failed, icon: TriangleAlert },
             { label: 'WhatsApp', value: summary.whatsappWeb, icon: MessageCircle },
             { label: 'Webhook', value: summary.webhook, icon: Link2 },
@@ -171,7 +171,7 @@ export default function DeliveryTelemetryPanel() {
                     {delivery.status}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">{delivery.recipient || 'Sin destinatario'} · {new Date(delivery.created_at).toLocaleString('es-CL')}</p>
+                <p className="text-sm text-gray-600">{delivery.recipient || 'Sin destinatario'} - {new Date(delivery.created_at).toLocaleString('es-CL')}</p>
                 {delivery.subject && <p className="mt-1 text-xs text-gray-500">{delivery.subject}</p>}
               </div>
               {delivery.delivery_url && (
@@ -188,7 +188,7 @@ export default function DeliveryTelemetryPanel() {
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500">Todavía no hay entregas registradas con este filtro.</p>
+          <p className="text-sm text-gray-500">Todavia no hay entregas registradas con este filtro.</p>
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react' // useState used by Counter
 import Link from 'next/link'
@@ -105,7 +105,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded flex items-center justify-center text-white text-xs font-bold" style={{ background: '#8fb2aa' }}>N3</div>
             <div>
-              <div className="font-semibold text-sm" style={{ color: '#173634' }}>Property Partners</div>
+              <div className="font-semibold text-sm" style={{ color: '#173634' }}>N3uralia</div>
               <div className="text-xs" style={{ color: '#9ca9a3' }}>Plataforma Interna</div>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function LandingPage() {
           <div className="flex flex-col justify-center px-10 py-24 md:py-0" style={{ background: '#173634' }}>
             <div style={{ animation: 'slideUp 0.9s ease-out both' }}>
               <p className="text-xs font-semibold uppercase tracking-widest mb-6" style={{ color: '#8fb2aa' }}>
-                Property Partners - Plataforma 2026
+                N3uralia - Plataforma 2026
               </p>
               <h1 className="font-bold leading-none mb-8" style={{ fontSize: 'clamp(2.8rem, 5vw, 4.5rem)', color: '#fbfbfa' }}>
                 Casas en Vitacura respaldadas por datos.
@@ -278,7 +278,7 @@ export default function LandingPage() {
                 <TrendingUp size={22} />
               </div>
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>Pilar 02</div>
-              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Inteligencia de Mercado</h3>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Inteligencia de Mercado Vitacura</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
                 Análisis de mercado en tiempo real por barrio en Vitacura. Entiendes qué barrios venden rápido, a qué precio, y cómo evolucionar la estrategia según el contexto.
               </p>
@@ -328,7 +328,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold leading-tight" style={{ color: '#fbfbfa' }}>
               Tu plataforma ya está activa.
             </h2>
-            <p className="mt-3 text-sm" style={{ color: '#9ca9a3' }}>Todo el equipo de Property Partners tiene acceso.</p>
+            <p className="mt-3 text-sm" style={{ color: '#9ca9a3' }}>Todo el equipo de N3uralia tiene acceso.</p>
           </div>
           <Link
             href="/auth/login"
@@ -345,7 +345,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold" style={{ background: '#8fb2aa' }}>N3</div>
-            <span className="text-xs" style={{ color: '#555a56' }}>Property Partners Platform</span>
+            <span className="text-xs" style={{ color: '#555a56' }}>N3uralia Platform</span>
           </div>
           <span className="text-xs" style={{ color: '#555a56' }}>Powered by N3uralia &mdash; 2026</span>
         </div>
@@ -360,6 +360,3 @@ export default function LandingPage() {
     </div>
   )
 }
-
-
-

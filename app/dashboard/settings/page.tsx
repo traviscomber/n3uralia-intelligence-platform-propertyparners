@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import ReportDeliveryTargetsManager from '@/components/settings/ReportDeliveryTargetsManager'
 import ProfileEditor from '@/components/settings/ProfileEditor'
 import DeliveryTelemetryPanel from '@/components/settings/DeliveryTelemetryPanel'
@@ -12,8 +12,8 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="border-b border-gray-200 pb-6">
-        <h1 className="text-3xl font-bold text-gray-900">ConfiguraciÃ³n</h1>
-        <p className="text-sm text-gray-600 mt-2">Gestiona tu perfil, preferencias y parÃ¡metros de la plataforma</p>
+        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
+        <p className="text-sm text-gray-600 mt-2">Gestiona tu perfil, preferencias y parámetros de la plataforma</p>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -33,11 +33,11 @@ export default async function SettingsPage() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Sistema N3uralia</h3>
         <div className="divide-y divide-gray-200">
           {[
-            { label: 'VersiÃ³n', value: 'v1.0.0 â€” Production' },
+             { label: 'Version', value: 'v1.0.0 - Production' },
             { label: 'Motor IA', value: 'N3uralia Intelligence v2' },
-            { label: 'ActualizaciÃ³n de datos', value: 'Cada 2 horas' },
+            { label: 'Actualizacion de datos', value: 'Cada 2 horas' },
             { label: 'Zona horaria', value: 'America/Santiago (UTC-4)' },
-            { label: 'Idioma', value: 'EspaÃ±ol (Chile)' },
+            { label: 'Idioma', value: 'Espanol (Chile)' },
           ].map((item) => (
             <div key={item.label} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
               <span className="text-sm text-gray-600">{item.label}</span>
@@ -50,13 +50,13 @@ export default async function SettingsPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Destinatarios de reportes</h3>
         <p className="text-sm text-gray-600 mb-4">
-          Define quiÃ©n recibe los reportes semanales por email o WhatsApp Web.
+          Define quién recibe los reportes semanales por email o WhatsApp Web.
         </p>
         <ReportDeliveryTargetsManager />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">TelemetrÃ­a de entregas</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Telemetría de entregas</h3>
         <p className="text-sm text-gray-600 mb-4">
           Revisa el historial real de email y WhatsApp generado por el cron semanal.
         </p>

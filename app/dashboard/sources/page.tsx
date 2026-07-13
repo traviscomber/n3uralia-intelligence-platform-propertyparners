@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -278,7 +278,7 @@ export default function SourcesPage() {
     const labels: { [key: string]: string } = {
       external_api: 'API Externa',
       internal_db: 'Base Interna',
-      geodata: 'Datos Geográficos',
+      geodata: 'Datos Geograficos',
       analytics_engine: 'Motor Analytics',
       vector_db: 'Base Vectorial',
       report_engine: 'Motor Reportes',
@@ -292,7 +292,7 @@ export default function SourcesPage() {
   const neighborhoodOptions = Array.from(new Set(propertyRows.map((row) => row.neighborhood).filter(Boolean) as string[])).sort()
   const sourceOptions = Array.from(new Set(propertyRows.map((row) => row.source).filter(Boolean) as string[])).sort()
   const filteredSeries = buildFilteredSeries(propertyRows, selectedNeighborhood, selectedSource)
-  const healthLabel = health?.status === 'healthy' ? 'Saludable' : health?.status === 'warning' ? 'Con alertas' : health?.status === 'critical' ? 'Crítico' : 'Sin datos'
+  const healthLabel = health?.status === 'healthy' ? 'Saludable' : health?.status === 'warning' ? 'Con alertas' : health?.status === 'critical' ? 'Critico' : 'Sin datos'
   const healthColor = health?.status === 'healthy' ? '#10b981' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#9ca9a3'
 
   return (
@@ -329,7 +329,7 @@ export default function SourcesPage() {
                 Estado actual: <span style={{ color: healthColor }}>{healthLabel}</span>
               </h2>
               <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                {health.summary?.activeSources || 0} fuentes activas � {health.summary?.averageScraped || 0} casas/corrida � {health.summary?.averageInserted || 0} insertadas/corrida
+                {health.summary?.activeSources || 0} fuentes activas · {health.summary?.averageScraped || 0} casas/corrida · {health.summary?.averageInserted || 0} insertadas/corrida
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -338,7 +338,7 @@ export default function SourcesPage() {
                 <p className="text-lg font-bold text-gray-900">{health.summary?.warningCount || 0}</p>
               </div>
               <div className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Críticas</p>
+                <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Criticas</p>
                 <p className="text-lg font-bold text-gray-900">{health.summary?.criticalCount || 0}</p>
               </div>
             </div>
@@ -375,7 +375,7 @@ export default function SourcesPage() {
                   >
                     <p className="text-sm font-semibold text-gray-900">{anomaly.title}</p>
                     <p className="text-xs mt-1" style={{ color: '#555a56' }}>
-                      {anomaly.area.toUpperCase()} · {anomaly.detail}
+                      {anomaly.area.toUpperCase()} - {anomaly.detail}
                     </p>
                   </div>
                 ))}
@@ -393,7 +393,7 @@ export default function SourcesPage() {
                       {new Date(snapshot.generated_at).toLocaleString('es-CL')}
                     </p>
                     <p className="text-xs mt-1" style={{ color: '#555a56' }}>
-                      {snapshot.summary?.successRate ?? 0}% exito · {snapshot.summary?.warningCount ?? 0} alertas · {snapshot.summary?.criticalCount ?? 0} criticas
+                      {snapshot.summary?.successRate ?? 0}% exito - {snapshot.summary?.warningCount ?? 0} alertas - {snapshot.summary?.criticalCount ?? 0} criticas
                     </p>
                   </div>
                 ))}
@@ -407,9 +407,9 @@ export default function SourcesPage() {
         <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
           <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="font-semibold text-gray-900">Telemetr�a de casas por barrio y fuente</h2>
+              <h2 className="font-semibold text-gray-900">Telemetría de casas por barrio y fuente</h2>
               <p className="text-sm" style={{ color: '#9ca9a3' }}>
-                {propertyTelemetry.total.toLocaleString()} casas normalizadas en el cat�logo.
+                {propertyTelemetry.total.toLocaleString()} casas normalizadas en el catálogo.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 lg:min-w-[520px]">
@@ -460,21 +460,21 @@ export default function SourcesPage() {
               Limpiar filtros
             </button>
             <span className="text-xs" style={{ color: '#9ca9a3' }}>
-              Vista filtrada sobre los últimos 7 días.
+              Vista filtrada sobre los ultimos 7 dias.
             </span>
             <span className="text-xs font-semibold" style={{ color: '#8fb2aa' }}>
-              {filteredSeries.reduce((sum, item) => sum + item.count, 0).toLocaleString()} registros en la selección
+              {filteredSeries.reduce((sum, item) => sum + item.count, 0).toLocaleString()} registros en la seleccion
             </span>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Barrios más activos</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Barrios mas activos</p>
               <div className="space-y-2">
                 {propertyTelemetry.neighborhoods.map((item) => (
                   <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
                     <div>
                       <span className="text-sm font-medium text-gray-900">{item.name}</span>
-                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev · {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
                     </div>
                     <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
                   </div>
@@ -482,13 +482,13 @@ export default function SourcesPage() {
               </div>
             </div>
             <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Fuentes con más volumen</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Fuentes con mas volumen</p>
               <div className="space-y-2">
                 {propertyTelemetry.sources.map((item) => (
                   <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
                     <div>
                       <span className="text-sm font-medium text-gray-900">{item.name}</span>
-                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev · {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
                     </div>
                     <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
                   </div>
@@ -501,7 +501,7 @@ export default function SourcesPage() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Actividad filtrada</p>
                 <p className="text-sm" style={{ color: '#9ca9a3' }}>
-                  Últimos 7 días para la combinación seleccionada.
+               Ultimos 7 dias para la combinacion seleccionada.
                 </p>
               </div>
               <p className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>
@@ -562,12 +562,12 @@ export default function SourcesPage() {
                     </div>
                     <div className="flex items-center gap-3 text-xs" style={{ color: '#9ca9a3' }}>
                       <span>{getSourceTypeLabel(source.source_type)}</span>
-                      <span>•</span>
+                      <span>-</span>
                       <span>{source.records_count.toLocaleString()} registros</span>
                       {source.last_sync && (
                         <>
-                          <span>•</span>
-                          <span>Última sync: {new Date(source.last_sync).toLocaleTimeString('es-CL')}</span>
+                          <span>-</span>
+                           <span>Ultima sync: {new Date(source.last_sync).toLocaleTimeString('es-CL')}</span>
                         </>
                       )}
                     </div>
@@ -610,7 +610,7 @@ export default function SourcesPage() {
           </div>
           <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
             <p className="text-xs font-medium mb-2" style={{ color: '#555a56' }}>
-              ÚLTIMA SINCRONIZACIÓN
+               ULTIMA SINCRONIZACION
             </p>
             <p className="text-sm text-gray-900">
               {sources[0]?.last_sync ? new Date(sources[0].last_sync).toLocaleString('es-CL') : 'N/A'}
@@ -624,10 +624,10 @@ export default function SourcesPage() {
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="font-semibold text-gray-900">
-                Últimas corridas del scraper
+                 Ultimas corridas del scraper
               </h2>
               <p className="text-sm" style={{ color: '#9ca9a3' }}>
-                Filtra por fuente y estado para revisar el pipeline con más precisión.
+                Filtra por fuente y estado para revisar el pipeline con mas precision.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -686,7 +686,7 @@ export default function SourcesPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-900">{run.source}</p>
                     <p className="text-xs" style={{ color: '#9ca9a3' }}>
-                      {new Date(run.created_at).toLocaleString('es-CL')} · {run.scraped_count} scraped · {run.inserted_count} inserted · {run.error_count} errors
+                      {new Date(run.created_at).toLocaleString('es-CL')} - {run.scraped_count} scraped - {run.inserted_count} inserted - {run.error_count} errors
                     </p>
                   </div>
                   <span
@@ -703,7 +703,7 @@ export default function SourcesPage() {
             </div>
           ) : (
             <p className="text-sm" style={{ color: '#9ca9a3' }}>
-              Todavía no hay ejecuciones registradas.
+              Todavia no hay ejecuciones registradas.
             </p>
           )}
         </div>
@@ -711,6 +711,3 @@ export default function SourcesPage() {
     </div>
   )
 }
-
-
-

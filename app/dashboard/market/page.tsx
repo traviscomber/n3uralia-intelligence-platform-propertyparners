@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
@@ -294,7 +294,7 @@ export default function MarketPage() {
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmarks externos</p>
               <h2 className="mt-1 text-lg font-semibold text-gray-900">Realtor International + Portal Inmobiliario</h2>
               <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                Comparaci�n de fuentes externas para reforzar `Inteligencia de Mercado`.
+                Comparación de fuentes externas para reforzar `Inteligencia de Mercado`.
               </p>
             </div>
             <button
@@ -318,7 +318,7 @@ export default function MarketPage() {
                     <h3 className="mt-1 text-base font-semibold text-gray-900">{title}</h3>
                     <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
                       {benchmark
-                        ? `${benchmark.offer_count} ofertas detectadas en ${benchmark.neighborhood} · ${new Date(benchmark.recorded_at).toLocaleString('es-CL')}`
+                        ? `${benchmark.offer_count} ofertas detectadas en ${benchmark.neighborhood} - ${new Date(benchmark.recorded_at).toLocaleString('es-CL')}`
                         : error || 'No disponible'}
                     </p>
                   </div>
@@ -331,16 +331,16 @@ export default function MarketPage() {
                 {benchmark && (
                   <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta mínima</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta minima</p>
                       <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{benchmark.price_currency || 'CLP'}</span></p>
                     </div>
                     <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta máxima</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta maxima</p>
                       <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{benchmark.price_currency || 'CLP'}</span></p>
                     </div>
                     <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Título fuente</p>
-                      <p className="mt-2 text-sm font-medium text-gray-900 line-clamp-2">{benchmark.listing_title || 'Sin título'}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Titulo fuente</p>
+                      <p className="mt-2 text-sm font-medium text-gray-900 line-clamp-2">{benchmark.listing_title || 'Sin titulo'}</p>
                     </div>
                   </div>
                 )}
@@ -353,10 +353,10 @@ export default function MarketPage() {
       {/* KPI Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Precio Prom. UF/m²', value: avgPrice.toFixed(1), unit: 'UF/m²', icon: <TrendingUp size={18} />, color: '#8fb2aa' },
-          { label: 'Velocidad Promedio', value: avgVelocity, unit: 'días', icon: <Clock size={18} />, color: '#b89a7e' },
+          { label: 'Precio Prom. UF/m2', value: avgPrice.toFixed(1), unit: 'UF/m2', icon: <TrendingUp size={18} />, color: '#8fb2aa' },
+          { label: 'Velocidad Promedio', value: avgVelocity, unit: 'dias', icon: <Clock size={18} />, color: '#b89a7e' },
           { label: 'Inventario Total', value: totalInventory, unit: 'props', icon: <Package size={18} />, color: '#10b981' },
-          { label: 'Absorción Promedio', value: (avgAbsorption * 100).toFixed(0), unit: '%', icon: <MapPin size={18} />, color: '#f59e0b' },
+          { label: 'Absorcion Promedio', value: (avgAbsorption * 100).toFixed(0), unit: '%', icon: <MapPin size={18} />, color: '#f59e0b' },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
             <div className="flex items-start justify-between">
@@ -411,9 +411,9 @@ export default function MarketPage() {
               <tr style={{ borderBottom: '1px solid #d8e5e2', background: '#f5f9f7' }}>
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Barrio</th>
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Tipo</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>UF/m²</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>UF/m2</th>
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Velocidad</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Absorción</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Absorcion</th>
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Inventario</th>
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Zona PRC</th>
               </tr>
@@ -436,7 +436,7 @@ export default function MarketPage() {
                     </span>
                   </td>
                   <td className="px-5 py-3 font-semibold text-gray-900">{n.price_per_sqm_uf?.toFixed(1)}</td>
-                  <td className="px-5 py-3 text-gray-700">{n.velocity_days} días</td>
+                  <td className="px-5 py-3 text-gray-700">{n.velocity_days} dias</td>
                   <td className="px-5 py-3"><TrendBadge value={n.absorption_rate} /></td>
                   <td className="px-5 py-3 text-gray-700">{n.inventory_count}</td>
                   <td className="px-5 py-3 text-xs font-mono" style={{ color: '#9ca9a3' }}>{n.zona_prc}</td>
@@ -450,7 +450,7 @@ export default function MarketPage() {
       {/* Tab: Prices Chart */}
       {activeTab === 'prices' && (
         <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Precio UF/m² por Barrio</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Precio UF/m2 por Barrio</h2>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={priceChartData} margin={{ bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -458,10 +458,10 @@ export default function MarketPage() {
               <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} tickFormatter={v => `${v} UF`} />
               <Tooltip
                 contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }}
-                formatter={(val) => [typeof val === 'number' ? `${val.toFixed(1)} UF/m²` : String(val ?? '—'), 'Precio']}
+                formatter={(val) => [typeof val === 'number' ? `${val.toFixed(1)} UF/m2` : String(val ?? '-'), 'Precio']}
                 labelFormatter={(label) => `Sector: ${label}`}
               />
-              <Bar dataKey="precio" fill="#8fb2aa" radius={[4, 4, 0, 0]} name="UF/m²" />
+              <Bar dataKey="precio" fill="#8fb2aa" radius={[4, 4, 0, 0]} name="UF/m2" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -470,7 +470,7 @@ export default function MarketPage() {
       {/* Tab: Velocity Chart */}
       {activeTab === 'velocity' && (
         <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Velocidad de Venta y Absorción por Barrio</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Velocidad de Venta y Absorcion por Barrio</h2>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={velocityChartData} margin={{ bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -481,8 +481,8 @@ export default function MarketPage() {
                 contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }}
               />
               <Legend />
-              <Bar yAxisId="days" dataKey="velocidad" fill="#8fb2aa" radius={[4, 4, 0, 0]} name="Días en mercado" />
-              <Bar yAxisId="pct" dataKey="absorcion" fill="#b89a7e" radius={[4, 4, 0, 0]} name="Absorción %" />
+              <Bar yAxisId="days" dataKey="velocidad" fill="#8fb2aa" radius={[4, 4, 0, 0]} name="Dias en mercado" />
+              <Bar yAxisId="pct" dataKey="absorcion" fill="#b89a7e" radius={[4, 4, 0, 0]} name="Absorcion %" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -494,15 +494,15 @@ export default function MarketPage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-lg font-bold text-gray-900">{selectedNeighborhood.name}</h3>
-              <p className="text-sm" style={{ color: '#555a56' }}>Zona {selectedNeighborhood.zona_prc} · {TIPO_LABEL[selectedNeighborhood.tipo] || selectedNeighborhood.tipo}</p>
+              <p className="text-sm" style={{ color: '#555a56' }}>Zona {selectedNeighborhood.zona_prc} - {TIPO_LABEL[selectedNeighborhood.tipo] || selectedNeighborhood.tipo}</p>
             </div>
             <button onClick={() => setSelected(null)} className="text-xs px-3 py-1 rounded" style={{ background: '#d8e5e2', color: '#555a56' }}>Cerrar</button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: 'Precio UF/m²', value: `${selectedNeighborhood.price_per_sqm_uf?.toFixed(1)} UF` },
-              { label: 'Velocidad', value: `${selectedNeighborhood.velocity_days} días` },
-              { label: 'Absorción', value: `${(selectedNeighborhood.absorption_rate * 100).toFixed(0)}%` },
+              { label: 'Precio UF/m2', value: `${selectedNeighborhood.price_per_sqm_uf?.toFixed(1)} UF` },
+              { label: 'Velocidad', value: `${selectedNeighborhood.velocity_days} dias` },
+              { label: 'Absorcion', value: `${(selectedNeighborhood.absorption_rate * 100).toFixed(0)}%` },
               { label: 'Inventario', value: `${selectedNeighborhood.inventory_count} props` },
             ].map(stat => (
               <div key={stat.label} className="bg-white rounded-lg p-3" style={{ border: '1px solid #d8e5e2' }}>
@@ -513,7 +513,7 @@ export default function MarketPage() {
           </div>
           {selectedMarket && (
             <p className="text-xs mt-4" style={{ color: '#555a56' }}>
-              Precio promedio propiedad: <strong>{selectedMarket.avg_price_uf?.toLocaleString('es-CL')} UF</strong> · Días en mercado: <strong>{selectedMarket.avg_days_on_market?.toFixed(0)} días</strong>
+              Precio promedio propiedad: <strong>{selectedMarket.avg_price_uf?.toLocaleString('es-CL')} UF</strong> - Dias en mercado: <strong>{selectedMarket.avg_days_on_market?.toFixed(0)} dias</strong>
             </p>
           )}
         </div>
@@ -540,10 +540,10 @@ export default function MarketPage() {
                   </span>
                 </div>
                 <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
-                  {new Date(row.snapshot_date).toLocaleDateString('es-CL')} · {row.inventory_count} inventario · {(row.absorption_rate || 0) * 100}% absorción
+                  {new Date(row.snapshot_date).toLocaleDateString('es-CL')} - {row.inventory_count} inventario - {(row.absorption_rate || 0) * 100}% absorcion
                 </p>
                 <p className="text-xs mt-1" style={{ color: '#555a56' }}>
-                  {row.avg_price_m2_uf?.toFixed(1) || 'N/A'} UF/m² · {row.avg_days_on_market ? `${row.avg_days_on_market.toFixed(0)} días` : 'sin días'}
+                  {row.avg_price_m2_uf?.toFixed(1) || 'N/A'} UF/m2 - {row.avg_days_on_market ? `${row.avg_days_on_market.toFixed(0)} dias` : 'sin dias'}
                 </p>
               </div>
             ))}
@@ -553,6 +553,3 @@ export default function MarketPage() {
     </div>
   )
 }
-
-
-
