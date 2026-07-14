@@ -98,7 +98,7 @@ export default async function DirectorReportDetailPage({
         {[
           { label: 'Ventas acumuladas', value: bundle.metrics.totalSales.toLocaleString('es-CL') },
           { label: 'Comision total', value: `${bundle.metrics.totalCommission.toLocaleString('es-CL')} UF` },
-          { label: 'conversion promedio', value: `${bundle.metrics.avgconversion.toFixed(1)}%` },
+          { label: 'conversion promedio', value: `${bundle.metrics.avgConversion.toFixed(1)}%` },
           { label: 'Snapshots', value: bundle.metrics.reportCount.toString() },
         ].map((item) => (
           <div key={item.label} className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>

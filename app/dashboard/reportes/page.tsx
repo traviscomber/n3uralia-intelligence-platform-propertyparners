@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, FileText, RefreshCw, Sparkles, TriangleAlert, Users } from 'lucide-react'
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime-query'
-import type { AiReport } from '@/lib/types'
+import type { AiReport, Profile } from '@/lib/types'
 import { buildWhatsAppWebUrl } from '@/lib/whatsapp-web'
 
 type WeeklyReport = {
@@ -49,6 +49,14 @@ type ReportChoice = {
   description: string
 }
 
+type ReportTypeKey = ReportTypeChoice | 'weekly_executive' | 'monthly_executive' | 'market'
+
+type ReportGenerateContext = {
+  director_id?: string | null
+  team?: string | null
+  seller_id?: string | null
+}
+
 const PRO_REPORT_CHOICES: ReportChoice[] = [
   {
     id: 'ceo_brief',
@@ -80,7 +88,7 @@ const SUPPORT_REPORT_CHOICES: ReportChoice[] = [
   },
 ]
 
-const REPORT_TYPE_LABELS: Record<ReportTypeChoice, string> = {
+const REPORT_TYPE_LABELS: Record<ReportTypeKey, string> = {
   ceo_brief: 'CEO',
   director_accounts: 'Directores de venta',
   seller_playbook: 'Ejecutivos de venta',
@@ -88,7 +96,44 @@ const REPORT_TYPE_LABELS: Record<ReportTypeChoice, string> = {
   monthly_ceo: 'Mensual CEO',
   market_brief: 'Lectura de mercado',
   captation_alert: 'Alerta de captacion',
+  weekly_executive: 'Ejecutivo semanal',
+  monthly_executive: 'Ejecutivo mensual',
+  market: 'Mercado',
 }
+
+type AudienceGroupKey = 'ceo' | 'director' | 'seller'
+
+type AudienceGroup = {
+  key: AudienceGroupKey
+  title: string
+  description: string
+  reportTypes: ReportTypeChoice[]
+  accent: string
+}
+
+const AUDIENCE_GROUPS: AudienceGroup[] = [
+  {
+    key: 'ceo',
+    title: 'CEO',
+    description: 'Ve negocio total, ranking de directores, brechas y foco por barrio.',
+    reportTypes: ['ceo_brief', 'monthly_ceo'],
+    accent: 'var(--n-primary)',
+  },
+  {
+    key: 'director',
+    title: 'Directores de venta',
+    description: 'Ve el desempeno del equipo, la cartera y el foco de gestion comercial.',
+    reportTypes: ['director_accounts', 'weekly_directors'],
+    accent: 'var(--n-success)',
+  },
+  {
+    key: 'seller',
+    title: 'Ejecutivos de venta',
+    description: 'Ve prioridades diarias, propiedades activas y seguimiento comercial.',
+    reportTypes: ['seller_playbook', 'captation_alert'],
+    accent: 'var(--n-warning)',
+  },
+]
 type ExportDataset = 'ai_reports' | 'weekly_reports' | 'profiles'
 
 type ScrapeHealthIssue = {
@@ -147,6 +192,19 @@ function getAudienceLabel(report: AiReport | null) {
   return audience || formatReportTypeLabel(report.report_type)
 }
 
+function getAudienceKey(report: AiReport | null): AudienceGroupKey {
+  if (!report) return 'director'
+  const content = report.content as Record<string, unknown> | null
+  const requested = content && typeof content.requested_report_type === 'string' ? content.requested_report_type : ''
+  const audience = content && typeof content.audience === 'string' ? content.audience : ''
+  const hint = `${requested} ${audience} ${report.report_type}`.toLowerCase()
+
+  if (hint.includes('ceo')) return 'ceo'
+  if (hint.includes('seller') || hint.includes('vendedor') || hint.includes('ejecutivo')) return 'seller'
+  if (hint.includes('market') || hint.includes('captation') || hint.includes('captacion')) return 'seller'
+  return 'director'
+}
+
 export default function ReportesPage() {
   const [weekly, setWeekly] = useState<WeeklyReportResponse | null>(null)
   const [weeklyLoading, setWeeklyLoading] = useState(true)
@@ -164,6 +222,9 @@ export default function ReportesPage() {
   const [exportProfileTeam, setExportProfileTeam] = useState('')
   const [exportFromDate, setExportFromDate] = useState('')
   const [exportToDate, setExportToDate] = useState('')
+  const [reportDirectorId, setReportDirectorId] = useState('')
+  const [reportSellerId, setReportSellerId] = useState('')
+  const [reportTeam, setReportTeam] = useState('')
   const [health, setHealth] = useState<ScrapeHealthSnapshot | null>(null)
   const [healthAnomalies, setHealthAnomalies] = useState<OperationalAnomaly[]>([])
   const [healthLoading, setHealthLoading] = useState(true)
@@ -183,6 +244,24 @@ export default function ReportesPage() {
       return data || []
     },
     { table: 'ai_reports', refreshIntervalMs: 4 * 60 * 1000 },
+  )
+
+  const {
+    data: profiles,
+    loading: profilesLoading,
+    error: profilesError,
+  } = useRealtimeQuery<Profile>(
+    async (supabase) => {
+      const { data, error: queryError } = await supabase
+        .from('profiles')
+        .select('id, full_name, role, team, avatar_url, created_at')
+        .order('full_name', { ascending: true })
+        .limit(200)
+
+      if (queryError) throw queryError
+      return data || []
+    },
+    { table: 'profiles', refreshIntervalMs: 10 * 60 * 1000 },
   )
 
   useEffect(() => {
@@ -274,14 +353,69 @@ export default function ReportesPage() {
     }
   }
 
+  useEffect(() => {
+    if (!reportDirectorId) {
+      const defaultDirector = profiles.find((profile) => profile.role === 'director')
+      if (defaultDirector) setReportDirectorId(defaultDirector.id)
+    }
+    if (!reportSellerId) {
+      const defaultSeller = profiles.find((profile) => profile.role === 'seller')
+      if (defaultSeller) setReportSellerId(defaultSeller.id)
+    }
+    if (!reportTeam) {
+      const defaultTeam = profiles.find((profile) => profile.team)?.team || ''
+      if (defaultTeam) setReportTeam(defaultTeam)
+    }
+  }, [profiles, reportDirectorId, reportSellerId, reportTeam])
+
+  const directorProfiles = useMemo(() => profiles.filter((profile) => profile.role === 'director'), [profiles])
+  const sellerProfiles = useMemo(() => profiles.filter((profile) => profile.role === 'seller'), [profiles])
+  const teamOptions = useMemo(
+    () =>
+      [...new Set(profiles.map((profile) => profile.team).filter((team): team is string => Boolean(team && team.trim())))]
+        .sort((a, b) => a.localeCompare(b)),
+    [profiles],
+  )
+
+  const resolveGenerateContext = (reportType: ReportTypeChoice): ReportGenerateContext => {
+    const selectedDirector = directorProfiles.find((profile) => profile.id === reportDirectorId) || null
+    const selectedSeller = sellerProfiles.find((profile) => profile.id === reportSellerId) || null
+
+    if (reportType === 'ceo_brief') {
+      return {
+        director_id: selectedDirector?.id || directorProfiles[0]?.id || null,
+        team: reportTeam || selectedDirector?.team || null,
+      }
+    }
+
+    if (reportType === 'director_accounts' || reportType === 'weekly_directors' || reportType === 'monthly_ceo') {
+      return {
+        director_id: selectedDirector?.id || directorProfiles[0]?.id || null,
+        team: reportTeam || selectedDirector?.team || null,
+      }
+    }
+
+    if (reportType === 'seller_playbook') {
+      return {
+        seller_id: selectedSeller?.id || sellerProfiles[0]?.id || null,
+        team: reportTeam || selectedSeller?.team || selectedDirector?.team || null,
+      }
+    }
+
+    return {
+      team: reportTeam || selectedDirector?.team || selectedSeller?.team || null,
+    }
+  }
+
   const handleGenerateReport = async (reportType: ReportTypeChoice) => {
     try {
       setGenerateLoading(reportType)
       setGenerateError(null)
+      const context = resolveGenerateContext(reportType)
       const response = await fetch('/api/reports/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ report_type: reportType }),
+        body: JSON.stringify({ report_type: reportType, ...context }),
       })
 
       const data = (await response.json()) as {
@@ -318,8 +452,22 @@ export default function ReportesPage() {
 
   const filteredAiReports = useMemo(() => {
     if (!reportFilter) return aiReports
-    return aiReports.filter((report) => report.report_type === reportFilter)
+    return aiReports.filter((report) => {
+      if (report.report_type === reportFilter) return true
+      const content = report.content as Record<string, unknown> | null
+      return content?.requested_report_type === reportFilter
+    })
   }, [aiReports, reportFilter])
+
+  const reportsByAudience = useMemo(() => {
+    return AUDIENCE_GROUPS.reduce<Record<AudienceGroupKey, AiReport[]>>(
+      (acc, group) => {
+        acc[group.key] = aiReports.filter((report) => getAudienceKey(report) === group.key)
+        return acc
+      },
+      { ceo: [], director: [], seller: [] },
+    )
+  }, [aiReports])
 
   const exportBaseUrl = useMemo(() => {
     const params = new URLSearchParams()
@@ -449,35 +597,152 @@ export default function ReportesPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          {PRO_REPORT_CHOICES.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => void handleGenerateReport(item.id)}
-              className="rounded-2xl border p-4 text-left transition-all hover:translate-y-[-1px]"
-              style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)', color: 'var(--n-fg)' }}
-              disabled={Boolean(generateLoading)}
-              aria-busy={generateLoading === item.id}
-              aria-disabled={Boolean(generateLoading)}
+        <div className="mb-5 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Contexto de generacion
+              </p>
+              <p className="mt-2 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                Define director, equipo y vendedor antes de generar. El reporte usa esta base para CEO, directores y vendedores.
+              </p>
+            </div>
+            <span className="n-chip">
+              {profilesLoading ? 'Cargando perfiles' : `${profiles.length} perfiles`}
+            </span>
+          </div>
+
+          {profilesError ? (
+            <p className="mt-3 text-sm" style={{ color: 'var(--n-warning)' }}>
+              {profilesError}
+            </p>
+          ) : null}
+
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <select
+              value={reportDirectorId}
+              onChange={(e) => setReportDirectorId(e.target.value)}
+              className="rounded-2xl border px-3 py-2 text-sm"
+              style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+              disabled={profilesLoading || !directorProfiles.length}
             >
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-                    Generar
-                  </p>
-                  <p className="mt-2 text-sm font-semibold">{item.label}</p>
-                  <p className="mt-1 text-xs leading-5" style={{ color: 'var(--n-fg-muted)' }}>
-                    {item.description}
-                  </p>
+              <option value="">Director base</option>
+              {directorProfiles.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.full_name || profile.id}
+                  {profile.team ? ` - ${profile.team}` : ''}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={reportTeam}
+              onChange={(e) => setReportTeam(e.target.value)}
+              className="rounded-2xl border px-3 py-2 text-sm"
+              style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+              disabled={profilesLoading || !teamOptions.length}
+            >
+              <option value="">Equipo / zona</option>
+              {teamOptions.map((team) => (
+                <option key={team} value={team}>
+                  {team}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={reportSellerId}
+              onChange={(e) => setReportSellerId(e.target.value)}
+              className="rounded-2xl border px-3 py-2 text-sm"
+              style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+              disabled={profilesLoading || !sellerProfiles.length}
+            >
+              <option value="">Vendedor base</option>
+              {sellerProfiles.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.full_name || profile.id}
+                  {profile.team ? ` - ${profile.team}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          {AUDIENCE_GROUPS.map((group) => {
+            const latestAudienceReport = reportsByAudience[group.key][0] || null
+
+            return (
+              <div key={group.key} className="rounded-3xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                      Audiencia
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>
+                      {group.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                      {group.description}
+                    </p>
+                  </div>
+                  <span className="n-chip" style={{ background: 'var(--n-surface)', color: group.accent }}>
+                    {reportsByAudience[group.key].length}
+                  </span>
                 </div>
-                {generateLoading === item.id ? (
-                  <RefreshCw size={14} className="animate-spin" />
-                ) : (
-                  <Sparkles size={14} style={{ color: 'var(--n-primary)' }} />
-                )}
+
+                <div className="mt-4 rounded-2xl border p-3" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+                  <p className="text-xs uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                    Ultimo reporte
+                  </p>
+                  {latestAudienceReport ? (
+                    <>
+                      <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                        {latestAudienceReport.title}
+                      </p>
+                      <p className="mt-1 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                        {latestAudienceReport.summary || 'Sin resumen disponible'}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                      Todavia no hay reportes para esta audiencia.
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  {group.reportTypes.map((reportType) => (
+                    <button
+                      key={reportType}
+                      onClick={() => void handleGenerateReport(reportType)}
+                      className="flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-all hover:translate-y-[-1px]"
+                      style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                      disabled={Boolean(generateLoading)}
+                      aria-busy={generateLoading === reportType}
+                      aria-disabled={Boolean(generateLoading)}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{formatReportTypeLabel(reportType)}</p>
+                        <p className="mt-1 text-xs leading-5" style={{ color: 'var(--n-fg-muted)' }}>
+                          {REPORT_TYPE_LABELS[reportType] === 'CEO'
+                            ? 'Sintesis ejecutiva con jerarquia y brechas.'
+                            : REPORT_TYPE_LABELS[reportType] === 'Directores de venta'
+                              ? 'Desempeno del equipo, foco y cartera.'
+                              : 'Playbook comercial con priorizacion diaria.'}
+                        </p>
+                      </div>
+                      {generateLoading === reportType ? (
+                        <RefreshCw size={14} className="animate-spin" />
+                      ) : (
+                        <Sparkles size={14} style={{ color: group.accent }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </button>
-          ))}
+            )
+          })}
         </div>
 
         <div className="mt-4">
@@ -1021,7 +1286,7 @@ export default function ReportesPage() {
                           {report.summary || 'Sin resumen disponible'}
                         </p>
                       </div>
-                      <span className="n-chip w-fit">{formatReportTypeLabel(report.report_type)}</span>
+                      <span className="n-chip w-fit">{getAudienceLabel(report)}</span>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
                       <span className="flex items-center gap-1">
