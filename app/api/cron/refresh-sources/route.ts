@@ -36,8 +36,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [scrapeResult, realtorBenchmarkResult, portalBenchmarkResult] = await Promise.all([
-      callEndpoint(request, '/api/scrape/portal-inmobiliario?source=houses', { method: 'POST' }, 180000),
+    const [scrapeResult, datainmobiliariaResult, realtorBenchmarkResult, portalBenchmarkResult] = await Promise.all([
+      callEndpoint(request, '/api/scrape/portal-inmobiliario?source=all', { method: 'POST' }, 180000),
+      callEndpoint(request, '/api/scrape/datainmobiliaria?source=vitacura&kind=all', { method: 'POST' }, 180000),
       callEndpoint(request, '/api/benchmarks/realtor', undefined, 30000),
       callEndpoint(request, '/api/benchmarks/portal-inmobiliario', undefined, 30000),
     ])
@@ -48,6 +49,7 @@ export async function GET(request: Request) {
       refreshedAt: new Date().toISOString(),
       sources: {
         scrape: scrapeResult,
+        datainmobiliaria: datainmobiliariaResult,
         benchmark: realtorBenchmarkResult,
         benchmarkPortal: portalBenchmarkResult,
         market: marketResult,
