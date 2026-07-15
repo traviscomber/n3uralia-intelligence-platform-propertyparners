@@ -29,7 +29,7 @@ function fmt(n: number) {
 
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
   return (
-    <div className="bg-white rounded-lg p-5 flex flex-col gap-1" style={{ borderLeft: `3px solid ${border}`, border: '1px solid #e8f0ed', borderLeft: `3px solid ${border}` }}>
+    <div className="bg-white rounded-lg p-5 flex flex-col gap-1" style={{ border: '1px solid #e8f0ed', borderLeft: `3px solid ${border}` }}>
       <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: '#9ca9a3' }}>{label}</span>
       <span className="text-2xl font-bold tracking-tight" style={{ color: '#173634' }}>{value}</span>
       {sub && <span className="text-xs" style={{ color: '#b89a7e' }}>{sub}</span>}
@@ -251,7 +251,7 @@ export default function CeoDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v: number) => [`$${fmt(v)}K`, 'Comisión']} contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
+                <Tooltip formatter={(v: unknown) => [`$${fmt(Number(v))}K`, 'Comisión']} contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
                 <Bar dataKey="comision" fill="#8fb2aa" radius={[4, 4, 0, 0]} maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>

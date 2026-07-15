@@ -24,6 +24,7 @@ export interface KpiSnapshot {
   velocidad_venta: number
   monthly_target: number
   director_id: string | null
+  agent_id: string | null
   created_at: string
 }
 

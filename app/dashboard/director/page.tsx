@@ -8,9 +8,12 @@ import type { KpiSnapshot, Profile, AgentActivity } from '@/lib/types'
 const DIRECTOR_ID = 'd0000000-0000-0000-0000-000000000001' // default: Juan Morales
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
-const MOCK_AGENTS = [
-  { id: '1', name: 'Sofía Ramos',      team: 'Equipo Alpha', ventas: 15, captaciones: 25, conversion: 11.1, velocidad: 31, status: 'on_track' as const },
-  { id: '2', name: 'Diego Herrera',    team: 'Equipo Alpha', ventas: 14, captaciones: 23, conversion:  9.1, velocidad: 34, status: 'warning'  as const },
+type StatusKey = 'on_track' | 'warning' | 'behind'
+type AgentRow = { id: string; name: string; team: string; ventas: number; captaciones: number; conversion: number; velocidad: number; status: StatusKey }
+
+const MOCK_AGENTS: AgentRow[] = [
+  { id: '1', name: 'Sofía Ramos',   team: 'Equipo Alpha', ventas: 15, captaciones: 25, conversion: 11.1, velocidad: 31, status: 'on_track' },
+  { id: '2', name: 'Diego Herrera', team: 'Equipo Alpha', ventas: 14, captaciones: 23, conversion:  9.1, velocidad: 34, status: 'warning'  },
 ]
 
 const MOCK_CHART = [
@@ -21,8 +24,6 @@ const MOCK_CHART = [
   { mes: 'Jun', ventas: 7, target: 7 },
   { mes: 'Jul', ventas: 3, target: 7 },
 ]
-
-type StatusKey = 'on_track' | 'warning' | 'behind'
 const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: string }> = {
   on_track: { label: 'En Meta',  bg: '#dcfce7', color: '#16a34a' },
   warning:  { label: 'Atención', bg: '#fef3c7', color: '#d97706' },
