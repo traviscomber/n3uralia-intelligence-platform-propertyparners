@@ -67,12 +67,28 @@ export interface WeeklyReport {
   created_at: string
 }
 
+export interface ReportDelivery {
+  id: number
+  report_type: string
+  report_id: number | null
+  channel: 'email' | 'whatsapp_web' | 'webhook'
+  recipient: string | null
+  delivery_url: string | null
+  status: 'queued' | 'sent' | 'failed' | 'escalated'
+  subject: string | null
+  message: string | null
+  provider_response: Record<string, unknown> | null
+  sent_at: string | null
+  created_at: string
+}
+
 export interface MarketData {
   neighborhood: string
   avg_price_uf: number | null
   avg_price_m2_uf: number | null
   absorption_rate: number | null
   inventory_count: number
+  avg_days_on_market?: number | null
 }
 
 export interface DataSource {
@@ -165,4 +181,31 @@ export interface ScrapeHealthSnapshot {
   runsWindow: ScrapeRun[]
   generatedAt: string
   created_at?: string
+}
+
+export interface NeighborhoodMarketSnapshot {
+  id: number
+  snapshot_date: string
+  neighborhood: string
+  avg_price_uf: number | null
+  avg_price_m2_uf: number | null
+  absorption_rate: number | null
+  inventory_count: number
+  avg_days_on_market: number | null
+  opportunity_score: number
+  data_points: number
+  source: string
+  created_at: string
+}
+
+export interface ReportDeliveryTarget {
+  id: number
+  label: string
+  channel: 'email' | 'whatsapp_web' | 'webhook'
+  recipient: string
+  active: boolean
+  notify_weekly: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
 }

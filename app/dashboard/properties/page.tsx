@@ -21,9 +21,9 @@ interface Property {
 }
 
 const NEIGHBORHOODS = [
-  'Vitacura Centro', 'El Golf', 'La Dehesa', 'Nueva Costanera',
-  'Costanera Sur', 'La Florida', 'Andres Bello', 'Huerfanos',
-  'Apoquindo Alto', 'Alonso de Cordova', 'Manquehue',
+  'Vitacura Centro', 'Lo Castillo', 'Villa El Dorado', 'Lo Curro',
+  'Santa Maria de Manquehue', 'Nueva Costanera', 'Jardin del Este', 'Las Hualtatas',
+  'Las Tranqueras', 'Luis Pasteur', 'Juan XXIII', 'Estadio Manquehue',
 ]
 
 const PROPERTY_TYPES = ['departamento', 'casa', 'oficina', 'local_comercial']
@@ -54,6 +54,8 @@ export default function PropertiesPage() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [generalBackfillEnabled, setGeneralBackfillEnabled] = useState(false)
+  const [showAdvancedScraping, setShowAdvancedScraping] = useState(false)
 
   const supabase = createClient()
 
@@ -96,7 +98,7 @@ export default function PropertiesPage() {
 
   async function handleSave() {
     if (!form.address || !form.price_uf || !form.area_m2) {
-      showToast('error', 'Dirección, precio y superficie son requeridos')
+      showToast('error', 'Direccion, precio y superficie son requeridos')
       return
     }
     setSaving(true)
@@ -132,28 +134,16 @@ export default function PropertiesPage() {
     }
   }
 
-  async function handleScrapePortal() {
+  async function handleScrapeMode(mode: 'all' | 'houses') {
     setScraping(true)
     try {
-      const res = await fetch('/api/scrape/portal-inmobiliario?source=all', { method: 'POST' })
+      const res = await fetch(`/api/scrape/portal-inmobiliario?source=${mode}`, { method: 'POST' })
       const json = await res.json()
       if (res.ok) {
-        let sourcesList = []
-        if (json.runs && Array.isArray(json.runs)) {
-          sourcesList = json.runs
-            .filter((r: any) => r.scraped > 0)
-            .map((r: any) => {
-              const sourceNames: Record<string, string> = {
-                'portal_inmobiliario': 'Portal Inmobiliario',
-                'toctoc_search': 'TOCTOC',
-                'icasas_search': 'iCasas',
-                'yapo_search': 'Yapo',
-              }
-              return `${sourceNames[r.source] || r.source}: ${r.inserted} props`
-            })
-        }
-        const details = sourcesList.length > 0 ? ` (${sourcesList.join(', ')})` : ''
-        showToast('success', `Actualización completada: ${json.inserted}/${json.scraped} propiedades importadas${details}`)
+        const label = mode === 'houses'
+          ? 'casas de Vitacura desde Portal Inmobiliario, TOCTOC Casas, TOCTOC Barrios Vitacura, icasas.cl Casas y Chilepropiedades Casas'
+          : 'Portal Inmobiliario, TOCTOC, TOCTOC Casas, icasas.cl, icasas.cl Casas, Yapo, Chilepropiedades y Chilepropiedades Casas'
+        showToast('success', `Scraping ${mode === 'houses' ? 'casas' : 'completo'}: ${json.inserted}/${json.scraped} casas importadas desde ${label}`)
         await loadProperties()
       } else {
         showToast('error', `Error: ${json.error || 'Fallo al scraping'}`)
@@ -176,18 +166,25 @@ export default function PropertiesPage() {
       {/* Header */}
       <div className="flex items-start justify-between pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Propiedades</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} propiedades cargadas · Portal, TOCTOC, iCasas, Yapo</p>
+          <h1 className="text-3xl font-bold text-gray-900">Casas Vitacura</h1>
+          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>{properties.length} casas cargadas · foco operativo en Vitacura</p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={handleScrapePortal}
+            onClick={() => handleScrapeMode('houses')}
             disabled={scraping}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             style={{ background: '#6b8e85' }}
           >
             <Download size={16} />
-            {scraping ? 'Actualizando...' : 'Actualizar Propiedades'}
+            {scraping ? 'Scrapeando...' : 'Sincronizar Casas'}
+          </button>
+          <button
+            onClick={() => setShowAdvancedScraping((prev) => !prev)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
+            style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
+          >
+            {showAdvancedScraping ? 'Avanzado ^' : 'Avanzado v'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
@@ -195,10 +192,37 @@ export default function PropertiesPage() {
             style={{ background: '#8fb2aa' }}
           >
             <Plus size={16} />
-            Nueva Propiedad
+            Nueva casa
           </button>
         </div>
       </div>
+      {showAdvancedScraping && (
+        <div className="flex items-center gap-3 rounded-lg px-4 py-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+          <button
+            onClick={() => setGeneralBackfillEnabled((prev) => !prev)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
+            style={{
+              background: generalBackfillEnabled ? '#e8f3f0' : '#fff',
+              color: '#555a56',
+              border: '1px solid #d8e5e2',
+            }}
+          >
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full" style={{ background: generalBackfillEnabled ? '#6b8e85' : '#d8e5e2' }}>
+              <span className="h-2 w-2 rounded-full" style={{ background: '#fff' }} />
+            </span>
+            {generalBackfillEnabled ? 'General ON' : 'General OFF'}
+          </button>
+          <button
+            onClick={() => handleScrapeMode('all')}
+            disabled={scraping || !generalBackfillEnabled}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#fff', color: '#555a56', border: '1px solid #d8e5e2' }}
+          >
+            <Download size={16} />
+            {scraping ? 'Scrapeando...' : generalBackfillEnabled ? 'Backfill General' : 'Backfill General (off)'}
+          </button>
+        </div>
+      )}
 
       {/* Toast */}
       {toast && (
@@ -222,7 +246,7 @@ export default function PropertiesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Address */}
             <div className="lg:col-span-2">
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Dirección *</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Direccion *</label>
               <input
                 value={form.address}
                 onChange={e => setForm({ ...form, address: e.target.value })}
@@ -264,7 +288,7 @@ export default function PropertiesPage() {
             </div>
             {/* Area */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Superficie m² *</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Superficie m2 *</label>
               <input type="number" value={form.area_m2} onChange={e => setForm({ ...form, area_m2: e.target.value })}
                 placeholder="80"
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
@@ -277,13 +301,13 @@ export default function PropertiesPage() {
             </div>
             {/* Bathrooms */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Baños</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Banos</label>
               <input type="number" min="0" max="10" value={form.bathrooms} onChange={e => setForm({ ...form, bathrooms: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
             </div>
             {/* Days on market */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Días en mercado</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Dias en mercado</label>
               <input type="number" min="0" value={form.days_on_market} onChange={e => setForm({ ...form, days_on_market: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
             </div>
@@ -323,7 +347,7 @@ export default function PropertiesPage() {
                   <>
                     <span style={{ color: '#8fb2aa' }}>Auto-detectado:</span>
                     <strong>{tagResult.barrio_nombre}</strong>
-                    {tagResult.zona_prc && <span style={{ color: '#9ca9a3' }}>· Zona {tagResult.zona_prc}</span>}
+                    {tagResult.zona_prc && <span style={{ color: '#9ca9a3' }}>- Zona {tagResult.zona_prc}</span>}
                   </>
                 ) : null}
               </div>
@@ -356,7 +380,7 @@ export default function PropertiesPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por dirección o barrio..."
+            placeholder="Buscar por direccion o barrio..."
             className="w-full pl-9 pr-3 py-2 rounded-lg text-sm text-gray-900"
             style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
           />
@@ -387,10 +411,10 @@ export default function PropertiesPage() {
         <div className="bg-white rounded-lg p-12 text-center shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
           <Home size={36} className="mx-auto mb-3" style={{ color: '#d8e5e2' }} />
           <p className="text-sm font-medium text-gray-900">
-            {properties.length === 0 ? 'No hay propiedades cargadas aún' : 'Sin resultados para tu búsqueda'}
+            {properties.length === 0 ? 'No hay casas cargadas aun' : 'Sin resultados para tu busqueda'}
           </p>
           <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
-            {properties.length === 0 ? 'Usa el botón "Nueva Propiedad" para agregar la primera' : 'Intenta con otro filtro'}
+            {properties.length === 0 ? 'Usa el boton "Nueva casa" para agregar la primera' : 'Intenta con otro filtro'}
           </p>
         </div>
       ) : (
@@ -398,7 +422,7 @@ export default function PropertiesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-                {['Dirección', 'Barrio', 'Tipo', 'Precio UF', 'UF/m²', 'Sup.', 'Dorm/Baños', 'Días', 'Estado', ''].map(h => (
+                {['Direccion', 'Barrio', 'Tipo', 'Precio UF', 'UF/m2', 'Sup.', 'Dorm/Banos', 'Dias', 'Estado', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>{h}</th>
                 ))}
               </tr>
@@ -411,7 +435,7 @@ export default function PropertiesPage() {
                   <td className="px-4 py-3 text-gray-600 capitalize">{p.property_type?.replace('_', ' ')}</td>
                   <td className="px-4 py-3 font-semibold text-gray-900">{p.price_uf?.toLocaleString('es-CL')}</td>
                   <td className="px-4 py-3 text-gray-600">{p.area_m2 ? (p.price_uf / p.area_m2).toFixed(1) : '-'}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.area_m2} m²</td>
+                  <td className="px-4 py-3 text-gray-600">{p.area_m2} m2</td>
                   <td className="px-4 py-3 text-gray-600">{p.bedrooms}D/{p.bathrooms}B</td>
                   <td className="px-4 py-3 text-gray-600">{p.days_on_market}d</td>
                   <td className="px-4 py-3">
@@ -430,7 +454,7 @@ export default function PropertiesPage() {
             </tbody>
           </table>
           <div className="px-5 py-3" style={{ borderTop: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-            <p className="text-xs" style={{ color: '#9ca9a3' }}>{filtered.length} de {properties.length} propiedades</p>
+            <p className="text-xs" style={{ color: '#9ca9a3' }}>{filtered.length} de {properties.length} casas</p>
           </div>
         </div>
       )}

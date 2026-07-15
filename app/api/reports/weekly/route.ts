@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { WeeklyReport as WeeklyReportRow } from '@/lib/types'
 
@@ -205,7 +204,7 @@ async function persistWeeklyReports(weekly: WeeklyReport[], directors: WeeklyRep
 
 export async function GET() {
   try {
-    const supabase = await createServerClient()
+    const supabase = getServiceClient()
     const { data, error } = await supabase
       .from('kpi_snapshots')
       .select('period_date, ventas_count, comision_total, conversion_rate, velocidad_venta, monthly_target, director_id')

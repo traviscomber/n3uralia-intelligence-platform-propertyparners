@@ -177,6 +177,7 @@ export default function ValorizadorPage() {
         const bedroomDelta = Math.abs(property.bedrooms - targetBedrooms)
         const bathroomDelta = Math.abs(property.bathrooms - targetBathrooms)
         const pricePerM2 = property.area_m2 > 0 ? property.price_uf / property.area_m2 : property.price_uf
+        const referenceGapPct = baseUFm2 > 0 ? Math.abs(pricePerM2 - baseUFm2) / baseUFm2 : 0
         const status = property.status?.toLowerCase() || 'activo'
         const recencyDays = daysSince(property.created_at)
         const marketAgePenalty = Number.isFinite(recencyDays) ? Math.min(14, recencyDays / 15) : 6
@@ -187,8 +188,11 @@ export default function ValorizadorPage() {
         const bedroomScore = Math.max(0, 16 - bedroomDelta * 6)
         const bathroomScore = Math.max(0, 12 - bathroomDelta * 5)
         const priceMatchScore = baseUFm2 > 0
-          ? Math.max(0, 18 - (Math.abs(pricePerM2 - baseUFm2) / baseUFm2) * 18)
+          ? Math.max(0, 20 - referenceGapPct * 20)
           : 10
+        const marketAlignmentScore = baseUFm2 > 0
+          ? Math.max(0, 12 - referenceGapPct * 12)
+          : 6
         const freshnessScore = Number.isFinite(recencyDays) && recencyDays <= recentCutoffDays
           ? Math.max(0, 12 - recencyDays / 16)
           : 2
@@ -202,6 +206,7 @@ export default function ValorizadorPage() {
               + bedroomScore
               + bathroomScore
               + priceMatchScore
+              + marketAlignmentScore
               + freshnessScore
               + sourceBonus
               - marketAgePenalty
@@ -214,6 +219,7 @@ export default function ValorizadorPage() {
           property.neighborhood === targetNeighborhood ? 'same neighborhood' : 'nearby inventory',
           sourceBonus >= 12 ? 'strong source' : 'market source',
           areaDeltaRatio <= 0.15 ? 'area match' : 'area variance',
+          referenceGapPct <= 0.1 ? 'market aligned' : 'market spread',
           bedroomDelta === 0 ? 'bedroom match' : 'bedroom variance',
           bathroomDelta === 0 ? 'bathroom match' : 'bathroom variance',
         ]

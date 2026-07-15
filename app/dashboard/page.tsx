@@ -60,8 +60,8 @@ export default function DashboardHome() {
     <div className="space-y-8 pb-8">
       {/* Header */}
       <div className="pb-6" style={{ borderBottom: '1px solid #d8e5e2' }}>
-        <h1 className="text-4xl font-bold text-gray-900">Executive Dashboard</h1>
-        <p className="mt-2" style={{ color: '#9ca9a3' }}>Real-time market intelligence and performance metrics</p>
+        <h1 className="text-4xl font-bold text-gray-900">Casas Vitacura</h1>
+        <p className="mt-2" style={{ color: '#9ca9a3' }}>Inteligencia operativa y performance de ventas de casas</p>
         <p className="text-xs mt-3" style={{ color: '#b9bfbc' }}>
           {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
@@ -76,7 +76,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ventas Mes</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.ventas_count}</p>
-                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>transacciones inmobiliarias</p>
+                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>ventas de casas</p>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#e8f3f0', color: '#8fb2aa' }}>
                 <Home className="w-6 h-6" />
@@ -90,7 +90,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>UF Vendidas</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{(latestKPI.ventas_uf / 1000).toFixed(1)}K</p>
-                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>en volumen de ventas</p>
+                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>en volumen de ventas de casas</p>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#f5f9f7', color: '#b89a7e' }}>
                 <DollarSign className="w-6 h-6" />
@@ -104,7 +104,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasa Conversión</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.conversion_rate.toFixed(1)}%</p>
-                <p className="text-xs text-gray-500 mt-2">leads a ventas</p>
+                <p className="text-xs text-gray-500 mt-2">leads a ventas de casas</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center transition-transform duration-300 hover:scale-110">
                 <TrendingUp className="w-6 h-6 text-green-600" />
@@ -118,7 +118,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Stock Activo</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.stock_count}</p>
-                <p className="text-xs text-gray-500 mt-2">propiedades disponibles</p>
+                <p className="text-xs text-gray-500 mt-2">casas disponibles</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center transition-transform duration-300 hover:scale-110">
                 <Activity className="w-6 h-6 text-orange-600" />
@@ -133,7 +133,7 @@ export default function DashboardHome() {
         {/* Ventas Tendencia */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Ventas Tendencia (Últimos 6 meses)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Ventas de Casas (Últimos 6 meses)</h3>
             <div className="w-2 h-2 rounded-full" style={{ background: '#8fb2aa' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
@@ -165,7 +165,7 @@ export default function DashboardHome() {
         {/* Tasa Conversión */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Tasa Conversión</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Tasa Conversión Casas</h3>
             <div className="w-2 h-2 rounded-full" style={{ background: '#b89a7e' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
@@ -210,7 +210,7 @@ export default function DashboardHome() {
               <p className="text-xs font-semibold uppercase" style={{ color: '#8fb2aa' }}>Próximas Acciones:</p>
               <ul className="mt-2 space-y-1 text-xs" style={{ color: '#555a56' }}>
                 <li>• Aumentar prospección en Nueva Costanera (90% absorción)</li>
-                <li>• Optimizar timing de venta en La Dehesa (velocidad: 62 días)</li>
+                <li>• Optimizar timing de venta en Lo Curro (velocidad: 62 días)</li>
               </ul>
             </div>
           </div>

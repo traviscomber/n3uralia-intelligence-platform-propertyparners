@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import {
   evaluateScrapeHealth,
+  loadOperationalAnomalies,
   type DataSourceSummary,
   type ExternalBenchmarkSummary,
   type ScrapeRunSummary,
@@ -44,7 +45,7 @@ export async function GET() {
       supabase
         .from('data_sources')
         .select('name,status,records_count,last_sync,error_message')
-        .in('name', ['Portal Inmobiliario', 'TOCTOC Search', 'icasas.cl', 'Yapo Search', 'Realtor International'])
+        .in('name', ['Portal Inmobiliario', 'TOCTOC Search', 'TOCTOC Casas', 'icasas.cl', 'icasas.cl Casas', 'Yapo Search', 'Chilepropiedades', 'Chilepropiedades Casas', 'Realtor International', 'Portal Inmobiliario Benchmark'])
         .order('pipeline_order', { ascending: true }),
       supabase
         .from('external_market_benchmarks')
@@ -68,14 +69,16 @@ export async function GET() {
       (sourcesRes.data || []) as DataSourceSummary[],
       (benchmarkRes.data?.[0] || null) as ExternalBenchmarkSummary | null,
     )
+    const anomalies = await loadOperationalAnomalies(supabase).catch(() => [])
 
     return NextResponse.json({
       ...health,
+      anomalies,
       history: (historyRes.data || []) as ScrapeHealthSnapshotRow[],
     })
   } catch (err) {
     return NextResponse.json(
-      { status: 'unknown', history: [], issues: [], error: err instanceof Error ? err.message : 'No pudimos evaluar la salud del scraper.' },
+      { status: 'unknown', history: [], issues: [], anomalies: [], error: err instanceof Error ? err.message : 'No pudimos evaluar la salud del scraper.' },
       { status: 200 },
     )
   }

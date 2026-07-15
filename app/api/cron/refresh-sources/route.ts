@@ -12,12 +12,22 @@ function isAuthorized(request: Request) {
   return headerSecret === secret || querySecret === secret
 }
 
-async function callEndpoint(request: Request, path: string, init?: RequestInit) {
+async function callEndpoint(request: Request, path: string, init?: RequestInit, timeoutMs = 45000) {
   const baseUrl = new URL(request.url)
   const endpoint = new URL(path, baseUrl)
-  const response = await fetch(endpoint, init)
-  const payload = await response.json().catch(() => ({}))
-  return { ok: response.ok, status: response.status, payload }
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(new Error(`Timeout calling ${path}`)), timeoutMs)
+
+  try {
+    const response = await fetch(endpoint, {
+      ...init,
+      signal: controller.signal,
+    })
+    const payload = await response.json().catch(() => ({}))
+    return { ok: response.ok, status: response.status, payload }
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 export async function GET(request: Request) {
@@ -26,17 +36,21 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [scrapeResult, benchmarkResult] = await Promise.all([
-      callEndpoint(request, '/api/scrape/portal-inmobiliario?source=all', { method: 'POST' }),
-      callEndpoint(request, '/api/benchmarks/realtor'),
+    const [scrapeResult, realtorBenchmarkResult, portalBenchmarkResult] = await Promise.all([
+      callEndpoint(request, '/api/scrape/portal-inmobiliario?source=houses', { method: 'POST' }, 180000),
+      callEndpoint(request, '/api/benchmarks/realtor', undefined, 30000),
+      callEndpoint(request, '/api/benchmarks/portal-inmobiliario', undefined, 30000),
     ])
+    const marketResult = await callEndpoint(request, '/api/market/insights', undefined, 30000)
 
     return NextResponse.json({
       success: true,
       refreshedAt: new Date().toISOString(),
       sources: {
         scrape: scrapeResult,
-        benchmark: benchmarkResult,
+        benchmark: realtorBenchmarkResult,
+        benchmarkPortal: portalBenchmarkResult,
+        market: marketResult,
       },
     })
   } catch (err) {

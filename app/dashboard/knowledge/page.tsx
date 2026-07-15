@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -63,7 +63,7 @@ export default function KnowledgePage() {
   const docTypeLabels: { [key: string]: string } = {
     report: 'Reporte',
     market: 'Market',
-    property: 'Propiedad',
+    property: 'Casa',
     trend: 'Tendencia',
     comparable: 'Comparable',
     document: 'Documento',
@@ -73,7 +73,7 @@ export default function KnowledgePage() {
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-6">
         <h1 className="text-3xl font-bold text-gray-900">Base de Conocimiento</h1>
-        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y análisis del mercado</p>
+        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y análisis del mercado de casas en Vitacura</p>
       </div>
 
       {/* Search & Filter */}
@@ -120,7 +120,7 @@ export default function KnowledgePage() {
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <BookOpen size={32} className="mx-auto mb-3 text-gray-400" />
-          <p className="text-gray-500">No hay documentos que coincidan con tu búsqueda</p>
+          <p className="text-gray-500">No hay documentos que coincidan con tu busqueda</p>
         </div>
       ) : (
         <div className="space-y-3">
