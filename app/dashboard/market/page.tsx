@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import type { Neighborhood as MapNeighborhood, PrcZone as MapPrcZone } from '@/components/map/VitacuraMap'
@@ -279,10 +280,17 @@ export default function MarketPage() {
           <h1 className="text-3xl font-bold text-gray-900">Inteligencia de Mercado Vitacura</h1>
           <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Vitacura - {neighborhoods.length} barrios activos - datos en tiempo real</p>
         </div>
-        <div className="flex items-center gap-3 mt-1">
-          <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: '#555a56' }}>
-            <input type="checkbox" checked={showPrc} onChange={e => setShowPrc(e.target.checked)} className="accent-green-600" />
-            Overlay PRC
+          <div className="flex items-center gap-3 mt-1">
+            <Link
+              href="/dashboard/market/import"
+              className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors"
+              style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+            >
+              Importar CSV/XLS
+            </Link>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: '#555a56' }}>
+              <input type="checkbox" checked={showPrc} onChange={e => setShowPrc(e.target.checked)} className="accent-green-600" />
+              Overlay PRC
           </label>
           <button
             onClick={handleSyncPrc}
