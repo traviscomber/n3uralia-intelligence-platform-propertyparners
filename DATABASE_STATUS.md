@@ -1,62 +1,63 @@
-# Database Migration Status
+# DATABASE STATUS REPORT
 
-**Last Updated:** July 10, 2026  
-**Status:** ⏳ Pending Verification
+## Summary
+- ✅ Supabase connected
+- ✅ Environment variables loaded
+- ⚠️ Migration status: PENDING (not yet executed)
+- ⚠️ Role dashboards: Compiled, but data not seeded
 
-## What We've Set Up
+## What's Ready
+- 3 Dashboard pages fully coded (/dashboard/ceo, /dashboard/director, /dashboard/agente)
+- Database migration script prepared (exec_roles_migration.sql)
+- All 4 execution methods documented
+- TypeScript: 0 errors
 
-### ✅ Completed
-- KMZ file with 12 Vitacura sectors (public at `/vitacura-sectors.kmz`)
-- SQL migration file: `supabase/migrations/20260710_create_neighborhoods.sql`
-- Migration executed via: `supabase db push`
-- API endpoints created for verification and queries
+## What's NOT Done Yet
+- Migration SQL NOT executed against database
+- agent_activities table NOT created
+- Agent/Director seed data NOT inserted
+- KPI snapshots WITHOUT agent_id
 
-### 📋 Next: Verify Migration Success
+## Why Dashboards Don't Show Data Yet
+Dashboards display mock fallback data because:
+1. Migration hasn't run on Supabase yet
+2. agent_activities table doesn't exist
+3. No profiles with role='director' or role='seller' match pattern 'a0000000%' / 'd0000000%'
 
-Run this command to verify the migration executed:
+## Next Step: Execute Migration
+Choose one of 4 methods to execute exec_roles_migration.sql:
 
+### Method 1: Supabase SQL Editor (5 seconds, no setup)
+1. https://app.supabase.com → SQL Editor
+2. Paste: cat exec_roles_migration.sql
+3. Run (▶️)
+4. Done!
+
+### Method 2: Python Script
 ```bash
-# Check Supabase project status
-supabase db pull
-
-# Or check in Supabase dashboard:
-# - Go to SQL Editor
-# - Run: SELECT * FROM information_schema.tables WHERE table_schema='public' AND table_name='neighborhoods';
+pip install psycopg2-binary
+python execute_migration.py
 ```
 
-### 🎯 Database Schema Created
+### Method 3: Bash Script
+```bash
+./execute_migration.sh
+```
 
-**Tables:**
-- `neighborhoods` - PostGIS geometry (POLYGON) with 12 Vitacura sectors
-- `properties` - Portal Inmobiliario listings with location data
-- `market_data_summary` - Market intelligence aggregations
+### Method 4: Complete Guide
+Read: EXECUTE_MIGRATION_GUIDE.md
 
-**Functions:**
-- `get_neighborhood_by_point(lat, lng)` - Point-in-polygon query
-- `find_closest_neighborhoods(lat, lng)` - Nearest neighborhood finder
+## Verification After Migration
+```bash
+# Run in Supabase SQL Editor:
+SELECT COUNT(*) FROM profiles WHERE id LIKE 'a0000000%' OR id LIKE 'd0000000%'; -- Should: 9
+SELECT COUNT(*) FROM agent_activities; -- Should: 22
+SELECT COUNT(*) FROM kpi_snapshots WHERE agent_id IS NOT NULL; -- Should: 36
+```
 
-**Views:**
-- `market_intelligence_summary` - Pre-aggregated neighborhood stats
-
-### 🔧 Troubleshooting
-
-**If tables don't exist:**
-1. Check Supabase dashboard for errors
-2. Run migration manually in SQL Editor
-3. File path: `supabase/migrations/20260710_create_neighborhoods.sql`
-
-**If query hangs:**
-- PostGIS extension might not be enabled
-- Run in SQL Editor: `CREATE EXTENSION IF NOT EXISTS postgis;`
-
-## Next Phase: Property Loading
-
-Once migration is verified:
-1. Load Portal Inmobiliario properties into `properties` table
-2. Run point-in-polygon queries to assign neighborhoods
-3. Build Market Intelligence dashboard
-4. Integrate Valorizador with ML model
-
----
-
-**Verification Command:** `pnpm tsx scripts/verify-migration.ts`
+## Files Available
+✅ exec_roles_migration.sql (186 lines) - Pure SQL
+✅ execute_migration.py (134 lines) - Python
+✅ execute_migration.sh (63 lines) - Bash
+✅ EXECUTE_MIGRATION_GUIDE.md (256 lines) - Documentation
+✅ SQL_EXECUTION_README.md (86 lines) - Quick start
