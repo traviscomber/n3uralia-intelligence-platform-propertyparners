@@ -24,6 +24,7 @@ export interface KpiSnapshot {
   velocidad_venta: number
   monthly_target: number
   director_id: string | null
+  agent_id: string | null
   created_at: string
 }
 
@@ -145,6 +146,19 @@ export interface ScrapeHealthIssue {
   severity: 'info' | 'warning' | 'critical'
   title: string
   detail: string
+}
+
+export interface AgentActivity {
+  id: string
+  agent_id: string
+  activity_type: 'llamada' | 'visita' | 'oferta' | 'cierre'
+  property_id: string | null
+  description: string | null
+  value_uf: number | null
+  status: 'pending' | 'done' | 'lost'
+  scheduled_at: string | null
+  completed_at: string | null
+  created_at: string
 }
 
 export interface ScrapeHealthSnapshot {
