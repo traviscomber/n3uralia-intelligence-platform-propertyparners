@@ -113,6 +113,7 @@ export default function ValorizadorPage() {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
   const [history, setHistory] = useState<ValuationHistoryItem[]>([])
+  const [historyNeighborhoodFilter, setHistoryNeighborhoodFilter] = useState('all')
   const analysisSeq = useRef(0)
 
   const [form, setForm] = useState({
@@ -151,7 +152,7 @@ export default function ValorizadorPage() {
           .from('valuation_quotes')
           .select('quote_key, neighborhood, estimated_uf, publication_price_uf, closing_price_uf, confidence, created_at')
           .order('created_at', { ascending: false })
-          .limit(5),
+          .limit(200),
       ])
 
       setNeighborhoods((nRes.data || []) as Neighborhood[])
@@ -208,27 +209,37 @@ export default function ValorizadorPage() {
     }
   }, [aiAnalysis, comparables, externalBenchmark, form, result, selectedNb])
 
+  const historyNeighborhoodOptions = useMemo(
+    () => [...new Set(history.map((item) => item.neighborhood).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
+    [history],
+  )
+
+  const visibleHistory = useMemo(() => {
+    if (historyNeighborhoodFilter === 'all') return history
+    return history.filter((item) => item.neighborhood === historyNeighborhoodFilter)
+  }, [history, historyNeighborhoodFilter])
+
   const comparisonSummary = useMemo(() => {
     if (!result) return null
-    const previous = history[0] || null
-    const averageClosing = history.length
-      ? history.reduce((sum, item) => sum + Number(item.closing_price_uf || 0), 0) / history.length
+    const previous = visibleHistory[0] || null
+    const averageClosing = visibleHistory.length
+      ? visibleHistory.reduce((sum, item) => sum + Number(item.closing_price_uf || 0), 0) / visibleHistory.length
       : result.price_uf
-    const averageConfidence = history.length
-      ? history.reduce((sum, item) => sum + Number(item.confidence || 0), 0) / history.length
+    const averageConfidence = visibleHistory.length
+      ? visibleHistory.reduce((sum, item) => sum + Number(item.confidence || 0), 0) / visibleHistory.length
       : result.confidence
     return {
       previous,
       averageClosing,
       averageConfidence,
     }
-  }, [history, result])
+  }, [result, visibleHistory])
 
   const neighborhoodComparison = useMemo(() => {
     if (!result) return null
 
     const grouped = new Map<string, ValuationHistoryItem[]>()
-    history.forEach((item) => {
+    visibleHistory.forEach((item) => {
       const list = grouped.get(item.neighborhood) || []
       list.push(item)
       grouped.set(item.neighborhood, list)
@@ -236,11 +247,26 @@ export default function ValorizadorPage() {
 
     const rows = [...grouped.entries()]
       .map(([neighborhood, items]) => {
+        const sorted = items
+          .map((item) => Number(item.closing_price_uf || 0))
+          .filter((value) => Number.isFinite(value) && value > 0)
+          .sort((a, b) => a - b)
+        const percentile = (p: number) => {
+          if (!sorted.length) return 0
+          const index = (sorted.length - 1) * p
+          const lower = Math.floor(index)
+          const upper = Math.ceil(index)
+          if (lower === upper) return sorted[lower]
+          return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower)
+        }
         const averageClosing = items.reduce((sum, item) => sum + Number(item.closing_price_uf || 0), 0) / items.length
         return {
           neighborhood,
           averageClosing,
           count: items.length,
+          p25: percentile(0.25),
+          p50: percentile(0.5),
+          p75: percentile(0.75),
         }
       })
       .sort((a, b) => b.averageClosing - a.averageClosing)
@@ -249,6 +275,9 @@ export default function ValorizadorPage() {
       neighborhood: result.comp_neighborhood,
       averageClosing: result.price_uf,
       count: 0,
+      p25: result.price_uf,
+      p50: result.price_uf,
+      p75: result.price_uf,
     }
 
     const maxValue = Math.max(result.price_uf, ...rows.slice(0, 4).map((row) => row.averageClosing))
@@ -257,8 +286,9 @@ export default function ValorizadorPage() {
       currentNeighborhood,
       rows: rows.slice(0, 4),
       maxValue,
+      totalRows: rows.length,
     }
-  }, [history, result])
+  }, [result, visibleHistory])
 
   function buildValuationRequest(): ValuationRequest | null {
     if (!result || !selectedNb) return null
@@ -288,7 +318,19 @@ export default function ValorizadorPage() {
     }
   }
 
-  const exportBase = '/api/valorizador/export'
+  const exportQuery = useMemo(() => {
+    const params = new URLSearchParams()
+    if (historyNeighborhoodFilter !== 'all') {
+      params.set('neighborhood', historyNeighborhoodFilter)
+    }
+    return params.toString()
+  }, [historyNeighborhoodFilter])
+
+  function exportUrl(format: 'csv' | 'xlsx') {
+    const params = new URLSearchParams(exportQuery)
+    params.set('format', format)
+    return `/api/valorizador/export?${params.toString()}`
+  }
 
   function buildComparables(
     targetNeighborhood: string,
@@ -936,7 +978,7 @@ export default function ValorizadorPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <a
-                        href={`${exportBase}?format=csv`}
+                        href={exportUrl('csv')}
                         className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
                         style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
                       >
@@ -944,7 +986,7 @@ export default function ValorizadorPage() {
                         CSV
                       </a>
                       <a
-                        href={`${exportBase}?format=xlsx`}
+                        href={exportUrl('xlsx')}
                         className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
                         style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
                       >
@@ -993,6 +1035,24 @@ export default function ValorizadorPage() {
                       {neighborhoodComparison.currentNeighborhood.count || 0} registros
                     </span>
                   </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Promedio</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
+                    </div>
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>P25</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p25 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
+                    </div>
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Mediana</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p50 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
+                    </div>
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>P75</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p75 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
+                    </div>
+                  </div>
                   <div className="mt-4 space-y-3">
                     {[
                       {
@@ -1025,16 +1085,34 @@ export default function ValorizadorPage() {
                 </div>
               )}
 
-              {history.length > 0 && (
+              {visibleHistory.length > 0 && (
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Historial de cotizaciones</p>
                       <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Ultimas valuaciones guardadas para seguimiento comercial y comparacion rapida.</p>
                     </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                        Filtrar barrio
+                      </label>
+                      <select
+                        value={historyNeighborhoodFilter}
+                        onChange={(e) => setHistoryNeighborhoodFilter(e.target.value)}
+                        className="rounded-md px-3 py-2 text-sm"
+                        style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                      >
+                        <option value="all">Todos los barrios</option>
+                        {historyNeighborhoodOptions.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {history.map((item) => (
+                    {visibleHistory.map((item) => (
                       <div key={item.quote_key} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
                         <div className="flex items-center justify-between gap-3">
                           <div>

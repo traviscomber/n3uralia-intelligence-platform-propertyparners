@@ -37,12 +37,19 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const format = (url.searchParams.get('format') || 'csv').toLowerCase()
     const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || '50'), 1), 500)
+    const neighborhood = url.searchParams.get('neighborhood')
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('valuation_quotes')
       .select('quote_key, neighborhood, estimated_uf, publication_price_uf, closing_price_uf, confidence, created_at, market_velocity, market_absorption, comparable_properties')
       .order('created_at', { ascending: false })
       .limit(limit)
+
+    if (neighborhood && neighborhood !== 'all') {
+      query = query.eq('neighborhood', neighborhood)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 
@@ -76,4 +83,3 @@ export async function GET(request: Request) {
     )
   }
 }
-
