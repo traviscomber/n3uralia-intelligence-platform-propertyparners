@@ -111,10 +111,10 @@ export default function MarketImportPage() {
           <div className="flex items-center gap-3">
             <Link href="/dashboard/market" className="inline-flex items-center gap-2 text-sm font-medium" style={{ color: '#555a56' }}>
               <ArrowLeft className="w-4 h-4" />
-              Volver a Market Intelligence
+              Volver a Inteligencia de Mercado
             </Link>
           </div>
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">Importar data de mercado</h1>
+          <h1 className="mt-3 text-3xl font-bold text-gray-900">Importar datos de mercado</h1>
           <p className="mt-1 text-sm" style={{ color: '#9ca9a3' }}>
             Sube archivos `.csv`, `.xls` o `.xlsx` con barrios de Vitacura. El endpoint queda listo para pipeline automatizado y carga manual.
           </p>
@@ -125,7 +125,7 @@ export default function MarketImportPage() {
           style={{ background: '#8fb2aa' }}
         >
           <Download className="w-4 h-4" />
-          Descargar template
+          Descargar plantilla
         </a>
       </div>
 
@@ -134,13 +134,13 @@ export default function MarketImportPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Carga guiada</p>
-              <h2 className="mt-1 text-xl font-semibold text-gray-900">Archivo de Market Intelligence</h2>
+              <h2 className="mt-1 text-xl font-semibold text-gray-900">Archivo de Inteligencia de Mercado</h2>
               <p className="mt-1 text-sm" style={{ color: '#9ca9a3' }}>
                 Mapea automáticamente nombres de columnas frecuentes como `barrio`, `precio_uf`, `precio_m2_uf`, `absorcion`, `inventario` y `dias_en_mercado`.
               </p>
             </div>
             <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: '#e8f3f0', color: '#8fb2aa' }}>
-              Vitacura only
+              Solo Vitacura
             </div>
           </div>
 
@@ -170,7 +170,7 @@ export default function MarketImportPage() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Fecha snapshot</span>
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Fecha de corte</span>
               <input
                 type="date"
                 value={snapshotDate}
@@ -201,7 +201,7 @@ export default function MarketImportPage() {
                 className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
                 style={{ borderColor: '#d8e5e2' }}
               >
-                <option value="market_data">Market Intelligence por barrio</option>
+                <option value="market_data">Inteligencia de mercado por barrio</option>
                 <option value="benchmark_data">Benchmarks externos</option>
               </select>
             </label>
@@ -226,7 +226,7 @@ export default function MarketImportPage() {
               style={{ background: '#0b2545', color: '#fff' }}
             >
               {loading && mode === 'import' ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              Importar a Market Data
+              Importar a datos de mercado
             </button>
           </div>
 

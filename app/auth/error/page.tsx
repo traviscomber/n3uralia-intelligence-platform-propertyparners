@@ -7,7 +7,7 @@ export default function AuthErrorPage() {
         </div>
         <h2 className="font-semibold mb-2 text-gray-900">Error de autenticación</h2>
         <p className="text-sm mb-4 text-gray-600">El enlace expiró o no es válido.</p>
-        <a href="/auth/login" className="inline-block text-sm px-4 py-2 rounded font-medium text-white hover:opacity-90 transition-colors" style={{ background: '#8fb2aa' }}>Volver al login</a>
+        <a href="/auth/login" className="inline-block text-sm px-4 py-2 rounded font-medium text-white hover:opacity-90 transition-colors" style={{ background: '#8fb2aa' }}>Volver al ingreso</a>
       </div>
     </div>
   )

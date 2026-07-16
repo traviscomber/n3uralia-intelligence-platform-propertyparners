@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -35,7 +35,7 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-          <h1 className="text-base font-semibold mb-1 text-gray-900">Iniciar sesión</h1>
+          <h1 className="text-base font-semibold mb-1 text-gray-900">Iniciar sesion</h1>
           <p className="text-sm mb-6 text-gray-600">Ingresa tus credenciales para continuar</p>
 
           {error && (
@@ -46,21 +46,21 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#555a56' }}>Email</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none" style={{ border: '1px solid #d8e5e2' }} />
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#555a56' }}>Correo</label>
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none" style={{ border: '1px solid #d8e5e2' }} />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#555a56' }}>Contraseña</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none" style={{ border: '1px solid #d8e5e2' }} />
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#555a56' }}>Contrasena</label>
+              <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none" style={{ border: '1px solid #d8e5e2' }} />
             </div>
             <button type="submit" disabled={loading} className="w-full py-2.5 rounded text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-colors" style={{ background: '#8fb2aa' }}>
-              {loading ? 'Ingresando…' : 'Ingresar'}
+              {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
 
           <div className="mt-4 text-center">
             <a href="/auth/sign-up" className="text-xs hover:text-gray-900" style={{ color: '#555a56' }}>
-              ¿No tienes cuenta? <span className="font-medium" style={{ color: '#8fb2aa' }}>Registrarse</span>
+              ?No tienes cuenta? <span className="font-medium" style={{ color: '#8fb2aa' }}>Registrarse</span>
             </a>
           </div>
         </div>
@@ -68,3 +68,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

@@ -43,20 +43,20 @@ const statusOptions = [
 
 const channelOptions = [
   { value: '', label: 'Todos los canales' },
-  { value: 'email', label: 'Email' },
+  { value: 'email', label: 'Correo' },
   { value: 'whatsapp_web', label: 'WhatsApp Web' },
   { value: 'webhook', label: 'Webhook' },
 ]
 
 const reportTypeOptions = [
   { value: '', label: 'Todos los reportes' },
-  { value: 'weekly_directors', label: 'Weekly directors' },
-  { value: 'monthly_ceo', label: 'Monthly CEO' },
-  { value: 'ceo_brief', label: 'CEO brief' },
+  { value: 'weekly_directors', label: 'Directores semanales' },
+  { value: 'monthly_ceo', label: 'CEO mensual' },
+  { value: 'ceo_brief', label: 'Resumen CEO' },
   { value: 'director_accounts', label: 'Directores de cuenta' },
-  { value: 'seller_playbook', label: 'Seller playbook' },
-  { value: 'market_brief', label: 'Market brief' },
-  { value: 'captation_alert', label: 'Captation alert' },
+  { value: 'seller_playbook', label: 'Guion vendedor' },
+  { value: 'market_brief', label: 'Resumen de mercado' },
+  { value: 'captation_alert', label: 'Alerta de captacion' },
 ]
 
 function formatDate(value: string | null) {

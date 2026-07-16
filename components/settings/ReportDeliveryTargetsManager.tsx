@@ -122,7 +122,7 @@ export default function ReportDeliveryTargetsManager() {
           className="rounded-lg border px-3 py-2 text-sm text-gray-900"
           style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
         >
-          <option value="email">Email</option>
+          <option value="email">Correo</option>
           <option value="whatsapp_web">WhatsApp Web</option>
           <option value="webhook">Webhook</option>
         </select>

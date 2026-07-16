@@ -6,7 +6,7 @@ import type { Profile } from '@/lib/types'
 
 const navItems = [
   {
-    label: 'Dashboard',
+    label: 'Panel',
     href: '/dashboard',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="6" height="6" rx="1" /><rect x="9" y="1" width="6" height="6" rx="1" /><rect x="1" y="9" width="6" height="6" rx="1" /><rect x="9" y="9" width="6" height="6" rx="1" /></svg>,
     exact: true,
@@ -70,7 +70,7 @@ const roleNavItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><circle cx="13" cy="5" r="1.5" /><path d="M14.5 12c0-1.7 1.3-3 3-3" strokeWidth="1.2" /></svg>,
   },
   {
-    label: 'Vista Agente',
+    label: 'PP',
     href: '/dashboard/agente',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><polyline points="6,10 8,12 11,9" /></svg>,
   },
@@ -88,7 +88,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
         </div>
         <div>
           <div className="text-sm font-semibold tracking-tight leading-none text-gray-900">N3uralia</div>
-          <div className="text-[10px] mt-0.5" style={{ color: '#9ca9a3' }}>Intelligence Platform</div>
+          <div className="text-[10px] mt-0.5" style={{ color: '#9ca9a3' }}>Plataforma de inteligencia</div>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
 
         {/* Role dashboards separator */}
         <div className="mt-4 mb-1 px-3 flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#c4cfc9' }}>Dashboards</span>
+          <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#c4cfc9' }}>Paneles</span>
           <div className="flex-1 h-px" style={{ background: '#e8f0ed' }} />
         </div>
         <ul className="flex flex-col gap-0.5">

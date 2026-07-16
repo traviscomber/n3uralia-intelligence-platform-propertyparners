@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -352,16 +352,16 @@ export default function ValorizadorPage() {
       <div className="pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
         <h1 className="text-3xl font-bold text-gray-900">Valorizador IA</h1>
         <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-          Price estimate based on real Vitacura market data, recent comparables and an external benchmark when available.
+          Estimacion basada en datos reales de Vitacura, comparables recientes y un benchmark externo cuando esta disponible.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm space-y-4" style={{ border: '1px solid #d8e5e2' }}>
-          <h2 className="font-semibold text-gray-900">Property data</h2>
+          <h2 className="font-semibold text-gray-900">Datos de la propiedad</h2>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Neighborhood</label>
+            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Barrio</label>
             <select
               value={form.neighborhood}
               onChange={(e) => { setForm({ ...form, neighborhood: e.target.value }); setResult(null) }}
@@ -372,14 +372,14 @@ export default function ValorizadorPage() {
             </select>
             {selectedNb && (
               <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
-                Reference price: <strong>{selectedNb.price_per_sqm_uf} UF/m²</strong> · Zone {selectedNb.zona_prc}
+                Precio de referencia: <strong>{selectedNb.price_per_sqm_uf} UF/m2</strong> · Zona {selectedNb.zona_prc}
               </p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Area m²</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Area m2</label>
               <input
                 type="number"
                 min="20"
@@ -390,7 +390,7 @@ export default function ValorizadorPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Age</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Antiguedad</label>
               <input
                 type="number"
                 min="0"
@@ -405,7 +405,7 @@ export default function ValorizadorPage() {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Beds</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Dormitorios</label>
               <input
                 type="number"
                 min="1"
@@ -417,7 +417,7 @@ export default function ValorizadorPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Baths</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Banos</label>
               <input
                 type="number"
                 min="1"
@@ -429,7 +429,7 @@ export default function ValorizadorPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Floor</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Piso</label>
               <input
                 type="number"
                 min="1"
@@ -443,7 +443,7 @@ export default function ValorizadorPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Condition</label>
+            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Estado</label>
             <div className="grid grid-cols-2 gap-2">
               {(['excelente', 'bueno', 'regular', 'a_renovar'] as const).map((c) => (
                 <button
@@ -466,9 +466,9 @@ export default function ValorizadorPage() {
             <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Extras</label>
             <div className="flex gap-2 flex-wrap">
               {[
-                { key: 'has_parking', label: 'Parking' },
-                { key: 'has_storage', label: 'Storage' },
-                { key: 'has_pool', label: 'Pool' },
+                { key: 'has_parking', label: 'Estacionamiento' },
+                { key: 'has_storage', label: 'Bodega' },
+                { key: 'has_pool', label: 'Piscina' },
               ].map(({ key, label }) => (
                 <button
                   key={key}
@@ -492,7 +492,7 @@ export default function ValorizadorPage() {
             className="w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
             style={{ background: '#8fb2aa' }}
           >
-            {calculating ? <><RefreshCw size={15} className="animate-spin" /> Calculating...</> : <><BarChart2 size={15} /> Calculate value</>}
+            {calculating ? <><RefreshCw size={15} className="animate-spin" /> Calculando...</> : <><BarChart2 size={15} /> Calcular valor</>}
           </button>
         </div>
 
@@ -500,7 +500,7 @@ export default function ValorizadorPage() {
           {result ? (
             <>
               <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #8fb2aa', borderLeft: '4px solid #8fb2aa' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#555a56' }}>Estimated value</p>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#555a56' }}>Valor estimado</p>
                 <p className="text-4xl font-bold text-gray-900">{result.price_uf.toLocaleString('es-CL')} <span className="text-xl font-semibold" style={{ color: '#8fb2aa' }}>UF</span></p>
                 <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>~ ${result.price_clp.toLocaleString('es-CL')} CLP</p>
 
@@ -508,7 +508,7 @@ export default function ValorizadorPage() {
                   <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#d8e5e2' }}>
                     <div className="h-full rounded-full transition-all" style={{ width: `${result.confidence}%`, background: result.confidence > 85 ? '#10b981' : result.confidence > 70 ? '#f59e0b' : '#d97706' }} />
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? '#10b981' : '#f59e0b' }}>{result.confidence}% confidence</span>
+                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? '#10b981' : '#f59e0b' }}>{result.confidence}% confianza</span>
                 </div>
               </div>
 
@@ -516,21 +516,21 @@ export default function ValorizadorPage() {
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign size={15} style={{ color: '#8fb2aa' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Price / m²</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Precio / m2</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.price_uf_m2} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>UF/m²</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{result.price_uf_m2} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>UF/m2</span></p>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp size={15} style={{ color: '#b89a7e' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Neighborhood velocity</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Velocidad del barrio</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.market_velocity} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>days</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{result.market_velocity} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>dias</span></p>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <BarChart2 size={15} style={{ color: '#10b981' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Absorption</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Absorcion</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{result.market_absorption}<span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>%</span></p>
                 </div>
@@ -546,11 +546,11 @@ export default function ValorizadorPage() {
               <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Comparable range</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Rango comparable</p>
                     <p className="text-lg font-semibold text-gray-900">{result.comparable_range_uf} UF</p>
                   </div>
                   <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
-                    Source: {result.comparable_source}
+                    Fuente: {result.comparable_source}
                   </span>
                 </div>
 
@@ -574,13 +574,13 @@ export default function ValorizadorPage() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm" style={{ color: '#9ca9a3' }}>No sufficient comparables in `properties` yet.</p>
+                    <p className="text-sm" style={{ color: '#9ca9a3' }}>No hay comparables suficientes en `properties` todavia.</p>
                   )}
                 </div>
               </div>
 
               <p className="text-xs px-1" style={{ color: '#9ca9a3' }}>
-                Estimate based on real market data for {result.comp_neighborhood}, recent comparables from `properties`, and the external benchmark when available.
+                Estimacion basada en datos reales de mercado para {result.comp_neighborhood}, comparables recientes de `properties` y el benchmark externo cuando esta disponible.
               </p>
             </>
           ) : (
@@ -588,8 +588,8 @@ export default function ValorizadorPage() {
               <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: '#e8f3f0' }}>
                 <Home size={26} style={{ color: '#8fb2aa' }} />
               </div>
-              <p className="font-semibold text-gray-900">Enter the property data</p>
-              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>The model will use real prices from {neighborhoods.length} Vitacura neighborhoods</p>
+              <p className="font-semibold text-gray-900">Ingresa los datos de la propiedad</p>
+              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>El modelo usara precios reales de {neighborhoods.length} barrios de Vitacura</p>
             </div>
           )}
         </div>
@@ -599,28 +599,28 @@ export default function ValorizadorPage() {
         <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>External benchmark</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmark externo</p>
               <h3 className="mt-1 text-lg font-semibold text-gray-900">Realtor International</h3>
               <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                {externalBenchmark.offer_count} offers detected in {externalBenchmark.neighborhood} · {new Date(externalBenchmark.recorded_at).toLocaleString('es-CL')}
+                {externalBenchmark.offer_count} ofertas detectadas en {externalBenchmark.neighborhood} · {new Date(externalBenchmark.recorded_at).toLocaleString('es-CL')}
               </p>
             </div>
             <a href={externalBenchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
-              Open source
+              Abrir fuente
             </a>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Low price</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio minimo</p>
               <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>High price</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio maximo</p>
               <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
             </div>
             <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Title</p>
-              <p className="mt-2 text-sm font-medium text-gray-900">{externalBenchmark.listing_title || 'No title'}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Titulo</p>
+              <p className="mt-2 text-sm font-medium text-gray-900">{externalBenchmark.listing_title || 'Sin titulo'}</p>
             </div>
           </div>
         </div>
@@ -629,13 +629,13 @@ export default function ValorizadorPage() {
       {neighborhoods.length > 0 && (
         <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
           <div className="px-5 py-3" style={{ borderBottom: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-            <h3 className="text-sm font-semibold text-gray-900">Reference prices by neighborhood</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Precios de referencia por barrio</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid #d8e5e2' }}>
-                  {['Neighborhood', 'UF/m²', 'Velocity', 'Absorption', 'Inventory'].map((h) => (
+                  {['Barrio', 'UF/m2', 'Velocidad', 'Absorcion', 'Inventario'].map((h) => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>{h}</th>
                   ))}
                 </tr>
@@ -666,3 +666,5 @@ export default function ValorizadorPage() {
     </div>
   )
 }
+
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -43,14 +43,14 @@ export default function ControlPage() {
   const funnelData = [
     { name: 'Leads', value: 1200 },
     { name: 'Calificados', value: 450 },
-    { name: 'Negociación', value: 180 },
+    { name: 'NegociaciÃ³n', value: 180 },
     { name: 'Cierre', value: 64 },
   ]
 
   const directors = [
     { name: 'Juan Morales', target: 25, actual: 24, conversion: 8.8 },
-    { name: 'María García', target: 22, actual: 21, conversion: 8.2 },
-    { name: 'Carlos López', target: 20, actual: 19, conversion: 7.9 },
+    { name: 'MarÃ­a GarcÃ­a', target: 22, actual: 21, conversion: 8.2 },
+    { name: 'Carlos LÃ³pez', target: 20, actual: 19, conversion: 7.9 },
   ]
 
   if (loading) {
@@ -70,21 +70,21 @@ export default function ControlPage() {
   return (
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Control de Gestión</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Control de GestiÃ³n</h1>
         <p className="text-sm text-gray-600 mt-2">Monitoreo de objetivos y performance de directores</p>
       </div>
 
       {/* KPI Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Performance Promedio</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Desempeno promedio</p>
           <p className="text-3xl font-bold mt-3" style={{ color: '#8fb2aa' }}>{avgPerformance}%</p>
           <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>Cumplimiento vs objetivo</p>
         </div>
         <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Velocidad Promedio</p>
           <p className="text-3xl font-bold mt-3" style={{ color: '#b89a7e' }}>{avgVelocity}</p>
-          <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>días promedio de venta</p>
+          <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>dias promedio de venta</p>
         </div>
         <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Directores</p>
@@ -95,7 +95,7 @@ export default function ControlPage() {
 
       {/* Directors Performance Cards */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Performance por Director</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Desempeno por Director</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {directors.map(director => {
             const achievement = (director.actual / director.target * 100).toFixed(0)
@@ -121,7 +121,7 @@ export default function ControlPage() {
                     <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>{achievement}% del target</p>
                   </div>
                   <div className="pt-2" style={{ borderTop: '1px solid #f0f0f0' }}>
-                    <p className="text-xs uppercase font-semibold mb-1" style={{ color: '#555a56' }}>Conversión</p>
+                    <p className="text-xs uppercase font-semibold mb-1" style={{ color: '#555a56' }}>ConversiÃ³n</p>
                     <p className="text-lg font-bold" style={{ color: '#b89a7e' }}>{director.conversion}%</p>
                   </div>
                 </div>
@@ -149,14 +149,14 @@ export default function ControlPage() {
         </div>
 
         <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Conversión (Tendencia)</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">ConversiÃ³n (Tendencia)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={kpis}>
               <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
               <XAxis dataKey="period_date" stroke="#9ca9a3" tick={{ fontSize: 12 }} />
               <YAxis stroke="#9ca9a3" />
               <Tooltip contentStyle={{ background: '#fbfbfa', border: '1px solid #d8e5e2', borderRadius: '8px' }} />
-              <Line type="monotone" dataKey="conversion_rate" stroke="#b89a7e" strokeWidth={2} name="Conversión %" />
+              <Line type="monotone" dataKey="conversion_rate" stroke="#b89a7e" strokeWidth={2} name="ConversiÃ³n %" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -179,3 +179,4 @@ export default function ControlPage() {
     </div>
   )
 }
+

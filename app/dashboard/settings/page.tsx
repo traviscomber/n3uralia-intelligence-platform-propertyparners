@@ -5,7 +5,7 @@ import DeliveryTelemetryPanel from '@/components/settings/DeliveryTelemetryPanel
 import ProfileDirectory from '@/components/settings/ProfileDirectory'
 
 const systemRows = [
-  { label: 'Version', value: 'v1.0.0 - Production' },
+  { label: 'Version', value: 'v1.0.0 - Produccion' },
   { label: 'Motor IA', value: 'N3uralia Intelligence v2' },
   { label: 'Actualizacion de datos', value: 'Cada 2 horas' },
   { label: 'Zona horaria', value: 'America/Santiago (UTC-4)' },
@@ -47,7 +47,7 @@ export default async function SettingsPage() {
               <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
                 Flujo
               </p>
-              <p className="mt-1 text-sm font-semibold text-gray-900">Email + WhatsApp Web</p>
+              <p className="mt-1 text-sm font-semibold text-gray-900">Correo + WhatsApp Web</p>
             </div>
           </div>
         </div>
@@ -120,10 +120,10 @@ export default async function SettingsPage() {
           </p>
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { label: 'Primary', color: '#8fb2aa' },
-              { label: 'Accent', color: '#b89a7e' },
-              { label: 'Success', color: '#10b981' },
-              { label: 'Warning', color: '#f59e0b' },
+              { label: 'Principal', color: '#8fb2aa' },
+              { label: 'Acento', color: '#b89a7e' },
+              { label: 'Exito', color: '#10b981' },
+              { label: 'Aviso', color: '#f59e0b' },
             ].map((item) => (
               <div key={item.label} className="rounded-2xl border p-3" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
                 <div className="h-12 rounded-xl" style={{ background: item.color }} />

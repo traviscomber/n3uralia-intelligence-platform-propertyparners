@@ -62,7 +62,7 @@ export default function KnowledgePage() {
 
   const docTypeLabels: { [key: string]: string } = {
     report: 'Reporte',
-    market: 'Market',
+    market: 'Mercado',
     property: 'Casa',
     trend: 'Tendencia',
     comparable: 'Comparable',

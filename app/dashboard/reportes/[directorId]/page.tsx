@@ -142,7 +142,7 @@ export default async function DirectorReportDetailPage({
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Seleccionar semana</h2>
             <p className="text-sm" style={{ color: '#9ca9a3' }}>
-              Elige el corte a revisar y exporta ese snapshot exacto en PDF.
+              Elige el corte a revisar y exporta esa instantanea exacta en PDF.
             </p>
           </div>
           <form method="get" className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -245,7 +245,7 @@ export default async function DirectorReportDetailPage({
               <p className="text-sm" style={{ color: '#9ca9a3' }}>Base operativa usada para los reportes semanales</p>
             </div>
             <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
-              {bundle.kpis.length} snapshots
+              {bundle.kpis.length} instantaneas
             </span>
           </div>
 
@@ -261,7 +261,7 @@ export default async function DirectorReportDetailPage({
                 </p>
               </div>
             )) : (
-              <p className="text-sm" style={{ color: '#9ca9a3' }}>No hay snapshots KPI para este director.</p>
+              <p className="text-sm" style={{ color: '#9ca9a3' }}>No hay instantaneas KPI para este director.</p>
             )}
           </div>
         </div>

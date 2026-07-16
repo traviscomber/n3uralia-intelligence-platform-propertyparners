@@ -6,6 +6,7 @@ import { Calendar, FileText, RefreshCw, Sparkles, TriangleAlert, Users } from 'l
 import { useRealtimeQuery } from '@/lib/hooks/use-realtime-query'
 import type { AiReport, Profile } from '@/lib/types'
 import { buildWhatsAppWebUrl } from '@/lib/whatsapp-web'
+import { PP_AGENTS, PP_AUDIENCES, PP_NAME, PP_STEPS } from '@/lib/pp-agent'
 
 type WeeklyReport = {
   week_start: string
@@ -538,7 +539,7 @@ export default function ReportesPage() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="n-chip">
             <FileText size={14} />
-            Reportes semanales
+            Centro de reportes PP
           </span>
           {weekly?.generatedAt && (
             <span className="n-chip" style={{ background: 'var(--n-success-muted)', color: 'var(--n-success)' }}>
@@ -554,10 +555,10 @@ export default function ReportesPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight md:text-4xl" style={{ color: 'var(--n-fg)' }}>
-              Reportes Pro
+              {PP_NAME} report center
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 md:text-[15px]" style={{ color: 'var(--n-fg-muted)' }}>
-              Reportes semanales derivados de KPIs reales y biblioteca historica de reportes automaticos.
+              Reportes comerciales para Vitacura: una lectura distinta para CEO, directores y ejecutivos, con insumos reales, fuente operativa y salida accionable.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -569,7 +570,7 @@ export default function ReportesPage() {
               aria-disabled={Boolean(generateLoading) || aiLoading}
             >
               <RefreshCw size={14} className={aiLoading ? 'animate-spin' : ''} />
-              {aiLoading ? 'Actualizando AI' : 'Refrescar AI'}
+              {aiLoading ? 'Actualizando IA' : 'Refrescar IA'}
             </button>
             <button
               onClick={() => void refreshWeekly()}
@@ -589,22 +590,124 @@ export default function ReportesPage() {
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
-              Reportes Pro
+              Metodologia PP
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Genera una version distinta segun la audiencia: CEO, directores de venta o ejecutivos de venta.
+              El sistema captura, limpia, deduplica, reporta y refresca datos para mantener una lectura viva del mercado.
             </p>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {PP_STEPS.map((step) => (
+            <div key={step.id} className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                {step.title}
+              </p>
+              <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                {step.output}
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                {step.description}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Agentes PP
+              </p>
+              <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                Cada agente tiene una decision clara, señales propias y salidas distintas para no mezclar captura, dedupe, reportes y monitoreo.
+              </p>
+            </div>
+            <span className="n-chip">5 agentes</span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {PP_AGENTS.map((agent) => (
+              <div key={agent.key} className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+                <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                  {agent.title}
+                </p>
+                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                  {agent.mission}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="n-chip">Entradas {agent.inputs.length}</span>
+                  <span className="n-chip">Senales {agent.signals.length}</span>
+                  <span className="n-chip">Salidas {agent.outputs.length}</span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {agent.weights.slice(0, 2).map((weight) => (
+                    <div key={weight.label} className="rounded-xl border bg-white p-2" style={{ borderColor: 'var(--n-border)' }}>
+                      <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                        {weight.label}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                        {weight.value}%
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                  Guardrails
+                </p>
+                <ul className="mt-2 space-y-1 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                  {agent.guardrails.map((guardrail) => (
+                    <li key={guardrail}>- {guardrail}</li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                  Respaldo / escalacion
+                </p>
+                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                  {agent.fallbacks[0]}
+                </p>
+                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                  {agent.escalations[0]?.trigger}
+                </p>
+                <p className="mt-1 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                  {agent.escalations[0]?.response}
+                </p>
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                  Foco por barrio
+                </p>
+                <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                  {agent.neighborhoodFocus.join(', ')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+          {PP_AUDIENCES.map((audience) => (
+            <div key={audience.key} className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                {audience.title}
+              </p>
+              <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                {audience.decision}
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                {audience.description}
+              </p>
+            </div>
+          ))}
         </div>
 
         <div className="mb-5 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
-                Contexto de generacion
+                Contexto comercial
               </p>
               <p className="mt-2 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-                Define director, equipo y vendedor antes de generar. El reporte usa esta base para CEO, directores y vendedores.
+                Define director, equipo y vendedor antes de generar. El reporte usa esa base para construir salidas distintas para cada audiencia.
               </p>
             </div>
             <span className="n-chip">
@@ -792,7 +895,7 @@ export default function ReportesPage() {
                   Reportes semanales guardados en `weekly_reports`
                 </h3>
               </div>
-              <span className="n-chip">{weekly.history.length} snapshots</span>
+              <span className="n-chip">{weekly.history.length} instantaneas</span>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
               {weekly.history.slice(0, 3).map((item) => (
@@ -971,13 +1074,13 @@ export default function ReportesPage() {
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
-              Salud operativa del scraper
+              Salud operativa de fuentes
             </h2>
             <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Cruza ejecuciones recientes, fuentes activas y anomalias detectadas para el sistema de reportes.
+              Cruza ejecuciones recientes, fuentes activas y anomalias detectadas para mantener vivo el ciclo PP.
             </p>
           </div>
-          <span className="n-chip">{health?.status || 'unknown'}</span>
+          <span className="n-chip">{health?.status || 'desconocido'}</span>
         </div>
 
         {healthLoading ? (
@@ -1105,10 +1208,10 @@ export default function ReportesPage() {
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
-              Biblioteca de reportes pro
+              Biblioteca PP
             </h2>
                 <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
-              Historial de reportes almacenados en `ai_reports`
+              Historial de reportes almacenados en `ai_reports` y listos para reutilizarse en nuevas entregas.
             </p>
           </div>
           <span className="n-chip">Supabase</span>
@@ -1149,7 +1252,7 @@ export default function ReportesPage() {
                 Exportaciones
               </p>
               <h3 className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
-                Variantes por biblioteca, reporte semanal y perfiles comerciales
+                Variantes por biblioteca, reporte semanal y perfiles comerciales de PP
               </h3>
             </div>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">

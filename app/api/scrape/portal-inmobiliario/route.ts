@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { parse } from 'node-html-parser'
 import puppeteer from 'puppeteer'
 import { persistScrapeHealthSnapshot } from '@/lib/scrape-health'
+import { buildPropertyDedupSignature, findBestDuplicateMatch, mergePropertyRecord, type PropertyLike } from '@/lib/property-dedupe'
 
 type ScrapedProperty = {
   address: string
@@ -797,10 +798,49 @@ async function logScrapeRun(payload: ScrapeRunPayload) {
 
 async function insertProperties(rows: ScrapedProperty[]) {
   const supabase = getSupabaseClient()
+  const { data: existingRows } = await supabase
+    .from('properties')
+    .select('id,address,neighborhood,property_type,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
+
+  const inventory = ((existingRows || []) as Array<PropertyLike & { id: string }>)
   let inserted = 0
+  let updated = 0
   const errors: string[] = []
 
   for (const row of rows) {
+    const match = findBestDuplicateMatch(inventory, row)
+    if (match?.row?.id && match.score >= 90) {
+      const merged = mergePropertyRecord(match.row, row)
+      const { error } = await supabase.from('properties').update({
+        address: merged.address,
+        neighborhood: merged.neighborhood,
+        property_type: merged.property_type,
+        price_uf: merged.price_uf,
+        area_m2: merged.area_m2,
+        bedrooms: merged.bedrooms,
+        bathrooms: merged.bathrooms,
+        lat: merged.lat,
+        lng: merged.lng,
+        source: merged.source,
+        external_id: merged.external_id,
+        source_url: merged.source_url,
+        image_url: merged.image_url,
+        listing_number: merged.listing_number,
+        tags: merged.tags,
+        source_listing_id: merged.source_listing_id,
+      }).eq('id', match.row.id)
+
+      if (error) {
+        errors.push(`${row.external_id}: ${error.message}`)
+        continue
+      }
+
+      updated += 1
+      const index = inventory.findIndex((candidate) => candidate.id === match.row.id)
+      if (index >= 0) inventory[index] = { ...match.row, ...merged }
+      continue
+    }
+
     const { error } = await supabase.from('properties').insert({
       address: row.address,
       neighborhood: row.neighborhood,
@@ -826,26 +866,59 @@ async function insertProperties(rows: ScrapedProperty[]) {
       errors.push(`${row.external_id}: ${error.message}`)
     } else {
       inserted += 1
+      inventory.push({
+        ...row,
+        id: row.external_id,
+      })
     }
   }
 
-  return { inserted, errors }
+  return { inserted: inserted + updated, errors }
 }
 
-function dedupeProperties(rows: ScrapedProperty[], seen = new Set<string>()) {
-  const unique: ScrapedProperty[] = []
+function dedupeProperties(rows: ScrapedProperty[]) {
+  const bestByKey = new Map<string, ScrapedProperty>()
 
   for (const row of rows) {
-    const key = canonicalPropertyKey(row)
-    if (seen.has(key)) continue
-    seen.add(key)
-    unique.push({
-      ...row,
-      external_id: row.external_id || hashLike(key),
-    })
+    const key = buildPropertyDedupSignature(row)
+    const current = bestByKey.get(key)
+    if (!current) {
+      bestByKey.set(key, {
+        ...row,
+        external_id: row.external_id || hashLike(key),
+      })
+      continue
+    }
+
+    const score = [
+      row.source_url,
+      row.image_url,
+      row.listing_number,
+      row.source_listing_id,
+      row.tags?.length,
+      row.property_type,
+      row.lat != null && row.lng != null,
+    ].filter(Boolean).length
+
+    const currentScore = [
+      current.source_url,
+      current.image_url,
+      current.listing_number,
+      current.source_listing_id,
+      current.tags?.length,
+      current.property_type,
+      current.lat != null && current.lng != null,
+    ].filter(Boolean).length
+
+    if (score > currentScore) {
+      bestByKey.set(key, {
+        ...row,
+        external_id: row.external_id || hashLike(key),
+      })
+    }
   }
 
-  return unique
+  return Array.from(bestByKey.values())
 }
 
 export async function POST(request: Request) {

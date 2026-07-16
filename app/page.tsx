@@ -137,7 +137,7 @@ export default function LandingPage() {
                 Casas en Vitacura respaldadas por datos.
               </h1>
               <p className="text-lg leading-relaxed mb-10" style={{ color: '#9ca9a3', maxWidth: '38ch' }}>
-                Automatización de reportes para CEO y directores, inteligencia de mercado por barrio en Vitacura, y un valorizador que pondera la calidad real de cada casa.
+                Automatizacion de reportes para CEO y directores, inteligencia de mercado por barrio en Vitacura, y un valorizador que pondera la calidad real de cada casa.
               </p>
               <Link
                 href="/auth/login"
@@ -152,7 +152,7 @@ export default function LandingPage() {
           {/* RIGHT — light panel with animated tech stack */}
           <div className="flex flex-col justify-center px-10 py-24 md:py-0 gap-6 relative" style={{ background: 'rgba(251,251,250,0.96)' }}>
             <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>
-              La tecnología detrás
+              La tecnologia detras
             </p>
 
             {[
@@ -161,21 +161,21 @@ export default function LandingPage() {
                   desc: 'Scraper de Portal Inmobiliario Vitacura + base de ventas internas + archivos KMZ que asignan barrio a cada casa. Todo integrado y actualizado trimestralmente.',
                 color: '#8fb2aa',
                 delay: '0ms',
-                tag: 'Data Pipeline',
+                tag: 'Pipeline de datos',
               },
               {
                   label: 'Modelos predictivos',
-                  desc: 'Regresión entrenada con 5 años de transacciones. El valorizador aprende a ponderar calidad, barrio y atributos específicos de cada inmueble.',
+                  desc: 'Regresion entrenada con 5 años de transacciones. El valorizador aprende a ponderar calidad, barrio y atributos especificos de cada inmueble.',
                 color: '#b89a7e',
                 delay: '120ms',
-                tag: 'Predictive AI',
+                tag: 'IA predictiva',
               },
               {
                   label: '3 directores + equipos',
-                  desc: 'El sistema genera el reporte mensual para el CEO y reportes semanales para los 3 directores automáticamente. Sin Excel, sin armado manual.',
+                  desc: 'El sistema genera el reporte mensual para el CEO y reportes semanales para los 3 directores automaticamente. Sin Excel, sin armado manual.',
                 color: '#10b981',
                 delay: '240ms',
-                tag: 'Auto Reports',
+                tag: 'Reportes automaticos',
               },
             ].map((item) => (
               <div
@@ -253,12 +253,12 @@ export default function LandingPage() {
                 <BarChart3 size={22} />
               </div>
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#8fb2aa' }}>Pilar 01</div>
-              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Reportes Automáticos</h3>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Reportes automaticos</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Los directores reciben sus reportes semanales sin tener que armarlos. Sistema actualiza automáticamente con los últimos datos de ventas, comisiones y evolución versus plan.
+                Los directores reciben sus reportes semanales sin tener que armarlos. El sistema actualiza automaticamente con los ultimos datos de ventas, comisiones y evolucion versus plan.
               </p>
               <div className="space-y-2.5">
-                {['Reportes semanales para directores', 'Actualización automática cada lunes', 'Avance real versus meta', 'Sin intervención manual'].map(item => (
+                {['Reportes semanales para directores', 'Actualizacion automatica cada lunes', 'Avance real versus meta', 'Sin intervencion manual'].map(item => (
                   <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#555a56' }}>
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8fb2aa' }} />
                     {item}
@@ -278,9 +278,9 @@ export default function LandingPage() {
                 <TrendingUp size={22} />
               </div>
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#b89a7e' }}>Pilar 02</div>
-              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Inteligencia de Mercado Vitacura</h3>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Inteligencia de mercado Vitacura</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Análisis de mercado en tiempo real por barrio en Vitacura. Entiendes qué barrios venden rápido, a qué precio, y cómo evolucionar la estrategia según el contexto.
+                Analisis de mercado en tiempo real por barrio en Vitacura. Entiendes que barrios venden rapido, a que precio, y como evolucionar la estrategia segun el contexto.
               </p>
               <div className="space-y-2.5">
                 {['Velocidad de venta por barrio', 'Precio actual UF/m²', 'Tendencias de mercado', 'Datos actualizados regularmente'].map(item => (
@@ -303,9 +303,9 @@ export default function LandingPage() {
                 <DollarSign size={22} />
               </div>
               <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#10b981' }}>Pilar 03</div>
-              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Valorizador Inteligente</h3>
+              <h3 className="text-xl font-bold mb-4" style={{ color: '#173634' }}>Valorizador inteligente</h3>
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#555a56' }}>
-                Precios exactos según calidad y estado del inmueble. No es solo barrio y metros cuadrados — el sistema ajusta por terminaciones, conservación y otros factores que importan.
+                Precios exactos segun calidad y estado del inmueble. No es solo barrio y metros cuadrados - el sistema ajusta por terminaciones, conservacion y otros factores que importan.
               </p>
               <div className="space-y-2.5">
                 {['Ajuste por calidad de terminaciones', 'Sensibilización por estado', 'Precio por barrio específico', 'Valorización instantánea'].map(item => (

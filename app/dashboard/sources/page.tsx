@@ -384,7 +384,7 @@ export default function SourcesPage() {
           )}
           {health.history && health.history.length > 0 && (
             <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#555a56' }}>Ultimos snapshots</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#555a56' }}>Ultimas instantaneas</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 {health.history.slice(0, 3).map((snapshot) => (
                   <div key={snapshot.id} className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>

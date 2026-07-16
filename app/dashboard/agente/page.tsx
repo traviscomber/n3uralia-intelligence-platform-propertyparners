@@ -1,268 +1,531 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts'
-import type { KpiSnapshot, Profile, AgentActivity } from '@/lib/types'
+import { buildVitacuraNeighborhoodIntelligence, filterVitacuraRows } from '@/lib/vitacura'
+import { PP_AGENTS, PP_AUDIENCES, PP_NAME, PP_SCOPE, PP_STEPS } from '@/lib/pp-agent'
 
-const AGENT_ID = 'a0000000-0000-0000-0000-000000000001' // default: Sofía Ramos
-const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-
-const ACTIVITY_COLORS: Record<string, string> = {
-  llamada: '#8fb2aa',
-  visita:  '#b89a7e',
-  oferta:  '#0ea5e9',
-  cierre:  '#10b981',
+type PropertyRow = {
+  id: string
+  property_type: string | null
+  neighborhood: string | null
+  source: string | null
+  source_url: string | null
+  image_url: string | null
+  listing_number: string | null
+  tags: string[] | null
+  created_at: string
+}
+type ScrapeRunRow = {
+  source: string
+  status: string
+  scraped_count: number
+  inserted_count: number
+  skipped_count: number
+  error_count: number
+  started_at: string
+  finished_at: string
+  created_at: string
 }
 
-const ACTIVITY_BORDER: Record<string, string> = {
-  llamada: '#8fb2aa',
-  visita:  '#b89a7e',
-  oferta:  '#0ea5e9',
-  cierre:  '#10b981',
+type MarketRow = {
+  neighborhood: string
+  avg_price_uf: number | null
+  avg_price_m2_uf: number | null
+  absorption_rate: number | null
+  inventory_count: number
+  avg_days_on_market: number | null
 }
 
-const MOCK_ACTIVITIES: AgentActivity[] = [
-  { id: '1', agent_id: AGENT_ID, activity_type: 'llamada', property_id: null, description: 'Seguimiento cliente Av. Vitacura 3200', value_uf: 14500, status: 'pending', scheduled_at: new Date().toISOString(), completed_at: null, created_at: new Date().toISOString() },
-  { id: '2', agent_id: AGENT_ID, activity_type: 'visita',  property_id: null, description: 'Visita depto 2D La Dehesa',              value_uf: 18200, status: 'pending', scheduled_at: new Date().toISOString(), completed_at: null, created_at: new Date().toISOString() },
-  { id: '3', agent_id: AGENT_ID, activity_type: 'oferta',  property_id: null, description: 'Enviar oferta Alonso de Córdova 4500',   value_uf: 23600, status: 'pending', scheduled_at: new Date().toISOString(), completed_at: null, created_at: new Date().toISOString() },
-]
+type AiReportRow = {
+  id: string
+  report_type: string
+  title: string
+  summary: string | null
+  content: Record<string, unknown> | null
+  created_at: string
+  period_date: string | null
+}
 
-const MOCK_CHART = [
-  { mes: 'Feb', ventas: 2, target: 3 },
-  { mes: 'Mar', ventas: 3, target: 3 },
-  { mes: 'Abr', ventas: 3, target: 3 },
-  { mes: 'May', ventas: 2, target: 3 },
-  { mes: 'Jun', ventas: 4, target: 4 },
-  { mes: 'Jul', ventas: 2, target: 4 },
-]
+type MetricCard = {
+  label: string
+  value: string
+  sub: string
+  accent: string
+}
 
-const MOCK_TEAMMATES = [
-  { name: 'Sofía Ramos',   ventas: 15, isMe: true },
-  { name: 'Diego Herrera', ventas: 14, isMe: false },
-]
+function fmt(value: number) {
+  return new Intl.NumberFormat('es-CL').format(value)
+}
 
-function fmt(n: number) { return n.toLocaleString('es-CL') }
+function daysSince(dateValue: string | null | undefined) {
+  if (!dateValue) return null
+  const date = new Date(dateValue)
+  if (Number.isNaN(date.getTime())) return null
+  return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000))
+}
 
-function KpiCard({ label, value, sub, border, delta }: { label: string; value: string; sub?: string; border: string; delta?: number }) {
+function normalizeText(value: string | null | undefined) {
+  return (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function inferAudience(report: AiReportRow) {
+  const content = (report.content || {}) as Record<string, unknown>
+  const hint = [
+    String(content.audience || ''),
+    String(content.requested_audience || ''),
+    String(content.requested_report_type || ''),
+    report.report_type,
+  ].join(' ').toLowerCase()
+
+  if (hint.includes('ceo')) return 'ceo'
+  if (hint.includes('vendedor') || hint.includes('seller') || hint.includes('ejecutivo')) return 'seller'
+  return 'director'
+}
+
+function getPropertyKindLabel(value: string | null) {
+  const normalized = normalizeText(value)
+  if (normalized.includes('depart')) return 'departamento'
+  if (normalized.includes('house') || normalized.includes('casa')) return 'casa'
+  return normalized || 'sin tipo'
+}
+
+function PPMetricCard({ label, value, sub, accent }: MetricCard) {
   return (
-    <div className="bg-white rounded-lg p-5 flex flex-col gap-1" style={{ border: '1px solid #e8f0ed', borderLeft: `3px solid ${border}` }}>
-      <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: '#9ca9a3' }}>{label}</span>
-      <div className="flex items-end gap-2">
-        <span className="text-2xl font-bold tracking-tight" style={{ color: '#173634' }}>{value}</span>
-        {delta !== undefined && (
-          <span className="text-xs font-medium mb-0.5" style={{ color: delta >= 0 ? '#10b981' : '#d97706' }}>
-            {delta >= 0 ? '+' : ''}{delta}%
-          </span>
-        )}
-      </div>
-      {sub && <span className="text-xs" style={{ color: '#b89a7e' }}>{sub}</span>}
+    <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#e6eeeb', borderLeft: `4px solid ${accent}` }}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>
+        {label}
+      </p>
+      <p className="mt-3 text-3xl font-semibold" style={{ color: '#173634' }}>
+        {value}
+      </p>
+      <p className="mt-2 text-sm" style={{ color: '#9ca9a3' }}>
+        {sub}
+      </p>
     </div>
   )
 }
 
-export default function AgenteDashboard() {
-  const [agent, setAgent] = useState<Profile | null>(null)
-  const [activities, setActivities] = useState<AgentActivity[]>(MOCK_ACTIVITIES)
-  const [doneIds, setDoneIds] = useState<Set<string>>(new Set())
-  const [chartData, setChartData] = useState(MOCK_CHART)
-  const [teammates, setTeammates] = useState(MOCK_TEAMMATES)
-  const [kpis, setKpis] = useState({ ventas: 15, comision: 2052000, captaciones: 25, velocidad: 31, deltaVentas: 33, deltaComision: 33 })
+export default function PpDashboard() {
+  const [properties, setProperties] = useState<PropertyRow[]>([])
+  const [scrapeRuns, setScrapeRuns] = useState<ScrapeRunRow[]>([])
+  const [marketRows, setMarketRows] = useState<MarketRow[]>([])
+  const [aiReports, setAiReports] = useState<AiReportRow[]>([])
   const [loading, setLoading] = useState(true)
+  const vitacuraProperties = useMemo(() => filterVitacuraRows(properties), [properties])
+  const vitacuraMarketRows = useMemo(() => filterVitacuraRows(marketRows), [marketRows])
 
   useEffect(() => {
     async function load() {
       try {
         const supabase = createClient()
-        const [{ data: profileData }, { data: snapshots }, { data: activityData }, { data: teamProfiles }] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', AGENT_ID).single(),
-          supabase.from('kpi_snapshots').select('*').eq('agent_id', AGENT_ID).order('period_date', { ascending: true }),
-          supabase.from('agent_activities').select('*').eq('agent_id', AGENT_ID).order('scheduled_at', { ascending: true }).limit(10),
-          supabase.from('profiles').select('*').eq('role', 'seller').eq('team', 'Equipo Alpha'),
+        const [
+          { data: propertyData },
+          { data: runData },
+          { data: marketData },
+          { data: reportData },
+        ] = await Promise.all([
+          supabase
+            .from('properties')
+            .select('id, property_type, neighborhood, source, source_url, image_url, listing_number, tags, created_at')
+            .order('created_at', { ascending: false })
+            .limit(250),
+          supabase
+            .from('scrape_runs')
+            .select('source, status, scraped_count, inserted_count, skipped_count, error_count, started_at, finished_at, created_at')
+            .order('created_at', { ascending: false })
+            .limit(12),
+          supabase
+            .from('market_data')
+            .select('neighborhood, avg_price_uf, avg_price_m2_uf, absorption_rate, inventory_count, avg_days_on_market')
+            .order('absorption_rate', { ascending: false })
+            .limit(12),
+          supabase
+            .from('ai_reports')
+            .select('id, report_type, title, summary, content, created_at, period_date')
+            .order('created_at', { ascending: false })
+            .limit(18),
         ])
 
-        if (profileData) setAgent(profileData as Profile)
-
-        if (snapshots && snapshots.length > 0) {
-          const snaps = snapshots as KpiSnapshot[]
-          const last  = snaps[snaps.length - 1]
-          const prev  = snaps.length >= 2 ? snaps[snaps.length - 2] : null
-          const totalVentas   = snaps.reduce((a, s) => a + s.ventas_count, 0)
-          const totalComision = snaps.reduce((a, s) => a + s.comision_total, 0)
-          const totalCaptac   = snaps.reduce((a, s) => a + s.captaciones_count, 0)
-          const avgVelocidad  = Math.round(snaps.reduce((a, s) => a + s.velocidad_venta, 0) / snaps.length)
-          const deltaV = prev ? Math.round(((last.ventas_count - prev.ventas_count) / Math.max(prev.ventas_count, 1)) * 100) : 0
-          const deltaC = prev ? Math.round(((last.comision_total - prev.comision_total) / Math.max(prev.comision_total, 1)) * 100) : 0
-
-          setKpis({ ventas: totalVentas, comision: totalComision, captaciones: totalCaptac, velocidad: avgVelocidad, deltaVentas: deltaV, deltaComision: deltaC })
-
-          const months = [...new Set(snaps.map(s => s.period_date.slice(0, 7)))].sort().slice(-6)
-          const chart = months.map(m => {
-            const s = snaps.find(ss => ss.period_date.startsWith(m))
-            return { mes: MONTHS_ES[parseInt(m.slice(5, 7)) - 1], ventas: s?.ventas_count ?? 0, target: s?.monthly_target ?? 0 }
-          })
-          setChartData(chart)
-        }
-
-        if (activityData) setActivities(activityData as AgentActivity[])
-
-        // Build teammate ranking from kpi_snapshots for same team
-        if (teamProfiles && teamProfiles.length > 0) {
-          const { data: teamSnaps } = await supabase
-            .from('kpi_snapshots')
-            .select('agent_id, ventas_count')
-            .in('agent_id', (teamProfiles as Profile[]).map(p => p.id))
-          if (teamSnaps) {
-            const teamMap: Record<string, number> = {}
-            for (const s of teamSnaps) {
-              if (!s.agent_id) continue
-              teamMap[s.agent_id] = (teamMap[s.agent_id] || 0) + s.ventas_count
-            }
-            const ranked = (teamProfiles as Profile[])
-              .map(p => ({ name: p.full_name || 'Agente', ventas: teamMap[p.id] || 0, isMe: p.id === AGENT_ID }))
-              .sort((a, b) => b.ventas - a.ventas)
-            setTeammates(ranked)
-          }
-        }
-      } catch (_) {
-        // keep mocks
+        setProperties((propertyData || []) as PropertyRow[])
+        setScrapeRuns((runData || []) as ScrapeRunRow[])
+        setMarketRows((marketData || []) as MarketRow[])
+        setAiReports((reportData || []) as AiReportRow[])
+      } catch (err) {
+        console.error('Error loading PP dashboard:', err)
       } finally {
         setLoading(false)
       }
     }
-    load()
+
+    void load()
   }, [])
 
-  // Local toggle done
-  function toggleDone(id: string) {
-    setDoneIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
-      return next
-    })
+  const uniqueSources = useMemo(() => {
+    return new Set(vitacuraProperties.map((property) => property.source || '').filter(Boolean)).size
+  }, [vitacuraProperties])
+
+  const casas = useMemo(() => vitacuraProperties.filter((property) => getPropertyKindLabel(property.property_type) === 'casa').length, [vitacuraProperties])
+  const deptos = useMemo(() => vitacuraProperties.filter((property) => getPropertyKindLabel(property.property_type) === 'departamento').length, [vitacuraProperties])
+  const withLinks = useMemo(() => vitacuraProperties.filter((property) => Boolean(property.source_url)).length, [vitacuraProperties])
+  const withPhotos = useMemo(() => vitacuraProperties.filter((property) => Boolean(property.image_url)).length, [vitacuraProperties])
+  const dedupeSignal = useMemo(() => {
+    const keys = new Set(
+      vitacuraProperties.map((property) => {
+        return [
+          normalizeText(property.source || ''),
+          normalizeText(property.listing_number || ''),
+          normalizeText(property.neighborhood || ''),
+          getPropertyKindLabel(property.property_type),
+        ].join('|')
+      }),
+    )
+
+    return {
+      unique: keys.size,
+      duplicates: Math.max(0, vitacuraProperties.length - keys.size),
+      coverage: vitacuraProperties.length ? Math.round((keys.size / vitacuraProperties.length) * 100) : 0,
+    }
+  }, [vitacuraProperties])
+
+  const latestRun = scrapeRuns[0] || null
+  const latestReport = aiReports[0] || null
+  const reportCounts = useMemo(() => {
+    return aiReports.reduce<Record<'ceo' | 'director' | 'seller', number>>(
+      (acc, report) => {
+        acc[inferAudience(report) as 'ceo' | 'director' | 'seller'] += 1
+        return acc
+      },
+      { ceo: 0, director: 0, seller: 0 },
+    )
+  }, [aiReports])
+
+  const latestMarket = vitacuraMarketRows[0] || null
+  const vitacuraNeighborhoodIntel = useMemo(
+    () => buildVitacuraNeighborhoodIntelligence(vitacuraMarketRows.length ? vitacuraMarketRows : vitacuraProperties),
+    [vitacuraMarketRows, vitacuraProperties],
+  )
+  const freshnessDays = Math.min(
+    ...[
+      daysSince(latestRun?.created_at),
+      daysSince(latestReport?.created_at),
+    ].filter((value): value is number => value !== null),
+    Number.POSITIVE_INFINITY,
+  )
+
+  const metrics: MetricCard[] = [
+    {
+      label: 'Inventario cargado',
+      value: fmt(vitacuraProperties.length),
+      sub: `${casas} casas y ${deptos} departamentos`,
+      accent: '#8fb2aa',
+    },
+    {
+      label: 'Fuentes activas',
+      value: fmt(uniqueSources),
+      sub: `${withLinks} con link y ${withPhotos} con foto`,
+      accent: '#b89a7e',
+    },
+    {
+      label: 'Dedupe fuerte',
+      value: `${dedupeSignal.coverage}%`,
+      sub: `${dedupeSignal.duplicates} posibles duplicados en la vista`,
+      accent: '#10b981',
+    },
+    {
+      label: 'Actualizacion',
+      value: Number.isFinite(freshnessDays) ? `${freshnessDays}d` : 's/d',
+      sub: latestRun ? `Ultimo scrape ${latestRun.source}` : 'Sin scrape reciente',
+      accent: '#173634',
+    },
+  ]
+
+  const runChartData = [...scrapeRuns]
+    .slice(0, 8)
+    .reverse()
+    .map((run) => ({
+      label: run.source.split('_')[0].slice(0, 10),
+      scraped: run.scraped_count,
+      inserted: run.inserted_count,
+    }))
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-sm" style={{ color: '#9ca9a3' }}>Cargando PP...</div>
+      </div>
+    )
   }
 
-  const today = new Date()
-  const todayActivities   = activities.filter(a => a.status === 'pending' || doneIds.has(a.id)).slice(0, 5)
-  const myRankPos         = teammates.findIndex(t => t.isMe) + 1
-  const todayStr          = today.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
-  const todayStrCap       = todayStr.charAt(0).toUpperCase() + todayStr.slice(1)
-
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <div className="text-xs font-medium mb-1" style={{ color: '#9ca9a3' }}>{todayStrCap}</div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#173634' }}>
-            {loading ? 'Cargando...' : `Hola, ${agent?.full_name?.split(' ')[0] || 'Sofía'}`}
-          </h1>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#e8f3f0', color: '#8fb2aa' }}>Agente</span>
-            {agent?.team && <span className="text-xs" style={{ color: '#9ca9a3' }}>{agent.team}</span>}
-            {myRankPos > 0 && <span className="text-xs font-medium" style={{ color: '#b89a7e' }}>#{myRankPos} en tu equipo</span>}
+    <div className="space-y-6 pb-8">
+      <div className="rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: '#dce7e3' }}>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: '#8fb2aa' }}>
+              {PP_NAME} Inteligencia de Mercado
+            </p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+              Agente senior para ventas en Vitacura
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: '#555a56' }}>
+              {PP_NAME} convierte la data de mercado en un motor comercial repetible para casas y departamentos en {PP_SCOPE.market}.
+              El modelo esta pensado para capturar, limpiar, deduplicar, reportar y refrescar datos sin trabajo manual.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-sm lg:min-w-[320px]">
+            <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Ambito</p>
+              <p className="mt-2 font-semibold text-gray-900">Vitacura</p>
+            </div>
+            <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Prioridad</p>
+              <p className="mt-2 font-semibold text-gray-900">Ventas</p>
+            </div>
+            <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Producto</p>
+              <p className="mt-2 font-semibold text-gray-900">Casas + deptos</p>
+            </div>
+            <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Frescura</p>
+              <p className="mt-2 font-semibold text-gray-900">{Number.isFinite(freshnessDays) ? `${freshnessDays}d` : 's/d'}</p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-2.5" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
-          <span className="text-xs font-medium" style={{ color: '#173634' }}>
-            {todayActivities.filter(a => !doneIds.has(a.id)).length} pendiente{todayActivities.filter(a => !doneIds.has(a.id)).length !== 1 ? 's' : ''} hoy
-          </span>
-        </div>
       </div>
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Mis ventas"      value={String(kpis.ventas)}           sub="propiedades cerradas (6m)" border="#8fb2aa" delta={kpis.deltaVentas} />
-        <KpiCard label="Mi comisión"     value={`$${fmt(Math.round(kpis.comision / 1000))}K`} sub="CLP acumulado" border="#b89a7e" delta={kpis.deltaComision} />
-        <KpiCard label="Captaciones"     value={String(kpis.captaciones)}      sub="propiedades captadas" border="#10b981" />
-        <KpiCard label="Días prom. venta" value={`${kpis.velocidad}d`}         sub="velocidad promedio" border="#173634" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <PPMetricCard key={metric.label} {...metric} />
+        ))}
       </div>
 
-      {/* Today + Chart + Ranking */}
-      <div className="grid grid-cols-5 gap-5 mb-8">
-        {/* Today's checklist */}
-        <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Mis actividades de hoy</h2>
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#f0f7f4', color: '#8fb2aa' }}>
-              {todayActivities.filter(a => doneIds.has(a.id)).length}/{todayActivities.length}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: '#dce7e3' }}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Modelo operativo PP</p>
+              <h2 className="mt-2 text-xl font-semibold text-gray-900">Como funciona PP</h2>
+            </div>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+              4 fases
             </span>
           </div>
-          <div className="divide-y" style={{ borderColor: '#f0f5f3' }}>
-            {todayActivities.length === 0 && (
-              <div className="px-5 py-8 text-center"><p className="text-xs" style={{ color: '#9ca9a3' }}>Sin actividades para hoy.</p></div>
-            )}
-            {todayActivities.map(act => {
-              const done = doneIds.has(act.id) || act.status === 'done'
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+            {PP_STEPS.map((step) => (
+              <div key={step.id} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+                <p className="text-sm font-semibold" style={{ color: '#173634' }}>{step.title}</p>
+                <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>{step.description}</p>
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>
+                  Output
+                </p>
+                <p className="mt-1 text-sm" style={{ color: '#3f4a46' }}>{step.output}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: '#dce7e3' }}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Agentes PP</p>
+              <h2 className="mt-2 text-xl font-semibold text-gray-900">Agentes inteligentes por funcion</h2>
+            </div>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+              5 agents
+            </span>
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+            {PP_AGENTS.map((agent) => (
+              <div key={agent.key} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+                <p className="text-sm font-semibold" style={{ color: '#173634' }}>{agent.title}</p>
+                <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>{agent.mission}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium" style={{ color: '#8c9a95' }}>
+                    Entradas {agent.inputs.length}
+                  </span>
+                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium" style={{ color: '#8c9a95' }}>
+                    Senales {agent.signals.length}
+                  </span>
+                  <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium" style={{ color: '#8c9a95' }}>
+                    Salidas {agent.outputs.length}
+                  </span>
+                </div>
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>
+                  Decisión
+                </p>
+                <p className="mt-1 text-sm" style={{ color: '#3f4a46' }}>{agent.decision}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: '#dce7e3' }}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Audience map</p>
+              <h2 className="mt-2 text-xl font-semibold text-gray-900">Lo que debe ver cada rol</h2>
+            </div>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+              3 audiences
+            </span>
+          </div>
+          <div className="mt-5 space-y-3">
+            {PP_AUDIENCES.map((audience) => {
+              const count = reportCounts[audience.key]
               return (
-                <div key={act.id} className="px-5 py-3 flex items-start gap-3" onClick={() => toggleDone(act.id)} style={{ cursor: 'pointer' }}>
-                  <div className="mt-0.5 shrink-0">
-                    <div className="w-4.5 h-4.5 rounded border-2 flex items-center justify-center transition-all" style={{ borderColor: done ? '#8fb2aa' : '#d8e5e2', background: done ? '#8fb2aa' : 'transparent', width: 18, height: 18 }}>
-                      {done && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                <div key={audience.key} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: '#173634' }}>{audience.title}</p>
+                      <p className="mt-1 text-sm leading-6" style={{ color: '#555a56' }}>{audience.description}</p>
                     </div>
+                    <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#e8f3f0', color: '#173634' }}>
+                      {count}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[11px] font-semibold capitalize" style={{ color: done ? '#9ca9a3' : ACTIVITY_COLORS[act.activity_type] }}>{act.activity_type}</span>
-                      {act.scheduled_at && <span className="text-[10px]" style={{ color: '#9ca9a3' }}>{new Date(act.scheduled_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>}
-                    </div>
-                    <p className="text-[12px] leading-snug" style={{ color: done ? '#9ca9a3' : '#173634', textDecoration: done ? 'line-through' : 'none' }}>{act.description || '—'}</p>
-                    {act.value_uf && !done && <span className="text-[11px]" style={{ color: '#9ca9a3' }}>{fmt(act.value_uf)} UF</span>}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs" style={{ color: '#8c9a95' }}>
+                      Decision: {audience.decision}
+                    </span>
                   </div>
-                  <div className="w-1 self-stretch rounded-full mt-1" style={{ background: ACTIVITY_BORDER[act.activity_type] + '60', width: 3 }} />
                 </div>
               )
             })}
           </div>
         </div>
+      </div>
 
-        {/* Bar chart ventas vs target */}
-        <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Mi Pipeline Personal</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Ventas vs target · 6 meses</p>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="rounded-3xl border bg-white p-6 shadow-sm xl:col-span-2" style={{ borderColor: '#dce7e3' }}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Flujo operativo</p>
+              <h2 className="mt-2 text-xl font-semibold text-gray-900">Ejecuciones del scraper y calidad de datos</h2>
+            </div>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+              {scrapeRuns.length} runs
+            </span>
           </div>
-          <div className="px-4 pt-4 pb-2">
-            <ResponsiveContainer width="100%" height={175}>
-              <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" vertical={false} />
-                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
+          <div className="mt-5 h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={runChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eef2ef" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
-                <Bar dataKey="ventas" radius={[4, 4, 0, 0]} maxBarSize={32} name="Ventas">
-                  {chartData.map((entry, i) => (
-                    <Cell key={i} fill={entry.ventas >= entry.target ? '#8fb2aa' : '#b89a7e'} />
+                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #dce7e3', borderRadius: 12, fontSize: 12 }} />
+                <Bar dataKey="scraped" radius={[6, 6, 0, 0]} name="Scraped" fill="#d8e5e2">
+                  {runChartData.map((entry, index) => (
+                    <Cell key={entry.label + index} fill={index % 2 === 0 ? '#8fb2aa' : '#b89a7e'} />
                   ))}
                 </Bar>
-                <Bar dataKey="target" fill="#e8f0ed" radius={[4, 4, 0, 0]} maxBarSize={32} name="Target" />
+                <Bar dataKey="inserted" radius={[6, 6, 0, 0]} name="Inserted" fill="#10b981" />
               </BarChart>
             </ResponsiveContainer>
-            <div className="flex gap-4 mt-1 justify-center">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: '#8fb2aa' }} /><span className="text-[11px]" style={{ color: '#9ca9a3' }}>Meta alcanzada</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: '#b89a7e' }} /><span className="text-[11px]" style={{ color: '#9ca9a3' }}>Bajo meta</span></div>
-            </div>
           </div>
-        </div>
 
-        {/* Team ranking */}
-        <div className="col-span-1 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="px-4 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Mi Ranking</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>En el equipo</p>
-          </div>
-          <div className="px-4 py-3 flex flex-col gap-2">
-            {teammates.map((t, i) => (
-              <div key={t.name} className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 ${t.isMe ? '' : ''}`} style={{ background: t.isMe ? '#f0f7f4' : 'transparent', border: t.isMe ? '1px solid #d8e5e2' : '1px solid transparent' }}>
-                <span className="text-sm font-bold w-5 text-center" style={{ color: i === 0 ? '#f59e0b' : '#9ca9a3' }}>{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[12px] font-medium truncate" style={{ color: t.isMe ? '#173634' : '#555a56' }}>{t.isMe ? 'Tú' : t.name.split(' ')[0]}</div>
-                  <div className="text-[11px]" style={{ color: '#9ca9a3' }}>{t.ventas} ventas</div>
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+            {scrapeRuns.slice(0, 4).map((run, index) => (
+              <div key={`${run.source}-${index}`} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold" style={{ color: '#173634' }}>{run.source}</p>
+                  <span className="rounded-full px-2 py-1 text-[11px] font-medium" style={{ background: run.status === 'success' ? '#e8f3f0' : '#fff7ed', color: run.status === 'success' ? '#166534' : '#c2410c' }}>
+                    {run.status}
+                  </span>
                 </div>
-                {t.isMe && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#8fb2aa' }} />}
+                <p className="mt-2 text-sm" style={{ color: '#555a56' }}>
+                  {run.scraped_count} capturadas, {run.inserted_count} insertadas, {run.skipped_count} omitidas, {run.error_count} errores
+                </p>
+                <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>
+                  {new Date(run.created_at).toLocaleString('es-CL')}
+                </p>
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: '#dce7e3' }}>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>
+            Ultima salida
+          </p>
+          <h2 className="mt-2 text-xl font-semibold text-gray-900">Lo que PP ve ahora</h2>
+          <div className="mt-5 space-y-4">
+            <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>Ultimo reporte</p>
+              <p className="mt-2 text-sm font-semibold" style={{ color: '#173634' }}>
+                {latestReport?.title || 'No report yet'}
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>
+                {latestReport?.summary || 'Genera un reporte de CEO, director o vendedor para alimentar el ciclo de conocimiento de PP.'}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>Barrio lider</p>
+              <p className="mt-2 text-sm font-semibold" style={{ color: '#173634' }}>
+                {latestMarket?.neighborhood || 'Vitacura'}
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>
+                {latestMarket
+                  ? `${latestMarket.inventory_count} avisos - ${((latestMarket.absorption_rate || 0) * 100).toFixed(0)}% de absorcion y ${latestMarket.avg_days_on_market?.toFixed(0) || 's/d'} dias en mercado.`
+                  : 'Esperando que market_data muestre el barrio mas activo.'}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#b89a7e' }}>Mezcla de inventario</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl bg-white p-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#9ca9a3' }}>Casas</p>
+                  <p className="mt-1 text-xl font-semibold" style={{ color: '#173634' }}>{casas}</p>
+                </div>
+                <div className="rounded-xl bg-white p-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#9ca9a3' }}>Deptos</p>
+                  <p className="mt-1 text-xl font-semibold" style={{ color: '#173634' }}>{deptos}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: '#dce7e3' }}>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Foco Vitacura</p>
+            <h2 className="mt-2 text-xl font-semibold text-gray-900">Barrios a vigilar</h2>
+          </div>
+          <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            Inteligencia por barrio
+          </span>
+        </div>
+        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {vitacuraNeighborhoodIntel.map((row) => (
+            <div key={row.neighborhood} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
+              <p className="text-sm font-semibold" style={{ color: '#173634' }}>{row.neighborhood}</p>
+              <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>
+                {row.commercialFocus}
+              </p>
+              <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>
+                Riesgo
+              </p>
+              <p className="mt-1 text-xs leading-5" style={{ color: '#9ca9a3' }}>
+                {row.watchout}
+              </p>
+              <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>
+                Mejor para
+              </p>
+              <p className="mt-1 text-xs leading-5" style={{ color: '#3f4a46' }}>
+                {row.bestFor}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

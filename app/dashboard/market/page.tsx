@@ -626,10 +626,10 @@ export default function MarketPage() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Historial de barrio</p>
-              <h3 className="mt-1 text-lg font-semibold text-gray-900">Neighborhood market snapshots</h3>
+              <h3 className="mt-1 text-lg font-semibold text-gray-900">Instantaneas del mercado por barrio</h3>
             </div>
             <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
-              {marketHistory.length} snapshots
+              {marketHistory.length} instantaneas
             </span>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">

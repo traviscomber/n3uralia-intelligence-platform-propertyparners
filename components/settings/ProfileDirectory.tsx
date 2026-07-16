@@ -89,7 +89,7 @@ export default function ProfileDirectory() {
             Directorio de perfiles
           </div>
           <p className="mt-2 text-sm text-gray-600">
-            Vista operativa de sellers, directores y administradores con filtros y exportacion directa.
+            Vista operativa de vendedores, directores y administradores con filtros y exportacion directa.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -129,7 +129,7 @@ export default function ProfileDirectory() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {[
             { label: 'Total', value: summary.total },
-            { label: 'Sellers', value: summary.sellers },
+            { label: 'Vendedores', value: summary.sellers },
             { label: 'Directores', value: summary.directors },
             { label: 'Admins', value: summary.admins },
             { label: 'CEOs', value: summary.ceos },
@@ -175,7 +175,7 @@ export default function ProfileDirectory() {
               style={{ color: '#111827' }}
             >
               <option value="">Todos</option>
-              <option value="seller">Seller</option>
+              <option value="seller">Vendedor</option>
               <option value="director">Director</option>
               <option value="admin">Admin</option>
               <option value="ceo">CEO</option>

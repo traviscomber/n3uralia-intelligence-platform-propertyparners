@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import { filterVitacuraRows, summarizeVitacuraNeighborhoods } from '@/lib/vitacura'
+import { buildVitacuraNeighborhoodIntelligence, filterVitacuraRows, summarizeVitacuraNeighborhoods } from '@/lib/vitacura'
 
 export const dynamic = 'force-dynamic'
 
@@ -127,6 +127,12 @@ type ReportContext = {
   selected_profile: ProfileRow | null
   team_roster: ProfileRow[]
   available_properties: PropertyRow[]
+  vitacura_neighborhood_insights: Array<{
+    neighborhood: string
+    commercialFocus: string
+    watchout: string
+    bestFor: string
+  }>
 }
 
 function getServiceClient() {
@@ -321,6 +327,7 @@ function buildRoleContext(
   const teamLabel = selectedTeam || selectedProfile?.team || selectedDirectorProfile?.team || 'Sin equipo'
   const sellerLabel = selectedProfile?.full_name || sellerId || 'equipo comercial'
   const vitacuraNeighborhoods = summarizeVitacuraNeighborhoods(vitacuraMarkets.length ? vitacuraMarkets : properties)
+  const vitacuraNeighborhoodInsights = buildVitacuraNeighborhoodIntelligence(vitacuraMarkets.length ? vitacuraMarkets : properties)
 
   const topDirectors = directorLeaderboard.slice(0, 3).map((row) => ({
     director_id: row.director_id,
@@ -351,6 +358,7 @@ function buildRoleContext(
         `Directores activos: ${directorCount}`,
         `Sellers activos: ${sellerCount}`,
         `Barrio lider: ${strongestNeighborhood}`,
+        vitacuraNeighborhoodInsights[0] ? `Lectura barrio: ${vitacuraNeighborhoodInsights[0].commercialFocus}` : 'Lectura barrio: Vitacura',
         topDirector ? `Director lider: ${topDirector.director_name || topDirector.director_id}` : 'Director lider: sin dato',
       ],
       risks: [
@@ -381,6 +389,7 @@ function buildRoleContext(
         `Velocidad comercial: ${selectedDirector?.latest_velocity ?? latest?.velocidad_venta ?? 0} dias`,
         `Brecha objetivo: ${selectedDirector?.target_gap ?? targetGap} ventas`,
         `Barrios de foco: ${vitacuraNeighborhoods.join(', ') || strongestNeighborhood}`,
+        vitacuraNeighborhoodInsights[0] ? `Barrio clave: ${vitacuraNeighborhoodInsights[0].neighborhood}` : 'Barrio clave: Vitacura',
       ],
       risks: [
         `Brecha actual de ${selectedDirector?.target_gap ?? targetGap} ventas frente al objetivo.`,
@@ -430,6 +439,7 @@ function buildRoleContext(
         `Absorcion: ${topMarket?.absorption_rate?.toFixed(1) ?? '0.0'}%`,
         `Inventario: ${topMarket?.inventory_count ?? 0} casas`,
         `Barrios observados: ${vitacuraNeighborhoods.join(', ') || 'Vitacura'}`,
+        vitacuraNeighborhoodInsights[0] ? `Foco comercial: ${vitacuraNeighborhoodInsights[0].commercialFocus}` : 'Foco comercial: Vitacura',
       ],
       risks: ['Lectura concentrada en una sola zona si no se diversifica cobertura.'],
       actions: ['Cruzar barrios con mejor absorcion y ajustar foco comercial.'],
@@ -444,6 +454,7 @@ function buildRoleContext(
         `Propiedades disponibles: ${availableProperties.length}`,
         `Mejor barrio: ${topMarket?.neighborhood || 'Sin dato'}`,
         `Barrios a cubrir: ${vitacuraNeighborhoods.join(', ') || 'Vitacura'}`,
+        vitacuraNeighborhoodInsights[0] ? `Mejor uso: ${vitacuraNeighborhoodInsights[0].bestFor}` : 'Mejor uso: Vitacura',
       ],
       risks: ['Si la captacion se retrasa, el inventario puede perder oportunidad comercial.'],
       actions: ['Activar seguimiento inmediato en las zonas con mejor absorcion y mejor margen de cierre.'],
@@ -470,6 +481,7 @@ function buildRoleContext(
     teamCount,
     strongestNeighborhood,
     vitacuraNeighborhoods,
+    vitacuraNeighborhoodInsights,
     topDirectors,
     roleByType,
   }
@@ -498,6 +510,7 @@ function buildDeterministicPayload(reportType: ReportType, context: ReturnType<t
         seller_id: context.selectedProfile?.id || null,
         director_leaderboard: context.topDirectors,
         vitacura_neighborhoods: context.vitacuraNeighborhoods,
+        vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
         team_roster: context.teamRoster.map((profile) => ({
           id: profile.id,
           full_name: profile.full_name,
@@ -514,6 +527,7 @@ function buildDeterministicPayload(reportType: ReportType, context: ReturnType<t
           status: property.status,
         })),
         market_leader: context.topMarket || null,
+        vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
       },
       notes: ['Fallback utilizado porque OPENAI_API_KEY no esta disponible o el modelo fallo.'],
     },
@@ -641,6 +655,7 @@ export async function POST(request: Request) {
           selected_profile: context.selectedProfile,
           team_roster: context.teamRoster,
           available_properties: context.availableProperties,
+          vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
         }
 
         const modelOutput = await generateWithOpenAI(
@@ -689,6 +704,7 @@ export async function POST(request: Request) {
             team: body.team || context.selectedTeam,
             seller_id: body.seller_id || context.selectedProfile?.id || null,
             vitacura_neighborhoods: context.vitacuraNeighborhoods,
+            vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
           },
         },
         period_date: kpiRows[0]?.period_date || null,

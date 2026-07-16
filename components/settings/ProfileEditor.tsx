@@ -115,7 +115,7 @@ export default function ProfileEditor({ profile, email }: Props) {
 
         <label className="space-y-1">
           <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
-            Avatar URL
+            URL del avatar
           </span>
           <input
             value={form.avatar_url}
@@ -140,7 +140,7 @@ export default function ProfileEditor({ profile, email }: Props) {
         </button>
         <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium" style={{ background: '#e8f3f0', color: '#555a56' }}>
           <UserRound size={13} />
-          Rol {profile?.role || 'seller'}
+          Rol {profile?.role || 'vendedor'}
         </span>
       </div>
 
