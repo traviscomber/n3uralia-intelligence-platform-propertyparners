@@ -63,7 +63,9 @@ function buildLines(request: ValuationRequest, analysis: ValuationAnalysis) {
   const lines: PdfLine[] = []
   let y = 796
 
-  pushLine(lines, 'Valorizacion comercial Vitacura', 48, y, 20, true)
+  pushLine(lines, 'N3uralia | Property Partners Vitacura', 48, y, 11, true)
+  y -= 18
+  pushLine(lines, 'Valorizacion comercial', 48, y, 20, true)
   y -= 24
   pushLine(lines, `${analysis.title}`, 48, y, 12, true)
   y -= 16
@@ -86,6 +88,15 @@ function buildLines(request: ValuationRequest, analysis: ValuationAnalysis) {
   pushLine(lines, `Piso de negociacion: ${moneyUF(analysis.price_bands.find((band) => band.label === 'piso_negociacion')?.value_uf || request.estimated_uf)}`, 48, y, 11)
   y -= 14
   pushLine(lines, `Estimacion base: ${moneyUF(request.estimated_uf)} | ${moneyCLP(request.estimated_clp)}`, 48, y, 11)
+
+  y -= 18
+  pushLine(lines, 'Escenarios', 48, y, 14, true)
+  y -= 18
+  pushLine(lines, `Conservador: ${moneyUF(analysis.price_bands.find((band) => band.label === 'conservador')?.value_uf || request.estimated_uf)}`, 48, y, 10)
+  y -= 14
+  pushLine(lines, `Mercado: ${moneyUF(analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || request.estimated_uf)}`, 48, y, 10)
+  y -= 14
+  pushLine(lines, `Aspiracional: ${moneyUF(analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || request.estimated_uf)}`, 48, y, 10)
 
   y -= 24
   pushLine(lines, 'Sensibilidad y lectura', 48, y, 14, true)
@@ -178,4 +189,3 @@ export async function buildValuationPdfBuffer(request: ValuationRequest, analysi
   const resolvedAnalysis = analysis || buildFallbackValuationAnalysis(request)
   return buildPdfBuffer(buildLines(request, resolvedAnalysis))
 }
-

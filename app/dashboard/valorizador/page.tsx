@@ -60,6 +60,26 @@ interface ValorizationResult {
   comparable_range_uf: string
 }
 
+interface ValuationHistoryItem {
+  quote_key: string
+  neighborhood: string
+  estimated_uf: number
+  publication_price_uf: number
+  closing_price_uf: number
+  confidence: number
+  created_at: string
+}
+
+interface ValuationHistoryItem {
+  quote_key: string
+  neighborhood: string
+  estimated_uf: number
+  publication_price_uf: number
+  closing_price_uf: number
+  confidence: number
+  created_at: string
+}
+
 const UF_VALUE = 37500
 
 function sourceQualityWeight(source?: string | null) {
@@ -102,6 +122,7 @@ export default function ValorizadorPage() {
   const [roleReportError, setRoleReportError] = useState<string | null>(null)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
+  const [history, setHistory] = useState<ValuationHistoryItem[]>([])
   const analysisSeq = useRef(0)
 
   const [form, setForm] = useState({
@@ -120,7 +141,7 @@ export default function ValorizadorPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const [nRes, pRes, bRes] = await Promise.all([
+      const [nRes, pRes, bRes, qRes] = await Promise.all([
         supabase
           .from('neighborhoods')
           .select('name, price_per_sqm_uf, velocity_days, absorption_rate, inventory_count, zona_prc')
@@ -136,11 +157,17 @@ export default function ValorizadorPage() {
           .select('source, source_url, neighborhood, listing_title, offer_count, low_price_clp, high_price_clp, price_currency, recorded_at')
           .order('recorded_at', { ascending: false })
           .limit(1),
+        supabase
+          .from('valuation_quotes')
+          .select('quote_key, neighborhood, estimated_uf, publication_price_uf, closing_price_uf, confidence, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5),
       ])
 
       setNeighborhoods((nRes.data || []) as Neighborhood[])
       setProperties((pRes.data || []) as PropertyComparable[])
       setExternalBenchmark((bRes.data?.[0] || null) as ExternalBenchmark | null)
+      setHistory((qRes.data || []) as ValuationHistoryItem[])
 
       if (nRes.data && nRes.data.length > 0) {
         setForm((f) => ({ ...f, neighborhood: nRes.data[0].name }))
@@ -839,6 +866,48 @@ export default function ValorizadorPage() {
                   <p className="mt-3 text-sm text-rose-700">{roleReportError}</p>
                 )}
               </div>
+
+              {history.length > 0 && (
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Historial de cotizaciones</p>
+                      <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Ultimas valuaciones guardadas para seguimiento comercial y comparacion rapida.</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {history.map((item) => (
+                      <div key={item.quote_key} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{item.neighborhood}</p>
+                            <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+                              {new Date(item.created_at).toLocaleString('es-CL')}
+                            </p>
+                          </div>
+                          <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#fff', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                            {item.confidence}% confianza
+                          </span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <p style={{ color: '#9ca9a3' }}>Publicacion</p>
+                            <p className="font-semibold text-gray-900">{Math.round(item.publication_price_uf).toLocaleString('es-CL')} UF</p>
+                          </div>
+                          <div>
+                            <p style={{ color: '#9ca9a3' }}>Cierre</p>
+                            <p className="font-semibold text-gray-900">{Math.round(item.closing_price_uf).toLocaleString('es-CL')} UF</p>
+                          </div>
+                          <div>
+                            <p style={{ color: '#9ca9a3' }}>Base</p>
+                            <p className="font-semibold text-gray-900">{Math.round(item.estimated_uf).toLocaleString('es-CL')} UF</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                 <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createClient as createSupabaseAuthClient } from '@/lib/supabase/server'
 import {
   buildFallbackValuationAnalysis,
   stripAccents,
@@ -165,14 +166,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Faltan datos para analizar la valorizacion.' }, { status: 400 })
     }
 
+    const authClient = await createSupabaseAuthClient()
+    const generatedBy = (await authClient.auth.getUser()).data.user?.id || null
     const fallback = buildFallbackValuationAnalysis(body as ValuationRequest)
     const analysis = await generateWithOpenAI(body as ValuationRequest, fallback).catch((err) => {
       console.error('OpenAI valuation analysis failed, using fallback:', err)
       return fallback
     })
 
+    const quotePayload = {
+      quote_key: crypto.randomUUID(),
+      created_by: generatedBy,
+      neighborhood: body.neighborhood.name,
+      area_m2: body.area_m2 || 0,
+      bedrooms: body.bedrooms || 0,
+      bathrooms: body.bathrooms || 0,
+      age_years: body.age_years || 0,
+      floor: body.floor || 0,
+      condition: body.condition || 'bueno',
+      has_parking: Boolean(body.has_parking),
+      has_storage: Boolean(body.has_storage),
+      has_pool: Boolean(body.has_pool),
+      estimated_uf: body.estimated_uf,
+      estimated_uf_m2: body.estimated_uf_m2 || 0,
+      estimated_clp: body.estimated_clp || 0,
+      confidence: body.confidence || 0,
+      comparable_source: body.comparable_source || 'unknown',
+      comparable_range_uf: body.comparable_range_uf || '',
+      market_velocity: body.market_velocity || 0,
+      market_absorption: body.market_absorption || 0,
+      comparable_properties: body.comparable_properties || 0,
+      publication_price_uf: analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || body.estimated_uf,
+      closing_price_uf: analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || body.estimated_uf,
+      negotiation_floor_uf: analysis.price_bands.find((band) => band.label === 'piso_negociacion')?.value_uf || body.estimated_uf,
+      analysis,
+      comparables: body.selected_comparables || [],
+      benchmark: body.benchmark || null,
+      market_context: {
+        source: 'valorizador',
+        market_scope: 'Vitacura',
+      },
+    }
+
+    const { error: insertError } = await authClient
+      .from('valuation_quotes')
+      .insert(quotePayload)
+
+    if (insertError) {
+      console.error('Error persisting valuation quote:', insertError)
+    }
+
     return NextResponse.json({
       analysis,
+      quote_key: quotePayload.quote_key,
       generatedAt: new Date().toISOString(),
       source: analysis.source,
     })
