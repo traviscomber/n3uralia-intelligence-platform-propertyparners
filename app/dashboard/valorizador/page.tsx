@@ -70,16 +70,6 @@ interface ValuationHistoryItem {
   created_at: string
 }
 
-interface ValuationHistoryItem {
-  quote_key: string
-  neighborhood: string
-  estimated_uf: number
-  publication_price_uf: number
-  closing_price_uf: number
-  confidence: number
-  created_at: string
-}
-
 const UF_VALUE = 37500
 
 function sourceQualityWeight(source?: string | null) {
@@ -218,6 +208,22 @@ export default function ValorizadorPage() {
     }
   }, [aiAnalysis, comparables, externalBenchmark, form, result, selectedNb])
 
+  const comparisonSummary = useMemo(() => {
+    if (!result) return null
+    const previous = history[0] || null
+    const averageClosing = history.length
+      ? history.reduce((sum, item) => sum + Number(item.closing_price_uf || 0), 0) / history.length
+      : result.price_uf
+    const averageConfidence = history.length
+      ? history.reduce((sum, item) => sum + Number(item.confidence || 0), 0) / history.length
+      : result.confidence
+    return {
+      previous,
+      averageClosing,
+      averageConfidence,
+    }
+  }, [history, result])
+
   function buildValuationRequest(): ValuationRequest | null {
     if (!result || !selectedNb) return null
 
@@ -245,6 +251,8 @@ export default function ValorizadorPage() {
       benchmark: externalBenchmark,
     }
   }
+
+  const exportBase = '/api/valorizador/export'
 
   function buildComparables(
     targetNeighborhood: string,
@@ -866,6 +874,61 @@ export default function ValorizadorPage() {
                   <p className="mt-3 text-sm text-rose-700">{roleReportError}</p>
                 )}
               </div>
+
+              {comparisonSummary && (
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Comparacion rapida</p>
+                      <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Compara esta valorizacion con el historial guardado para leer tendencia y consistencia.</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={`${exportBase}?format=csv`}
+                        className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+                        style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                      >
+                        <Download size={14} />
+                        CSV
+                      </a>
+                      <a
+                        href={`${exportBase}?format=xlsx`}
+                        className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+                        style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                      >
+                        <Download size={14} />
+                        XLSX
+                      </a>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Actual</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{result?.price_uf.toLocaleString('es-CL')} UF</p>
+                      <p className="text-xs" style={{ color: '#9ca9a3' }}>Cierre objetivo: {selectedBands?.closing?.toLocaleString('es-CL')} UF</p>
+                    </div>
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Promedio historico</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(comparisonSummary.averageClosing).toLocaleString('es-CL')} UF</p>
+                      <p className="text-xs" style={{ color: '#9ca9a3' }}>Confianza media: {Math.round(comparisonSummary.averageConfidence)}%</p>
+                    </div>
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ultima cotizacion</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{comparisonSummary.previous ? Math.round(comparisonSummary.previous.closing_price_uf).toLocaleString('es-CL') : 'N/A'} UF</p>
+                      <p className="text-xs" style={{ color: '#9ca9a3' }}>{comparisonSummary.previous ? comparisonSummary.previous.neighborhood : 'Sin historial'}</p>
+                    </div>
+                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Tendencia</p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">
+                        {comparisonSummary.previous
+                          ? `${(result.price_uf - Number(comparisonSummary.previous.closing_price_uf || 0)).toLocaleString('es-CL')} UF`
+                          : 'N/A'}
+                      </p>
+                      <p className="text-xs" style={{ color: '#9ca9a3' }}>Vs. ultima cotizacion guardada</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {history.length > 0 && (
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
