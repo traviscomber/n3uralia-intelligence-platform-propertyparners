@@ -1,8 +1,14 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, Home, DollarSign, BarChart2, RefreshCw } from 'lucide-react'
+import {
+  buildFallbackValuationAnalysis,
+  type ValuationAnalysis,
+  type ValuationComparable,
+  type ValuationRequest,
+} from '@/lib/valuation-ai'
 
 interface Neighborhood {
   name: string
@@ -11,6 +17,18 @@ interface Neighborhood {
   absorption_rate: number
   inventory_count: number
   zona_prc: string
+}
+
+interface ExternalBenchmark {
+  source: string
+  source_url: string
+  neighborhood: string
+  listing_title: string | null
+  offer_count: number
+  low_price_clp: number | null
+  high_price_clp: number | null
+  price_currency: string | null
+  recorded_at: string
 }
 
 interface PropertyComparable {
@@ -27,35 +45,6 @@ interface PropertyComparable {
   source?: string | null
   latitude?: number | null
   longitude?: number | null
-}
-
-interface ExternalBenchmark {
-  source: string
-  source_url: string
-  neighborhood: string
-  listing_title: string | null
-  offer_count: number
-  low_price_clp: number | null
-  high_price_clp: number | null
-  price_currency: string | null
-  recorded_at: string
-}
-
-interface ComparableItem {
-  id: string
-  address: string
-  neighborhood: string
-  price_uf: number
-  area_m2: number
-  bedrooms: number
-  bathrooms: number
-  status: string
-  source?: string | null
-  similarity: number
-  score: number
-  price_per_m2: number
-  delta_to_estimate_uf: number
-  match_label: string
 }
 
 interface ValorizationResult {
@@ -104,7 +93,11 @@ export default function ValorizadorPage() {
   const [loading, setLoading] = useState(true)
   const [calculating, setCalculating] = useState(false)
   const [result, setResult] = useState<ValorizationResult | null>(null)
-  const [comparables, setComparables] = useState<ComparableItem[]>([])
+  const [comparables, setComparables] = useState<ValuationComparable[]>([])
+  const [aiAnalysis, setAiAnalysis] = useState<ValuationAnalysis | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const analysisSeq = useRef(0)
 
   const [form, setForm] = useState({
     neighborhood: '',
@@ -246,11 +239,47 @@ export default function ValorizadorPage() {
       .slice(0, 6)
   }
 
+  async function requestAiAnalysis(payload: ValuationRequest) {
+    const currentSeq = ++analysisSeq.current
+    setAiLoading(true)
+    setAiError(null)
+
+    try {
+      const response = await fetch('/api/valorizador/analisis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Analisis IA respondio con estado ${response.status}`)
+      }
+
+      const data = await response.json().catch(() => ({}))
+      const analysis = (data?.analysis as ValuationAnalysis | undefined) || buildFallbackValuationAnalysis(payload)
+
+      if (analysisSeq.current !== currentSeq) return
+      setAiAnalysis(analysis)
+    } catch (error) {
+      if (analysisSeq.current !== currentSeq) return
+      setAiAnalysis(buildFallbackValuationAnalysis(payload))
+      setAiError(error instanceof Error ? error.message : 'No pudimos conectar la capa IA.')
+    } finally {
+      if (analysisSeq.current === currentSeq) {
+        setAiLoading(false)
+      }
+    }
+  }
+
   function calculate() {
     const nb = selectedNb
     if (!nb || !nb.price_per_sqm_uf) return
 
     setCalculating(true)
+    setAiAnalysis(null)
+    setAiError(null)
 
     const area = Number.parseFloat(form.area_m2)
     const ageYears = Number.parseInt(form.age_years, 10)
@@ -321,22 +350,49 @@ export default function ValorizadorPage() {
     const compConf = comparableMatches.length ? Math.min(12, Math.round(comparableMatches[0].score / 8)) : 0
     const confidence = Math.min(97, baseConf + absConf + invConf + sourceConf + compConf)
 
+    const resultPayload = {
+      price_uf: Math.round(totalUF),
+      price_uf_m2: Math.round(adjustedUFm2 * 10) / 10,
+      price_clp: Math.round(totalUF * UF_VALUE),
+      confidence,
+      comp_neighborhood: nb.name,
+      market_velocity: nb.velocity_days,
+      market_absorption: Math.round(nb.absorption_rate * 100),
+      comparable_properties: comparableMatches.length,
+      comparable_source: comparableMatches.length ? 'weighted_properties' : externalBenchmark ? 'external_benchmark' : 'neighborhood_index',
+      comparable_range_uf: `${comparableLow.toLocaleString('es-CL')} - ${comparableHigh.toLocaleString('es-CL')}`,
+    }
+
+    const analysisPayload: ValuationRequest = {
+      neighborhood: nb,
+      area_m2: area,
+      bedrooms,
+      bathrooms,
+      age_years: ageYears,
+      floor: floorNum,
+      condition: form.condition,
+      has_parking: form.has_parking,
+      has_storage: form.has_storage,
+      has_pool: form.has_pool,
+      estimated_uf: resultPayload.price_uf,
+      estimated_uf_m2: resultPayload.price_uf_m2,
+      estimated_clp: resultPayload.price_clp,
+      confidence: resultPayload.confidence,
+      comparable_source: resultPayload.comparable_source,
+      comparable_range_uf: resultPayload.comparable_range_uf,
+      market_velocity: resultPayload.market_velocity,
+      market_absorption: resultPayload.market_absorption,
+      comparable_properties: resultPayload.comparable_properties,
+      selected_comparables: comparableMatches,
+      benchmark: externalBenchmark,
+    }
+
     setTimeout(() => {
-      setResult({
-        price_uf: Math.round(totalUF),
-        price_uf_m2: Math.round(adjustedUFm2 * 10) / 10,
-        price_clp: Math.round(totalUF * UF_VALUE),
-        confidence,
-        comp_neighborhood: nb.name,
-        market_velocity: nb.velocity_days,
-        market_absorption: Math.round(nb.absorption_rate * 100),
-        comparable_properties: comparableMatches.length,
-        comparable_source: comparableMatches.length ? 'weighted_properties' : externalBenchmark ? 'external_benchmark' : 'neighborhood_index',
-        comparable_range_uf: `${comparableLow.toLocaleString('es-CL')} - ${comparableHigh.toLocaleString('es-CL')}`,
-      })
+      setResult(resultPayload)
       setComparables(comparableMatches)
       setCalculating(false)
-    }, 450)
+      void requestAiAnalysis(analysisPayload)
+    }, 350)
   }
 
   if (loading) {
@@ -540,6 +596,148 @@ export default function ValorizadorPage() {
                     <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Comparables</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{result.comparable_properties} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>props</span></p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Lectura IA</p>
+                    <h3 className="mt-1 text-lg font-semibold text-gray-900">{aiAnalysis?.title || 'Analisis comercial asistido'}</h3>
+                    <p className="text-sm mt-1 max-w-3xl" style={{ color: '#9ca9a3' }}>
+                      {aiLoading
+                        ? 'La IA esta revisando comparables, absorcion y contexto del barrio para reforzar el relato comercial.'
+                        : aiAnalysis?.summary || 'Se generara una lectura comercial apenas termine el calculo.'}
+                    </p>
+                  </div>
+                  <span className="text-xs px-2 py-1 rounded-full self-start" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                    {aiLoading ? 'Analizando' : aiAnalysis?.source === 'openai' ? 'OpenAI' : 'Fallback local'}
+                  </span>
+                </div>
+                {aiError && (
+                  <p className="mt-3 text-xs px-3 py-2 rounded-md" style={{ background: '#fff7ed', color: '#92400e', border: '1px solid #fdba74' }}>
+                    {aiError}
+                  </p>
+                )}
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                  {(aiAnalysis?.price_bands || buildFallbackValuationAnalysis({
+                    neighborhood: {
+                      name: result.comp_neighborhood,
+                      price_per_sqm_uf: selectedNb?.price_per_sqm_uf || 0,
+                      velocity_days: result.market_velocity,
+                      absorption_rate: result.market_absorption / 100,
+                      inventory_count: selectedNb?.inventory_count || 0,
+                      zona_prc: selectedNb?.zona_prc || '',
+                    },
+                    area_m2: Number(form.area_m2),
+                    bedrooms: Number(form.bedrooms),
+                    bathrooms: Number(form.bathrooms),
+                    age_years: Number(form.age_years),
+                    floor: Number(form.floor),
+                    condition: form.condition,
+                    has_parking: form.has_parking,
+                    has_storage: form.has_storage,
+                    has_pool: form.has_pool,
+                    estimated_uf: result.price_uf,
+                    estimated_uf_m2: result.price_uf_m2,
+                    estimated_clp: result.price_clp,
+                    confidence: result.confidence,
+                    comparable_source: result.comparable_source,
+                    comparable_range_uf: result.comparable_range_uf,
+                    market_velocity: result.market_velocity,
+                    market_absorption: result.market_absorption,
+                    comparable_properties: result.comparable_properties,
+                    selected_comparables: comparables,
+                    benchmark: externalBenchmark,
+                  }).price_bands).map((band) => (
+                    <div key={band.label} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                        {band.label.replace('_', ' ')}
+                      </p>
+                      <p className="mt-2 text-xl font-semibold text-gray-900">{band.value_uf.toLocaleString('es-CL')} UF</p>
+                      <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>{band.note}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Por que este valor</p>
+                    <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
+                      {(aiAnalysis?.why_now || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
+                    </ul>
+                  </div>
+                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Riesgos</p>
+                    <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
+                      {(aiAnalysis?.risks || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
+                    </ul>
+                  </div>
+                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Acciones</p>
+                    <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
+                      {(aiAnalysis?.actions || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Sensibilidad de precio</p>
+                    <div className="mt-2 space-y-2">
+                      {(aiAnalysis?.sensitivities || buildFallbackValuationAnalysis({
+                        neighborhood: {
+                          name: result.comp_neighborhood,
+                          price_per_sqm_uf: selectedNb?.price_per_sqm_uf || 0,
+                          velocity_days: result.market_velocity,
+                          absorption_rate: result.market_absorption / 100,
+                          inventory_count: selectedNb?.inventory_count || 0,
+                          zona_prc: selectedNb?.zona_prc || '',
+                        },
+                        area_m2: Number(form.area_m2),
+                        bedrooms: Number(form.bedrooms),
+                        bathrooms: Number(form.bathrooms),
+                        age_years: Number(form.age_years),
+                        floor: Number(form.floor),
+                        condition: form.condition,
+                        has_parking: form.has_parking,
+                        has_storage: form.has_storage,
+                        has_pool: form.has_pool,
+                        estimated_uf: result.price_uf,
+                        estimated_uf_m2: result.price_uf_m2,
+                        estimated_clp: result.price_clp,
+                        confidence: result.confidence,
+                        comparable_source: result.comparable_source,
+                        comparable_range_uf: result.comparable_range_uf,
+                        market_velocity: result.market_velocity,
+                        market_absorption: result.market_absorption,
+                        comparable_properties: result.comparable_properties,
+                        selected_comparables: comparables,
+                        benchmark: externalBenchmark,
+                      }).sensitivities).map((item) => (
+                        <div key={item.factor} className="flex items-center justify-between gap-3 text-sm">
+                          <div>
+                            <p className="font-medium text-gray-900">{item.factor}</p>
+                            <p className="text-xs" style={{ color: '#9ca9a3' }}>{item.note}</p>
+                          </div>
+                          <span className="font-semibold text-gray-900">
+                            {item.direction === 'down' ? '-' : '+'}{item.impact_uf.toLocaleString('es-CL')} UF
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Posicion comercial</p>
+                    <p className="mt-2 text-sm font-medium text-gray-900">{aiAnalysis?.market_position || 'Se reforzara la posicion con la lectura IA.'}</p>
+                    <p className="mt-2 text-sm" style={{ color: '#9ca9a3' }}>
+                      {aiAnalysis?.band_recommendation || 'La IA ajustara el relato de salida, el piso y el espacio de negociacion.'}
+                    </p>
+                    <div className="mt-3 rounded-md px-3 py-2 text-xs" style={{ background: '#fff', border: '1px solid #d8e5e2', color: '#555a56' }}>
+                      {aiAnalysis?.confidence_note || 'La confianza del relato dependera de la calidad de los comparables y la frescura del mercado.'}
+                    </div>
+                  </div>
                 </div>
               </div>
 
