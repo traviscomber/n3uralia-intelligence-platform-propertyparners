@@ -11,6 +11,11 @@ type PdfLine = {
   bold?: boolean
 }
 
+type ReportSection = {
+  title: string
+  bullets: string[]
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('es-CL', {
     day: '2-digit',
@@ -68,17 +73,54 @@ function statusLabel(status: string) {
   return 'Bajo objetivo'
 }
 
+function getReportContent(report: DirectorReportRow | null) {
+  const content = report?.content && typeof report.content === 'object' ? report.content : null
+  return content as Record<string, unknown> | null
+}
+
+function getStringArray(value: unknown, limit = 3) {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === 'string').slice(0, limit)
+}
+
+function getSections(report: DirectorReportRow | null): ReportSection[] {
+  const content = getReportContent(report)
+  const sections = Array.isArray(content?.sections) ? (content.sections as Record<string, unknown>[]) : []
+  return sections
+    .map((section) => ({
+      title: typeof section.title === 'string' ? section.title : 'Seccion',
+      bullets: getStringArray(section.bullets, 3),
+    }))
+    .filter((section) => section.title || section.bullets.length)
+}
+
+function getAudienceLabel(report: DirectorReportRow | null) {
+  const content = getReportContent(report)
+  const audience = typeof content?.audience === 'string' ? content.audience : ''
+  const requested = typeof content?.requested_report_type === 'string' ? content.requested_report_type : ''
+  if (audience) return audience
+  if (requested.includes('ceo')) return 'CEO'
+  if (requested.includes('seller')) return 'Ejecutivos de venta'
+  if (requested.includes('director')) return 'Directores de venta'
+  return 'Reporte comercial'
+}
+
 function buildContentLines(bundle: DirectorReportBundle) {
   const lines: PdfLine[] = []
   let y = 796
+  const latestContent = getReportContent(bundle.latestReport)
+  const highlights = getStringArray(latestContent?.highlights, 3)
+  const sections = getSections(bundle.latestReport)
 
-  pushLine(lines, 'Reporte por Director', 48, y, 20, true)
+  pushLine(lines, 'Reporte Inteligente por Director', 48, y, 20, true)
   y -= 24
   pushLine(lines, `Director: ${bundle.directorId}`, 48, y, 10)
   y -= 14
   pushLine(lines, `Generado: ${new Date().toLocaleString('es-CL')}`, 48, y, 10)
   y -= 14
   pushLine(lines, `Reportes persistidos: ${bundle.metrics.reportCount}`, 48, y, 10)
+  y -= 14
+  pushLine(lines, `Audiencia: ${getAudienceLabel(bundle.latestReport)}`, 48, y, 10)
 
   y -= 28
   pushLine(lines, 'Resumen ejecutivo', 48, y, 14, true)
@@ -120,7 +162,38 @@ function buildContentLines(bundle: DirectorReportBundle) {
     pushLine(lines, 'No hay reporte semanal persistido para este director.', 48, y, 10)
   }
 
-  y -= 26
+  y -= 24
+  pushLine(lines, 'Señales clave del reporte', 48, y, 14, true)
+  y -= 18
+  if (highlights.length) {
+    highlights.forEach((highlight) => {
+      pushWrappedLines(lines, `- ${highlight}`, 48, y, 10, 76)
+      y -= 14
+    })
+  } else {
+    pushLine(lines, 'Sin señales clave disponibles en el reporte persistido.', 48, y, 10)
+    y -= 14
+  }
+
+  y -= 10
+  pushLine(lines, 'Bloques de accion', 48, y, 14, true)
+  y -= 18
+  if (sections.length) {
+    sections.slice(0, 3).forEach((section) => {
+      pushLine(lines, section.title, 48, y, 11, true)
+      y -= 13
+      section.bullets.slice(0, 3).forEach((bullet) => {
+        pushWrappedLines(lines, `• ${bullet}`, 54, y, 9, 76)
+        y -= 12
+      })
+      y -= 6
+    })
+  } else {
+    pushLine(lines, 'El reporte no incluyo bloques estructurados.', 48, y, 10)
+    y -= 14
+  }
+
+  y -= 12
   pushLine(lines, 'Ultimos reportes', 48, y, 14, true)
   y -= 18
   if (bundle.reports.length) {
