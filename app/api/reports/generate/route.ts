@@ -133,6 +133,7 @@ type ReportContext = {
     watchout: string
     bestFor: string
   }>
+  market_context?: Record<string, unknown> | null
 }
 
 function getServiceClient() {
@@ -527,7 +528,6 @@ function buildDeterministicPayload(reportType: ReportType, context: ReturnType<t
           status: property.status,
         })),
         market_leader: context.topMarket || null,
-        vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
       },
       notes: ['Fallback utilizado porque OPENAI_API_KEY no esta disponible o el modelo fallo.'],
     },
@@ -587,6 +587,7 @@ export async function POST(request: Request) {
       director_id?: string | null
       team?: string | null
       seller_id?: string | null
+      market_context?: Record<string, unknown> | null
     }
 
     const reportType = body.report_type || 'weekly_directors'
@@ -656,6 +657,7 @@ export async function POST(request: Request) {
           team_roster: context.teamRoster,
           available_properties: context.availableProperties,
           vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
+          market_context: body.market_context || null,
         }
 
         const modelOutput = await generateWithOpenAI(
@@ -705,6 +707,7 @@ export async function POST(request: Request) {
             seller_id: body.seller_id || context.selectedProfile?.id || null,
             vitacura_neighborhoods: context.vitacuraNeighborhoods,
             vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
+            market_context: body.market_context || null,
           },
         },
         period_date: kpiRows[0]?.period_date || null,

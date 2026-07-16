@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { TrendingUp, Home, DollarSign, BarChart2, RefreshCw } from 'lucide-react'
+import { TrendingUp, Home, DollarSign, BarChart2, RefreshCw, Download, FileText, Send } from 'lucide-react'
 import {
   buildFallbackValuationAnalysis,
   type ValuationAnalysis,
@@ -97,6 +97,11 @@ export default function ValorizadorPage() {
   const [aiAnalysis, setAiAnalysis] = useState<ValuationAnalysis | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
+  const [roleReportLoading, setRoleReportLoading] = useState<string | null>(null)
+  const [roleReportMessage, setRoleReportMessage] = useState<string | null>(null)
+  const [roleReportError, setRoleReportError] = useState<string | null>(null)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [pdfError, setPdfError] = useState<string | null>(null)
   const analysisSeq = useRef(0)
 
   const [form, setForm] = useState({
@@ -151,6 +156,68 @@ export default function ValorizadorPage() {
     () => neighborhoods.find((n) => n.name === form.neighborhood) || null,
     [form.neighborhood, neighborhoods],
   )
+
+  const selectedBands = useMemo(() => {
+    if (!result || !selectedNb) return null
+    const analysis: ValuationAnalysis = aiAnalysis || buildFallbackValuationAnalysis({
+      neighborhood: selectedNb,
+      area_m2: Number(form.area_m2),
+      bedrooms: Number(form.bedrooms),
+      bathrooms: Number(form.bathrooms),
+      age_years: Number(form.age_years),
+      floor: Number(form.floor),
+      condition: form.condition,
+      has_parking: form.has_parking,
+      has_storage: form.has_storage,
+      has_pool: form.has_pool,
+      estimated_uf: result.price_uf,
+      estimated_uf_m2: result.price_uf_m2,
+      estimated_clp: result.price_clp,
+      confidence: result.confidence,
+      comparable_source: result.comparable_source,
+      comparable_range_uf: result.comparable_range_uf,
+      market_velocity: result.market_velocity,
+      market_absorption: result.market_absorption,
+      comparable_properties: result.comparable_properties,
+      selected_comparables: comparables,
+      benchmark: externalBenchmark,
+    })
+
+    return {
+      publication: analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || result.price_uf,
+      closing: analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || result.price_uf,
+      floor: analysis.price_bands.find((band) => band.label === 'piso_negociacion')?.value_uf || result.price_uf,
+      analysis,
+    }
+  }, [aiAnalysis, comparables, externalBenchmark, form, result, selectedNb])
+
+  function buildValuationRequest(): ValuationRequest | null {
+    if (!result || !selectedNb) return null
+
+    return {
+      neighborhood: selectedNb,
+      area_m2: Number(form.area_m2),
+      bedrooms: Number(form.bedrooms),
+      bathrooms: Number(form.bathrooms),
+      age_years: Number(form.age_years),
+      floor: Number(form.floor),
+      condition: form.condition,
+      has_parking: form.has_parking,
+      has_storage: form.has_storage,
+      has_pool: form.has_pool,
+      estimated_uf: result.price_uf,
+      estimated_uf_m2: result.price_uf_m2,
+      estimated_clp: result.price_clp,
+      confidence: result.confidence,
+      comparable_source: result.comparable_source,
+      comparable_range_uf: result.comparable_range_uf,
+      market_velocity: result.market_velocity,
+      market_absorption: result.market_absorption,
+      comparable_properties: result.comparable_properties,
+      selected_comparables: comparables,
+      benchmark: externalBenchmark,
+    }
+  }
 
   function buildComparables(
     targetNeighborhood: string,
@@ -273,6 +340,113 @@ export default function ValorizadorPage() {
     }
   }
 
+  async function downloadValuationPdf() {
+    const valuation = buildValuationRequest()
+    const analysis = selectedBands?.analysis || aiAnalysis
+    if (!valuation) return
+
+    setPdfLoading(true)
+    setPdfError(null)
+
+    try {
+      const response = await fetch('/api/valorizador/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ valuation, analysis }),
+      })
+
+      if (!response.ok) {
+        throw new Error('No pudimos generar el PDF de valorizacion.')
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `${new Date().toISOString().slice(0, 10)}_Valorizacion_Vitacura.pdf`
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      setPdfError(error instanceof Error ? error.message : 'No pudimos generar el PDF de valorizacion.')
+    } finally {
+      setPdfLoading(false)
+    }
+  }
+
+  async function generateRoleReport(reportType: 'ceo_brief' | 'director_accounts' | 'seller_playbook') {
+    const valuation = buildValuationRequest()
+    if (!valuation) return
+
+    setRoleReportLoading(reportType)
+    setRoleReportError(null)
+    setRoleReportMessage(null)
+
+    const marketContext = {
+      source: 'valorizador',
+      neighborhood: valuation.neighborhood.name,
+      area_m2: valuation.area_m2,
+      price_uf: result?.price_uf || 0,
+      price_uf_m2: result?.price_uf_m2 || 0,
+      price_clp: result?.price_clp || 0,
+      confidence: result?.confidence || 0,
+      market_velocity: result?.market_velocity || 0,
+      market_absorption: result?.market_absorption || 0,
+      comparable_source: result?.comparable_source || '',
+      comparable_range_uf: result?.comparable_range_uf || '',
+      comparable_properties: result?.comparable_properties || 0,
+      top_comparables: comparables.slice(0, 3).map((item) => ({
+        id: item.id,
+        address: item.address,
+        neighborhood: item.neighborhood,
+        price_uf: item.price_uf,
+        score: item.score,
+      })),
+      publication_price_uf: selectedBands?.publication || result?.price_uf || 0,
+      closing_price_uf: selectedBands?.closing || result?.price_uf || 0,
+      negotiation_floor_uf: selectedBands?.floor || result?.price_uf || 0,
+      report_role: reportType,
+      insights: aiAnalysis
+        ? {
+            title: aiAnalysis.title,
+            summary: aiAnalysis.summary,
+            why_now: aiAnalysis.why_now,
+            risks: aiAnalysis.risks,
+            actions: aiAnalysis.actions,
+            band_recommendation: aiAnalysis.band_recommendation,
+          }
+        : null,
+    }
+
+    try {
+      const response = await fetch('/api/reports/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report_type: reportType,
+          market_context: marketContext,
+        }),
+      })
+
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string
+        report?: { id?: string; title?: string; summary?: string }
+      }
+
+      if (!response.ok || !data.report) {
+        throw new Error(data.error || 'No pudimos generar el reporte.')
+      }
+
+      const label = reportType === 'ceo_brief' ? 'CEO' : reportType === 'director_accounts' ? 'Director' : 'Vendedor'
+      setRoleReportMessage(`Reporte ${label} generado: ${data.report.title || 'sin titulo'}`)
+    } catch (error) {
+      setRoleReportError(error instanceof Error ? error.message : 'No pudimos generar el reporte.')
+    } finally {
+      setRoleReportLoading(null)
+    }
+  }
+
   function calculate() {
     const nb = selectedNb
     if (!nb || !nb.price_per_sqm_uf) return
@@ -280,6 +454,9 @@ export default function ValorizadorPage() {
     setCalculating(true)
     setAiAnalysis(null)
     setAiError(null)
+    setRoleReportMessage(null)
+    setRoleReportError(null)
+    setPdfError(null)
 
     const area = Number.parseFloat(form.area_m2)
     const ageYears = Number.parseInt(form.age_years, 10)
@@ -599,6 +776,70 @@ export default function ValorizadorPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio de publicacion</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.publication?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
+                  <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>Nivel aspiracional para abrir la negociacion con margen comercial.</p>
+                </div>
+                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio de cierre objetivo</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.closing?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
+                  <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>Nivel de mercado para cerrar con buena velocidad y menos friccion.</p>
+                </div>
+                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Piso de negociacion</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.floor?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
+                  <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>Umbral minimo recomendado para no regalar valor.</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Activar reportes por rol</p>
+                    <p className="text-sm mt-1 max-w-2xl" style={{ color: '#9ca9a3' }}>
+                      Usa esta valorizacion como insumo para el vendedor, el director o el CEO sin volver a rearmar contexto.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => void generateRoleReport('seller_playbook')}
+                      disabled={Boolean(roleReportLoading)}
+                      className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
+                      style={{ background: '#8fb2aa' }}
+                    >
+                      <Send size={14} />
+                      {roleReportLoading === 'seller_playbook' ? 'Generando...' : 'Vendedor'}
+                    </button>
+                    <button
+                      onClick={() => void generateRoleReport('director_accounts')}
+                      disabled={Boolean(roleReportLoading)}
+                      className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
+                      style={{ background: '#6f8f89' }}
+                    >
+                      <Send size={14} />
+                      {roleReportLoading === 'director_accounts' ? 'Generando...' : 'Director'}
+                    </button>
+                    <button
+                      onClick={() => void generateRoleReport('ceo_brief')}
+                      disabled={Boolean(roleReportLoading)}
+                      className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
+                      style={{ background: '#173634' }}
+                    >
+                      <Send size={14} />
+                      {roleReportLoading === 'ceo_brief' ? 'Generando...' : 'CEO'}
+                    </button>
+                  </div>
+                </div>
+                {roleReportMessage && (
+                  <p className="mt-3 text-sm text-emerald-700">{roleReportMessage}</p>
+                )}
+                {roleReportError && (
+                  <p className="mt-3 text-sm text-rose-700">{roleReportError}</p>
+                )}
+              </div>
+
               <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
                 <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                   <div>
@@ -739,6 +980,28 @@ export default function ValorizadorPage() {
                     </div>
                   </div>
                 </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    onClick={downloadValuationPdf}
+                    disabled={pdfLoading}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
+                    style={{ background: '#173634' }}
+                  >
+                    <Download size={14} />
+                    {pdfLoading ? 'Generando PDF...' : 'Descargar PDF'}
+                  </button>
+                  <a
+                    href="/dashboard/reportes"
+                    className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+                    style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                  >
+                    <FileText size={14} />
+                    Ir a reportes
+                  </a>
+                </div>
+                {pdfError && (
+                  <p className="mt-3 text-sm text-rose-700">{pdfError}</p>
+                )}
               </div>
 
               <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
