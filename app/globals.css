@@ -47,59 +47,58 @@
 
 :root {
   color-scheme: light;
-  /* N3uralia Brandbook - Premium Real Estate Intelligence Platform */
-  /* Warm Teal & Sage Color Palette with Soft Contrast */
+  /* Property Partners / N3uralia brandbook - black, white and red system */
   
-  /* Primary Palette - Warm, Soft Colors */
-  --background: #fbfbfa;
-  --foreground: #173634;
+  /* Primary Palette */
+  --background: #ffffff;
+  --foreground: #111111;
   --card: #ffffff;
-  --card-foreground: #173634;
+  --card-foreground: #111111;
   --popover: #ffffff;
-  --popover-foreground: #173634;
+  --popover-foreground: #111111;
   
-  /* Brand Colors - Warm Teal (Primary) */
-  --primary: #8fb2aa;
+  /* Brand Colors - Black / Red */
+  --primary: #111111;
   --primary-foreground: #ffffff;
-  --secondary: #173634;
+  --secondary: #d61f2c;
   --secondary-foreground: #fbfbfa;
   
-  /* Accent - Warm Complement */
-  --accent: #b89a7e;
-  --accent-foreground: #173634;
+  /* Accent */
+  --accent: #d61f2c;
+  --accent-foreground: #ffffff;
   
   /* Status Colors */
-  --destructive: #d97706;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --info: #0ea5e9;
+  --destructive: #d61f2c;
+  --success: #111111;
+  --warning: #6b7280;
+  --info: #9ca3af;
   
   /* Surfaces & Borders */
-  --muted: #555a56;
-  --muted-foreground: #9ca9a3;
-  --border: #d8e5e2;
-  --input: #f5f9f7;
-  --ring: #8fb2aa;
+  --muted: #374151;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
+  --input: #f9fafb;
+  --ring: #d61f2c;
   
   /* Charts */
-  --chart-1: #8fb2aa;
-  --chart-2: #b89a7e;
-  --chart-3: #10b981;
-  --chart-4: #f59e0b;
-  --chart-5: #d97706;
+  --chart-1: #111111;
+  --chart-2: #d61f2c;
+  --chart-3: #6b7280;
+  --chart-4: #9ca3af;
+  --chart-5: #e5e7eb;
   
   /* Radius */
   --radius: 0.375rem;
   
   /* Sidebar */
-  --sidebar: #fbfbfa;
-  --sidebar-foreground: #173634;
-  --sidebar-primary: #8fb2aa;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #111111;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #b89a7e;
-  --sidebar-accent-foreground: #173634;
-  --sidebar-border: #d8e5e2;
-  --sidebar-ring: #8fb2aa;
+  --sidebar-accent: #d61f2c;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #d61f2c;
 }
 
 .dark {

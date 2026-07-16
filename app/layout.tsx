@@ -2,14 +2,14 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'N3uralia - Inteligencia Inmobiliaria',
-  description: 'Plataforma de inteligencia ejecutiva para inmobiliarias de alto rendimiento.',
+  title: 'Property Partners Vitacura | N3uralia',
+  description: 'Plataforma de inteligencia comercial para ventas de casas en Vitacura.',
   generator: 'N3uralia',
 }
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#8fb2aa',
+  themeColor: '#d61f2c',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
