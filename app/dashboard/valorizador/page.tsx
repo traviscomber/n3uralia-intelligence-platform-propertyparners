@@ -224,6 +224,42 @@ export default function ValorizadorPage() {
     }
   }, [history, result])
 
+  const neighborhoodComparison = useMemo(() => {
+    if (!result) return null
+
+    const grouped = new Map<string, ValuationHistoryItem[]>()
+    history.forEach((item) => {
+      const list = grouped.get(item.neighborhood) || []
+      list.push(item)
+      grouped.set(item.neighborhood, list)
+    })
+
+    const rows = [...grouped.entries()]
+      .map(([neighborhood, items]) => {
+        const averageClosing = items.reduce((sum, item) => sum + Number(item.closing_price_uf || 0), 0) / items.length
+        return {
+          neighborhood,
+          averageClosing,
+          count: items.length,
+        }
+      })
+      .sort((a, b) => b.averageClosing - a.averageClosing)
+
+    const currentNeighborhood = rows.find((row) => row.neighborhood === result.comp_neighborhood) || {
+      neighborhood: result.comp_neighborhood,
+      averageClosing: result.price_uf,
+      count: 0,
+    }
+
+    const maxValue = Math.max(result.price_uf, ...rows.slice(0, 4).map((row) => row.averageClosing))
+
+    return {
+      currentNeighborhood,
+      rows: rows.slice(0, 4),
+      maxValue,
+    }
+  }, [history, result])
+
   function buildValuationRequest(): ValuationRequest | null {
     if (!result || !selectedNb) return null
 
@@ -364,6 +400,22 @@ export default function ValorizadorPage() {
 
       if (analysisSeq.current !== currentSeq) return
       setAiAnalysis(analysis)
+      if (data?.quote_key) {
+        const publicationPrice = analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || payload.estimated_uf
+        const closingPrice = analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || payload.estimated_uf
+        setHistory((current) => [
+          {
+            quote_key: String(data.quote_key),
+            neighborhood: payload.neighborhood.name,
+            estimated_uf: payload.estimated_uf,
+            publication_price_uf: publicationPrice,
+            closing_price_uf: closingPrice,
+            confidence: payload.confidence,
+            created_at: new Date().toISOString(),
+          },
+          ...current,
+        ].slice(0, 5))
+      }
     } catch (error) {
       if (analysisSeq.current !== currentSeq) return
       setAiAnalysis(buildFallbackValuationAnalysis(payload))
@@ -926,6 +978,49 @@ export default function ValorizadorPage() {
                       </p>
                       <p className="text-xs" style={{ color: '#9ca9a3' }}>Vs. ultima cotizacion guardada</p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {neighborhoodComparison && (
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Comparacion por barrio</p>
+                      <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Promedio de cierres guardados por barrio para leer posicion relativa.</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                      {neighborhoodComparison.currentNeighborhood.count || 0} registros
+                    </span>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    {[
+                      {
+                        label: neighborhoodComparison.currentNeighborhood.neighborhood,
+                        value: neighborhoodComparison.currentNeighborhood.averageClosing,
+                        accent: '#173634',
+                      },
+                      ...neighborhoodComparison.rows.filter((row) => row.neighborhood !== neighborhoodComparison.currentNeighborhood.neighborhood).map((row) => ({
+                        label: row.neighborhood,
+                        value: row.averageClosing,
+                        accent: '#8fb2aa',
+                      })),
+                    ].slice(0, 4).map((item) => {
+                      const width = Math.max(12, Math.round((item.value / neighborhoodComparison.maxValue) * 100))
+                      return (
+                        <div key={item.label} className="flex items-center gap-3">
+                          <div className="w-36 text-xs font-medium uppercase tracking-wide" style={{ color: '#555a56' }}>
+                            {item.label}
+                          </div>
+                          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: '#eef4f2', border: '1px solid #d8e5e2' }}>
+                            <div className="h-full rounded-full" style={{ width: `${width}%`, background: item.accent }} />
+                          </div>
+                          <div className="w-24 text-right text-sm font-semibold text-gray-900">
+                            {Math.round(item.value).toLocaleString('es-CL')} UF
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}

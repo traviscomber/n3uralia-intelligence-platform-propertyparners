@@ -1,191 +1,454 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import puppeteer from 'puppeteer'
 import {
   buildFallbackValuationAnalysis,
   type ValuationAnalysis,
   type ValuationRequest,
 } from '@/lib/valuation-ai'
 
-const PAGE_WIDTH = 595.28
-const PAGE_HEIGHT = 841.89
-
-type PdfLine = {
-  text: string
-  x: number
-  y: number
-  size: number
-  bold?: boolean
+function formatUF(value: number) {
+  return Math.round(value).toLocaleString('es-CL')
 }
 
-function escapePdfText(text: string) {
-  return text
-    .replace(/\\/g, '\\\\')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)')
+function formatCLP(value: number) {
+  return Math.round(value).toLocaleString('es-CL')
 }
 
-function wrapText(text: string, maxChars: number) {
-  const words = text.split(/\s+/).filter(Boolean)
-  const lines: string[] = []
-  let current = ''
-
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word
-    if (candidate.length > maxChars && current) {
-      lines.push(current)
-      current = word
-    } else {
-      current = candidate
-    }
-  }
-
-  if (current) lines.push(current)
-  return lines.length ? lines : ['']
-}
-
-function pushLine(lines: PdfLine[], text: string, x: number, y: number, size: number, bold = false) {
-  lines.push({ text, x, y, size, bold })
-}
-
-function pushWrapped(lines: PdfLine[], text: string, x: number, y: number, size: number, maxChars: number, bold = false) {
-  wrapText(text, maxChars).forEach((line, index) => {
-    pushLine(lines, line, x, y - index * (size + 3), size, bold)
+function formatDate(value = new Date()) {
+  return value.toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
   })
 }
 
-function moneyUF(value: number) {
-  return `${Math.round(value).toLocaleString('es-CL')} UF`
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
-function moneyCLP(value: number) {
-  return `$${Math.round(value).toLocaleString('es-CL')} CLP`
+function iconSvg(color = '#173634') {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="${color}"/>
+      <path d="M8 21L8 11H12L16 18L20 11H24V21H21V15.8L17.7 21H14.3L11 15.8V21H8Z" fill="white"/>
+    </svg>
+  `)}`
 }
 
-function buildLines(request: ValuationRequest, analysis: ValuationAnalysis) {
-  const lines: PdfLine[] = []
-  let y = 796
-
-  pushLine(lines, 'N3uralia | Property Partners Vitacura', 48, y, 11, true)
-  y -= 18
-  pushLine(lines, 'Valorizacion comercial', 48, y, 20, true)
-  y -= 24
-  pushLine(lines, `${analysis.title}`, 48, y, 12, true)
-  y -= 16
-  pushLine(lines, `Barrio: ${request.neighborhood.name} | Condicion: ${request.condition} | Area: ${request.area_m2} m2`, 48, y, 10)
-  y -= 14
-  pushLine(lines, `Fecha: ${new Date().toLocaleDateString('es-CL')} | Fuente: ${analysis.source === 'openai' ? 'OpenAI + fallback comercial' : 'Fallback comercial'}`, 48, y, 10)
-
-  y -= 26
-  pushLine(lines, 'Resumen comercial', 48, y, 14, true)
-  y -= 18
-  pushWrapped(lines, analysis.summary, 48, y, 10, 74)
-  y -= 34
-
-  pushLine(lines, 'Precio recomendado', 48, y, 14, true)
-  y -= 18
-  pushLine(lines, `Precio de publicacion: ${moneyUF(analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || request.estimated_uf)}`, 48, y, 11)
-  y -= 14
-  pushLine(lines, `Precio de cierre objetivo: ${moneyUF(analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || request.estimated_uf)}`, 48, y, 11)
-  y -= 14
-  pushLine(lines, `Piso de negociacion: ${moneyUF(analysis.price_bands.find((band) => band.label === 'piso_negociacion')?.value_uf || request.estimated_uf)}`, 48, y, 11)
-  y -= 14
-  pushLine(lines, `Estimacion base: ${moneyUF(request.estimated_uf)} | ${moneyCLP(request.estimated_clp)}`, 48, y, 11)
-
-  y -= 18
-  pushLine(lines, 'Escenarios', 48, y, 14, true)
-  y -= 18
-  pushLine(lines, `Conservador: ${moneyUF(analysis.price_bands.find((band) => band.label === 'conservador')?.value_uf || request.estimated_uf)}`, 48, y, 10)
-  y -= 14
-  pushLine(lines, `Mercado: ${moneyUF(analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || request.estimated_uf)}`, 48, y, 10)
-  y -= 14
-  pushLine(lines, `Aspiracional: ${moneyUF(analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || request.estimated_uf)}`, 48, y, 10)
-
-  y -= 24
-  pushLine(lines, 'Sensibilidad y lectura', 48, y, 14, true)
-  y -= 18
-  analysis.sensitivities.slice(0, 4).forEach((item) => {
-    pushWrapped(lines, `${item.factor}: ${item.direction === 'down' ? '-' : '+'}${moneyUF(item.impact_uf)} - ${item.note}`, 48, y, 10, 74)
-    y -= 22
-  })
-
-  y -= 2
-  pushLine(lines, 'Reportes por rol', 48, y, 14, true)
-  y -= 18
-  pushLine(lines, 'Vendedor: foco en cierre, objeciones y siguiente accion comercial.', 48, y, 10)
-  y -= 14
-  pushLine(lines, 'Director: foco en desempeno del equipo, brechas y priorizacion de cartera.', 48, y, 10)
-  y -= 14
-  pushLine(lines, 'CEO: foco en negocio, riesgos, directores y lectura ejecutiva del mercado.', 48, y, 10)
-
-  y -= 24
-  pushLine(lines, 'Comparables principales', 48, y, 14, true)
-  y -= 18
-  request.selected_comparables.slice(0, 3).forEach((item, index) => {
-    pushWrapped(
-      lines,
-      `${index + 1}. ${item.address} | ${item.neighborhood} | ${item.bedrooms}D/${item.bathrooms}B | ${moneyUF(item.price_uf)} | score ${item.score.toFixed(0)}%`,
-      48,
-      y,
-      10,
-      74,
-    )
-    y -= 18
-  })
-
-  y -= 8
-  pushLine(lines, 'Acciones sugeridas', 48, y, 14, true)
-  y -= 18
-  analysis.actions.slice(0, 3).forEach((item) => {
-    pushWrapped(lines, `- ${item}`, 48, y, 10, 74)
-    y -= 18
-  })
-
-  y -= 4
-  pushLine(lines, `Confianza: ${analysis.confidence_note}`, 48, y, 10)
-
-  return lines
+function priceBandValue(analysis: ValuationAnalysis, label: 'conservador' | 'mercado' | 'aspiracional' | 'piso_negociacion', fallback: number) {
+  return analysis.price_bands.find((band) => band.label === label)?.value_uf || fallback
 }
 
-function buildPdfBuffer(lines: PdfLine[]) {
-  const contentParts = lines.map((line) => {
-    const fontName = line.bold ? 'F2' : 'F1'
-    return `BT /${fontName} ${line.size} Tf ${line.x} ${line.y} Td (${escapePdfText(line.text)}) Tj ET`
-  })
-  const content = contentParts.join('\n')
-  const objects = [
-    '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
-    '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
-    `3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >> endobj`,
-    '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
-    '5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj',
-    `6 0 obj << /Length ${Buffer.byteLength(content, 'utf8')} >> stream\n${content}\nendstream endobj`,
+function buildNeighborhoodInsights(request: ValuationRequest, analysis: ValuationAnalysis) {
+  return [
+    {
+      label: 'Precio de publicacion',
+      value: formatUF(priceBandValue(analysis, 'aspiracional', request.estimated_uf)),
+      note: 'Salida aspiracional con margen de negociacion.',
+    },
+    {
+      label: 'Precio de cierre',
+      value: formatUF(priceBandValue(analysis, 'mercado', request.estimated_uf)),
+      note: 'Punto de cierre objetivo segun mercado.',
+    },
+    {
+      label: 'Piso',
+      value: formatUF(priceBandValue(analysis, 'piso_negociacion', request.estimated_uf)),
+      note: 'Defensa minima del valor comercial.',
+    },
+    {
+      label: 'Confianza',
+      value: `${request.confidence}%`,
+      note: 'Sustento del pricing y comparables.',
+    },
   ]
+}
 
-  let offset = Buffer.byteLength('%PDF-1.4\n', 'utf8')
-  const offsets = [0]
-  const bodyParts: Buffer[] = [Buffer.from('%PDF-1.4\n', 'utf8')]
+function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
+  const logoPath = join(process.cwd(), 'public', 'n3uralia-logo.webp')
+  const logoData = readFileSync(logoPath).toString('base64')
+  const logoMime = 'image/webp'
+  const insights = buildNeighborhoodInsights(request, analysis)
+  const topComparables = request.selected_comparables.slice(0, 4)
+  const bars = [
+    {
+      label: 'Conservador',
+      value: priceBandValue(analysis, 'conservador', request.estimated_uf),
+      color: '#8fb2aa',
+    },
+    {
+      label: 'Mercado',
+      value: priceBandValue(analysis, 'mercado', request.estimated_uf),
+      color: '#173634',
+    },
+    {
+      label: 'Aspiracional',
+      value: priceBandValue(analysis, 'aspiracional', request.estimated_uf),
+      color: '#6f8f89',
+    },
+  ]
+  const maxBar = Math.max(...bars.map((item) => item.value), request.estimated_uf)
 
-  for (const object of objects) {
-    offsets.push(offset)
-    const body = Buffer.from(`${object}\n`, 'utf8')
-    bodyParts.push(body)
-    offset += body.length
-  }
+  return `<!doctype html>
+  <html lang="es">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Valorizacion comercial</title>
+      <style>
+        :root {
+          --ink: #173634;
+          --muted: #5f6f6c;
+          --soft: #eef4f2;
+          --line: #d8e5e2;
+          --accent: #8fb2aa;
+          --paper: #f7faf9;
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          font-family: Arial, Helvetica, sans-serif;
+          color: var(--ink);
+          background: white;
+        }
+        .page {
+          padding: 28px 30px 32px;
+        }
+        .hero {
+          display: grid;
+          grid-template-columns: 140px 1fr;
+          gap: 18px;
+          align-items: center;
+          padding: 20px;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #173634 0%, #214d49 100%);
+          color: white;
+          position: relative;
+          overflow: hidden;
+        }
+        .hero::after {
+          content: '';
+          position: absolute;
+          right: -40px;
+          top: -40px;
+          width: 180px;
+          height: 180px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.08);
+        }
+        .brand-mark {
+          width: 128px;
+          height: 128px;
+          border-radius: 24px;
+          background: rgba(255,255,255,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(3px);
+        }
+        .brand-mark img { width: 110px; height: auto; display: block; }
+        h1 {
+          margin: 0;
+          font-size: 30px;
+          line-height: 1.05;
+          letter-spacing: -0.02em;
+        }
+        .subtitle {
+          margin-top: 8px;
+          font-size: 14px;
+          line-height: 1.5;
+          color: rgba(255,255,255,0.88);
+          max-width: 680px;
+        }
+        .meta {
+          margin-top: 12px;
+          display: flex;
+          gap: 14px;
+          flex-wrap: wrap;
+          font-size: 12px;
+          color: rgba(255,255,255,0.76);
+        }
+        .section {
+          margin-top: 16px;
+          border: 1px solid var(--line);
+          border-radius: 18px;
+          background: white;
+          padding: 16px;
+        }
+        .section-title {
+          margin: 0 0 12px;
+          font-size: 15px;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+        .grid-4 {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+        }
+        .grid-3 {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+        }
+        .card {
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          padding: 14px;
+          background: var(--paper);
+        }
+        .card .kicker {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--muted);
+        }
+        .card .value {
+          margin-top: 8px;
+          font-size: 24px;
+          font-weight: 700;
+        }
+        .card .note {
+          margin-top: 6px;
+          font-size: 12px;
+          line-height: 1.45;
+          color: var(--muted);
+        }
+        .bar-wrap {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-top: 10px;
+        }
+        .bar-label {
+          width: 120px;
+          font-size: 12px;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .bar-track {
+          flex: 1;
+          height: 14px;
+          background: var(--soft);
+          border-radius: 999px;
+          overflow: hidden;
+          border: 1px solid var(--line);
+        }
+        .bar-fill {
+          height: 100%;
+          border-radius: 999px;
+        }
+        .bar-value {
+          width: 100px;
+          text-align: right;
+          font-size: 12px;
+          font-weight: 700;
+        }
+        .two-col {
+          display: grid;
+          grid-template-columns: 1.25fr 0.75fr;
+          gap: 12px;
+        }
+        ul {
+          margin: 0;
+          padding-left: 18px;
+        }
+        li {
+          margin: 0 0 8px;
+          font-size: 13px;
+          line-height: 1.45;
+          color: #243331;
+        }
+        .comparison-list {
+          display: grid;
+          gap: 10px;
+        }
+        .comparable {
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          background: #fbfcfc;
+          padding: 12px;
+        }
+        .comparable-top {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .comparable-title {
+          font-size: 13px;
+          font-weight: 700;
+        }
+        .comparable-meta {
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 4px;
+        }
+        .footer {
+          margin-top: 14px;
+          font-size: 11px;
+          color: var(--muted);
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="page">
+        <div class="hero">
+          <div class="brand-mark">
+            <img src="data:${logoMime};base64,${logoData}" alt="N3uralia" />
+          </div>
+          <div>
+            <h1>Valorizacion comercial Vitacura</h1>
+            <div class="subtitle">
+              ${escapeHtml(analysis.summary)}
+            </div>
+            <div class="meta">
+              <span>Barrio: ${escapeHtml(request.neighborhood.name)}</span>
+              <span>Condicion: ${escapeHtml(request.condition)}</span>
+              <span>Area: ${escapeHtml(String(request.area_m2))} m2</span>
+              <span>${formatDate()}</span>
+            </div>
+          </div>
+        </div>
 
-  const xrefOffset = offset
-  const xrefEntries = ['0000000000 65535 f ']
-  for (let i = 1; i < offsets.length; i += 1) {
-    xrefEntries.push(`${offsets[i].toString().padStart(10, '0')} 00000 n `)
-  }
+        <div class="section">
+          <h2 class="section-title">Lectura comercial</h2>
+          <div class="grid-4">
+            ${insights
+              .map(
+                (item) => `
+              <div class="card">
+                <div class="kicker">${escapeHtml(item.label)}</div>
+                <div class="value">${escapeHtml(item.value)}</div>
+                <div class="note">${escapeHtml(item.note)}</div>
+              </div>`,
+              )
+              .join('')}
+          </div>
+        </div>
 
-  const xref = `xref\n0 ${offsets.length}\n${xrefEntries.join('\n')}\n`
-  const trailer = `trailer << /Size ${offsets.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`
+        <div class="section">
+          <h2 class="section-title">Escenarios de precio</h2>
+          ${bars
+            .map((item) => {
+              const width = Math.max(10, Math.round((item.value / maxBar) * 100))
+              return `
+              <div class="bar-wrap">
+                <div class="bar-label">${escapeHtml(item.label)}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${width}%; background:${item.color};"></div></div>
+                <div class="bar-value">${formatUF(item.value)} UF</div>
+              </div>`
+            })
+            .join('')}
+        </div>
 
-  bodyParts.push(Buffer.from(xref, 'utf8'))
-  bodyParts.push(Buffer.from(trailer, 'utf8'))
+        <div class="two-col">
+          <div class="section">
+            <h2 class="section-title">Porque este valor</h2>
+            <ul>
+              ${(analysis.why_now || []).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+            <h2 class="section-title" style="margin-top:16px;">Riesgos</h2>
+            <ul>
+              ${(analysis.risks || []).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+          </div>
+          <div class="section">
+            <h2 class="section-title">Sensibilidad</h2>
+            <div class="comparison-list">
+              ${(analysis.sensitivities || [])
+                .slice(0, 5)
+                .map(
+                  (item) => `
+                <div class="comparable">
+                  <div class="comparable-top">
+                    <div class="comparable-title">${escapeHtml(item.factor)}</div>
+                    <div class="comparable-title">${item.direction === 'down' ? '-' : '+'}${formatUF(item.impact_uf)} UF</div>
+                  </div>
+                  <div class="comparable-meta">${escapeHtml(item.note)}</div>
+                </div>`,
+                )
+                .join('')}
+            </div>
+          </div>
+        </div>
 
-  return Buffer.concat(bodyParts)
+        <div class="section">
+          <h2 class="section-title">Comparables principales</h2>
+          <div class="comparison-list">
+            ${topComparables
+              .map(
+                (item, index) => `
+              <div class="comparable">
+                <div class="comparable-top">
+                  <div>
+                    <div class="comparable-title">${index + 1}. ${escapeHtml(item.address)}</div>
+                    <div class="comparable-meta">${escapeHtml(item.neighborhood)} · ${item.bedrooms}D/${item.bathrooms}B · ${item.area_m2} m2</div>
+                  </div>
+                  <div class="comparable-title">${formatUF(item.price_uf)} UF</div>
+                </div>
+                <div class="comparable-meta">Score ${item.score.toFixed(0)}% · Similarity ${item.similarity.toFixed(0)}%</div>
+              </div>`,
+              )
+              .join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Reporte comercial y cierre</h2>
+          <div class="grid-3">
+            <div class="card">
+              <div class="kicker">Vendedor</div>
+              <div class="note">Foco en cierre, objeciones, seguimiento y proxima accion.</div>
+            </div>
+            <div class="card">
+              <div class="kicker">Director</div>
+              <div class="note">Foco en desempeno del equipo, brechas y cartera priorizada.</div>
+            </div>
+            <div class="card">
+              <div class="kicker">CEO</div>
+              <div class="note">Foco en negocio, riesgos, directores y lectura ejecutiva.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          N3uralia · Property Partners Vitacura · ${analysis.source === 'openai' ? 'Analisis asistido por IA' : 'Analisis deterministico comercial'}
+        </div>
+      </div>
+    </body>
+  </html>`
 }
 
 export async function buildValuationPdfBuffer(request: ValuationRequest, analysis?: ValuationAnalysis | null) {
   const resolvedAnalysis = analysis || buildFallbackValuationAnalysis(request)
-  return buildPdfBuffer(buildLines(request, resolvedAnalysis))
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  })
+
+  try {
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1280, height: 2200, deviceScaleFactor: 1 })
+    await page.setContent(buildHtml(request, resolvedAnalysis), { waitUntil: 'load' })
+    return await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '14mm',
+        right: '12mm',
+        bottom: '14mm',
+        left: '12mm',
+      },
+    })
+  } finally {
+    await browser.close()
+  }
 }
