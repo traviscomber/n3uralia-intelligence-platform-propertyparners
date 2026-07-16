@@ -94,6 +94,10 @@ type DeterministicBase = {
   actions: string[]
   recommendation: string
   confidence: number
+  sections: Array<{
+    title: string
+    bullets: string[]
+  }>
 }
 
 type DirectorLeaderboardRow = {
@@ -375,6 +379,32 @@ function buildRoleContext(
       ],
       recommendation: 'Consolidar el foco en las zonas con mejor absorcion de Vitacura y mover recursos hacia los directores y equipos con mayor capacidad de cierre.',
       confidence: 0.91,
+      sections: [
+        {
+          title: 'Lectura ejecutiva',
+          bullets: [
+            `Ventas totales: ${latest?.ventas_count ?? 0}`,
+            `Comision total: ${latest?.comision_total ?? 0} UF`,
+            `Conversion promedio: ${latest?.conversion_rate?.toFixed(1) ?? '0.0'}%`,
+          ],
+        },
+        {
+          title: 'Brechas y riesgo',
+          bullets: [
+            targetGap > 0 ? `Faltan ${targetGap} ventas para el objetivo.` : 'Objetivo cubierto.',
+            `Cambio de conversion: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts.`,
+            topDirector ? `Director lider: ${topDirector.director_name || topDirector.director_id}` : 'Sin director lider claro.',
+          ],
+        },
+        {
+          title: 'Decisiones',
+          bullets: [
+            'Reasignar foco hacia los equipos con mayor capacidad de cierre.',
+            'Sostener lectura semanal por barrio en Vitacura.',
+            'Bajar el reporte al detalle operativo de los directores.',
+          ],
+        },
+      ],
     },
     director_accounts: {
       title: 'Reporte de Desempeno del Equipo Comercial',
@@ -407,6 +437,32 @@ function buildRoleContext(
       ],
       recommendation: 'Mantener una disciplina semanal de equipo, con coaching a vendedores y activacion de cartera antes de ampliar el pipeline en Vitacura.',
       confidence: 0.88,
+      sections: [
+        {
+          title: 'Equipo y cartera',
+          bullets: [
+            `Equipo: ${teamLabel}`,
+            `Vendedores activos: ${teamRoster.length || sellerCount}`,
+            `Brecha objetivo: ${selectedDirector?.target_gap ?? targetGap} ventas`,
+          ],
+        },
+        {
+          title: 'Coaching',
+          bullets: [
+            'Priorizar vendedores con mejor traccion.',
+            'Alinear seguimiento de visitas y contraofertas.',
+            'Revisar cartera estancada del equipo.',
+          ],
+        },
+        {
+          title: 'Siguientes 7 dias',
+          bullets: [
+            `Casas disponibles para activar: ${availableProperties.length}`,
+            `Barrio clave: ${vitacuraNeighborhoodInsights[0]?.neighborhood || strongestNeighborhood}`,
+            'Usar el resumen en reunion semanal de rendimiento.',
+          ],
+        },
+      ],
     },
     seller_playbook: {
       title: 'Playbook Comercial de Vendedor',
@@ -430,6 +486,32 @@ function buildRoleContext(
       ],
       recommendation: 'Trabajar el inventario con mayor potencial de Vitacura y sostener cadencia diaria de seguimiento para convertir mas rapido.',
       confidence: 0.86,
+      sections: [
+        {
+          title: 'Prioridades de hoy',
+          bullets: [
+            `Casas disponibles: ${availableProperties.length}`,
+            `Barrio lider: ${topMarket?.neighborhood || 'Sin dato'}`,
+            `Equipo: ${teamLabel}`,
+          ],
+        },
+        {
+          title: 'Guion comercial',
+          bullets: [
+            'Contactar primero las propiedades y leads con mejor respuesta.',
+            'Actualizar seguimiento diario de visitas y objeciones.',
+            'Cerrar primero el inventario con mayor probabilidad de conversion.',
+          ],
+        },
+        {
+          title: 'Control diario',
+          bullets: [
+            'Revisar seguimiento cada dia.',
+            'No dispersar esfuerzos en inventario de baja probabilidad.',
+            'Mantener foco en Vitacura y sus barrios de mayor traccion.',
+          ],
+        },
+      ],
     },
     market_brief: {
       title: 'Lectura de Mercado',
@@ -446,6 +528,27 @@ function buildRoleContext(
       actions: ['Cruzar barrios con mejor absorcion y ajustar foco comercial.'],
       recommendation: 'Usar el brief para ajustar posicionamiento y priorizar las zonas con mejor traccion en Vitacura.',
       confidence: 0.84,
+      sections: [
+        {
+          title: 'Mercado',
+          bullets: [
+            `Barrio lider: ${topMarket?.neighborhood || 'Sin dato'}`,
+            `Absorcion: ${topMarket?.absorption_rate?.toFixed(1) ?? '0.0'}%`,
+            `Inventario: ${topMarket?.inventory_count ?? 0} casas`,
+          ],
+        },
+        {
+          title: 'Señales',
+          bullets: [
+            vitacuraNeighborhoodInsights[0] ? vitacuraNeighborhoodInsights[0].commercialFocus : 'Vitacura concentro la lectura.',
+            'Cruzar barrios con mejor absorcion y ajustar foco comercial.',
+          ],
+        },
+        {
+          title: 'Accion',
+          bullets: ['Usar este brief para guiar posicionamiento y mensaje comercial.'],
+        },
+      ],
     },
     captation_alert: {
       title: 'Alerta de Captacion',
@@ -461,6 +564,24 @@ function buildRoleContext(
       actions: ['Activar seguimiento inmediato en las zonas con mejor absorcion y mejor margen de cierre.'],
       recommendation: 'Enfocar captacion sobre propiedades y barrios con mayor velocidad comercial dentro de Vitacura.',
       confidence: 0.83,
+      sections: [
+        {
+          title: 'Oportunidades',
+          bullets: [
+            `Propiedades disponibles: ${availableProperties.length}`,
+            `Mejor barrio: ${topMarket?.neighborhood || 'Sin dato'}`,
+            vitacuraNeighborhoodInsights[0] ? vitacuraNeighborhoodInsights[0].bestFor : 'Vitacura debe seguir como foco.',
+          ],
+        },
+        {
+          title: 'Riesgo',
+          bullets: ['Si la captacion se retrasa, el inventario puede perder oportunidad comercial.'],
+        },
+        {
+          title: 'Accion inmediata',
+          bullets: ['Activar seguimiento inmediato en las zonas con mejor absorcion y mejor margen de cierre.'],
+        },
+      ],
     },
   }
 
@@ -505,6 +626,7 @@ function buildDeterministicPayload(reportType: ReportType, context: ReturnType<t
       actions: base.actions,
       recommendation: base.recommendation,
       confidence: base.confidence,
+      sections: base.sections,
       audience_context: {
         director_id: context.selectedDirector?.director_id || null,
         team: context.selectedTeam,
@@ -551,7 +673,7 @@ async function generateWithOpenAI(prompt: string, systemFocus: string, audience:
       messages: [
         {
           role: 'system',
-          content: `Eres un analista inmobiliario senior de N3uralia. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence.`,
+          content: `Eres un analista inmobiliario senior de N3uralia. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence, sections. sections debe ser un array de objetos con title y bullets. Mantiene el foco en Vitacura y en decisiones accionables por audiencia.`,
         },
         {
           role: 'user',

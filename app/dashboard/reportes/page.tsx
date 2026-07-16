@@ -206,6 +206,32 @@ function getAudienceKey(report: AiReport | null): AudienceGroupKey {
   return 'director'
 }
 
+type ReportSection = {
+  title: string
+  bullets: string[]
+}
+
+function getReportSections(report: AiReport | null): ReportSection[] {
+  if (!report) return []
+  const content = report.content as Record<string, unknown> | null
+  const sections = Array.isArray(content?.sections) ? (content?.sections as Record<string, unknown>[]) : []
+  return sections
+    .map((section) => ({
+      title: typeof section.title === 'string' ? section.title : 'Seccion',
+      bullets: Array.isArray(section.bullets)
+        ? section.bullets.filter((bullet): bullet is string => typeof bullet === 'string').slice(0, 4)
+        : [],
+    }))
+    .filter((section) => section.title || section.bullets.length)
+}
+
+function getReportHighlights(report: AiReport | null) {
+  if (!report) return []
+  const content = report.content as Record<string, unknown> | null
+  const highlights = Array.isArray(content?.highlights) ? (content?.highlights as unknown[]) : []
+  return highlights.filter((item): item is string => typeof item === 'string').slice(0, 3)
+}
+
 export default function ReportesPage() {
   const [weekly, setWeekly] = useState<WeeklyReportResponse | null>(null)
   const [weeklyLoading, setWeeklyLoading] = useState(true)
@@ -806,6 +832,19 @@ export default function ReportesPage() {
                       <p className="mt-1 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
                         {latestAudienceReport.summary || 'Sin resumen disponible'}
                       </p>
+                      {getReportHighlights(latestAudienceReport).length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {getReportHighlights(latestAudienceReport).map((item) => (
+                            <span
+                              key={item}
+                              className="rounded-full px-3 py-1 text-[11px] font-medium"
+                              style={{ background: 'var(--n-primary-muted)', color: 'var(--n-primary)' }}
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <p className="mt-2 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
@@ -941,6 +980,22 @@ export default function ReportesPage() {
             <p className="mt-3 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
               {generatedReport.summary || 'Sin resumen disponible'}
             </p>
+            {getReportSections(generatedReport).length > 0 && (
+              <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+                {getReportSections(generatedReport).map((section) => (
+                  <div key={section.title} className="rounded-2xl border p-3" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+                    <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                      {section.title}
+                    </p>
+                    <ul className="mt-3 space-y-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                      {section.bullets.map((bullet) => (
+                        <li key={bullet}>- {bullet}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
             {generatedWhatsappUrl && (
               <div className="mt-4">
                 <a
