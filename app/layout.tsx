@@ -1,16 +1,16 @@
-import type { Metadata, Viewport } from 'next'
+﻿import type { Metadata, Viewport } from 'next'
 import { Montserrat, Rajdhani } from 'next/font/google'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Property Partners | Inteligencia de mercado Vitacura',
-  description: 'Property Partners convierte datos dispersos, flujos comerciales y señales de IA en inteligencia operativa para ventas en Vitacura.',
-  generator: 'Property Partners',
+  title: 'N3uralia | Turn complexity into intelligent execution',
+  description: 'N3uralia converts scattered data, workflows, documents, and AI into operational intelligence for complex teams.',
+  generator: 'N3uralia',
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light',
-  themeColor: '#d61f2c',
+  colorScheme: 'dark',
+  themeColor: '#0a1110',
 }
 
 const rajdhani = Rajdhani({
@@ -36,3 +36,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   )
 }
+

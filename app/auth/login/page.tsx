@@ -34,12 +34,12 @@ export default function LoginPage() {
           <div className="mb-3 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
             <PPLogo className="h-7 w-auto" priority />
           </div>
-          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>Property Partners</p>
+          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>N3uralia</p>
         </div>
 
         <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
-          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesión</h1>
-          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Accede a la inteligencia de mercado de Vitacura</p>
+          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesion</h1>
+          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Accede a la inteligencia operativa de N3uralia</p>
 
           {error && (
             <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(139,169,167,0.08)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>
@@ -64,14 +64,14 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
-                Contraseña
+                Contrasena
               </label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="********"
                 className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
                 style={{ border: '1px solid var(--n3-line)' }}
               />
@@ -88,7 +88,7 @@ export default function LoginPage() {
 
           <div className="mt-4 text-center">
             <a href="/auth/sign-up" className="text-xs hover:opacity-80" style={{ color: 'var(--n3-text-muted)' }}>
-              ¿No tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Registrarse</span>
+              No tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Registrarse</span>
             </a>
           </div>
 

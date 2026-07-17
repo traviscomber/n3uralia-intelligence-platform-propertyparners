@@ -47,7 +47,7 @@ export default function SignUpPage() {
           </div>
           <h2 className="mb-2 font-semibold text-[var(--n3-text-light)]">Revisa tu email</h2>
           <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>
-            Enviamos un enlace de confirmación a <strong className="text-[var(--n3-text-light)]">{email}</strong>
+            Enviamos un enlace de confirmacion a <strong className="text-[var(--n3-text-light)]">{email}</strong>
           </p>
           <a href="/auth/login" className="mt-4 inline-block text-sm transition-opacity hover:opacity-80" style={{ color: 'var(--n3-teal)' }}>
             Volver al ingreso
@@ -64,11 +64,11 @@ export default function SignUpPage() {
           <div className="mb-3 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
             <PPLogo className="h-7 w-auto" priority />
           </div>
-          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>Property Partners</p>
+          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>N3uralia</p>
         </div>
         <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
           <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Crear cuenta</h1>
-          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Únete a Property Partners y accede a inteligencia operativa</p>
+          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Unete a N3uralia y accede a inteligencia operativa</p>
           {error && <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(139,169,167,0.08)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>{error}</div>}
           <form onSubmit={handleSignUp} className="flex flex-col gap-4">
             <div>
@@ -101,7 +101,7 @@ export default function SignUpPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
-                Contraseña
+                Contrasena
               </label>
               <input
                 type="password"
@@ -109,7 +109,7 @@ export default function SignUpPage() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="********"
                 className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
                 style={{ border: '1px solid var(--n3-line)' }}
               />
@@ -125,7 +125,7 @@ export default function SignUpPage() {
           </form>
           <div className="mt-4 text-center">
             <a href="/auth/login" className="text-xs transition-opacity hover:opacity-80" style={{ color: 'var(--n3-text-muted)' }}>
-              ¿Ya tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Iniciar sesión</span>
+              Ya tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Iniciar sesion</span>
             </a>
           </div>
 

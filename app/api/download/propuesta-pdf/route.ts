@@ -4,13 +4,13 @@ import { join } from 'path'
 
 export async function GET() {
   try {
-    const pdfPath = join(process.cwd(), 'public', '2026-07-13_PC_PropertyPartners.pdf')
+    const pdfPath = join(process.cwd(), 'public', 'propuesta-comercial-n3uralia.pdf')
     const pdfBuffer = readFileSync(pdfPath)
 
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="2026-07-13_PC_PropertyPartners.pdf"',
+        'Content-Disposition': 'attachment; filename="propuesta-comercial-n3uralia.pdf"',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     })
