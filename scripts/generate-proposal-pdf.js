@@ -18,7 +18,7 @@ function generateProposalPDF() {
 
   // Paleta de colores
   const darkGreen = '#2c5f56';
-  const mediumGreen = '#8fb2aa';
+  const mediumGreen = '#d61f2c';
   const lightGreen = '#f0f5f4';
   const darkText = '#1a3a35';
 
@@ -48,7 +48,7 @@ function generateProposalPDF() {
   }
 
   // PÁGINA 1: COVER
-  doc.fontSize(48).fillColor(darkGreen).font('Helvetica-Bold').text('N3uralia', { align: 'center' });
+  doc.fontSize(48).fillColor(darkGreen).font('Helvetica-Bold').text('Property Partners', { align: 'center' });
   doc.moveDown(1);
   doc.fontSize(24).fillColor(mediumGreen).font('Helvetica').text('Inteligencia Inmobiliaria para Vitacura', { align: 'center' });
   doc.moveDown(2);
@@ -58,9 +58,9 @@ function generateProposalPDF() {
   doc.addPage();
 
   // PÁGINA 2: ABOUT
-  addSection('Sobre N3uralia');
+  addSection('Sobre Property Partners');
   addSubsection('Visión');
-  addParagraph('N3uralia es una plataforma de inteligencia inmobiliaria que transforma datos brutos en decisiones estratégicas para directores, vendedores y analistas de mercado inmobiliario. Enfocada inicialmente en Vitacura, ofrece análisis en tiempo real de precios, velocidad de venta, y oportunidades de negocio.');
+  addParagraph('Property Partners es una plataforma de inteligencia inmobiliaria que transforma datos brutos en decisiones estratégicas para directores, vendedores y analistas de mercado inmobiliario. Enfocada inicialmente en Vitacura, ofrece análisis en tiempo real de precios, velocidad de venta, y oportunidades de negocio.');
 
   addSubsection('Tres Herramientas Clave');
   doc.fontSize(11).font('Helvetica-Bold').fillColor(mediumGreen);
@@ -213,10 +213,10 @@ function generateProposalPDF() {
 
   doc.moveDown(1);
   addSubsection('Contacto');
-  doc.fontSize(11).fillColor('#333').font('Helvetica').text('Travis Comber\nFounder, N3uralia\nEmail: travis@n3uralia.com\nPlataforma: https://n3uralia-intelligence-platform.vercel.app');
+  doc.fontSize(11).fillColor('#333').font('Helvetica').text('Travis Comber\nFounder, Property Partners\nEmail: travis@n3uralia.com\nPlataforma: https://n3uralia-intelligence-platform.vercel.app');
 
   doc.moveDown(2);
-  doc.fontSize(9).fillColor('#999').font('Helvetica').text('N3uralia — Inteligencia Inmobiliaria | Julio 2026 | Propuesta Confidencial', { align: 'center' });
+  doc.fontSize(9).fillColor('#999').font('Helvetica').text('Property Partners — Inteligencia Inmobiliaria | Julio 2026 | Propuesta Confidencial', { align: 'center' });
 
   doc.end();
 
@@ -234,3 +234,4 @@ generateProposalPDF().catch(err => {
   console.error('Error generando PDF:', err);
   process.exit(1);
 });
+

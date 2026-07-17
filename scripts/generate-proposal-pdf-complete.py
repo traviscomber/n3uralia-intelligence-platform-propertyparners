@@ -28,8 +28,8 @@ PUBLIC_DIR = ROOT / "public"
 DOCS_DIR = ROOT / "docs"
 SOURCE_PDF = DOCS_DIR / "propuesta-comercial-vitacura-juan-2026-07-13-v2.pdf"
 LOGO_PATH = PUBLIC_DIR / "n3uralia-logo.webp"
-REPORT_STAMP = "2026-07-13"
-REPORT_FILENAME = f"{REPORT_STAMP}_PC_PropertyPartners.pdf"
+REPORT_STAMP = "2026-07-15"
+REPORT_FILENAME = f"{REPORT_STAMP}_Propuesta_Comercial_Property_Partners_Vitacura.pdf"
 
 OUTPUTS = [
     PUBLIC_DIR / REPORT_FILENAME,
@@ -221,7 +221,7 @@ def build_cover_story(styles, logo_image_path: Path):
         Paragraph("Property Partners Vitacura", styles["CoverSub"]),
         Spacer(1, 0.12 * inch),
         Paragraph(
-            "N3uralia presenta una propuesta formal para el desarrollo de una plataforma comercial enfocada en ventas de casas en Vitacura, con informacion de mercado, automatizacion de reportes y soporte para la gestion comercial.",
+            "Property Partners presenta una propuesta formal para el desarrollo de una plataforma comercial enfocada en ventas de casas en Vitacura, con informacion de mercado, automatizacion de reportes y soporte para la gestion comercial.",
             styles["CoverSub"],
         ),
         Spacer(1, 0.28 * inch),
@@ -348,7 +348,7 @@ def source_table_page(styles):
         ],
         [
             Paragraph("Yapo", styles["BodyCommercial"]),
-            Paragraph("Señales de oferta y referencia de mercado", styles["BodyCommercial"]),
+            Paragraph("Senales de oferta y referencia de mercado", styles["BodyCommercial"]),
             Paragraph("Referencia externa", styles["BodyCommercial"]),
         ],
         [
@@ -392,28 +392,28 @@ def agent_table_page(styles):
         ],
         [
             Paragraph("Agente de scraping", styles["BodyCommercial"]),
-            Paragraph("Orquesta la captura de propiedades y fuentes externas", styles["BodyCommercial"]),
-            Paragraph("Mantiene el inventario actualizado y comparable", styles["BodyCommercial"]),
+            Paragraph("Construye la base bruta mas amplia posible sin perder trazabilidad ni contexto comercial", styles["BodyCommercial"]),
+            Paragraph("Mantiene cobertura por fuente, barrio y fecha para sostener el inventario vivo", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Agente de validacion", styles["BodyCommercial"]),
-            Paragraph("Revisa duplicados, precios, barrio y coherencia", styles["BodyCommercial"]),
-            Paragraph("Reduce ruido y mejora la calidad del dato", styles["BodyCommercial"]),
+            Paragraph("Convierte registros fragmentados en una propiedad canonica unica y confiable", styles["BodyCommercial"]),
+            Paragraph("Reduce ruido, preserva la mejor evidencia y evita merges falsos", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Agente de reportes", styles["BodyCommercial"]),
-            Paragraph("Genera reportes semanales y resuelve distribucion", styles["BodyCommercial"]),
-            Paragraph("Convierte datos en entregables listos para el cliente", styles["BodyCommercial"]),
+            Paragraph("Traduce la base canonica en narrativa comercial util para cada nivel de decision", styles["BodyCommercial"]),
+            Paragraph("Convierte datos en entregables listos para CEO, directores y ejecutivos", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Agente de refresco", styles["BodyCommercial"]),
-            Paragraph("Ejecuta cron jobs de actualizacion de fuentes", styles["BodyCommercial"]),
-            Paragraph("Sostiene continuidad operativa sin trabajo manual", styles["BodyCommercial"]),
+            Paragraph("Mantiene la inteligencia actualizada y reevalua el mercado cuando cambia la evidencia", styles["BodyCommercial"]),
+            Paragraph("Reingesta, vuelve a puntuar y protege la vigencia del modelo", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Agente de monitoreo", styles["BodyCommercial"]),
-            Paragraph("Observa salud de fuentes, runs y anomalías", styles["BodyCommercial"]),
-            Paragraph("Permite reaccionar antes de que el pipeline se degrade", styles["BodyCommercial"]),
+            Paragraph("Vigila la salud operativa del sistema para evitar degradacion silenciosa del producto", styles["BodyCommercial"]),
+            Paragraph("Supervisa fuentes, runs y alertas para proteger inventario y reportes", styles["BodyCommercial"]),
         ],
     ]
 
@@ -452,7 +452,7 @@ def data_connections_page(styles):
         [
             Paragraph("Benchmark Portal", styles["BodyCommercial"]),
             Paragraph("/api/benchmarks/portal-inmobiliario", styles["BodyCommercial"]),
-            Paragraph("Actualiza referencia de precios y señales del mercado", styles["BodyCommercial"]),
+            Paragraph("Actualiza referencia de precios y senales del mercado", styles["BodyCommercial"]),
         ],
         [
             Paragraph("Benchmark externo", styles["BodyCommercial"]),
@@ -598,7 +598,7 @@ def draw_content_chrome(canvas_obj, doc):
     canvas_obj.drawRightString(
         width - doc.rightMargin,
         height - 0.35 * inch,
-        "N3uralia - Property Partners Vitacura",
+        "Property Partners - Property Partners Vitacura",
     )
     canvas_obj.setFont("Helvetica", 8)
     canvas_obj.setFillColor(colors.HexColor("#6e837c"))
@@ -666,6 +666,188 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     story.append(Spacer(1, 0.12 * inch))
     story.extend(
         text_page_story(
+            "Funcionalidades del sitio",
+            [
+                "La plataforma muestra en una sola experiencia el mapa de mercado, la ficha de cada propiedad, los reportes ejecutivos y la lectura de velocidad comercial para respaldar la venta.",
+                "Cada modulo esta pensado para facilitar una conversacion comercial clara, con informacion util para directores, vendedores y lideres de cuenta.",
+            ],
+            [
+                "Mapa interactivo por barrio y tipo de propiedad.",
+                "Ficha ejecutiva con aval?o, contribuciones e historial.",
+                "Reportes automaticos para seguimiento comercial.",
+                "Monitoreo de fuentes y salud operativa del pipeline.",
+                "Valorizador y metricas de mercado para apoyar pricing y relato comercial.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.12 * inch))
+    story.extend(
+        text_page_story(
+            "Agentes de la plataforma",
+            [
+                "Los agentes automatizan la captura, validacion y transformacion de datos para que el equipo comercial reciba una salida confiable y lista para usar.",
+                "Cada agente cumple un rol especifico dentro del pipeline y permite mantener continuidad sin depender de trabajo manual repetitivo.",
+            ],
+            [
+                "Agente de scraping: construye la base bruta con trazabilidad y cobertura por fuente.",
+                "Agente de validacion: convierte registros fragmentados en una propiedad canonica unica.",
+                "Agente de reportes: adapta la narrativa a CEO, directores y ejecutivos.",
+                "Agente de refresco: reingesta y vuelve a puntuar para mantener vigencia.",
+                "Agente de monitoreo: vigila salud operativa, cobertura y alertas para evitar degradacion silenciosa.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.12 * inch))
+    story.append(agent_table_page(styles))
+    story.append(PageBreak())
+
+    story.extend(
+        text_page_story(
+            "Entrega de reportes",
+            [
+                "La entrega de reportes esta pensada para distintos niveles comerciales, con una lectura distinta para cada perfil y un mismo origen de datos confiable.",
+                "El sistema consolida la informacion para que cada entrega llegue con contexto, foco comercial y narrativa clara.",
+            ],
+            [
+                "CEO: resumen consolidado, tendencias y alertas clave.",
+                "Directores de venta: rendimiento del equipo, pipeline y zonas prioritarias.",
+                "Ejecutivos de venta: propiedades, comparables y argumentos para el cliente.",
+                "Salida automatica por correo, enlace o canal definido por el cliente.",
+            ],
+            styles,
+        )
+    )
+    story.append(Spacer(1, 0.12 * inch))
+    story.append(report_flow_page(styles))
+    story.append(PageBreak())
+
+    screenshot_specs = [
+        (
+            "Dashboard comercial",
+            [
+                "Vista ejecutiva con indicadores clave para leer el negocio en pocos segundos.",
+                "Sirve para presentar el estado general de la plataforma, el inventario y el comportamiento del mercado.",
+            ],
+            [
+                "Resumen para direccion y equipo comercial.",
+                "Lectura rapida de volumen, cambios y alertas.",
+            ],
+            "panel principal",
+        ),
+        (
+            "Mapa de mercado",
+            [
+                "Mapa interactivo para explorar propiedades, filtros por comuna y la lectura visual de Vitacura.",
+                "La experiencia facilita comparar zonas y detectar oportunidades comerciales en un solo vistazo.",
+            ],
+            [
+                "Exploracion por barrio y tipo de propiedad.",
+                "Navegacion visual para reuniones comerciales.",
+            ],
+            "mapa interactivo",
+        ),
+        (
+            "Ficha de propiedad",
+            [
+                "Detalle comercial de cada propiedad con datos de ubicacion, avaluo, contribuciones y superficie.",
+                "Permite convertir una referencia catastral en una narrativa util para el cliente.",
+            ],
+            [
+                "Ficha ejecutiva por propiedad.",
+                "Datos listos para explicar valor y contexto.",
+            ],
+            "detalle de propiedad",
+        ),
+        (
+            "Velocidad comercial",
+            [
+                "Panel orientado a entender la velocidad de venta, la actividad y la presion comercial por barrio.",
+                "Ayuda a priorizar conversaciones con mayor sentido de urgencia o mejor ventana de cierre.",
+            ],
+            [
+                "Seguimiento de dinamica de ventas.",
+                "Lectura de tendencia para el equipo comercial.",
+            ],
+            "velocidad de mercado",
+        ),
+        (
+            "Control operativo",
+            [
+                "Vista de control para revisar salud del sistema, fuentes activas y eventos relevantes del pipeline.",
+                "Da visibilidad de la operacion sin obligar al cliente a entrar a pantallas tecnicas.",
+            ],
+            [
+                "Monitoreo operativo simplificado.",
+                "Seguimiento de alertas y estado de fuentes.",
+            ],
+            "control operativo",
+        ),
+        (
+            "Valorizador comercial",
+            [
+                "Modulo que traduce la informacion de mercado en una estimacion util para conversar con clientes y prospectos.",
+                "Apoya la argumentacion comercial con referencias concretas y ordenadas.",
+            ],
+            [
+                "Apoyo para pricing y presentacion comercial.",
+                "Base para explicar valor de forma consistente.",
+            ],
+            "valorizador",
+        ),
+        (
+            "Inventario de propiedades",
+            [
+                "Tabla operativa para revisar propiedades cargadas, comparar atributos y validar consistencia del inventario.",
+                "Es la base para el trabajo comercial diario y para detectar cambios relevantes a tiempo.",
+            ],
+            [
+                "Listado de propiedades y comparables.",
+                "Apoyo para revision interna y seguimiento.",
+            ],
+            "inventario de propiedades",
+        ),
+        (
+            "Fuentes de datos",
+            [
+                "Panel de origen de datos y estado del scraping, para mostrar trazabilidad y continuidad en la captura de informacion.",
+                "Permite explicar al cliente de donde sale la data y como se mantiene actualizada.",
+            ],
+            [
+                "Trazabilidad y control de fuentes.",
+                "Base para sostener reportes confiables.",
+            ],
+            "fuentes y scraping",
+        ),
+        (
+            "Flujo de reportes",
+            [
+                "Vista del recorrido completo: captura, validacion, analisis, redaccion y distribucion del reporte.",
+                "Sirve para mostrar como Property Partners transforma data en entregables listos para usar.",
+            ],
+            [
+                "Proceso comercial de punta a punta.",
+                "Salida lista para directores, vendedores y CEO.",
+            ],
+            "flujo de entrega",
+        ),
+    ]
+
+    for image_path, (title, paragraphs, bullets, caption) in zip(image_paths, screenshot_specs, strict=False):
+        story.extend(
+            image_page_story(
+                title,
+                paragraphs,
+                bullets,
+                image_path,
+                f"Captura de referencia: {caption}.",
+                styles,
+            )
+        )
+
+    story.extend(
+        text_page_story(
             "Inversion y condiciones comerciales",
             [
                 "La propuesta se presenta con una inversion cerrada y facil de explicar, alineada con el alcance comercial y el tipo de entrega esperado para Property Partners Vitacura.",
@@ -699,14 +881,14 @@ def build_story(image_paths: list[Path], styles, logo_image_path: Path):
     )
     story.append(
         Paragraph(
-            "Agradecemos la oportunidad de presentar esta propuesta. N3uralia queda disponible para coordinar la validacion, el kickoff y el inicio del trabajo una vez aprobado el alcance.",
+            "Agradecemos la oportunidad de presentar esta propuesta. Property Partners queda disponible para coordinar la validacion, el kickoff y el inicio del trabajo una vez aprobado el alcance.",
             styles["BodyCommercial"],
         )
     )
     story.append(Spacer(1, 0.12 * inch))
     story.append(Paragraph("Datos de contacto", styles["RoadmapTitle"]))
     story.append(Paragraph("Juan Vial Comber", styles["BodyCommercial"]))
-    story.append(Paragraph("CEO de N3uralia", styles["BodyCommercial"]))
+    story.append(Paragraph("CEO de Property Partners", styles["BodyCommercial"]))
     story.append(Paragraph("juan@n3uralia.com", styles["BodyCommercial"]))
     story.append(Paragraph("WhatsApp: +56 9 9382 6127", styles["BodyCommercial"]))
 
@@ -732,7 +914,8 @@ def build_pdf() -> None:
         global RENDER_LOGO_PATH
         RENDER_LOGO_PATH = render_logo_path
 
-        story = build_story([], styles, render_logo_path)
+        image_paths = extract_images(SOURCE_PDF, temp_dir)
+        story = build_story(image_paths, styles, render_logo_path)
 
         tmp_pdf = temp_dir / REPORT_FILENAME
         doc = SimpleDocTemplate(
@@ -756,3 +939,4 @@ def build_pdf() -> None:
 
 if __name__ == "__main__":
     build_pdf()
+

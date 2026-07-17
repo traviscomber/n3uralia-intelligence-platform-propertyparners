@@ -37,47 +37,15 @@ function scoreTone(status: 'good' | 'warning' | 'critical' | 'inactive') {
   if (status === 'good') return '#16a34a'
   if (status === 'warning') return '#d97706'
   if (status === 'critical') return '#dc2626'
-  return '#9ca9a3'
+  return '#6b7280'
 }
 
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
-  const directorScorecard = useMemo(() => {
-    const conversionScore = clampScore(Math.round(totals.conversion * 7))
-    const pipelineCoverage = clampScore(Math.round((totals.ventas / Math.max(1, totals.target)) * 300))
-    const followupCompletion = clampScore(Math.max(0, 100 - activities.length * 12))
-
-    const states = PP_SCORECARD_DEFINITIONS.director.map((definition) => {
-      const current =
-        definition.id === 'team-conversion'
-          ? conversionScore
-          : definition.id === 'pipeline-coverage'
-            ? pipelineCoverage
-            : definition.id === 'followup-completion'
-              ? followupCompletion
-              : null
-
-      return {
-        definition,
-        current,
-        status: assessMetricStatus(current, definition),
-      }
-    })
-
-    const values = states.map((item) => item.current).filter((value): value is number => value !== null)
-    const overall = values.length ? clampScore(values.reduce((sum, value) => sum + value, 0) / values.length) : null
-
-    return {
-      overall,
-      states,
-      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
-    }
-  }, [activities.length, totals.conversion, totals.target, totals.ventas])
-
   return (
     <div className="bg-white rounded-lg p-5 flex flex-col gap-1" style={{ border: '1px solid #e8f0ed', borderLeft: `3px solid ${border}` }}>
-      <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: '#9ca9a3' }}>{label}</span>
-      <span className="text-2xl font-bold tracking-tight" style={{ color: '#173634' }}>{value}</span>
-      {sub && <span className="text-xs" style={{ color: '#b89a7e' }}>{sub}</span>}
+      <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: '#6b7280' }}>{label}</span>
+      <span className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>{value}</span>
+      {sub && <span className="text-xs" style={{ color: '#6b7280' }}>{sub}</span>}
     </div>
   )
 }
@@ -171,9 +139,40 @@ export default function DirectorDashboard() {
   }, [])
 
   const pctCumpl = totals.target > 0 ? Math.round((totals.ventas / totals.target) * 100) : 0
+  const directorScorecard = useMemo(() => {
+    const conversionScore = clampScore(Math.round(totals.conversion * 7))
+    const pipelineCoverage = clampScore(Math.round((totals.ventas / Math.max(1, totals.target)) * 300))
+    const followupCompletion = clampScore(Math.max(0, 100 - activities.length * 12))
+
+    const states = PP_SCORECARD_DEFINITIONS.director.map((definition) => {
+      const current =
+        definition.id === 'team-conversion'
+          ? conversionScore
+          : definition.id === 'pipeline-coverage'
+            ? pipelineCoverage
+            : definition.id === 'followup-completion'
+              ? followupCompletion
+              : null
+
+      return {
+        definition,
+        current,
+        status: assessMetricStatus(current, definition),
+      }
+    })
+
+    const values = states.map((item) => item.current).filter((value): value is number => value !== null)
+    const overall = values.length ? clampScore(values.reduce((sum, value) => sum + value, 0) / values.length) : null
+
+    return {
+      overall,
+      states,
+      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
+    }
+  }, [activities.length, totals.conversion, totals.target, totals.ventas])
 
   const ACTIVITY_ICONS: Record<string, string> = { llamada: '📞', visita: '🏠', oferta: '📄', cierre: '✍️' }
-  const ACTIVITY_COLORS: Record<string, string> = { llamada: '#8fb2aa', visita: '#b89a7e', oferta: '#0ea5e9', cierre: '#10b981' }
+  const ACTIVITY_COLORS: Record<string, string> = { llamada: '#d61f2c', visita: '#6b7280', oferta: '#0ea5e9', cierre: '#d61f2c' }
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
@@ -181,23 +180,23 @@ export default function DirectorDashboard() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#b89a7e', color: '#fff' }}>Director</span>
-            {director?.team && <span className="text-xs font-medium" style={{ color: '#8fb2aa' }}>{director.team}</span>}
+            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#6b7280', color: '#fff' }}>Director</span>
+            {director?.team && <span className="text-xs font-medium" style={{ color: '#d61f2c' }}>{director.team}</span>}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#173634' }}>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>
             {loading ? 'Cargando...' : director?.full_name || 'Juan Morales'}
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Panel de tu equipo · {agents.length} agentes activos</p>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel de tu equipo · {agents.length} agentes activos</p>
         </div>
         <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-3" style={{ border: '1px solid #e8f0ed' }}>
           <div className="text-right">
-            <div className="text-[11px] uppercase tracking-wider" style={{ color: '#9ca9a3' }}>Cumpl. 6 meses</div>
-            <div className="text-xl font-bold" style={{ color: pctCumpl >= 90 ? '#10b981' : pctCumpl >= 70 ? '#f59e0b' : '#d97706' }}>{pctCumpl}%</div>
+            <div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b7280' }}>Cumpl. 6 meses</div>
+            <div className="text-xl font-bold" style={{ color: pctCumpl >= 90 ? '#d61f2c' : pctCumpl >= 70 ? '#f59e0b' : '#d97706' }}>{pctCumpl}%</div>
           </div>
           <div className="w-12 h-12 relative">
             <svg viewBox="0 0 36 36" className="w-12 h-12 -rotate-90">
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f0f5f3" strokeWidth="3.8" />
-              <circle cx="18" cy="18" r="15.9" fill="none" stroke={pctCumpl >= 90 ? '#10b981' : pctCumpl >= 70 ? '#f59e0b' : '#d97706'} strokeWidth="3.8" strokeDasharray={`${Math.min(pctCumpl, 100)} 100`} strokeLinecap="round" />
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke={pctCumpl >= 90 ? '#d61f2c' : pctCumpl >= 70 ? '#f59e0b' : '#d97706'} strokeWidth="3.8" strokeDasharray={`${Math.min(pctCumpl, 100)} 100`} strokeLinecap="round" />
             </svg>
           </div>
         </div>
@@ -205,10 +204,10 @@ export default function DirectorDashboard() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Ventas equipo" value={String(totals.ventas)} sub="propiedades cerradas (6m)" border="#8fb2aa" />
-        <KpiCard label="UF vendidas"   value={`${(totals.uf/1000).toFixed(0)}K`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#b89a7e" />
-        <KpiCard label="Conversión"    value={`${totals.conversion}%`} sub="leads → cierre promedio" border="#10b981" />
-        <KpiCard label="Comisión eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#173634" />
+        <KpiCard label="Ventas equipo" value={String(totals.ventas)} sub="propiedades cerradas (6m)" border="#d61f2c" />
+        <KpiCard label="UF vendidas"   value={`${(totals.uf/1000).toFixed(0)}K`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#6b7280" />
+        <KpiCard label="Conversión"    value={`${totals.conversion}%`} sub="leads → cierre promedio" border="#d61f2c" />
+        <KpiCard label="Comisión eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#111111" />
       </div>
 
       {/* Director Scorecard */}
@@ -216,27 +215,27 @@ export default function DirectorDashboard() {
         <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Score de gestión</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Lectura operativa del equipo y su disciplina comercial</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score de gestión</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Lectura operativa del equipo y su disciplina comercial</p>
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold" style={{ color: directorScorecard.overall !== null && directorScorecard.overall >= 80 ? '#16a34a' : directorScorecard.overall !== null && directorScorecard.overall >= 65 ? '#d97706' : '#dc2626' }}>
                 {directorScorecard.overall === null ? '—' : directorScorecard.overall}
               </div>
-              <div className="text-[11px]" style={{ color: '#9ca9a3' }}>{directorScorecard.trend}</div>
+              <div className="text-[11px]" style={{ color: '#6b7280' }}>{directorScorecard.trend}</div>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {directorScorecard.states.map(({ definition, current, status }) => (
               <div key={definition.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>{definition.label}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>{definition.label}</span>
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(status) }} />
                 </div>
-                <div className="text-lg font-bold" style={{ color: '#173634' }}>
+                <div className="text-lg font-bold" style={{ color: '#111111' }}>
                   {current === null ? '—' : `${current}${definition.unit ? definition.unit : ''}`}
                 </div>
-                <div className="text-[11px] leading-snug mt-1" style={{ color: '#9ca9a3' }}>{definition.note}</div>
+                <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{definition.note}</div>
               </div>
             ))}
           </div>
@@ -245,25 +244,25 @@ export default function DirectorDashboard() {
         <div className="col-span-3 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Métricas del director</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Definición, umbral y cadencia para el equipo</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas del director</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Definición, umbral y cadencia para el equipo</p>
             </div>
-            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#8fb2aa' }}>Vitacura ventas</span>
+            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#d61f2c' }}>Vitacura ventas</span>
           </div>
           <div className="space-y-3">
             {PP_SCORECARD_DEFINITIONS.director.map((metric) => (
               <div key={metric.id} className="rounded-lg p-3" style={{ background: '#fbfbfa', border: '1px solid #edf4f1' }}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-[13px] font-semibold" style={{ color: '#173634' }}>{metric.label}</div>
-                    <div className="text-[11px] mt-0.5" style={{ color: '#9ca9a3' }}>{metric.formula}</div>
+                    <div className="text-[13px] font-semibold" style={{ color: '#111111' }}>{metric.label}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>{metric.formula}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[11px] font-medium" style={{ color: '#173634' }}>{metric.cadence}</div>
-                    <div className="text-[11px]" style={{ color: '#9ca9a3' }}>Owner: {metric.owner}</div>
+                    <div className="text-[11px] font-medium" style={{ color: '#111111' }}>{metric.cadence}</div>
+                    <div className="text-[11px]" style={{ color: '#6b7280' }}>Owner: {metric.owner}</div>
                   </div>
                 </div>
-                <div className="text-[11px] mt-2" style={{ color: '#b89a7e' }}>{metric.threshold}</div>
+                <div className="text-[11px] mt-2" style={{ color: '#6b7280' }}>{metric.threshold}</div>
               </div>
             ))}
           </div>
@@ -275,14 +274,14 @@ export default function DirectorDashboard() {
         {/* Agents */}
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Mi Equipo de Agentes</h2>
-            <span className="text-xs" style={{ color: '#9ca9a3' }}>6 meses · {agents.length} agentes</span>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Mi Equipo de Agentes</h2>
+            <span className="text-xs" style={{ color: '#6b7280' }}>6 meses · {agents.length} agentes</span>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: '#f8fbfa' }}>
                 {['Agente','Ventas','Captac.','Conv.','Veloc.','Estado'].map(h => (
-                  <th key={h} className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider ${h === 'Agente' ? 'text-left' : 'text-right'}`} style={{ color: '#9ca9a3' }}>{h}</th>
+                  <th key={h} className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider ${h === 'Agente' ? 'text-left' : 'text-right'}`} style={{ color: '#6b7280' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -293,14 +292,14 @@ export default function DirectorDashboard() {
                   <tr key={a.id} style={{ borderTop: '1px solid #f0f5f3' }}>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: '#f0f7f4', color: '#8fb2aa' }}>{a.name.charAt(0)}</div>
-                        <span className="text-[13px] font-medium" style={{ color: '#173634' }}>{a.name}</span>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: '#f0f7f4', color: '#d61f2c' }}>{a.name.charAt(0)}</div>
+                        <span className="text-[13px] font-medium" style={{ color: '#111111' }}>{a.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px] font-semibold" style={{ color: '#173634' }}>{a.ventas}</span></td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#555a56' }}>{a.captaciones}</span></td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#555a56' }}>{a.conversion}%</span></td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#555a56' }}>{a.velocidad}d</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px] font-semibold" style={{ color: '#111111' }}>{a.ventas}</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#374151' }}>{a.captaciones}</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#374151' }}>{a.conversion}%</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#374151' }}>{a.velocidad}d</span></td>
                     <td className="px-4 py-3.5 text-right">
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>
                     </td>
@@ -314,23 +313,23 @@ export default function DirectorDashboard() {
         {/* Trend chart */}
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Ventas vs Target</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Equipo · últimos 6 meses</p>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas vs Target</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Equipo · últimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">
             <ResponsiveContainer width="100%" height={190}>
               <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" />
-                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
-                <Line type="monotone" dataKey="ventas" stroke="#8fb2aa" strokeWidth={2.5} dot={{ fill: '#8fb2aa', r: 4 }} name="Ventas" />
-                <Line type="monotone" dataKey="target" stroke="#d8e5e2" strokeWidth={1.5} strokeDasharray="4 3" dot={false} name="Target" />
+                <Line type="monotone" dataKey="ventas" stroke="#d61f2c" strokeWidth={2.5} dot={{ fill: '#d61f2c', r: 4 }} name="Ventas" />
+                <Line type="monotone" dataKey="target" stroke="#e5e7eb" strokeWidth={1.5} strokeDasharray="4 3" dot={false} name="Target" />
               </LineChart>
             </ResponsiveContainer>
             <div className="flex gap-4 mt-1 justify-center">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: '#8fb2aa' }} /><span className="text-[11px]" style={{ color: '#9ca9a3' }}>Ventas</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-0.5" style={{ background: '#d8e5e2' }} /><span className="text-[11px]" style={{ color: '#9ca9a3' }}>Target</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: '#d61f2c' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Ventas</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-0.5" style={{ background: '#e5e7eb' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Target</span></div>
             </div>
           </div>
         </div>
@@ -339,11 +338,11 @@ export default function DirectorDashboard() {
       {/* Activities Pending */}
       <div className="bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
         <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-          <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Actividades Pendientes del Equipo</h2>
-          <span className="text-xs" style={{ color: '#9ca9a3' }}>{activities.length} pendientes hoy</span>
+          <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Actividades Pendientes del Equipo</h2>
+          <span className="text-xs" style={{ color: '#6b7280' }}>{activities.length} pendientes hoy</span>
         </div>
         {activities.length === 0 ? (
-          <div className="px-5 py-8 text-center"><p className="text-xs" style={{ color: '#9ca9a3' }}>Sin actividades pendientes.</p></div>
+          <div className="px-5 py-8 text-center"><p className="text-xs" style={{ color: '#6b7280' }}>Sin actividades pendientes.</p></div>
         ) : (
           <div className="grid grid-cols-2 gap-0">
             {activities.map((act, i) => (
@@ -354,10 +353,10 @@ export default function DirectorDashboard() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[11px] font-semibold capitalize" style={{ color: ACTIVITY_COLORS[act.activity_type] }}>{act.activity_type}</span>
-                    {act.scheduled_at && <span className="text-[10px]" style={{ color: '#9ca9a3' }}>{new Date(act.scheduled_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>}
+                    {act.scheduled_at && <span className="text-[10px]" style={{ color: '#6b7280' }}>{new Date(act.scheduled_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>}
                   </div>
-                  <p className="text-[12px] leading-snug truncate" style={{ color: '#173634' }}>{act.description || '—'}</p>
-                  {act.value_uf && <span className="text-[11px]" style={{ color: '#9ca9a3' }}>{fmt(act.value_uf)} UF</span>}
+                  <p className="text-[12px] leading-snug truncate" style={{ color: '#111111' }}>{act.description || '—'}</p>
+                  {act.value_uf && <span className="text-[11px]" style={{ color: '#6b7280' }}>{fmt(act.value_uf)} UF</span>}
                 </div>
               </div>
             ))}
@@ -367,3 +366,4 @@ export default function DirectorDashboard() {
     </div>
   )
 }
+

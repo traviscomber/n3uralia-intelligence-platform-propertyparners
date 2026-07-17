@@ -134,10 +134,10 @@ export default function DeliveryTelemetryPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
+      <div className="rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+            <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
               Resumen ejecutivo
             </p>
             <p className="mt-2 text-sm font-medium text-gray-900">Telemetria de entregas</p>
@@ -147,20 +147,20 @@ export default function DeliveryTelemetryPanel() {
           </div>
           {summary && (
             <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-              <div className="rounded-2xl border px-3 py-2" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
-                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+              <div className="rounded-2xl border px-3 py-2" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
+                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
                   Exito reciente
                 </p>
                 <p className="mt-1 text-sm font-semibold text-gray-900">{summary.recentSuccessRate}%</p>
               </div>
-              <div className="rounded-2xl border px-3 py-2" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
-                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+              <div className="rounded-2xl border px-3 py-2" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
+                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
                   Ultimo envio
                 </p>
                 <p className="mt-1 text-sm font-semibold text-gray-900">{formatDate(summary.lastSentAt)}</p>
               </div>
-              <div className="rounded-2xl border px-3 py-2" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
-                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+              <div className="rounded-2xl border px-3 py-2" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
+                <p className="text-[10px] uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
                   Registro total
                 </p>
                 <p className="mt-1 text-sm font-semibold text-gray-900">{formatNumber(summary.total)}</p>
@@ -175,7 +175,7 @@ export default function DeliveryTelemetryPanel() {
           value={reportType}
           onChange={(e) => setReportType(e.target.value)}
           className="rounded-lg border px-3 py-2 text-sm"
-          style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+          style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
         >
           {reportTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -187,7 +187,7 @@ export default function DeliveryTelemetryPanel() {
           value={status}
           onChange={(e) => setStatus(e.target.value)}
           className="rounded-lg border px-3 py-2 text-sm"
-          style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+          style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
         >
           {statusOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -199,7 +199,7 @@ export default function DeliveryTelemetryPanel() {
           value={channel}
           onChange={(e) => setChannel(e.target.value)}
           className="rounded-lg border px-3 py-2 text-sm"
-          style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+          style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
         >
           {channelOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -212,7 +212,7 @@ export default function DeliveryTelemetryPanel() {
           onClick={() => void loadTelemetry()}
           disabled={refreshing}
           className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          style={{ background: '#8fb2aa' }}
+          style={{ background: '#d61f2c' }}
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           {refreshing ? 'Actualizando' : 'Refrescar'}
@@ -231,12 +231,12 @@ export default function DeliveryTelemetryPanel() {
           ].map((item) => {
             const Icon = item.icon
             return (
-              <div key={item.label} className="rounded-2xl border p-3" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
+              <div key={item.label} className="rounded-2xl border p-3" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+                  <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
                     {item.label}
                   </p>
-                  <Icon size={14} style={{ color: '#8fb2aa' }} />
+                  <Icon size={14} style={{ color: '#d61f2c' }} />
                 </div>
                 <p className="mt-2 text-2xl font-semibold text-gray-900">{formatNumber(item.value)}</p>
               </div>
@@ -247,20 +247,20 @@ export default function DeliveryTelemetryPanel() {
 
       {summary && (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <div className="rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
-            <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <div className="rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
+            <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
               Ultimo envio
             </p>
             <p className="mt-2 text-sm font-semibold text-gray-900">{formatDate(summary.lastSentAt)}</p>
           </div>
-          <div className="rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
-            <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <div className="rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
+            <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
               Ultima entrada
             </p>
             <p className="mt-2 text-sm font-semibold text-gray-900">{formatDate(summary.latestCreatedAt)}</p>
           </div>
-          <div className="rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
-            <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <div className="rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
+            <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
               Tasa reciente
             </p>
             <p className="mt-2 text-sm font-semibold text-gray-900">{summary.recentSuccessRate}%</p>
@@ -269,8 +269,8 @@ export default function DeliveryTelemetryPanel() {
       )}
 
       {summary?.byReportType?.length ? (
-        <div className="rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
-          <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+        <div className="rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
+          <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Mix por tipo de reporte
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -278,7 +278,7 @@ export default function DeliveryTelemetryPanel() {
               <span
                 key={item.report_type}
                 className="rounded-full border px-3 py-1 text-xs font-medium"
-                style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#555a56' }}
+                style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
               >
                 {formatLabel(item.report_type)} · {formatNumber(item.count)}
               </span>
@@ -288,8 +288,8 @@ export default function DeliveryTelemetryPanel() {
       ) : null}
 
       {summary?.byStatus?.length ? (
-        <div className="rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
-          <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+        <div className="rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
+          <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Mix por estado
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -297,7 +297,7 @@ export default function DeliveryTelemetryPanel() {
               <span
                 key={item.status}
                 className="rounded-full border px-3 py-1 text-xs font-medium"
-                style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#555a56' }}
+                style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
               >
                 {formatLabel(item.status)} · {formatNumber(item.count)}
               </span>
@@ -307,8 +307,8 @@ export default function DeliveryTelemetryPanel() {
       ) : null}
 
       {summary?.byChannel?.length ? (
-        <div className="rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
-          <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+        <div className="rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
+          <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Mix por canal
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -316,7 +316,7 @@ export default function DeliveryTelemetryPanel() {
               <span
                 key={item.channel}
                 className="rounded-full border px-3 py-1 text-xs font-medium"
-                style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#555a56' }}
+                style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
               >
                 {formatLabel(item.channel)} · {formatNumber(item.count)}
               </span>
@@ -347,12 +347,12 @@ export default function DeliveryTelemetryPanel() {
               <div
                 key={delivery.id}
                 className="flex flex-col gap-3 rounded-2xl border p-4 md:flex-row md:items-center md:justify-between"
-                style={{ borderColor: '#d8e5e2', background: '#fff' }}
+                style={{ borderColor: '#e5e7eb', background: '#fff' }}
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold text-gray-900">{formatLabel(delivery.report_type)}</p>
-                    <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em]" style={{ background: '#e8f3f0', color: '#555a56' }}>
+                    <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em]" style={{ background: '#f9fafb', color: '#374151' }}>
                       {delivery.channel}
                     </span>
                     <span
@@ -374,7 +374,7 @@ export default function DeliveryTelemetryPanel() {
                   {delivery.subject && <p className="mt-1 text-xs text-gray-500">{delivery.subject}</p>}
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                     {attempts && (
-                      <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
+                      <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
                         <Clock3 size={12} />
                         {attempts}
                       </span>
@@ -392,7 +392,7 @@ export default function DeliveryTelemetryPanel() {
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium md:self-start"
-                    style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#555a56' }}
+                    style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
                   >
                     {delivery.channel === 'whatsapp_web'
                       ? 'Abrir WhatsApp Web'
@@ -411,3 +411,4 @@ export default function DeliveryTelemetryPanel() {
     </div>
   )
 }
+

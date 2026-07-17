@@ -114,13 +114,13 @@ export default function ReportDeliveryTargetsManager() {
           onChange={(e) => setForm({ ...form, label: e.target.value })}
           placeholder="Nombre del destinatario"
           className="rounded-lg border px-3 py-2 text-sm text-gray-900"
-          style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
+          style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}
         />
         <select
           value={form.channel}
           onChange={(e) => setForm({ ...form, channel: e.target.value as 'email' | 'whatsapp_web' | 'webhook' })}
           className="rounded-lg border px-3 py-2 text-sm text-gray-900"
-          style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
+          style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}
         >
           <option value="email">Correo</option>
           <option value="whatsapp_web">WhatsApp Web</option>
@@ -131,14 +131,14 @@ export default function ReportDeliveryTargetsManager() {
           onChange={(e) => setForm({ ...form, recipient: e.target.value })}
           placeholder={form.channel === 'email' ? 'correo@empresa.com' : form.channel === 'whatsapp_web' ? '+56912345678' : 'https://hooks.example.com/report'}
           className="rounded-lg border px-3 py-2 text-sm text-gray-900 md:col-span-2"
-          style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
+          style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}
         />
         <input
           value={form.notes || ''}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           placeholder="Notas opcionales"
           className="rounded-lg border px-3 py-2 text-sm text-gray-900 md:col-span-2"
-          style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
+          style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}
         />
       </div>
 
@@ -147,7 +147,7 @@ export default function ReportDeliveryTargetsManager() {
           onClick={() => void handleCreate()}
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          style={{ background: '#8fb2aa' }}
+          style={{ background: '#d61f2c' }}
         >
           <Plus size={14} />
           {saving ? 'Guardando...' : 'Agregar destinatario'}
@@ -156,7 +156,7 @@ export default function ReportDeliveryTargetsManager() {
           onClick={() => void loadTargets()}
           disabled={refreshing}
           className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold"
-          style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
+          style={{ borderColor: '#e5e7eb', background: '#fff', color: '#374151' }}
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           Refrescar
@@ -168,27 +168,27 @@ export default function ReportDeliveryTargetsManager() {
 
       <div className="space-y-2">
         {loading ? (
-          <p className="text-sm" style={{ color: '#9ca9a3' }}>Cargando destinatarios...</p>
+          <p className="text-sm" style={{ color: '#6b7280' }}>Cargando destinatarios...</p>
         ) : targets.length ? (
           targets.map((target) => (
-            <div key={target.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
+            <div key={target.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
               <div>
                 <p className="font-semibold text-gray-900">{target.label}</p>
-                <p className="text-sm" style={{ color: '#555a56' }}>{target.channel} · {target.recipient}</p>
-                {target.notes && <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>{target.notes}</p>}
+                <p className="text-sm" style={{ color: '#374151' }}>{target.channel} · {target.recipient}</p>
+                {target.notes && <p className="text-xs mt-1" style={{ color: '#6b7280' }}>{target.notes}</p>}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => void handleToggle(target, 'active')}
                   className="rounded-md px-3 py-1.5 text-xs font-medium"
-                  style={{ background: target.active ? '#e8f3f0' : '#fef2f2', color: target.active ? '#166534' : '#991b1b' }}
+                  style={{ background: target.active ? '#f9fafb' : '#fef2f2', color: target.active ? '#166534' : '#991b1b' }}
                 >
                   {target.active ? 'Activo' : 'Inactivo'}
                 </button>
                 <button
                   onClick={() => void handleToggle(target, 'notify_weekly')}
                   className="rounded-md px-3 py-1.5 text-xs font-medium"
-                  style={{ background: target.notify_weekly ? '#e8f3f0' : '#f5f9f7', color: target.notify_weekly ? '#166534' : '#555a56' }}
+                  style={{ background: target.notify_weekly ? '#f9fafb' : '#f9fafb', color: target.notify_weekly ? '#166534' : '#374151' }}
                 >
                   {target.notify_weekly ? 'Incluido semanal' : 'Excluido semanal'}
                 </button>
@@ -204,9 +204,10 @@ export default function ReportDeliveryTargetsManager() {
             </div>
           ))
         ) : (
-          <p className="text-sm" style={{ color: '#9ca9a3' }}>Todavía no hay destinatarios configurados.</p>
+          <p className="text-sm" style={{ color: '#6b7280' }}>Todavía no hay destinatarios configurados.</p>
         )}
       </div>
     </div>
   )
 }
+

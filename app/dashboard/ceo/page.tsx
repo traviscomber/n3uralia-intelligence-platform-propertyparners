@@ -29,18 +29,18 @@ function fmt(n: number) {
 }
 
 function scoreTone(status: 'good' | 'warning' | 'critical' | 'inactive') {
-  if (status === 'good') return '#10b981'
+  if (status === 'good') return '#d61f2c'
   if (status === 'warning') return '#f59e0b'
   if (status === 'critical') return '#ef4444'
-  return '#9ca9a3'
+  return '#6b7280'
 }
 
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
   return (
     <div className="bg-white rounded-lg p-5 flex flex-col gap-1" style={{ border: '1px solid #e8f0ed', borderLeft: `3px solid ${border}` }}>
-      <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: '#9ca9a3' }}>{label}</span>
-      <span className="text-2xl font-bold tracking-tight" style={{ color: '#173634' }}>{value}</span>
-      {sub && <span className="text-xs" style={{ color: '#b89a7e' }}>{sub}</span>}
+      <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: '#6b7280' }}>{label}</span>
+      <span className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>{value}</span>
+      {sub && <span className="text-xs" style={{ color: '#6b7280' }}>{sub}</span>}
     </div>
   )
 }
@@ -116,7 +116,7 @@ export default function CeoDashboard() {
   }, [])
 
   const dirKeys  = directors.map(d => d.name.split(' ')[0])
-  const dirColors = ['#8fb2aa', '#b89a7e', '#10b981']
+  const dirColors = ['#d61f2c', '#6b7280', '#d61f2c']
   const executiveMetrics = PP_SCORECARD_DEFINITIONS.ceo
   const executiveStates = useMemo(() => {
     const totalTargets = directors.reduce((sum, d) => sum + d.target, 0) || 1
@@ -159,24 +159,24 @@ export default function CeoDashboard() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#173634', color: '#8fb2aa' }}>CEO</span>
-            <span className="text-xs" style={{ color: '#9ca9a3' }}>Vista Ejecutiva</span>
+            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#111111', color: '#d61f2c' }}>CEO</span>
+            <span className="text-xs" style={{ color: '#6b7280' }}>Vista Ejecutiva</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#173634' }}>Panel de Comando</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Resumen global del negocio · {loading ? 'Cargando...' : 'Actualizado ahora'}</p>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>Panel de Comando</h1>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Resumen global del negocio · {loading ? 'Cargando...' : 'Actualizado ahora'}</p>
         </div>
         <div className="text-right">
-          <div className="text-xs" style={{ color: '#9ca9a3' }}>Acumulado 6 meses</div>
-          <div className="text-sm font-semibold" style={{ color: '#173634' }}>{new Date().toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}</div>
+          <div className="text-xs" style={{ color: '#6b7280' }}>Acumulado 6 meses</div>
+          <div className="text-sm font-semibold" style={{ color: '#111111' }}>{new Date().toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}</div>
         </div>
       </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Ventas totales"     value={fmt(totals.ventas)}           sub="propiedades cerradas (6m)"  border="#8fb2aa" />
-        <KpiCard label="UF vendidas"        value={`${(totals.uf/1000).toFixed(0)}K UF`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#b89a7e" />
-        <KpiCard label="Comisión acumulada" value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP comisión total" border="#10b981" />
-        <KpiCard label="Conversión global"  value={`${totals.conversion}%`}      sub="leads → cierre promedio"   border="#173634" />
+        <KpiCard label="Ventas totales"     value={fmt(totals.ventas)}           sub="propiedades cerradas (6m)"  border="#d61f2c" />
+        <KpiCard label="UF vendidas"        value={`${(totals.uf/1000).toFixed(0)}K UF`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#6b7280" />
+        <KpiCard label="Comisión acumulada" value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP comisión total" border="#d61f2c" />
+        <KpiCard label="Conversión global"  value={`${totals.conversion}%`}      sub="leads → cierre promedio"   border="#111111" />
       </div>
 
       {/* Executive Scorecard */}
@@ -184,27 +184,27 @@ export default function CeoDashboard() {
         <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Score ejecutivo</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Lectura profesional para CEO y directorio</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score ejecutivo</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Lectura profesional para CEO y directorio</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold" style={{ color: executiveStates.score >= 80 ? '#10b981' : executiveStates.score >= 65 ? '#f59e0b' : '#ef4444' }}>
+              <div className="text-3xl font-bold" style={{ color: executiveStates.score >= 80 ? '#d61f2c' : executiveStates.score >= 65 ? '#f59e0b' : '#ef4444' }}>
                 {executiveStates.score}
               </div>
-              <div className="text-[11px]" style={{ color: '#9ca9a3' }}>{executiveStates.trend}</div>
+              <div className="text-[11px]" style={{ color: '#6b7280' }}>{executiveStates.trend}</div>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {executiveStates.states.map(metric => (
               <div key={metric.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>{metric.label}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>{metric.label}</span>
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(metric.status) }} />
                 </div>
-                <div className="text-lg font-bold" style={{ color: '#173634' }}>
+                <div className="text-lg font-bold" style={{ color: '#111111' }}>
                   {metric.current === null ? '—' : metric.unit ? `${metric.current}${metric.unit}` : metric.current}
                 </div>
-                <div className="text-[11px] leading-snug mt-1" style={{ color: '#9ca9a3' }}>{metric.note}</div>
+                <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{metric.note}</div>
               </div>
             ))}
           </div>
@@ -213,25 +213,25 @@ export default function CeoDashboard() {
         <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Métricas CEO</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Umbrales, cadencia y responsables</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas CEO</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Umbrales, cadencia y responsables</p>
             </div>
-            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#8fb2aa' }}>Vitacura ventas</span>
+            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#d61f2c' }}>Vitacura ventas</span>
           </div>
           <div className="space-y-3">
             {executiveMetrics.map(metric => (
               <div key={metric.id} className="rounded-lg p-3" style={{ background: '#fbfbfa', border: '1px solid #edf4f1' }}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-[13px] font-semibold" style={{ color: '#173634' }}>{metric.label}</div>
-                    <div className="text-[11px] mt-0.5" style={{ color: '#9ca9a3' }}>{metric.formula}</div>
+                    <div className="text-[13px] font-semibold" style={{ color: '#111111' }}>{metric.label}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>{metric.formula}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[11px] font-medium" style={{ color: '#173634' }}>{metric.cadence}</div>
-                    <div className="text-[11px]" style={{ color: '#9ca9a3' }}>Owner: {metric.owner}</div>
+                    <div className="text-[11px] font-medium" style={{ color: '#111111' }}>{metric.cadence}</div>
+                    <div className="text-[11px]" style={{ color: '#6b7280' }}>Owner: {metric.owner}</div>
                   </div>
                 </div>
-                <div className="text-[11px] mt-2" style={{ color: '#b89a7e' }}>{metric.threshold}</div>
+                <div className="text-[11px] mt-2" style={{ color: '#6b7280' }}>{metric.threshold}</div>
               </div>
             ))}
           </div>
@@ -240,20 +240,20 @@ export default function CeoDashboard() {
         <div className="col-span-1 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Últimos reportes IA</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Señales recientes para decisión</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Últimos reportes IA</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Señales recientes para decisión</p>
             </div>
           </div>
           <div className="space-y-3">
             {recentReports.length === 0 ? (
-              <div className="text-xs rounded-lg p-3" style={{ background: '#f8fbfa', color: '#9ca9a3', border: '1px dashed #dbe7e3' }}>
+              <div className="text-xs rounded-lg p-3" style={{ background: '#f8fbfa', color: '#6b7280', border: '1px dashed #dbe7e3' }}>
                 No hay reportes aún.
               </div>
             ) : (
               recentReports.map(report => (
                 <div key={report.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
-                  <div className="text-[12px] font-semibold leading-snug" style={{ color: '#173634' }}>{report.title}</div>
-                  <div className="text-[11px] mt-1 line-clamp-3" style={{ color: '#9ca9a3' }}>{report.summary || 'Sin resumen disponible.'}</div>
+                  <div className="text-[12px] font-semibold leading-snug" style={{ color: '#111111' }}>{report.title}</div>
+                  <div className="text-[11px] mt-1 line-clamp-3" style={{ color: '#6b7280' }}>{report.summary || 'Sin resumen disponible.'}</div>
                 </div>
               ))
             )}
@@ -266,56 +266,56 @@ export default function CeoDashboard() {
         {/* Ranking table */}
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Ranking de Directores</h2>
-            <span className="text-xs" style={{ color: '#9ca9a3' }}>6 meses</span>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ranking de Directores</h2>
+            <span className="text-xs" style={{ color: '#6b7280' }}>6 meses</span>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: '#f8fbfa' }}>
-                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>#</th>
-                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>Director</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>Ventas</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>UF</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>Cumpl.</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>Comisión</th>
+                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>#</th>
+                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Director</th>
+                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Ventas</th>
+                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>UF</th>
+                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Cumpl.</th>
+                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Comisión</th>
               </tr>
             </thead>
             <tbody>
               {directors.map((d, i) => {
                 const pct = d.target > 0 ? Math.round((d.ventas / d.target) * 100) : 0
-                const medals = ['#f59e0b', '#9ca9a3', '#b89a7e']
+                const medals = ['#f59e0b', '#6b7280', '#6b7280']
                 return (
                   <tr key={d.id} style={{ borderTop: '1px solid #f0f5f3' }}>
                     <td className="px-5 py-3.5">
-                      <span className="text-sm font-bold" style={{ color: medals[i] || '#9ca9a3' }}>{i + 1}</span>
+                      <span className="text-sm font-bold" style={{ color: medals[i] || '#6b7280' }}>{i + 1}</span>
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: '#e8f3f0', color: '#8fb2aa' }}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: '#f9fafb', color: '#d61f2c' }}>
                           {d.name.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-[13px] font-medium" style={{ color: '#173634' }}>{d.name}</div>
-                          <div className="text-[11px]" style={{ color: '#9ca9a3' }}>{d.team}</div>
+                          <div className="text-[13px] font-medium" style={{ color: '#111111' }}>{d.name}</div>
+                          <div className="text-[11px]" style={{ color: '#6b7280' }}>{d.team}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px] font-semibold" style={{ color: '#173634' }}>{d.ventas}</span>
+                      <span className="text-[13px] font-semibold" style={{ color: '#111111' }}>{d.ventas}</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px]" style={{ color: '#555a56' }}>{(d.uf / 1000).toFixed(0)}K</span>
+                      <span className="text-[13px]" style={{ color: '#374151' }}>{(d.uf / 1000).toFixed(0)}K</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex flex-col items-end gap-1">
-                        <span className="text-[12px] font-semibold" style={{ color: pct >= 100 ? '#10b981' : pct >= 80 ? '#f59e0b' : '#d97706' }}>{pct}%</span>
+                        <span className="text-[12px] font-semibold" style={{ color: pct >= 100 ? '#d61f2c' : pct >= 80 ? '#f59e0b' : '#d97706' }}>{pct}%</span>
                         <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: '#e8f0ed' }}>
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? '#10b981' : pct >= 80 ? '#f59e0b' : '#d97706' }} />
+                          <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? '#d61f2c' : pct >= 80 ? '#f59e0b' : '#d97706' }} />
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px]" style={{ color: '#555a56' }}>${fmt(Math.round(d.comision / 1000))}K</span>
+                      <span className="text-[13px]" style={{ color: '#374151' }}>${fmt(Math.round(d.comision / 1000))}K</span>
                     </td>
                   </tr>
                 )
@@ -327,8 +327,8 @@ export default function CeoDashboard() {
         {/* Sales AreaChart */}
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Ventas por Director</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Últimos 6 meses</p>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas por Director</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Últimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">
             <ResponsiveContainer width="100%" height={180}>
@@ -342,8 +342,8 @@ export default function CeoDashboard() {
                   ))}
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" />
-                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
                 {dirKeys.map((k, i) => (
                   <Area key={k} type="monotone" dataKey={k} stroke={dirColors[i]} strokeWidth={2} fill={`url(#g${i})`} />
@@ -354,7 +354,7 @@ export default function CeoDashboard() {
               {dirKeys.map((k, i) => (
                 <div key={k} className="flex items-center gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: dirColors[i] }} />
-                  <span className="text-[11px]" style={{ color: '#9ca9a3' }}>{k}</span>
+                  <span className="text-[11px]" style={{ color: '#6b7280' }}>{k}</span>
                 </div>
               ))}
             </div>
@@ -367,17 +367,17 @@ export default function CeoDashboard() {
         {/* Comision bar */}
         <div className="col-span-3 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Comisiones por Director</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>En miles de pesos CLP</p>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Comisiones por Director</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>En miles de pesos CLP</p>
           </div>
           <div className="px-4 pt-4 pb-4">
             <ResponsiveContainer width="100%" height={150}>
               <BarChart data={directors.map(d => ({ name: d.name.split(' ')[0], comision: Math.round(d.comision / 1000) }))} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v: unknown) => [`$${fmt(Number(v))}K`, 'Comisión']} contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
-                <Bar dataKey="comision" fill="#8fb2aa" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                <Bar dataKey="comision" fill="#d61f2c" radius={[4, 4, 0, 0]} maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -386,25 +386,25 @@ export default function CeoDashboard() {
         {/* Latest AI Reports */}
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Reportes IA Recientes</h2>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Reportes IA Recientes</h2>
           </div>
           <div className="divide-y" style={{ borderColor: '#f0f5f3' }}>
             {reports.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <p className="text-xs" style={{ color: '#9ca9a3' }}>Sin reportes generados aún.</p>
-                <a href="/dashboard/reportes" className="text-xs mt-1 block hover:underline" style={{ color: '#8fb2aa' }}>Generar primer reporte</a>
+                <p className="text-xs" style={{ color: '#6b7280' }}>Sin reportes generados aún.</p>
+                <a href="/dashboard/reportes" className="text-xs mt-1 block hover:underline" style={{ color: '#d61f2c' }}>Generar primer reporte</a>
               </div>
             ) : (
               reports.map(r => (
                 <div key={r.id} className="px-5 py-3.5">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="text-[12px] font-medium leading-snug" style={{ color: '#173634' }}>{r.title}</span>
-                    <span className="text-[10px] shrink-0" style={{ color: '#9ca9a3' }}>
+                    <span className="text-[12px] font-medium leading-snug" style={{ color: '#111111' }}>{r.title}</span>
+                    <span className="text-[10px] shrink-0" style={{ color: '#6b7280' }}>
                       {r.period_date ? new Date(r.period_date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : '—'}
                     </span>
                   </div>
-                  {r.summary && <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: '#9ca9a3' }}>{r.summary}</p>}
-                  <span className="inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#f0f7f4', color: '#8fb2aa' }}>{r.report_type}</span>
+                  {r.summary && <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: '#6b7280' }}>{r.summary}</p>}
+                  <span className="inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#f0f7f4', color: '#d61f2c' }}>{r.report_type}</span>
                 </div>
               ))
             )}
@@ -414,3 +414,4 @@ export default function CeoDashboard() {
     </div>
   )
 }
+

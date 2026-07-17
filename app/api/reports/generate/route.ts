@@ -770,7 +770,7 @@ async function generateWithOpenAI(prompt: string, systemFocus: string, audience:
       messages: [
         {
           role: 'system',
-          content: `Eres un analista inmobiliario senior de N3uralia. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Toma en cuenta el learning persistido y ajusta el foco segun lo que el equipo marca como util o ignorado. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence, sections. sections debe ser un array de objetos con title y bullets. Mantiene el foco en Vitacura y en decisiones accionables por audiencia.`,
+          content: `Eres un analista inmobiliario senior de Property Partners. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Toma en cuenta el learning persistido y ajusta el foco segun lo que el equipo marca como util o ignorado. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence, sections. sections debe ser un array de objetos con title y bullets. Mantiene el foco en Vitacura y en decisiones accionables por audiencia.`,
         },
         {
           role: 'user',
@@ -974,3 +974,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

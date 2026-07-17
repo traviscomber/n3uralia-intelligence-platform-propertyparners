@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next'
+import { Montserrat, Rajdhani } from 'next/font/google'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Property Partners Vitacura | N3uralia',
-  description: 'Plataforma de inteligencia comercial para ventas de casas en Vitacura.',
-  generator: 'N3uralia',
+  title: 'Property Partners | Intelligence layer for complex operations',
+  description: 'Property Partners helps companies turn scattered data, workflows, documents, and AI into systems that improve visibility, control, and execution.',
+  generator: 'Property Partners',
 }
 
 export const viewport: Viewport = {
@@ -12,17 +13,27 @@ export const viewport: Viewport = {
   themeColor: '#d61f2c',
 }
 
+const rajdhani = Rajdhani({
+  subsets: ['latin'],
+  weight: ['300', '400'],
+  variable: '--font-rajdhani',
+  display: 'swap',
+})
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-montserrat',
+  display: 'swap',
+})
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="es"
-      style={{
-        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <body className="antialiased bg-gray-50">
+    <html lang="es" className={`${rajdhani.variable} ${montserrat.variable}`}>
+      <body className="antialiased bg-[var(--background)] text-[var(--foreground)]">
         {children}
       </body>
     </html>
   )
 }
+

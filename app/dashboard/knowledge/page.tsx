@@ -73,7 +73,7 @@ export default function KnowledgePage() {
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-6">
         <h1 className="text-3xl font-bold text-gray-900">Base de Conocimiento</h1>
-        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y análisis del mercado de casas en Vitacura</p>
+        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y an�lisis del mercado de casas en Vitacura</p>
       </div>
 
       {/* Search & Filter */}
@@ -95,7 +95,7 @@ export default function KnowledgePage() {
           <button
             onClick={() => setSelectedTag(null)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              selectedTag === null ? '#8fb2aa text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              selectedTag === null ? '#d61f2c text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
             }`}
           >
             Todos
@@ -105,7 +105,7 @@ export default function KnowledgePage() {
               key={tag}
               onClick={() => setSelectedTag(tag)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                selectedTag === tag ? '#8fb2aa text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                selectedTag === tag ? '#d61f2c text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
               }`}
             >
               {tag}
@@ -127,8 +127,8 @@ export default function KnowledgePage() {
           {filtered.map((doc) => (
             <div key={doc.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-cyan-300 cursor-pointer transition-colors">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg #e8f3f0 flex items-center justify-center flex-shrink-0">
-                  <BookOpen size={18} className="#b89a7e" />
+                <div className="w-10 h-10 rounded-lg #f9fafb flex items-center justify-center flex-shrink-0">
+                  <BookOpen size={18} className="#6b7280" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-gray-900">{doc.title}</h3>
@@ -150,3 +150,5 @@ export default function KnowledgePage() {
     </div>
   )
 }
+
+

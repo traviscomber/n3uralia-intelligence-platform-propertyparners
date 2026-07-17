@@ -23,7 +23,7 @@ const html = `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>N3uralia Intelligence Platform - Propuesta Comercial Completa</title>
+  <title>Property Partners Intelligence Platform - Propuesta Comercial Completa</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -157,7 +157,7 @@ const html = `
 
 <!-- COVER PAGE -->
 <div class="page cover-page">
-  <h1>N3uralia Intelligence Platform</h1>
+  <h1>Property Partners Intelligence Platform</h1>
   <div class="subtitle">Propuesta Comercial Completa</div>
   <div style="font-size: 18px; max-width: 600px;">
     Decisiones inmobiliarias respaldadas por datos reales.<br/>
@@ -169,7 +169,7 @@ const html = `
 <!-- EXECUTIVE SUMMARY -->
 <div class="page">
   <h2>Resumen Ejecutivo</h2>
-  <p>N3uralia Intelligence Platform es una solución integral para el análisis, valorización y gestión del mercado inmobiliario en Vitacura. La plataforma integra datos en tiempo real de múltiples fuentes, analítica avanzada y modelos predictivos para fundamentar decisiones comerciales.</p>
+  <p>Property Partners Intelligence Platform es una solución integral para el análisis, valorización y gestión del mercado inmobiliario en Vitacura. La plataforma integra datos en tiempo real de múltiples fuentes, analítica avanzada y modelos predictivos para fundamentar decisiones comerciales.</p>
   
   <div class="section-divider"></div>
   
@@ -761,7 +761,7 @@ const html = `
 
   <h3>Mediano Plazo (Próximo Mes)</h3>
   <ul>
-    <li>Integración profunda: portales existentes + N3uralia</li>
+    <li>Integración profunda: portales existentes + Property Partners</li>
     <li>Entrenamiento de equipos (directores + staff)</li>
     <li>Configuración de reportes personalizados por director</li>
   </ul>
@@ -786,7 +786,7 @@ const html = `
   <p style="margin-top: 40px; text-align: center; font-style: italic; color: #666;">
     Documento preparado: Julio 11, 2026<br/>
     Versión: 1.0 Propuesta Comercial Completa<br/>
-    Plataforma: N3uralia Intelligence Platform v0.5.0
+    Plataforma: Property Partners Intelligence Platform v0.5.0
   </p>
 </div>
 
@@ -805,3 +805,4 @@ console.log('✓ Propuesta profesional completa generada: propuesta-profesional-
 console.log('✓ Tamaño: ' + (html.length / 1024).toFixed(2) + ' KB');
 console.log('✓ 17 páginas con 12 screenshots embebidas');
 console.log('✓ Compatible con MS Word, Google Docs, LibreOffice, navegadores web');
+

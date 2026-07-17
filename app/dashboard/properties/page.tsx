@@ -41,7 +41,7 @@ const STATUSES = ['activo', 'vendido', 'reservado', 'captado']
 
 const STATUS_STYLE: Record<string, { bg: string; text: string; label: string }> = {
   activo:         { bg: '#dcfce7', text: '#166534', label: 'Activo' },
-  vendido:        { bg: '#e8f3f0', text: '#173634', label: 'Vendido' },
+  vendido:        { bg: '#f9fafb', text: '#111111', label: 'Vendido' },
   reservado:      { bg: '#fef9c3', text: '#854d0e', label: 'Reservado' },
   captado:        { bg: '#ede9fe', text: '#5b21b6', label: 'Captado' },
 }
@@ -299,12 +299,12 @@ export default function PropertiesPage() {
         className="rounded-3xl border p-6 md:p-8 shadow-sm"
         style={{
           background: 'linear-gradient(135deg, #f8fbfa 0%, #ffffff 55%, #eef6f3 100%)',
-          borderColor: '#d8e5e2',
+          borderColor: '#e5e7eb',
         }}
       >
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]" style={{ background: '#eef6f3', color: '#5f7f78', borderColor: '#d8e5e2' }}>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]" style={{ background: '#eef6f3', color: '#5f7f78', borderColor: '#e5e7eb' }}>
               <MapPin size={12} />
               Vitacura market intelligence
             </div>
@@ -316,34 +316,34 @@ export default function PropertiesPage() {
               sin perder foco en Vitacura.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Total cargadas</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">{properties.length}</p>
               </div>
-              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Casas</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">{houseCount}</p>
               </div>
-              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Deptos</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">{departmentCount}</p>
               </div>
-              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+              <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Fuentes</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">{sourceCount || '-'}</p>
               </div>
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[520px]">
-            <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+            <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Prom. UF</p>
               <p className="mt-2 text-2xl font-bold text-gray-900">{avgPriceUf ? avgPriceUf.toLocaleString('es-CL', { maximumFractionDigits: 0 }) : '-'}</p>
             </div>
-            <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+            <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Prom. m2</p>
               <p className="mt-2 text-2xl font-bold text-gray-900">{avgArea ? `${avgArea.toFixed(0)} m2` : '-'}</p>
             </div>
-            <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+            <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Modo</p>
               <p className="mt-2 text-2xl font-bold text-gray-900">{PROPERTY_MODE_LABELS[propertyMode]}</p>
             </div>
@@ -352,23 +352,23 @@ export default function PropertiesPage() {
       </div>
 
       {/* Header */}
-      <div className="flex items-start justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+      <div className="flex items-start justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Control panel</p>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
             {properties.length} propiedades cargadas · {houseCount} casas · {departmentCount} departamentos
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 p-1 rounded-lg" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+          <div className="flex gap-1 p-1 rounded-lg" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
             {(['all', 'houses', 'departments'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setPropertyMode(mode)}
                 className="px-3 py-1.5 rounded text-xs font-semibold transition-all"
                 style={{
-                  background: propertyMode === mode ? '#8fb2aa' : 'transparent',
-                  color: propertyMode === mode ? '#fff' : '#9ca9a3',
+                  background: propertyMode === mode ? '#d61f2c' : 'transparent',
+                  color: propertyMode === mode ? '#fff' : '#6b7280',
                 }}
               >
                 {PROPERTY_MODE_LABELS[mode]}
@@ -396,7 +396,7 @@ export default function PropertiesPage() {
           <button
             onClick={() => setShowAdvancedScraping((prev) => !prev)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
-            style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
+            style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}
           >
             {showAdvancedScraping ? 'Avanzado ^' : 'Avanzado v'}
           </button>
@@ -404,14 +404,14 @@ export default function PropertiesPage() {
             onClick={handleDedupe}
             disabled={deduping}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: '#fff', color: '#315249', border: '1px solid #d8e5e2' }}
+            style={{ background: '#fff', color: '#315249', border: '1px solid #e5e7eb' }}
           >
             {deduping ? 'Deduplicando...' : 'Dedupe fuerte'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ background: '#8fb2aa' }}
+            style={{ background: '#d61f2c' }}
           >
             <Plus size={16} />
             Nueva propiedad
@@ -419,17 +419,17 @@ export default function PropertiesPage() {
         </div>
       </div>
       {showAdvancedScraping && (
-        <div className="flex items-center gap-3 rounded-lg px-4 py-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+        <div className="flex items-center gap-3 rounded-lg px-4 py-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
           <button
             onClick={() => setGeneralBackfillEnabled((prev) => !prev)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
             style={{
-              background: generalBackfillEnabled ? '#e8f3f0' : '#fff',
-              color: '#555a56',
-              border: '1px solid #d8e5e2',
+              background: generalBackfillEnabled ? '#f9fafb' : '#fff',
+              color: '#374151',
+              border: '1px solid #e5e7eb',
             }}
           >
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full" style={{ background: generalBackfillEnabled ? '#6b8e85' : '#d8e5e2' }}>
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full" style={{ background: generalBackfillEnabled ? '#6b8e85' : '#e5e7eb' }}>
               <span className="h-2 w-2 rounded-full" style={{ background: '#fff' }} />
             </span>
             {generalBackfillEnabled ? 'General ON' : 'General OFF'}
@@ -438,7 +438,7 @@ export default function PropertiesPage() {
             onClick={() => handleScrapeMode('all')}
             disabled={scraping || !generalBackfillEnabled}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: '#fff', color: '#555a56', border: '1px solid #d8e5e2' }}
+            style={{ background: '#fff', color: '#374151', border: '1px solid #e5e7eb' }}
           >
             <Download size={16} />
             {scraping ? 'Scrapeando...' : generalBackfillEnabled ? 'Backfill General' : 'Backfill General (off)'}
@@ -460,82 +460,82 @@ export default function PropertiesPage() {
 
       {/* Add Form */}
       {showForm && (
-        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-semibold text-gray-900">Agregar Propiedad</h2>
-            <button onClick={() => setShowForm(false)}><X size={18} style={{ color: '#9ca9a3' }} /></button>
+            <button onClick={() => setShowForm(false)}><X size={18} style={{ color: '#6b7280' }} /></button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Address */}
             <div className="lg:col-span-2">
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Direccion *</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Direccion *</label>
               <input
                 value={form.address}
                 onChange={e => setForm({ ...form, address: e.target.value })}
                 placeholder="Av. Vitacura 1234, Dpto 502"
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900 outline-none focus:ring-2"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
             {/* Status */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Estado</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Estado</label>
               <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}>
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}>
                 {STATUSES.map(s => <option key={s} value={s}>{STATUS_STYLE[s]?.label || s}</option>)}
               </select>
             </div>
             {/* Neighborhood */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Barrio</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Barrio</label>
               <select value={form.neighborhood} onChange={e => setForm({ ...form, neighborhood: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}>
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}>
                 {NEIGHBORHOODS.map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             {/* Type */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Tipo</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Tipo</label>
               <select value={form.property_type} onChange={e => setForm({ ...form, property_type: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}>
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}>
                 {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
               </select>
             </div>
             {/* Price */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Precio UF *</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Precio UF *</label>
               <input type="number" value={form.price_uf} onChange={e => setForm({ ...form, price_uf: e.target.value })}
                 placeholder="5000"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }} />
             </div>
             {/* Area */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Superficie m2 *</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Superficie m2 *</label>
               <input type="number" value={form.area_m2} onChange={e => setForm({ ...form, area_m2: e.target.value })}
                 placeholder="80"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }} />
             </div>
             {/* Bedrooms */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Dormitorios</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Dormitorios</label>
               <input type="number" min="0" max="10" value={form.bedrooms} onChange={e => setForm({ ...form, bedrooms: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }} />
             </div>
             {/* Bathrooms */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Banos</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Banos</label>
               <input type="number" min="0" max="10" value={form.bathrooms} onChange={e => setForm({ ...form, bathrooms: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }} />
             </div>
             {/* Days on market */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Dias en mercado</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Dias en mercado</label>
               <input type="number" min="0" value={form.days_on_market} onChange={e => setForm({ ...form, days_on_market: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }} />
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }} />
             </div>
             {/* Lat */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>
                 Latitud (opcional)
               </label>
               <input
@@ -543,12 +543,12 @@ export default function PropertiesPage() {
                 onChange={e => setForm({ ...form, lat: e.target.value })}
                 onBlur={e => autoTagFromCoords(e.target.value, form.lng)}
                 placeholder="-33.4172"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
             {/* Lng */}
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>
                 Longitud (opcional)
               </label>
               <input
@@ -556,20 +556,20 @@ export default function PropertiesPage() {
                 onChange={e => setForm({ ...form, lng: e.target.value })}
                 onBlur={e => autoTagFromCoords(form.lat, e.target.value)}
                 placeholder="-70.6060"
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900" style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
             {/* Auto-tag result */}
             {(tagging || tagResult) && (
               <div className="lg:col-span-3 flex items-center gap-2 text-xs px-3 py-2 rounded-md"
-                style={{ background: tagResult ? '#e8f3f0' : '#f5f9f7', border: '1px solid #d8e5e2', color: '#173634' }}>
+                style={{ background: tagResult ? '#f9fafb' : '#f9fafb', border: '1px solid #e5e7eb', color: '#111111' }}>
                 {tagging ? (
-                  <span style={{ color: '#9ca9a3' }}>Detectando barrio desde coordenadas...</span>
+                  <span style={{ color: '#6b7280' }}>Detectando barrio desde coordenadas...</span>
                 ) : tagResult ? (
                   <>
-                    <span style={{ color: '#8fb2aa' }}>Auto-detectado:</span>
+                    <span style={{ color: '#d61f2c' }}>Auto-detectado:</span>
                     <strong>{tagResult.barrio_nombre}</strong>
-                    {tagResult.zona_prc && <span style={{ color: '#9ca9a3' }}>- Zona {tagResult.zona_prc}</span>}
+                    {tagResult.zona_prc && <span style={{ color: '#6b7280' }}>- Zona {tagResult.zona_prc}</span>}
                   </>
                 ) : null}
               </div>
@@ -580,14 +580,14 @@ export default function PropertiesPage() {
               onClick={handleSave}
               disabled={saving}
               className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ background: '#8fb2aa' }}
+              style={{ background: '#d61f2c' }}
             >
               {saving ? 'Guardando...' : 'Guardar Propiedad'}
             </button>
             <button
               onClick={() => { setForm(EMPTY_FORM); setShowForm(false) }}
               className="px-5 py-2 rounded-lg text-sm font-semibold"
-              style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
+              style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}
             >
               Cancelar
             </button>
@@ -598,34 +598,34 @@ export default function PropertiesPage() {
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9ca9a3' }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6b7280' }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por direccion, barrio o numero..."
             className="w-full pl-9 pr-3 py-2 rounded-lg text-sm text-gray-900"
-            style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+            style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
           />
         </div>
         <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9ca9a3' }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6b7280' }} />
           <input
             value={tagQuery}
             onChange={e => setTagQuery(e.target.value)}
             placeholder="Buscar por tags rapidos (casa, depto, barrio, fuente)..."
             className="w-full pl-9 pr-3 py-2 rounded-lg text-sm text-gray-900"
-            style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+            style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
           />
         </div>
-        <div className="flex gap-1 p-1 rounded-lg" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+        <div className="flex gap-1 p-1 rounded-lg" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
           {(['all', ...STATUSES]).map(s => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
               className="px-3 py-1 rounded text-xs font-medium transition-all"
               style={{
-                background: filterStatus === s ? '#8fb2aa' : 'transparent',
-                color: filterStatus === s ? '#fff' : '#9ca9a3',
+                background: filterStatus === s ? '#d61f2c' : 'transparent',
+                color: filterStatus === s ? '#fff' : '#6b7280',
               }}
             >
               {s === 'all' ? 'Todos' : STATUS_STYLE[s]?.label || s}
@@ -637,26 +637,26 @@ export default function PropertiesPage() {
       {/* Table */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#d8e5e2', borderTopColor: '#8fb2aa' }} />
+          <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: '#d61f2c' }} />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-lg p-12 text-center shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-          <Home size={36} className="mx-auto mb-3" style={{ color: '#d8e5e2' }} />
+        <div className="bg-white rounded-lg p-12 text-center shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+          <Home size={36} className="mx-auto mb-3" style={{ color: '#e5e7eb' }} />
           <p className="text-sm font-medium text-gray-900">
             {properties.length === 0 ? 'No hay propiedades cargadas aun' : 'Sin resultados para tu busqueda'}
           </p>
-          <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+          <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
             {properties.length === 0 ? 'Usa el boton "Nueva propiedad" para agregar la primera' : 'Intenta con otro filtro'}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.06)] overflow-hidden" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.06)] overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[1450px]">
               <thead>
-                <tr style={{ borderBottom: '1px solid #d8e5e2', background: '#f5f9f7' }}>
+                <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
                   {['#', 'Foto', 'Direccion', 'Barrio', 'Tipo', 'Precio UF', 'UF/m2', 'Sup.', 'Dorm/Banos', 'Tags', 'Link', 'Estado', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -680,7 +680,7 @@ export default function PropertiesPage() {
                           ) : (
                             <div
                               className="flex h-16 w-24 flex-col items-center justify-center rounded-xl text-white ring-1 ring-black/5"
-                              style={{ background: 'linear-gradient(135deg, #8fb2aa 0%, #6b8e85 100%)' }}
+                              style={{ background: 'linear-gradient(135deg, #d61f2c 0%, #6b8e85 100%)' }}
                             >
                               <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">{typeLabel === 'casa' ? 'Casa' : 'Depto'}</span>
                               <span className="mt-1 text-[9px] opacity-80">Sin foto</span>
@@ -713,7 +713,7 @@ export default function PropertiesPage() {
                       <td className="px-4 py-4 align-top">
                         <div className="flex flex-wrap gap-1.5 max-w-[240px]">
                           {tags.map((tag) => (
-                            <span key={tag} className="px-2.5 py-1 rounded-full text-[11px] font-medium" style={{ background: '#eef6f3', color: '#315249', border: '1px solid #d8e5e2' }}>
+                            <span key={tag} className="px-2.5 py-1 rounded-full text-[11px] font-medium" style={{ background: '#eef6f3', color: '#315249', border: '1px solid #e5e7eb' }}>
                               {tag}
                             </span>
                           ))}
@@ -726,7 +726,7 @@ export default function PropertiesPage() {
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors hover:opacity-90"
-                            style={{ color: '#315249', background: '#eef6f3', border: '1px solid #d8e5e2' }}
+                            style={{ color: '#315249', background: '#eef6f3', border: '1px solid #e5e7eb' }}
                           >
                             Abrir
                             <ArrowUpRight size={12} />
@@ -738,13 +738,13 @@ export default function PropertiesPage() {
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors hover:opacity-90"
-                              style={{ color: '#315249', background: '#eef6f3', border: '1px solid #d8e5e2' }}
+                              style={{ color: '#315249', background: '#eef6f3', border: '1px solid #e5e7eb' }}
                             >
                               Ver fuente
                               <ArrowUpRight size={12} />
                             </a>
                           ) : (
-                            <span className="text-xs" style={{ color: '#9ca9a3' }}>Sin link</span>
+                            <span className="text-xs" style={{ color: '#6b7280' }}>Sin link</span>
                           )
                         )}
                       </td>
@@ -756,7 +756,7 @@ export default function PropertiesPage() {
                       </td>
                       <td className="px-4 py-4 align-top">
                         <button onClick={() => handleDelete(p.id)} className="p-1 rounded hover:bg-red-50 transition-colors">
-                          <X size={14} style={{ color: '#9ca9a3' }} />
+                          <X size={14} style={{ color: '#6b7280' }} />
                         </button>
                       </td>
                     </tr>
@@ -765,11 +765,12 @@ export default function PropertiesPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-5 py-3" style={{ borderTop: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-            <p className="text-xs" style={{ color: '#9ca9a3' }}>{filtered.length} de {properties.length} propiedades</p>
+          <div className="px-5 py-3" style={{ borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
+            <p className="text-xs" style={{ color: '#6b7280' }}>{filtered.length} de {properties.length} propiedades</p>
           </div>
         </div>
       )}
     </div>
   )
 }
+

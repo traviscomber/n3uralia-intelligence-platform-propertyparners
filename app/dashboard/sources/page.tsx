@@ -254,13 +254,13 @@ export default function SourcesPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <Check size={16} style={{ color: '#10b981' }} />
+        return <Check size={16} style={{ color: '#d61f2c' }} />
       case 'syncing':
         return <Clock size={16} style={{ color: '#f59e0b', animation: 'spin 2s linear infinite' }} />
       case 'error':
         return <AlertCircle size={16} style={{ color: '#d97706' }} />
       default:
-        return <Database size={16} style={{ color: '#9ca9a3' }} />
+        return <Database size={16} style={{ color: '#6b7280' }} />
     }
   }
 
@@ -293,7 +293,7 @@ export default function SourcesPage() {
   const sourceOptions = Array.from(new Set(propertyRows.map((row) => row.source).filter(Boolean) as string[])).sort()
   const filteredSeries = buildFilteredSeries(propertyRows, selectedNeighborhood, selectedSource)
   const healthLabel = health?.status === 'healthy' ? 'Saludable' : health?.status === 'warning' ? 'Con alertas' : health?.status === 'critical' ? 'Critico' : 'Sin datos'
-  const healthColor = health?.status === 'healthy' ? '#10b981' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#9ca9a3'
+  const healthColor = health?.status === 'healthy' ? '#d61f2c' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#6b7280'
 
   return (
     <div className="space-y-6" aria-busy={loading || runsLoading}>
@@ -301,7 +301,7 @@ export default function SourcesPage() {
         <h1 className="text-3xl font-bold text-gray-900">
           Fuentes de Datos
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
           Pipeline de inteligencia con fuentes integradas en tiempo real
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -310,35 +310,35 @@ export default function SourcesPage() {
             disabled={refreshingAll}
             aria-label="Refrescar scraper y benchmark"
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: '#8fb2aa' }}
+            style={{ background: '#d61f2c' }}
           >
             {refreshingAll ? 'Refrescando...' : 'Refrescar scraper + benchmark'}
           </button>
           {refreshMsg && (
-            <span className="text-sm" style={{ color: '#555a56' }}>{refreshMsg}</span>
+            <span className="text-sm" style={{ color: '#374151' }}>{refreshMsg}</span>
           )}
         </div>
       </div>
 
       {!loading && health && health.summary && (
-        <div className="rounded-lg p-5 bg-white" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="rounded-lg p-5 bg-white" style={{ border: '1px solid #e5e7eb' }}>
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Health del pipeline</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Health del pipeline</p>
               <h2 className="mt-1 text-lg font-semibold text-gray-900">
                 Estado actual: <span style={{ color: healthColor }}>{healthLabel}</span>
               </h2>
-              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                {health.summary?.activeSources || 0} fuentes activas · {health.summary?.averageScraped || 0} casas/corrida · {health.summary?.averageInserted || 0} insertadas/corrida
+              <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+                {health.summary?.activeSources || 0} fuentes activas � {health.summary?.averageScraped || 0} casas/corrida � {health.summary?.averageInserted || 0} insertadas/corrida
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Alertas</p>
+              <div className="rounded-lg px-3 py-2" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                <p className="text-xs uppercase font-semibold" style={{ color: '#374151' }}>Alertas</p>
                 <p className="text-lg font-bold text-gray-900">{health.summary?.warningCount || 0}</p>
               </div>
-              <div className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                <p className="text-xs uppercase font-semibold" style={{ color: '#555a56' }}>Criticas</p>
+              <div className="rounded-lg px-3 py-2" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                <p className="text-xs uppercase font-semibold" style={{ color: '#374151' }}>Criticas</p>
                 <p className="text-lg font-bold text-gray-900">{health.summary?.criticalCount || 0}</p>
               </div>
             </div>
@@ -355,14 +355,14 @@ export default function SourcesPage() {
                   }}
                 >
                   <p className="text-sm font-semibold text-gray-900">{issue.title}</p>
-                  <p className="text-xs mt-1" style={{ color: '#555a56' }}>{issue.detail}</p>
+                  <p className="text-xs mt-1" style={{ color: '#374151' }}>{issue.detail}</p>
                 </div>
               ))}
             </div>
           )}
           {health.anomalies && health.anomalies.length > 0 && (
             <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#555a56' }}>Anomalias operativas</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#374151' }}>Anomalias operativas</p>
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {health.anomalies.slice(0, 4).map((anomaly) => (
                   <div
@@ -374,7 +374,7 @@ export default function SourcesPage() {
                     }}
                   >
                     <p className="text-sm font-semibold text-gray-900">{anomaly.title}</p>
-                    <p className="text-xs mt-1" style={{ color: '#555a56' }}>
+                    <p className="text-xs mt-1" style={{ color: '#374151' }}>
                       {anomaly.area.toUpperCase()} - {anomaly.detail}
                     </p>
                   </div>
@@ -384,15 +384,15 @@ export default function SourcesPage() {
           )}
           {health.history && health.history.length > 0 && (
             <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#555a56' }}>Ultimas instantaneas</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#374151' }}>Ultimas instantaneas</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 {health.history.slice(0, 3).map((snapshot) => (
-                  <div key={snapshot.id} className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                  <div key={snapshot.id} className="rounded-lg px-3 py-2" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
                     <p className="text-sm font-semibold text-gray-900 capitalize">{snapshot.status}</p>
-                    <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+                    <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
                       {new Date(snapshot.generated_at).toLocaleString('es-CL')}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#555a56' }}>
+                    <p className="text-xs mt-1" style={{ color: '#374151' }}>
                       {snapshot.summary?.successRate ?? 0}% exito - {snapshot.summary?.warningCount ?? 0} alertas - {snapshot.summary?.criticalCount ?? 0} criticas
                     </p>
                   </div>
@@ -404,24 +404,24 @@ export default function SourcesPage() {
       )}
 
       {!loading && propertyTelemetry && (
-        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #e5e7eb' }}>
           <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="font-semibold text-gray-900">Telemetría de casas por barrio y fuente</h2>
-              <p className="text-sm" style={{ color: '#9ca9a3' }}>
-                {propertyTelemetry.total.toLocaleString()} casas normalizadas en el catálogo.
+              <h2 className="font-semibold text-gray-900">Telemetr�a de casas por barrio y fuente</h2>
+              <p className="text-sm" style={{ color: '#6b7280' }}>
+                {propertyTelemetry.total.toLocaleString()} casas normalizadas en el cat�logo.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 lg:min-w-[520px]">
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>
                   Barrio
                 </span>
                 <select
                   value={selectedNeighborhood}
                   onChange={(event) => setSelectedNeighborhood(event.target.value)}
                   className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900"
-                  style={{ borderColor: '#d8e5e2' }}
+                  style={{ borderColor: '#e5e7eb' }}
                 >
                   <option value="all">Todos los barrios</option>
                   {neighborhoodOptions.map((item) => (
@@ -430,14 +430,14 @@ export default function SourcesPage() {
                 </select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>
                   Fuente
                 </span>
                 <select
                   value={selectedSource}
                   onChange={(event) => setSelectedSource(event.target.value)}
                   className="w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-900"
-                  style={{ borderColor: '#d8e5e2' }}
+                  style={{ borderColor: '#e5e7eb' }}
                 >
                   <option value="all">Todas las fuentes</option>
                   {sourceOptions.map((item) => (
@@ -455,73 +455,73 @@ export default function SourcesPage() {
                 setSelectedSource('all')
               }}
               className="rounded-full border px-3 py-1.5 text-xs font-semibold text-gray-900 transition-opacity hover:opacity-90"
-              style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}
+              style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}
             >
               Limpiar filtros
             </button>
-            <span className="text-xs" style={{ color: '#9ca9a3' }}>
+            <span className="text-xs" style={{ color: '#6b7280' }}>
               Vista filtrada sobre los ultimos 7 dias.
             </span>
-            <span className="text-xs font-semibold" style={{ color: '#8fb2aa' }}>
+            <span className="text-xs font-semibold" style={{ color: '#d61f2c' }}>
               {filteredSeries.reduce((sum, item) => sum + item.count, 0).toLocaleString()} registros en la seleccion
             </span>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Barrios mas activos</p>
+            <div className="rounded-lg p-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#374151' }}>Barrios mas activos</p>
               <div className="space-y-2">
                 {propertyTelemetry.neighborhoods.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
+                  <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #e5e7eb' }}>
                     <div>
                       <span className="text-sm font-medium text-gray-900">{item.name}</span>
-                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#d61f2c' }}>{item.count}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#555a56' }}>Fuentes con mas volumen</p>
+            <div className="rounded-lg p-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#374151' }}>Fuentes con mas volumen</p>
               <div className="space-y-2">
                 {propertyTelemetry.sources.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #d8e5e2' }}>
+                  <div key={item.name} className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2" style={{ border: '1px solid #e5e7eb' }}>
                     <div>
                       <span className="text-sm font-medium text-gray-900">{item.name}</span>
-                      <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>{item.count}</span>
+                    <span className="text-sm font-semibold" style={{ color: '#d61f2c' }}>{item.count}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-          <div className="mt-4 rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+          <div className="mt-4 rounded-lg p-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Actividad filtrada</p>
-                <p className="text-sm" style={{ color: '#9ca9a3' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Actividad filtrada</p>
+                <p className="text-sm" style={{ color: '#6b7280' }}>
                Ultimos 7 dias para la combinacion seleccionada.
                 </p>
               </div>
-              <p className="text-sm font-semibold" style={{ color: '#8fb2aa' }}>
+              <p className="text-sm font-semibold" style={{ color: '#d61f2c' }}>
                 {filteredSeries[filteredSeries.length - 1]?.count ?? 0} hoy
               </p>
             </div>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={filteredSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#d8e5e2" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }} />
-                <Line type="monotone" dataKey="count" stroke="#8fb2aa" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: 12 }} />
+                <Line type="monotone" dataKey="count" stroke="#d61f2c" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
       )}
       {/* Pipeline Overview */}
-      <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
+      <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #e5e7eb' }}>
         <h2 className="font-semibold mb-4 text-gray-900">
           Pipeline de Datos
         </h2>
@@ -530,8 +530,8 @@ export default function SourcesPage() {
           <div className="space-y-2">
             {sources.map((source, idx) => (
               <div key={source.id}>
-                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#f5f9f7' }}>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full font-semibold text-xs text-white" style={{ background: '#8fb2aa' }}>
+                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#f9fafb' }}>
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full font-semibold text-xs text-white" style={{ background: '#d61f2c' }}>
                     {source.pipeline_order}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -545,13 +545,13 @@ export default function SourcesPage() {
                         style={{
                           background:
                             source.status === 'active'
-                              ? '#e8f3f0'
+                              ? '#f9fafb'
                               : source.status === 'syncing'
                                 ? '#fef3e2'
                                 : '#fef3f2',
                           color:
                             source.status === 'active'
-                              ? '#10b981'
+                              ? '#d61f2c'
                               : source.status === 'syncing'
                                 ? '#f59e0b'
                                 : '#d97706',
@@ -560,7 +560,7 @@ export default function SourcesPage() {
                         {getStatusLabel(source.status)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs" style={{ color: '#9ca9a3' }}>
+                    <div className="flex items-center gap-3 text-xs" style={{ color: '#6b7280' }}>
                       <span>{getSourceTypeLabel(source.source_type)}</span>
                       <span>-</span>
                       <span>{source.records_count.toLocaleString()} registros</span>
@@ -580,7 +580,7 @@ export default function SourcesPage() {
                 </div>
                 {idx < sources.length - 1 && (
                   <div className="flex justify-center py-1">
-                    <div className="w-0.5 h-4" style={{ background: '#d8e5e2' }} />
+                    <div className="w-0.5 h-4" style={{ background: '#e5e7eb' }} />
                   </div>
                 )}
               </div>
@@ -592,24 +592,24 @@ export default function SourcesPage() {
       {/* Statistics */}
       {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
-            <p className="text-xs font-medium mb-2" style={{ color: '#555a56' }}>
+          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #e5e7eb' }}>
+            <p className="text-xs font-medium mb-2" style={{ color: '#374151' }}>
               FUENTES ACTIVAS
             </p>
-            <p className="text-2xl font-bold" style={{ color: '#10b981' }}>
+            <p className="text-2xl font-bold" style={{ color: '#d61f2c' }}>
               {sources.filter((s) => s.status === 'active').length}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
-            <p className="text-xs font-medium mb-2" style={{ color: '#555a56' }}>
+          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #e5e7eb' }}>
+            <p className="text-xs font-medium mb-2" style={{ color: '#374151' }}>
               REGISTROS TOTALES
             </p>
-            <p className="text-2xl font-bold" style={{ color: '#8fb2aa' }}>
+            <p className="text-2xl font-bold" style={{ color: '#d61f2c' }}>
               {sources.reduce((sum, s) => sum + s.records_count, 0).toLocaleString()}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #d8e5e2' }}>
-            <p className="text-xs font-medium mb-2" style={{ color: '#555a56' }}>
+          <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #e5e7eb' }}>
+            <p className="text-xs font-medium mb-2" style={{ color: '#374151' }}>
                ULTIMA SINCRONIZACION
             </p>
             <p className="text-sm text-gray-900">
@@ -620,13 +620,13 @@ export default function SourcesPage() {
       )}
 
       {!loading && (
-        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #e5e7eb' }}>
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="font-semibold text-gray-900">
                  Ultimas corridas del scraper
               </h2>
-              <p className="text-sm" style={{ color: '#9ca9a3' }}>
+              <p className="text-sm" style={{ color: '#6b7280' }}>
                 Filtra por fuente y estado para revisar el pipeline con mas precision.
               </p>
             </div>
@@ -636,7 +636,7 @@ export default function SourcesPage() {
                 onChange={(e) => setRunSourceFilter(e.target.value)}
                 aria-label="Filtrar corridas por fuente"
                 className="rounded-lg border px-3 py-2 text-sm"
-                style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+                style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
               >
                 <option value="">Todas las fuentes</option>
                 {runSourceOptions.map((sourceName) => (
@@ -648,7 +648,7 @@ export default function SourcesPage() {
                 onChange={(e) => setRunStatusFilter(e.target.value)}
                 aria-label="Filtrar corridas por estado"
                 className="rounded-lg border px-3 py-2 text-sm"
-                style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+                style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
               >
                 <option value="">Todos los estados</option>
                 <option value="success">Success</option>
@@ -663,7 +663,7 @@ export default function SourcesPage() {
                     setRunStatusFilter('')
                   }}
                   className="rounded-lg border px-3 py-2 text-sm font-semibold"
-                  style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
+                  style={{ borderColor: '#e5e7eb', background: '#fff', color: '#374151' }}
                 >
                   Limpiar
                 </button>
@@ -682,18 +682,18 @@ export default function SourcesPage() {
           ) : runs.length ? (
             <div className="space-y-2">
               {runs.slice(0, 5).map((run) => (
-                <div key={run.id} className="flex items-center justify-between gap-4 rounded-lg px-3 py-2" style={{ background: '#f5f9f7' }}>
+                <div key={run.id} className="flex items-center justify-between gap-4 rounded-lg px-3 py-2" style={{ background: '#f9fafb' }}>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{run.source}</p>
-                    <p className="text-xs" style={{ color: '#9ca9a3' }}>
+                    <p className="text-xs" style={{ color: '#6b7280' }}>
                       {new Date(run.created_at).toLocaleString('es-CL')} - {run.scraped_count} scraped - {run.inserted_count} inserted - {run.error_count} errors
                     </p>
                   </div>
                   <span
                     className="text-xs font-medium px-2 py-0.5 rounded capitalize"
                     style={{
-                      background: run.status === 'success' ? '#e8f3f0' : run.status === 'partial' ? '#fef3e2' : '#fef3f2',
-                      color: run.status === 'success' ? '#10b981' : run.status === 'partial' ? '#f59e0b' : '#d97706',
+                      background: run.status === 'success' ? '#f9fafb' : run.status === 'partial' ? '#fef3e2' : '#fef3f2',
+                      color: run.status === 'success' ? '#d61f2c' : run.status === 'partial' ? '#f59e0b' : '#d97706',
                     }}
                   >
                     {run.status}
@@ -702,7 +702,7 @@ export default function SourcesPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm" style={{ color: '#9ca9a3' }}>
+            <p className="text-sm" style={{ color: '#6b7280' }}>
               Todavia no hay ejecuciones registradas.
             </p>
           )}
@@ -711,3 +711,5 @@ export default function SourcesPage() {
     </div>
   )
 }
+
+

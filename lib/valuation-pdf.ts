@@ -31,7 +31,7 @@ function escapeHtml(value: string) {
     .replace(/"/g, '&quot;')
 }
 
-function iconSvg(color = '#173634') {
+function iconSvg(color = '#111111') {
   return `data:image/svg+xml;utf8,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
       <rect width="32" height="32" rx="8" fill="${color}"/>
@@ -79,12 +79,12 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
     {
       label: 'Conservador',
       value: priceBandValue(analysis, 'conservador', request.estimated_uf),
-      color: '#8fb2aa',
+      color: '#d61f2c',
     },
     {
       label: 'Mercado',
       value: priceBandValue(analysis, 'mercado', request.estimated_uf),
-      color: '#173634',
+      color: '#111111',
     },
     {
       label: 'Aspiracional',
@@ -102,11 +102,11 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
       <title>Valorizacion comercial</title>
       <style>
         :root {
-          --ink: #173634;
+          --ink: #111111;
           --muted: #5f6f6c;
           --soft: #eef4f2;
-          --line: #d8e5e2;
-          --accent: #8fb2aa;
+          --line: #e5e7eb;
+          --accent: #d61f2c;
           --paper: #f7faf9;
         }
         * { box-sizing: border-box; }
@@ -126,7 +126,7 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
           align-items: center;
           padding: 20px;
           border-radius: 20px;
-          background: linear-gradient(135deg, #173634 0%, #214d49 100%);
+          background: linear-gradient(135deg, #111111 0%, #214d49 100%);
           color: white;
           position: relative;
           overflow: hidden;
@@ -302,7 +302,7 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
       <div class="page">
         <div class="hero">
           <div class="brand-mark">
-            <img src="data:${logoMime};base64,${logoData}" alt="N3uralia" />
+            <img src="data:${logoMime};base64,${logoData}" alt="Property Partners" />
           </div>
           <div>
             <h1>Valorizacion comercial Vitacura</h1>
@@ -420,7 +420,7 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
         </div>
 
         <div class="footer">
-          N3uralia · Property Partners Vitacura · ${analysis.source === 'openai' ? 'Analisis asistido por IA' : 'Analisis deterministico comercial'}
+          Property Partners · Property Partners Vitacura · ${analysis.source === 'openai' ? 'Analisis asistido por IA' : 'Analisis deterministico comercial'}
         </div>
       </div>
     </body>
@@ -452,3 +452,4 @@ export async function buildValuationPdfBuffer(request: ValuationRequest, analysi
     await browser.close()
   }
 }
+

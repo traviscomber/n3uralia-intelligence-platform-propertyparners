@@ -147,7 +147,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
 
       {/* User */}
       {profile && (
-        <div className="px-3 py-3" style={{ borderTop: '1px solid #d8e5e2' }}>
+        <div className="px-3 py-3" style={{ borderTop: '1px solid #e5e7eb' }}>
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: '#f9fafb', color: '#d61f2c' }}>
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
@@ -162,3 +162,4 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     </aside>
   )
 }
+

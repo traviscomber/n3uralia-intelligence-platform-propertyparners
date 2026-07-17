@@ -9,7 +9,7 @@ export async function GET() {
     return new Response(fileBuffer, {
       headers: {
         'Content-Type': 'application/gzip',
-        'Content-Disposition': 'attachment; filename="Propuesta-N3uralia.tar.gz"',
+        'Content-Disposition': 'attachment; filename="Propuesta-Property Partners.tar.gz"',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     });
@@ -18,3 +18,4 @@ export async function GET() {
     return new Response('Archive not found', { status: 404 });
   }
 }
+

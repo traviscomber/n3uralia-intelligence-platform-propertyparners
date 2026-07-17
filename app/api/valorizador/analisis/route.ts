@@ -130,7 +130,7 @@ async function generateWithOpenAI(request: ValuationRequest, fallback: Valuation
         {
           role: 'system',
           content:
-            'Eres un analista senior de N3uralia especializado en ventas de casas y departamentos en Vitacura. Prioriza precision comercial, foco ejecutivo y lenguaje simple. No uses tildes ni inventes datos. Devuelve solo JSON.',
+            'Eres un analista senior de Property Partners especializado en ventas de casas y departamentos en Vitacura. Prioriza precision comercial, foco ejecutivo y lenguaje simple. No uses tildes ni inventes datos. Devuelve solo JSON.',
         },
         {
           role: 'user',
@@ -232,3 +232,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

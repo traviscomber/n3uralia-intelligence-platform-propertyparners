@@ -77,7 +77,7 @@ export default function ProfileEditor({ profile, email }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white" style={{ background: '#8fb2aa' }}>
+        <div className="flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white" style={{ background: '#d61f2c' }}>
           {avatarLetter}
         </div>
         <div>
@@ -88,7 +88,7 @@ export default function ProfileEditor({ profile, email }: Props) {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <label className="space-y-1 md:col-span-2">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Nombre completo
           </span>
           <input
@@ -96,12 +96,12 @@ export default function ProfileEditor({ profile, email }: Props) {
             onChange={(e) => setForm({ ...form, full_name: e.target.value })}
             placeholder="Nombre y apellido"
             className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors"
-            style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+            style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
           />
         </label>
 
         <label className="space-y-1">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Equipo
           </span>
           <input
@@ -109,12 +109,12 @@ export default function ProfileEditor({ profile, email }: Props) {
             onChange={(e) => setForm({ ...form, team: e.target.value })}
             placeholder="Ventas, operaciones, etc."
             className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors"
-            style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+            style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
           />
         </label>
 
         <label className="space-y-1">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             URL del avatar
           </span>
           <input
@@ -122,7 +122,7 @@ export default function ProfileEditor({ profile, email }: Props) {
             onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
             placeholder="https://..."
             className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors"
-            style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+            style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
           />
         </label>
       </div>
@@ -133,12 +133,12 @@ export default function ProfileEditor({ profile, email }: Props) {
           onClick={() => void handleSave()}
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          style={{ background: '#8fb2aa' }}
+          style={{ background: '#d61f2c' }}
         >
           {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
           {saving ? 'Guardando...' : 'Guardar cambios'}
         </button>
-        <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium" style={{ background: '#e8f3f0', color: '#555a56' }}>
+        <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium" style={{ background: '#f9fafb', color: '#374151' }}>
           <UserRound size={13} />
           Rol {profile?.role || 'vendedor'}
         </span>
@@ -149,3 +149,4 @@ export default function ProfileEditor({ profile, email }: Props) {
     </div>
   )
 }
+

@@ -46,16 +46,16 @@ export interface VitacuraMapProps {
 }
 
 const TIPO_COLOR: Record<string, string> = {
-  residencial_alto:       '#8fb2aa',
-  residencial_medio_alto: '#b89a7e',
-  residencial_medio:      '#10b981',
+  residencial_alto:       '#d61f2c',
+  residencial_medio_alto: '#6b7280',
+  residencial_medio:      '#d61f2c',
   comercial_servicios:    '#f59e0b',
 }
 
 // Función para obtener badge de status basado en absorption rate
 const getAbsorptionBadge = (rate: number | null) => {
   if (rate === null || rate === undefined) return { label: 'Sin dato', color: '#9ca3af' }
-  if (rate >= 0.85) return { label: 'Bueno', color: '#10b981' }
+  if (rate >= 0.85) return { label: 'Bueno', color: '#d61f2c' }
   if (rate >= 0.70) return { label: 'Medio', color: '#f59e0b' }
   return { label: 'Bajo', color: '#ef4444' }
 }
@@ -71,7 +71,7 @@ const getHeatmapOpacity = (rate: number | null): number => {
 // Función para obtener color de heatmap basado en absorción
 const getHeatmapColor = (rate: number | null): string => {
   if (rate === null || rate === undefined) return '#9ca3af'  // Gris
-  if (rate >= 0.85) return '#10b981'  // Verde
+  if (rate >= 0.85) return '#d61f2c'  // Verde
   if (rate >= 0.70) return '#f59e0b'  // Naranja
   return '#ef4444'  // Rojo
 }
@@ -86,7 +86,7 @@ const getTooltipHtml = (neighborhood: Neighborhood, propertyCount: number = 0): 
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px;">
         <strong style="font-size: 14px; color: #1f2937; flex: 1;">${neighborhood.name}</strong>
         <span style="background-color: ${absorptionBadge.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; white-space: nowrap;">${absorptionBadge.label}</span>
-        ${propertyCount > 0 ? `<span style="background-color: #8fb2aa; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; white-space: nowrap;">🏠 ${propertyCount}</span>` : ''}
+        ${propertyCount > 0 ? `<span style="background-color: #d61f2c; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; white-space: nowrap;">🏠 ${propertyCount}</span>` : ''}
       </div>
       
       <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 10px; padding-bottom: 8px;">
@@ -96,19 +96,19 @@ const getTooltipHtml = (neighborhood: Neighborhood, propertyCount: number = 0): 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
         <div>
           <span style="color: #9ca3af; font-size: 11px;">UF/m²</span><br/>
-          <strong style="color: #8fb2aa; font-size: 13px;">${neighborhood.price_per_sqm_uf?.toFixed(1) ?? '—'}</strong>
+          <strong style="color: #d61f2c; font-size: 13px;">${neighborhood.price_per_sqm_uf?.toFixed(1) ?? '—'}</strong>
         </div>
         <div>
           <span style="color: #9ca3af; font-size: 11px;">Velocidad</span><br/>
-          <strong style="color: #8fb2aa; font-size: 13px;">${neighborhood.velocity_days ?? '—'}d</strong>
+          <strong style="color: #d61f2c; font-size: 13px;">${neighborhood.velocity_days ?? '—'}d</strong>
         </div>
         <div>
           <span style="color: #9ca3af; font-size: 11px;">Absorción</span><br/>
-          <strong style="color: #8fb2aa; font-size: 13px;">${absorptionPct}%</strong>
+          <strong style="color: #d61f2c; font-size: 13px;">${absorptionPct}%</strong>
         </div>
         <div>
           <span style="color: #9ca3af; font-size: 11px;">Inventario</span><br/>
-          <strong style="color: #8fb2aa; font-size: 13px;">${neighborhood.inventory_count ?? '—'}</strong>
+          <strong style="color: #d61f2c; font-size: 13px;">${neighborhood.inventory_count ?? '—'}</strong>
         </div>
       </div>
     </div>
@@ -233,7 +233,7 @@ export default function VitacuraMap({ neighborhoods, prcZones, properties, selec
 
     neighborhoods.forEach((n) => {
       if (!n.geometry) return
-      const color           = TIPO_COLOR[n.tipo] || '#8fb2aa'
+      const color           = TIPO_COLOR[n.tipo] || '#d61f2c'
       const isSelected      = n.barrio_id === selected
       const heatmapOpacity  = getHeatmapOpacity(n.absorption_rate)
       const heatmapColor    = getHeatmapColor(n.absorption_rate)
@@ -376,7 +376,7 @@ export default function VitacuraMap({ neighborhoods, prcZones, properties, selec
         <div style="
           width: 32px;
           height: 32px;
-          background: linear-gradient(135deg, #8fb2aa 0%, #6b9e98 100%);
+          background: linear-gradient(135deg, #d61f2c 0%, #111111 100%);
           border: 2px solid white;
           border-radius: 50%;
           display: flex;
@@ -407,32 +407,32 @@ export default function VitacuraMap({ neighborhoods, prcZones, properties, selec
         <div style="font-family: 'Segoe UI', sans-serif; min-width: 180px; padding: 12px;">
           <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
             <span style="font-size: 12px; font-weight: 600; color: #1f2937;">🏠 Propiedad</span>
-            <span style="background-color: #8fb2aa; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 600;">Disponible</span>
+            <span style="background-color: #d61f2c; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 600;">Disponible</span>
           </div>
           
           <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 8px; padding-bottom: 8px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
               <div>
                 <span style="color: #9ca3af;">Precio</span><br/>
-                <strong style="color: #8fb2aa; font-size: 12px;">${p.price_uf?.toFixed(0) ?? '—'} UF</strong>
+                <strong style="color: #d61f2c; font-size: 12px;">${p.price_uf?.toFixed(0) ?? '—'} UF</strong>
               </div>
               <div>
                 <span style="color: #9ca3af;">Área</span><br/>
-                <strong style="color: #8fb2aa; font-size: 12px;">${p.area_m2?.toFixed(0) ?? '—'}m²</strong>
+                <strong style="color: #d61f2c; font-size: 12px;">${p.area_m2?.toFixed(0) ?? '—'}m²</strong>
               </div>
               <div>
                 <span style="color: #9ca3af;">Dormir</span><br/>
-                <strong style="color: #8fb2aa; font-size: 12px;">${p.bedrooms ?? '—'}</strong>
+                <strong style="color: #d61f2c; font-size: 12px;">${p.bedrooms ?? '—'}</strong>
               </div>
               <div>
                 <span style="color: #9ca3af;">Baños</span><br/>
-                <strong style="color: #8fb2aa; font-size: 12px;">${p.bathrooms ?? '—'}</strong>
+                <strong style="color: #d61f2c; font-size: 12px;">${p.bathrooms ?? '—'}</strong>
               </div>
             </div>
           </div>
           
           <div style="font-size: 10px; color: #9ca3af;">
-            Tiempo en mercado: <strong style="color: #555a56;">${p.days_on_market ?? '—'} días</strong>
+            Tiempo en mercado: <strong style="color: #374151;">${p.days_on_market ?? '—'} días</strong>
           </div>
         </div>
       `
@@ -523,7 +523,7 @@ export default function VitacuraMap({ neighborhoods, prcZones, properties, selec
       }}>
         <div style={{ marginBottom: 10, fontWeight: 600, fontSize: 12, color: '#1f2937' }}>Absorción</div>
         {[
-          { label: 'Bueno', color: '#10b981', range: '≥85%' },
+          { label: 'Bueno', color: '#d61f2c', range: '≥85%' },
           { label: 'Medio', color: '#f59e0b', range: '70-84%' },
           { label: 'Bajo', color: '#ef4444', range: '<70%' },
         ].map(item => (
@@ -552,3 +552,4 @@ export default function VitacuraMap({ neighborhoods, prcZones, properties, selec
     </div>
   )
 }
+

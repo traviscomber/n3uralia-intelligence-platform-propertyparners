@@ -84,7 +84,7 @@ export default function ProfileDirectory() {
     <div className="space-y-4" aria-busy={loading || refreshing}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium" style={{ background: '#e8f3f0', color: '#555a56' }}>
+          <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium" style={{ background: '#f9fafb', color: '#374151' }}>
             <Users size={13} />
             Directorio de perfiles
           </div>
@@ -99,7 +99,7 @@ export default function ProfileDirectory() {
             disabled={refreshing}
             aria-label="Refrescar directorio de perfiles"
             className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: '#8fb2aa' }}
+            style={{ background: '#d61f2c' }}
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             Refrescar
@@ -108,7 +108,7 @@ export default function ProfileDirectory() {
             href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=csv`}
             aria-label="Exportar perfiles en CSV"
             className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold"
-            style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
+            style={{ borderColor: '#e5e7eb', background: '#fff', color: '#374151' }}
           >
             <Download size={14} />
             CSV
@@ -117,7 +117,7 @@ export default function ProfileDirectory() {
             href={`${exportBaseUrl}${exportBaseUrl.includes('?') ? '&' : '?'}format=json`}
             aria-label="Exportar perfiles en JSON"
             className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold"
-            style={{ borderColor: '#d8e5e2', background: '#fff', color: '#555a56' }}
+            style={{ borderColor: '#e5e7eb', background: '#fff', color: '#374151' }}
           >
             <Download size={14} />
             JSON
@@ -135,8 +135,8 @@ export default function ProfileDirectory() {
             { label: 'CEOs', value: summary.ceos },
             { label: 'Equipos', value: summary.teams },
           ].map((item) => (
-            <div key={item.label} className="rounded-2xl border p-3" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
-              <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>{item.label}</p>
+            <div key={item.label} className="rounded-2xl border p-3" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
+              <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>{item.label}</p>
               <p className="mt-2 text-2xl font-semibold text-gray-900">{item.value}</p>
             </div>
           ))}
@@ -145,11 +145,11 @@ export default function ProfileDirectory() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <label className="space-y-1">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Buscar
           </span>
-          <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
-            <Search size={14} style={{ color: '#8fb2aa' }} />
+          <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
+            <Search size={14} style={{ color: '#d61f2c' }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -162,11 +162,11 @@ export default function ProfileDirectory() {
         </label>
 
         <label className="space-y-1">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Rol
           </span>
-          <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: '#d8e5e2', background: '#f5f9f7' }}>
-            <Filter size={14} style={{ color: '#8fb2aa' }} />
+          <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
+            <Filter size={14} style={{ color: '#d61f2c' }} />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
@@ -184,7 +184,7 @@ export default function ProfileDirectory() {
         </label>
 
         <label className="space-y-1">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
             Equipo
           </span>
           <input
@@ -193,13 +193,13 @@ export default function ProfileDirectory() {
             placeholder="Ventas, operaciones..."
             aria-label="Filtrar perfiles por equipo"
             className="w-full rounded-2xl border px-3 py-2 text-sm outline-none"
-            style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#111827' }}
+            style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
           />
         </label>
       </div>
 
       {hasFilters && (
-        <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#9ca9a3' }}>
+        <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
           Filtros activos
         </p>
       )}
@@ -210,7 +210,7 @@ export default function ProfileDirectory() {
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="animate-pulse rounded-2xl border p-4" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
+              <div key={index} className="animate-pulse rounded-2xl border p-4" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
                 <div className="h-4 w-40 rounded-full bg-gray-200" />
                 <div className="mt-3 h-3 w-56 rounded-full bg-gray-200" />
                 <div className="mt-3 h-3 w-32 rounded-full bg-gray-200" />
@@ -219,11 +219,11 @@ export default function ProfileDirectory() {
           </div>
         ) : profiles.length ? (
           profiles.map((profile) => (
-            <div key={profile.id} className="flex flex-col gap-3 rounded-2xl border p-4 md:flex-row md:items-center md:justify-between" style={{ borderColor: '#d8e5e2', background: '#fff' }}>
+            <div key={profile.id} className="flex flex-col gap-3 rounded-2xl border p-4 md:flex-row md:items-center md:justify-between" style={{ borderColor: '#e5e7eb', background: '#fff' }}>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-gray-900">{profile.full_name || 'Sin nombre'}</p>
-                  <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em]" style={{ background: '#e8f3f0', color: '#555a56' }}>
+                  <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.18em]" style={{ background: '#f9fafb', color: '#374151' }}>
                     {profile.role}
                   </span>
                 </div>
@@ -240,7 +240,7 @@ export default function ProfileDirectory() {
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium"
-                  style={{ borderColor: '#d8e5e2', background: '#f5f9f7', color: '#555a56' }}
+                  style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
                 >
                   Ver avatar
                 </a>
@@ -254,3 +254,4 @@ export default function ProfileDirectory() {
     </div>
   )
 }
+

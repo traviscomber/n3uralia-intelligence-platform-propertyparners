@@ -13,7 +13,7 @@ import { TrendingUp, TrendingDown, Minus, MapPin, Clock, Package } from 'lucide-
 const VitacuraMap = dynamic(() => import('@/components/map/VitacuraMap'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full text-sm" style={{ color: '#9ca9a3' }}>
+    <div className="flex items-center justify-center h-full text-sm" style={{ color: '#6b7280' }}>
       Cargando mapa...
     </div>
   ),
@@ -96,14 +96,14 @@ const TIPO_LABEL: Record<string, string> = {
 }
 
 const TIPO_COLOR: Record<string, string> = {
-  residencial_alto: '#8fb2aa',
-  residencial_medio_alto: '#b89a7e',
-  residencial_medio: '#10b981',
+  residencial_alto: '#d61f2c',
+  residencial_medio_alto: '#6b7280',
+  residencial_medio: '#d61f2c',
   comercial_servicios: '#f59e0b',
 }
 
 function TrendBadge({ value }: { value: number }) {
-  if (value >= 0.85) return <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded"><TrendingUp size={11} />{(value * 100).toFixed(0)}%</span>
+  if (value >= 0.85) return <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded"><TrendingUp size={11} />{(value * 100).toFixed(0)}%</span>
   if (value >= 0.70) return <span className="flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded"><Minus size={11} />{(value * 100).toFixed(0)}%</span>
   return <span className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded"><TrendingDown size={11} />{(value * 100).toFixed(0)}%</span>
 }
@@ -267,7 +267,7 @@ export default function MarketPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#d8e5e2', borderTopColor: '#8fb2aa' }} />
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: '#d61f2c' }} />
       </div>
     )
   }
@@ -275,28 +275,28 @@ export default function MarketPage() {
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="pb-5 flex items-start justify-between" style={{ borderBottom: '1px solid #d8e5e2' }}>
+      <div className="pb-5 flex items-start justify-between" style={{ borderBottom: '1px solid #e5e7eb' }}>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Inteligencia de Mercado Vitacura</h1>
-          <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Vitacura - {neighborhoods.length} barrios activos - datos en tiempo real</p>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Vitacura - {neighborhoods.length} barrios activos - datos en tiempo real</p>
         </div>
           <div className="flex items-center gap-3 mt-1">
             <Link
               href="/dashboard/market/import"
               className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors"
-              style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+              style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
             >
               Importar CSV/XLS
             </Link>
-            <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: '#555a56' }}>
-              <input type="checkbox" checked={showPrc} onChange={e => setShowPrc(e.target.checked)} className="accent-green-600" />
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: '#374151' }}>
+              <input type="checkbox" checked={showPrc} onChange={e => setShowPrc(e.target.checked)} className="accent-red-600" />
               Overlay PRC
           </label>
           <button
             onClick={handleSyncPrc}
             disabled={syncing}
             className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
-            style={{ background: '#8fb2aa', color: '#fff' }}
+            style={{ background: '#d61f2c', color: '#fff' }}
           >
             {syncing ? 'Sincronizando...' : 'Sync PRC ArcGIS'}
           </button>
@@ -309,20 +309,20 @@ export default function MarketPage() {
       )}
 
       {(realtorBenchmark || portalBenchmark || realtorError || portalError || benchmarksLoading) && (
-        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmarks externos</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Benchmarks externos</p>
               <h2 className="mt-1 text-lg font-semibold text-gray-900">Realtor International + Portal Inmobiliario</h2>
-              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                Comparación de fuentes externas para reforzar `Inteligencia de Mercado`.
+              <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+                Comparaci�n de fuentes externas para reforzar `Inteligencia de Mercado`.
               </p>
             </div>
             <button
               onClick={() => void loadBenchmarks()}
               disabled={benchmarksLoading}
               className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
-              style={{ background: '#8fb2aa', color: '#fff' }}
+              style={{ background: '#d61f2c', color: '#fff' }}
             >
               {benchmarksLoading ? 'Actualizando...' : 'Actualizar benchmarks'}
             </button>
@@ -332,35 +332,35 @@ export default function MarketPage() {
               { title: 'Realtor International', benchmark: realtorBenchmark, error: realtorError },
               { title: 'Portal Inmobiliario Benchmark', benchmark: portalBenchmark, error: portalError },
             ].map(({ title, benchmark, error }) => (
-              <div key={title} className="rounded-lg p-4" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <div key={title} className="rounded-lg p-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmark externo</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Benchmark externo</p>
                     <h3 className="mt-1 text-base font-semibold text-gray-900">{title}</h3>
-                    <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+                    <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
                       {benchmark
                         ? `${benchmark.offer_count} ofertas detectadas en ${benchmark.neighborhood} - ${new Date(benchmark.recorded_at).toLocaleString('es-CL')}`
                         : error || 'No disponible'}
                     </p>
                   </div>
                   {benchmark && (
-                    <a href={benchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-xs rounded-md font-medium transition-colors" style={{ background: '#fff', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                    <a href={benchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-xs rounded-md font-medium transition-colors" style={{ background: '#fff', color: '#374151', border: '1px solid #e5e7eb' }}>
                       Abrir fuente
                     </a>
                   )}
                 </div>
                 {benchmark && (
                   <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta minima</p>
-                      <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{benchmark.price_currency || 'CLP'}</span></p>
+                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Oferta minima</p>
+                      <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>{benchmark.price_currency || 'CLP'}</span></p>
                     </div>
-                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Oferta maxima</p>
-                      <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{benchmark.price_currency || 'CLP'}</span></p>
+                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Oferta maxima</p>
+                      <p className="mt-2 text-lg font-semibold text-gray-900">{benchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>{benchmark.price_currency || 'CLP'}</span></p>
                     </div>
-                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Titulo fuente</p>
+                    <div className="rounded-lg p-3 bg-white" style={{ border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Titulo fuente</p>
                       <p className="mt-2 text-sm font-medium text-gray-900 line-clamp-2">{benchmark.listing_title || 'Sin titulo'}</p>
                     </div>
                   </div>
@@ -374,16 +374,16 @@ export default function MarketPage() {
       {/* KPI Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Precio Prom. UF/m2', value: avgPrice.toFixed(1), unit: 'UF/m2', icon: <TrendingUp size={18} />, color: '#8fb2aa' },
-          { label: 'Velocidad Promedio', value: avgVelocity, unit: 'dias', icon: <Clock size={18} />, color: '#b89a7e' },
-          { label: 'Inventario Total', value: totalInventory, unit: 'props', icon: <Package size={18} />, color: '#10b981' },
+          { label: 'Precio Prom. UF/m2', value: avgPrice.toFixed(1), unit: 'UF/m2', icon: <TrendingUp size={18} />, color: '#d61f2c' },
+          { label: 'Velocidad Promedio', value: avgVelocity, unit: 'dias', icon: <Clock size={18} />, color: '#6b7280' },
+          { label: 'Inventario Total', value: totalInventory, unit: 'props', icon: <Package size={18} />, color: '#d61f2c' },
           { label: 'Absorcion Promedio', value: (avgAbsorption * 100).toFixed(0), unit: '%', icon: <MapPin size={18} />, color: '#f59e0b' },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+          <div key={kpi.label} className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>{kpi.label}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">{kpi.value} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{kpi.unit}</span></p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>{kpi.label}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{kpi.value} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>{kpi.unit}</span></p>
               </div>
               <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${kpi.color}18`, color: kpi.color }}>
                 {kpi.icon}
@@ -394,8 +394,8 @@ export default function MarketPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>CEO</p>
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>CEO</p>
           <h2 className="mt-1 text-lg font-semibold text-gray-900">Lectura de direccion</h2>
           <p className="mt-2 text-sm text-gray-600">
             {topMarketRow
@@ -409,8 +409,8 @@ export default function MarketPage() {
           </ul>
         </div>
 
-        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Directores</p>
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Directores</p>
           <h2 className="mt-1 text-lg font-semibold text-gray-900">Prioridad comercial por barrio</h2>
           <p className="mt-2 text-sm text-gray-600">
             {velocityLeader
@@ -424,8 +424,8 @@ export default function MarketPage() {
           </ul>
         </div>
 
-        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ejecutivos de venta</p>
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Ejecutivos de venta</p>
           <h2 className="mt-1 text-lg font-semibold text-gray-900">Accion diaria recomendada</h2>
           <p className="mt-2 text-sm text-gray-600">
             {priceLeader
@@ -442,10 +442,10 @@ export default function MarketPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {executiveBarrios.map((neighborhood, index) => (
-          <div key={neighborhood.id} className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+          <div key={neighborhood.id} className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>
                   Top {index + 1}
                 </p>
                 <h3 className="mt-1 text-base font-semibold text-gray-900">{neighborhood.name}</h3>
@@ -454,19 +454,19 @@ export default function MarketPage() {
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>Velocidad</p>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#6b7280' }}>Velocidad</p>
                 <p className="mt-1 font-semibold text-gray-900">{neighborhood.velocity_days} dias</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>Inventario</p>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#6b7280' }}>Inventario</p>
                 <p className="mt-1 font-semibold text-gray-900">{formatNumber(neighborhood.inventory_count)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>UF/m2</p>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#6b7280' }}>UF/m2</p>
                 <p className="mt-1 font-semibold text-gray-900">{neighborhood.price_per_sqm_uf.toFixed(1)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide" style={{ color: '#9ca9a3' }}>Tipo</p>
+                <p className="text-xs uppercase tracking-wide" style={{ color: '#6b7280' }}>Tipo</p>
                 <p className="mt-1 font-semibold text-gray-900">{TIPO_LABEL[neighborhood.tipo] || neighborhood.tipo}</p>
               </div>
             </div>
@@ -475,15 +475,15 @@ export default function MarketPage() {
       </div>
 
       {/* Tab Nav */}
-      <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+      <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
         {(['mapa', 'overview', 'prices', 'velocity'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className="px-4 py-1.5 rounded text-sm font-medium transition-all"
             style={{
-              background: activeTab === tab ? '#8fb2aa' : 'transparent',
-              color: activeTab === tab ? '#ffffff' : '#9ca9a3',
+              background: activeTab === tab ? '#d61f2c' : 'transparent',
+              color: activeTab === tab ? '#ffffff' : '#6b7280',
             }}
           >
             {tab === 'mapa' ? 'Mapa' : tab === 'overview' ? 'Tabla General' : tab === 'prices' ? 'Precios' : 'Velocidad'}
@@ -493,7 +493,7 @@ export default function MarketPage() {
 
       {/* Tab: Mapa */}
       {activeTab === 'mapa' && (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: '1px solid #d8e5e2', height: '520px' }}>
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: '1px solid #e5e7eb', height: '520px' }}>
           <VitacuraMap
             neighborhoods={neighborhoods as MapNeighborhood[]}
             prcZones={prcZones as MapPrcZone[]}
@@ -507,17 +507,17 @@ export default function MarketPage() {
 
       {/* Tab: Overview Table */}
       {activeTab === 'overview' && (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ borderBottom: '1px solid #d8e5e2', background: '#f5f9f7' }}>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Barrio</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Tipo</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>UF/m2</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Velocidad</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Absorcion</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Inventario</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Zona PRC</th>
+              <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Barrio</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Tipo</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>UF/m2</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Velocidad</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Absorcion</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Inventario</th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Zona PRC</th>
               </tr>
             </thead>
             <tbody>
@@ -528,7 +528,7 @@ export default function MarketPage() {
                   className="cursor-pointer transition-colors"
                   style={{
                     borderBottom: '1px solid #f0f0f0',
-                    background: selected === n.barrio_id ? '#e8f3f0' : undefined,
+                    background: selected === n.barrio_id ? '#f9fafb' : undefined,
                   }}
                 >
                   <td className="px-5 py-3 font-medium text-gray-900">{n.name}</td>
@@ -541,7 +541,7 @@ export default function MarketPage() {
                   <td className="px-5 py-3 text-gray-700">{n.velocity_days} dias</td>
                   <td className="px-5 py-3"><TrendBadge value={n.absorption_rate} /></td>
                   <td className="px-5 py-3 text-gray-700">{n.inventory_count}</td>
-                  <td className="px-5 py-3 text-xs font-mono" style={{ color: '#9ca9a3' }}>{n.zona_prc}</td>
+                  <td className="px-5 py-3 text-xs font-mono" style={{ color: '#6b7280' }}>{n.zona_prc}</td>
                 </tr>
               ))}
             </tbody>
@@ -551,7 +551,7 @@ export default function MarketPage() {
 
       {/* Tab: Prices Chart */}
       {activeTab === 'prices' && (
-        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
           <h2 className="text-base font-semibold text-gray-900 mb-4">Precio UF/m2 por Barrio</h2>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={priceChartData} margin={{ bottom: 60 }}>
@@ -559,11 +559,11 @@ export default function MarketPage() {
               <XAxis dataKey="shortName" stroke="#9ca3af" tick={{ fontSize: 11 }} angle={-40} textAnchor="end" height={70} />
               <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} tickFormatter={v => `${v} UF`} />
               <Tooltip
-                contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }}
+                contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: 12 }}
                 formatter={(val) => [typeof val === 'number' ? `${val.toFixed(1)} UF/m2` : String(val ?? '-'), 'Precio']}
                 labelFormatter={(label) => `Sector: ${label}`}
               />
-              <Bar dataKey="precio" fill="#8fb2aa" radius={[4, 4, 0, 0]} name="UF/m2" />
+              <Bar dataKey="precio" fill="#d61f2c" radius={[4, 4, 0, 0]} name="UF/m2" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -571,20 +571,20 @@ export default function MarketPage() {
 
       {/* Tab: Velocity Chart */}
       {activeTab === 'velocity' && (
-        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
           <h2 className="text-base font-semibold text-gray-900 mb-4">Velocidad de Venta y Absorcion por Barrio</h2>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={velocityChartData} margin={{ bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="shortName" stroke="#9ca3af" tick={{ fontSize: 11 }} angle={-40} textAnchor="end" height={70} />
-              <YAxis yAxisId="days" stroke="#8fb2aa" tick={{ fontSize: 11 }} tickFormatter={v => `${v}d`} />
-              <YAxis yAxisId="pct" orientation="right" stroke="#b89a7e" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} />
+              <YAxis yAxisId="days" stroke="#d61f2c" tick={{ fontSize: 11 }} tickFormatter={v => `${v}d`} />
+              <YAxis yAxisId="pct" orientation="right" stroke="#6b7280" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} />
               <Tooltip
-                contentStyle={{ background: '#fff', border: '1px solid #d8e5e2', borderRadius: '8px', fontSize: 12 }}
+                contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: 12 }}
               />
               <Legend />
-              <Bar yAxisId="days" dataKey="velocidad" fill="#8fb2aa" radius={[4, 4, 0, 0]} name="Dias en mercado" />
-              <Bar yAxisId="pct" dataKey="absorcion" fill="#b89a7e" radius={[4, 4, 0, 0]} name="Absorcion %" />
+              <Bar yAxisId="days" dataKey="velocidad" fill="#d61f2c" radius={[4, 4, 0, 0]} name="Dias en mercado" />
+              <Bar yAxisId="pct" dataKey="absorcion" fill="#6b7280" radius={[4, 4, 0, 0]} name="Absorcion %" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -592,13 +592,13 @@ export default function MarketPage() {
 
       {/* Detail Panel - shown when a row is selected */}
       {selectedNeighborhood && (
-        <div className="rounded-lg p-6" style={{ background: '#e8f3f0', border: '1px solid #8fb2aa' }}>
+        <div className="rounded-lg p-6" style={{ background: '#f9fafb', border: '1px solid #d61f2c' }}>
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-lg font-bold text-gray-900">{selectedNeighborhood.name}</h3>
-              <p className="text-sm" style={{ color: '#555a56' }}>Zona {selectedNeighborhood.zona_prc} - {TIPO_LABEL[selectedNeighborhood.tipo] || selectedNeighborhood.tipo}</p>
+              <p className="text-sm" style={{ color: '#374151' }}>Zona {selectedNeighborhood.zona_prc} - {TIPO_LABEL[selectedNeighborhood.tipo] || selectedNeighborhood.tipo}</p>
             </div>
-            <button onClick={() => setSelected(null)} className="text-xs px-3 py-1 rounded" style={{ background: '#d8e5e2', color: '#555a56' }}>Cerrar</button>
+            <button onClick={() => setSelected(null)} className="text-xs px-3 py-1 rounded" style={{ background: '#e5e7eb', color: '#374151' }}>Cerrar</button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -607,14 +607,14 @@ export default function MarketPage() {
               { label: 'Absorcion', value: `${(selectedNeighborhood.absorption_rate * 100).toFixed(0)}%` },
               { label: 'Inventario', value: `${selectedNeighborhood.inventory_count} props` },
             ].map(stat => (
-              <div key={stat.label} className="bg-white rounded-lg p-3" style={{ border: '1px solid #d8e5e2' }}>
-                <p className="text-xs font-semibold uppercase" style={{ color: '#9ca9a3' }}>{stat.label}</p>
+              <div key={stat.label} className="bg-white rounded-lg p-3" style={{ border: '1px solid #e5e7eb' }}>
+                <p className="text-xs font-semibold uppercase" style={{ color: '#6b7280' }}>{stat.label}</p>
                 <p className="text-xl font-bold text-gray-900 mt-1">{stat.value}</p>
               </div>
             ))}
           </div>
           {selectedMarket && (
-            <p className="text-xs mt-4" style={{ color: '#555a56' }}>
+            <p className="text-xs mt-4" style={{ color: '#374151' }}>
               Precio promedio propiedad: <strong>{selectedMarket.avg_price_uf?.toLocaleString('es-CL')} UF</strong> - Dias en mercado: <strong>{selectedMarket.avg_days_on_market?.toFixed(0)} dias</strong>
             </p>
           )}
@@ -622,29 +622,29 @@ export default function MarketPage() {
       )}
 
       {marketHistory.length > 0 && (
-        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Historial de barrio</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Historial de barrio</p>
               <h3 className="mt-1 text-lg font-semibold text-gray-900">Instantaneas del mercado por barrio</h3>
             </div>
-            <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+            <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
               {marketHistory.length} instantaneas
             </span>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
             {marketHistory.slice(0, 3).map((row) => (
-              <div key={row.id} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+              <div key={row.id} className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-gray-900">{row.neighborhood}</p>
-                  <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#e8f3f0', color: '#166534' }}>
+                  <span className="text-xs px-2 py-0.5 rounded" style={{ background: '#f9fafb', color: '#166534' }}>
                     {row.opportunity_score}/100
                   </span>
                 </div>
-                <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+                <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
                   {new Date(row.snapshot_date).toLocaleDateString('es-CL')} - {row.inventory_count} inventario - {(row.absorption_rate || 0) * 100}% absorcion
                 </p>
-                <p className="text-xs mt-1" style={{ color: '#555a56' }}>
+                <p className="text-xs mt-1" style={{ color: '#374151' }}>
                   {row.avg_price_m2_uf?.toFixed(1) || 'N/A'} UF/m2 - {row.avg_days_on_market ? `${row.avg_days_on_market.toFixed(0)} dias` : 'sin dias'}
                 </p>
               </div>
@@ -654,13 +654,13 @@ export default function MarketPage() {
       )}
 
       {focusNeighborhood && (
-        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#d8e5e2' }}>
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Barrio foco</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Barrio foco</p>
               <h3 className="mt-1 text-lg font-semibold text-gray-900">{focusNeighborhood.name}</h3>
             </div>
-            <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+            <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
               {selected ? 'Seleccionado' : 'Sugerido por lectura general'}
             </span>
           </div>
@@ -674,3 +674,5 @@ export default function MarketPage() {
     </div>
   )
 }
+
+

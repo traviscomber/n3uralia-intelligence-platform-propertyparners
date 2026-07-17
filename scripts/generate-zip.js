@@ -19,29 +19,29 @@ archive.pipe(output);
 
 // Add PDF
 archive.file(path.join(process.cwd(), 'public', 'propuesta-profesional-completa.pdf'), {
-  name: 'Propuesta-Comercial-N3uralia.pdf',
+  name: 'Propuesta-Comercial-Property Partners.pdf',
 });
 
 // Add HTML version
 archive.file(path.join(process.cwd(), 'public', 'propuesta-profesional-v2.html'), {
-  name: 'Propuesta-Comercial-N3uralia.html',
+  name: 'Propuesta-Comercial-Property Partners.html',
 });
 
 // Add README with links and instructions
-const readmeContent = `# N3uralia - Propuesta Comercial
+const readmeContent = `# Property Partners - Propuesta Comercial
 
 ## Contenido
 
-Este ZIP contiene la propuesta comercial profesional completa de N3uralia Intelligence Platform.
+Este ZIP contiene la propuesta comercial profesional completa de Property Partners Intelligence Platform.
 
 ### Archivos incluidos:
 
-1. **Propuesta-Comercial-N3uralia.pdf** (17 páginas, 82 KB)
+1. **Propuesta-Comercial-Property Partners.pdf** (17 páginas, 82 KB)
    - Documento profesional con todas las screenshots
    - Alto impacto visual, print-ready
    - 12 imágenes de la plataforma
 
-2. **Propuesta-Comercial-N3uralia.html** (17 páginas)
+2. **Propuesta-Comercial-Property Partners.html** (17 páginas)
    - Versión web, compatible con MS Word, Google Docs, LibreOffice
    - Puede editarse si es necesario
 
@@ -161,3 +161,4 @@ Versión: v0.5.0 - Phase 3 Completo
 archive.append(readmeContent, { name: 'README.md' });
 
 archive.finalize();
+

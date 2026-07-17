@@ -8,12 +8,14 @@ type PPLogoProps = {
 export function PPLogo({ className = '', priority = false }: PPLogoProps) {
   return (
     <Image
-      src="/n3uralia-logo.webp"
+      src="/brand/n3uralia-wordmark.jpeg"
       alt="Property Partners"
       width={240}
       height={72}
       priority={priority}
+      unoptimized
       className={className}
     />
   )
 }
+

@@ -31,7 +31,7 @@ const html = `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>N3uralia Intelligence Platform - Propuesta Comercial</title>
+  <title>Property Partners Intelligence Platform - Propuesta Comercial</title>
   <style>
     * { margin: 0; padding: 0; }
     body {
@@ -171,7 +171,7 @@ const html = `
 <!-- PAGE 2: EXECUTIVE SUMMARY -->
 <div class="page">
   <h2>Resumen Ejecutivo</h2>
-  <p>N3uralia Intelligence Platform es una solución integral de inteligencia de mercado diseñada específicamente para el sector inmobiliario chileno. La plataforma integra datos reales de Portal Inmobiliario, análisis geoespacial con PostGIS, y algoritmos de machine learning para proporcionar insights accionables.</p>
+  <p>Property Partners Intelligence Platform es una solución integral de inteligencia de mercado diseñada específicamente para el sector inmobiliario chileno. La plataforma integra datos reales de Portal Inmobiliario, análisis geoespacial con PostGIS, y algoritmos de machine learning para proporcionar insights accionables.</p>
   
   <h3>Características Clave:</h3>
   <ul>
@@ -401,7 +401,7 @@ const html = `
   <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
   
   <p style="text-align: center; margin-top: 40px;">
-    <strong>N3uralia Intelligence Platform v0.5.0</strong><br>
+    <strong>Property Partners Intelligence Platform v0.5.0</strong><br>
     Julio 2026 — Propuesta Comercial
   </p>
 </div>
@@ -422,3 +422,4 @@ const DocxModule = require('html-docx-js');
 const converted = DocxModule.asBlob(html);
 fs.writeFileSync(path.join(__dirname, '../public/propuesta-comercial-n3uralia.docx'), converted);
 console.log('✅ DOCX file generated: public/propuesta-comercial-n3uralia.docx');
+

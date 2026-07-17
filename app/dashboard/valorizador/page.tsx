@@ -411,7 +411,7 @@ export default function ValorizadorPage() {
           score,
           price_per_m2: pricePerM2,
           delta_to_estimate_uf: property.price_uf - estimateUF,
-          match_label: reasons.slice(0, 3).join(' · '),
+          match_label: reasons.slice(0, 3).join(' � '),
         }
       })
       .filter((item) => item.score >= 35)
@@ -704,55 +704,55 @@ export default function ValorizadorPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#d8e5e2', borderTopColor: '#8fb2aa' }} />
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: '#d61f2c' }} />
       </div>
     )
   }
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="pb-5" style={{ borderBottom: '1px solid #d8e5e2' }}>
+      <div className="pb-5" style={{ borderBottom: '1px solid #e5e7eb' }}>
         <h1 className="text-3xl font-bold text-gray-900">Valorizador IA</h1>
-        <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
+        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
           Estimacion basada en datos reales de Vitacura, comparables recientes y un benchmark externo cuando esta disponible.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm space-y-4" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm space-y-4" style={{ border: '1px solid #e5e7eb' }}>
           <h2 className="font-semibold text-gray-900">Datos de la propiedad</h2>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Barrio</label>
+            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Barrio</label>
             <select
               value={form.neighborhood}
               onChange={(e) => { setForm({ ...form, neighborhood: e.target.value }); setResult(null) }}
               className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-              style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+              style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
             >
               {neighborhoods.map((n) => <option key={n.name} value={n.name}>{n.name}</option>)}
             </select>
             {selectedNb && (
-              <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
-                Precio de referencia: <strong>{selectedNb.price_per_sqm_uf} UF/m2</strong> · Zona {selectedNb.zona_prc}
+              <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
+                Precio de referencia: <strong>{selectedNb.price_per_sqm_uf} UF/m2</strong> � Zona {selectedNb.zona_prc}
               </p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Area m2</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Area m2</label>
               <input
                 type="number"
                 min="20"
                 value={form.area_m2}
                 onChange={(e) => { setForm({ ...form, area_m2: e.target.value }); setResult(null) }}
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Antiguedad</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Antiguedad</label>
               <input
                 type="number"
                 min="0"
@@ -760,14 +760,14 @@ export default function ValorizadorPage() {
                 value={form.age_years}
                 onChange={(e) => { setForm({ ...form, age_years: e.target.value }); setResult(null) }}
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Dormitorios</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Dormitorios</label>
               <input
                 type="number"
                 min="1"
@@ -775,11 +775,11 @@ export default function ValorizadorPage() {
                 value={form.bedrooms}
                 onChange={(e) => { setForm({ ...form, bedrooms: e.target.value }); setResult(null) }}
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Banos</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Banos</label>
               <input
                 type="number"
                 min="1"
@@ -787,11 +787,11 @@ export default function ValorizadorPage() {
                 value={form.bathrooms}
                 onChange={(e) => { setForm({ ...form, bathrooms: e.target.value }); setResult(null) }}
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Piso</label>
+              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Piso</label>
               <input
                 type="number"
                 min="1"
@@ -799,13 +799,13 @@ export default function ValorizadorPage() {
                 value={form.floor}
                 onChange={(e) => { setForm({ ...form, floor: e.target.value }); setResult(null) }}
                 className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #d8e5e2', background: '#f5f9f7' }}
+                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Estado</label>
+            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Estado</label>
             <div className="grid grid-cols-2 gap-2">
               {(['excelente', 'bueno', 'regular', 'a_renovar'] as const).map((c) => (
                 <button
@@ -813,9 +813,9 @@ export default function ValorizadorPage() {
                   onClick={() => { setForm({ ...form, condition: c }); setResult(null) }}
                   className="px-3 py-1.5 rounded text-xs font-medium capitalize transition-all"
                   style={{
-                    background: form.condition === c ? '#8fb2aa' : '#f5f9f7',
-                    color: form.condition === c ? '#fff' : '#555a56',
-                    border: `1px solid ${form.condition === c ? '#8fb2aa' : '#d8e5e2'}`,
+                    background: form.condition === c ? '#d61f2c' : '#f9fafb',
+                    color: form.condition === c ? '#fff' : '#374151',
+                    border: `1px solid ${form.condition === c ? '#d61f2c' : '#e5e7eb'}`,
                   }}
                 >
                   {c.replace('_', ' ')}
@@ -825,7 +825,7 @@ export default function ValorizadorPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#555a56' }}>Extras</label>
+            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Extras</label>
             <div className="flex gap-2 flex-wrap">
               {[
                 { key: 'has_parking', label: 'Estacionamiento' },
@@ -837,9 +837,9 @@ export default function ValorizadorPage() {
                   onClick={() => { setForm((f) => ({ ...f, [key]: !f[key as keyof typeof f] })); setResult(null) }}
                   className="px-3 py-1.5 rounded text-xs font-medium transition-all"
                   style={{
-                    background: form[key as keyof typeof form] ? '#e8f3f0' : '#f5f9f7',
-                    color: form[key as keyof typeof form] ? '#173634' : '#9ca9a3',
-                    border: `1px solid ${form[key as keyof typeof form] ? '#8fb2aa' : '#d8e5e2'}`,
+                    background: form[key as keyof typeof form] ? '#f9fafb' : '#f9fafb',
+                    color: form[key as keyof typeof form] ? '#111111' : '#6b7280',
+                    border: `1px solid ${form[key as keyof typeof form] ? '#d61f2c' : '#e5e7eb'}`,
                   }}
                 >
                   {label}
@@ -852,7 +852,7 @@ export default function ValorizadorPage() {
             onClick={calculate}
             disabled={calculating || !form.neighborhood}
             className="w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-            style={{ background: '#8fb2aa' }}
+            style={{ background: '#d61f2c' }}
           >
             {calculating ? <><RefreshCw size={15} className="animate-spin" /> Calculando...</> : <><BarChart2 size={15} /> Calcular valor</>}
           </button>
@@ -861,73 +861,73 @@ export default function ValorizadorPage() {
         <div className="lg:col-span-3 space-y-4">
           {result ? (
             <>
-              <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #8fb2aa', borderLeft: '4px solid #8fb2aa' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#555a56' }}>Valor estimado</p>
-                <p className="text-4xl font-bold text-gray-900">{result.price_uf.toLocaleString('es-CL')} <span className="text-xl font-semibold" style={{ color: '#8fb2aa' }}>UF</span></p>
-                <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>~ ${result.price_clp.toLocaleString('es-CL')} CLP</p>
+              <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d61f2c', borderLeft: '4px solid #d61f2c' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#374151' }}>Valor estimado</p>
+                <p className="text-4xl font-bold text-gray-900">{result.price_uf.toLocaleString('es-CL')} <span className="text-xl font-semibold" style={{ color: '#d61f2c' }}>UF</span></p>
+                <p className="text-sm mt-1" style={{ color: '#6b7280' }}>~ ${result.price_clp.toLocaleString('es-CL')} CLP</p>
 
                 <div className="flex items-center gap-2 mt-4">
-                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#d8e5e2' }}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${result.confidence}%`, background: result.confidence > 85 ? '#10b981' : result.confidence > 70 ? '#f59e0b' : '#d97706' }} />
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#e5e7eb' }}>
+                    <div className="h-full rounded-full transition-all" style={{ width: `${result.confidence}%`, background: result.confidence > 85 ? '#d61f2c' : result.confidence > 70 ? '#f59e0b' : '#d97706' }} />
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? '#10b981' : '#f59e0b' }}>{result.confidence}% confianza</span>
+                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? '#d61f2c' : '#f59e0b' }}>{result.confidence}% confianza</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={15} style={{ color: '#8fb2aa' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Precio / m2</p>
+                    <DollarSign size={15} style={{ color: '#d61f2c' }} />
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Precio / m2</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.price_uf_m2} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>UF/m2</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{result.price_uf_m2} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>UF/m2</span></p>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp size={15} style={{ color: '#b89a7e' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Velocidad del barrio</p>
+                    <TrendingUp size={15} style={{ color: '#6b7280' }} />
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Velocidad del barrio</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.market_velocity} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>dias</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{result.market_velocity} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>dias</span></p>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <BarChart2 size={15} style={{ color: '#10b981' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Absorcion</p>
+                    <BarChart2 size={15} style={{ color: '#d61f2c' }} />
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Absorcion</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.market_absorption}<span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>%</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{result.market_absorption}<span className="text-sm font-normal" style={{ color: '#6b7280' }}>%</span></p>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <Home size={15} style={{ color: '#f59e0b' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#555a56' }}>Comparables</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Comparables</p>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.comparable_properties} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>props</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{result.comparable_properties} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>props</span></p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio de publicacion</p>
+                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio de publicacion</p>
                   <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.publication?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
-                  <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>Nivel aspiracional para abrir la negociacion con margen comercial.</p>
+                  <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>Nivel aspiracional para abrir la negociacion con margen comercial.</p>
                 </div>
-                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio de cierre objetivo</p>
+                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio de cierre objetivo</p>
                   <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.closing?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
-                  <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>Nivel de mercado para cerrar con buena velocidad y menos friccion.</p>
+                  <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>Nivel de mercado para cerrar con buena velocidad y menos friccion.</p>
                 </div>
-                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Piso de negociacion</p>
+                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Piso de negociacion</p>
                   <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.floor?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
-                  <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>Umbral minimo recomendado para no regalar valor.</p>
+                  <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>Umbral minimo recomendado para no regalar valor.</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Activar reportes por rol</p>
-                    <p className="text-sm mt-1 max-w-2xl" style={{ color: '#9ca9a3' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Activar reportes por rol</p>
+                    <p className="text-sm mt-1 max-w-2xl" style={{ color: '#6b7280' }}>
                       Usa esta valorizacion como insumo para el vendedor, el director o el CEO sin volver a rearmar contexto.
                     </p>
                   </div>
@@ -936,7 +936,7 @@ export default function ValorizadorPage() {
                       onClick={() => void generateRoleReport('seller_playbook')}
                       disabled={Boolean(roleReportLoading)}
                       className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                      style={{ background: '#8fb2aa' }}
+                      style={{ background: '#d61f2c' }}
                     >
                       <Send size={14} />
                       {roleReportLoading === 'seller_playbook' ? 'Generando...' : 'Vendedor'}
@@ -954,7 +954,7 @@ export default function ValorizadorPage() {
                       onClick={() => void generateRoleReport('ceo_brief')}
                       disabled={Boolean(roleReportLoading)}
                       className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                      style={{ background: '#173634' }}
+                      style={{ background: '#111111' }}
                     >
                       <Send size={14} />
                       {roleReportLoading === 'ceo_brief' ? 'Generando...' : 'CEO'}
@@ -962,7 +962,7 @@ export default function ValorizadorPage() {
                   </div>
                 </div>
                 {roleReportMessage && (
-                  <p className="mt-3 text-sm text-emerald-700">{roleReportMessage}</p>
+                  <p className="mt-3 text-sm text-red-700">{roleReportMessage}</p>
                 )}
                 {roleReportError && (
                   <p className="mt-3 text-sm text-rose-700">{roleReportError}</p>
@@ -970,17 +970,17 @@ export default function ValorizadorPage() {
               </div>
 
               {comparisonSummary && (
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Comparacion rapida</p>
-                      <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Compara esta valorizacion con el historial guardado para leer tendencia y consistencia.</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Comparacion rapida</p>
+                      <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Compara esta valorizacion con el historial guardado para leer tendencia y consistencia.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <a
                         href={exportUrl('csv')}
                         className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
-                        style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                        style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
                       >
                         <Download size={14} />
                         CSV
@@ -988,7 +988,7 @@ export default function ValorizadorPage() {
                       <a
                         href={exportUrl('xlsx')}
                         className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
-                        style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                        style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
                       >
                         <Download size={14} />
                         XLSX
@@ -996,60 +996,60 @@ export default function ValorizadorPage() {
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Actual</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Actual</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{result?.price_uf.toLocaleString('es-CL')} UF</p>
-                      <p className="text-xs" style={{ color: '#9ca9a3' }}>Cierre objetivo: {selectedBands?.closing?.toLocaleString('es-CL')} UF</p>
+                      <p className="text-xs" style={{ color: '#6b7280' }}>Cierre objetivo: {selectedBands?.closing?.toLocaleString('es-CL')} UF</p>
                     </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Promedio historico</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Promedio historico</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(comparisonSummary.averageClosing).toLocaleString('es-CL')} UF</p>
-                      <p className="text-xs" style={{ color: '#9ca9a3' }}>Confianza media: {Math.round(comparisonSummary.averageConfidence)}%</p>
+                      <p className="text-xs" style={{ color: '#6b7280' }}>Confianza media: {Math.round(comparisonSummary.averageConfidence)}%</p>
                     </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ultima cotizacion</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Ultima cotizacion</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{comparisonSummary.previous ? Math.round(comparisonSummary.previous.closing_price_uf).toLocaleString('es-CL') : 'N/A'} UF</p>
-                      <p className="text-xs" style={{ color: '#9ca9a3' }}>{comparisonSummary.previous ? comparisonSummary.previous.neighborhood : 'Sin historial'}</p>
+                      <p className="text-xs" style={{ color: '#6b7280' }}>{comparisonSummary.previous ? comparisonSummary.previous.neighborhood : 'Sin historial'}</p>
                     </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Tendencia</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Tendencia</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">
                         {comparisonSummary.previous
                           ? `${(result.price_uf - Number(comparisonSummary.previous.closing_price_uf || 0)).toLocaleString('es-CL')} UF`
                           : 'N/A'}
                       </p>
-                      <p className="text-xs" style={{ color: '#9ca9a3' }}>Vs. ultima cotizacion guardada</p>
+                      <p className="text-xs" style={{ color: '#6b7280' }}>Vs. ultima cotizacion guardada</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {neighborhoodComparison && (
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Comparacion por barrio</p>
-                      <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Promedio de cierres guardados por barrio para leer posicion relativa.</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Comparacion por barrio</p>
+                      <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Promedio de cierres guardados por barrio para leer posicion relativa.</p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                    <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
                       {neighborhoodComparison.currentNeighborhood.count || 0} registros
                     </span>
                   </div>
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Promedio</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Promedio</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
                     </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>P25</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>P25</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p25 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
                     </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Mediana</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Mediana</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p50 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
                     </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>P75</p>
+                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>P75</p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p75 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
                     </div>
                   </div>
@@ -1058,21 +1058,21 @@ export default function ValorizadorPage() {
                       {
                         label: neighborhoodComparison.currentNeighborhood.neighborhood,
                         value: neighborhoodComparison.currentNeighborhood.averageClosing,
-                        accent: '#173634',
+                        accent: '#111111',
                       },
                       ...neighborhoodComparison.rows.filter((row) => row.neighborhood !== neighborhoodComparison.currentNeighborhood.neighborhood).map((row) => ({
                         label: row.neighborhood,
                         value: row.averageClosing,
-                        accent: '#8fb2aa',
+                        accent: '#d61f2c',
                       })),
                     ].slice(0, 4).map((item) => {
                       const width = Math.max(12, Math.round((item.value / neighborhoodComparison.maxValue) * 100))
                       return (
                         <div key={item.label} className="flex items-center gap-3">
-                          <div className="w-36 text-xs font-medium uppercase tracking-wide" style={{ color: '#555a56' }}>
+                          <div className="w-36 text-xs font-medium uppercase tracking-wide" style={{ color: '#374151' }}>
                             {item.label}
                           </div>
-                          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: '#eef4f2', border: '1px solid #d8e5e2' }}>
+                          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: '#eef4f2', border: '1px solid #e5e7eb' }}>
                             <div className="h-full rounded-full" style={{ width: `${width}%`, background: item.accent }} />
                           </div>
                           <div className="w-24 text-right text-sm font-semibold text-gray-900">
@@ -1086,21 +1086,21 @@ export default function ValorizadorPage() {
               )}
 
               {visibleHistory.length > 0 && (
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Historial de cotizaciones</p>
-                      <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>Ultimas valuaciones guardadas para seguimiento comercial y comparacion rapida.</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Historial de cotizaciones</p>
+                      <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Ultimas valuaciones guardadas para seguimiento comercial y comparacion rapida.</p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                      <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>
                         Filtrar barrio
                       </label>
                       <select
                         value={historyNeighborhoodFilter}
                         onChange={(e) => setHistoryNeighborhoodFilter(e.target.value)}
                         className="rounded-md px-3 py-2 text-sm"
-                        style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                        style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
                       >
                         <option value="all">Todos los barrios</option>
                         {historyNeighborhoodOptions.map((name) => (
@@ -1113,29 +1113,29 @@ export default function ValorizadorPage() {
                   </div>
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                     {visibleHistory.map((item) => (
-                      <div key={item.quote_key} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <div key={item.quote_key} className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-gray-900">{item.neighborhood}</p>
-                            <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
+                            <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
                               {new Date(item.created_at).toLocaleString('es-CL')}
                             </p>
                           </div>
-                          <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#fff', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                          <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#fff', color: '#374151', border: '1px solid #e5e7eb' }}>
                             {item.confidence}% confianza
                           </span>
                         </div>
                         <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
                           <div>
-                            <p style={{ color: '#9ca9a3' }}>Publicacion</p>
+                            <p style={{ color: '#6b7280' }}>Publicacion</p>
                             <p className="font-semibold text-gray-900">{Math.round(item.publication_price_uf).toLocaleString('es-CL')} UF</p>
                           </div>
                           <div>
-                            <p style={{ color: '#9ca9a3' }}>Cierre</p>
+                            <p style={{ color: '#6b7280' }}>Cierre</p>
                             <p className="font-semibold text-gray-900">{Math.round(item.closing_price_uf).toLocaleString('es-CL')} UF</p>
                           </div>
                           <div>
-                            <p style={{ color: '#9ca9a3' }}>Base</p>
+                            <p style={{ color: '#6b7280' }}>Base</p>
                             <p className="font-semibold text-gray-900">{Math.round(item.estimated_uf).toLocaleString('es-CL')} UF</p>
                           </div>
                         </div>
@@ -1145,18 +1145,18 @@ export default function ValorizadorPage() {
                 </div>
               )}
 
-              <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+              <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                 <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Lectura IA</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Lectura IA</p>
                     <h3 className="mt-1 text-lg font-semibold text-gray-900">{aiAnalysis?.title || 'Analisis comercial asistido'}</h3>
-                    <p className="text-sm mt-1 max-w-3xl" style={{ color: '#9ca9a3' }}>
+                    <p className="text-sm mt-1 max-w-3xl" style={{ color: '#6b7280' }}>
                       {aiLoading
                         ? 'La IA esta revisando comparables, absorcion y contexto del barrio para reforzar el relato comercial.'
                         : aiAnalysis?.summary || 'Se generara una lectura comercial apenas termine el calculo.'}
                     </p>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full self-start" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                  <span className="text-xs px-2 py-1 rounded-full self-start" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
                     {aiLoading ? 'Analizando' : aiAnalysis?.source === 'openai' ? 'OpenAI' : 'Fallback local'}
                   </span>
                 </div>
@@ -1197,31 +1197,31 @@ export default function ValorizadorPage() {
                     selected_comparables: comparables,
                     benchmark: externalBenchmark,
                   }).price_bands).map((band) => (
-                    <div key={band.label} className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>
+                    <div key={band.label} className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>
                         {band.label.replace('_', ' ')}
                       </p>
                       <p className="mt-2 text-xl font-semibold text-gray-900">{band.value_uf.toLocaleString('es-CL')} UF</p>
-                      <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>{band.note}</p>
+                      <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>{band.note}</p>
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Por que este valor</p>
+                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Por que este valor</p>
                     <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
                       {(aiAnalysis?.why_now || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
                     </ul>
                   </div>
-                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Riesgos</p>
+                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Riesgos</p>
                     <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
                       {(aiAnalysis?.risks || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
                     </ul>
                   </div>
-                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Acciones</p>
+                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Acciones</p>
                     <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
                       {(aiAnalysis?.actions || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
                     </ul>
@@ -1229,8 +1229,8 @@ export default function ValorizadorPage() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Sensibilidad de precio</p>
+                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Sensibilidad de precio</p>
                     <div className="mt-2 space-y-2">
                       {(aiAnalysis?.sensitivities || buildFallbackValuationAnalysis({
                         neighborhood: {
@@ -1265,7 +1265,7 @@ export default function ValorizadorPage() {
                         <div key={item.factor} className="flex items-center justify-between gap-3 text-sm">
                           <div>
                             <p className="font-medium text-gray-900">{item.factor}</p>
-                            <p className="text-xs" style={{ color: '#9ca9a3' }}>{item.note}</p>
+                            <p className="text-xs" style={{ color: '#6b7280' }}>{item.note}</p>
                           </div>
                           <span className="font-semibold text-gray-900">
                             {item.direction === 'down' ? '-' : '+'}{item.impact_uf.toLocaleString('es-CL')} UF
@@ -1274,13 +1274,13 @@ export default function ValorizadorPage() {
                       ))}
                     </div>
                   </div>
-                  <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Posicion comercial</p>
+                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Posicion comercial</p>
                     <p className="mt-2 text-sm font-medium text-gray-900">{aiAnalysis?.market_position || 'Se reforzara la posicion con la lectura IA.'}</p>
-                    <p className="mt-2 text-sm" style={{ color: '#9ca9a3' }}>
+                    <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
                       {aiAnalysis?.band_recommendation || 'La IA ajustara el relato de salida, el piso y el espacio de negociacion.'}
                     </p>
-                    <div className="mt-3 rounded-md px-3 py-2 text-xs" style={{ background: '#fff', border: '1px solid #d8e5e2', color: '#555a56' }}>
+                    <div className="mt-3 rounded-md px-3 py-2 text-xs" style={{ background: '#fff', border: '1px solid #e5e7eb', color: '#374151' }}>
                       {aiAnalysis?.confidence_note || 'La confianza del relato dependera de la calidad de los comparables y la frescura del mercado.'}
                     </div>
                   </div>
@@ -1290,7 +1290,7 @@ export default function ValorizadorPage() {
                     onClick={downloadValuationPdf}
                     disabled={pdfLoading}
                     className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                    style={{ background: '#173634' }}
+                    style={{ background: '#111111' }}
                   >
                     <Download size={14} />
                     {pdfLoading ? 'Generando PDF...' : 'Descargar PDF'}
@@ -1298,7 +1298,7 @@ export default function ValorizadorPage() {
                   <a
                     href="/dashboard/reportes"
                     className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
-                    style={{ background: '#f5f9f7', color: '#173634', border: '1px solid #d8e5e2' }}
+                    style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
                   >
                     <FileText size={14} />
                     Ir a reportes
@@ -1309,13 +1309,13 @@ export default function ValorizadorPage() {
                 )}
               </div>
 
-              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Rango comparable</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Rango comparable</p>
                     <p className="text-lg font-semibold text-gray-900">{result.comparable_range_uf} UF</p>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+                  <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
                     Fuente: {result.comparable_source}
                   </span>
                 </div>
@@ -1323,69 +1323,69 @@ export default function ValorizadorPage() {
                 <div className="mt-4 space-y-2">
                   {comparables.length ? (
                     comparables.map((item) => (
-                      <div key={item.id} className="rounded-lg px-3 py-2" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
+                      <div key={item.id} className="rounded-lg px-3 py-2" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium text-gray-900">{item.address}</p>
-                            <p className="text-xs mt-1" style={{ color: '#9ca9a3' }}>
-                              {item.neighborhood} · {item.bedrooms}D/{item.bathrooms}B · {item.area_m2} m² · {item.source || 'properties'}
+                            <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
+                              {item.neighborhood} � {item.bedrooms}D/{item.bathrooms}B � {item.area_m2} m� � {item.source || 'properties'}
                             </p>
-                            <p className="text-xs mt-1" style={{ color: '#555a56' }}>{item.match_label}</p>
+                            <p className="text-xs mt-1" style={{ color: '#374151' }}>{item.match_label}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-semibold text-gray-900">{item.price_uf.toLocaleString('es-CL')} UF</p>
-                            <p className="text-xs" style={{ color: '#9ca9a3' }}>Score {item.score.toFixed(0)}% · Similarity {item.similarity.toFixed(0)}%</p>
+                            <p className="text-xs" style={{ color: '#6b7280' }}>Score {item.score.toFixed(0)}% � Similarity {item.similarity.toFixed(0)}%</p>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm" style={{ color: '#9ca9a3' }}>No hay comparables suficientes en `properties` todavia.</p>
+                    <p className="text-sm" style={{ color: '#6b7280' }}>No hay comparables suficientes en `properties` todavia.</p>
                   )}
                 </div>
               </div>
 
-              <p className="text-xs px-1" style={{ color: '#9ca9a3' }}>
+              <p className="text-xs px-1" style={{ color: '#6b7280' }}>
                 Estimacion basada en datos reales de mercado para {result.comp_neighborhood}, comparables recientes de `properties` y el benchmark externo cuando esta disponible.
               </p>
             </>
           ) : (
-            <div className="bg-white rounded-lg p-12 text-center shadow-sm flex flex-col items-center justify-center h-full min-h-[300px]" style={{ border: '1px dashed #d8e5e2' }}>
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: '#e8f3f0' }}>
-                <Home size={26} style={{ color: '#8fb2aa' }} />
+            <div className="bg-white rounded-lg p-12 text-center shadow-sm flex flex-col items-center justify-center h-full min-h-[300px]" style={{ border: '1px dashed #e5e7eb' }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: '#f9fafb' }}>
+                <Home size={26} style={{ color: '#d61f2c' }} />
               </div>
               <p className="font-semibold text-gray-900">Ingresa los datos de la propiedad</p>
-              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>El modelo usara precios reales de {neighborhoods.length} barrios de Vitacura</p>
+              <p className="text-sm mt-1" style={{ color: '#6b7280' }}>El modelo usara precios reales de {neighborhoods.length} barrios de Vitacura</p>
             </div>
           )}
         </div>
       </div>
 
       {externalBenchmark && (
-        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
+        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Benchmark externo</p>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Benchmark externo</p>
               <h3 className="mt-1 text-lg font-semibold text-gray-900">Realtor International</h3>
-              <p className="text-sm mt-1" style={{ color: '#9ca9a3' }}>
-                {externalBenchmark.offer_count} ofertas detectadas en {externalBenchmark.neighborhood} · {new Date(externalBenchmark.recorded_at).toLocaleString('es-CL')}
+              <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
+                {externalBenchmark.offer_count} ofertas detectadas en {externalBenchmark.neighborhood} � {new Date(externalBenchmark.recorded_at).toLocaleString('es-CL')}
               </p>
             </div>
-            <a href={externalBenchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors" style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}>
+            <a href={externalBenchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
               Abrir fuente
             </a>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio minimo</p>
-              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
+            <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio minimo</p>
+              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Precio maximo</p>
-              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#9ca9a3' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
+            <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio maximo</p>
+              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#f5f9f7', border: '1px solid #d8e5e2' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Titulo</p>
+            <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Titulo</p>
               <p className="mt-2 text-sm font-medium text-gray-900">{externalBenchmark.listing_title || 'Sin titulo'}</p>
             </div>
           </div>
@@ -1393,16 +1393,16 @@ export default function ValorizadorPage() {
       )}
 
       {neighborhoods.length > 0 && (
-        <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #d8e5e2' }}>
-          <div className="px-5 py-3" style={{ borderBottom: '1px solid #d8e5e2', background: '#f5f9f7' }}>
+        <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+          <div className="px-5 py-3" style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
             <h3 className="text-sm font-semibold text-gray-900">Precios de referencia por barrio</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: '1px solid #d8e5e2' }}>
+                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                   {['Barrio', 'UF/m2', 'Velocidad', 'Absorcion', 'Inventario'].map((h) => (
-                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>{h}</th>
+                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -1414,11 +1414,11 @@ export default function ValorizadorPage() {
                     className="cursor-pointer transition-colors"
                     style={{
                       borderBottom: '1px solid #f5f5f5',
-                      background: form.neighborhood === n.name ? '#e8f3f0' : undefined,
+                      background: form.neighborhood === n.name ? '#f9fafb' : undefined,
                     }}
                   >
                     <td className="px-4 py-2.5 font-medium text-gray-900">{n.name}</td>
-                    <td className="px-4 py-2.5 font-semibold" style={{ color: '#8fb2aa' }}>{n.price_per_sqm_uf}</td>
+                    <td className="px-4 py-2.5 font-semibold" style={{ color: '#d61f2c' }}>{n.price_per_sqm_uf}</td>
                     <td className="px-4 py-2.5 text-gray-600">{n.velocity_days}d</td>
                     <td className="px-4 py-2.5 text-gray-600">{(n.absorption_rate * 100).toFixed(0)}%</td>
                     <td className="px-4 py-2.5 text-gray-600">{n.inventory_count}</td>
@@ -1432,5 +1432,7 @@ export default function ValorizadorPage() {
     </div>
   )
 }
+
+
 
 

@@ -22,7 +22,7 @@ const html = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>N3uralia Intelligence Platform — Propuesta Comercial Profesional</title>
+  <title>Property Partners Intelligence Platform — Propuesta Comercial Profesional</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Calibri', 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
@@ -30,13 +30,13 @@ const html = `<!DOCTYPE html>
     .page:nth-child(odd) { background: #fafafa; }
     
     /* Colors */
-    .dark-green { color: #1a4d42; }
-    .teal { color: #5cb8a6; }
-    .tan { color: #a89968; }
+    .dark-green { color: #111111; }
+    .teal { color: #d61f2c; }
+    .tan { color: #6b7280; }
     
-    h1 { font-size: 48px; font-weight: bold; margin-bottom: 20px; color: #1a4d42; }
-    h2 { font-size: 32px; font-weight: bold; margin-bottom: 15px; color: #1a4d42; margin-top: 20px; }
-    h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; color: #2d6b5f; }
+    h1 { font-size: 48px; font-weight: bold; margin-bottom: 20px; color: #111111; }
+    h2 { font-size: 32px; font-weight: bold; margin-bottom: 15px; color: #111111; margin-top: 20px; }
+    h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; color: #374151; }
     p { font-size: 15px; margin-bottom: 12px; line-height: 1.7; }
     
     .cover {
@@ -92,7 +92,7 @@ const html = `<!DOCTYPE html>
     }
     
     .section-intro {
-      background: #f5f9f7;
+      background: #f9fafb;
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 20px;
@@ -113,7 +113,7 @@ const html = `<!DOCTYPE html>
 
 <!-- PAGE 1: COVER -->
 <div class="page cover">
-  <h1>N3uralia Intelligence Platform</h1>
+  <h1>Property Partners Intelligence Platform</h1>
   <p>Decisiones inmobiliarias respaldadas por datos</p>
   <p style="font-size: 18px; color: #b0d4cc; margin-top: 50px;">Propuesta Comercial Professional</p>
   <p style="font-size: 14px; color: #b0d4cc; margin-top: 100px;">Vitacura, Julio 2026</p>
@@ -122,7 +122,7 @@ const html = `<!DOCTYPE html>
 <!-- PAGE 2: EXECUTIVE SUMMARY -->
 <div class="page">
   <h2>Resumen Ejecutivo</h2>
-  <p>N3uralia Intelligence Platform es una solución integral de inteligencia artificial para decisiones inmobiliarias en Vitacura, Chile. Combina análisis de mercado en tiempo real, valuación inteligente y automatización de reportes para directores comerciales y ejecutivos inmobiliarios.</p>
+  <p>Property Partners Intelligence Platform es una solución integral de inteligencia artificial para decisiones inmobiliarias en Vitacura, Chile. Combina análisis de mercado en tiempo real, valuación inteligente y automatización de reportes para directores comerciales y ejecutivos inmobiliarios.</p>
   
   <div class="section-intro">
     <h3>Tres Herramientas Principales:</h3>
@@ -250,7 +250,7 @@ const html = `<!DOCTYPE html>
 <!-- PAGE 13: THREE TOOLS VALUE -->
 <div class="page">
   <h2>Tres Herramientas para Tomar Decisiones con Datos Reales</h2>
-  <p>N3uralia combina 5 años de histórico, 12 sectores principales y 2.800+ propiedades analizadas para entregar soluciones financieras y comerciales precisas.</p>
+  <p>Property Partners combina 5 años de histórico, 12 sectores principales y 2.800+ propiedades analizadas para entregar soluciones financieras y comerciales precisas.</p>
   <div class="image-container">
     <img src="${images.threeTools}" alt="Three Tools">
     <div class="image-caption">Figura 11: Pilares de la plataforma — Reportes Automáticos, Market Intelligence, Valorizador</div>
@@ -260,7 +260,7 @@ const html = `<!DOCTYPE html>
 <!-- PAGE 14: LANDING PAGE -->
 <div class="page">
   <h2>Landing Page — Propuesta de Valor</h2>
-  <p>Interfaz pública presentando la plataforma a nuevos usuarios. Muestra pain points del mercado (DSO 60-75 días) y cómo N3uralia acelera decisiones con datos.</p>
+  <p>Interfaz pública presentando la plataforma a nuevos usuarios. Muestra pain points del mercado (DSO 60-75 días) y cómo Property Partners acelera decisiones con datos.</p>
   <div class="image-container">
     <img src="${images.landing}" alt="Landing Page">
     <div class="image-caption">Figura 12: Landing Page — "Decisiones inmobiliarias respaldadas por datos"</div>
@@ -351,7 +351,7 @@ const html = `<!DOCTYPE html>
   </ul>
   
   <h3>Contacto</h3>
-  <p><strong>N3uralia Intelligence Platform</strong><br>
+  <p><strong>Property Partners Intelligence Platform</strong><br>
   Email: info@n3uralia.com<br>
   Website: www.n3uralia.com<br>
   Support: +56 9 XXXX-XXXX</p>
@@ -366,3 +366,4 @@ console.log(`✓ Professional proposal generated: ${outputPath}`);
 console.log(`✓ File size: ${(fs.statSync(outputPath).size / 1024).toFixed(1)} KB`);
 console.log(`✓ Contains 12 high-quality images from blob storage`);
 console.log(`✓ 17 pages with complete platform documentation`);
+

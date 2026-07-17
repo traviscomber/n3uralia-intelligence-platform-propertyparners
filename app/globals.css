@@ -47,129 +47,63 @@
 
 :root {
   color-scheme: light;
-  /* Property Partners / N3uralia brandbook - black, white and red system */
-  
-  /* Primary Palette */
   --background: #ffffff;
   --foreground: #111111;
   --card: #ffffff;
   --card-foreground: #111111;
   --popover: #ffffff;
   --popover-foreground: #111111;
-  
-  /* Brand Colors - Black / Red */
   --primary: #111111;
   --primary-foreground: #ffffff;
   --secondary: #d61f2c;
-  --secondary-foreground: #fbfbfa;
-  
-  /* Accent */
+  --secondary-foreground: #ffffff;
   --accent: #d61f2c;
   --accent-foreground: #ffffff;
-  
-  /* Status Colors */
   --destructive: #d61f2c;
-  --success: #111111;
-  --warning: #6b7280;
-  --info: #9ca3af;
-  
-  /* Surfaces & Borders */
-  --muted: #374151;
+  --muted: #f3f4f6;
   --muted-foreground: #6b7280;
   --border: #e5e7eb;
-  --input: #f9fafb;
+  --input: #ffffff;
   --ring: #d61f2c;
-  
-  /* Charts */
   --chart-1: #111111;
   --chart-2: #d61f2c;
   --chart-3: #6b7280;
   --chart-4: #9ca3af;
-  --chart-5: #e5e7eb;
-  
-  /* Radius */
-  --radius: 0.375rem;
-  
-  /* Sidebar */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #111111;
+  --chart-5: #d1d5db;
+  --radius: 0px;
+  --sidebar: #111111;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #d61f2c;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #d61f2c;
+  --sidebar-accent: #1f2937;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #e5e7eb;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
   --sidebar-ring: #d61f2c;
+
+  /* Legacy aliases kept for the older marketing surface so it inherits the same brand system */
+  --n3-black: #111111;
+  --n3-deep: #0f172a;
+  --n3-dark-surface: #1f2937;
+  --n3-teal: #d61f2c;
+  --n3-teal-soft: #d61f2c;
+  --n3-teal-dim: rgba(214, 31, 44, 0.24);
+  --n3-line: rgba(17, 17, 17, 0.12);
+  --n3-text-light: #ffffff;
+  --n3-text-muted: #6b7280;
+  --n3-light-bg: #f9fafb;
+  --n3-light-surface: #ffffff;
+  --n3-light-text: #111111;
+  --n3-light-muted: #6b7280;
+  --n3-border-light: #e5e7eb;
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     color-scheme: dark;
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
   }
 }
 
@@ -179,5 +113,29 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-montserrat), system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(214, 31, 44, 0.08), transparent 28%),
+      radial-gradient(circle at 80% 0%, rgba(17, 17, 17, 0.04), transparent 24%),
+      linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-display {
+    font-family: var(--font-rajdhani), sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.08;
+  }
+
+  ::selection {
+    background: rgba(214, 31, 44, 0.2);
+    color: #111111;
   }
 }

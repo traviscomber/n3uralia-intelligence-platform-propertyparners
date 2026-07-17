@@ -175,10 +175,10 @@ function PPMetricCard({ label, value, sub, accent }: MetricCard) {
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>
         {label}
       </p>
-      <p className="mt-3 text-3xl font-semibold" style={{ color: '#173634' }}>
+      <p className="mt-3 text-3xl font-semibold" style={{ color: '#111111' }}>
         {value}
       </p>
-      <p className="mt-2 text-sm" style={{ color: '#9ca9a3' }}>
+      <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
         {sub}
       </p>
     </div>
@@ -495,25 +495,25 @@ export default function PpDashboard() {
       label: 'Inventario cargado',
       value: fmt(vitacuraProperties.length),
       sub: `${casas} casas y ${deptos} departamentos`,
-      accent: '#8fb2aa',
+      accent: '#d61f2c',
     },
     {
       label: 'Fuentes activas',
       value: fmt(uniqueSources),
       sub: `${withLinks} con link y ${withPhotos} con foto`,
-      accent: '#b89a7e',
+      accent: '#6b7280',
     },
     {
       label: 'Dedupe fuerte',
       value: `${dedupeSignal.coverage}%`,
       sub: `${dedupeSignal.duplicates} posibles duplicados en la vista`,
-      accent: '#10b981',
+      accent: '#d61f2c',
     },
     {
       label: 'Actualizacion',
       value: Number.isFinite(freshnessDays) ? `${freshnessDays}d` : 's/d',
       sub: latestRun ? `Ultimo scrape ${latestRun.source}` : 'Sin scrape reciente',
-      accent: '#173634',
+      accent: '#111111',
     },
   ]
 
@@ -529,7 +529,7 @@ export default function PpDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-sm" style={{ color: '#9ca9a3' }}>Cargando PP...</div>
+        <div className="text-sm" style={{ color: '#6b7280' }}>Cargando PP...</div>
       </div>
     )
   }
@@ -539,13 +539,13 @@ export default function PpDashboard() {
       <div className="rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: '#dce7e3' }}>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: '#8fb2aa' }}>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: '#d61f2c' }}>
               {PP_NAME} Inteligencia de Mercado
             </p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
               Agente senior para ventas en Vitacura
             </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: '#555a56' }}>
+            <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: '#374151' }}>
               {PP_NAME} convierte la data de mercado en un motor comercial repetible para casas y departamentos en {PP_SCOPE.market}.
               El modelo esta pensado para capturar, limpiar, deduplicar, reportar y refrescar datos sin trabajo manual.
             </p>
@@ -584,16 +584,16 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Modelo operativo PP</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">Como funciona PP</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               4 fases
             </span>
           </div>
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
             {PP_STEPS.map((step) => (
               <div key={step.id} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-                <p className="text-sm font-semibold" style={{ color: '#173634' }}>{step.title}</p>
-                <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>{step.description}</p>
-                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>
+                <p className="text-sm font-semibold" style={{ color: '#111111' }}>{step.title}</p>
+                <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>{step.description}</p>
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#d61f2c' }}>
                   Output
                 </p>
                 <p className="mt-1 text-sm" style={{ color: '#3f4a46' }}>{step.output}</p>
@@ -608,15 +608,15 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Agentes PP</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">Agentes inteligentes por funcion</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               5 agents
             </span>
           </div>
           <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
             {PP_AGENTS.map((agent) => (
               <div key={agent.key} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-                <p className="text-sm font-semibold" style={{ color: '#173634' }}>{agent.title}</p>
-                <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>{agent.mission}</p>
+                <p className="text-sm font-semibold" style={{ color: '#111111' }}>{agent.title}</p>
+                <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>{agent.mission}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium" style={{ color: '#8c9a95' }}>
                     Entradas {agent.inputs.length}
@@ -628,7 +628,7 @@ export default function PpDashboard() {
                     Salidas {agent.outputs.length}
                   </span>
                 </div>
-                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#d61f2c' }}>
                   Decisión
                 </p>
                 <p className="mt-1 text-sm" style={{ color: '#3f4a46' }}>{agent.decision}</p>
@@ -643,7 +643,7 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Audience map</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">Lo que debe ver cada rol</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               3 audiences
             </span>
           </div>
@@ -654,10 +654,10 @@ export default function PpDashboard() {
                 <div key={audience.key} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: '#173634' }}>{audience.title}</p>
-                      <p className="mt-1 text-sm leading-6" style={{ color: '#555a56' }}>{audience.description}</p>
+                      <p className="text-sm font-semibold" style={{ color: '#111111' }}>{audience.title}</p>
+                      <p className="mt-1 text-sm leading-6" style={{ color: '#374151' }}>{audience.description}</p>
                     </div>
-                    <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#e8f3f0', color: '#173634' }}>
+                    <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#f9fafb', color: '#111111' }}>
                       {count}
                     </span>
                   </div>
@@ -680,7 +680,7 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Flujo operativo</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">Ejecuciones del scraper y calidad de datos</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               {scrapeRuns.length} runs
             </span>
           </div>
@@ -688,15 +688,15 @@ export default function PpDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={runChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eef2ef" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca9a3' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #dce7e3', borderRadius: 12, fontSize: 12 }} />
-                <Bar dataKey="scraped" radius={[6, 6, 0, 0]} name="Scraped" fill="#d8e5e2">
+                <Bar dataKey="scraped" radius={[6, 6, 0, 0]} name="Scraped" fill="#e5e7eb">
                   {runChartData.map((entry, index) => (
-                    <Cell key={entry.label + index} fill={index % 2 === 0 ? '#8fb2aa' : '#b89a7e'} />
+                    <Cell key={entry.label + index} fill={index % 2 === 0 ? '#d61f2c' : '#6b7280'} />
                   ))}
                 </Bar>
-                <Bar dataKey="inserted" radius={[6, 6, 0, 0]} name="Inserted" fill="#10b981" />
+                <Bar dataKey="inserted" radius={[6, 6, 0, 0]} name="Inserted" fill="#d61f2c" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -705,15 +705,15 @@ export default function PpDashboard() {
             {scrapeRuns.slice(0, 4).map((run, index) => (
               <div key={`${run.source}-${index}`} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold" style={{ color: '#173634' }}>{run.source}</p>
-                  <span className="rounded-full px-2 py-1 text-[11px] font-medium" style={{ background: run.status === 'success' ? '#e8f3f0' : '#fff7ed', color: run.status === 'success' ? '#166534' : '#c2410c' }}>
+                  <p className="text-sm font-semibold" style={{ color: '#111111' }}>{run.source}</p>
+                  <span className="rounded-full px-2 py-1 text-[11px] font-medium" style={{ background: run.status === 'success' ? '#f9fafb' : '#fff7ed', color: run.status === 'success' ? '#166534' : '#c2410c' }}>
                     {run.status}
                   </span>
                 </div>
-                <p className="mt-2 text-sm" style={{ color: '#555a56' }}>
+                <p className="mt-2 text-sm" style={{ color: '#374151' }}>
                   {run.scraped_count} capturadas, {run.inserted_count} insertadas, {run.skipped_count} omitidas, {run.error_count} errores
                 </p>
-                <p className="mt-1 text-xs" style={{ color: '#9ca9a3' }}>
+                <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>
                   {new Date(run.created_at).toLocaleString('es-CL')}
                 </p>
               </div>
@@ -728,21 +728,21 @@ export default function PpDashboard() {
           <h2 className="mt-2 text-xl font-semibold text-gray-900">Lo que PP ve ahora</h2>
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>Ultimo reporte</p>
-              <p className="mt-2 text-sm font-semibold" style={{ color: '#173634' }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#d61f2c' }}>Ultimo reporte</p>
+              <p className="mt-2 text-sm font-semibold" style={{ color: '#111111' }}>
                 {latestReport?.title || 'No report yet'}
               </p>
-              <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>
+              <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>
                 {latestReport?.summary || 'Genera un reporte de CEO, director o vendedor para alimentar el ciclo de conocimiento de PP.'}
               </p>
             </div>
 
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#8fb2aa' }}>Barrio lider</p>
-              <p className="mt-2 text-sm font-semibold" style={{ color: '#173634' }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#d61f2c' }}>Barrio lider</p>
+              <p className="mt-2 text-sm font-semibold" style={{ color: '#111111' }}>
                 {latestMarket?.neighborhood || 'Vitacura'}
               </p>
-              <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>
+              <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>
                 {latestMarket
                   ? `${latestMarket.inventory_count} avisos - ${((latestMarket.absorption_rate || 0) * 100).toFixed(0)}% de absorcion y ${latestMarket.avg_days_on_market?.toFixed(0) || 's/d'} dias en mercado.`
                   : 'Esperando que market_data muestre el barrio mas activo.'}
@@ -750,15 +750,15 @@ export default function PpDashboard() {
             </div>
 
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#b89a7e' }}>Mezcla de inventario</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>Mezcla de inventario</p>
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl bg-white p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#9ca9a3' }}>Casas</p>
-                  <p className="mt-1 text-xl font-semibold" style={{ color: '#173634' }}>{casas}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#6b7280' }}>Casas</p>
+                  <p className="mt-1 text-xl font-semibold" style={{ color: '#111111' }}>{casas}</p>
                 </div>
                 <div className="rounded-xl bg-white p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#9ca9a3' }}>Deptos</p>
-                  <p className="mt-1 text-xl font-semibold" style={{ color: '#173634' }}>{deptos}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#6b7280' }}>Deptos</p>
+                  <p className="mt-1 text-xl font-semibold" style={{ color: '#111111' }}>{deptos}</p>
                 </div>
               </div>
             </div>
@@ -773,7 +773,7 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>AI control plane</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">How PP reasons before answering</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               AI readiness {aiReadiness}%
             </span>
           </div>
@@ -781,19 +781,19 @@ export default function PpDashboard() {
             {PP_AI_LOOP.map((step, index) => (
               <div key={step.id} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold" style={{ color: '#173634' }}>
+                  <p className="text-sm font-semibold" style={{ color: '#111111' }}>
                     {index + 1}. {step.title}
                   </p>
                   <span className="rounded-full bg-white px-2 py-1 text-[11px] font-medium" style={{ color: '#8c9a95' }}>
                     {step.id}
                   </span>
                 </div>
-                <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>{step.description}</p>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>
+                <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>{step.description}</p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#d61f2c' }}>
                   Input
                 </p>
                 <p className="mt-1 text-sm" style={{ color: '#3f4a46' }}>{step.input}</p>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#d61f2c' }}>
                   Output
                 </p>
                 <p className="mt-1 text-sm" style={{ color: '#3f4a46' }}>{step.output}</p>
@@ -808,31 +808,31 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Prompt contract</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">Rules and escalation logic</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               Guardrails + fallback
             </span>
           </div>
 
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>Rules</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#d61f2c' }}>Rules</p>
               <div className="mt-3 space-y-3">
                 {PP_AI_RULES.map((rule) => (
                   <div key={rule.title} className="rounded-xl bg-white px-4 py-3">
-                    <p className="text-sm font-semibold" style={{ color: '#173634' }}>{rule.title}</p>
-                    <p className="mt-1 text-sm leading-6" style={{ color: '#555a56' }}>{rule.detail}</p>
+                    <p className="text-sm font-semibold" style={{ color: '#111111' }}>{rule.title}</p>
+                    <p className="mt-1 text-sm leading-6" style={{ color: '#374151' }}>{rule.detail}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#b89a7e' }}>Escalation</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#6b7280' }}>Escalation</p>
               <div className="mt-3 space-y-3">
                 {PP_AI_ESCALATIONS.map((rule) => (
                   <div key={rule.title} className="rounded-xl bg-white px-4 py-3">
-                    <p className="text-sm font-semibold" style={{ color: '#173634' }}>{rule.title}</p>
-                    <p className="mt-1 text-sm leading-6" style={{ color: '#555a56' }}>{rule.detail}</p>
+                    <p className="text-sm font-semibold" style={{ color: '#111111' }}>{rule.title}</p>
+                    <p className="mt-1 text-sm leading-6" style={{ color: '#374151' }}>{rule.detail}</p>
                   </div>
                 ))}
               </div>
@@ -848,7 +848,7 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Recommendations</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">AI recommendations ranked by feedback</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               {recommendations.length} active
             </span>
           </div>
@@ -861,7 +861,7 @@ export default function PpDashboard() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold" style={{ color: '#173634' }}>{recommendation.title}</p>
+                        <p className="text-sm font-semibold" style={{ color: '#111111' }}>{recommendation.title}</p>
                         <span className="rounded-full px-2 py-1 text-[11px] font-medium" style={{ background: '#fff', color: '#8c9a95' }}>
                           {getRecommendationAreaLabel(recommendation.area)}
                         </span>
@@ -869,11 +869,11 @@ export default function PpDashboard() {
                           {recommendation.audience}
                         </span>
                       </div>
-                      <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>{recommendation.description}</p>
+                      <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>{recommendation.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>Rank</p>
-                      <p className="mt-1 text-2xl font-semibold" style={{ color: '#173634' }}>{recommendation.baseScore}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#d61f2c' }}>Rank</p>
+                      <p className="mt-1 text-2xl font-semibold" style={{ color: '#111111' }}>{recommendation.baseScore}</p>
                     </div>
                   </div>
 
@@ -890,7 +890,7 @@ export default function PpDashboard() {
 
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
                     {recommendation.signals.map((signal) => (
-                      <div key={signal} className="rounded-xl bg-white px-3 py-2 text-xs leading-5" style={{ color: '#555a56' }}>
+                      <div key={signal} className="rounded-xl bg-white px-3 py-2 text-xs leading-5" style={{ color: '#374151' }}>
                         {signal}
                       </div>
                     ))}
@@ -901,8 +901,8 @@ export default function PpDashboard() {
                       <button
                         type="button"
                         onClick={() => void registerFeedback(recommendation, 'useful')}
-                        className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-emerald-50"
-                        style={{ background: '#e8f3f0', color: '#166534' }}
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-red-50"
+                        style={{ background: '#f9fafb', color: '#166534' }}
                       >
                         Util
                       </button>
@@ -941,7 +941,7 @@ export default function PpDashboard() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Feedback loop</p>
               <h2 className="mt-2 text-xl font-semibold text-gray-900">What the model learns from usage</h2>
             </div>
-            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+            <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
               Adoption {recommendationHealth.adoption}%
             </span>
           </div>
@@ -949,25 +949,25 @@ export default function PpDashboard() {
           <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
               <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#8c9a95' }}>Useful</p>
-              <p className="mt-2 text-2xl font-semibold" style={{ color: '#173634' }}>{recommendationHealth.useful}</p>
+              <p className="mt-2 text-2xl font-semibold" style={{ color: '#111111' }}>{recommendationHealth.useful}</p>
             </div>
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
               <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#8c9a95' }}>Ignored</p>
-              <p className="mt-2 text-2xl font-semibold" style={{ color: '#173634' }}>{recommendationHealth.ignored}</p>
+              <p className="mt-2 text-2xl font-semibold" style={{ color: '#111111' }}>{recommendationHealth.ignored}</p>
             </div>
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
               <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#8c9a95' }}>Review</p>
-              <p className="mt-2 text-2xl font-semibold" style={{ color: '#173634' }}>{recommendationHealth.review}</p>
+              <p className="mt-2 text-2xl font-semibold" style={{ color: '#111111' }}>{recommendationHealth.review}</p>
             </div>
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
               <p className="text-[11px] uppercase tracking-[0.16em]" style={{ color: '#8c9a95' }}>AI readiness</p>
-              <p className="mt-2 text-2xl font-semibold" style={{ color: '#173634' }}>{effectiveAiReadiness}%</p>
+              <p className="mt-2 text-2xl font-semibold" style={{ color: '#111111' }}>{effectiveAiReadiness}%</p>
             </div>
           </div>
 
           <div className="mt-5 rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>Ranking signal</p>
-            <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#d61f2c' }}>Ranking signal</p>
+            <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>
               El orden de recomendaciones cambia segun el feedback real. Las sugerencias que el equipo marca como utiles suben de prioridad y las que
               se ignoran caen. Eso alimenta el siguiente reporte por audiencia y evita repetir hallazgos que no se usan.
             </p>
@@ -983,7 +983,7 @@ export default function PpDashboard() {
                   const adoption = total ? Math.round((audienceFeedback.useful / total) * 100) : 0
                   return (
                     <div key={audience} className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm">
-                      <span style={{ color: '#173634' }}>{audience}</span>
+                      <span style={{ color: '#111111' }}>{audience}</span>
                       <span style={{ color: '#8c9a95' }}>
                         {total} feedback · {adoption}% utile
                       </span>
@@ -994,14 +994,14 @@ export default function PpDashboard() {
             </div>
 
             <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#b89a7e' }}>By neighborhood</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: '#6b7280' }}>By neighborhood</p>
               <div className="mt-3 space-y-2">
                 {[...feedbackSummary.byNeighborhood.entries()].slice(0, 4).map(([neighborhood, data]) => {
                   const total = data.useful + data.ignored + data.review
                   const adoption = total ? Math.round((data.useful / total) * 100) : 0
                   return (
                     <div key={neighborhood} className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm">
-                      <span style={{ color: '#173634' }}>{neighborhood}</span>
+                      <span style={{ color: '#111111' }}>{neighborhood}</span>
                       <span style={{ color: '#8c9a95' }}>
                         {total} feedback · {adoption}% utile
                       </span>
@@ -1025,24 +1025,24 @@ export default function PpDashboard() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: '#8c9a95' }}>Foco Vitacura</p>
             <h2 className="mt-2 text-xl font-semibold text-gray-900">Barrios a vigilar</h2>
           </div>
-          <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#555a56' }}>
+          <span className="rounded-full border px-3 py-1 text-xs font-medium" style={{ borderColor: '#dce7e3', color: '#374151' }}>
             Inteligencia por barrio
           </span>
         </div>
         <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {vitacuraNeighborhoodIntel.map((row) => (
             <div key={row.neighborhood} className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: '#dce7e3' }}>
-              <p className="text-sm font-semibold" style={{ color: '#173634' }}>{row.neighborhood}</p>
-              <p className="mt-2 text-sm leading-6" style={{ color: '#555a56' }}>
+              <p className="text-sm font-semibold" style={{ color: '#111111' }}>{row.neighborhood}</p>
+              <p className="mt-2 text-sm leading-6" style={{ color: '#374151' }}>
                 {row.commercialFocus}
               </p>
-              <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>
+              <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em]" style={{ color: '#d61f2c' }}>
                 Riesgo
               </p>
-              <p className="mt-1 text-xs leading-5" style={{ color: '#9ca9a3' }}>
+              <p className="mt-1 text-xs leading-5" style={{ color: '#6b7280' }}>
                 {row.watchout}
               </p>
-              <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em]" style={{ color: '#8fb2aa' }}>
+              <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em]" style={{ color: '#d61f2c' }}>
                 Mejor para
               </p>
               <p className="mt-1 text-xs leading-5" style={{ color: '#3f4a46' }}>
@@ -1055,3 +1055,4 @@ export default function PpDashboard() {
     </div>
   )
 }
+

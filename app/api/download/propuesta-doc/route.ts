@@ -9,7 +9,7 @@ export async function GET() {
     return new Response(docBuffer, {
       headers: {
         'Content-Type': 'application/msword',
-        'Content-Disposition': 'attachment; filename="Propuesta-N3uralia.doc"',
+        'Content-Disposition': 'attachment; filename="Propuesta-Property Partners.doc"',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     })
@@ -18,3 +18,4 @@ export async function GET() {
     return new Response('File not found', { status: 404 })
   }
 }
+
