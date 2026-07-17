@@ -55,7 +55,7 @@ export default async function DirectorReportDetailPage({
       <div className="flex flex-col gap-4 border-b border-gray-200 pb-6 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="mb-3">
-            <Link href="/dashboard/reportes" className="text-sm font-medium" style={{ color: '#d61f2c' }}>
+            <Link href="/dashboard/reportes" className="text-sm font-medium" style={{ color: 'var(--n3-teal)' }}>
               Volver a Reportes Pro
             </Link>
           </div>
@@ -73,7 +73,7 @@ export default async function DirectorReportDetailPage({
           <a
             href={pdfHref}
             className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white"
-            style={{ background: '#d61f2c' }}
+            style={{ background: 'var(--n3-teal)' }}
           >
             Descargar PDF
           </a>
@@ -163,7 +163,7 @@ export default async function DirectorReportDetailPage({
             <button
               type="submit"
               className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
-              style={{ background: '#d61f2c' }}
+              style={{ background: 'var(--n3-teal)' }}
             >
               Ver corte
             </button>
@@ -193,7 +193,7 @@ export default async function DirectorReportDetailPage({
                   className="rounded-lg p-4"
                   style={{
                     background: report.week_start === selectedWeekStart ? '#eef7f4' : '#f9fafb',
-                    border: `1px solid ${report.week_start === selectedWeekStart ? '#d61f2c' : '#e5e7eb'}`,
+                    border: `1px solid ${report.week_start === selectedWeekStart ? 'var(--n3-teal)' : '#e5e7eb'}`,
                   }}
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -269,6 +269,7 @@ export default async function DirectorReportDetailPage({
     </div>
   )
 }
+
 
 
 

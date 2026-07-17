@@ -749,6 +749,58 @@ export default function ReportesPage() {
     }
   }, [aiReports, health, latestLearning, marketRows, properties, weekly])
 
+  const operationalPanel = useMemo(() => {
+    const reportBuckets = {
+      ceo: aiReports.filter((report) => ['ceo_brief', 'monthly_ceo'].includes(report.report_type)),
+      director: aiReports.filter((report) => ['director_accounts', 'weekly_directors'].includes(report.report_type)),
+      seller: aiReports.filter((report) => ['seller_playbook', 'captation_alert'].includes(report.report_type)),
+    }
+
+    const roleFreshness = (reports: AiReport[]) => {
+      const latest = reports
+        .slice()
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+
+      if (!latest) {
+        return { label: 'Sin reporte', hours: null as number | null, title: 'Sin reporte reciente' }
+      }
+
+      const hours = daysSince(latest.created_at)
+      return {
+        label: latest.title,
+        hours,
+        title: hours === null ? 'Sin fecha' : hours < 24 ? 'Mismo dia' : `${Math.round(hours / 24)}d`,
+      }
+    }
+
+    const sourceFreshness = health
+      ? {
+          rate: health.summary.successRate,
+          stale: health.summary.staleSourceCount,
+          active: health.summary.activeSources,
+          status: health.status,
+        }
+      : null
+
+    const dedupeRate = scorecard.dedupeCoverage
+    const duplicateRate = dedupeRate === null ? null : clampScore(100 - dedupeRate)
+    const duplicateCount = vitacuraProperties.length && dedupeRate !== null
+      ? Math.max(0, vitacuraProperties.length - Math.round((dedupeRate / 100) * vitacuraProperties.length))
+      : null
+
+    return {
+      sourceFreshness,
+      dedupeRate,
+      duplicateRate,
+      duplicateCount,
+      roles: {
+        ceo: roleFreshness(reportBuckets.ceo),
+        director: roleFreshness(reportBuckets.director),
+        seller: roleFreshness(reportBuckets.seller),
+      },
+    }
+  }, [aiReports, health, scorecard.dedupeCoverage, vitacuraProperties.length])
+
   const filteredAiReports = useMemo(() => {
     if (!reportFilter) return aiReports
     return aiReports.filter((report) => {
@@ -1049,6 +1101,92 @@ export default function ReportesPage() {
                 </div>
               )
             })}
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Panel operacional
+              </p>
+              <h3 className="mt-2 text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>
+                Frescura de fuentes, merges y reportes por rol
+              </h3>
+            </div>
+            <span className="n-chip">
+              {operationalPanel.sourceFreshness ? `${operationalPanel.sourceFreshness.active} fuentes activas` : 'Sin salud de fuentes'}
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Salud de fuentes
+              </p>
+              <p className="mt-2 text-3xl font-semibold" style={{ color: 'var(--n-fg)' }}>
+                {operationalPanel.sourceFreshness ? `${operationalPanel.sourceFreshness.rate}%` : 'n/d'}
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                {operationalPanel.sourceFreshness
+                  ? `${operationalPanel.sourceFreshness.stale} fuentes stale y ${operationalPanel.sourceFreshness.active} activas.`
+                  : 'Todavia no se pudo evaluar la salud de las fuentes.'}
+              </p>
+              <p className="mt-2 text-[11px] leading-5" style={{ color: 'var(--n-fg-subtle)' }}>
+                Estado: {operationalPanel.sourceFreshness?.status || 'unknown'}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Dedupe canonico
+              </p>
+              <p className="mt-2 text-3xl font-semibold" style={{ color: 'var(--n-fg)' }}>
+                {operationalPanel.dedupeRate === null ? 'n/d' : `${operationalPanel.dedupeRate}%`}
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                {operationalPanel.duplicateRate === null
+                  ? 'El merge rate se calculara apenas haya suficientes propiedades para comparar.'
+                  : `${operationalPanel.duplicateRate}% de la vista sigue potencialmente duplicada, con ${operationalPanel.duplicateCount ?? 'n/d'} registros por consolidar.`}
+              </p>
+              <p className="mt-2 text-[11px] leading-5" style={{ color: 'var(--n-fg-subtle)' }}>
+                Canon segun listing_number, fuente, barrio y tipo.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Frescura por rol
+              </p>
+              <div className="mt-3 space-y-3">
+                {(
+                  [
+                    ['ceo', 'CEO'],
+                    ['director', 'Director'],
+                    ['seller', 'Vendedor'],
+                  ] as const
+                ).map(([roleKey, label]) => {
+                  const role = operationalPanel.roles[roleKey]
+                  return (
+                    <div key={roleKey} className="rounded-xl border bg-white p-3" style={{ borderColor: 'var(--n-border)' }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                            {label}
+                          </p>
+                          <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
+                            {role.label}
+                          </p>
+                        </div>
+                        <span className="n-chip">
+                          {role.title}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { summarizePpRecommendationFeedback, type PpRecommendationFeedbackEntry } from '@/lib/pp-learning'
@@ -237,7 +237,7 @@ function buildLearningGuidance(learningContext: RecommendationLearningContext) {
   const weakRecommendation = [...learningContext.top_recommendations].sort((a, b) => a.net_score - b.net_score || b.total - a.total)[0]
 
   const clauses = [
-    `Aprendizaje acumulado: ${learningContext.adoption_rate}% de adopcion sobre ${learningContext.total_feedback} señales.`,
+    `Aprendizaje acumulado: ${learningContext.adoption_rate}% de adopcion sobre ${learningContext.total_feedback} seÃ±ales.`,
     topRecommendation
       ? `Prioriza el tipo de salida que mejor funciono: "${topRecommendation.title}" para ${topRecommendation.audience}.`
       : 'No existe aun una recomendacion dominante.',
@@ -629,7 +629,7 @@ function buildRoleContext(
           ],
         },
         {
-          title: 'Señales',
+          title: 'SeÃ±ales',
           bullets: [
             vitacuraNeighborhoodInsights[0] ? vitacuraNeighborhoodInsights[0].commercialFocus : 'Vitacura concentro la lectura.',
             'Cruzar barrios con mejor absorcion y ajustar foco comercial.',
@@ -770,7 +770,7 @@ async function generateWithOpenAI(prompt: string, systemFocus: string, audience:
       messages: [
         {
           role: 'system',
-          content: `Eres un analista inmobiliario senior de Property Partners. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Toma en cuenta el learning persistido y ajusta el foco segun lo que el equipo marca como util o ignorado. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence, sections. sections debe ser un array de objetos con title y bullets. Mantiene el foco en Vitacura y en decisiones accionables por audiencia.`,
+          content: `Eres un analista inmobiliario senior de N3uralia. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Toma en cuenta el learning persistido y ajusta el foco segun lo que el equipo marca como util o ignorado. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence, sections. sections debe ser un array de objetos con title y bullets. Mantiene el foco en Vitacura y en decisiones accionables por audiencia.`,
         },
         {
           role: 'user',
@@ -974,4 +974,5 @@ export async function POST(request: Request) {
     )
   }
 }
+
 

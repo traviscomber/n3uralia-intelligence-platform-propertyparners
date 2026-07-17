@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
@@ -62,7 +62,7 @@ export default function DashboardHome() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#e5e7eb', borderTopColor: '#d61f2c' }}></div>
+          <div className="w-12 h-12 border-4 rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#e5e7eb', borderTopColor: 'var(--n3-teal)' }}></div>
           <p style={{ color: '#6b7280' }}>Cargando dashboard...</p>
         </div>
       </div>
@@ -84,14 +84,14 @@ export default function DashboardHome() {
       {latestKPI && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Ventas Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-l-4" style={{ border: '1px solid #e5e7eb', borderLeftColor: '#d61f2c' }}>
+          <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-l-4" style={{ border: '1px solid #e5e7eb', borderLeftColor: 'var(--n3-teal)' }}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Ventas Vitacura</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.ventas_count}</p>
                 <p className="text-xs mt-2" style={{ color: '#6b7280' }}>casas y departamentos</p>
               </div>
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#f9fafb', color: '#d61f2c' }}>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
                 <Home className="w-6 h-6" />
               </div>
             </div>
@@ -111,11 +111,11 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          {/* Conversión Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-l-4" style={{ border: '1px solid #e5e7eb', borderLeftColor: '#d61f2c' }}>
+          {/* ConversiÃ³n Card */}
+          <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-l-4" style={{ border: '1px solid #e5e7eb', borderLeftColor: 'var(--n3-teal)' }}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasa Conversión</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasa ConversiÃ³n</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.conversion_rate.toFixed(1)}%</p>
                 <p className="text-xs text-gray-500 mt-2">leads a ventas de Vitacura</p>
               </div>
@@ -147,9 +147,9 @@ export default function DashboardHome() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Score ejecutivo</p>
-                <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Panel de gestión</h2>
+                <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Panel de gestiÃ³n</h2>
               </div>
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#f9fafb', color: '#d61f2c' }}>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
                 <Target className="w-6 h-6" />
               </div>
             </div>
@@ -157,29 +157,29 @@ export default function DashboardHome() {
               {executiveScore === null ? 'n/d' : `${executiveScore}%`}
             </p>
             <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
-              {salesDelta !== null ? `Ventas vs periodo previo: ${salesDelta >= 0 ? '+' : ''}${salesDelta}` : 'Sin comparación previa disponible'}
+              {salesDelta !== null ? `Ventas vs periodo previo: ${salesDelta >= 0 ? '+' : ''}${salesDelta}` : 'Sin comparaciÃ³n previa disponible'}
             </p>
             <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
-              {conversionDelta !== null ? `Conversión vs periodo previo: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts` : 'Sin variación previa disponible'}
+              {conversionDelta !== null ? `ConversiÃ³n vs periodo previo: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts` : 'Sin variaciÃ³n previa disponible'}
             </p>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#e5e7eb' }}>
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Lectura actual</p>
-            <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Qué está pasando hoy</h2>
+            <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>QuÃ© estÃ¡ pasando hoy</h2>
             <ul className="mt-4 space-y-3 text-sm" style={{ color: '#374151' }}>
-              <li>• Ventas: {latestKPI.ventas_count} transacciones activas.</li>
-              <li>• Conversión: {latestKPI.conversion_rate.toFixed(1)}% de leads a ventas.</li>
-              <li>• Captaciones: {latestKPI.captaciones_count} oportunidades nuevas en Vitacura.</li>
-              <li>• Stock: {latestKPI.stock_count} propiedades en el inventario.</li>
+              <li>â€¢ Ventas: {latestKPI.ventas_count} transacciones activas.</li>
+              <li>â€¢ ConversiÃ³n: {latestKPI.conversion_rate.toFixed(1)}% de leads a ventas.</li>
+              <li>â€¢ Captaciones: {latestKPI.captaciones_count} oportunidades nuevas en Vitacura.</li>
+              <li>â€¢ Stock: {latestKPI.stock_count} propiedades en el inventario.</li>
             </ul>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#e5e7eb' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Siguiente acción</p>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Siguiente acciÃ³n</p>
             <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Ir al centro de reportes</h2>
             <p className="mt-4 text-sm leading-6" style={{ color: '#374151' }}>
-              Ahí quedan el scorecard, los reportes por audiencia, el aprendizaje IA y el seguimiento operativo del negocio.
+              AhÃ­ quedan el scorecard, los reportes por audiencia, el aprendizaje IA y el seguimiento operativo del negocio.
             </p>
             <Link href="/dashboard/reportes" className="inline-flex mt-5 items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold" style={{ background: '#111111', color: '#f9fafb' }}>
               <Sparkles className="w-4 h-4" />
@@ -194,15 +194,15 @@ export default function DashboardHome() {
         {/* Ventas Tendencia */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Ventas de Casas (Últimos 6 meses)</h3>
-            <div className="w-2 h-2 rounded-full" style={{ background: '#d61f2c' }}></div>
+            <h3 className="text-lg font-semibold text-gray-900">Ventas de Casas (Ãšltimos 6 meses)</h3>
+            <div className="w-2 h-2 rounded-full" style={{ background: 'var(--n3-teal)' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#d61f2c" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#d61f2c" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="var(--n3-teal)" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="var(--n3-teal)" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
@@ -216,17 +216,17 @@ export default function DashboardHome() {
                   boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                   padding: '12px',
                 }}
-                cursor={{ stroke: '#d61f2c', strokeWidth: 1 }}
+                cursor={{ stroke: 'var(--n3-teal)', strokeWidth: 1 }}
               />
-              <Area type="monotone" dataKey="ventas_count" stroke="#d61f2c" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVentas)" name="Ventas" />
+              <Area type="monotone" dataKey="ventas_count" stroke="var(--n3-teal)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVentas)" name="Ventas" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Tasa Conversión */}
+        {/* Tasa ConversiÃ³n */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Tasa Conversión Casas</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Tasa ConversiÃ³n Casas</h3>
             <div className="w-2 h-2 rounded-full" style={{ background: '#6b7280' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
@@ -244,34 +244,34 @@ export default function DashboardHome() {
                 }}
                 cursor={{ fill: '#f9fafb' }}
               />
-              <Bar dataKey="conversion_rate" fill="#6b7280" name="Conversión %" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="conversion_rate" fill="#6b7280" name="ConversiÃ³n %" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* AI Summary Section */}
-      <div className="rounded-lg p-8 border-l-4 hover:shadow-md transition-all duration-300" style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #f9fafb 100%)', border: '1px solid #e5e7eb', borderLeftColor: '#d61f2c' }}>
+      <div className="rounded-lg p-8 border-l-4 hover:shadow-md transition-all duration-300" style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #f9fafb 100%)', border: '1px solid #e5e7eb', borderLeftColor: 'var(--n3-teal)' }}>
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold text-lg transition-transform duration-300 hover:scale-110" style={{ background: '#d61f2c' }}>
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold text-lg transition-transform duration-300 hover:scale-110" style={{ background: 'var(--n3-teal)' }}>
             <Sparkles className="w-6 h-6" />
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               Resumen Ejecutivo IA
-              <span className="text-xs px-2 py-1 rounded-full font-semibold text-white" style={{ background: '#d61f2c' }}>En Tiempo Real</span>
+              <span className="text-xs px-2 py-1 rounded-full font-semibold text-white" style={{ background: 'var(--n3-teal)' }}>En Tiempo Real</span>
             </h3>
             <p className="mt-3 leading-relaxed" style={{ color: '#374151' }}>
-              El mercado inmobiliario continúa mostrando absorción sostenida. Las ventas del mes alcanzaron{' '}
-              <span className="font-bold px-2 py-1 rounded" style={{ color: '#d61f2c', background: '#f9fafb' }}>{latestKPI.ventas_count} transacciones</span> con una tasa de conversión
+              El mercado inmobiliario continÃºa mostrando absorciÃ³n sostenida. Las ventas del mes alcanzaron{' '}
+              <span className="font-bold px-2 py-1 rounded" style={{ color: 'var(--n3-teal)', background: '#f9fafb' }}>{latestKPI.ventas_count} transacciones</span> con una tasa de conversiÃ³n
               de <span className="font-bold px-2 py-1 rounded" style={{ color: '#6b7280', background: '#f9fafb' }}>{latestKPI.conversion_rate.toFixed(1)}%</span>. Se recomienda incrementar captaciones en zonas de alta demanda para
               maximizar el pipeline comercial.
             </p>
             <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(143, 178, 170, 0.2)' }}>
-              <p className="text-xs font-semibold uppercase" style={{ color: '#d61f2c' }}>Próximas Acciones:</p>
+              <p className="text-xs font-semibold uppercase" style={{ color: 'var(--n3-teal)' }}>PrÃ³ximas Acciones:</p>
               <ul className="mt-2 space-y-1 text-xs" style={{ color: '#374151' }}>
-                <li>• Aumentar prospección en Nueva Costanera (90% absorción)</li>
-                <li>• Optimizar timing de venta en Lo Curro (velocidad: 62 días)</li>
+                <li>â€¢ Aumentar prospecciÃ³n en Nueva Costanera (90% absorciÃ³n)</li>
+                <li>â€¢ Optimizar timing de venta en Lo Curro (velocidad: 62 dÃ­as)</li>
               </ul>
             </div>
           </div>
@@ -280,23 +280,24 @@ export default function DashboardHome() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid #d61f2c', borderLeftColor: '#d61f2c' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#d61f2c' }}>Captaciones</p>
+        <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid var(--n3-teal)', borderLeftColor: 'var(--n3-teal)' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-teal)' }}>Captaciones</p>
           <p className="text-3xl font-bold text-gray-900 mt-3">{latestKPI.captaciones_count}</p>
           <p className="text-xs mt-2" style={{ color: '#374151' }}>oportunidades nuevas</p>
         </div>
         <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderLeftColor: '#6b7280' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Comisión Total</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>ComisiÃ³n Total</p>
           <p className="text-3xl font-bold text-gray-900 mt-3">${(latestKPI.comision_total / 1000000).toFixed(1)}M</p>
           <p className="text-xs mt-2" style={{ color: '#374151' }}>ingresos acumulados</p>
         </div>
-        <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid #d61f2c', borderLeftColor: '#d61f2c' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#d61f2c' }}>Velocidad Venta</p>
-          <p className="text-3xl font-bold text-gray-900 mt-3">{latestKPI.velocidad_venta.toFixed(0)} días</p>
+        <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid var(--n3-teal)', borderLeftColor: 'var(--n3-teal)' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-teal)' }}>Velocidad Venta</p>
+          <p className="text-3xl font-bold text-gray-900 mt-3">{latestKPI.velocidad_venta.toFixed(0)} dÃ­as</p>
           <p className="text-xs mt-2" style={{ color: '#374151' }}>promedio de mercado</p>
         </div>
       </div>
     </div>
   )
 }
+
 

@@ -704,7 +704,7 @@ export default function ValorizadorPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: '#d61f2c' }} />
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: 'var(--n3-teal)' }} />
       </div>
     )
   }
@@ -813,9 +813,9 @@ export default function ValorizadorPage() {
                   onClick={() => { setForm({ ...form, condition: c }); setResult(null) }}
                   className="px-3 py-1.5 rounded text-xs font-medium capitalize transition-all"
                   style={{
-                    background: form.condition === c ? '#d61f2c' : '#f9fafb',
+                    background: form.condition === c ? 'var(--n3-teal)' : '#f9fafb',
                     color: form.condition === c ? '#fff' : '#374151',
-                    border: `1px solid ${form.condition === c ? '#d61f2c' : '#e5e7eb'}`,
+                    border: `1px solid ${form.condition === c ? 'var(--n3-teal)' : '#e5e7eb'}`,
                   }}
                 >
                   {c.replace('_', ' ')}
@@ -839,7 +839,7 @@ export default function ValorizadorPage() {
                   style={{
                     background: form[key as keyof typeof form] ? '#f9fafb' : '#f9fafb',
                     color: form[key as keyof typeof form] ? '#111111' : '#6b7280',
-                    border: `1px solid ${form[key as keyof typeof form] ? '#d61f2c' : '#e5e7eb'}`,
+                    border: `1px solid ${form[key as keyof typeof form] ? 'var(--n3-teal)' : '#e5e7eb'}`,
                   }}
                 >
                   {label}
@@ -852,7 +852,7 @@ export default function ValorizadorPage() {
             onClick={calculate}
             disabled={calculating || !form.neighborhood}
             className="w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-            style={{ background: '#d61f2c' }}
+            style={{ background: 'var(--n3-teal)' }}
           >
             {calculating ? <><RefreshCw size={15} className="animate-spin" /> Calculando...</> : <><BarChart2 size={15} /> Calcular valor</>}
           </button>
@@ -861,23 +861,23 @@ export default function ValorizadorPage() {
         <div className="lg:col-span-3 space-y-4">
           {result ? (
             <>
-              <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #d61f2c', borderLeft: '4px solid #d61f2c' }}>
+              <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid var(--n3-teal)', borderLeft: '4px solid var(--n3-teal)' }}>
                 <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#374151' }}>Valor estimado</p>
-                <p className="text-4xl font-bold text-gray-900">{result.price_uf.toLocaleString('es-CL')} <span className="text-xl font-semibold" style={{ color: '#d61f2c' }}>UF</span></p>
+                <p className="text-4xl font-bold text-gray-900">{result.price_uf.toLocaleString('es-CL')} <span className="text-xl font-semibold" style={{ color: 'var(--n3-teal)' }}>UF</span></p>
                 <p className="text-sm mt-1" style={{ color: '#6b7280' }}>~ ${result.price_clp.toLocaleString('es-CL')} CLP</p>
 
                 <div className="flex items-center gap-2 mt-4">
                   <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#e5e7eb' }}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${result.confidence}%`, background: result.confidence > 85 ? '#d61f2c' : result.confidence > 70 ? '#f59e0b' : '#d97706' }} />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${result.confidence}%`, background: result.confidence > 85 ? 'var(--n3-teal)' : result.confidence > 70 ? '#f59e0b' : '#d97706' }} />
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? '#d61f2c' : '#f59e0b' }}>{result.confidence}% confianza</span>
+                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? 'var(--n3-teal)' : '#f59e0b' }}>{result.confidence}% confianza</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={15} style={{ color: '#d61f2c' }} />
+                    <DollarSign size={15} style={{ color: 'var(--n3-teal)' }} />
                     <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Precio / m2</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{result.price_uf_m2} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>UF/m2</span></p>
@@ -891,7 +891,7 @@ export default function ValorizadorPage() {
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <BarChart2 size={15} style={{ color: '#d61f2c' }} />
+                    <BarChart2 size={15} style={{ color: 'var(--n3-teal)' }} />
                     <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Absorcion</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{result.market_absorption}<span className="text-sm font-normal" style={{ color: '#6b7280' }}>%</span></p>
@@ -936,7 +936,7 @@ export default function ValorizadorPage() {
                       onClick={() => void generateRoleReport('seller_playbook')}
                       disabled={Boolean(roleReportLoading)}
                       className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                      style={{ background: '#d61f2c' }}
+                      style={{ background: 'var(--n3-teal)' }}
                     >
                       <Send size={14} />
                       {roleReportLoading === 'seller_playbook' ? 'Generando...' : 'Vendedor'}
@@ -1063,7 +1063,7 @@ export default function ValorizadorPage() {
                       ...neighborhoodComparison.rows.filter((row) => row.neighborhood !== neighborhoodComparison.currentNeighborhood.neighborhood).map((row) => ({
                         label: row.neighborhood,
                         value: row.averageClosing,
-                        accent: '#d61f2c',
+                        accent: 'var(--n3-teal)',
                       })),
                     ].slice(0, 4).map((item) => {
                       const width = Math.max(12, Math.round((item.value / neighborhoodComparison.maxValue) * 100))
@@ -1352,7 +1352,7 @@ export default function ValorizadorPage() {
           ) : (
             <div className="bg-white rounded-lg p-12 text-center shadow-sm flex flex-col items-center justify-center h-full min-h-[300px]" style={{ border: '1px dashed #e5e7eb' }}>
               <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: '#f9fafb' }}>
-                <Home size={26} style={{ color: '#d61f2c' }} />
+                <Home size={26} style={{ color: 'var(--n3-teal)' }} />
               </div>
               <p className="font-semibold text-gray-900">Ingresa los datos de la propiedad</p>
               <p className="text-sm mt-1" style={{ color: '#6b7280' }}>El modelo usara precios reales de {neighborhoods.length} barrios de Vitacura</p>
@@ -1418,7 +1418,7 @@ export default function ValorizadorPage() {
                     }}
                   >
                     <td className="px-4 py-2.5 font-medium text-gray-900">{n.name}</td>
-                    <td className="px-4 py-2.5 font-semibold" style={{ color: '#d61f2c' }}>{n.price_per_sqm_uf}</td>
+                    <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--n3-teal)' }}>{n.price_per_sqm_uf}</td>
                     <td className="px-4 py-2.5 text-gray-600">{n.velocity_days}d</td>
                     <td className="px-4 py-2.5 text-gray-600">{(n.absorption_rate * 100).toFixed(0)}%</td>
                     <td className="px-4 py-2.5 text-gray-600">{n.inventory_count}</td>
@@ -1432,6 +1432,7 @@ export default function ValorizadorPage() {
     </div>
   )
 }
+
 
 
 

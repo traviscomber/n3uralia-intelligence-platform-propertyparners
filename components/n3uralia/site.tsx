@@ -468,15 +468,7 @@ function SiteShell({ children, footerVariant = 'dark' }: SiteShellProps) {
       <header className="sticky top-0 z-50 border-b border-[var(--n3-line)] bg-[rgba(3,6,6,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1440px] items-center gap-6 px-4 py-3 md:px-8">
           <Link href="/es" className="shrink-0">
-            <Image
-              src="/brand/n3uralia-wordmark.jpeg"
-              alt="Property Partners"
-              width={260}
-              height={72}
-              priority
-              unoptimized
-              className="h-10 w-auto md:h-11"
-            />
+            <BrandLockup />
           </Link>
           <nav className="ml-auto hidden items-center gap-8 lg:flex">
             {navLinks.map((link) => (
@@ -505,22 +497,23 @@ function SiteFooter({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
   const dark = variant === 'dark'
   return (
     <footer className={dark ? 'border-t border-[var(--n3-line)] bg-[var(--n3-black)]' : 'border-t border-[var(--n3-border-light)] bg-[var(--n3-light-bg)] text-[var(--n3-light-text)]'}>
-      <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-14 md:grid-cols-[1.1fr_1fr_1fr_1fr_1fr_1.1fr] md:px-8">
-        <div className="space-y-5">
-          <Image
-            src="/brand/n3uralia-wordmark.jpeg"
-            alt="Property Partners"
-            width={260}
-            height={72}
-            unoptimized
-            className={dark ? 'h-10 w-auto' : 'h-10 w-auto mix-blend-multiply'}
-          />
-          <p className={dark ? 'max-w-sm text-sm leading-7 text-[var(--n3-text-muted)]' : 'max-w-sm text-sm leading-7 text-[var(--n3-light-muted)]'}>
-            We build AI systems and intelligent workflows that help organizations operate with more clarity, speed, and control.
-          </p>
-        </div>
+        <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-14 md:grid-cols-[1.1fr_1fr_1fr_1fr_1fr_1.1fr] md:px-8">
+          <div className="space-y-5">
+            <BrandLockup dark={dark} />
+            <Image
+              src="/brand/n3uralia-mark.jpeg"
+              alt="N3uralia"
+              width={52}
+              height={52}
+              unoptimized
+              className={dark ? 'h-12 w-12 object-contain' : 'h-12 w-12 object-contain mix-blend-multiply'}
+            />
+            <p className={dark ? 'max-w-sm text-sm leading-7 text-[var(--n3-text-muted)]' : 'max-w-sm text-sm leading-7 text-[var(--n3-light-muted)]'}>
+              We build AI systems and intelligent workflows that help organizations operate with more clarity, speed, and control.
+            </p>
+          </div>
 
-        <FooterColumn title="Property Partners" links={footerLinks.slice(0, 2)} dark={dark} />
+        <FooterColumn title="N3uralia" links={footerLinks.slice(0, 2)} dark={dark} />
         <FooterColumn title="Projects" links={[footerLinks[1], footerLinks[5]]} dark={dark} />
         <FooterColumn title="Products" links={[footerLinks[2]]} dark={dark} />
         <FooterColumn title="Company" links={[footerLinks[4], footerLinks[3]]} dark={dark} />
@@ -540,6 +533,17 @@ function SiteFooter({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
               <Crosshair className="h-4 w-4 text-[var(--n3-teal-soft)]" />
               <span>Santiago, Chile - LATAM</span>
             </div>
+          </div>
+          <div className="pt-2 text-[11px] uppercase tracking-[0.22em] text-[var(--n3-teal-soft)]">
+            Powered by{' '}
+            <a
+              href="https://n3uralia.com"
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-[rgba(255,255,255,0.25)] underline-offset-4 transition-colors hover:text-white"
+            >
+              N3uralia
+            </a>
           </div>
         </div>
       </div>
@@ -620,6 +624,52 @@ function HudCorners({ active = 1 }: { active?: number }) {
       <span className="absolute right-0 top-0 h-4 w-4 border-r border-t border-[var(--n3-teal-soft)]" />
       <span className="absolute bottom-0 left-0 h-4 w-4 border-b border-l border-[var(--n3-teal-soft)]" />
       <span className="absolute bottom-0 right-0 h-4 w-4 border-b border-r border-[var(--n3-teal-soft)]" />
+    </div>
+  )
+}
+
+function BrandLockup({ dark = true }: { dark?: boolean }) {
+  return (
+    <div className="flex items-center gap-3">
+      <Image
+        src="/brand/n3uralia-mark.jpeg"
+        alt="N3uralia"
+        width={52}
+        height={52}
+        unoptimized
+        className={`h-10 w-10 shrink-0 object-contain ${dark ? '' : 'mix-blend-multiply'}`}
+      />
+      <Image
+        src="/brand/n3uralia-wordmark.jpeg"
+        alt="N3uralia"
+        width={260}
+        height={72}
+        priority
+        unoptimized
+        className={`h-8 w-auto object-contain md:h-9 ${dark ? '' : 'mix-blend-multiply'}`}
+      />
+    </div>
+  )
+}
+
+function PhotoPanel({
+  src,
+  alt,
+  className = '',
+  aspect = 'aspect-[16/10]',
+  imageClassName = 'object-cover object-center',
+}: {
+  src: string
+  alt: string
+  className?: string
+  aspect?: string
+  imageClassName?: string
+}) {
+  return (
+    <div className={`relative overflow-hidden border border-[var(--n3-line)] bg-black ${aspect} ${className}`}>
+      <HudCorners active={1} />
+      <Image src={src} alt={alt} fill unoptimized className={imageClassName} />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,6,6,0.12)_0%,rgba(3,6,6,0.28)_100%)]" />
     </div>
   )
 }
@@ -841,13 +891,13 @@ function LandingHero() {
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="text-[11px] uppercase tracking-[0.28em] text-[var(--n3-teal-soft)]">
-                Intelligence - Automation - Execution
+                Intelligence · Automation · Execution
               </div>
               <h1 className="max-w-xl text-[clamp(3rem,6vw,6.2rem)] font-light leading-[0.94] text-[var(--n3-text-light)]">
                 Turn complexity into intelligent execution.
               </h1>
               <p className="max-w-lg text-sm leading-7 text-[var(--n3-text-muted)] md:text-base">
-                Property Partners helps companies turn scattered data, workflows, documents, and AI into systems that improve visibility, control, and execution.
+                N3uralia helps companies turn scattered data, workflows, documents, and AI into systems that improve visibility, control, and execution.
               </p>
             </div>
 
@@ -882,7 +932,12 @@ function LandingHero() {
               filter: `blur(${focus.blur}px)`,
             }}
           >
-            <GeneratedGraphic src="/assets/graphics/hero-command-center.svg" alt="Property Partners command center" priority />
+            <PhotoPanel
+              src="/assets/photos/hero-ops.jpg"
+              alt="N3uralia strategic team"
+              aspect="aspect-[16/11]"
+              imageClassName="object-cover object-[center_top]"
+            />
           </div>
         </div>
       </div>
@@ -929,7 +984,12 @@ function LandingPage() {
       <section className="border-t border-[var(--n3-line)] bg-[var(--n3-black)] px-4 py-14 md:px-8 md:py-20">
         <div className="mx-auto max-w-[1440px] space-y-8">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
-            <GeneratedGraphic src="/assets/graphics/operations-team.svg" alt="Operational team around a system table" />
+            <PhotoPanel
+              src="/assets/photos/operations-team.jpg"
+              alt="Operational team around a system table"
+              aspect="aspect-[16/10]"
+              imageClassName="object-cover object-center"
+            />
             <div className="space-y-5">
               <div className="text-[11px] uppercase tracking-[0.28em] text-[var(--n3-teal-soft)]">Built on experience</div>
               <h2 className="max-w-md text-[clamp(2rem,4vw,4.1rem)] font-light leading-[0.96]">
@@ -976,7 +1036,13 @@ function LandingPage() {
                 </div>
               </ExpandableRetroPanel>
             </div>
-            <GeneratedGraphic src="/assets/graphics/control-room.svg" alt="Control room with operational dashboards" className="order-1 lg:order-2" />
+            <PhotoPanel
+              src="/assets/photos/control-room.jpg"
+              alt="Control room with operational dashboards"
+              aspect="aspect-[16/10]"
+              className="order-1 lg:order-2"
+              imageClassName="object-cover object-center"
+            />
           </div>
         </div>
       </section>
@@ -991,7 +1057,7 @@ function LandingPage() {
               </h2>
             </div>
             <p className="max-w-md text-sm leading-7 text-[var(--n3-light-muted)]">
-              Selected projects show Property Partners&apos; work converting complexity into measurable operational value.
+              Selected projects show N3uralia&apos;s work converting complexity into measurable operational value.
             </p>
           </div>
 
@@ -1031,7 +1097,7 @@ function LandingPage() {
               </h2>
             </div>
             <p className="max-w-md text-sm leading-7 text-[var(--n3-light-muted)]">
-              Property Partners&apos; product suite powers intelligent operations across documents, processes, and decisions.
+              N3uralia&apos;s product suite powers intelligent operations across documents, processes, and decisions.
             </p>
           </div>
 
@@ -1129,7 +1195,12 @@ function LandingPage() {
               </RetroButton>
             </div>
           </div>
-          <GeneratedGraphic src="/assets/graphics/operations-control-room.svg" alt="Operations command center" />
+          <PhotoPanel
+            src="/assets/photos/control-room.jpg"
+            alt="Operations command center"
+            aspect="aspect-[16/10]"
+            imageClassName="object-cover object-center"
+          />
         </div>
       </section>
     </SiteShell>
@@ -1217,7 +1288,7 @@ function RoutePageFrame({
   return (
     <SiteShell footerVariant={darkHero ? 'dark' : 'light'}>
       <PageHero
-        eyebrow="Property Partners"
+        eyebrow="N3uralia"
         title={title}
         body={intro}
         ctas={cta}
@@ -1234,7 +1305,7 @@ function SolutionsPage() {
   return (
     <RoutePageFrame
       title="Expertise for complex operations."
-      intro="Property Partners designs operational intelligence, workflow automation, production AI systems, and the surrounding governance layer."
+      intro="N3uralia designs operational intelligence, workflow automation, production AI systems, and the surrounding governance layer."
       graphic="/assets/graphics/operational-intelligence-stack.svg"
     >
       <section className="border-t border-[var(--n3-line)] bg-[var(--n3-black)] px-4 py-14 md:px-8 md:py-20">
@@ -1303,7 +1374,7 @@ function ProductsPage() {
   return (
     <RoutePageFrame
       title="Products built from real operations."
-      intro="Property Partners products are reusable systems shaped by the realities of complex organizations."
+      intro="N3uralia products are reusable systems shaped by the realities of complex organizations."
       graphic="/assets/graphics/product-mockup.svg"
       darkHero={false}
       cta={<RetroButton href="/es/productos#clarity" variant="primary">Explore products</RetroButton>}
@@ -1383,8 +1454,8 @@ function AboutPage() {
   return (
     <RoutePageFrame
       title="A philosophy built for real operations."
-      intro="Property Partners works at the intersection of strategy, systems design, and practical implementation."
-      graphic="/assets/graphics/operations-team.svg"
+      intro="N3uralia works at the intersection of strategy, systems design, and practical implementation."
+      graphic="/assets/photos/operations-team.jpg"
       darkHero={false}
     >
       <section className="border-t border-[var(--n3-border-light)] bg-[var(--n3-light-bg)] px-4 py-14 text-[var(--n3-light-text)] md:px-8 md:py-20">

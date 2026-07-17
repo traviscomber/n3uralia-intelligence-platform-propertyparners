@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -6,11 +6,11 @@ import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContai
 import type { KpiSnapshot, Profile, AiReport } from '@/lib/types'
 import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
 
-// ── mock fallback data (shown while DB loads or if empty) ──
+// â”€â”€ mock fallback data (shown while DB loads or if empty) â”€â”€
 const MOCK_DIRECTORS = [
   { id: '1', name: 'Juan Morales',  team: 'Equipo Alpha', ventas: 30, uf: 138100, target: 36, comision: 4119000 },
-  { id: '2', name: 'María García',  team: 'Equipo Beta',  ventas: 26, uf: 116700, target: 36, comision: 3528000 },
-  { id: '3', name: 'Carlos López',  team: 'Equipo Gamma', ventas: 17, uf:  75900, target: 28, comision: 2286000 },
+  { id: '2', name: 'MarÃ­a GarcÃ­a',  team: 'Equipo Beta',  ventas: 26, uf: 116700, target: 36, comision: 3528000 },
+  { id: '3', name: 'Carlos LÃ³pez',  team: 'Equipo Gamma', ventas: 17, uf:  75900, target: 28, comision: 2286000 },
 ]
 
 const MOCK_CHART = [
@@ -29,7 +29,7 @@ function fmt(n: number) {
 }
 
 function scoreTone(status: 'good' | 'warning' | 'critical' | 'inactive') {
-  if (status === 'good') return '#d61f2c'
+  if (status === 'good') return 'var(--n3-teal)'
   if (status === 'warning') return '#f59e0b'
   if (status === 'critical') return '#ef4444'
   return '#6b7280'
@@ -76,7 +76,7 @@ export default function CeoDashboard() {
           const newDirs = (profileRows as Profile[]).map(p => ({
             id: p.id,
             name: p.full_name || 'Director',
-            team: p.team || '—',
+            team: p.team || 'â€”',
             ventas:   dirMap[p.id]?.ventas   ?? 0,
             uf:       dirMap[p.id]?.uf       ?? 0,
             target:   dirMap[p.id]?.target   ?? 0,
@@ -116,7 +116,7 @@ export default function CeoDashboard() {
   }, [])
 
   const dirKeys  = directors.map(d => d.name.split(' ')[0])
-  const dirColors = ['#d61f2c', '#6b7280', '#d61f2c']
+  const dirColors = ['var(--n3-teal)', '#6b7280', 'var(--n3-teal)']
   const executiveMetrics = PP_SCORECARD_DEFINITIONS.ceo
   const executiveStates = useMemo(() => {
     const totalTargets = directors.reduce((sum, d) => sum + d.target, 0) || 1
@@ -159,11 +159,11 @@ export default function CeoDashboard() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#111111', color: '#d61f2c' }}>CEO</span>
+            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#111111', color: 'var(--n3-teal)' }}>CEO</span>
             <span className="text-xs" style={{ color: '#6b7280' }}>Vista Ejecutiva</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>Panel de Comando</h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Resumen global del negocio · {loading ? 'Cargando...' : 'Actualizado ahora'}</p>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Resumen global del negocio Â· {loading ? 'Cargando...' : 'Actualizado ahora'}</p>
         </div>
         <div className="text-right">
           <div className="text-xs" style={{ color: '#6b7280' }}>Acumulado 6 meses</div>
@@ -173,10 +173,10 @@ export default function CeoDashboard() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Ventas totales"     value={fmt(totals.ventas)}           sub="propiedades cerradas (6m)"  border="#d61f2c" />
+        <KpiCard label="Ventas totales"     value={fmt(totals.ventas)}           sub="propiedades cerradas (6m)"  border="var(--n3-teal)" />
         <KpiCard label="UF vendidas"        value={`${(totals.uf/1000).toFixed(0)}K UF`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#6b7280" />
-        <KpiCard label="Comisión acumulada" value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP comisión total" border="#d61f2c" />
-        <KpiCard label="Conversión global"  value={`${totals.conversion}%`}      sub="leads → cierre promedio"   border="#111111" />
+        <KpiCard label="ComisiÃ³n acumulada" value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP comisiÃ³n total" border="var(--n3-teal)" />
+        <KpiCard label="ConversiÃ³n global"  value={`${totals.conversion}%`}      sub="leads â†’ cierre promedio"   border="#111111" />
       </div>
 
       {/* Executive Scorecard */}
@@ -188,7 +188,7 @@ export default function CeoDashboard() {
               <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Lectura profesional para CEO y directorio</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold" style={{ color: executiveStates.score >= 80 ? '#d61f2c' : executiveStates.score >= 65 ? '#f59e0b' : '#ef4444' }}>
+              <div className="text-3xl font-bold" style={{ color: executiveStates.score >= 80 ? 'var(--n3-teal)' : executiveStates.score >= 65 ? '#f59e0b' : '#ef4444' }}>
                 {executiveStates.score}
               </div>
               <div className="text-[11px]" style={{ color: '#6b7280' }}>{executiveStates.trend}</div>
@@ -202,7 +202,7 @@ export default function CeoDashboard() {
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(metric.status) }} />
                 </div>
                 <div className="text-lg font-bold" style={{ color: '#111111' }}>
-                  {metric.current === null ? '—' : metric.unit ? `${metric.current}${metric.unit}` : metric.current}
+                  {metric.current === null ? 'â€”' : metric.unit ? `${metric.current}${metric.unit}` : metric.current}
                 </div>
                 <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{metric.note}</div>
               </div>
@@ -213,10 +213,10 @@ export default function CeoDashboard() {
         <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas CEO</h2>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>MÃ©tricas CEO</h2>
               <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Umbrales, cadencia y responsables</p>
             </div>
-            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#d61f2c' }}>Vitacura ventas</span>
+            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>Vitacura ventas</span>
           </div>
           <div className="space-y-3">
             {executiveMetrics.map(metric => (
@@ -240,14 +240,14 @@ export default function CeoDashboard() {
         <div className="col-span-1 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Últimos reportes IA</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Señales recientes para decisión</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ãšltimos reportes IA</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>SeÃ±ales recientes para decisiÃ³n</p>
             </div>
           </div>
           <div className="space-y-3">
             {recentReports.length === 0 ? (
               <div className="text-xs rounded-lg p-3" style={{ background: '#f8fbfa', color: '#6b7280', border: '1px dashed #dbe7e3' }}>
-                No hay reportes aún.
+                No hay reportes aÃºn.
               </div>
             ) : (
               recentReports.map(report => (
@@ -277,7 +277,7 @@ export default function CeoDashboard() {
                 <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Ventas</th>
                 <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>UF</th>
                 <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Cumpl.</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Comisión</th>
+                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>ComisiÃ³n</th>
               </tr>
             </thead>
             <tbody>
@@ -291,7 +291,7 @@ export default function CeoDashboard() {
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: '#f9fafb', color: '#d61f2c' }}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
                           {d.name.charAt(0)}
                         </div>
                         <div>
@@ -308,9 +308,9 @@ export default function CeoDashboard() {
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex flex-col items-end gap-1">
-                        <span className="text-[12px] font-semibold" style={{ color: pct >= 100 ? '#d61f2c' : pct >= 80 ? '#f59e0b' : '#d97706' }}>{pct}%</span>
+                        <span className="text-[12px] font-semibold" style={{ color: pct >= 100 ? 'var(--n3-teal)' : pct >= 80 ? '#f59e0b' : '#d97706' }}>{pct}%</span>
                         <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: '#e8f0ed' }}>
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? '#d61f2c' : pct >= 80 ? '#f59e0b' : '#d97706' }} />
+                          <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? 'var(--n3-teal)' : pct >= 80 ? '#f59e0b' : '#d97706' }} />
                         </div>
                       </div>
                     </td>
@@ -328,7 +328,7 @@ export default function CeoDashboard() {
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas por Director</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Últimos 6 meses</p>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Ãšltimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">
             <ResponsiveContainer width="100%" height={180}>
@@ -376,8 +376,8 @@ export default function CeoDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v: unknown) => [`$${fmt(Number(v))}K`, 'Comisión']} contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
-                <Bar dataKey="comision" fill="#d61f2c" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                <Tooltip formatter={(v: unknown) => [`$${fmt(Number(v))}K`, 'ComisiÃ³n']} contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
+                <Bar dataKey="comision" fill="var(--n3-teal)" radius={[4, 4, 0, 0]} maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -391,8 +391,8 @@ export default function CeoDashboard() {
           <div className="divide-y" style={{ borderColor: '#f0f5f3' }}>
             {reports.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <p className="text-xs" style={{ color: '#6b7280' }}>Sin reportes generados aún.</p>
-                <a href="/dashboard/reportes" className="text-xs mt-1 block hover:underline" style={{ color: '#d61f2c' }}>Generar primer reporte</a>
+                <p className="text-xs" style={{ color: '#6b7280' }}>Sin reportes generados aÃºn.</p>
+                <a href="/dashboard/reportes" className="text-xs mt-1 block hover:underline" style={{ color: 'var(--n3-teal)' }}>Generar primer reporte</a>
               </div>
             ) : (
               reports.map(r => (
@@ -400,11 +400,11 @@ export default function CeoDashboard() {
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <span className="text-[12px] font-medium leading-snug" style={{ color: '#111111' }}>{r.title}</span>
                     <span className="text-[10px] shrink-0" style={{ color: '#6b7280' }}>
-                      {r.period_date ? new Date(r.period_date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : '—'}
+                      {r.period_date ? new Date(r.period_date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : 'â€”'}
                     </span>
                   </div>
                   {r.summary && <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: '#6b7280' }}>{r.summary}</p>}
-                  <span className="inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#f0f7f4', color: '#d61f2c' }}>{r.report_type}</span>
+                  <span className="inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>{r.report_type}</span>
                 </div>
               ))
             )}
@@ -414,4 +414,5 @@ export default function CeoDashboard() {
     </div>
   )
 }
+
 

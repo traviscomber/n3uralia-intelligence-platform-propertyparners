@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Filter, RefreshCw, Search, Users } from 'lucide-react'
@@ -99,7 +99,7 @@ export default function ProfileDirectory() {
             disabled={refreshing}
             aria-label="Refrescar directorio de perfiles"
             className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: '#d61f2c' }}
+            style={{ background: 'var(--n3-teal)' }}
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             Refrescar
@@ -149,7 +149,7 @@ export default function ProfileDirectory() {
             Buscar
           </span>
           <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
-            <Search size={14} style={{ color: '#d61f2c' }} />
+            <Search size={14} style={{ color: 'var(--n3-teal)' }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -166,7 +166,7 @@ export default function ProfileDirectory() {
             Rol
           </span>
           <div className="flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
-            <Filter size={14} style={{ color: '#d61f2c' }} />
+            <Filter size={14} style={{ color: 'var(--n3-teal)' }} />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
@@ -228,7 +228,7 @@ export default function ProfileDirectory() {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-gray-600">
-                  {profile.team || 'Sin equipo'} · {profile.id}
+                  {profile.team || 'Sin equipo'} Â· {profile.id}
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
                   Creado {new Date(profile.created_at).toLocaleDateString('es-CL')}
@@ -254,4 +254,5 @@ export default function ProfileDirectory() {
     </div>
   )
 }
+
 

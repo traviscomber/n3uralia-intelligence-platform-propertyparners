@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -13,7 +13,7 @@ type StatusKey = 'on_track' | 'warning' | 'behind'
 type AgentRow = { id: string; name: string; team: string; ventas: number; captaciones: number; conversion: number; velocidad: number; status: StatusKey }
 
 const MOCK_AGENTS: AgentRow[] = [
-  { id: '1', name: 'Sofía Ramos',   team: 'Equipo Alpha', ventas: 15, captaciones: 25, conversion: 11.1, velocidad: 31, status: 'on_track' },
+  { id: '1', name: 'SofÃ­a Ramos',   team: 'Equipo Alpha', ventas: 15, captaciones: 25, conversion: 11.1, velocidad: 31, status: 'on_track' },
   { id: '2', name: 'Diego Herrera', team: 'Equipo Alpha', ventas: 14, captaciones: 23, conversion:  9.1, velocidad: 34, status: 'warning'  },
 ]
 
@@ -27,7 +27,7 @@ const MOCK_CHART = [
 ]
 const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: string }> = {
   on_track: { label: 'En Meta',  bg: '#dcfce7', color: '#16a34a' },
-  warning:  { label: 'Atención', bg: '#fef3c7', color: '#d97706' },
+  warning:  { label: 'AtenciÃ³n', bg: '#fef3c7', color: '#d97706' },
   behind:   { label: 'En Riesgo',bg: '#fee2e2', color: '#dc2626' },
 }
 
@@ -105,7 +105,7 @@ export default function DirectorDashboard() {
             return {
               id: p.id,
               name: p.full_name || 'Agente',
-              team: p.team || '—',
+              team: p.team || 'â€”',
               ventas: v,
               captaciones: ag?.captaciones ?? 0,
               conversion: ag && ag.count > 0 ? Math.round((ag.conversion / ag.count) * 10) / 10 : 0,
@@ -167,12 +167,12 @@ export default function DirectorDashboard() {
     return {
       overall,
       states,
-      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
+      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sÃ³lido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
     }
   }, [activities.length, totals.conversion, totals.target, totals.ventas])
 
-  const ACTIVITY_ICONS: Record<string, string> = { llamada: '📞', visita: '🏠', oferta: '📄', cierre: '✍️' }
-  const ACTIVITY_COLORS: Record<string, string> = { llamada: '#d61f2c', visita: '#6b7280', oferta: '#0ea5e9', cierre: '#d61f2c' }
+  const ACTIVITY_ICONS: Record<string, string> = { llamada: 'ðŸ“ž', visita: 'ðŸ ', oferta: 'ðŸ“„', cierre: 'âœï¸' }
+  const ACTIVITY_COLORS: Record<string, string> = { llamada: 'var(--n3-teal)', visita: '#6b7280', oferta: '#0ea5e9', cierre: 'var(--n3-teal)' }
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
@@ -181,22 +181,22 @@ export default function DirectorDashboard() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#6b7280', color: '#fff' }}>Director</span>
-            {director?.team && <span className="text-xs font-medium" style={{ color: '#d61f2c' }}>{director.team}</span>}
+            {director?.team && <span className="text-xs font-medium" style={{ color: 'var(--n3-teal)' }}>{director.team}</span>}
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>
             {loading ? 'Cargando...' : director?.full_name || 'Juan Morales'}
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel de tu equipo · {agents.length} agentes activos</p>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel de tu equipo Â· {agents.length} agentes activos</p>
         </div>
         <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-3" style={{ border: '1px solid #e8f0ed' }}>
           <div className="text-right">
             <div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b7280' }}>Cumpl. 6 meses</div>
-            <div className="text-xl font-bold" style={{ color: pctCumpl >= 90 ? '#d61f2c' : pctCumpl >= 70 ? '#f59e0b' : '#d97706' }}>{pctCumpl}%</div>
+            <div className="text-xl font-bold" style={{ color: pctCumpl >= 90 ? 'var(--n3-teal)' : pctCumpl >= 70 ? '#f59e0b' : '#d97706' }}>{pctCumpl}%</div>
           </div>
           <div className="w-12 h-12 relative">
             <svg viewBox="0 0 36 36" className="w-12 h-12 -rotate-90">
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f0f5f3" strokeWidth="3.8" />
-              <circle cx="18" cy="18" r="15.9" fill="none" stroke={pctCumpl >= 90 ? '#d61f2c' : pctCumpl >= 70 ? '#f59e0b' : '#d97706'} strokeWidth="3.8" strokeDasharray={`${Math.min(pctCumpl, 100)} 100`} strokeLinecap="round" />
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke={pctCumpl >= 90 ? 'var(--n3-teal)' : pctCumpl >= 70 ? '#f59e0b' : '#d97706'} strokeWidth="3.8" strokeDasharray={`${Math.min(pctCumpl, 100)} 100`} strokeLinecap="round" />
             </svg>
           </div>
         </div>
@@ -204,10 +204,10 @@ export default function DirectorDashboard() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Ventas equipo" value={String(totals.ventas)} sub="propiedades cerradas (6m)" border="#d61f2c" />
+        <KpiCard label="Ventas equipo" value={String(totals.ventas)} sub="propiedades cerradas (6m)" border="var(--n3-teal)" />
         <KpiCard label="UF vendidas"   value={`${(totals.uf/1000).toFixed(0)}K`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#6b7280" />
-        <KpiCard label="Conversión"    value={`${totals.conversion}%`} sub="leads → cierre promedio" border="#d61f2c" />
-        <KpiCard label="Comisión eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#111111" />
+        <KpiCard label="ConversiÃ³n"    value={`${totals.conversion}%`} sub="leads â†’ cierre promedio" border="var(--n3-teal)" />
+        <KpiCard label="ComisiÃ³n eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#111111" />
       </div>
 
       {/* Director Scorecard */}
@@ -215,12 +215,12 @@ export default function DirectorDashboard() {
         <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score de gestión</h2>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score de gestiÃ³n</h2>
               <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Lectura operativa del equipo y su disciplina comercial</p>
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold" style={{ color: directorScorecard.overall !== null && directorScorecard.overall >= 80 ? '#16a34a' : directorScorecard.overall !== null && directorScorecard.overall >= 65 ? '#d97706' : '#dc2626' }}>
-                {directorScorecard.overall === null ? '—' : directorScorecard.overall}
+                {directorScorecard.overall === null ? 'â€”' : directorScorecard.overall}
               </div>
               <div className="text-[11px]" style={{ color: '#6b7280' }}>{directorScorecard.trend}</div>
             </div>
@@ -233,7 +233,7 @@ export default function DirectorDashboard() {
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(status) }} />
                 </div>
                 <div className="text-lg font-bold" style={{ color: '#111111' }}>
-                  {current === null ? '—' : `${current}${definition.unit ? definition.unit : ''}`}
+                  {current === null ? 'â€”' : `${current}${definition.unit ? definition.unit : ''}`}
                 </div>
                 <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{definition.note}</div>
               </div>
@@ -244,10 +244,10 @@ export default function DirectorDashboard() {
         <div className="col-span-3 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas del director</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Definición, umbral y cadencia para el equipo</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>MÃ©tricas del director</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>DefiniciÃ³n, umbral y cadencia para el equipo</p>
             </div>
-            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#d61f2c' }}>Vitacura ventas</span>
+            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>Vitacura ventas</span>
           </div>
           <div className="space-y-3">
             {PP_SCORECARD_DEFINITIONS.director.map((metric) => (
@@ -275,7 +275,7 @@ export default function DirectorDashboard() {
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Mi Equipo de Agentes</h2>
-            <span className="text-xs" style={{ color: '#6b7280' }}>6 meses · {agents.length} agentes</span>
+            <span className="text-xs" style={{ color: '#6b7280' }}>6 meses Â· {agents.length} agentes</span>
           </div>
           <table className="w-full text-sm">
             <thead>
@@ -292,7 +292,7 @@ export default function DirectorDashboard() {
                   <tr key={a.id} style={{ borderTop: '1px solid #f0f5f3' }}>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: '#f0f7f4', color: '#d61f2c' }}>{a.name.charAt(0)}</div>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>{a.name.charAt(0)}</div>
                         <span className="text-[13px] font-medium" style={{ color: '#111111' }}>{a.name}</span>
                       </div>
                     </td>
@@ -314,7 +314,7 @@ export default function DirectorDashboard() {
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas vs Target</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Equipo · últimos 6 meses</p>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Equipo Â· Ãºltimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">
             <ResponsiveContainer width="100%" height={190}>
@@ -323,12 +323,12 @@ export default function DirectorDashboard() {
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
-                <Line type="monotone" dataKey="ventas" stroke="#d61f2c" strokeWidth={2.5} dot={{ fill: '#d61f2c', r: 4 }} name="Ventas" />
+                <Line type="monotone" dataKey="ventas" stroke="var(--n3-teal)" strokeWidth={2.5} dot={{ fill: 'var(--n3-teal)', r: 4 }} name="Ventas" />
                 <Line type="monotone" dataKey="target" stroke="#e5e7eb" strokeWidth={1.5} strokeDasharray="4 3" dot={false} name="Target" />
               </LineChart>
             </ResponsiveContainer>
             <div className="flex gap-4 mt-1 justify-center">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: '#d61f2c' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Ventas</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--n3-teal)' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Ventas</span></div>
               <div className="flex items-center gap-1.5"><div className="w-2.5 h-0.5" style={{ background: '#e5e7eb' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Target</span></div>
             </div>
           </div>
@@ -355,7 +355,7 @@ export default function DirectorDashboard() {
                     <span className="text-[11px] font-semibold capitalize" style={{ color: ACTIVITY_COLORS[act.activity_type] }}>{act.activity_type}</span>
                     {act.scheduled_at && <span className="text-[10px]" style={{ color: '#6b7280' }}>{new Date(act.scheduled_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>}
                   </div>
-                  <p className="text-[12px] leading-snug truncate" style={{ color: '#111111' }}>{act.description || '—'}</p>
+                  <p className="text-[12px] leading-snug truncate" style={{ color: '#111111' }}>{act.description || 'â€”'}</p>
                   {act.value_uf && <span className="text-[11px]" style={{ color: '#6b7280' }}>{fmt(act.value_uf)} UF</span>}
                 </div>
               </div>
@@ -366,4 +366,5 @@ export default function DirectorDashboard() {
     </div>
   )
 }
+
 

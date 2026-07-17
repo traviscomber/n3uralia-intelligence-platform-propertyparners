@@ -28,28 +28,28 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--n3-black)]">
       <div className="w-full max-w-sm px-4">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-3 rounded-md bg-black px-3 py-1.5">
+        <div className="mb-8 text-center">
+          <div className="mb-3 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
             <PPLogo className="h-7 w-auto" priority />
           </div>
-          <p className="text-sm text-gray-600">Property Partners Vitacura</p>
+          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>N3uralia</p>
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-          <h1 className="text-base font-semibold mb-1 text-gray-900">Iniciar sesion</h1>
-          <p className="text-sm mb-6 text-gray-600">Ingresa tus credenciales para continuar</p>
+        <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
+          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesion</h1>
+          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Ingresa tus credenciales para continuar</p>
 
           {error && (
-            <div className="mb-4 p-3 rounded text-sm bg-red-50 text-red-600 border border-red-200">
+            <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(139,169,167,0.08)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
                 Correo
               </label>
               <input
@@ -58,12 +58,12 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@correo.com"
-                className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none"
-                style={{ border: '1px solid #e5e7eb' }}
+                className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
+                style={{ border: '1px solid var(--n3-line)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
                 Contrasena
               </label>
               <input
@@ -72,23 +72,23 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none"
-                style={{ border: '1px solid #e5e7eb' }}
+                className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
+                style={{ border: '1px solid var(--n3-line)' }}
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-colors"
-              style={{ background: '#111111' }}
+              className="w-full rounded py-2.5 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-60"
+              style={{ background: 'var(--n3-teal)', color: 'var(--n3-black)' }}
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
 
           <div className="mt-4 text-center">
-            <a href="/auth/sign-up" className="text-xs hover:text-gray-900" style={{ color: '#374151' }}>
-              ¿No tienes cuenta? <span className="font-medium" style={{ color: '#d61f2c' }}>Registrarse</span>
+            <a href="/auth/sign-up" className="text-xs hover:opacity-80" style={{ color: 'var(--n3-text-muted)' }}>
+              ¿No tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Registrarse</span>
             </a>
           </div>
         </div>

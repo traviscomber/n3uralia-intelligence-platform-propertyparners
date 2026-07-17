@@ -35,21 +35,21 @@ export default function SignUpPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="bg-white rounded-lg p-8 max-w-sm w-full text-center shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-          <div className="inline-flex items-center justify-center mb-4 rounded-md bg-black px-3 py-1.5">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--n3-black)]">
+        <div className="w-full max-w-sm rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-8 text-center shadow-sm">
+          <div className="mb-4 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
             <PPLogo className="h-7 w-auto" priority />
           </div>
-          <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: '#f9fafb' }}>
-            <svg width="24" height="24" fill="none" stroke="#d61f2c" strokeWidth="2">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full" style={{ background: 'rgba(139,169,167,0.08)' }}>
+            <svg width="24" height="24" fill="none" stroke="var(--n3-teal)" strokeWidth="2">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h2 className="font-semibold mb-2 text-gray-900">Revisa tu email</h2>
-          <p className="text-sm text-gray-600">
-            Enviamos un enlace de confirmacion a <strong className="text-gray-900">{email}</strong>
+          <h2 className="mb-2 font-semibold text-[var(--n3-text-light)]">Revisa tu email</h2>
+          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>
+            Enviamos un enlace de confirmacion a <strong className="text-[var(--n3-text-light)]">{email}</strong>
           </p>
-          <a href="/auth/login" className="mt-4 inline-block text-sm hover:opacity-80 transition-opacity" style={{ color: '#d61f2c' }}>
+          <a href="/auth/login" className="mt-4 inline-block text-sm transition-opacity hover:opacity-80" style={{ color: 'var(--n3-teal)' }}>
             Volver al ingreso
           </a>
         </div>
@@ -58,20 +58,21 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--n3-black)]">
       <div className="w-full max-w-sm px-4">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-3 rounded-md bg-black px-3 py-1.5">
+        <div className="mb-8 text-center">
+          <div className="mb-3 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
             <PPLogo className="h-7 w-auto" priority />
           </div>
+          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>N3uralia</p>
         </div>
-        <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-          <h1 className="text-base font-semibold mb-1 text-gray-900">Crear cuenta</h1>
-          <p className="text-sm mb-6 text-gray-600">Unete a Property Partners y accede a inteligencia inmobiliaria</p>
-          {error && <div className="mb-4 p-3 rounded text-sm bg-red-50 text-red-600 border border-red-200">{error}</div>}
+        <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
+          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Crear cuenta</h1>
+          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Unete a N3uralia y accede a inteligencia operativa</p>
+          {error && <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(139,169,167,0.08)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>{error}</div>}
           <form onSubmit={handleSignUp} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
                 Nombre completo
               </label>
               <input
@@ -80,12 +81,12 @@ export default function SignUpPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Ana Garcia"
-                className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none"
-                style={{ border: '1px solid #e5e7eb' }}
+                className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
+                style={{ border: '1px solid var(--n3-line)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
                 Correo
               </label>
               <input
@@ -94,12 +95,12 @@ export default function SignUpPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@correo.com"
-                className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none"
-                style={{ border: '1px solid #e5e7eb' }}
+                className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
+                style={{ border: '1px solid var(--n3-line)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#374151' }}>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
                 Contrasena
               </label>
               <input
@@ -109,22 +110,29 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3 py-2.5 rounded text-sm bg-white text-gray-900 outline-none"
-                style={{ border: '1px solid #e5e7eb' }}
+                className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
+                style={{ border: '1px solid var(--n3-line)' }}
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded text-sm font-medium text-white hover:opacity-90 disabled:opacity-60 transition-colors"
-              style={{ background: '#111111' }}
+              className="w-full rounded py-2.5 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-60"
+              style={{ background: 'var(--n3-teal)', color: 'var(--n3-black)' }}
             >
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
           </form>
           <div className="mt-4 text-center">
-            <a href="/auth/login" className="text-xs hover:text-gray-900" style={{ color: '#374151' }}>
-              ¿Ya tienes cuenta? <span className="font-medium" style={{ color: '#d61f2c' }}>Iniciar sesion</span>
+            <a href="/auth/login" className="text-xs transition-opacity hover:opacity-80" style={{ color: 'var(--n3-text-muted)' }}>
+              Ya tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Iniciar sesion</span>
+            </a>
+          </div>
+
+          <div className="mt-5 border-t border-[var(--n3-line)] pt-3 text-center text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>
+            Powered by{' '}
+            <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium hover:opacity-80" style={{ color: 'var(--n3-teal)' }}>
+              N3uralia
             </a>
           </div>
         </div>

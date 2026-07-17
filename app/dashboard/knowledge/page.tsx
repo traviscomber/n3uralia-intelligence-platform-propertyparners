@@ -95,7 +95,7 @@ export default function KnowledgePage() {
           <button
             onClick={() => setSelectedTag(null)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              selectedTag === null ? '#d61f2c text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              selectedTag === null ? 'var(--n3-teal) text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
             }`}
           >
             Todos
@@ -105,7 +105,7 @@ export default function KnowledgePage() {
               key={tag}
               onClick={() => setSelectedTag(tag)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                selectedTag === tag ? '#d61f2c text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                selectedTag === tag ? 'var(--n3-teal) text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
               }`}
             >
               {tag}
@@ -150,5 +150,6 @@ export default function KnowledgePage() {
     </div>
   )
 }
+
 
 

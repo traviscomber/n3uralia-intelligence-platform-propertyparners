@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -122,7 +122,7 @@ export default function MarketImportPage() {
         <a
           href={templateHref}
           className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white"
-          style={{ background: '#d61f2c' }}
+          style={{ background: 'var(--n3-teal)' }}
         >
           <Download className="w-4 h-4" />
           Descargar plantilla
@@ -136,10 +136,10 @@ export default function MarketImportPage() {
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Carga guiada</p>
               <h2 className="mt-1 text-xl font-semibold text-gray-900">Archivo de Inteligencia de Mercado</h2>
               <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
-                Mapea automáticamente nombres de columnas frecuentes como `barrio`, `precio_uf`, `precio_m2_uf`, `absorcion`, `inventario` y `dias_en_mercado`.
+                Mapea automÃ¡ticamente nombres de columnas frecuentes como `barrio`, `precio_uf`, `precio_m2_uf`, `absorcion`, `inventario` y `dias_en_mercado`.
               </p>
             </div>
-            <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: '#f9fafb', color: '#d61f2c' }}>
+            <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
               Solo Vitacura
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function MarketImportPage() {
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Archivo</span>
               <div className="flex items-center gap-3 rounded-lg border border-dashed p-4" style={{ borderColor: '#e5e7eb', background: '#f9fbfa' }}>
-                <FileSpreadsheet className="h-5 w-5" style={{ color: '#d61f2c' }} />
+                <FileSpreadsheet className="h-5 w-5" style={{ color: 'var(--n3-teal)' }} />
                 <input
                   type="file"
                   accept=".csv,.xls,.xlsx"
@@ -213,7 +213,7 @@ export default function MarketImportPage() {
               onClick={() => void runImport('preview')}
               disabled={loading || !file}
               className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-              style={{ background: '#d61f2c' }}
+              style={{ background: 'var(--n3-teal)' }}
             >
               {loading && mode === 'preview' ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               Analizar archivo
@@ -364,11 +364,11 @@ export default function MarketImportPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Formato esperado</p>
             <ul className="mt-3 space-y-2 text-sm" style={{ color: '#374151' }}>
-              <li>• `neighborhood` o `barrio` es obligatorio.</li>
-              <li>• `absorption_rate` acepta `0.85` o `85`.</li>
-              <li>• `source` y `snapshot_date` son opcionales.</li>
-              <li>• `kind=market_data` actualiza `market_data` y el historico `neighborhood_market_data`.</li>
-              <li>• `kind=benchmark_data` inserta en `external_market_benchmarks`.</li>
+              <li>â€¢ `neighborhood` o `barrio` es obligatorio.</li>
+              <li>â€¢ `absorption_rate` acepta `0.85` o `85`.</li>
+              <li>â€¢ `source` y `snapshot_date` son opcionales.</li>
+              <li>â€¢ `kind=market_data` actualiza `market_data` y el historico `neighborhood_market_data`.</li>
+              <li>â€¢ `kind=benchmark_data` inserta en `external_market_benchmarks`.</li>
             </ul>
           </div>
         </div>
@@ -376,4 +376,5 @@ export default function MarketImportPage() {
     </div>
   )
 }
+
 

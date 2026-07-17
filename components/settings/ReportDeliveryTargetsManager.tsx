@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { Plus, RefreshCw, Trash2 } from 'lucide-react'
@@ -147,7 +147,7 @@ export default function ReportDeliveryTargetsManager() {
           onClick={() => void handleCreate()}
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          style={{ background: '#d61f2c' }}
+          style={{ background: 'var(--n3-teal)' }}
         >
           <Plus size={14} />
           {saving ? 'Guardando...' : 'Agregar destinatario'}
@@ -174,7 +174,7 @@ export default function ReportDeliveryTargetsManager() {
             <div key={target.id} className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
               <div>
                 <p className="font-semibold text-gray-900">{target.label}</p>
-                <p className="text-sm" style={{ color: '#374151' }}>{target.channel} · {target.recipient}</p>
+                <p className="text-sm" style={{ color: '#374151' }}>{target.channel} Â· {target.recipient}</p>
                 {target.notes && <p className="text-xs mt-1" style={{ color: '#6b7280' }}>{target.notes}</p>}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -204,10 +204,11 @@ export default function ReportDeliveryTargetsManager() {
             </div>
           ))
         ) : (
-          <p className="text-sm" style={{ color: '#6b7280' }}>Todavía no hay destinatarios configurados.</p>
+          <p className="text-sm" style={{ color: '#6b7280' }}>TodavÃ­a no hay destinatarios configurados.</p>
         )}
       </div>
     </div>
   )
 }
+
 

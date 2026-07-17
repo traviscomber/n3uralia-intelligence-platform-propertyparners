@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -23,6 +23,18 @@ interface Property {
   status: string
   days_on_market: number
   created_at: string
+}
+
+type DedupeAuditTrail = {
+  survivor_id: string
+  survivor_address: string
+  incoming_id: string
+  incoming_address: string
+  neighborhood: string | null
+  property_type: string | null
+  source: string | null
+  score: number
+  reason: string
 }
 
 const NEIGHBORHOODS = [
@@ -137,6 +149,8 @@ export default function PropertiesPage() {
   const [tagResult, setTagResult] = useState<{ barrio_nombre: string; zona_prc: string } | null>(null)
   const [scraping, setScraping] = useState(false)
   const [deduping, setDeduping] = useState(false)
+  const [dedupeSummary, setDedupeSummary] = useState<{ merged: number; removed: number; survivors: number } | null>(null)
+  const [dedupeAuditTrail, setDedupeAuditTrail] = useState<DedupeAuditTrail[]>([])
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [search, setSearch] = useState('')
   const [propertyMode, setPropertyMode] = useState<'houses' | 'departments' | 'all'>('all')
@@ -251,6 +265,8 @@ export default function PropertiesPage() {
       const res = await fetch('/api/maintenance/dedupe-properties', { method: 'POST' })
       const json = await res.json()
       if (res.ok) {
+        setDedupeSummary({ merged: json.merged, removed: json.removed, survivors: json.survivors })
+        setDedupeAuditTrail((json.auditTrail || []) as DedupeAuditTrail[])
         showToast('success', `Dedupe completo: ${json.merged} consolidadas, ${json.removed} eliminadas`)
         await loadProperties()
       } else {
@@ -356,7 +372,7 @@ export default function PropertiesPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>Control panel</p>
           <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-            {properties.length} propiedades cargadas · {houseCount} casas · {departmentCount} departamentos
+            {properties.length} propiedades cargadas Â· {houseCount} casas Â· {departmentCount} departamentos
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -367,7 +383,7 @@ export default function PropertiesPage() {
                 onClick={() => setPropertyMode(mode)}
                 className="px-3 py-1.5 rounded text-xs font-semibold transition-all"
                 style={{
-                  background: propertyMode === mode ? '#d61f2c' : 'transparent',
+                  background: propertyMode === mode ? 'var(--n3-teal)' : 'transparent',
                   color: propertyMode === mode ? '#fff' : '#6b7280',
                 }}
               >
@@ -411,7 +427,7 @@ export default function PropertiesPage() {
           <button
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ background: '#d61f2c' }}
+            style={{ background: 'var(--n3-teal)' }}
           >
             <Plus size={16} />
             Nueva propiedad
@@ -567,7 +583,7 @@ export default function PropertiesPage() {
                   <span style={{ color: '#6b7280' }}>Detectando barrio desde coordenadas...</span>
                 ) : tagResult ? (
                   <>
-                    <span style={{ color: '#d61f2c' }}>Auto-detectado:</span>
+                    <span style={{ color: 'var(--n3-teal)' }}>Auto-detectado:</span>
                     <strong>{tagResult.barrio_nombre}</strong>
                     {tagResult.zona_prc && <span style={{ color: '#6b7280' }}>- Zona {tagResult.zona_prc}</span>}
                   </>
@@ -580,7 +596,7 @@ export default function PropertiesPage() {
               onClick={handleSave}
               disabled={saving}
               className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ background: '#d61f2c' }}
+              style={{ background: 'var(--n3-teal)' }}
             >
               {saving ? 'Guardando...' : 'Guardar Propiedad'}
             </button>
@@ -591,6 +607,43 @@ export default function PropertiesPage() {
             >
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {(dedupeSummary || dedupeAuditTrail.length > 0) && (
+        <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>Audit trail dedupe</p>
+              <h2 className="mt-1 text-lg font-semibold text-gray-900">Ultimos merges consolidados</h2>
+            </div>
+            {dedupeSummary && (
+              <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}>
+                {dedupeSummary.merged} merges Â· {dedupeSummary.removed} eliminadas Â· {dedupeSummary.survivors} supervivientes
+              </span>
+            )}
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {dedupeAuditTrail.map((item) => (
+              <div key={`${item.incoming_id}-${item.survivor_id}`} className="rounded-xl border p-4" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{item.incoming_address}</p>
+                    <p className="mt-1 text-xs text-gray-600">Se consolido en: {item.survivor_address}</p>
+                  </div>
+                  <span className="rounded-full px-2 py-1 text-[11px] font-semibold" style={{ background: '#fff', color: 'var(--n3-teal)', border: '1px solid #f3d5d9' }}>
+                    {item.score} pts
+                  </span>
+                </div>
+                <p className="mt-3 text-xs leading-5 text-gray-600">{item.reason}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full border px-2 py-1 text-[11px] text-gray-700" style={{ borderColor: '#e5e7eb' }}>{item.neighborhood || 'Sin barrio'}</span>
+                  <span className="rounded-full border px-2 py-1 text-[11px] text-gray-700" style={{ borderColor: '#e5e7eb' }}>{item.property_type || 'Sin tipo'}</span>
+                  <span className="rounded-full border px-2 py-1 text-[11px] text-gray-700" style={{ borderColor: '#e5e7eb' }}>{item.source || 'Sin fuente'}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -624,7 +677,7 @@ export default function PropertiesPage() {
               onClick={() => setFilterStatus(s)}
               className="px-3 py-1 rounded text-xs font-medium transition-all"
               style={{
-                background: filterStatus === s ? '#d61f2c' : 'transparent',
+                background: filterStatus === s ? 'var(--n3-teal)' : 'transparent',
                 color: filterStatus === s ? '#fff' : '#6b7280',
               }}
             >
@@ -637,7 +690,7 @@ export default function PropertiesPage() {
       {/* Table */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: '#d61f2c' }} />
+          <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: 'var(--n3-teal)' }} />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-lg p-12 text-center shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
@@ -680,7 +733,7 @@ export default function PropertiesPage() {
                           ) : (
                             <div
                               className="flex h-16 w-24 flex-col items-center justify-center rounded-xl text-white ring-1 ring-black/5"
-                              style={{ background: 'linear-gradient(135deg, #d61f2c 0%, #6b8e85 100%)' }}
+                              style={{ background: 'linear-gradient(135deg, var(--n3-teal) 0%, #6b8e85 100%)' }}
                             >
                               <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">{typeLabel === 'casa' ? 'Casa' : 'Depto'}</span>
                               <span className="mt-1 text-[9px] opacity-80">Sin foto</span>
@@ -691,7 +744,7 @@ export default function PropertiesPage() {
                               {p.source || 'fuente'}
                             </p>
                             <p className="mt-1 max-w-[110px] truncate text-xs" style={{ color: '#5f6662' }}>
-                              {typeLabel} · {p.neighborhood}
+                              {typeLabel} Â· {p.neighborhood}
                             </p>
                           </div>
                         </div>
@@ -773,4 +826,5 @@ export default function PropertiesPage() {
     </div>
   )
 }
+
 

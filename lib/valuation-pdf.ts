@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+﻿import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import puppeteer from 'puppeteer'
 import {
@@ -79,7 +79,7 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
     {
       label: 'Conservador',
       value: priceBandValue(analysis, 'conservador', request.estimated_uf),
-      color: '#d61f2c',
+      color: 'var(--n3-teal)',
     },
     {
       label: 'Mercado',
@@ -106,7 +106,7 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
           --muted: #5f6f6c;
           --soft: #eef4f2;
           --line: #e5e7eb;
-          --accent: #d61f2c;
+          --accent: var(--n3-teal);
           --paper: #f7faf9;
         }
         * { box-sizing: border-box; }
@@ -302,7 +302,7 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
       <div class="page">
         <div class="hero">
           <div class="brand-mark">
-            <img src="data:${logoMime};base64,${logoData}" alt="Property Partners" />
+            <img src="data:${logoMime};base64,${logoData}" alt="N3uralia" />
           </div>
           <div>
             <h1>Valorizacion comercial Vitacura</h1>
@@ -390,11 +390,11 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
                 <div class="comparable-top">
                   <div>
                     <div class="comparable-title">${index + 1}. ${escapeHtml(item.address)}</div>
-                    <div class="comparable-meta">${escapeHtml(item.neighborhood)} · ${item.bedrooms}D/${item.bathrooms}B · ${item.area_m2} m2</div>
+                    <div class="comparable-meta">${escapeHtml(item.neighborhood)} Â· ${item.bedrooms}D/${item.bathrooms}B Â· ${item.area_m2} m2</div>
                   </div>
                   <div class="comparable-title">${formatUF(item.price_uf)} UF</div>
                 </div>
-                <div class="comparable-meta">Score ${item.score.toFixed(0)}% · Similarity ${item.similarity.toFixed(0)}%</div>
+                <div class="comparable-meta">Score ${item.score.toFixed(0)}% Â· Similarity ${item.similarity.toFixed(0)}%</div>
               </div>`,
               )
               .join('')}
@@ -420,7 +420,7 @@ function buildHtml(request: ValuationRequest, analysis: ValuationAnalysis) {
         </div>
 
         <div class="footer">
-          Property Partners · Property Partners Vitacura · ${analysis.source === 'openai' ? 'Analisis asistido por IA' : 'Analisis deterministico comercial'}
+          N3uralia Â· N3uralia Vitacura Â· ${analysis.source === 'openai' ? 'Analisis asistido por IA' : 'Analisis deterministico comercial'}
         </div>
       </div>
     </body>
@@ -452,4 +452,5 @@ export async function buildValuationPdfBuffer(request: ValuationRequest, analysi
     await browser.close()
   }
 }
+
 

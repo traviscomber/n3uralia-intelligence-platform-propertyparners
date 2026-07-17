@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import ReportDeliveryTargetsManager from '@/components/settings/ReportDeliveryTargetsManager'
 import ProfileEditor from '@/components/settings/ProfileEditor'
 import DeliveryTelemetryPanel from '@/components/settings/DeliveryTelemetryPanel'
@@ -6,7 +6,7 @@ import ProfileDirectory from '@/components/settings/ProfileDirectory'
 
 const systemRows = [
   { label: 'Version', value: 'v1.0.0 - Produccion' },
-  { label: 'Motor IA', value: 'Property Partners Intelligence v2' },
+  { label: 'Motor IA', value: 'N3uralia Intelligence v2' },
   { label: 'Actualizacion de datos', value: 'Cada 2 horas' },
   { label: 'Zona horaria', value: 'America/Santiago (UTC-4)' },
   { label: 'Idioma', value: 'Espanol (Chile)' },
@@ -57,7 +57,7 @@ export default async function SettingsPage() {
         <div className="rounded-2xl border bg-white p-6" style={{ borderColor: '#e5e7eb' }}>
           <h3 className="text-lg font-semibold text-gray-900">Perfil ejecutivo</h3>
           <p className="mt-2 text-sm text-gray-600">
-            Mantiene la identidad del usuario y la información base para operar la plataforma.
+            Mantiene la identidad del usuario y la informaciÃ³n base para operar la plataforma.
           </p>
           <div className="mt-4">
             <ProfileEditor profile={profile} email={user?.email} />
@@ -120,9 +120,9 @@ export default async function SettingsPage() {
           </p>
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { label: 'Principal', color: '#d61f2c' },
+              { label: 'Principal', color: 'var(--n3-teal)' },
               { label: 'Acento', color: '#6b7280' },
-              { label: 'Exito', color: '#d61f2c' },
+              { label: 'Exito', color: 'var(--n3-teal)' },
               { label: 'Aviso', color: '#f59e0b' },
             ].map((item) => (
               <div key={item.label} className="rounded-2xl border p-3" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
@@ -136,4 +136,5 @@ export default async function SettingsPage() {
     </div>
   )
 }
+
 

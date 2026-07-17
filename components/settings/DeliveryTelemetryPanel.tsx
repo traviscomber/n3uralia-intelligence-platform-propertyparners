@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { BarChart3, CheckCircle2, Clock3, Link2, MessageCircle, RefreshCw, Send, TriangleAlert } from 'lucide-react'
@@ -212,7 +212,7 @@ export default function DeliveryTelemetryPanel() {
           onClick={() => void loadTelemetry()}
           disabled={refreshing}
           className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          style={{ background: '#d61f2c' }}
+          style={{ background: 'var(--n3-teal)' }}
         >
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           {refreshing ? 'Actualizando' : 'Refrescar'}
@@ -236,7 +236,7 @@ export default function DeliveryTelemetryPanel() {
                   <p className="text-xs uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
                     {item.label}
                   </p>
-                  <Icon size={14} style={{ color: '#d61f2c' }} />
+                  <Icon size={14} style={{ color: 'var(--n3-teal)' }} />
                 </div>
                 <p className="mt-2 text-2xl font-semibold text-gray-900">{formatNumber(item.value)}</p>
               </div>
@@ -280,7 +280,7 @@ export default function DeliveryTelemetryPanel() {
                 className="rounded-full border px-3 py-1 text-xs font-medium"
                 style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
               >
-                {formatLabel(item.report_type)} · {formatNumber(item.count)}
+                {formatLabel(item.report_type)} Â· {formatNumber(item.count)}
               </span>
             ))}
           </div>
@@ -299,7 +299,7 @@ export default function DeliveryTelemetryPanel() {
                 className="rounded-full border px-3 py-1 text-xs font-medium"
                 style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
               >
-                {formatLabel(item.status)} · {formatNumber(item.count)}
+                {formatLabel(item.status)} Â· {formatNumber(item.count)}
               </span>
             ))}
           </div>
@@ -318,7 +318,7 @@ export default function DeliveryTelemetryPanel() {
                 className="rounded-full border px-3 py-1 text-xs font-medium"
                 style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#374151' }}
               >
-                {formatLabel(item.channel)} · {formatNumber(item.count)}
+                {formatLabel(item.channel)} Â· {formatNumber(item.count)}
               </span>
             ))}
           </div>
@@ -366,7 +366,7 @@ export default function DeliveryTelemetryPanel() {
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-gray-600">
-                    {delivery.recipient || 'Sin destinatario'} · {formatDate(delivery.created_at)}
+                    {delivery.recipient || 'Sin destinatario'} Â· {formatDate(delivery.created_at)}
                   </p>
                   {delivery.sent_at && (
                     <p className="mt-1 text-xs text-gray-500">Enviado: {formatDate(delivery.sent_at)}</p>
@@ -411,4 +411,5 @@ export default function DeliveryTelemetryPanel() {
     </div>
   )
 }
+
 

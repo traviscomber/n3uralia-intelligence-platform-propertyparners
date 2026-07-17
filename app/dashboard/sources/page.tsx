@@ -254,7 +254,7 @@ export default function SourcesPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <Check size={16} style={{ color: '#d61f2c' }} />
+        return <Check size={16} style={{ color: 'var(--n3-teal)' }} />
       case 'syncing':
         return <Clock size={16} style={{ color: '#f59e0b', animation: 'spin 2s linear infinite' }} />
       case 'error':
@@ -293,7 +293,7 @@ export default function SourcesPage() {
   const sourceOptions = Array.from(new Set(propertyRows.map((row) => row.source).filter(Boolean) as string[])).sort()
   const filteredSeries = buildFilteredSeries(propertyRows, selectedNeighborhood, selectedSource)
   const healthLabel = health?.status === 'healthy' ? 'Saludable' : health?.status === 'warning' ? 'Con alertas' : health?.status === 'critical' ? 'Critico' : 'Sin datos'
-  const healthColor = health?.status === 'healthy' ? '#d61f2c' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#6b7280'
+  const healthColor = health?.status === 'healthy' ? 'var(--n3-teal)' : health?.status === 'warning' ? '#f59e0b' : health?.status === 'critical' ? '#dc2626' : '#6b7280'
 
   return (
     <div className="space-y-6" aria-busy={loading || runsLoading}>
@@ -310,7 +310,7 @@ export default function SourcesPage() {
             disabled={refreshingAll}
             aria-label="Refrescar scraper y benchmark"
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: '#d61f2c' }}
+            style={{ background: 'var(--n3-teal)' }}
           >
             {refreshingAll ? 'Refrescando...' : 'Refrescar scraper + benchmark'}
           </button>
@@ -462,7 +462,7 @@ export default function SourcesPage() {
             <span className="text-xs" style={{ color: '#6b7280' }}>
               Vista filtrada sobre los ultimos 7 dias.
             </span>
-            <span className="text-xs font-semibold" style={{ color: '#d61f2c' }}>
+            <span className="text-xs font-semibold" style={{ color: 'var(--n3-teal)' }}>
               {filteredSeries.reduce((sum, item) => sum + item.count, 0).toLocaleString()} registros en la seleccion
             </span>
           </div>
@@ -476,7 +476,7 @@ export default function SourcesPage() {
                       <span className="text-sm font-medium text-gray-900">{item.name}</span>
                       <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: '#d61f2c' }}>{item.count}</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--n3-teal)' }}>{item.count}</span>
                   </div>
                 ))}
               </div>
@@ -490,7 +490,7 @@ export default function SourcesPage() {
                       <span className="text-sm font-medium text-gray-900">{item.name}</span>
                       <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>{item.previousCount} prev - {item.delta >= 0 ? '+' : ''}{item.delta} trend</p>
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: '#d61f2c' }}>{item.count}</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--n3-teal)' }}>{item.count}</span>
                   </div>
                 ))}
               </div>
@@ -504,7 +504,7 @@ export default function SourcesPage() {
                Ultimos 7 dias para la combinacion seleccionada.
                 </p>
               </div>
-              <p className="text-sm font-semibold" style={{ color: '#d61f2c' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--n3-teal)' }}>
                 {filteredSeries[filteredSeries.length - 1]?.count ?? 0} hoy
               </p>
             </div>
@@ -514,7 +514,7 @@ export default function SourcesPage() {
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#9ca3af" />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: 12 }} />
-                <Line type="monotone" dataKey="count" stroke="#d61f2c" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="count" stroke="var(--n3-teal)" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -531,7 +531,7 @@ export default function SourcesPage() {
             {sources.map((source, idx) => (
               <div key={source.id}>
                 <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#f9fafb' }}>
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full font-semibold text-xs text-white" style={{ background: '#d61f2c' }}>
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full font-semibold text-xs text-white" style={{ background: 'var(--n3-teal)' }}>
                     {source.pipeline_order}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -551,7 +551,7 @@ export default function SourcesPage() {
                                 : '#fef3f2',
                           color:
                             source.status === 'active'
-                              ? '#d61f2c'
+                              ? 'var(--n3-teal)'
                               : source.status === 'syncing'
                                 ? '#f59e0b'
                                 : '#d97706',
@@ -596,7 +596,7 @@ export default function SourcesPage() {
             <p className="text-xs font-medium mb-2" style={{ color: '#374151' }}>
               FUENTES ACTIVAS
             </p>
-            <p className="text-2xl font-bold" style={{ color: '#d61f2c' }}>
+            <p className="text-2xl font-bold" style={{ color: 'var(--n3-teal)' }}>
               {sources.filter((s) => s.status === 'active').length}
             </p>
           </div>
@@ -604,7 +604,7 @@ export default function SourcesPage() {
             <p className="text-xs font-medium mb-2" style={{ color: '#374151' }}>
               REGISTROS TOTALES
             </p>
-            <p className="text-2xl font-bold" style={{ color: '#d61f2c' }}>
+            <p className="text-2xl font-bold" style={{ color: 'var(--n3-teal)' }}>
               {sources.reduce((sum, s) => sum + s.records_count, 0).toLocaleString()}
             </p>
           </div>
@@ -693,7 +693,7 @@ export default function SourcesPage() {
                     className="text-xs font-medium px-2 py-0.5 rounded capitalize"
                     style={{
                       background: run.status === 'success' ? '#f9fafb' : run.status === 'partial' ? '#fef3e2' : '#fef3f2',
-                      color: run.status === 'success' ? '#d61f2c' : run.status === 'partial' ? '#f59e0b' : '#d97706',
+                      color: run.status === 'success' ? 'var(--n3-teal)' : run.status === 'partial' ? '#f59e0b' : '#d97706',
                     }}
                   >
                     {run.status}
@@ -711,5 +711,6 @@ export default function SourcesPage() {
     </div>
   )
 }
+
 
 

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { createClient as createSupabaseAuthClient } from '@/lib/supabase/server'
 import {
   buildFallbackValuationAnalysis,
@@ -93,7 +93,7 @@ async function generateWithOpenAI(request: ValuationRequest, fallback: Valuation
 
   const prompt = {
     market_scope: 'Vitacura',
-    audience: 'Cotizador comercial de Property Partners',
+    audience: 'Cotizador comercial de N3uralia',
     instruction:
       'Devuelve solo JSON valido, sin tildes ni markdown. No inventes datos. Enfocate en relato comercial para vender casas y departamentos en Vitacura.',
     request,
@@ -130,7 +130,7 @@ async function generateWithOpenAI(request: ValuationRequest, fallback: Valuation
         {
           role: 'system',
           content:
-            'Eres un analista senior de Property Partners especializado en ventas de casas y departamentos en Vitacura. Prioriza precision comercial, foco ejecutivo y lenguaje simple. No uses tildes ni inventes datos. Devuelve solo JSON.',
+            'Eres un analista senior de N3uralia especializado en ventas de casas y departamentos en Vitacura. Prioriza precision comercial, foco ejecutivo y lenguaje simple. No uses tildes ni inventes datos. Devuelve solo JSON.',
         },
         {
           role: 'user',
@@ -232,4 +232,5 @@ export async function POST(request: Request) {
     )
   }
 }
+
 

@@ -96,9 +96,9 @@ const TIPO_LABEL: Record<string, string> = {
 }
 
 const TIPO_COLOR: Record<string, string> = {
-  residencial_alto: '#d61f2c',
+  residencial_alto: 'var(--n3-teal)',
   residencial_medio_alto: '#6b7280',
-  residencial_medio: '#d61f2c',
+  residencial_medio: 'var(--n3-teal)',
   comercial_servicios: '#f59e0b',
 }
 
@@ -267,7 +267,7 @@ export default function MarketPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: '#d61f2c' }} />
+        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: 'var(--n3-teal)' }} />
       </div>
     )
   }
@@ -296,7 +296,7 @@ export default function MarketPage() {
             onClick={handleSyncPrc}
             disabled={syncing}
             className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
-            style={{ background: '#d61f2c', color: '#fff' }}
+            style={{ background: 'var(--n3-teal)', color: '#fff' }}
           >
             {syncing ? 'Sincronizando...' : 'Sync PRC ArcGIS'}
           </button>
@@ -322,7 +322,7 @@ export default function MarketPage() {
               onClick={() => void loadBenchmarks()}
               disabled={benchmarksLoading}
               className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors disabled:opacity-60"
-              style={{ background: '#d61f2c', color: '#fff' }}
+              style={{ background: 'var(--n3-teal)', color: '#fff' }}
             >
               {benchmarksLoading ? 'Actualizando...' : 'Actualizar benchmarks'}
             </button>
@@ -374,9 +374,9 @@ export default function MarketPage() {
       {/* KPI Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Precio Prom. UF/m2', value: avgPrice.toFixed(1), unit: 'UF/m2', icon: <TrendingUp size={18} />, color: '#d61f2c' },
+          { label: 'Precio Prom. UF/m2', value: avgPrice.toFixed(1), unit: 'UF/m2', icon: <TrendingUp size={18} />, color: 'var(--n3-teal)' },
           { label: 'Velocidad Promedio', value: avgVelocity, unit: 'dias', icon: <Clock size={18} />, color: '#6b7280' },
-          { label: 'Inventario Total', value: totalInventory, unit: 'props', icon: <Package size={18} />, color: '#d61f2c' },
+          { label: 'Inventario Total', value: totalInventory, unit: 'props', icon: <Package size={18} />, color: 'var(--n3-teal)' },
           { label: 'Absorcion Promedio', value: (avgAbsorption * 100).toFixed(0), unit: '%', icon: <MapPin size={18} />, color: '#f59e0b' },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
@@ -482,7 +482,7 @@ export default function MarketPage() {
             onClick={() => setActiveTab(tab)}
             className="px-4 py-1.5 rounded text-sm font-medium transition-all"
             style={{
-              background: activeTab === tab ? '#d61f2c' : 'transparent',
+              background: activeTab === tab ? 'var(--n3-teal)' : 'transparent',
               color: activeTab === tab ? '#ffffff' : '#6b7280',
             }}
           >
@@ -563,7 +563,7 @@ export default function MarketPage() {
                 formatter={(val) => [typeof val === 'number' ? `${val.toFixed(1)} UF/m2` : String(val ?? '-'), 'Precio']}
                 labelFormatter={(label) => `Sector: ${label}`}
               />
-              <Bar dataKey="precio" fill="#d61f2c" radius={[4, 4, 0, 0]} name="UF/m2" />
+              <Bar dataKey="precio" fill="var(--n3-teal)" radius={[4, 4, 0, 0]} name="UF/m2" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -577,13 +577,13 @@ export default function MarketPage() {
             <BarChart data={velocityChartData} margin={{ bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="shortName" stroke="#9ca3af" tick={{ fontSize: 11 }} angle={-40} textAnchor="end" height={70} />
-              <YAxis yAxisId="days" stroke="#d61f2c" tick={{ fontSize: 11 }} tickFormatter={v => `${v}d`} />
+              <YAxis yAxisId="days" stroke="var(--n3-teal)" tick={{ fontSize: 11 }} tickFormatter={v => `${v}d`} />
               <YAxis yAxisId="pct" orientation="right" stroke="#6b7280" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} />
               <Tooltip
                 contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: 12 }}
               />
               <Legend />
-              <Bar yAxisId="days" dataKey="velocidad" fill="#d61f2c" radius={[4, 4, 0, 0]} name="Dias en mercado" />
+              <Bar yAxisId="days" dataKey="velocidad" fill="var(--n3-teal)" radius={[4, 4, 0, 0]} name="Dias en mercado" />
               <Bar yAxisId="pct" dataKey="absorcion" fill="#6b7280" radius={[4, 4, 0, 0]} name="Absorcion %" />
             </BarChart>
           </ResponsiveContainer>
@@ -592,7 +592,7 @@ export default function MarketPage() {
 
       {/* Detail Panel - shown when a row is selected */}
       {selectedNeighborhood && (
-        <div className="rounded-lg p-6" style={{ background: '#f9fafb', border: '1px solid #d61f2c' }}>
+        <div className="rounded-lg p-6" style={{ background: '#f9fafb', border: '1px solid var(--n3-teal)' }}>
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-lg font-bold text-gray-900">{selectedNeighborhood.name}</h3>
@@ -674,5 +674,6 @@ export default function MarketPage() {
     </div>
   )
 }
+
 
 

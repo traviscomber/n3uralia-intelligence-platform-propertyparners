@@ -1,4 +1,4 @@
-export function normalizePhone(phone: string) {
+﻿export function normalizePhone(phone: string) {
   return phone.replace(/\D/g, '')
 }
 
@@ -20,7 +20,7 @@ export function buildWeeklyReportMessage(params: {
 }) {
   const topDirector = params.topDirector || 'sin director asignado'
   return [
-    'Reporte semanal Property Partners',
+    'Reporte semanal N3uralia',
     `Semana: ${params.weekStart} a ${params.weekEnd}`,
     `Ventas: ${params.salesCount}`,
     `Comision total: ${params.commissionTotal.toLocaleString('es-CL')} UF`,
@@ -30,3 +30,4 @@ export function buildWeeklyReportMessage(params: {
     `Snapshots disponibles: ${params.reportCount}`,
   ].join('\n')
 }
+

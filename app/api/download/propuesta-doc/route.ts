@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs'
+﻿import { readFileSync } from 'fs'
 import { join } from 'path'
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
     return new Response(docBuffer, {
       headers: {
         'Content-Type': 'application/msword',
-        'Content-Disposition': 'attachment; filename="Propuesta-Property Partners.doc"',
+        'Content-Disposition': 'attachment; filename="Propuesta-N3uralia.doc"',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     })
@@ -18,4 +18,5 @@ export async function GET() {
     return new Response('File not found', { status: 404 })
   }
 }
+
 

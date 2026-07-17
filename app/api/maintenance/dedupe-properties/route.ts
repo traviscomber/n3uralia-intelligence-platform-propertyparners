@@ -31,6 +31,17 @@ export async function POST() {
     const survivors: Array<PropertyLike & { id: string }> = []
     const survivorIndexById = new Map<string, number>()
     const deletes: string[] = []
+    const auditTrail: Array<{
+      survivor_id: string
+      survivor_address: string
+      incoming_id: string
+      incoming_address: string
+      neighborhood: string | null
+      property_type: string | null
+      source: string | null
+      score: number
+      reason: string
+    }> = []
     let mergedCount = 0
 
     for (const row of inventory) {
@@ -45,6 +56,13 @@ export async function POST() {
       const survivor = survivorIndex != null ? survivors[survivorIndex] : match.row
       const merged = mergePropertyRecord(survivor, row)
       const targetId = survivor.id
+      const reasonParts = [
+        survivor.listing_number && row.listing_number && survivor.listing_number === row.listing_number ? 'same listing_number' : null,
+        survivor.source_url && row.source_url && survivor.source_url === row.source_url ? 'same source_url' : null,
+        survivor.external_id && row.external_id && survivor.external_id === row.external_id ? 'same external_id' : null,
+        survivor.source_listing_id && row.source_listing_id && survivor.source_listing_id === row.source_listing_id ? 'same source_listing_id' : null,
+        survivor.address === row.address ? 'same address' : null,
+      ].filter(Boolean) as string[]
 
       const { error: updateError } = await supabase
         .from('properties')
@@ -82,6 +100,17 @@ export async function POST() {
 
       deletes.push(row.id)
       mergedCount += 1
+      auditTrail.push({
+        survivor_id: targetId,
+        survivor_address: survivor.address,
+        incoming_id: row.id,
+        incoming_address: row.address,
+        neighborhood: merged.neighborhood,
+        property_type: merged.property_type,
+        source: merged.source,
+        score: match.score,
+        reason: reasonParts.length ? reasonParts.join(' · ') : 'match by similarity threshold',
+      })
     }
 
     if (deletes.length > 0) {
@@ -96,6 +125,7 @@ export async function POST() {
       merged: mergedCount,
       removed: deletes.length,
       survivors: survivors.length,
+      auditTrail: auditTrail.slice(-12).reverse(),
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Dedupe failed'
