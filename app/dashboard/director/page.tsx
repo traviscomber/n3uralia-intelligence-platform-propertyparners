@@ -13,7 +13,7 @@ type StatusKey = 'on_track' | 'warning' | 'behind'
 type AgentRow = { id: string; name: string; team: string; ventas: number; captaciones: number; conversion: number; velocidad: number; status: StatusKey }
 
 const MOCK_AGENTS: AgentRow[] = [
-  { id: '1', name: 'SofÃ­a Ramos',   team: 'Equipo Alpha', ventas: 15, captaciones: 25, conversion: 11.1, velocidad: 31, status: 'on_track' },
+  { id: '1', name: 'Sofía Ramos',   team: 'Equipo Alpha', ventas: 15, captaciones: 25, conversion: 11.1, velocidad: 31, status: 'on_track' },
   { id: '2', name: 'Diego Herrera', team: 'Equipo Alpha', ventas: 14, captaciones: 23, conversion:  9.1, velocidad: 34, status: 'warning'  },
 ]
 
@@ -27,7 +27,7 @@ const MOCK_CHART = [
 ]
 const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: string }> = {
   on_track: { label: 'En Meta',  bg: '#dcfce7', color: '#16a34a' },
-  warning:  { label: 'AtenciÃ³n', bg: '#fef3c7', color: '#d97706' },
+  warning:  { label: 'Atención', bg: '#fef3c7', color: '#d97706' },
   behind:   { label: 'En Riesgo',bg: '#fee2e2', color: '#dc2626' },
 }
 
@@ -167,7 +167,7 @@ export default function DirectorDashboard() {
     return {
       overall,
       states,
-      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sÃ³lido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
+      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
     }
   }, [activities.length, totals.conversion, totals.target, totals.ventas])
 
@@ -186,7 +186,7 @@ export default function DirectorDashboard() {
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>
             {loading ? 'Cargando...' : director?.full_name || 'Juan Morales'}
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel de tu equipo Â· {agents.length} agentes activos</p>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel de tu equipo · {agents.length} agentes activos</p>
         </div>
         <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-3" style={{ border: '1px solid #e8f0ed' }}>
           <div className="text-right">
@@ -206,8 +206,8 @@ export default function DirectorDashboard() {
       <div className="grid grid-cols-4 gap-4 mb-8">
         <KpiCard label="Ventas equipo" value={String(totals.ventas)} sub="propiedades cerradas (6m)" border="var(--n3-teal)" />
         <KpiCard label="UF vendidas"   value={`${(totals.uf/1000).toFixed(0)}K`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#6b7280" />
-        <KpiCard label="ConversiÃ³n"    value={`${totals.conversion}%`} sub="leads â†’ cierre promedio" border="var(--n3-teal)" />
-        <KpiCard label="ComisiÃ³n eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#111111" />
+        <KpiCard label="Conversión"    value={`${totals.conversion}%`} sub="leads → cierre promedio" border="var(--n3-teal)" />
+        <KpiCard label="Comisión eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#111111" />
       </div>
 
       {/* Director Scorecard */}
@@ -215,7 +215,7 @@ export default function DirectorDashboard() {
         <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score de gestiÃ³n</h2>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score de gestión</h2>
               <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Lectura operativa del equipo y su disciplina comercial</p>
             </div>
             <div className="text-right">
@@ -244,8 +244,8 @@ export default function DirectorDashboard() {
         <div className="col-span-3 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>MÃ©tricas del director</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>DefiniciÃ³n, umbral y cadencia para el equipo</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas del director</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Definición, umbral y cadencia para el equipo</p>
             </div>
             <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>Vitacura ventas</span>
           </div>
@@ -275,7 +275,7 @@ export default function DirectorDashboard() {
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Mi Equipo de Agentes</h2>
-            <span className="text-xs" style={{ color: '#6b7280' }}>6 meses Â· {agents.length} agentes</span>
+            <span className="text-xs" style={{ color: '#6b7280' }}>6 meses · {agents.length} agentes</span>
           </div>
           <table className="w-full text-sm">
             <thead>
@@ -314,7 +314,7 @@ export default function DirectorDashboard() {
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas vs Target</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Equipo Â· Ãºltimos 6 meses</p>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Equipo · últimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">
             <ResponsiveContainer width="100%" height={190}>

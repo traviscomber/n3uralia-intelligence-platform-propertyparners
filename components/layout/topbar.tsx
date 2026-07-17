@@ -27,7 +27,7 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
         </div>
         <button onClick={handleLogout} className="flex items-center gap-1.5 rounded border border-[var(--n3-line)] px-3 py-1.5 text-xs transition-colors hover:opacity-70" style={{ color: 'var(--n3-text-light)' }}>
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M10 11l3-3-3-3M13 8H6" /></svg>
-          {profile?.full_name?.split(' ')[0] || 'Logout'}
+          {profile?.full_name?.split(' ')[0] || 'Salir'}
         </button>
       </div>
     </header>

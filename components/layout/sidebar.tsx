@@ -13,7 +13,7 @@ const navItems = [
     exact: true,
   },
   {
-    label: 'Control de Gestion',
+    label: 'Control de Gestión',
     href: '/dashboard/control',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,12 5,8 8,10 11,5 14,7" /><line x1="2" y1="14" x2="14" y2="14" /></svg>,
   },
@@ -53,7 +53,7 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><ellipse cx="8" cy="5" rx="5" ry="2" /><path d="M3 5v3c0 1.1 2.2 2 5 2s5-.9 5-2V5" /><path d="M3 8v3c0 1.1 2.2 2 5 2s5-.9 5-2V8" /></svg>,
   },
   {
-    label: 'Configuracion',
+    label: 'Configuración',
     href: '/dashboard/settings',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2.5" /><path d="M8 1.5v1.2M8 13.3v1.2M1.5 8h1.2M13.3 8h1.2M3.3 3.3l.85.85M11.85 11.85l.85.85M11.85 4.15l-.85.85M4.15 11.85l-.85.85" /></svg>,
   },
@@ -87,8 +87,8 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
           <PPLogo className="h-6 w-auto" priority />
         </div>
         <div>
-          <div className="text-sm font-semibold leading-none tracking-tight text-[var(--n3-text-light)]">N3uralia</div>
-          <div className="mt-0.5 text-[10px]" style={{ color: 'var(--n3-text-muted)' }}>Intelligent operations</div>
+          <div className="text-sm font-semibold leading-none tracking-tight text-[var(--n3-text-light)]">Property Partners</div>
+          <div className="mt-0.5 text-[10px]" style={{ color: 'var(--n3-text-muted)' }}>Inteligencia comercial Vitacura</div>
         </div>
       </div>
 
@@ -142,8 +142,8 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
         </ul>
       </nav>
 
-      {profile && (
-        <div className="border-t border-[var(--n3-line)] px-3 py-3">
+      <div className="border-t border-[var(--n3-line)] px-3 py-3">
+        {profile ? (
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style={{ background: 'rgba(139,169,167,0.14)', color: 'var(--n3-teal)' }}>
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
@@ -153,8 +153,14 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
               <div className="text-[10px] capitalize" style={{ color: 'var(--n3-text-muted)' }}>{profile.role}</div>
             </div>
           </div>
+        ) : null}
+        <div className="mt-3 border-t border-[var(--n3-line)] pt-3 text-[11px] leading-tight" style={{ color: 'var(--n3-text-muted)' }}>
+          Powered by{' '}
+          <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium hover:opacity-80" style={{ color: 'var(--n3-teal)' }}>
+            N3uralia
+          </a>
         </div>
-      )}
+      </div>
     </aside>
   )
 }

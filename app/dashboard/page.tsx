@@ -111,11 +111,11 @@ export default function DashboardHome() {
             </div>
           </div>
 
-          {/* ConversiÃ³n Card */}
+          {/* Conversión Card */}
           <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-l-4" style={{ border: '1px solid #e5e7eb', borderLeftColor: 'var(--n3-teal)' }}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasa ConversiÃ³n</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasa Conversión</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.conversion_rate.toFixed(1)}%</p>
                 <p className="text-xs text-gray-500 mt-2">leads a ventas de Vitacura</p>
               </div>
@@ -147,7 +147,7 @@ export default function DashboardHome() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Score ejecutivo</p>
-                <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Panel de gestiÃ³n</h2>
+                <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Panel de gestión</h2>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
                 <Target className="w-6 h-6" />
@@ -157,29 +157,29 @@ export default function DashboardHome() {
               {executiveScore === null ? 'n/d' : `${executiveScore}%`}
             </p>
             <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
-              {salesDelta !== null ? `Ventas vs periodo previo: ${salesDelta >= 0 ? '+' : ''}${salesDelta}` : 'Sin comparaciÃ³n previa disponible'}
+              {salesDelta !== null ? `Ventas vs periodo previo: ${salesDelta >= 0 ? '+' : ''}${salesDelta}` : 'Sin comparación previa disponible'}
             </p>
             <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
-              {conversionDelta !== null ? `ConversiÃ³n vs periodo previo: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts` : 'Sin variaciÃ³n previa disponible'}
+              {conversionDelta !== null ? `Conversión vs periodo previo: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts` : 'Sin variación previa disponible'}
             </p>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#e5e7eb' }}>
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Lectura actual</p>
-            <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>QuÃ© estÃ¡ pasando hoy</h2>
+            <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Qué está pasando hoy</h2>
             <ul className="mt-4 space-y-3 text-sm" style={{ color: '#374151' }}>
-              <li>â€¢ Ventas: {latestKPI.ventas_count} transacciones activas.</li>
-              <li>â€¢ ConversiÃ³n: {latestKPI.conversion_rate.toFixed(1)}% de leads a ventas.</li>
-              <li>â€¢ Captaciones: {latestKPI.captaciones_count} oportunidades nuevas en Vitacura.</li>
-              <li>â€¢ Stock: {latestKPI.stock_count} propiedades en el inventario.</li>
+              <li>• Ventas: {latestKPI.ventas_count} transacciones activas.</li>
+              <li>• Conversión: {latestKPI.conversion_rate.toFixed(1)}% de leads a ventas.</li>
+              <li>• Captaciones: {latestKPI.captaciones_count} oportunidades nuevas en Vitacura.</li>
+              <li>• Stock: {latestKPI.stock_count} propiedades en el inventario.</li>
             </ul>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#e5e7eb' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Siguiente acciÃ³n</p>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Siguiente acción</p>
             <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Ir al centro de reportes</h2>
             <p className="mt-4 text-sm leading-6" style={{ color: '#374151' }}>
-              AhÃ­ quedan el scorecard, los reportes por audiencia, el aprendizaje IA y el seguimiento operativo del negocio.
+              Ahí quedan el scorecard, los reportes por audiencia, el aprendizaje IA y el seguimiento operativo del negocio.
             </p>
             <Link href="/dashboard/reportes" className="inline-flex mt-5 items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold" style={{ background: '#111111', color: '#f9fafb' }}>
               <Sparkles className="w-4 h-4" />
@@ -194,7 +194,7 @@ export default function DashboardHome() {
         {/* Ventas Tendencia */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Ventas de Casas (Ãšltimos 6 meses)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Ventas de Casas (Últimos 6 meses)</h3>
             <div className="w-2 h-2 rounded-full" style={{ background: 'var(--n3-teal)' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
@@ -223,10 +223,10 @@ export default function DashboardHome() {
           </ResponsiveContainer>
         </div>
 
-        {/* Tasa ConversiÃ³n */}
+          {/* Tasa Conversión */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Tasa ConversiÃ³n Casas</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Tasa Conversión Casas</h3>
             <div className="w-2 h-2 rounded-full" style={{ background: '#6b7280' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
@@ -244,7 +244,7 @@ export default function DashboardHome() {
                 }}
                 cursor={{ fill: '#f9fafb' }}
               />
-              <Bar dataKey="conversion_rate" fill="#6b7280" name="ConversiÃ³n %" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="conversion_rate" fill="#6b7280" name="Conversión %" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -262,16 +262,16 @@ export default function DashboardHome() {
               <span className="text-xs px-2 py-1 rounded-full font-semibold text-white" style={{ background: 'var(--n3-teal)' }}>En Tiempo Real</span>
             </h3>
             <p className="mt-3 leading-relaxed" style={{ color: '#374151' }}>
-              El mercado inmobiliario continÃºa mostrando absorciÃ³n sostenida. Las ventas del mes alcanzaron{' '}
-              <span className="font-bold px-2 py-1 rounded" style={{ color: 'var(--n3-teal)', background: '#f9fafb' }}>{latestKPI.ventas_count} transacciones</span> con una tasa de conversiÃ³n
+              El mercado inmobiliario continúa mostrando absorción sostenida. Las ventas del mes alcanzaron{' '}
+              <span className="font-bold px-2 py-1 rounded" style={{ color: 'var(--n3-teal)', background: '#f9fafb' }}>{latestKPI.ventas_count} transacciones</span> con una tasa de conversión
               de <span className="font-bold px-2 py-1 rounded" style={{ color: '#6b7280', background: '#f9fafb' }}>{latestKPI.conversion_rate.toFixed(1)}%</span>. Se recomienda incrementar captaciones en zonas de alta demanda para
               maximizar el pipeline comercial.
             </p>
             <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(143, 178, 170, 0.2)' }}>
-              <p className="text-xs font-semibold uppercase" style={{ color: 'var(--n3-teal)' }}>PrÃ³ximas Acciones:</p>
+              <p className="text-xs font-semibold uppercase" style={{ color: 'var(--n3-teal)' }}>Próximas Acciones:</p>
               <ul className="mt-2 space-y-1 text-xs" style={{ color: '#374151' }}>
-                <li>â€¢ Aumentar prospecciÃ³n en Nueva Costanera (90% absorciÃ³n)</li>
-                <li>â€¢ Optimizar timing de venta en Lo Curro (velocidad: 62 dÃ­as)</li>
+                <li>• Aumentar prospección en Nueva Costanera (90% absorción)</li>
+                <li>• Optimizar timing de venta en Lo Curro (velocidad: 62 días)</li>
               </ul>
             </div>
           </div>
@@ -286,13 +286,13 @@ export default function DashboardHome() {
           <p className="text-xs mt-2" style={{ color: '#374151' }}>oportunidades nuevas</p>
         </div>
         <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderLeftColor: '#6b7280' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>ComisiÃ³n Total</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Comisión Total</p>
           <p className="text-3xl font-bold text-gray-900 mt-3">${(latestKPI.comision_total / 1000000).toFixed(1)}M</p>
           <p className="text-xs mt-2" style={{ color: '#374151' }}>ingresos acumulados</p>
         </div>
         <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid var(--n3-teal)', borderLeftColor: 'var(--n3-teal)' }}>
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-teal)' }}>Velocidad Venta</p>
-          <p className="text-3xl font-bold text-gray-900 mt-3">{latestKPI.velocidad_venta.toFixed(0)} dÃ­as</p>
+          <p className="text-3xl font-bold text-gray-900 mt-3">{latestKPI.velocidad_venta.toFixed(0)} días</p>
           <p className="text-xs mt-2" style={{ color: '#374151' }}>promedio de mercado</p>
         </div>
       </div>

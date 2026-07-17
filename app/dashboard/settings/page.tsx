@@ -6,7 +6,7 @@ import ProfileDirectory from '@/components/settings/ProfileDirectory'
 
 const systemRows = [
   { label: 'Version', value: 'v1.0.0 - Produccion' },
-  { label: 'Motor IA', value: 'N3uralia Intelligence v2' },
+  { label: 'Motor IA', value: 'Property Partners Intelligence v2' },
   { label: 'Actualizacion de datos', value: 'Cada 2 horas' },
   { label: 'Zona horaria', value: 'America/Santiago (UTC-4)' },
   { label: 'Idioma', value: 'Espanol (Chile)' },
@@ -25,9 +25,9 @@ export default async function SettingsPage() {
             <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
               Centro de control
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-gray-900">Configuracion ejecutiva</h1>
+            <h1 className="mt-2 text-3xl font-bold text-gray-900">Configuración ejecutiva</h1>
             <p className="mt-2 text-sm leading-6 text-gray-600">
-              Gestion de perfil, destinatarios, telemetria y parametrizacion operativa en una sola vista para trabajo directo con direccion.
+              Gestión de perfil, destinatarios, telemetría y parametrización operativa en una sola vista para trabajo directo con dirección.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -57,7 +57,7 @@ export default async function SettingsPage() {
         <div className="rounded-2xl border bg-white p-6" style={{ borderColor: '#e5e7eb' }}>
           <h3 className="text-lg font-semibold text-gray-900">Perfil ejecutivo</h3>
           <p className="mt-2 text-sm text-gray-600">
-            Mantiene la identidad del usuario y la informaciÃ³n base para operar la plataforma.
+            Mantiene la identidad del usuario y la información base para operar la plataforma.
           </p>
           <div className="mt-4">
             <ProfileEditor profile={profile} email={user?.email} />
@@ -67,7 +67,7 @@ export default async function SettingsPage() {
         <div className="rounded-2xl border bg-white p-6" style={{ borderColor: '#e5e7eb' }}>
           <h3 className="text-lg font-semibold text-gray-900">Resumen del sistema</h3>
           <p className="mt-2 text-sm text-gray-600">
-            Estado operativo y parametros estandar de la plataforma.
+            Estado operativo y parámetros estándar de la plataforma.
           </p>
           <div className="mt-4 divide-y divide-gray-200 rounded-2xl border" style={{ borderColor: '#e5e7eb' }}>
             {systemRows.map((item) => (
@@ -94,7 +94,7 @@ export default async function SettingsPage() {
         <div className="rounded-2xl border bg-white p-6" style={{ borderColor: '#e5e7eb' }}>
           <h3 className="text-lg font-semibold text-gray-900">Destinatarios de reportes</h3>
           <p className="mt-2 text-sm text-gray-600">
-            Define quienes reciben los reportes semanales por email, WhatsApp Web o webhook.
+            Define quiénes reciben los reportes semanales por email, WhatsApp Web o webhook.
           </p>
           <div className="mt-4">
             <ReportDeliveryTargetsManager />

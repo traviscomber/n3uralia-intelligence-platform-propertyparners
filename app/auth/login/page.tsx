@@ -34,12 +34,12 @@ export default function LoginPage() {
           <div className="mb-3 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
             <PPLogo className="h-7 w-auto" priority />
           </div>
-          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>N3uralia</p>
+          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>Property Partners</p>
         </div>
 
         <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
-          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesion</h1>
-          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Ingresa tus credenciales para continuar</p>
+          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesión</h1>
+          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Accede a la inteligencia de mercado de Vitacura</p>
 
           {error && (
             <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(139,169,167,0.08)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>
@@ -64,7 +64,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
-                Contrasena
+                Contraseña
               </label>
               <input
                 type="password"
@@ -89,6 +89,13 @@ export default function LoginPage() {
           <div className="mt-4 text-center">
             <a href="/auth/sign-up" className="text-xs hover:opacity-80" style={{ color: 'var(--n3-text-muted)' }}>
               ¿No tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Registrarse</span>
+            </a>
+          </div>
+
+          <div className="mt-5 border-t border-[var(--n3-line)] pt-3 text-center text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>
+            Powered by{' '}
+            <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium hover:opacity-80" style={{ color: 'var(--n3-teal)' }}>
+              N3uralia
             </a>
           </div>
         </div>
