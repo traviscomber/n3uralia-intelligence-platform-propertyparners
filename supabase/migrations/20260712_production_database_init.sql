@@ -188,6 +188,69 @@ DROP POLICY IF EXISTS ai_reports_read_all ON ai_reports;
 CREATE POLICY ai_reports_read_all ON ai_reports FOR SELECT USING (true);
 
 -- ============================================================================
+-- PP RECOMMENDATION FEEDBACK TABLE - Learning loop for AI recommendations
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS pp_recommendation_feedback (
+  id BIGSERIAL PRIMARY KEY,
+  recommendation_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  audience TEXT NOT NULL,
+  neighborhood TEXT,
+  area TEXT NOT NULL,
+  feedback_type TEXT NOT NULL CHECK (feedback_type IN ('useful', 'ignored', 'review')),
+  responsible TEXT,
+  base_score INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pp_recommendation_feedback_created_at
+  ON pp_recommendation_feedback(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pp_recommendation_feedback_audience
+  ON pp_recommendation_feedback(audience, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pp_recommendation_feedback_neighborhood
+  ON pp_recommendation_feedback(neighborhood, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pp_recommendation_feedback_recommendation
+  ON pp_recommendation_feedback(recommendation_id, created_at DESC);
+
+ALTER TABLE pp_recommendation_feedback ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS pp_recommendation_feedback_read_all ON pp_recommendation_feedback;
+CREATE POLICY pp_recommendation_feedback_read_all ON pp_recommendation_feedback FOR SELECT USING (true);
+DROP POLICY IF EXISTS pp_recommendation_feedback_insert_auth ON pp_recommendation_feedback;
+CREATE POLICY pp_recommendation_feedback_insert_auth ON pp_recommendation_feedback FOR INSERT WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS pp_ai_learning_snapshots (
+  id BIGSERIAL PRIMARY KEY,
+  report_key VARCHAR(200) NOT NULL UNIQUE,
+  week_start DATE NOT NULL,
+  week_end DATE NOT NULL,
+  total_feedback INTEGER NOT NULL DEFAULT 0,
+  useful_count INTEGER NOT NULL DEFAULT 0,
+  ignored_count INTEGER NOT NULL DEFAULT 0,
+  review_count INTEGER NOT NULL DEFAULT 0,
+  adoption_rate NUMERIC(5, 2) NOT NULL DEFAULT 0,
+  summary TEXT NOT NULL DEFAULT '',
+  top_recommendations JSONB NOT NULL DEFAULT '[]'::jsonb,
+  audience_breakdown JSONB NOT NULL DEFAULT '[]'::jsonb,
+  neighborhood_breakdown JSONB NOT NULL DEFAULT '[]'::jsonb,
+  generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pp_ai_learning_snapshots_week_start
+  ON pp_ai_learning_snapshots(week_start DESC);
+CREATE INDEX IF NOT EXISTS idx_pp_ai_learning_snapshots_generated_at
+  ON pp_ai_learning_snapshots(generated_at DESC);
+
+ALTER TABLE pp_ai_learning_snapshots ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS pp_ai_learning_snapshots_read_all ON pp_ai_learning_snapshots;
+CREATE POLICY pp_ai_learning_snapshots_read_all ON pp_ai_learning_snapshots FOR SELECT USING (true);
+DROP POLICY IF EXISTS pp_ai_learning_snapshots_insert_auth ON pp_ai_learning_snapshots;
+CREATE POLICY pp_ai_learning_snapshots_insert_auth ON pp_ai_learning_snapshots FOR INSERT WITH CHECK (true);
+
+-- ============================================================================
 -- SCRAPE RUNS TABLE - Audit trail for scraper executions
 -- ============================================================================
 

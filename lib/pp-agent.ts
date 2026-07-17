@@ -48,6 +48,19 @@ export type PpAudience = {
   decision: string
 }
 
+export type PpAiLoopStep = {
+  id: string
+  title: string
+  description: string
+  input: string
+  output: string
+}
+
+export type PpAiRule = {
+  title: string
+  detail: string
+}
+
 export const PP_STEPS: PpStep[] = [
   {
     id: 'capture',
@@ -319,5 +332,92 @@ export const PP_AUDIENCES: PpAudience[] = [
     title: 'CEO',
     description: 'Lectura ejecutiva del negocio, riesgos, tendencia, comparacion de directores y foco por barrio.',
     decision: 'Que priorizar a nivel negocio y como asignar recursos.',
+  },
+]
+
+export const PP_AI_LOOP: PpAiLoopStep[] = [
+  {
+    id: 'ingest',
+    title: 'Ingesta',
+    description: 'Captura nuevas propiedades, cambios de estado, benchmarks y reportes recientes.',
+    input: 'Scrapers, market_data, ai_reports, scrape_runs',
+    output: 'Pool bruto con evidencia y frescura.',
+  },
+  {
+    id: 'normalize',
+    title: 'Normalizacion',
+    description: 'Unifica tipologias, barrios, precios, metadatos y elimina duplicados de baja confianza.',
+    input: 'Direccion, barrio, listing_number, source_url, geo, precio',
+    output: 'Inventario canonico y confiable.',
+  },
+  {
+    id: 'score',
+    title: 'Scoring',
+    description: 'Puntua oportunidad, frescura, absorcion, riesgo y urgencia comercial.',
+    input: 'Inventario canonico y señales de mercado',
+    output: 'Ranking accionable por barrio, propiedad y audiencia.',
+  },
+  {
+    id: 'decide',
+    title: 'Decisioning',
+    description: 'Convierte la lectura en una recomendacion clara para vendedor, director o CEO.',
+    input: 'Ranking, contexto de audiencia y estado operativo',
+    output: 'Siguiente accion priorizada y explicable.',
+  },
+  {
+    id: 'deliver',
+    title: 'Delivery',
+    description: 'Publica el output adecuado en la interfaz y en los canales de reporte.',
+    input: 'Insight final y reglas de audiencia',
+    output: 'Reporte, alerta o playbook listo para usar.',
+  },
+  {
+    id: 'learn',
+    title: 'Learning loop',
+    description: 'Mide si el output se uso, si mejoro la decision y si la fuente sigue confiable.',
+    input: 'Feedback, cambios posteriores y salud del pipeline',
+    output: 'Ajuste de pesos, reglas y escalamiento.',
+  },
+]
+
+export const PP_AI_RULES: PpAiRule[] = [
+  {
+    title: 'Vitacura only',
+    detail: 'Todo el razonamiento debe ignorar inventario y comparables fuera de Vitacura.',
+  },
+  {
+    title: 'Sales only',
+    detail: 'No se debe mezclar arriendo, desarrollo o categorias fuera de ventas de casas y departamentos.',
+  },
+  {
+    title: 'Actionable first',
+    detail: 'Cada insight debe terminar en una accion concreta y atribuible.',
+  },
+  {
+    title: 'Dedupe before narrative',
+    detail: 'Si el canon no esta limpio, el sistema debe frenar antes de narrar una conclusion fuerte.',
+  },
+  {
+    title: 'Audience depth',
+    detail: 'Vendedor, director y CEO reciben distintas capas de detalle y no el mismo resumen reciclado.',
+  },
+]
+
+export const PP_AI_ESCALATIONS: PpAiRule[] = [
+  {
+    title: 'Stale source',
+    detail: 'Si una fuente se enfria o deja de actualizar, marcarla como stale y bajar su peso en la sintesis.',
+  },
+  {
+    title: 'Duplicate risk',
+    detail: 'Si el merge es dudoso, dejar el registro separado y pedir validacion antes de consolidar.',
+  },
+  {
+    title: 'Weak signal',
+    detail: 'Si no hay suficiente evidencia, ampliar el nivel ejecutivo y reducir la precision aparente.',
+  },
+  {
+    title: 'Market shock',
+    detail: 'Si el precio, absorcion o volumen cambian brutalmente, escalar a revision humana y recalculo.',
   },
 ]

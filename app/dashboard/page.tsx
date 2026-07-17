@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart } from 'recharts'
 import { TrendingUp, Home, DollarSign, Target, Users, Activity, Sparkles } from 'lucide-react'
@@ -43,7 +44,19 @@ export default function DashboardHome() {
   }, [])
 
   const latestKPI = kpis[0]
+  const previousKPI = kpis[1] || null
   const chartData = [...kpis].reverse()
+  const executiveScore = useMemo(() => {
+    if (!latestKPI) return null
+    const salesComponent = Math.min(35, latestKPI.ventas_count * 1.8)
+    const conversionComponent = Math.min(35, latestKPI.conversion_rate * 4)
+    const captureComponent = Math.min(20, latestKPI.captaciones_count * 1.5)
+    const stockComponent = Math.max(0, 10 - Math.min(latestKPI.stock_count, 10))
+    const momentumBonus = previousKPI && latestKPI.ventas_count > previousKPI.ventas_count ? 8 : 0
+    return Math.max(0, Math.min(100, Math.round(salesComponent + conversionComponent + captureComponent + stockComponent + momentumBonus)))
+  }, [latestKPI, previousKPI])
+  const salesDelta = latestKPI && previousKPI ? latestKPI.ventas_count - previousKPI.ventas_count : null
+  const conversionDelta = latestKPI && previousKPI ? latestKPI.conversion_rate - previousKPI.conversion_rate : null
 
   if (loading) {
     return (
@@ -60,8 +73,8 @@ export default function DashboardHome() {
     <div className="space-y-8 pb-8">
       {/* Header */}
       <div className="pb-6" style={{ borderBottom: '1px solid #d8e5e2' }}>
-        <h1 className="text-4xl font-bold text-gray-900">Casas Vitacura</h1>
-        <p className="mt-2" style={{ color: '#9ca9a3' }}>Inteligencia operativa y performance de ventas de casas</p>
+        <h1 className="text-4xl font-bold text-gray-900">Ventas Vitacura</h1>
+        <p className="mt-2" style={{ color: '#9ca9a3' }}>Inteligencia operativa y performance de ventas de casas y departamentos</p>
         <p className="text-xs mt-3" style={{ color: '#b9bfbc' }}>
           {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
@@ -74,9 +87,9 @@ export default function DashboardHome() {
           <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-l-4" style={{ border: '1px solid #d8e5e2', borderLeftColor: '#8fb2aa' }}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ventas Mes</p>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Ventas Vitacura</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.ventas_count}</p>
-                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>ventas de casas</p>
+                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>casas y departamentos</p>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#e8f3f0', color: '#8fb2aa' }}>
                 <Home className="w-6 h-6" />
@@ -90,7 +103,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>UF Vendidas</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{(latestKPI.ventas_uf / 1000).toFixed(1)}K</p>
-                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>en volumen de ventas de casas</p>
+                <p className="text-xs mt-2" style={{ color: '#9ca9a3' }}>en volumen de ventas Vitacura</p>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#f5f9f7', color: '#b89a7e' }}>
                 <DollarSign className="w-6 h-6" />
@@ -104,7 +117,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasa Conversión</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.conversion_rate.toFixed(1)}%</p>
-                <p className="text-xs text-gray-500 mt-2">leads a ventas de casas</p>
+                <p className="text-xs text-gray-500 mt-2">leads a ventas de Vitacura</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center transition-transform duration-300 hover:scale-110">
                 <TrendingUp className="w-6 h-6 text-green-600" />
@@ -118,12 +131,60 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Stock Activo</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.stock_count}</p>
-                <p className="text-xs text-gray-500 mt-2">casas disponibles</p>
+                <p className="text-xs text-gray-500 mt-2">casas y departamentos disponibles</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center transition-transform duration-300 hover:scale-110">
                 <Activity className="w-6 h-6 text-orange-600" />
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {latestKPI && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#d8e5e2' }}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Score ejecutivo</p>
+                <h2 className="text-xl font-semibold mt-2" style={{ color: '#173634' }}>Panel de gestión</h2>
+              </div>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#e8f3f0', color: '#8fb2aa' }}>
+                <Target className="w-6 h-6" />
+              </div>
+            </div>
+            <p className="mt-4 text-4xl font-bold" style={{ color: '#173634' }}>
+              {executiveScore === null ? 'n/d' : `${executiveScore}%`}
+            </p>
+            <p className="mt-2 text-sm" style={{ color: '#9ca9a3' }}>
+              {salesDelta !== null ? `Ventas vs periodo previo: ${salesDelta >= 0 ? '+' : ''}${salesDelta}` : 'Sin comparación previa disponible'}
+            </p>
+            <p className="mt-1 text-sm" style={{ color: '#9ca9a3' }}>
+              {conversionDelta !== null ? `Conversión vs periodo previo: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts` : 'Sin variación previa disponible'}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#d8e5e2' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Lectura actual</p>
+            <h2 className="text-xl font-semibold mt-2" style={{ color: '#173634' }}>Qué está pasando hoy</h2>
+            <ul className="mt-4 space-y-3 text-sm" style={{ color: '#555a56' }}>
+              <li>• Ventas: {latestKPI.ventas_count} transacciones activas.</li>
+              <li>• Conversión: {latestKPI.conversion_rate.toFixed(1)}% de leads a ventas.</li>
+              <li>• Captaciones: {latestKPI.captaciones_count} oportunidades nuevas en Vitacura.</li>
+              <li>• Stock: {latestKPI.stock_count} propiedades en el inventario.</li>
+            </ul>
+          </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#d8e5e2' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#555a56' }}>Siguiente acción</p>
+            <h2 className="text-xl font-semibold mt-2" style={{ color: '#173634' }}>Ir al centro de reportes</h2>
+            <p className="mt-4 text-sm leading-6" style={{ color: '#555a56' }}>
+              Ahí quedan el scorecard, los reportes por audiencia, el aprendizaje IA y el seguimiento operativo del negocio.
+            </p>
+            <Link href="/dashboard/reportes" className="inline-flex mt-5 items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold" style={{ background: '#173634', color: '#e8f3f0' }}>
+              <Sparkles className="w-4 h-4" />
+              Abrir reportes
+            </Link>
           </div>
         </div>
       )}

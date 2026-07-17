@@ -9,6 +9,12 @@
 - Scrape health snapshots are persisted and surfaced in `Fuentes de Datos`
 - Weekly delivery now supports email and WhatsApp Web links
 - Weekly delivery now retries primary email and escalates to backup recipients when needed
+- Vitacura-only market intelligence strategy is now documented in `docs/PP_MARKET_INTELLIGENCE_STRATEGY.md`
+- The existing report generator already separates seller, director, and CEO outputs around a Vitacura sales scope
+- The PP dashboard now exposes an explicit AI control plane, agent loop, and escalation rules for market intelligence
+- The PP dashboard now captures recommendation feedback and uses it to reprioritize the AI ranking
+- Recommendation feedback is now persisted in Supabase and aggregated by audience and neighborhood
+- The market intelligence strategy now includes a formal measurement framework with formulas, owners, cadences, and thresholds
 
 ## Project Links
 
@@ -45,11 +51,19 @@
 ## Next Implementation Block
 
 1. Keep tightening accessibility, responsiveness, and loading states.
+2. Make the canonical dedupe flow more visible in the UI so operators can trust what became the merged record.
+3. Add a small operational panel or knowledge entry that summarizes source freshness, duplicate merge rate, and report freshness for the three roles.
+4. Persist recommendation feedback server-side so the learning loop survives across sessions and devices.
+5. Feed the persisted feedback into the next report generation pass as an explicit signal.
 
 ## Follow-Up Roadmap
 
 1. Add director/seller export variants with week selection and filters.
 2. Add more delivery channels and richer delivery telemetry.
+3. Add a source-by-source dedupe audit trail for the highest-risk merges.
+4. Add explicit feedback scoring for AI recommendations to improve ranking, prompting, and escalation.
+5. Persist and analyze recommendation feedback by audience, neighborhood, and action type.
+6. Surface the professional KPI tree inside the UI as an operational scorecard for CEO, director, and seller.
 
 ## Notes
 

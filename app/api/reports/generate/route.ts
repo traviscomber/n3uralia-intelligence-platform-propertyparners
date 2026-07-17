@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { summarizePpRecommendationFeedback, type PpRecommendationFeedbackEntry } from '@/lib/pp-learning'
 import { buildVitacuraNeighborhoodIntelligence, filterVitacuraRows, summarizeVitacuraNeighborhoods } from '@/lib/vitacura'
 
 export const dynamic = 'force-dynamic'
@@ -140,6 +141,47 @@ type ReportContext = {
   market_context?: Record<string, unknown> | null
 }
 
+type RecommendationLearningContext = {
+  total_feedback: number
+  useful_feedback: number
+  ignored_feedback: number
+  review_feedback: number
+  adoption_rate: number
+  useful_share: number
+  narrative: string
+  top_recommendations: Array<{
+    recommendation_id: string
+    title: string
+    audience: string
+    neighborhood: string
+    area: string
+    useful: number
+    ignored: number
+    review: number
+    total: number
+    net_score: number
+    adoption_rate: number
+  }>
+  audience_breakdown: Array<{
+    key: string
+    label: string
+    useful: number
+    ignored: number
+    review: number
+    total: number
+    adoption_rate: number
+  }>
+  neighborhood_breakdown: Array<{
+    key: string
+    label: string
+    useful: number
+    ignored: number
+    review: number
+    total: number
+    adoption_rate: number
+  }>
+}
+
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -157,6 +199,55 @@ function asError(error: unknown, fallback: string) {
     return new Error((error as { message: string }).message)
   }
   return new Error(fallback)
+}
+
+function buildMarketContext(
+  marketContext: Record<string, unknown> | null | undefined,
+  learningContext: RecommendationLearningContext,
+) {
+  return {
+    ...(marketContext || {}),
+    pp_learning: learningContext,
+  }
+}
+
+function buildLearningContext(entries: PpRecommendationFeedbackEntry[]): RecommendationLearningContext {
+  const summary = summarizePpRecommendationFeedback(entries)
+
+  return {
+    total_feedback: summary.total,
+    useful_feedback: summary.useful,
+    ignored_feedback: summary.ignored,
+    review_feedback: summary.review,
+    adoption_rate: summary.adoption_rate,
+    useful_share: summary.useful_share,
+    narrative: summary.narrative,
+    top_recommendations: summary.top_recommendations.slice(0, 5),
+    audience_breakdown: summary.audience_breakdown.slice(0, 5),
+    neighborhood_breakdown: summary.neighborhood_breakdown.slice(0, 5),
+  }
+}
+
+function buildLearningGuidance(learningContext: RecommendationLearningContext) {
+  if (!learningContext.total_feedback) {
+    return 'Todavia no hay feedback persistido, asi que mantente en lectura determinista hasta que el loop aprenda.'
+  }
+
+  const topRecommendation = learningContext.top_recommendations[0]
+  const weakRecommendation = [...learningContext.top_recommendations].sort((a, b) => a.net_score - b.net_score || b.total - a.total)[0]
+
+  const clauses = [
+    `Aprendizaje acumulado: ${learningContext.adoption_rate}% de adopcion sobre ${learningContext.total_feedback} señales.`,
+    topRecommendation
+      ? `Prioriza el tipo de salida que mejor funciono: "${topRecommendation.title}" para ${topRecommendation.audience}.`
+      : 'No existe aun una recomendacion dominante.',
+    weakRecommendation && weakRecommendation.net_score < 0
+      ? `Reduce peso de lo que el equipo ignoro con mas frecuencia: "${weakRecommendation.title}".`
+      : 'No hay recomendaciones claramente penalizadas.',
+    learningContext.narrative,
+  ]
+
+  return clauses.join(' ')
 }
 
 function canonicalReportType(reportType: ReportType): CanonicalReportType {
@@ -609,18 +700,24 @@ function buildRoleContext(
   }
 }
 
-function buildDeterministicPayload(reportType: ReportType, context: ReturnType<typeof buildRoleContext>) {
+function buildDeterministicPayload(
+  reportType: ReportType,
+  context: ReturnType<typeof buildRoleContext>,
+  learningContext: RecommendationLearningContext,
+) {
   const base = context.roleByType[context.canonicalType]
+  const learningGuidance = buildLearningGuidance(learningContext)
 
   return {
     title: base.title,
-    summary: clampText(base.summary),
+    summary: clampText(`${base.summary} ${learningGuidance}`),
     content: {
       report_type: context.canonicalType,
       requested_report_type: reportType,
       audience: base.audience,
       market_scope: 'Vitacura',
       generated_mode: 'deterministic',
+      learning_context: learningContext,
       highlights: base.highlights,
       risks: base.risks,
       actions: base.actions,
@@ -673,7 +770,7 @@ async function generateWithOpenAI(prompt: string, systemFocus: string, audience:
       messages: [
         {
           role: 'system',
-          content: `Eres un analista inmobiliario senior de N3uralia. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence, sections. sections debe ser un array de objetos con title y bullets. Mantiene el foco en Vitacura y en decisiones accionables por audiencia.`,
+          content: `Eres un analista inmobiliario senior de N3uralia. Genera un reporte comercial para ${audience}. ${systemFocus} No inventes datos de vendedor si no existen; usa la capa de equipo, cartera y mercado para inferir solo lo que el contexto soporte. Toma en cuenta el learning persistido y ajusta el foco segun lo que el equipo marca como util o ignorado. Devuelve solo JSON valido con keys: title, summary, highlights, risks, actions, recommendation, confidence, sections. sections debe ser un array de objetos con title y bullets. Mantiene el foco en Vitacura y en decisiones accionables por audiencia.`,
         },
         {
           role: 'user',
@@ -724,6 +821,7 @@ export async function POST(request: Request) {
       { data: markets, error: marketError },
       { data: properties, error: propertyError },
       { data: profiles, error: profileError },
+      { data: feedbackRows, error: feedbackError },
     ] = await Promise.all([
       supabase
         .from('kpi_snapshots')
@@ -744,19 +842,27 @@ export async function POST(request: Request) {
         .from('profiles')
         .select('id, full_name, role, team, avatar_url, created_at')
         .limit(200),
+      supabase
+        .from('pp_recommendation_feedback')
+        .select('id, recommendation_id, title, audience, neighborhood, area, feedback_type, responsible, base_score, notes, created_at')
+        .order('created_at', { ascending: false })
+        .limit(200),
     ])
 
     if (kpiError) throw asError(kpiError, 'Error consultando kpi_snapshots.')
     if (marketError) throw asError(marketError, 'Error consultando market_data.')
     if (propertyError) throw asError(propertyError, 'Error consultando properties.')
     if (profileError) throw asError(profileError, 'Error consultando profiles.')
+    if (feedbackError) throw asError(feedbackError, 'Error consultando pp_recommendation_feedback.')
 
     const kpiRows = (kpis || []) as KpiSnapshot[]
     const marketRows = (markets || []) as MarketRow[]
     const propertyRows = (properties || []) as PropertyRow[]
     const profileRows = (profiles || []) as ProfileRow[]
+    const feedbackEntries = (feedbackRows || []) as PpRecommendationFeedbackEntry[]
     const generatedBy = (await authClient.auth.getUser()).data.user?.id || null
     const context = buildRoleContext(reportType, kpiRows, marketRows, propertyRows, profileRows, body.director_id || null, body.team || null, body.seller_id || null)
+    const learningContext = buildLearningContext(feedbackEntries)
 
     const payload: GeneratedReportPayload = await (async () => {
       try {
@@ -779,7 +885,7 @@ export async function POST(request: Request) {
           team_roster: context.teamRoster,
           available_properties: context.availableProperties,
           vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
-          market_context: body.market_context || null,
+          market_context: buildMarketContext(body.market_context, learningContext),
         }
 
         const modelOutput = await generateWithOpenAI(
@@ -800,6 +906,7 @@ export async function POST(request: Request) {
               requested_report_type: reportType,
               requested_audience: meta.audience,
               context: promptContext,
+              learning_context: learningContext,
             },
             period_date: kpiRows[0]?.period_date || null,
             generated_by: generatedBy,
@@ -809,7 +916,7 @@ export async function POST(request: Request) {
         console.error('OpenAI generation failed, using fallback:', err)
       }
 
-      const fallback = buildDeterministicPayload(reportType, context)
+      const fallback = buildDeterministicPayload(reportType, context, learningContext)
       return {
         report_type: storedType,
         title: fallback.title,
@@ -829,7 +936,7 @@ export async function POST(request: Request) {
             seller_id: body.seller_id || context.selectedProfile?.id || null,
             vitacura_neighborhoods: context.vitacuraNeighborhoods,
             vitacura_neighborhood_insights: context.vitacuraNeighborhoodInsights,
-            market_context: body.market_context || null,
+            market_context: buildMarketContext(body.market_context, learningContext),
           },
         },
         period_date: kpiRows[0]?.period_date || null,

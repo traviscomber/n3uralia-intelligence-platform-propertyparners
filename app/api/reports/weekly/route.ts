@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { WeeklyReport as WeeklyReportRow } from '@/lib/types'
+import {
+  buildPpLearningSnapshot,
+  summarizePpRecommendationFeedback,
+  type PpRecommendationFeedbackEntry,
+} from '@/lib/pp-learning'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +29,22 @@ type WeeklyReport = {
   velocity_change: number
   director_id: string | null
   status: 'on_track' | 'warning' | 'behind'
+}
+
+type LearningSnapshotRow = {
+  report_key: string
+  week_start: string
+  week_end: string
+  total_feedback: number
+  useful_count: number
+  ignored_count: number
+  review_count: number
+  adoption_rate: number
+  summary: string
+  top_recommendations: unknown
+  audience_breakdown: unknown
+  neighborhood_breakdown: unknown
+  generated_at: string
 }
 
 function toDate(value: string) {
@@ -202,6 +223,56 @@ async function persistWeeklyReports(weekly: WeeklyReport[], directors: WeeklyRep
   return (data || []) as WeeklyReportRow[]
 }
 
+async function persistLearningSnapshot(generatedAt: string) {
+  const supabase = getServiceClient()
+  const now = new Date()
+  const { start, end } = getWeekBounds(now)
+
+  const { data: feedbackRows, error: feedbackError } = await supabase
+    .from('pp_recommendation_feedback')
+    .select('id, recommendation_id, title, audience, neighborhood, area, feedback_type, responsible, base_score, notes, created_at')
+    .gte('created_at', start.toISOString())
+    .lte('created_at', end.toISOString())
+    .order('created_at', { ascending: false })
+
+  if (feedbackError) throw feedbackError
+
+  const feedbackEntries = (feedbackRows || []) as PpRecommendationFeedbackEntry[]
+  const summary = summarizePpRecommendationFeedback(feedbackEntries)
+  const snapshot = buildPpLearningSnapshot(summary, formatDate(start), formatDate(end), generatedAt)
+
+  const { error: upsertError } = await supabase.from('pp_ai_learning_snapshots').upsert(
+    {
+      report_key: snapshot.report_key,
+      week_start: snapshot.week_start,
+      week_end: snapshot.week_end,
+      total_feedback: snapshot.total_feedback,
+      useful_count: snapshot.useful_count,
+      ignored_count: snapshot.ignored_count,
+      review_count: snapshot.review_count,
+      adoption_rate: snapshot.adoption_rate,
+      summary: snapshot.summary,
+      top_recommendations: snapshot.top_recommendations,
+      audience_breakdown: snapshot.audience_breakdown,
+      neighborhood_breakdown: snapshot.neighborhood_breakdown,
+      generated_at: snapshot.generated_at,
+    },
+    { onConflict: 'report_key' },
+  )
+
+  if (upsertError) throw upsertError
+
+  const { data, error } = await supabase
+    .from('pp_ai_learning_snapshots')
+    .select('*')
+    .order('generated_at', { ascending: false })
+    .limit(6)
+
+  if (error) throw error
+
+  return (data || []) as LearningSnapshotRow[]
+}
+
 export async function GET() {
   try {
     const supabase = getServiceClient()
@@ -218,11 +289,13 @@ export async function GET() {
     const reports = groupWeekly(rows)
     const directors = groupDirectors(rows)
     const history = await persistWeeklyReports(reports, directors, generatedAt)
+    const learning = await persistLearningSnapshot(generatedAt)
 
     return NextResponse.json({
       reports,
       directors,
       history,
+      learning,
       generatedAt,
     })
   } catch (err) {

@@ -46,6 +46,81 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; label: string }> 
   captado:        { bg: '#ede9fe', text: '#5b21b6', label: 'Captado' },
 }
 
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function derivePropertyType(property: Property) {
+  const explicit = normalizeText(property.property_type || '')
+  if (explicit.includes('casa')) return 'casa'
+  if (explicit.includes('depart')) return 'departamento'
+
+  const source = normalizeText(property.source || '')
+  if (source.includes('house')) return 'casa'
+  if (source.includes('depart') || source.includes('dept')) return 'departamento'
+
+  const address = normalizeText(property.address || '')
+  if (address.includes('casa') || address.includes('casona')) return 'casa'
+  if (address.includes('depart') || address.includes('dpto') || address.includes('depto')) return 'departamento'
+
+  return 'departamento'
+}
+
+function getFallbackSourceUrl(property: Property) {
+  const kind = derivePropertyType(property)
+  const source = normalizeText(property.source || '')
+
+  if (source.includes('portal_inmobiliario')) {
+    return kind === 'casa'
+      ? 'https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana'
+      : 'https://www.portalinmobiliario.com/venta/departamento/vitacura-metropolitana'
+  }
+
+  if (source.includes('toctoc')) {
+    return kind === 'casa'
+      ? 'https://www.toctoc.com/venta/casa/metropolitana/vitacura'
+      : 'https://www.toctoc.com/venta/departamento/metropolitana/vitacura'
+  }
+
+  if (source.includes('icasas')) {
+    return kind === 'casa'
+      ? 'https://www.icasas.cl/venta/casas/santiago/vitacura'
+      : 'https://www.icasas.cl/venta/departamentos/santiago/vitacura'
+  }
+
+  if (source.includes('chilepropiedades')) {
+    return kind === 'casa'
+      ? 'https://chilepropiedades.cl/propiedades/venta/casa/vitacura'
+      : 'https://chilepropiedades.cl/propiedades/venta/departamento/vitacura'
+  }
+
+  if (source.includes('yapo')) {
+    return 'https://www.yapo.cl/bienes-raices-venta-de-propiedades-apartamentos/region-metropolitana-vitacura'
+  }
+
+  if (source.includes('datainmobiliaria')) {
+    return 'https://datainmobiliaria.cl/'
+  }
+
+  return null
+}
+
+function getDisplayTags(property: Property) {
+  const tags = (property.tags || []).filter(Boolean)
+  if (tags.length > 0) return tags
+  return [
+    derivePropertyType(property),
+    property.neighborhood,
+    property.source || 'vitacura',
+    property.listing_number || property.id,
+  ].filter(Boolean) as string[]
+}
+
 const EMPTY_FORM = {
   address: '', neighborhood: 'Vitacura Centro', property_type: 'departamento',
   price_uf: '', area_m2: '', bedrooms: '3', bathrooms: '2',
@@ -61,6 +136,7 @@ export default function PropertiesPage() {
   const [tagging, setTagging] = useState(false)
   const [tagResult, setTagResult] = useState<{ barrio_nombre: string; zona_prc: string } | null>(null)
   const [scraping, setScraping] = useState(false)
+  const [deduping, setDeduping] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [search, setSearch] = useState('')
   const [propertyMode, setPropertyMode] = useState<'houses' | 'departments' | 'all'>('all')
@@ -166,6 +242,24 @@ export default function PropertiesPage() {
       showToast('error', `Error de red: ${(err as Error).message}`)
     } finally {
       setScraping(false)
+    }
+  }
+
+  async function handleDedupe() {
+    setDeduping(true)
+    try {
+      const res = await fetch('/api/maintenance/dedupe-properties', { method: 'POST' })
+      const json = await res.json()
+      if (res.ok) {
+        showToast('success', `Dedupe completo: ${json.merged} consolidadas, ${json.removed} eliminadas`)
+        await loadProperties()
+      } else {
+        showToast('error', json.error || 'No se pudo ejecutar el dedupe')
+      }
+    } catch (err) {
+      showToast('error', `Error de red: ${(err as Error).message}`)
+    } finally {
+      setDeduping(false)
     }
   }
 
@@ -305,6 +399,14 @@ export default function PropertiesPage() {
             style={{ background: '#f5f9f7', color: '#555a56', border: '1px solid #d8e5e2' }}
           >
             {showAdvancedScraping ? 'Avanzado ^' : 'Avanzado v'}
+          </button>
+          <button
+            onClick={handleDedupe}
+            disabled={deduping}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ background: '#fff', color: '#315249', border: '1px solid #d8e5e2' }}
+          >
+            {deduping ? 'Deduplicando...' : 'Dedupe fuerte'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
@@ -560,7 +662,9 @@ export default function PropertiesPage() {
               </thead>
               <tbody>
                 {filtered.map((p, index) => {
-                  const tags = (p.tags || []).slice(0, 4)
+                  const tags = getDisplayTags(p).slice(0, 4)
+                  const sourceUrl = p.source_url || getFallbackSourceUrl(p)
+                  const typeLabel = derivePropertyType(p)
                   return (
                     <tr key={p.id} className="transition-colors hover:bg-[#f8fbfa]" style={{ borderBottom: '1px solid #f5f5f5' }}>
                       <td className="px-4 py-4 text-xs font-semibold text-gray-500 align-top">{index + 1}</td>
@@ -574,10 +678,22 @@ export default function PropertiesPage() {
                               loading="lazy"
                             />
                           ) : (
-                            <div className="flex h-16 w-24 items-center justify-center rounded-xl text-xs font-semibold uppercase tracking-wide text-white ring-1 ring-black/5" style={{ background: 'linear-gradient(135deg, #8fb2aa 0%, #6b8e85 100%)' }}>
-                              {((p.property_type || '').toLowerCase().includes('depart') ? 'Depto' : 'Casa')}
+                            <div
+                              className="flex h-16 w-24 flex-col items-center justify-center rounded-xl text-white ring-1 ring-black/5"
+                              style={{ background: 'linear-gradient(135deg, #8fb2aa 0%, #6b8e85 100%)' }}
+                            >
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">{typeLabel === 'casa' ? 'Casa' : 'Depto'}</span>
+                              <span className="mt-1 text-[9px] opacity-80">Sin foto</span>
                             </div>
                           )}
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>
+                              {p.source || 'fuente'}
+                            </p>
+                            <p className="mt-1 max-w-[110px] truncate text-xs" style={{ color: '#5f6662' }}>
+                              {typeLabel} · {p.neighborhood}
+                            </p>
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 font-medium text-gray-900 max-w-[220px] align-top">
@@ -606,7 +722,7 @@ export default function PropertiesPage() {
                       <td className="px-4 py-4 align-top">
                         {p.source_url ? (
                           <a
-                            href={p.source_url}
+                            href={sourceUrl || p.source_url}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors hover:opacity-90"
@@ -616,7 +732,20 @@ export default function PropertiesPage() {
                             <ArrowUpRight size={12} />
                           </a>
                         ) : (
-                          <span className="text-xs" style={{ color: '#9ca9a3' }}>Sin link</span>
+                          sourceUrl ? (
+                            <a
+                              href={sourceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors hover:opacity-90"
+                              style={{ color: '#315249', background: '#eef6f3', border: '1px solid #d8e5e2' }}
+                            >
+                              Ver fuente
+                              <ArrowUpRight size={12} />
+                            </a>
+                          ) : (
+                            <span className="text-xs" style={{ color: '#9ca9a3' }}>Sin link</span>
+                          )
                         )}
                       </td>
                       <td className="px-4 py-4 align-top">

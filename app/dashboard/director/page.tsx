@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import type { KpiSnapshot, Profile, AgentActivity } from '@/lib/types'
+import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
 
 const DIRECTOR_ID = 'd0000000-0000-0000-0000-000000000001' // default: Juan Morales
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
@@ -32,7 +33,46 @@ const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: strin
 
 function fmt(n: number) { return n.toLocaleString('es-CL') }
 
+function scoreTone(status: 'good' | 'warning' | 'critical' | 'inactive') {
+  if (status === 'good') return '#16a34a'
+  if (status === 'warning') return '#d97706'
+  if (status === 'critical') return '#dc2626'
+  return '#9ca9a3'
+}
+
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
+  const directorScorecard = useMemo(() => {
+    const conversionScore = clampScore(Math.round(totals.conversion * 7))
+    const pipelineCoverage = clampScore(Math.round((totals.ventas / Math.max(1, totals.target)) * 300))
+    const followupCompletion = clampScore(Math.max(0, 100 - activities.length * 12))
+
+    const states = PP_SCORECARD_DEFINITIONS.director.map((definition) => {
+      const current =
+        definition.id === 'team-conversion'
+          ? conversionScore
+          : definition.id === 'pipeline-coverage'
+            ? pipelineCoverage
+            : definition.id === 'followup-completion'
+              ? followupCompletion
+              : null
+
+      return {
+        definition,
+        current,
+        status: assessMetricStatus(current, definition),
+      }
+    })
+
+    const values = states.map((item) => item.current).filter((value): value is number => value !== null)
+    const overall = values.length ? clampScore(values.reduce((sum, value) => sum + value, 0) / values.length) : null
+
+    return {
+      overall,
+      states,
+      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
+    }
+  }, [activities.length, totals.conversion, totals.target, totals.ventas])
+
   return (
     <div className="bg-white rounded-lg p-5 flex flex-col gap-1" style={{ border: '1px solid #e8f0ed', borderLeft: `3px solid ${border}` }}>
       <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: '#9ca9a3' }}>{label}</span>
@@ -169,6 +209,65 @@ export default function DirectorDashboard() {
         <KpiCard label="UF vendidas"   value={`${(totals.uf/1000).toFixed(0)}K`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#b89a7e" />
         <KpiCard label="Conversión"    value={`${totals.conversion}%`} sub="leads → cierre promedio" border="#10b981" />
         <KpiCard label="Comisión eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#173634" />
+      </div>
+
+      {/* Director Scorecard */}
+      <div className="grid grid-cols-5 gap-5 mb-8">
+        <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Score de gestión</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Lectura operativa del equipo y su disciplina comercial</p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold" style={{ color: directorScorecard.overall !== null && directorScorecard.overall >= 80 ? '#16a34a' : directorScorecard.overall !== null && directorScorecard.overall >= 65 ? '#d97706' : '#dc2626' }}>
+                {directorScorecard.overall === null ? '—' : directorScorecard.overall}
+              </div>
+              <div className="text-[11px]" style={{ color: '#9ca9a3' }}>{directorScorecard.trend}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {directorScorecard.states.map(({ definition, current, status }) => (
+              <div key={definition.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>{definition.label}</span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(status) }} />
+                </div>
+                <div className="text-lg font-bold" style={{ color: '#173634' }}>
+                  {current === null ? '—' : `${current}${definition.unit ? definition.unit : ''}`}
+                </div>
+                <div className="text-[11px] leading-snug mt-1" style={{ color: '#9ca9a3' }}>{definition.note}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="col-span-3 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Métricas del director</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Definición, umbral y cadencia para el equipo</p>
+            </div>
+            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#8fb2aa' }}>Vitacura ventas</span>
+          </div>
+          <div className="space-y-3">
+            {PP_SCORECARD_DEFINITIONS.director.map((metric) => (
+              <div key={metric.id} className="rounded-lg p-3" style={{ background: '#fbfbfa', border: '1px solid #edf4f1' }}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[13px] font-semibold" style={{ color: '#173634' }}>{metric.label}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: '#9ca9a3' }}>{metric.formula}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] font-medium" style={{ color: '#173634' }}>{metric.cadence}</div>
+                    <div className="text-[11px]" style={{ color: '#9ca9a3' }}>Owner: {metric.owner}</div>
+                  </div>
+                </div>
+                <div className="text-[11px] mt-2" style={{ color: '#b89a7e' }}>{metric.threshold}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Agents Table + Chart */}

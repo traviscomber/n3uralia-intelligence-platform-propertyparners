@@ -7,6 +7,8 @@ import { useRealtimeQuery } from '@/lib/hooks/use-realtime-query'
 import type { AiReport, Profile } from '@/lib/types'
 import { buildWhatsAppWebUrl } from '@/lib/whatsapp-web'
 import { PP_AGENTS, PP_AUDIENCES, PP_NAME, PP_STEPS } from '@/lib/pp-agent'
+import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore, type ScorecardRoleKey, type ScorecardStatus } from '@/lib/pp-scorecard'
+import { filterVitacuraRows } from '@/lib/vitacura'
 
 type WeeklyReport = {
   week_start: string
@@ -20,6 +22,27 @@ type WeeklyReport = {
   status: 'on_track' | 'warning' | 'behind'
 }
 
+type PropertyRow = {
+  id: string
+  property_type: string | null
+  neighborhood: string | null
+  source: string | null
+  source_url: string | null
+  image_url: string | null
+  listing_number: string | null
+  tags: string[] | null
+  created_at: string
+}
+
+type MarketRow = {
+  neighborhood: string
+  avg_price_uf: number | null
+  avg_price_m2_uf: number | null
+  absorption_rate: number | null
+  inventory_count: number
+  avg_days_on_market: number | null
+}
+
 type WeeklyReportResponse = {
   reports: WeeklyReport[]
   directors: WeeklyReport[]
@@ -30,6 +53,50 @@ type WeeklyReportResponse = {
     week_end: string
     director_id: string | null
     status: string
+    generated_at: string
+  }>
+  learning?: Array<{
+    id?: number
+    report_key: string
+    week_start: string
+    week_end: string
+    total_feedback: number
+    useful_count: number
+    ignored_count: number
+    review_count: number
+    adoption_rate: number
+    summary: string
+    top_recommendations: Array<{
+      recommendation_id: string
+      title: string
+      audience: string
+      neighborhood: string
+      area: string
+      useful: number
+      ignored: number
+      review: number
+      total: number
+      net_score: number
+      adoption_rate: number
+    }>
+    audience_breakdown: Array<{
+      key: string
+      label: string
+      useful: number
+      ignored: number
+      review: number
+      total: number
+      adoption_rate: number
+    }>
+    neighborhood_breakdown: Array<{
+      key: string
+      label: string
+      useful: number
+      ignored: number
+      review: number
+      total: number
+      adoption_rate: number
+    }>
     generated_at: string
   }>
   generatedAt: string
@@ -56,6 +123,22 @@ type ReportGenerateContext = {
   director_id?: string | null
   team?: string | null
   seller_id?: string | null
+}
+
+function normalizeText(value: string | null | undefined) {
+  return (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function daysSince(value: string | null | undefined) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return (Date.now() - date.getTime()) / 3600000
 }
 
 const PRO_REPORT_CHOICES: ReportChoice[] = [
@@ -232,6 +315,19 @@ function getReportHighlights(report: AiReport | null) {
   return highlights.filter((item): item is string => typeof item === 'string').slice(0, 3)
 }
 
+function scoreTone(status: ScorecardStatus) {
+  if (status === 'good') return { bg: 'var(--n-success-muted)', fg: 'var(--n-success)' }
+  if (status === 'warning') return { bg: 'var(--n-warning-muted)', fg: 'var(--n-warning)' }
+  if (status === 'critical') return { bg: 'var(--n-danger-muted)', fg: 'var(--n-danger)' }
+  return { bg: 'var(--n-surface)', fg: 'var(--n-fg-subtle)' }
+}
+
+function formatScoreValue(value: number | null, unit?: string) {
+  if (value === null) return 'n/d'
+  const rounded = Number.isInteger(value) ? String(value) : value.toFixed(1)
+  return unit ? `${rounded}${unit}` : `${rounded}%`
+}
+
 export default function ReportesPage() {
   const [weekly, setWeekly] = useState<WeeklyReportResponse | null>(null)
   const [weeklyLoading, setWeeklyLoading] = useState(true)
@@ -257,6 +353,8 @@ export default function ReportesPage() {
   const [healthLoading, setHealthLoading] = useState(true)
   const [healthRefreshing, setHealthRefreshing] = useState(false)
   const [healthError, setHealthError] = useState<string | null>(null)
+  const [feedbackLoading, setFeedbackLoading] = useState<string | null>(null)
+  const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null)
   const whatsappPhone = process.env.NEXT_PUBLIC_REPORT_WHATSAPP_PHONE || ''
 
   const { data: aiReports, loading: aiLoading, error: aiError, lastUpdated, refresh: refreshAiReports } = useRealtimeQuery<AiReport>(
@@ -289,6 +387,34 @@ export default function ReportesPage() {
       return data || []
     },
     { table: 'profiles', refreshIntervalMs: 10 * 60 * 1000 },
+  )
+
+  const { data: properties } = useRealtimeQuery<PropertyRow>(
+    async (supabase) => {
+      const { data, error: queryError } = await supabase
+        .from('properties')
+        .select('id, property_type, neighborhood, source, source_url, image_url, listing_number, tags, created_at')
+        .order('created_at', { ascending: false })
+        .limit(250)
+
+      if (queryError) throw queryError
+      return data || []
+    },
+    { table: 'properties', refreshIntervalMs: 8 * 60 * 1000 },
+  )
+
+  const { data: marketRows } = useRealtimeQuery<MarketRow>(
+    async (supabase) => {
+      const { data, error: queryError } = await supabase
+        .from('market_data')
+        .select('neighborhood, avg_price_uf, avg_price_m2_uf, absorption_rate, inventory_count, avg_days_on_market')
+        .order('absorption_rate', { ascending: false })
+        .limit(12)
+
+      if (queryError) throw queryError
+      return data || []
+    },
+    { table: 'market_data', refreshIntervalMs: 10 * 60 * 1000 },
   )
 
   useEffect(() => {
@@ -377,6 +503,59 @@ export default function ReportesPage() {
       setHealthError(err instanceof Error ? err.message : 'No pudimos cargar la salud del scraper.')
     } finally {
       setHealthRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void refreshWeekly()
+      void refreshHealth()
+      void refreshAiReports()
+    }, 5 * 60 * 1000)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [refreshAiReports])
+
+  const submitRecommendationFeedback = async (
+    item: {
+      recommendation_id: string
+      title: string
+      audience: string
+      neighborhood: string
+      area: string
+      net_score: number
+    },
+    feedbackType: 'useful' | 'ignored' | 'review',
+  ) => {
+    try {
+      setFeedbackLoading(`${item.recommendation_id}:${feedbackType}`)
+      setFeedbackStatus(null)
+      const response = await fetch('/api/pp/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recommendation_id: item.recommendation_id,
+          title: item.title,
+          audience: item.audience,
+          neighborhood: item.neighborhood,
+          area: item.area,
+          feedback_type: feedbackType,
+          responsible: 'reportes-ui',
+          base_score: item.net_score,
+        }),
+      })
+
+      const data = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) throw new Error(data.error || 'No pudimos guardar el feedback.')
+
+      setFeedbackStatus(`Feedback ${feedbackType} registrado para ${item.title}.`)
+      await refreshWeekly()
+    } catch (err) {
+      setFeedbackStatus(err instanceof Error ? err.message : 'No pudimos guardar el feedback.')
+    } finally {
+      setFeedbackLoading(null)
     }
   }
 
@@ -474,8 +653,101 @@ export default function ReportesPage() {
       latestWeek: reports[0] || null,
       topDirector: directors[0] || null,
       aiCount: aiReports.length,
+      learningCount: weekly?.learning?.length || 0,
     }
   }, [aiReports.length, weekly])
+
+  const latestLearning = weekly?.learning?.[0] || null
+  const vitacuraProperties = useMemo(() => filterVitacuraRows(properties || []), [properties])
+  const vitacuraMarkets = useMemo(() => filterVitacuraRows(marketRows || []), [marketRows])
+
+  const scorecard = useMemo(() => {
+    const uniqueKeys = new Set(
+      vitacuraProperties.map((property) =>
+        [
+          normalizeText(property.source || ''),
+          normalizeText(property.listing_number || ''),
+          normalizeText(property.neighborhood || ''),
+          normalizeText(property.property_type || ''),
+        ].join('|'),
+      ),
+    )
+
+    const completenessComponents = [
+      vitacuraProperties.length ? Math.round((vitacuraProperties.filter((property) => Boolean(property.source_url)).length / vitacuraProperties.length) * 100) : 0,
+      vitacuraProperties.length ? Math.round((vitacuraProperties.filter((property) => Boolean(property.image_url)).length / vitacuraProperties.length) * 100) : 0,
+      vitacuraProperties.length ? Math.round((vitacuraProperties.filter((property) => Boolean(property.listing_number)).length / vitacuraProperties.length) * 100) : 0,
+    ]
+
+    const dedupeCoverage = vitacuraProperties.length ? Math.round((uniqueKeys.size / vitacuraProperties.length) * 100) : null
+    const sourceReliability = health ? clampScore((health.summary.successRate * 0.8) + (Math.max(0, 100 - Math.min(health.summary.staleSourceCount * 20, 100)) * 0.2)) : null
+    const fieldCompleteness = completenessComponents.length ? clampScore(completenessComponents.reduce((sum, value) => sum + value, 0) / completenessComponents.length) : null
+    const dataQuality = dedupeCoverage !== null && sourceReliability !== null && fieldCompleteness !== null
+      ? clampScore((dedupeCoverage * 0.45) + (sourceReliability * 0.35) + (fieldCompleteness * 0.2))
+      : null
+
+    const latestMarket = vitacuraMarkets[0] || null
+    const marketScore = latestMarket
+      ? clampScore(
+          ((latestMarket.absorption_rate ?? 0) * 100 * 0.6) +
+            (Math.max(0, 100 - Math.min(latestMarket.avg_days_on_market ?? 100, 100)) * 0.4),
+        )
+      : null
+
+    const latestWeek = weekly?.reports?.[0] || null
+    const executionScore = latestWeek
+      ? clampScore(
+          (latestWeek.target_progress * 0.5) +
+            (latestWeek.conversion_rate * 0.35) +
+            (Math.max(0, 100 - Math.min(Math.abs(latestWeek.velocity_change) * 10, 100)) * 0.15),
+        )
+      : null
+
+    const learning = latestLearning
+    const learningScore = learning
+      ? clampScore((learning.adoption_rate * 0.7) + (Math.min(learning.total_feedback * 5, 100) * 0.3))
+      : null
+
+    const reportAgeHours = daysSince(aiReports[0]?.created_at || weekly?.generatedAt || null)
+    const freshnessScore = reportAgeHours !== null ? clampScore(100 - reportAgeHours * 3) : null
+
+    const roleStates = {
+      ceo: PP_SCORECARD_DEFINITIONS.ceo.map((definition) => {
+        if (definition.id === 'data-quality') return { definition, current: dataQuality }
+        if (definition.id === 'market-signal') return { definition, current: marketScore }
+        if (definition.id === 'forecast-discipline') return { definition, current: executionScore }
+        return { definition, current: null }
+      }),
+      director: PP_SCORECARD_DEFINITIONS.director.map((definition) => {
+        if (definition.id === 'team-conversion') return { definition, current: latestWeek ? clampScore(latestWeek.conversion_rate) : null }
+        if (definition.id === 'pipeline-coverage') return { definition, current: latestWeek ? clampScore(latestWeek.target_progress * 3) : null }
+        if (definition.id === 'followup-completion') return { definition, current: latestWeek ? clampScore(Math.min(100, latestWeek.target_progress)) : null }
+        return { definition, current: null }
+      }),
+      seller: PP_SCORECARD_DEFINITIONS.seller.map((definition) => {
+        if (definition.id === 'response-speed') return { definition, current: reportAgeHours !== null ? clampScore(Math.max(0, 100 - reportAgeHours * 2)) : null }
+        if (definition.id === 'playbook-adoption') return { definition, current: learningScore }
+        if (definition.id === 'insight-freshness') return { definition, current: freshnessScore !== null ? clampScore(freshnessScore) : null }
+        return { definition, current: null }
+      }),
+    } satisfies Record<ScorecardRoleKey, Array<{ definition: (typeof PP_SCORECARD_DEFINITIONS.ceo)[number]; current: number | null }>>
+
+    const overallParts = [dataQuality, marketScore, executionScore, learningScore].filter((value): value is number => value !== null)
+    const overall = overallParts.length ? clampScore(overallParts.reduce((sum, value) => sum + value, 0) / overallParts.length) : null
+
+    return {
+      overall,
+      dataQuality,
+      marketScore,
+      executionScore,
+      learningScore,
+      dedupeCoverage,
+      sourceReliability,
+      fieldCompleteness,
+      reportAgeHours,
+      roleStates,
+    }
+  }, [aiReports, health, latestLearning, marketRows, properties, weekly])
 
   const filteredAiReports = useMemo(() => {
     if (!reportFilter) return aiReports
@@ -638,6 +910,146 @@ export default function ReportesPage() {
               </p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-6 rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Scorecard operativo
+              </p>
+              <h3 className="mt-2 text-lg font-semibold" style={{ color: 'var(--n-fg)' }}>
+                Medicion profesional para CEO, director y vendedor
+              </h3>
+            </div>
+            <span className="n-chip">
+              {scorecard.overall === null ? 'Sin score' : `${scorecard.overall}% overall`}
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: 'Calidad de datos',
+                value: scorecard.dataQuality,
+                formula: '0.40*dedupe + 0.35*reliability + 0.25*completeness',
+                note: `Dedupe ${scorecard.dedupeCoverage ?? 'n/d'}% · Completeness ${scorecard.fieldCompleteness ?? 'n/d'}%`,
+              },
+              {
+                label: 'Señal de mercado',
+                value: scorecard.marketScore,
+                formula: '0.40*absorption + 0.30*velocity + 0.30*inventory-balance',
+                note: 'Absorción, velocidad y presión de inventario',
+              },
+              {
+                label: 'Ejecución comercial',
+                value: scorecard.executionScore,
+                formula: '0.50*target_progress + 0.35*conversion + 0.15*velocity',
+                note: 'Target progress, conversión y velocidad',
+              },
+              {
+                label: 'Aprendizaje IA',
+                value: scorecard.learningScore,
+                formula: '0.70*adoption + 0.30*feedback_depth',
+                note: 'Adopción real del feedback y profundidad de señales',
+              },
+            ].map((item) => {
+              const status: ScorecardStatus = item.value === null ? 'inactive' : item.value >= 80 ? 'good' : item.value >= 60 ? 'warning' : 'critical'
+              const tone = scoreTone(status)
+
+              return (
+                <div key={item.label} className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                        {item.label}
+                      </p>
+                      <p className="mt-2 text-3xl font-semibold" style={{ color: 'var(--n-fg)' }}>
+                        {formatScoreValue(item.value)}
+                      </p>
+                    </div>
+                    <span className="n-chip" style={{ background: tone.bg, color: tone.fg }}>
+                      {status}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                    {item.note}
+                  </p>
+                  <p className="mt-2 text-[11px] leading-5" style={{ color: 'var(--n-fg-subtle)' }}>
+                    Formula: {item.formula}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-5" style={{ color: 'var(--n-fg-subtle)' }}>
+                    Umbral: good &gt;= 80, warning 60-79, critical &lt; 60
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
+            {(
+              [
+                ['ceo', 'CEO'],
+                ['director', 'Directores de venta'],
+                ['seller', 'Ejecutivos de venta'],
+              ] as const
+            ).map(([roleKey, title]) => {
+              const metrics = scorecard.roleStates[roleKey]
+              const weightedValues = metrics.map((metric) => metric.current).filter((value): value is number => value !== null)
+              const summaryValue = weightedValues.length ? clampScore(weightedValues.reduce((sum, value) => sum + value, 0) / weightedValues.length) : null
+
+              return (
+                <div key={roleKey} className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                        {title}
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold" style={{ color: 'var(--n-fg)' }}>
+                        {formatScoreValue(summaryValue)}
+                      </p>
+                    </div>
+                    <span className="n-chip">{metrics.length} métricas</span>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    {metrics.map(({ definition, current }) => {
+                      const metricStatus = assessMetricStatus(current, definition)
+                      const tone = scoreTone(metricStatus)
+                      return (
+                        <div key={definition.id} className="rounded-xl border bg-white p-3" style={{ borderColor: 'var(--n-border)' }}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                                {definition.label}
+                              </p>
+                              <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
+                                {definition.owner} · {definition.cadence}
+                              </p>
+                            </div>
+                            <span className="n-chip" style={{ background: tone.bg, color: tone.fg }}>
+                              {metricStatus}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                            {formatScoreValue(current, definition.unit)}
+                          </p>
+                          <p className="mt-2 text-xs leading-5" style={{ color: 'var(--n-fg-muted)' }}>
+                            {definition.note}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-5" style={{ color: 'var(--n-fg-subtle)' }}>
+                            Formula: {definition.formula}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-5" style={{ color: 'var(--n-fg-subtle)' }}>
+                            Umbral: {definition.threshold}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         <div className="mt-6">
@@ -1088,6 +1500,14 @@ export default function ReportesPage() {
         </div>
         <div className="n-card p-4">
           <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+            Learning IA
+          </p>
+          <p className="mt-3 text-3xl font-semibold" style={{ color: 'var(--n-warning)' }}>
+            {stats.learningCount}
+          </p>
+        </div>
+        <div className="n-card p-4">
+          <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
             Ultima semana
           </p>
           <p className="mt-3 text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
@@ -1124,6 +1544,178 @@ export default function ReportesPage() {
           </div>
         </div>
       )}
+
+      {latestLearning && (
+        <div className="n-card p-6">
+          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="font-semibold" style={{ color: 'var(--n-fg)' }}>
+                Aprendizaje IA semanal
+              </h2>
+              <p className="text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                Snapshot persistido del feedback de recomendaciones para ajustar la lectura comercial de Vitacura.
+              </p>
+            </div>
+            <span className="n-chip">{latestLearning.adoption_rate}% adopcion</span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Feedback total
+              </p>
+              <p className="mt-2 text-2xl font-semibold" style={{ color: 'var(--n-primary)' }}>
+                {latestLearning.total_feedback}
+              </p>
+              <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                {latestLearning.useful_count} utiles, {latestLearning.ignored_count} ignoradas, {latestLearning.review_count} en revision
+              </p>
+            </div>
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Lectura semanal
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                {latestLearning.summary}
+              </p>
+            </div>
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Foco de adopcion
+              </p>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--n-fg-muted)' }}>
+                El learning se usa para priorizar las recomendaciones que el equipo efectivamente encuentra utiles, con corte semanal.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Top recomendaciones
+              </p>
+              <div className="mt-3 space-y-3">
+                {latestLearning.top_recommendations.slice(0, 3).map((item) => (
+                  <div key={item.recommendation_id} className="rounded-2xl border p-3" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                      {item.title}
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-muted)' }}>
+                      {item.audience} · {item.neighborhood} · {item.total} señales
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
+                      Adopcion {item.adoption_rate}% · neto {item.net_score}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Agregado por audiencia
+              </p>
+              <div className="mt-3 space-y-2">
+                {latestLearning.audience_breakdown.map((item) => (
+                  <div key={item.key} className="flex items-center justify-between rounded-2xl border px-3 py-2" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                        {item.label}
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--n-fg-muted)' }}>
+                        {item.total} señales
+                      </p>
+                    </div>
+                    <span className="n-chip">{item.adoption_rate}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Agregado por barrio
+              </p>
+              <div className="mt-3 space-y-2">
+                {latestLearning.neighborhood_breakdown.map((item) => (
+                  <div key={item.key} className="flex items-center justify-between rounded-2xl border px-3 py-2" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)' }}>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                        {item.label}
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--n-fg-muted)' }}>
+                        {item.total} señales
+                      </p>
+                    </div>
+                    <span className="n-chip">{item.adoption_rate}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {latestLearning?.top_recommendations?.length ? (
+        <div className="n-card p-6">
+          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: 'var(--n-fg-subtle)' }}>
+                Feedback del equipo
+              </p>
+              <h2 className="mt-2 font-semibold" style={{ color: 'var(--n-fg)' }}>
+                Aprendizaje continuo sobre recomendaciones
+              </h2>
+              <p className="mt-1 text-sm" style={{ color: 'var(--n-fg-muted)' }}>
+                Registra si la recomendación sirvió, se ignoró o requiere revisión. El corte semanal vuelve a ponderar el learning con esa señal.
+              </p>
+            </div>
+            <span className="n-chip">{feedbackStatus || 'Feedback listo para registrar'}</span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {latestLearning.top_recommendations.slice(0, 3).map((item) => {
+              const baseKey = `${item.recommendation_id}`
+              return (
+                <div key={item.recommendation_id} className="rounded-2xl border p-4" style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface-2)' }}>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--n-fg)' }}>
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-muted)' }}>
+                    {item.audience} · {item.neighborhood} · {item.total} señales
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: 'var(--n-fg-subtle)' }}>
+                    Adopción {item.adoption_rate}% · neto {item.net_score}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {[
+                      ['useful', 'Útil'],
+                      ['review', 'Revisar'],
+                      ['ignored', 'Ignorar'],
+                    ].map(([type, label]) => {
+                      const feedbackType = type as 'useful' | 'review' | 'ignored'
+                      const isBusy = feedbackLoading === `${baseKey}:${feedbackType}`
+                      return (
+                        <button
+                          key={feedbackType}
+                          onClick={() => void submitRecommendationFeedback(item, feedbackType)}
+                          className="rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors"
+                          style={{ borderColor: 'var(--n-border)', background: 'var(--n-surface)', color: 'var(--n-fg)' }}
+                          disabled={Boolean(feedbackLoading)}
+                          aria-busy={isBusy}
+                          aria-disabled={Boolean(feedbackLoading)}
+                        >
+                          {isBusy ? '...' : label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
 
       <div className="n-card p-6">
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">

@@ -409,7 +409,7 @@ export async function persistScrapeHealthSnapshot() {
       supabase
         .from('data_sources')
         .select('name,status,records_count,last_sync,error_message')
-        .in('name', ['Portal Inmobiliario', 'TOCTOC Search', 'TOCTOC Casas', 'icasas.cl', 'icasas.cl Casas', 'Yapo Search', 'Chilepropiedades', 'Chilepropiedades Casas', 'Realtor International', 'Portal Inmobiliario Benchmark'])
+      .in('name', ['Portal Inmobiliario', 'TOCTOC Search', 'TOCTOC Casas', 'icasas.cl', 'icasas.cl Casas', 'Yapo Search', 'Chilepropiedades', 'Chilepropiedades Casas', 'Realtor International', 'Portal Inmobiliario Benchmark', 'Data Inmobiliaria Vitacura'])
         .order('pipeline_order', { ascending: true }),
       supabase
         .from('external_market_benchmarks')

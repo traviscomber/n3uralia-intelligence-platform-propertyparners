@@ -105,10 +105,21 @@ function getAudienceLabel(report: DirectorReportRow | null) {
   return 'Reporte comercial'
 }
 
+function getLearningContext(report: DirectorReportRow | null) {
+  const content = getReportContent(report)
+  const learning = content && typeof content.learning_context === 'object' ? (content.learning_context as Record<string, unknown>) : null
+  return learning
+}
+
+function getNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
 function buildContentLines(bundle: DirectorReportBundle) {
   const lines: PdfLine[] = []
   let y = 796
   const latestContent = getReportContent(bundle.latestReport)
+  const learningContext = getLearningContext(bundle.latestReport)
   const highlights = getStringArray(latestContent?.highlights, 3)
   const sections = getSections(bundle.latestReport)
 
@@ -136,6 +147,43 @@ function buildContentLines(bundle: DirectorReportBundle) {
   pushLine(lines, `Cambio velocidad: ${bundle.metrics.velocityChange.toFixed(1)} dias`, 48, y, 11)
   y -= 14
   pushLine(lines, `Estado actual: ${statusLabel(bundle.metrics.latestStatus)}`, 48, y, 11)
+
+  y -= 26
+  pushLine(lines, 'Scorecard ejecutivo', 48, y, 14, true)
+  y -= 18
+  pushLine(lines, `Ventas acumuladas: ${bundle.metrics.totalSales}`, 48, y, 10)
+  y -= 14
+  pushLine(lines, `Conversion promedio: ${bundle.metrics.avgConversion.toFixed(1)}%`, 48, y, 10)
+  y -= 14
+  pushLine(lines, `Cumplimiento objetivo: ${bundle.metrics.targetProgress}%`, 48, y, 10)
+  y -= 14
+  pushLine(lines, `Cambio velocidad: ${bundle.metrics.velocityChange.toFixed(1)} dias`, 48, y, 10)
+  y -= 14
+  pushLine(lines, `Estado: ${statusLabel(bundle.metrics.latestStatus)}`, 48, y, 10)
+
+  y -= 24
+  pushLine(lines, 'Aprendizaje IA', 48, y, 14, true)
+  y -= 18
+  const adoptionRate = getNumber(learningContext?.adoption_rate)
+  const totalFeedback = getNumber(learningContext?.total_feedback)
+  if (adoptionRate !== null || totalFeedback !== null) {
+    pushLine(lines, `Adopcion: ${adoptionRate !== null ? `${adoptionRate}%` : 'n/d'} sobre ${totalFeedback ?? 0} señales`, 48, y, 10)
+    y -= 14
+  }
+  const narrative = typeof learningContext?.narrative === 'string' ? learningContext.narrative : ''
+  if (narrative) {
+    pushWrappedLines(lines, narrative, 48, y, 10, 76)
+    y -= 14 * wrapText(narrative, 76).length
+  }
+  const topRecommendation = Array.isArray(learningContext?.top_recommendations) ? learningContext?.top_recommendations[0] as Record<string, unknown> | undefined : undefined
+  if (topRecommendation) {
+    const title = typeof topRecommendation.title === 'string' ? topRecommendation.title : 'Sin titulo'
+    const audience = typeof topRecommendation.audience === 'string' ? topRecommendation.audience : 'Sin audiencia'
+    const neighborhood = typeof topRecommendation.neighborhood === 'string' ? topRecommendation.neighborhood : 'Vitacura'
+    const adoption = getNumber(topRecommendation.adoption_rate)
+    pushWrappedLines(lines, `Top feedback: ${title} | ${audience} | ${neighborhood} | adopcion ${adoption !== null ? `${adoption}%` : 'n/d'}`, 48, y, 10, 76)
+    y -= 14 * wrapText(`Top feedback: ${title} | ${audience} | ${neighborhood} | adopcion ${adoption !== null ? `${adoption}%` : 'n/d'}`, 76).length
+  }
 
   y -= 26
   pushLine(lines, 'Reporte mas reciente', 48, y, 14, true)

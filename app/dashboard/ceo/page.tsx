@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import type { KpiSnapshot, Profile, AiReport } from '@/lib/types'
+import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
 
 // ── mock fallback data (shown while DB loads or if empty) ──
 const MOCK_DIRECTORS = [
@@ -25,6 +26,13 @@ const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','
 
 function fmt(n: number) {
   return n.toLocaleString('es-CL')
+}
+
+function scoreTone(status: 'good' | 'warning' | 'critical' | 'inactive') {
+  if (status === 'good') return '#10b981'
+  if (status === 'warning') return '#f59e0b'
+  if (status === 'critical') return '#ef4444'
+  return '#9ca9a3'
 }
 
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
@@ -109,6 +117,41 @@ export default function CeoDashboard() {
 
   const dirKeys  = directors.map(d => d.name.split(' ')[0])
   const dirColors = ['#8fb2aa', '#b89a7e', '#10b981']
+  const executiveMetrics = PP_SCORECARD_DEFINITIONS.ceo
+  const executiveStates = useMemo(() => {
+    const totalTargets = directors.reduce((sum, d) => sum + d.target, 0) || 1
+    const fulfillmentRate = directors.length > 0
+      ? directors.reduce((sum, d) => sum + (d.target > 0 ? Math.min(1, d.ventas / d.target) : 0), 0) / directors.length
+      : 0
+    const dataQuality = 88
+    const marketSignal = clampScore((totals.conversion / 10) * 100)
+    const forecastDiscipline = clampScore(((fulfillmentRate * 100) + Math.min(100, (totals.ventas / totalTargets) * 100)) / 2)
+    const scoreById: Record<string, number | null> = {
+      'data-quality': dataQuality,
+      'market-signal': marketSignal,
+      'forecast-discipline': forecastDiscipline,
+    }
+
+    const states = executiveMetrics.map(metric => {
+      const current = scoreById[metric.id] ?? null
+      return {
+        ...metric,
+        current,
+        status: assessMetricStatus(current, metric),
+      }
+    })
+
+    const score = clampScore(
+      states.reduce((sum, metric) => sum + (metric.current ?? 0), 0) / states.length,
+    )
+
+    return {
+      score,
+      states,
+      trend: score >= 80 ? 'Estable' : score >= 65 ? 'En vigilancia' : 'Bajo control',
+    }
+  }, [directors, executiveMetrics, totals.conversion, totals.ventas])
+  const recentReports = reports.slice(0, 3)
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
@@ -134,6 +177,88 @@ export default function CeoDashboard() {
         <KpiCard label="UF vendidas"        value={`${(totals.uf/1000).toFixed(0)}K UF`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#b89a7e" />
         <KpiCard label="Comisión acumulada" value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP comisión total" border="#10b981" />
         <KpiCard label="Conversión global"  value={`${totals.conversion}%`}      sub="leads → cierre promedio"   border="#173634" />
+      </div>
+
+      {/* Executive Scorecard */}
+      <div className="grid grid-cols-5 gap-5 mb-8">
+        <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Score ejecutivo</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Lectura profesional para CEO y directorio</p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold" style={{ color: executiveStates.score >= 80 ? '#10b981' : executiveStates.score >= 65 ? '#f59e0b' : '#ef4444' }}>
+                {executiveStates.score}
+              </div>
+              <div className="text-[11px]" style={{ color: '#9ca9a3' }}>{executiveStates.trend}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {executiveStates.states.map(metric => (
+              <div key={metric.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#9ca9a3' }}>{metric.label}</span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(metric.status) }} />
+                </div>
+                <div className="text-lg font-bold" style={{ color: '#173634' }}>
+                  {metric.current === null ? '—' : metric.unit ? `${metric.current}${metric.unit}` : metric.current}
+                </div>
+                <div className="text-[11px] leading-snug mt-1" style={{ color: '#9ca9a3' }}>{metric.note}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Métricas CEO</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Umbrales, cadencia y responsables</p>
+            </div>
+            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: '#8fb2aa' }}>Vitacura ventas</span>
+          </div>
+          <div className="space-y-3">
+            {executiveMetrics.map(metric => (
+              <div key={metric.id} className="rounded-lg p-3" style={{ background: '#fbfbfa', border: '1px solid #edf4f1' }}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[13px] font-semibold" style={{ color: '#173634' }}>{metric.label}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: '#9ca9a3' }}>{metric.formula}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] font-medium" style={{ color: '#173634' }}>{metric.cadence}</div>
+                    <div className="text-[11px]" style={{ color: '#9ca9a3' }}>Owner: {metric.owner}</div>
+                  </div>
+                </div>
+                <div className="text-[11px] mt-2" style={{ color: '#b89a7e' }}>{metric.threshold}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="col-span-1 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold" style={{ color: '#173634' }}>Últimos reportes IA</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#9ca9a3' }}>Señales recientes para decisión</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {recentReports.length === 0 ? (
+              <div className="text-xs rounded-lg p-3" style={{ background: '#f8fbfa', color: '#9ca9a3', border: '1px dashed #dbe7e3' }}>
+                No hay reportes aún.
+              </div>
+            ) : (
+              recentReports.map(report => (
+                <div key={report.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
+                  <div className="text-[12px] font-semibold leading-snug" style={{ color: '#173634' }}>{report.title}</div>
+                  <div className="text-[11px] mt-1 line-clamp-3" style={{ color: '#9ca9a3' }}>{report.summary || 'Sin resumen disponible.'}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Director Ranking + Sales Chart */}
