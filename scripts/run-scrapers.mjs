@@ -47,18 +47,14 @@ if (!supabaseUrl || !serviceRoleKey) {
 const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } })
 
 const SOURCES = SOURCE_ARG === 'all'
-  ? ['portal-inmobiliario', 'datainmobiliaria']
-  : SOURCE_ARG === 'portal' || SOURCE_ARG === 'portal-inmobiliario'
-    ? ['portal-inmobiliario']
-    : SOURCE_ARG === 'datainmobiliaria'
-      ? ['datainmobiliaria']
-      : [SOURCE_ARG]
+  ? ['vitacura']
+  : [SOURCE_ARG]
 
 async function callScrapeRoute(source) {
   const url = `${BASE_URL}/api/scrape/${source}`
-  const body = source === 'portal-inmobiliario'
+  const body = source === 'vitacura'
     ? { source: 'all', kind: 'all', limit: LIMIT }
-    : { source: 'vitacura', limit: LIMIT }
+    : { source: 'all', kind: 'all', limit: LIMIT }
 
   const response = await fetch(url, {
     method: 'POST',
@@ -82,20 +78,6 @@ async function callScrapeRoute(source) {
     throw new Error(`${source} returned ${response.status}: ${detail}`)
   }
 
-  return payload
-}
-
-async function dedupeProperties() {
-  const response = await fetch(`${BASE_URL}/api/maintenance/dedupe-properties`, {
-    method: 'POST',
-    headers: {
-      ...(INTERNAL_KEY ? { 'x-internal-key': INTERNAL_KEY } : {}),
-    },
-  })
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(payload?.error || `dedupe returned ${response.status}`)
-  }
   return payload
 }
 
@@ -144,12 +126,7 @@ async function main() {
   }
 
   if (AGGREGATE) {
-    try {
-      const dedupe = await dedupeProperties()
-      console.log(`[scrapers] dedupe merged=${dedupe.merged ?? 0} removed=${dedupe.removed ?? 0} survivors=${dedupe.survivors ?? 0}`)
-    } catch (error) {
-      console.error(`[scrapers] dedupe failed: ${error instanceof Error ? error.message : String(error)}`)
-    }
+    console.log('[scrapers] aggregate is handled by /api/scrape/vitacura')
   }
 
   printSummary(results)
