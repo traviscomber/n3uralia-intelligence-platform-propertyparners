@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { findBestDuplicateMatch, mergePropertyRecord, type PropertyLike } from '@/lib/property-dedupe'
+import { validateScraperAccess } from '@/lib/scrapers/route-auth'
 
 export const runtime = 'nodejs'
 
@@ -15,7 +16,10 @@ function getSupabaseClient() {
   return createSupabaseClient(supabaseUrl, supabaseKey)
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  const authResponse = validateScraperAccess(request)
+  if (authResponse) return authResponse
+
   try {
     const supabase = getSupabaseClient()
     const { data: rows, error } = await supabase

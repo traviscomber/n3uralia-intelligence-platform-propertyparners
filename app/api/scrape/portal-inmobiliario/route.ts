@@ -3,7 +3,10 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { parse } from 'node-html-parser'
 import puppeteer from 'puppeteer'
 import { persistScrapeHealthSnapshot } from '@/lib/scrape-health'
+import { validateScraperAccess } from '@/lib/scrapers/route-auth'
 import { buildPropertyDedupSignature, findBestDuplicateMatch, mergePropertyRecord, type PropertyLike } from '@/lib/property-dedupe'
+
+export const runtime = 'nodejs'
 
 type ScrapedProperty = {
   address: string
@@ -922,6 +925,9 @@ function dedupeProperties(rows: ScrapedProperty[]) {
 }
 
 export async function POST(request: Request) {
+  const authResponse = validateScraperAccess(request)
+  if (authResponse) return authResponse
+
   const body = await request.json().catch(() => ({})) as { source?: string }
   const source = body.source || new URL(request.url).searchParams.get('source') || 'all'
   const runAll = source === 'all'
