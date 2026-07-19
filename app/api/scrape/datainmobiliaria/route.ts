@@ -225,6 +225,10 @@ async function logScrapeRun(payload: ScrapeRunPayload) {
   }
 }
 
+function isGuestQuotaError(err: unknown) {
+  return err instanceof Error && /guest quota/i.test(err.message)
+}
+
 async function insertProperties(rows: ScrapedProperty[]) {
   const supabase = getSupabaseClient()
   const { data: existingRows } = await supabase
@@ -559,20 +563,36 @@ export async function POST(request: Request) {
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Data Inmobiliaria scrape failed'
+    const quotaLimited = isGuestQuotaError(err)
+    const status: ScrapeRunPayload['status'] = quotaLimited ? 'partial' : 'error'
 
-    await syncSourceStats('Data Inmobiliaria Vitacura', 10, 'error', 0, message)
+    await syncSourceStats('Data Inmobiliaria Vitacura', 10, quotaLimited ? 'active' : 'error', 0, message)
     await logScrapeRun({
       source,
-      status: 'error',
+      status,
       scraped_count: 0,
       inserted_count: 0,
       skipped_count: 0,
       error_count: 1,
-      source_breakdown: { runs: [], error: message },
+      source_breakdown: { runs: [], error: message, quota_limited: quotaLimited },
       started_at: startedAt,
       finished_at: new Date().toISOString(),
     })
     await persistScrapeHealthSnapshot()
+
+    if (quotaLimited) {
+      return NextResponse.json({
+        success: false,
+        quota_limited: true,
+        source,
+        scraped: 0,
+        inserted: 0,
+        skipped: 0,
+        runs: [],
+        errors: [message],
+        message: 'Data Inmobiliaria alcanzó la cuota de invitado. Se mantiene Vitacura con Portal como fuente principal.',
+      })
+    }
 
     return NextResponse.json({ error: message }, { status: 500 })
   }

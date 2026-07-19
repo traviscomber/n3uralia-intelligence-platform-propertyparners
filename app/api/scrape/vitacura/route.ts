@@ -54,6 +54,7 @@ export async function POST(request: Request) {
   const shouldRunDataInmobiliaria = source === 'all' || source === 'datainmobiliaria'
 
   const runs: Array<Record<string, unknown>> = []
+  const warnings: string[] = []
 
   try {
     if (shouldRunPortal) {
@@ -62,8 +63,13 @@ export async function POST(request: Request) {
     }
 
     if (shouldRunDataInmobiliaria) {
-      const dataInmobiliaria = await callRoute(baseUrl, '/api/scrape/datainmobiliaria', { source: 'vitacura', kind, limit }, token)
-      runs.push({ source: 'datainmobiliaria', ...dataInmobiliaria })
+      try {
+        const dataInmobiliaria = await callRoute(baseUrl, '/api/scrape/datainmobiliaria', { source: 'vitacura', kind, limit }, token)
+        runs.push({ source: 'datainmobiliaria', ...dataInmobiliaria })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Data Inmobiliaria scrape failed'
+        warnings.push(message)
+      }
     }
 
     const dedupe = await callRoute(baseUrl, '/api/maintenance/dedupe-properties', {}, token)
@@ -72,8 +78,10 @@ export async function POST(request: Request) {
       success: true,
       source: 'vitacura',
       focus: 'Vitacura sales only',
+      primary_source: 'portal_inmobiliario',
       kind,
       runs,
+      warnings,
       dedupe,
       startedAt,
       finishedAt: new Date().toISOString(),
