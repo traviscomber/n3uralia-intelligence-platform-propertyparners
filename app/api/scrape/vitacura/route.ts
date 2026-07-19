@@ -49,16 +49,19 @@ export async function POST(request: Request) {
   const limit = body.limit ?? 60
   const kind = body.kind || 'all'
   const startedAt = new Date().toISOString()
+  const routeSource = kind === 'all' ? 'all' : kind
+  const shouldRunPortal = source === 'all' || source === 'portal'
+  const shouldRunDataInmobiliaria = source === 'all' || source === 'datainmobiliaria'
 
   const runs: Array<Record<string, unknown>> = []
 
   try {
-    if (source === 'all' || source === 'portal') {
-      const portal = await callRoute(baseUrl, '/api/scrape/portal-inmobiliario', { source: 'all', kind, limit }, token)
+    if (shouldRunPortal) {
+      const portal = await callRoute(baseUrl, '/api/scrape/portal-inmobiliario', { source: routeSource, kind, limit }, token)
       runs.push({ source: 'portal_inmobiliario', ...portal })
     }
 
-    if (source === 'all' || source === 'datainmobiliaria') {
+    if (shouldRunDataInmobiliaria) {
       const dataInmobiliaria = await callRoute(baseUrl, '/api/scrape/datainmobiliaria', { source: 'vitacura', kind, limit }, token)
       runs.push({ source: 'datainmobiliaria', ...dataInmobiliaria })
     }
@@ -69,6 +72,7 @@ export async function POST(request: Request) {
       success: true,
       source: 'vitacura',
       focus: 'Vitacura sales only',
+      kind,
       runs,
       dedupe,
       startedAt,

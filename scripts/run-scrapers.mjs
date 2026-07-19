@@ -3,9 +3,11 @@
  * Vitacura scraper coordinator CLI.
  *
  * Usage:
- *   node scripts/run-scrapers.mjs                 # portal + datainmobiliaria
- *   node scripts/run-scrapers.mjs --source=portal  # only portal route
- *   node scripts/run-scrapers.mjs --aggregate      # also dedupe properties
+ *   node scripts/run-scrapers.mjs                          # portal + datainmobiliaria, all kinds
+ *   node scripts/run-scrapers.mjs --kind=houses             # only casas
+ *   node scripts/run-scrapers.mjs --kind=departments        # only departamentos
+ *   node scripts/run-scrapers.mjs --source=portal           # only portal route
+ *   node scripts/run-scrapers.mjs --source=datainmobiliaria # only Data Inmobiliaria route
  *
  * Required env:
  *   NEXT_PUBLIC_APP_URL
@@ -20,13 +22,9 @@ function getArg(name) {
   return flag ? flag.split('=').slice(1).join('=') : null
 }
 
-function hasFlag(name) {
-  return argv.includes(`--${name}`)
-}
-
 const SOURCE_ARG = getArg('source') || 'all'
+const KIND_ARG = getArg('kind') || 'all'
 const LIMIT = Number.parseInt(getArg('limit') || getArg('pages') || '60', 10)
-const AGGREGATE = hasFlag('aggregate')
 const OPERATION = getArg('operation') || 'venta'
 const BASE_URL = env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 const INTERNAL_KEY = env.APP_PASSWORD || env.NEXT_PUBLIC_APP_PASSWORD || env.SCRAPER_INTERNAL_KEY || ''
@@ -47,14 +45,20 @@ if (!supabaseUrl || !serviceRoleKey) {
 const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } })
 
 const SOURCES = SOURCE_ARG === 'all'
-  ? ['vitacura']
-  : [SOURCE_ARG]
+  ? [{ name: 'vitacura', route: 'vitacura' }]
+  : SOURCE_ARG === 'portal'
+    ? [{ name: 'portal_inmobiliario', route: 'portal-inmobiliario' }]
+    : SOURCE_ARG === 'datainmobiliaria'
+      ? [{ name: 'datainmobiliaria', route: 'datainmobiliaria' }]
+      : [{ name: SOURCE_ARG, route: SOURCE_ARG }]
 
-async function callScrapeRoute(source) {
-  const url = `${BASE_URL}/api/scrape/${source}`
-  const body = source === 'vitacura'
-    ? { source: 'all', kind: 'all', limit: LIMIT }
-    : { source: 'all', kind: 'all', limit: LIMIT }
+async function callScrapeRoute(target) {
+  const url = `${BASE_URL}/api/scrape/${target.route}`
+  const body = target.route === 'vitacura'
+    ? { source: SOURCE_ARG, kind: KIND_ARG, limit: LIMIT }
+    : target.route === 'portal-inmobiliario'
+      ? { source: KIND_ARG === 'all' ? 'all' : KIND_ARG, limit: LIMIT }
+      : { source: 'vitacura', kind: KIND_ARG, limit: LIMIT }
 
   const response = await fetch(url, {
     method: 'POST',
@@ -75,7 +79,7 @@ async function callScrapeRoute(source) {
 
   if (!response.ok) {
     const detail = typeof payload === 'object' && payload && 'error' in payload ? payload.error : text.slice(0, 200)
-    throw new Error(`${source} returned ${response.status}: ${detail}`)
+    throw new Error(`${target.name} returned ${response.status}: ${detail}`)
   }
 
   return payload
@@ -103,7 +107,7 @@ function printSummary(results) {
 }
 
 async function main() {
-  console.log(`[scrapers] vitacura coordinator | source=${SOURCE_ARG} limit=${LIMIT} aggregate=${AGGREGATE}`)
+  console.log(`[scrapers] vitacura coordinator | source=${SOURCE_ARG} kind=${KIND_ARG} limit=${LIMIT}`)
 
   const results = []
 
@@ -111,22 +115,18 @@ async function main() {
     try {
       const payload = await callScrapeRoute(source)
       results.push({
-        source,
+        source: source.name,
         scraped: payload.scraped ?? payload.found ?? 0,
         inserted: payload.inserted ?? 0,
         updated: payload.updated ?? 0,
         errors: payload.errors ?? [],
       })
-      console.log(`[scrapers] ${source} done`)
+      console.log(`[scrapers] ${source.name} done`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      results.push({ source, scraped: 0, inserted: 0, updated: 0, errors: [message] })
-      console.error(`[scrapers] ${source} failed: ${message}`)
+      results.push({ source: source.name, scraped: 0, inserted: 0, updated: 0, errors: [message] })
+      console.error(`[scrapers] ${source.name} failed: ${message}`)
     }
-  }
-
-  if (AGGREGATE) {
-    console.log('[scrapers] aggregate is handled by /api/scrape/vitacura')
   }
 
   printSummary(results)
