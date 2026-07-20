@@ -17,22 +17,46 @@ interface KPISnapshot {
   velocidad_venta: number
 }
 
+interface PropertyRow {
+  id: string
+  address: string
+  neighborhood: string | null
+  property_type: string | null
+  description: string | null
+  image_url: string | null
+  source: string | null
+  price_uf: number | null
+  area_m2: number | null
+  days_on_market: number | null
+  created_at: string
+}
+
 export default function DashboardHome() {
   const [kpis, setKpis] = useState<KPISnapshot[]>([])
+  const [properties, setProperties] = useState<PropertyRow[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchKPIs = async () => {
       try {
         const supabase = createClient()
-        const { data, error } = await supabase
-          .from('kpi_snapshots')
-          .select('*')
-          .order('period_date', { ascending: false })
-          .limit(6)
+        const [kpiRes, propertiesRes] = await Promise.all([
+          supabase
+            .from('kpi_snapshots')
+            .select('*')
+            .order('period_date', { ascending: false })
+            .limit(6),
+          supabase
+            .from('properties')
+            .select('id,address,neighborhood,property_type,description,image_url,source,price_uf,area_m2,days_on_market,created_at')
+            .order('created_at', { ascending: false })
+            .limit(300),
+        ])
 
-        if (error) throw error
-        setKpis(data || [])
+        if (kpiRes.error) throw kpiRes.error
+        if (propertiesRes.error) throw propertiesRes.error
+        setKpis(kpiRes.data || [])
+        setProperties((propertiesRes.data || []) as PropertyRow[])
       } catch (err) {
         console.error('Error fetching KPIs:', err)
       } finally {
@@ -46,6 +70,50 @@ export default function DashboardHome() {
   const latestKPI = kpis[0]
   const previousKPI = kpis[1] || null
   const chartData = [...kpis].reverse()
+  const propertyMetrics = useMemo(() => {
+    const rows = properties.filter((property) => {
+      const text = `${property.address || ''} ${property.neighborhood || ''} ${property.source || ''}`.toLowerCase()
+      return text.includes('vitacura')
+    })
+
+    const total = rows.length
+    const withImage = rows.filter((property) => Boolean(property.image_url)).length
+    const withDescription = rows.filter((property) => Boolean(property.description && property.description.trim())).length
+    const recent24h = rows.filter((property) => Date.now() - new Date(property.created_at).getTime() <= 24 * 60 * 60 * 1000).length
+    const recent7d = rows.filter((property) => Date.now() - new Date(property.created_at).getTime() <= 7 * 24 * 60 * 60 * 1000).length
+    const avgDays = total > 0 ? rows.reduce((sum, property) => sum + (property.days_on_market || 0), 0) / total : 0
+    const avgPricePerM2 = total > 0
+      ? rows.reduce((sum, property) => {
+          const area = property.area_m2 && property.area_m2 > 0 ? property.area_m2 : 0
+          const price = property.price_uf || 0
+          return sum + (area > 0 ? price / area : 0)
+        }, 0) / total
+      : 0
+    const houseCount = rows.filter((property) => (property.property_type || '').toLowerCase().includes('casa')).length
+    const departmentCount = rows.filter((property) => (property.property_type || '').toLowerCase().includes('depart')).length
+
+    return {
+      total,
+      withImage,
+      withDescription,
+      recent24h,
+      recent7d,
+      avgDays,
+      avgPricePerM2,
+      houseCount,
+      departmentCount,
+      sourceCount: new Set(rows.map((property) => property.source).filter(Boolean)).size,
+    }
+  }, [properties])
+  const imageCoverage = propertyMetrics.total > 0 ? Math.round((propertyMetrics.withImage / propertyMetrics.total) * 100) : 0
+  const descriptionCoverage = propertyMetrics.total > 0 ? Math.round((propertyMetrics.withDescription / propertyMetrics.total) * 100) : 0
+  const marketTone = propertyMetrics.total === 0
+    ? 'Sin data'
+    : imageCoverage >= 90 && descriptionCoverage >= 90
+      ? 'Cobertura fuerte'
+      : imageCoverage >= 75 && descriptionCoverage >= 75
+        ? 'Cobertura media'
+        : 'Cobertura baja'
   const executiveScore = useMemo(() => {
     if (!latestKPI) return null
     const salesComponent = Math.min(35, latestKPI.ventas_count * 1.8)
@@ -57,6 +125,35 @@ export default function DashboardHome() {
   }, [latestKPI, previousKPI])
   const salesDelta = latestKPI && previousKPI ? latestKPI.ventas_count - previousKPI.ventas_count : null
   const conversionDelta = latestKPI && previousKPI ? latestKPI.conversion_rate - previousKPI.conversion_rate : null
+
+  const audienceCards = useMemo(() => {
+    const coverageSignal = imageCoverage >= 90 && descriptionCoverage >= 90
+      ? 'Inventario muy sólido para lectura comercial'
+      : imageCoverage >= 75 && descriptionCoverage >= 75
+        ? 'Inventario utilizable, pero con huecos de calidad'
+        : 'Inventario con huecos de calidad que requieren limpieza'
+
+    return [
+      {
+        role: 'CEO',
+        title: 'Panel ejecutivo',
+        body: `${propertyMetrics.total} propiedades Vitacura, ${propertyMetrics.recent7d} recientes en 7 días y ${propertyMetrics.avgDays ? propertyMetrics.avgDays.toFixed(0) : '-'} días promedio en mercado.`,
+        note: `Prioridad: ${coverageSignal}.`,
+      },
+      {
+        role: 'Director',
+        title: 'Gestión de equipo',
+        body: `${propertyMetrics.sourceCount} fuentes activas, mix ${propertyMetrics.houseCount} casas / ${propertyMetrics.departmentCount} deptos y ${propertyMetrics.recent24h} entradas en 24h.`,
+        note: 'Prioriza seguimiento, dedupe y redistribución de foco por barrio.',
+      },
+      {
+        role: 'Vendedor',
+        title: 'Lectura táctica',
+        body: `Cobertura visual ${imageCoverage}% y descriptiva ${descriptionCoverage}%. Foco en fichas con mejor material para prospección.`,
+        note: `Promedio ${propertyMetrics.avgPricePerM2 ? propertyMetrics.avgPricePerM2.toFixed(1) : '-'} UF/m².`,
+      },
+    ]
+  }, [descriptionCoverage, imageCoverage, propertyMetrics])
 
   if (loading) {
     return (
@@ -140,6 +237,68 @@ export default function DashboardHome() {
           </div>
         </div>
       )}
+
+      <div className="rounded-lg p-6 border shadow-sm" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f8fbfa 100%)', borderColor: '#e5e7eb' }}>
+        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Market intelligence Vitacura</p>
+            <h2 className="mt-1 text-xl font-semibold text-gray-900">Inventario operativo de propiedades</h2>
+          </div>
+          <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}>
+            {marketTone}
+          </span>
+        </div>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb', borderLeft: '3px solid var(--n3-teal)' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Inventario</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{propertyMetrics.total}</p>
+            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>propiedades Vitacura visibles</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Nuevas 24h</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{propertyMetrics.recent24h}</p>
+            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>ingresos recientes</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Cobertura visual</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{imageCoverage}%</p>
+            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>fichas con imagen útil</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Cobertura descriptiva</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{descriptionCoverage}%</p>
+            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>fichas con descripcion</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Prom. días</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{propertyMetrics.avgDays ? propertyMetrics.avgDays.toFixed(0) : '-'}</p>
+            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>tiempo en mercado</p>
+          </div>
+          <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>UF/m2</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{propertyMetrics.avgPricePerM2 ? propertyMetrics.avgPricePerM2.toFixed(1) : '-'}</p>
+            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>promedio Vitacura</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {audienceCards.map((card) => (
+          <div key={card.role} className="rounded-lg border bg-white p-5 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>{card.role}</p>
+                <h3 className="mt-1 text-lg font-semibold text-gray-900">{card.title}</h3>
+              </div>
+              <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: '#f9fafb', color: 'var(--n3-teal)', border: '1px solid #e5e7eb' }}>
+                Vitacura
+              </span>
+            </div>
+            <p className="mt-4 text-sm leading-6" style={{ color: '#374151' }}>{card.body}</p>
+            <p className="mt-3 text-xs" style={{ color: '#6b7280' }}>{card.note}</p>
+          </div>
+        ))}
+      </div>
 
       {latestKPI && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

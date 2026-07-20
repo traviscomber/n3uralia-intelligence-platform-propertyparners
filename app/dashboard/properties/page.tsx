@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Search, X, Home, CheckCircle, AlertCircle, Download, ArrowUpRight, MapPin } from 'lucide-react'
 
@@ -132,6 +132,26 @@ function getDisplayTags(property: Property) {
     property.source || 'vitacura',
     property.listing_number || property.id,
   ].filter(Boolean) as string[]
+}
+
+function StatCard({
+  label,
+  value,
+  sub,
+  tone = '#111111',
+}: {
+  label: string
+  value: string
+  sub: string
+  tone?: string
+}) {
+  return (
+    <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: '#8c9691' }}>{label}</p>
+      <p className="mt-2 text-2xl font-bold tracking-tight" style={{ color: tone }}>{value}</p>
+      <p className="mt-1 text-xs leading-5" style={{ color: '#6b7280' }}>{sub}</p>
+    </div>
+  )
 }
 
 const EMPTY_FORM = {
@@ -310,6 +330,49 @@ export default function PropertiesPage() {
   const avgArea = properties.length > 0
     ? properties.reduce((sum, p) => sum + (Number.isFinite(p.area_m2) ? p.area_m2 : 0), 0) / properties.length
     : 0
+  const vitacuraMetrics = useMemo(() => {
+    const rows = properties.filter((property) => {
+      const text = normalizeText(`${property.address || ''} ${property.neighborhood || ''} ${property.source || ''}`)
+      return text.includes('vitacura')
+    })
+
+    const now = Date.now()
+    const recent24h = rows.filter((property) => now - new Date(property.created_at).getTime() <= 24 * 60 * 60 * 1000)
+    const recent7d = rows.filter((property) => now - new Date(property.created_at).getTime() <= 7 * 24 * 60 * 60 * 1000)
+    const withImage = rows.filter((property) => Boolean(property.image_url)).length
+    const withDescription = rows.filter((property) => Boolean(property.description && property.description.trim())).length
+    const sourceCount = new Set(rows.map((property) => property.source).filter(Boolean)).size
+    const avgDaysOnMarket = rows.length > 0
+      ? rows.reduce((sum, property) => sum + (Number.isFinite(property.days_on_market) ? property.days_on_market : 0), 0) / rows.length
+      : 0
+    const avgPricePerM2 = rows.length > 0
+      ? rows.reduce((sum, property) => {
+          const area = Number.isFinite(property.area_m2) && property.area_m2 > 0 ? property.area_m2 : 0
+          const price = Number.isFinite(property.price_uf) ? property.price_uf : 0
+          return sum + (area > 0 ? price / area : 0)
+        }, 0) / rows.length
+      : 0
+    const houseCount = rows.filter((property) => (property.property_type || '').toLowerCase().includes('casa')).length
+    const departmentCount = rows.filter((property) => (property.property_type || '').toLowerCase().includes('depart')).length
+
+    return {
+      total: rows.length,
+      recent24h: recent24h.length,
+      recent7d: recent7d.length,
+      withImage,
+      withDescription,
+      sourceCount,
+      avgDaysOnMarket,
+      avgPricePerM2,
+      houseCount,
+      departmentCount,
+    }
+  }, [properties])
+  const imageCoverage = vitacuraMetrics.total > 0 ? Math.round((vitacuraMetrics.withImage / vitacuraMetrics.total) * 100) : 0
+  const descriptionCoverage = vitacuraMetrics.total > 0 ? Math.round((vitacuraMetrics.withDescription / vitacuraMetrics.total) * 100) : 0
+  const mixRatio = vitacuraMetrics.total > 0
+    ? `${Math.round((vitacuraMetrics.houseCount / vitacuraMetrics.total) * 100)}% casas · ${Math.round((vitacuraMetrics.departmentCount / vitacuraMetrics.total) * 100)}% deptos`
+    : 'Sin mix'
 
   return (
     <div className="space-y-6 pb-10">
@@ -367,6 +430,45 @@ export default function PropertiesPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <StatCard
+          label="Inventario Vitacura"
+          value={String(vitacuraMetrics.total)}
+          sub="fichas visibles en la vista"
+          tone="var(--n3-teal)"
+        />
+        <StatCard
+          label="Nuevas 24h"
+          value={String(vitacuraMetrics.recent24h)}
+          sub="propiedades sincronizadas hoy"
+          tone="#111111"
+        />
+        <StatCard
+          label="Nuevas 7d"
+          value={String(vitacuraMetrics.recent7d)}
+          sub="flujo reciente de mercado"
+          tone="#111111"
+        />
+        <StatCard
+          label="Cobertura visual"
+          value={`${imageCoverage}%`}
+          sub="propiedades con imagen utilizable"
+          tone={imageCoverage >= 90 ? 'var(--n3-teal)' : imageCoverage >= 75 ? '#d97706' : '#dc2626'}
+        />
+        <StatCard
+          label="Cobertura descriptiva"
+          value={`${descriptionCoverage}%`}
+          sub="propiedades con descripcion legible"
+          tone={descriptionCoverage >= 90 ? 'var(--n3-teal)' : descriptionCoverage >= 75 ? '#d97706' : '#dc2626'}
+        />
+        <StatCard
+          label="Mix operativo"
+          value={mixRatio}
+          sub={`${vitacuraMetrics.sourceCount} fuentes activas · prom. ${vitacuraMetrics.avgDaysOnMarket ? vitacuraMetrics.avgDaysOnMarket.toFixed(0) : '-'} dias · ${vitacuraMetrics.avgPricePerM2 ? vitacuraMetrics.avgPricePerM2.toFixed(1) : '-'} UF/m²`}
+          tone="#111111"
+        />
       </div>
 
       {/* Header */}
