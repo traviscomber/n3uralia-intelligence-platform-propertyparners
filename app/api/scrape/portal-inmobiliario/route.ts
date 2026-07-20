@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createHash } from 'crypto'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { parse } from 'node-html-parser'
 import puppeteer from 'puppeteer'
@@ -177,6 +178,14 @@ function hashLike(input: string) {
   return hash.toString(36)
 }
 
+function makeExternalId(source: string, rawKey: string, fallbackKey = '') {
+  const sourceToken = normalizeSourceToken(source)
+  const base = [sourceToken, rawKey, fallbackKey].filter(Boolean).join('|')
+  if (base.length <= 180) return base.slice(0, 200)
+  const digest = createHash('sha1').update(base).digest('hex')
+  return `${sourceToken}|${digest}`
+}
+
 function normalizeSourceToken(value: string) {
   return normalizeText(value).replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
 }
@@ -339,7 +348,7 @@ async function scrapePortalListings(
           lng: sector.lng + (Math.random() - 0.5) * 0.002,
           days_on_market: Math.floor(Math.random() * 90) + 5,
           source,
-          external_id: `${source}|${sourceUrl}|${listingNumber}`,
+          external_id: makeExternalId(source, sourceUrl, listingNumber),
           property_type: propertyType,
           source_url: sourceUrl,
           image_url: card.image ? new URL(card.image, url).href : null,
@@ -453,7 +462,7 @@ async function scrapeToctocListings(
       lng: sector.lng + (Math.random() - 0.5) * 0.0015,
       days_on_market: Math.floor(Math.random() * 60) + 3,
       source,
-      external_id: `${source}|${item.url || hashLike(`${item.name || ''}|${neighborhood}`)}`,
+      external_id: makeExternalId(source, item.url || hashLike(`${item.name || ''}|${neighborhood}`)),
       property_type: propertyType,
       source_url: item.url || urls[0] || null,
       image_url: null,
@@ -537,7 +546,7 @@ async function scrapeIcasasListings(
         lng: card.lng ? Number.parseFloat(card.lng) : sector.lng + (Math.random() - 0.5) * 0.0015,
         days_on_market: Math.floor(Math.random() * 70) + 4,
         source,
-        external_id: `${source}|${card.href || hashLike(`${card.title}|${card.address}|${card.price}`)}`,
+        external_id: makeExternalId(source, card.href || hashLike(`${card.title}|${card.address}|${card.price}`)),
         property_type: propertyType,
         source_url: card.href ? new URL(card.href, searchUrl).href : searchUrl,
         image_url: null,
@@ -609,7 +618,7 @@ async function scrapeYapoListings(limit = 20) {
         lng: sector.lng + (Math.random() - 0.5) * 0.0012,
         days_on_market: Math.floor(Math.random() * 80) + 3,
         source: 'yapo_search',
-        external_id: `yapo_search|${href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`)}`,
+        external_id: makeExternalId('yapo_search', href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`)),
         property_type: 'departamento',
         source_url: href ? new URL(href, searchUrl).href : searchUrl,
         image_url: null,
@@ -707,7 +716,7 @@ async function scrapeChilePropiedadesDetail(
     lng: sector.lng + (Math.random() - 0.5) * 0.0013,
     days_on_market: daysOnMarket,
     source,
-    external_id: `${source}|${url}`,
+    external_id: makeExternalId(source, url),
     property_type: propertyType,
     source_url: url,
     image_url: imageUrl,
@@ -806,12 +815,25 @@ async function insertProperties(rows: ScrapedProperty[]) {
     .select('id,address,neighborhood,property_type,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
 
   const inventory = ((existingRows || []) as Array<PropertyLike & { id: string }>)
+  const existingByExternalId = new Map<string, PropertyLike & { id: string }>()
+  for (const row of inventory) {
+    if (row.external_id) {
+      existingByExternalId.set(row.external_id, row)
+    }
+  }
   let inserted = 0
   let updated = 0
+  let skipped = 0
   const errors: string[] = []
 
+  function isDuplicateExternalIdError(errorMessage: string) {
+    const lower = errorMessage.toLowerCase()
+    return lower.includes('duplicate key value violates unique constraint') && lower.includes('external_id')
+  }
+
   for (const row of rows) {
-    const match = findBestDuplicateMatch(inventory, row)
+    const exactMatch = row.external_id ? existingByExternalId.get(row.external_id) : null
+    const match = exactMatch ? { row: exactMatch, score: 200 } : findBestDuplicateMatch(inventory, row)
     if (match?.row?.id && match.score >= 90) {
       const merged = mergePropertyRecord(match.row, row)
       const { error } = await supabase.from('properties').update({
@@ -841,6 +863,9 @@ async function insertProperties(rows: ScrapedProperty[]) {
       updated += 1
       const index = inventory.findIndex((candidate) => candidate.id === match.row.id)
       if (index >= 0) inventory[index] = { ...match.row, ...merged }
+      if (row.external_id) {
+        existingByExternalId.set(row.external_id, { ...match.row, ...merged, id: match.row.id })
+      }
       continue
     }
 
@@ -866,6 +891,42 @@ async function insertProperties(rows: ScrapedProperty[]) {
     })
 
     if (error) {
+      if (isDuplicateExternalIdError(error.message) && row.external_id) {
+        const existing = existingByExternalId.get(row.external_id)
+        if (existing?.id) {
+          const merged = mergePropertyRecord(existing, row)
+          const { error: updateError } = await supabase.from('properties').update({
+            address: merged.address,
+            neighborhood: merged.neighborhood,
+            property_type: merged.property_type,
+            price_uf: merged.price_uf,
+            area_m2: merged.area_m2,
+            bedrooms: merged.bedrooms,
+            bathrooms: merged.bathrooms,
+            lat: merged.lat,
+            lng: merged.lng,
+            source: merged.source,
+            external_id: merged.external_id,
+            source_url: merged.source_url,
+            image_url: merged.image_url,
+            listing_number: merged.listing_number,
+            tags: merged.tags,
+            source_listing_id: merged.source_listing_id,
+          }).eq('id', existing.id)
+
+          if (updateError) {
+            errors.push(`${row.external_id}: ${updateError.message}`)
+            continue
+          }
+
+          updated += 1
+          const index = inventory.findIndex((candidate) => candidate.id === existing.id)
+          if (index >= 0) inventory[index] = { ...existing, ...merged, id: existing.id }
+          existingByExternalId.set(row.external_id, { ...existing, ...merged, id: existing.id })
+          continue
+        }
+      }
+
       errors.push(`${row.external_id}: ${error.message}`)
     } else {
       inserted += 1
@@ -873,10 +934,13 @@ async function insertProperties(rows: ScrapedProperty[]) {
         ...row,
         id: row.external_id,
       })
+      if (row.external_id) {
+        existingByExternalId.set(row.external_id, { ...row, id: row.external_id })
+      }
     }
   }
 
-  return { inserted: inserted + updated, errors }
+  return { inserted: inserted + updated, updated, skipped, errors }
 }
 
 function dedupeProperties(rows: ScrapedProperty[]) {
