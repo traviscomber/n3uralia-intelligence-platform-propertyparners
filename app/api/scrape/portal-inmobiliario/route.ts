@@ -166,6 +166,49 @@ function hasForeignCommuneSignal(text: string) {
   return FOREIGN_COMMUNE_TERMS.some((term) => lower.includes(term))
 }
 
+function isLikelyPropertyImage(url: string | null | undefined) {
+  if (!url) return false
+  const lower = url.toLowerCase()
+  return !['logo', 'publisher', 'placeholder', 'avatar', 'icon', 'sprite'].some((term) => lower.includes(term))
+}
+
+async function resolveIcasasImageUrl(cardHref: string | null | undefined, searchUrl: string, fallbackImage: string | null | undefined): Promise<string | null> {
+  const fallback = fallbackImage && isLikelyPropertyImage(fallbackImage) ? fallbackImage : null
+
+  if (!cardHref) {
+    return fallback
+  }
+
+  try {
+    const response = await fetch(new URL(cardHref, searchUrl), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+    })
+
+    if (response.ok) {
+      const html = await response.text()
+      const root = parse(html)
+      const detailImage =
+        root.querySelector('meta[property="og:image:secure_url"]')?.getAttribute('content')
+        || root.querySelector('meta[property="og:image"]')?.getAttribute('content')
+        || root.querySelector('meta[name="twitter:image"]')?.getAttribute('content')
+        || root.querySelector('img[data-src]')?.getAttribute('data-src')
+        || root.querySelector('img[src]')?.getAttribute('src')
+        || null
+
+      if (isLikelyPropertyImage(detailImage)) {
+        return new URL(detailImage!, new URL(cardHref, searchUrl)).href
+      }
+    }
+  } catch {
+    // Fall back to the search card if the detail page is unavailable.
+  }
+
+  return fallback
+}
+
 async function canonicalizeSourceUrl(rawUrl: string | null | undefined, baseUrl?: string) {
   if (!rawUrl) return null
 
@@ -585,6 +628,11 @@ async function scrapeIcasasListings(
       return Array.from(elements).map((card) => {
         const title = card.querySelector('a.detail-redirection')?.textContent?.trim() ?? ''
         const href = card.querySelector('a.detail-redirection')?.getAttribute('href') ?? ''
+        const image =
+          card.querySelector('img')?.getAttribute('data-src')
+          || card.querySelector('img')?.getAttribute('src')
+          || card.querySelector('source')?.getAttribute('srcset')?.split(/\s+/)[0]
+          || ''
         const price = card.querySelector('.price')?.textContent?.trim() ?? ''
         const description = card.querySelector('.description')?.textContent?.trim() ?? ''
         const address = card.querySelector('[itemprop="streetAddress"] [itemprop="content"], [itemprop="streetAddress"] meta')?.getAttribute('content')
@@ -599,7 +647,7 @@ async function scrapeIcasasListings(
         const rooms = card.querySelector('.rooms')?.textContent?.trim() ?? ''
         const bathrooms = card.querySelector('.bathrooms')?.textContent?.trim() ?? ''
 
-        return { title, href, price, description, address, locality, lat, lng, area, rooms, bathrooms }
+        return { title, href, image, price, description, address, locality, lat, lng, area, rooms, bathrooms }
       })
     })
 
@@ -630,7 +678,7 @@ async function scrapeIcasasListings(
         external_id: makeExternalId(source, card.href || hashLike(`${card.title}|${card.address}|${card.price}`)),
         property_type: propertyType,
         source_url: await canonicalizeSourceUrl(card.href ? new URL(card.href, searchUrl).href : searchUrl, searchUrl),
-        image_url: null,
+        image_url: await resolveIcasasImageUrl(card.href, searchUrl, card.image ? new URL(card.image, searchUrl).href : null),
         listing_number: makeListingNumber(source, propertyType, results.length),
         tags: makeTags({
           propertyType,
