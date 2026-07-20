@@ -3,6 +3,7 @@ export type PropertyLike = {
   address: string
   neighborhood: string | null
   property_type: string | null
+  description: string | null
   price_uf: number | null
   area_m2: number | null
   bedrooms: number | null
@@ -92,6 +93,7 @@ function scoreCompleteness(row: PropertyLike) {
   return [
     row.source_url ? 1 : 0,
     row.image_url ? 1 : 0,
+    row.description ? 1 : 0,
     row.listing_number ? 1 : 0,
     row.source_listing_id ? 1 : 0,
     row.tags?.length ? 1 : 0,
@@ -180,6 +182,7 @@ export function mergePropertyRecord<T extends PropertyLike>(existing: T, incomin
     address: incoming.address || existing.address,
     neighborhood: incoming.neighborhood || existing.neighborhood,
     property_type: incoming.property_type || existing.property_type,
+    description: incoming.description || existing.description,
     price_uf: incoming.price_uf ?? existing.price_uf,
     area_m2: incoming.area_m2 ?? existing.area_m2,
     bedrooms: incoming.bedrooms ?? existing.bedrooms,

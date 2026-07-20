@@ -9,6 +9,7 @@ interface Property {
   address: string
   neighborhood: string
   property_type: string
+  description?: string | null
   listing_number?: string | null
   source_url?: string | null
   image_url?: string | null
@@ -293,6 +294,7 @@ export default function PropertiesPage() {
     const matchSearch = normalizedSearch === ''
       || p.address.toLowerCase().includes(normalizedSearch)
       || p.neighborhood.toLowerCase().includes(normalizedSearch)
+      || (p.description || '').toLowerCase().includes(normalizedSearch)
       || tagText.includes(normalizedSearch)
     const matchTag = normalizedTagQuery === '' || tagText.includes(normalizedTagQuery)
     const matchStatus = filterStatus === 'all' || p.status === filterStatus
@@ -752,6 +754,7 @@ export default function PropertiesPage() {
                       <td className="px-4 py-4 font-medium text-gray-900 max-w-[220px] align-top">
                         <div className="flex flex-col gap-1">
                           <span className="truncate">{p.address}</span>
+                          {p.description ? <span className="line-clamp-2 text-xs font-normal text-gray-500">{p.description}</span> : null}
                           <span className="text-xs text-gray-500">{p.listing_number || p.id}</span>
                         </div>
                       </td>

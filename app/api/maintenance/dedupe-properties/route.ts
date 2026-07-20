@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const supabase = getSupabaseClient()
     const { data: rows, error } = await supabase
       .from('properties')
-      .select('id,address,neighborhood,property_type,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
+      .select('id,address,neighborhood,property_type,description,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
       .order('created_at', { ascending: true })
 
     if (error) {
@@ -74,6 +74,7 @@ export async function POST(request: Request) {
           address: merged.address,
           neighborhood: merged.neighborhood,
           property_type: merged.property_type,
+          description: merged.description,
           price_uf: merged.price_uf,
           area_m2: merged.area_m2,
           bedrooms: merged.bedrooms,

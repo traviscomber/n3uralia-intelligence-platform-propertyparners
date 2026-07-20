@@ -9,6 +9,7 @@ export const runtime = 'nodejs'
 
 type ScrapedProperty = {
   address: string
+  description: string | null
   price_uf: number
   area_m2: number
   bedrooms: number
@@ -233,7 +234,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
   const supabase = getSupabaseClient()
   const { data: existingRows } = await supabase
     .from('properties')
-    .select('id,address,neighborhood,property_type,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
+    .select('id,address,neighborhood,property_type,description,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
 
   const inventory = ((existingRows || []) as Array<PropertyLike & { id: string }>)
   let inserted = 0
@@ -248,6 +249,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
         address: merged.address,
         neighborhood: merged.neighborhood,
         property_type: merged.property_type,
+        description: merged.description,
         price_uf: merged.price_uf,
         area_m2: merged.area_m2,
         bedrooms: merged.bedrooms,
@@ -277,6 +279,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
     const { error } = await supabase.from('properties').insert({
       address: row.address,
       neighborhood: row.neighborhood,
+      description: row.description,
       price_uf: row.price_uf,
       area_m2: row.area_m2,
       bedrooms: row.bedrooms,
@@ -326,6 +329,7 @@ function dedupeProperties(rows: ScrapedProperty[]) {
     const score = [
       row.source_url,
       row.image_url,
+      row.description,
       row.listing_number,
       row.source_listing_id,
       row.tags?.length,
@@ -336,6 +340,7 @@ function dedupeProperties(rows: ScrapedProperty[]) {
     const currentScore = [
       current.source_url,
       current.image_url,
+      current.description,
       current.listing_number,
       current.source_listing_id,
       current.tags?.length,
@@ -470,10 +475,14 @@ async function scrapeDatainmobiliariaVitacura(limit = 60, kind: 'houses' | 'depa
           String(detailData?.image_url || detailData?.foto || detailData?.url_foto || detailData?.imagen || '')
             .trim() || null
         const sourceUrl = `${MAPA_URL}?cod_com=${codCom}&cod_mz=${codMz}&cod_pr=${codPr}`
+        const description =
+          String(detailData?.descripcion || detailData?.observaciones || detailData?.detalle || detailData?.glosa || row.destino || '')
+            .trim() || null
         const listingNumber = makeListingNumber('datainmobiliaria_vitacura', propertyType, results.length)
 
         const normalized: ScrapedProperty = {
           address,
+          description,
           price_uf: Math.max(0, Math.round(priceUf)),
           area_m2: Math.max(0, areaM2),
           bedrooms,

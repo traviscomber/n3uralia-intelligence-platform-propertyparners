@@ -11,6 +11,7 @@ export const runtime = 'nodejs'
 
 type ScrapedProperty = {
   address: string
+  description: string | null
   price_uf: number
   area_m2: number
   bedrooms: number
@@ -113,6 +114,21 @@ const SECTORS = [
   { keys: ['vitacura', 'av vitacura', 'americo vespucio'], lat: -33.3900, lng: -70.5980, name: 'Vitacura Centro' },
 ]
 
+const FOREIGN_COMMUNE_TERMS = [
+  'cerrillos',
+  'macul',
+  'quinta normal',
+  'la florida',
+  'puente alto',
+  'san pedro de la paz',
+  'puerto montt',
+  'san miguel',
+  'providencia',
+  'nunoa',
+  'ñuñoa',
+  'lo barnechea',
+]
+
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -125,11 +141,68 @@ function getSupabaseClient() {
 }
 
 function sectorFromText(text: string, idx: number) {
-  const lower = text.toLowerCase()
+  const lower = normalizeText(text)
   for (const sector of SECTORS) {
     if (sector.keys.some((key) => lower.includes(key))) return sector
   }
-  return SECTORS[idx % SECTORS.length]
+  return null
+}
+
+function resolveVitacuraSector(text: string) {
+  const lower = normalizeText(text)
+  for (const sector of SECTORS) {
+    if (sector.keys.some((key) => lower.includes(key))) return sector
+  }
+
+  if (lower.includes('vitacura')) {
+    return SECTORS.find((sector) => sector.name === 'Vitacura Centro') || null
+  }
+
+  return null
+}
+
+function hasForeignCommuneSignal(text: string) {
+  const lower = normalizeText(text)
+  return FOREIGN_COMMUNE_TERMS.some((term) => lower.includes(term))
+}
+
+async function canonicalizeSourceUrl(rawUrl: string | null | undefined, baseUrl?: string) {
+  if (!rawUrl) return null
+
+  try {
+    const resolved = new URL(rawUrl, baseUrl)
+    const host = resolved.hostname.toLowerCase()
+
+    if (host.includes('click1.portalinmobiliario.com')) {
+      try {
+        const response = await fetch(resolved.href, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            Accept: 'text/html,application/xhtml+xml',
+          },
+        })
+
+        if (response.url) {
+          const finalUrl = new URL(response.url)
+          finalUrl.hash = ''
+          finalUrl.search = ''
+          return finalUrl.href
+        }
+      } catch {
+        // Fall through to the resolved URL.
+      }
+    }
+
+    resolved.hash = ''
+    if (host.includes('portalinmobiliario.com')) {
+      resolved.search = ''
+    }
+    return resolved.href
+  } catch {
+    return rawUrl.trim() || null
+  }
 }
 
 function parseUF(text: string): number | null {
@@ -256,7 +329,7 @@ function benchmarkPriceForNeighborhood(
 ) {
   const match = benchmarks.find((row) => row.neighborhood?.toLowerCase() === neighborhood.toLowerCase())
   const basePrice = match?.avg_price_m2_uf || benchmarks[0]?.avg_price_m2_uf || 85
-  const sector = sectorFromText(neighborhood, idx)
+  const sector = resolveVitacuraSector(neighborhood) || SECTORS.find((row) => row.name === 'Vitacura Centro') || SECTORS[0]
   const normalizedBase = Number.isFinite(basePrice) ? basePrice : 85
   return Math.max(900, Math.round(areaM2 * normalizedBase + (sector.lat + sector.lng) * 0))
 }
@@ -315,6 +388,9 @@ async function scrapePortalListings(
       for (let i = 0; i < cards.length && results.length < maxResults; i += 1) {
         const card = cards[i]
         if (!card.address || card.address.length < 5) continue
+        if (hasForeignCommuneSignal(card.address) && !resolveVitacuraSector(card.address)) continue
+        const sector = resolveVitacuraSector(`${card.address} ${card.title}`)
+        if (!sector) continue
 
         const priceUf = parseUF(card.price)
         if (!priceUf || priceUf < 1000 || priceUf > 200000) continue
@@ -327,8 +403,7 @@ async function scrapePortalListings(
         const bathrooms = bathMatch ? parseRange(bathMatch[1]) : 2
         const areaM2 = areaMatch ? parseArea(areaMatch[0]) : 90
 
-        const sector = sectorFromText(card.address, results.length)
-        const sourceUrl = card.link ? new URL(card.link, url).href : url
+        const sourceUrl = await canonicalizeSourceUrl(card.link ? new URL(card.link, url).href : url, url) || url
         const listingNumber = card.listingNumber || makeListingNumber(source, propertyType, results.length)
         const tags = makeTags({
           propertyType,
@@ -339,6 +414,7 @@ async function scrapePortalListings(
         })
         results.push({
           address: `${card.title} - ${card.address}`.slice(0, 200),
+          description: card.attrs || card.title || null,
           price_uf: priceUf,
           area_m2: Math.max(30, Math.min(areaM2, 500)),
           bedrooms: Math.max(1, Math.min(bedrooms, 6)),
@@ -445,14 +521,17 @@ async function scrapeToctocListings(
   for (let i = 0; i < listings.length && results.length < limit; i += 1) {
     const item = listings[i]
     const neighborhood = item.address?.addressLocality || 'Vitacura Centro'
-    const sector = sectorFromText(`${neighborhood} ${item.name || ''}`, i)
+    const sector = resolveVitacuraSector(`${neighborhood} ${item.name || ''}`)
+    if (!sector) continue
     const bedrooms = item.numberOfBedrooms ? Number.parseInt(item.numberOfBedrooms, 10) || 2 : 2
     const bathrooms = item.numberOfBathroomsTotal ? Number.parseInt(item.numberOfBathroomsTotal, 10) || 2 : 2
     const areaM2 = Math.max(45, bedrooms * 35 + bathrooms * 10 + (i % 3) * 7)
     const priceUf = benchmarkPriceForNeighborhood(sector.name, benchmarks, areaM2, i)
+    const sourceUrl = await canonicalizeSourceUrl(item.url || urls[0] || null, urls[0] || undefined) || item.url || urls[0] || null
 
     results.push({
       address: `${item.name || 'TOCTOC listing'} - ${neighborhood}`.slice(0, 200),
+      description: item.name || null,
       price_uf: priceUf,
       area_m2: areaM2,
       bedrooms,
@@ -464,7 +543,7 @@ async function scrapeToctocListings(
       source,
       external_id: makeExternalId(source, item.url || hashLike(`${item.name || ''}|${neighborhood}`)),
       property_type: propertyType,
-      source_url: item.url || urls[0] || null,
+      source_url: sourceUrl,
       image_url: null,
       listing_number: makeListingNumber(source, propertyType, results.length),
       tags: makeTags({
@@ -526,17 +605,19 @@ async function scrapeIcasasListings(
 
     for (let i = 0; i < cards.length && results.length < limit; i += 1) {
       const card = cards[i]
-      const combinedText = `${card.title} ${card.description} ${card.address} ${card.locality}`
+      const combinedText = `${card.address} ${card.locality} ${card.title}`
       const priceUf = parseUF(card.price)
       const areaMatch = card.area.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
       const bedrooms = parseRange(card.rooms || '2')
       const bathrooms = parseRange(card.bathrooms || '2')
-      const sector = sectorFromText(combinedText, i)
+      const sector = resolveVitacuraSector(combinedText)
+      if (!sector) continue
 
       if (!priceUf || priceUf < 1000 || priceUf > 200000) continue
 
       results.push({
         address: `${card.title || 'icasas listing'} - ${card.address || card.locality || sector.name}`.slice(0, 200),
+        description: card.description || card.title || null,
         price_uf: priceUf,
         area_m2: areaMatch ? Math.max(30, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (i % 5) * 12, 500)),
         bedrooms: Math.max(1, Math.min(Number.isFinite(bedrooms) ? bedrooms : 2, 6)),
@@ -548,7 +629,7 @@ async function scrapeIcasasListings(
         source,
         external_id: makeExternalId(source, card.href || hashLike(`${card.title}|${card.address}|${card.price}`)),
         property_type: propertyType,
-        source_url: card.href ? new URL(card.href, searchUrl).href : searchUrl,
+        source_url: await canonicalizeSourceUrl(card.href ? new URL(card.href, searchUrl).href : searchUrl, searchUrl),
         image_url: null,
         listing_number: makeListingNumber(source, propertyType, results.length),
         tags: makeTags({
@@ -588,8 +669,8 @@ async function scrapeYapoListings(limit = 20) {
     const html = await response.text()
     const root = parse(html)
 
-    root.querySelectorAll('.d3-ad-tile').some((tile) => {
-      if (results.length >= limit) return true
+    for (const tile of root.querySelectorAll('.d3-ad-tile')) {
+      if (results.length >= limit) break
 
       const title = tile.querySelector('.d3-ad-tile__title')?.text.trim() || ''
       const description = tile.querySelector('.d3-ad-tile__short-description')?.text.trim() || ''
@@ -603,12 +684,14 @@ async function scrapeYapoListings(limit = 20) {
       const areaMatch = details[0]?.match(/(\d+(?:[.,]\d+)?)\s*m2/i)
       const bedroomsMatch = details[1]
       const bathroomsMatch = details[3]
-      const sector = sectorFromText(`${title} ${description} ${location}`, results.length)
+      const sector = resolveVitacuraSector(`${location} ${title}`)
+      if (!sector) continue
 
-      if (!priceUf || priceUf < 1000 || priceUf > 200000) return
+      if (!priceUf || priceUf < 1000 || priceUf > 200000) continue
 
       results.push({
         address: `${title || 'Yapo listing'} - ${location || sector.name}`.slice(0, 200),
+        description: description || title || null,
         price_uf: priceUf,
         area_m2: areaMatch ? Math.max(25, Math.min(Math.round(Number.parseFloat(areaMatch[1].replace(',', '.'))), 500)) : Math.max(30, Math.min(90 + (results.length % 4) * 10, 500)),
         bedrooms: Math.max(1, Math.min(Number.parseInt(bedroomsMatch || '2', 10) || 2, 6)),
@@ -620,7 +703,7 @@ async function scrapeYapoListings(limit = 20) {
         source: 'yapo_search',
         external_id: makeExternalId('yapo_search', href || hashLike(`${title}|${location}|${priceText}|${details.join('|')}`)),
         property_type: 'departamento',
-        source_url: href ? new URL(href, searchUrl).href : searchUrl,
+        source_url: await canonicalizeSourceUrl(href ? new URL(href, searchUrl).href : searchUrl, searchUrl),
         image_url: null,
         listing_number: makeListingNumber('yapo_search', 'departamento', results.length),
         tags: makeTags({
@@ -632,8 +715,7 @@ async function scrapeYapoListings(limit = 20) {
         }),
         source_listing_id: href || null,
       })
-      return false
-    })
+    }
   }
 
   return results
@@ -699,7 +781,8 @@ async function scrapeChilePropiedadesDetail(
   const daysOnMarket = datePosted
     ? Math.max(1, Math.round((Date.now() - new Date(datePosted).getTime()) / (1000 * 60 * 60 * 24)))
     : 18
-  const sector = sectorFromText(`${title} ${address.streetAddress || ''} ${address.addressLocality || ''} ${metaDescription}`, idx)
+  const sector = resolveVitacuraSector(`${address.streetAddress || ''} ${address.addressLocality || ''} ${title}`)
+  if (!sector) return null
 
   if (!priceUf || priceUf < 1000 || priceUf > 200000) {
     throw new Error(`Chilepropiedades price missing for ${url}`)
@@ -707,6 +790,7 @@ async function scrapeChilePropiedadesDetail(
 
   return {
     address: `${title} - ${String(address.streetAddress || address.addressLocality || sector.name)}`.slice(0, 200),
+    description: description || metaDescription || null,
     price_uf: priceUf,
     area_m2: Math.max(30, Math.min(Math.round(usefulArea || totalArea || 90), 500)),
     bedrooms: Math.max(1, Math.min(bedrooms, 6)),
@@ -718,7 +802,7 @@ async function scrapeChilePropiedadesDetail(
     source,
     external_id: makeExternalId(source, url),
     property_type: propertyType,
-    source_url: url,
+    source_url: await canonicalizeSourceUrl(url, url),
     image_url: imageUrl,
     listing_number: makeListingNumber(source, propertyType, idx),
     tags: makeTags({
@@ -770,7 +854,9 @@ async function scrapeChilePropiedadesListings(
       if (!itemUrl) continue
 
       const detail = await scrapeChilePropiedadesDetail(itemUrl, String(item.name || ''), results.length, source, propertyType)
-      results.push(detail)
+      if (detail) {
+        results.push(detail)
+      }
     }
   }
 
@@ -812,7 +898,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
   const supabase = getSupabaseClient()
   const { data: existingRows } = await supabase
     .from('properties')
-    .select('id,address,neighborhood,property_type,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
+    .select('id,address,neighborhood,property_type,description,price_uf,area_m2,bedrooms,bathrooms,lat,lng,source,source_url,image_url,listing_number,tags,source_listing_id,external_id')
 
   const inventory = ((existingRows || []) as Array<PropertyLike & { id: string }>)
   const existingByExternalId = new Map<string, PropertyLike & { id: string }>()
@@ -840,6 +926,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
         address: merged.address,
         neighborhood: merged.neighborhood,
         property_type: merged.property_type,
+        description: merged.description,
         price_uf: merged.price_uf,
         area_m2: merged.area_m2,
         bedrooms: merged.bedrooms,
@@ -872,6 +959,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
     const { error } = await supabase.from('properties').insert({
       address: row.address,
       neighborhood: row.neighborhood,
+      description: row.description,
       price_uf: row.price_uf,
       area_m2: row.area_m2,
       bedrooms: row.bedrooms,
@@ -899,6 +987,7 @@ async function insertProperties(rows: ScrapedProperty[]) {
             address: merged.address,
             neighborhood: merged.neighborhood,
             property_type: merged.property_type,
+            description: merged.description,
             price_uf: merged.price_uf,
             area_m2: merged.area_m2,
             bedrooms: merged.bedrooms,
@@ -960,6 +1049,7 @@ function dedupeProperties(rows: ScrapedProperty[]) {
     const score = [
       row.source_url,
       row.image_url,
+      row.description,
       row.listing_number,
       row.source_listing_id,
       row.tags?.length,
@@ -970,6 +1060,7 @@ function dedupeProperties(rows: ScrapedProperty[]) {
     const currentScore = [
       current.source_url,
       current.image_url,
+      current.description,
       current.listing_number,
       current.source_listing_id,
       current.tags?.length,
