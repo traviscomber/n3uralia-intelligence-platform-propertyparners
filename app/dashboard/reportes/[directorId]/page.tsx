@@ -21,13 +21,15 @@ export default async function DirectorReportDetailPage({
   params,
   searchParams,
 }: {
-  params: { directorId: string }
-  searchParams?: { week_start?: string }
+  params: Promise<{ directorId: string }>
+  searchParams?: Promise<{ week_start?: string }>
 }) {
-  const directorId = decodeURIComponent(params.directorId)
+  const { directorId: encodedDirectorId } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const directorId = decodeURIComponent(encodedDirectorId)
   const supabase = await createClient()
   const bundle = await loadDirectorReportBundle(supabase, directorId)
-  const requestedWeekStart = searchParams?.week_start ? decodeURIComponent(searchParams.week_start) : null
+  const requestedWeekStart = resolvedSearchParams?.week_start ? decodeURIComponent(resolvedSearchParams.week_start) : null
 
   if (!bundle.latestReport && !bundle.reports.length) {
     notFound()

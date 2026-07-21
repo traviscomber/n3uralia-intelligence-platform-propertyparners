@@ -1,0 +1,2348 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-21T20:33:17.093Z",
+  "scope": {
+    "commune": "Vitacura",
+    "operation": "Venta",
+    "propertyTypes": [
+      "Casa",
+      "Departamento"
+    ],
+    "excludedOperations": [
+      "Arriendo"
+    ],
+    "piiIncluded": false
+  },
+  "sourceInventory": {
+    "workbookCount": 84,
+    "periodStart": "2025-01",
+    "periodEnd": "2026-06",
+    "monthlyOperationalStart": "2026-01",
+    "aprilFortnightIncluded": true,
+    "workbooks": [
+      {
+        "file": "Datos 2025/raw/captaciones_vigentes_y_vendidas_dic_2025.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 218
+      },
+      {
+        "file": "Datos 2025/raw/leads_2025.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 4023
+      },
+      {
+        "file": "Datos 2025/raw/propiedades_suspendidas_2025.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 118
+      },
+      {
+        "file": "Datos 2025/raw/requerimientos_por_propiedades_2025.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 5069
+      },
+      {
+        "file": "Datos 2025/raw/resumen_ventas_2025_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 61
+      },
+      {
+        "file": "Datos 2025/raw/total_cartera_cierre_2025.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 725
+      },
+      {
+        "file": "Datos 2025/raw/ventas_2025_vitacura_con_vendedor.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 61
+      },
+      {
+        "file": "Datos 2025/raw/ventas_2025_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 61
+      },
+      {
+        "file": "Datos 2025/raw/visitas_agendadas_2025.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 3993
+      },
+      {
+        "file": "Datos 202601/raw/captadas_enero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 35
+      },
+      {
+        "file": "Datos 202601/raw/cierres_enero_2026_ventas.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 4
+      },
+      {
+        "file": "Datos 202601/raw/leads_enero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 285
+      },
+      {
+        "file": "Datos 202601/raw/requerimientos_online_enero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 506
+      },
+      {
+        "file": "Datos 202601/raw/suspendidas_enero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 13
+      },
+      {
+        "file": "Datos 202601/raw/total_cartera_20260218.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 394
+      },
+      {
+        "file": "Datos 202601/raw/visitas_enero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 269
+      },
+      {
+        "file": "Datos 202602/raw/captadas_febrero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 14
+      },
+      {
+        "file": "Datos 202602/raw/leads_clasificados_febrero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 668
+      },
+      {
+        "file": "Datos 202602/raw/leads_febrero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 198
+      },
+      {
+        "file": "Datos 202602/raw/requerimientos_online_febrero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 423
+      },
+      {
+        "file": "Datos 202602/raw/suspendidas_febrero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 20
+      },
+      {
+        "file": "Datos 202602/raw/total_cartera_febrero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 388
+      },
+      {
+        "file": "Datos 202602/raw/ventas_febrero_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 4
+      },
+      {
+        "file": "Datos 202603/raw/captadas_marzo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 41
+      },
+      {
+        "file": "Datos 202603/raw/leads_activos_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 3164
+      },
+      {
+        "file": "Datos 202603/raw/leads_clasificados_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 654
+      },
+      {
+        "file": "Datos 202603/raw/leads_marzo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 328
+      },
+      {
+        "file": "Datos 202603/raw/leads_sin_clasificar_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 2228
+      },
+      {
+        "file": "Datos 202603/raw/leads_sin_gestion_15_dias_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 788
+      },
+      {
+        "file": "Datos 202603/raw/leads_sin_gestion_90_dias_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 1974
+      },
+      {
+        "file": "Datos 202603/raw/misc_undefined_20260402.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 7
+      },
+      {
+        "file": "Datos 202603/raw/requerimientos_online_marzo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 709
+      },
+      {
+        "file": "Datos 202603/raw/suspendidas_marzo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 21
+      },
+      {
+        "file": "Datos 202603/raw/total_cartera_20260402.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 384
+      },
+      {
+        "file": "Datos 202603/raw/ventas_enero_marzo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 14
+      },
+      {
+        "file": "Datos 202603/raw/ventas_marzo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 7
+      },
+      {
+        "file": "Datos 202603/raw/visitas_marzo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 381
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/captadas_este_mes_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 16
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/leads_activos_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 3671
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/leads_clasificados_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 690
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/leads_este_mes_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 245
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/leads_sin_gestion_15_dias_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 893
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/leads_sin_gestion_90_dias_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 3046
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/requerimientos_online_este_mes_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 420
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/suspendidas_este_mes_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 19
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/total_cartera_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 393
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/ventas_quincena_abril_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 6
+      },
+      {
+        "file": "Datos 202604/informe_quincenal/raw/visitas_este_mes_vitacura.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 229
+      },
+      {
+        "file": "Datos 202604/raw/captadas_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 35
+      },
+      {
+        "file": "Datos 202604/raw/cierres_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 8
+      },
+      {
+        "file": "Datos 202604/raw/leads_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 371
+      },
+      {
+        "file": "Datos 202604/raw/leads_activos_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 3298
+      },
+      {
+        "file": "Datos 202604/raw/leads_clasificados_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 658
+      },
+      {
+        "file": "Datos 202604/raw/leads_sin_clasificar_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 2330
+      },
+      {
+        "file": "Datos 202604/raw/leads_sin_gestion_15_dias_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 706
+      },
+      {
+        "file": "Datos 202604/raw/leads_sin_gestion_90_dias_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 2143
+      },
+      {
+        "file": "Datos 202604/raw/requerimientos_online_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 611
+      },
+      {
+        "file": "Datos 202604/raw/suspendidas_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 43
+      },
+      {
+        "file": "Datos 202604/raw/total_cartera_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 382
+      },
+      {
+        "file": "Datos 202604/raw/visitas_abril_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 359
+      },
+      {
+        "file": "Datos 202605/raw/captadas_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 35
+      },
+      {
+        "file": "Datos 202605/raw/cierres_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 4
+      },
+      {
+        "file": "Datos 202605/raw/leads_activos_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 2131
+      },
+      {
+        "file": "Datos 202605/raw/leads_clasificados_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 959
+      },
+      {
+        "file": "Datos 202605/raw/leads_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 414
+      },
+      {
+        "file": "Datos 202605/raw/leads_sin_clasificar_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 1172
+      },
+      {
+        "file": "Datos 202605/raw/leads_sin_gestion_15_dias_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 505
+      },
+      {
+        "file": "Datos 202605/raw/leads_sin_gestion_90_dias_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 904
+      },
+      {
+        "file": "Datos 202605/raw/requerimientos_online_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 611
+      },
+      {
+        "file": "Datos 202605/raw/suspendidas_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 67
+      },
+      {
+        "file": "Datos 202605/raw/total_cartera_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 371
+      },
+      {
+        "file": "Datos 202605/raw/visitas_mayo_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 390
+      },
+      {
+        "file": "Datos 202606/raw/captadas_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 36
+      },
+      {
+        "file": "Datos 202606/raw/cierres_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 21
+      },
+      {
+        "file": "Datos 202606/raw/leads_activos_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 1770
+      },
+      {
+        "file": "Datos 202606/raw/leads_clasificados_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 502
+      },
+      {
+        "file": "Datos 202606/raw/leads_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 392
+      },
+      {
+        "file": "Datos 202606/raw/leads_sin_clasificar_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 925
+      },
+      {
+        "file": "Datos 202606/raw/leads_sin_gestion_15_dias_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 596
+      },
+      {
+        "file": "Datos 202606/raw/leads_sin_gestion_90_dias_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 505
+      },
+      {
+        "file": "Datos 202606/raw/requerimientos_online_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 619
+      },
+      {
+        "file": "Datos 202606/raw/suspendidas_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 64
+      },
+      {
+        "file": "Datos 202606/raw/total_cartera_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 354
+      },
+      {
+        "file": "Datos 202606/raw/visitas_junio_2026.xlsx",
+        "selectedSheet": "Data",
+        "dataRows": 347
+      }
+    ]
+  },
+  "baseline2025": {
+    "salesCount": 61,
+    "salesUf": 919970,
+    "newLeadsCount": 4023,
+    "requirementsCount": 4594,
+    "uniqueVisitsCount": 3619,
+    "firstHalfSalesCount": 30,
+    "firstHalfSalesUf": 388820,
+    "months": [
+      {
+        "period": "2025-01",
+        "salesCount": 2,
+        "salesUf": 22790
+      },
+      {
+        "period": "2025-02",
+        "salesCount": 4,
+        "salesUf": 61400
+      },
+      {
+        "period": "2025-03",
+        "salesCount": 4,
+        "salesUf": 40600
+      },
+      {
+        "period": "2025-04",
+        "salesCount": 10,
+        "salesUf": 119330
+      },
+      {
+        "period": "2025-05",
+        "salesCount": 4,
+        "salesUf": 70350
+      },
+      {
+        "period": "2025-06",
+        "salesCount": 6,
+        "salesUf": 74350
+      },
+      {
+        "period": "2025-07",
+        "salesCount": 4,
+        "salesUf": 71150
+      },
+      {
+        "period": "2025-08",
+        "salesCount": 5,
+        "salesUf": 77450
+      },
+      {
+        "period": "2025-09",
+        "salesCount": 3,
+        "salesUf": 56000
+      },
+      {
+        "period": "2025-10",
+        "salesCount": 6,
+        "salesUf": 78300
+      },
+      {
+        "period": "2025-11",
+        "salesCount": 6,
+        "salesUf": 141500
+      },
+      {
+        "period": "2025-12",
+        "salesCount": 7,
+        "salesUf": 106750
+      }
+    ]
+  },
+  "months": [
+    {
+      "period": "2026-01",
+      "label": "Ene 2026",
+      "salesCount": 4,
+      "salesUf": 103150,
+      "medianSaleUf": 26000,
+      "capturesCount": 33,
+      "newLeadsCount": 285,
+      "requirementsCount": 505,
+      "visitsCount": 257,
+      "stockCount": 386,
+      "suspendedCount": 13,
+      "salesByType": [
+        {
+          "label": "Departamento",
+          "count": 4
+        }
+      ],
+      "salesByOffice": [],
+      "salesByListingAgent": [
+        {
+          "label": "Soledad Fernandez | Chile",
+          "count": 2
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 1
+        },
+        {
+          "label": "Paula Villarroel | Chile",
+          "count": 1
+        }
+      ],
+      "capturesByAgent": [
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 5
+        },
+        {
+          "label": "Rossana Lampasona | Chile",
+          "count": 4
+        },
+        {
+          "label": "Claudia Esposito Palma | Chile",
+          "count": 3
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 3
+        },
+        {
+          "label": "Alejandra Montt Siegmund | Chile",
+          "count": 2
+        },
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 2
+        },
+        {
+          "label": "Maria Jose Del Campo Tagle | Chile",
+          "count": 2
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 2
+        },
+        {
+          "label": "Soledad Fernandez | Chile",
+          "count": 2
+        },
+        {
+          "label": "Viviana Manfredi Barrios | Chile",
+          "count": 2
+        },
+        {
+          "label": "Alejandra Cambiaso | Chile",
+          "count": 1
+        },
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 1
+        }
+      ],
+      "leadOrigins": [
+        {
+          "label": "Mercado Libre",
+          "count": 80
+        },
+        {
+          "label": "Marketplace - Meta Ads",
+          "count": 45
+        },
+        {
+          "label": "TocToc",
+          "count": 39
+        },
+        {
+          "label": "Marketplace - Orgánico",
+          "count": 34
+        },
+        {
+          "label": "Marketplace - Google Ads",
+          "count": 21
+        },
+        {
+          "label": "Referido",
+          "count": 18
+        },
+        {
+          "label": "Otro",
+          "count": 14
+        },
+        {
+          "label": "CRM - Ingreso manual",
+          "count": 9
+        }
+      ],
+      "leadOwners": [
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 54
+        },
+        {
+          "label": "Paula Alvarado Baigorria | Chile",
+          "count": 27
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 22
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 22
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 18
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 15
+        },
+        {
+          "label": "Alejandra Montt Siegmund | Chile",
+          "count": 14
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 14
+        },
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 12
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 11
+        },
+        {
+          "label": "Maria de los angeles Tagle | Chile",
+          "count": 10
+        },
+        {
+          "label": "Ramiro Peon-Veiga Cervantes | Chile",
+          "count": 9
+        }
+      ],
+      "quality": {
+        "sourceCoverage": 100,
+        "expectedDatasets": 7,
+        "acceptedRecords": 1483,
+        "excludedOutsideScope": 11,
+        "duplicateRows": 12,
+        "malformedRows": 0,
+        "missingDatasets": [],
+        "files": {
+          "sales": {
+            "source": "cierres_enero_2026_ventas.xlsx",
+            "sheet": "Data",
+            "rawRows": 4,
+            "acceptedRows": 4,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "captures": {
+            "source": "captadas_enero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 35,
+            "acceptedRows": 33,
+            "duplicateRows": 0,
+            "excludedRows": 2,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "leads": {
+            "source": "leads_enero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 285,
+            "acceptedRows": 285,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "requirements": {
+            "source": "requerimientos_online_enero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 506,
+            "acceptedRows": 505,
+            "duplicateRows": 0,
+            "excludedRows": 1,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "visits": {
+            "source": "visitas_enero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 269,
+            "acceptedRows": 257,
+            "duplicateRows": 12,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "suspended": {
+            "source": "suspendidas_enero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 13,
+            "acceptedRows": 13,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "stock": {
+            "source": "total_cartera_20260218.xlsx",
+            "sheet": "Data",
+            "rawRows": 394,
+            "acceptedRows": 386,
+            "duplicateRows": 0,
+            "excludedRows": 8,
+            "malformedRows": 0,
+            "missing": false
+          }
+        }
+      }
+    },
+    {
+      "period": "2026-02",
+      "label": "Feb 2026",
+      "salesCount": 3,
+      "salesUf": 48800,
+      "medianSaleUf": 8700,
+      "capturesCount": 13,
+      "newLeadsCount": 198,
+      "requirementsCount": 421,
+      "visitsCount": null,
+      "stockCount": 385,
+      "suspendedCount": 17,
+      "salesByType": [
+        {
+          "label": "Departamento",
+          "count": 3
+        }
+      ],
+      "salesByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "count": 2
+        },
+        {
+          "label": "Santa María",
+          "count": 1
+        }
+      ],
+      "salesByListingAgent": [
+        {
+          "label": "Alejandra Cambiaso | Chile",
+          "count": 1
+        },
+        {
+          "label": "Alejandra Montt Siegmund | Chile",
+          "count": 1
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 1
+        }
+      ],
+      "capturesByAgent": [
+        {
+          "label": "Natalia Andrea Cannizzo | Chile",
+          "count": 6
+        },
+        {
+          "label": "Francisca Santos | Chile",
+          "count": 1
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 1
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 1
+        },
+        {
+          "label": "Maria de los angeles Tagle | Chile",
+          "count": 1
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 1
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 1
+        },
+        {
+          "label": "Rossana Lampasona | Chile",
+          "count": 1
+        }
+      ],
+      "leadOrigins": [
+        {
+          "label": "Mercado Libre",
+          "count": 62
+        },
+        {
+          "label": "Marketplace - Meta Ads",
+          "count": 39
+        },
+        {
+          "label": "Marketplace - Google Ads",
+          "count": 26
+        },
+        {
+          "label": "Marketplace - Orgánico",
+          "count": 23
+        },
+        {
+          "label": "CRM - Ingreso manual",
+          "count": 11
+        },
+        {
+          "label": "TocToc",
+          "count": 10
+        },
+        {
+          "label": "Otro",
+          "count": 8
+        },
+        {
+          "label": "Usuario",
+          "count": 5
+        }
+      ],
+      "leadOwners": [
+        {
+          "label": "Francisca Santos | Chile",
+          "count": 27
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 27
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 20
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 16
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 16
+        },
+        {
+          "label": "Ramiro Peon-Veiga Cervantes | Chile",
+          "count": 12
+        },
+        {
+          "label": "Natalia Andrea Cannizzo | Chile",
+          "count": 11
+        },
+        {
+          "label": "Maria de los angeles Tagle | Chile",
+          "count": 8
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 8
+        },
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 7
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 7
+        },
+        {
+          "label": "Paula Alvarado Baigorria | Chile",
+          "count": 6
+        }
+      ],
+      "quality": {
+        "sourceCoverage": 85.7,
+        "expectedDatasets": 7,
+        "acceptedRecords": 1037,
+        "excludedOutsideScope": 10,
+        "duplicateRows": 0,
+        "malformedRows": 0,
+        "missingDatasets": [
+          "visits"
+        ],
+        "files": {
+          "sales": {
+            "source": "ventas_febrero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 4,
+            "acceptedRows": 3,
+            "duplicateRows": 0,
+            "excludedRows": 1,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "captures": {
+            "source": "captadas_febrero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 14,
+            "acceptedRows": 13,
+            "duplicateRows": 0,
+            "excludedRows": 1,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "leads": {
+            "source": "leads_febrero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 198,
+            "acceptedRows": 198,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "requirements": {
+            "source": "requerimientos_online_febrero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 423,
+            "acceptedRows": 421,
+            "duplicateRows": 0,
+            "excludedRows": 2,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "visits": {
+            "rawRows": 0,
+            "acceptedRows": 0,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": true
+          },
+          "suspended": {
+            "source": "suspendidas_febrero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 20,
+            "acceptedRows": 17,
+            "duplicateRows": 0,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "stock": {
+            "source": "total_cartera_febrero_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 388,
+            "acceptedRows": 385,
+            "duplicateRows": 0,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          }
+        }
+      }
+    },
+    {
+      "period": "2026-03",
+      "label": "Mar 2026",
+      "salesCount": 7,
+      "salesUf": 155970,
+      "medianSaleUf": 14120,
+      "capturesCount": 41,
+      "newLeadsCount": 328,
+      "requirementsCount": 707,
+      "visitsCount": 348,
+      "stockCount": 381,
+      "suspendedCount": 21,
+      "salesByType": [
+        {
+          "label": "Departamento",
+          "count": 4
+        },
+        {
+          "label": "Casa",
+          "count": 3
+        }
+      ],
+      "salesByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 3
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 3
+        },
+        {
+          "label": "Santa María",
+          "count": 1
+        }
+      ],
+      "salesByListingAgent": [
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 1
+        },
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 1
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 1
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 1
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 1
+        },
+        {
+          "label": "Ramiro Peon-Veiga Cervantes | Chile",
+          "count": 1
+        },
+        {
+          "label": "Rossana Lampasona | Chile",
+          "count": 1
+        }
+      ],
+      "capturesByAgent": [
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 7
+        },
+        {
+          "label": "Fernanda Cortés Pradenas | Chile",
+          "count": 5
+        },
+        {
+          "label": "Paula Villarroel | Chile",
+          "count": 4
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 4
+        },
+        {
+          "label": "Alejandra Cambiaso | Chile",
+          "count": 2
+        },
+        {
+          "label": "Francisca Santos | Chile",
+          "count": 2
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 2
+        },
+        {
+          "label": "Maria Jose Del Campo Tagle | Chile",
+          "count": 2
+        },
+        {
+          "label": "Soledad Fernandez | Chile",
+          "count": 2
+        },
+        {
+          "label": "Alejandra Montt Siegmund | Chile",
+          "count": 1
+        },
+        {
+          "label": "Claudia Stark Faundez | Chile",
+          "count": 1
+        },
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 1
+        }
+      ],
+      "leadOrigins": [
+        {
+          "label": "Mercado Libre",
+          "count": 99
+        },
+        {
+          "label": "Marketplace - Meta Ads",
+          "count": 58
+        },
+        {
+          "label": "Marketplace - Orgánico",
+          "count": 46
+        },
+        {
+          "label": "Marketplace - Google Ads",
+          "count": 35
+        },
+        {
+          "label": "Otro",
+          "count": 27
+        },
+        {
+          "label": "CRM - Ingreso manual",
+          "count": 17
+        },
+        {
+          "label": "TocToc",
+          "count": 10
+        },
+        {
+          "label": "Referido",
+          "count": 7
+        }
+      ],
+      "leadOwners": [
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 30
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 27
+        },
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 26
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 26
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 21
+        },
+        {
+          "label": "Soledad Fernandez | Chile",
+          "count": 19
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 19
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 18
+        },
+        {
+          "label": "Natalia Andrea Cannizzo | Chile",
+          "count": 17
+        },
+        {
+          "label": "Francisca Santos | Chile",
+          "count": 15
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 14
+        },
+        {
+          "label": "Maria de los angeles Tagle | Chile",
+          "count": 13
+        }
+      ],
+      "quality": {
+        "sourceCoverage": 100,
+        "expectedDatasets": 7,
+        "acceptedRecords": 1833,
+        "excludedOutsideScope": 7,
+        "duplicateRows": 31,
+        "malformedRows": 0,
+        "missingDatasets": [],
+        "files": {
+          "sales": {
+            "source": "ventas_marzo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 7,
+            "acceptedRows": 7,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "captures": {
+            "source": "captadas_marzo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 41,
+            "acceptedRows": 41,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "leads": {
+            "source": "leads_marzo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 328,
+            "acceptedRows": 328,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "requirements": {
+            "source": "requerimientos_online_marzo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 709,
+            "acceptedRows": 707,
+            "duplicateRows": 0,
+            "excludedRows": 2,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "visits": {
+            "source": "visitas_marzo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 381,
+            "acceptedRows": 348,
+            "duplicateRows": 31,
+            "excludedRows": 2,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "suspended": {
+            "source": "suspendidas_marzo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 21,
+            "acceptedRows": 21,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "stock": {
+            "source": "total_cartera_20260402.xlsx",
+            "sheet": "Data",
+            "rawRows": 384,
+            "acceptedRows": 381,
+            "duplicateRows": 0,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          }
+        }
+      }
+    },
+    {
+      "period": "2026-04",
+      "label": "Abr 2026",
+      "salesCount": 8,
+      "salesUf": 107500,
+      "medianSaleUf": 12500,
+      "capturesCount": 35,
+      "newLeadsCount": 371,
+      "requirementsCount": 610,
+      "visitsCount": 324,
+      "stockCount": 379,
+      "suspendedCount": 43,
+      "salesByType": [
+        {
+          "label": "Departamento",
+          "count": 6
+        },
+        {
+          "label": "Casa",
+          "count": 2
+        }
+      ],
+      "salesByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 3
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 3
+        },
+        {
+          "label": "Santa María",
+          "count": 2
+        }
+      ],
+      "salesByListingAgent": [
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 2
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 1
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 1
+        },
+        {
+          "label": "Paula Villarroel | Chile",
+          "count": 1
+        },
+        {
+          "label": "Ramiro Peon-Veiga Cervantes | Chile",
+          "count": 1
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 1
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 1
+        }
+      ],
+      "capturesByAgent": [
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 5
+        },
+        {
+          "label": "Fernanda Cortés Pradenas | Chile",
+          "count": 3
+        },
+        {
+          "label": "María Ignacia Labbé Krinfokai",
+          "count": 3
+        },
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 2
+        },
+        {
+          "label": "Francisca Santos Ramos | Chile",
+          "count": 2
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 2
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 2
+        },
+        {
+          "label": "Miguel Maldonado Aguila",
+          "count": 2
+        },
+        {
+          "label": "Paula Villarroel | Chile",
+          "count": 2
+        },
+        {
+          "label": "Alejandra Cambiaso | Chile",
+          "count": 1
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 1
+        },
+        {
+          "label": "Luz Barbosa | Chile",
+          "count": 1
+        }
+      ],
+      "leadOrigins": [
+        {
+          "label": "Mercado Libre",
+          "count": 129
+        },
+        {
+          "label": "Marketplace - Meta Ads",
+          "count": 56
+        },
+        {
+          "label": "Marketplace - Orgánico",
+          "count": 53
+        },
+        {
+          "label": "Marketplace - Google Ads",
+          "count": 49
+        },
+        {
+          "label": "Otro",
+          "count": 29
+        },
+        {
+          "label": "Referido",
+          "count": 14
+        },
+        {
+          "label": "Usuario",
+          "count": 8
+        },
+        {
+          "label": "Proppit",
+          "count": 7
+        }
+      ],
+      "leadOwners": [
+        {
+          "label": "Francisca Santos Ramos | Chile",
+          "count": 36
+        },
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 34
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 34
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 31
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 24
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 20
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 15
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 15
+        },
+        {
+          "label": "Paula Alvarado Baigorria | Chile",
+          "count": 15
+        },
+        {
+          "label": "Rossana Lampasona | Chile",
+          "count": 15
+        },
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 14
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 14
+        }
+      ],
+      "quality": {
+        "sourceCoverage": 100,
+        "expectedDatasets": 7,
+        "acceptedRecords": 1770,
+        "excludedOutsideScope": 7,
+        "duplicateRows": 32,
+        "malformedRows": 0,
+        "missingDatasets": [],
+        "files": {
+          "sales": {
+            "source": "cierres_abril_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 8,
+            "acceptedRows": 8,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "captures": {
+            "source": "captadas_abril_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 35,
+            "acceptedRows": 35,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "leads": {
+            "source": "leads_abril_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 371,
+            "acceptedRows": 371,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "requirements": {
+            "source": "requerimientos_online_abril_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 611,
+            "acceptedRows": 610,
+            "duplicateRows": 0,
+            "excludedRows": 1,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "visits": {
+            "source": "visitas_abril_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 359,
+            "acceptedRows": 324,
+            "duplicateRows": 32,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "suspended": {
+            "source": "suspendidas_abril_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 43,
+            "acceptedRows": 43,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "stock": {
+            "source": "total_cartera_abril_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 382,
+            "acceptedRows": 379,
+            "duplicateRows": 0,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          }
+        }
+      }
+    },
+    {
+      "period": "2026-05",
+      "label": "May 2026",
+      "salesCount": 4,
+      "salesUf": 69850,
+      "medianSaleUf": 11900,
+      "capturesCount": 35,
+      "newLeadsCount": 414,
+      "requirementsCount": 610,
+      "visitsCount": 351,
+      "stockCount": 368,
+      "suspendedCount": 65,
+      "salesByType": [
+        {
+          "label": "Departamento",
+          "count": 3
+        },
+        {
+          "label": "Casa",
+          "count": 1
+        }
+      ],
+      "salesByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 3
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 1
+        }
+      ],
+      "salesByListingAgent": [
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 2
+        },
+        {
+          "label": "Claudia Stark Faundez | Chile",
+          "count": 1
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 1
+        }
+      ],
+      "capturesByAgent": [
+        {
+          "label": "Fernanda Cortés Pradenas | Chile",
+          "count": 7
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 4
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 3
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 3
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 3
+        },
+        {
+          "label": "Alejandra Montt Siegmund | Chile",
+          "count": 2
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 2
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 2
+        },
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 1
+        },
+        {
+          "label": "Francisca Santos Ramos | Chile",
+          "count": 1
+        },
+        {
+          "label": "María Ignacia Labbé Krinfokai",
+          "count": 1
+        },
+        {
+          "label": "Marta Sotomayor Bulnes",
+          "count": 1
+        }
+      ],
+      "leadOrigins": [
+        {
+          "label": "Mercado Libre",
+          "count": 168
+        },
+        {
+          "label": "Marketplace - Meta Ads",
+          "count": 69
+        },
+        {
+          "label": "Marketplace - Orgánico",
+          "count": 52
+        },
+        {
+          "label": "Marketplace - Google Ads",
+          "count": 36
+        },
+        {
+          "label": "Otro",
+          "count": 22
+        },
+        {
+          "label": "TocToc",
+          "count": 22
+        },
+        {
+          "label": "Envío de propiedades",
+          "count": 8
+        },
+        {
+          "label": "A través de agendamiento",
+          "count": 5
+        }
+      ],
+      "leadOwners": [
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 52
+        },
+        {
+          "label": "Francisca Santos Ramos | Chile",
+          "count": 43
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 35
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 34
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 34
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 24
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 22
+        },
+        {
+          "label": "Paula Alvarado Baigorria | Chile",
+          "count": 20
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 16
+        },
+        {
+          "label": "Maria Alejandra Garcia | Chile",
+          "count": 14
+        },
+        {
+          "label": "Fernanda Cortés Pradenas | Chile",
+          "count": 13
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 13
+        }
+      ],
+      "quality": {
+        "sourceCoverage": 100,
+        "expectedDatasets": 7,
+        "acceptedRecords": 1847,
+        "excludedOutsideScope": 7,
+        "duplicateRows": 38,
+        "malformedRows": 0,
+        "missingDatasets": [],
+        "files": {
+          "sales": {
+            "source": "cierres_mayo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 4,
+            "acceptedRows": 4,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "captures": {
+            "source": "captadas_mayo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 35,
+            "acceptedRows": 35,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "leads": {
+            "source": "leads_mayo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 414,
+            "acceptedRows": 414,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "requirements": {
+            "source": "requerimientos_online_mayo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 611,
+            "acceptedRows": 610,
+            "duplicateRows": 0,
+            "excludedRows": 1,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "visits": {
+            "source": "visitas_mayo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 390,
+            "acceptedRows": 351,
+            "duplicateRows": 38,
+            "excludedRows": 1,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "suspended": {
+            "source": "suspendidas_mayo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 67,
+            "acceptedRows": 65,
+            "duplicateRows": 0,
+            "excludedRows": 2,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "stock": {
+            "source": "total_cartera_mayo_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 371,
+            "acceptedRows": 368,
+            "duplicateRows": 0,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          }
+        }
+      }
+    },
+    {
+      "period": "2026-06",
+      "label": "Jun 2026",
+      "salesCount": 8,
+      "salesUf": 158400,
+      "medianSaleUf": 19825,
+      "capturesCount": 36,
+      "newLeadsCount": 392,
+      "requirementsCount": 617,
+      "visitsCount": 319,
+      "stockCount": 351,
+      "suspendedCount": 64,
+      "salesByType": [
+        {
+          "label": "Casa",
+          "count": 6
+        },
+        {
+          "label": "Departamento",
+          "count": 2
+        }
+      ],
+      "salesByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "count": 4
+        },
+        {
+          "label": "Santa María",
+          "count": 3
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 1
+        }
+      ],
+      "salesByListingAgent": [
+        {
+          "label": "Claudia Stark Faundez | Chile",
+          "count": 1
+        },
+        {
+          "label": "Francisca Santos Ramos | Chile",
+          "count": 1
+        },
+        {
+          "label": "Luz Barbosa | Chile",
+          "count": 1
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 1
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 1
+        },
+        {
+          "label": "Rossana Lampasona | Chile",
+          "count": 1
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 1
+        }
+      ],
+      "capturesByAgent": [
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 4
+        },
+        {
+          "label": "Jorge Zurob | Chile",
+          "count": 4
+        },
+        {
+          "label": "María Ignacia Labbé Krinfokai",
+          "count": 4
+        },
+        {
+          "label": "Fernanda Cortés Pradenas | Chile",
+          "count": 3
+        },
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 2
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 2
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 2
+        },
+        {
+          "label": "Marta Sotomayor Bulnes",
+          "count": 2
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 2
+        },
+        {
+          "label": "Paula Villarroel | Chile",
+          "count": 2
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 2
+        },
+        {
+          "label": "Alejandra Montt Siegmund | Chile",
+          "count": 1
+        }
+      ],
+      "leadOrigins": [
+        {
+          "label": "Mercado Libre",
+          "count": 159
+        },
+        {
+          "label": "Marketplace - Google Ads",
+          "count": 52
+        },
+        {
+          "label": "Marketplace - Orgánico",
+          "count": 42
+        },
+        {
+          "label": "TocToc",
+          "count": 38
+        },
+        {
+          "label": "Marketplace - Meta Ads",
+          "count": 29
+        },
+        {
+          "label": "Otro",
+          "count": 23
+        },
+        {
+          "label": "Marketplace - Campaña Email",
+          "count": 9
+        },
+        {
+          "label": "Amigo",
+          "count": 7
+        }
+      ],
+      "leadOwners": [
+        {
+          "label": "Francisca Rossetti Ossa | Chile",
+          "count": 56
+        },
+        {
+          "label": "Sebastián Zlatar Ayuso | Chile",
+          "count": 37
+        },
+        {
+          "label": "María Sol Marsiglia Ventura | Chile",
+          "count": 35
+        },
+        {
+          "label": "Isabel Steverlynck Vanherpe | Chile",
+          "count": 29
+        },
+        {
+          "label": "Mary Canale Montenegro | Chile",
+          "count": 28
+        },
+        {
+          "label": "Paula Alvarado Baigorria | Chile",
+          "count": 24
+        },
+        {
+          "label": "Felipe Elizalde Prado | Chile",
+          "count": 20
+        },
+        {
+          "label": "Francisca Santos Ramos | Chile",
+          "count": 20
+        },
+        {
+          "label": "Veronica Lagos | Chile",
+          "count": 20
+        },
+        {
+          "label": "María Ignacia Labbé Krinfokai",
+          "count": 16
+        },
+        {
+          "label": "Fernanda Cortés Pradenas | Chile",
+          "count": 14
+        },
+        {
+          "label": "Maria de los angeles Carcavilla | Chile",
+          "count": 14
+        }
+      ],
+      "quality": {
+        "sourceCoverage": 100,
+        "expectedDatasets": 7,
+        "acceptedRecords": 1787,
+        "excludedOutsideScope": 8,
+        "duplicateRows": 25,
+        "malformedRows": 13,
+        "missingDatasets": [],
+        "files": {
+          "sales": {
+            "source": "cierres_junio_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 21,
+            "acceptedRows": 8,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 13,
+            "missing": false
+          },
+          "captures": {
+            "source": "captadas_junio_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 36,
+            "acceptedRows": 36,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "leads": {
+            "source": "leads_junio_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 392,
+            "acceptedRows": 392,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "requirements": {
+            "source": "requerimientos_online_junio_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 619,
+            "acceptedRows": 617,
+            "duplicateRows": 0,
+            "excludedRows": 2,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "visits": {
+            "source": "visitas_junio_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 347,
+            "acceptedRows": 319,
+            "duplicateRows": 25,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "suspended": {
+            "source": "suspendidas_junio_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 64,
+            "acceptedRows": 64,
+            "duplicateRows": 0,
+            "excludedRows": 0,
+            "malformedRows": 0,
+            "missing": false
+          },
+          "stock": {
+            "source": "total_cartera_junio_2026.xlsx",
+            "sheet": "Data",
+            "rawRows": 354,
+            "acceptedRows": 351,
+            "duplicateRows": 0,
+            "excludedRows": 3,
+            "malformedRows": 0,
+            "missing": false
+          }
+        }
+      }
+    }
+  ],
+  "latestLeadSnapshot": {
+    "period": "2026-06",
+    "active": 1770,
+    "classified": 502,
+    "unclassified": 925,
+    "stale15": 596,
+    "stale90": 505,
+    "classificationCoverage": 80.6
+  },
+  "ytd": {
+    "salesCount": 34,
+    "salesUf": 643670,
+    "capturesCount": 193,
+    "newLeadsCount": 1988,
+    "requirementsCount": 3470,
+    "visitsCount": null,
+    "knownVisitsCount": 1599,
+    "stockChange": -35,
+    "comparison2025": {
+      "salesChangePct": 13.3,
+      "salesUfChangePct": 65.5
+    },
+    "salesByOffice": [
+      {
+        "label": "Nueva Costanera",
+        "count": 13
+      },
+      {
+        "label": "Lo Beltrán",
+        "count": 10
+      },
+      {
+        "label": "Santa María",
+        "count": 7
+      }
+    ],
+    "salesByListingAgent": [
+      {
+        "label": "Maria de los angeles Carcavilla | Chile",
+        "count": 4
+      },
+      {
+        "label": "Jorge Zurob | Chile",
+        "count": 3
+      },
+      {
+        "label": "María Sol Marsiglia Ventura | Chile",
+        "count": 3
+      },
+      {
+        "label": "Claudia Stark Faundez | Chile",
+        "count": 2
+      },
+      {
+        "label": "Mary Canale Montenegro | Chile",
+        "count": 2
+      },
+      {
+        "label": "Paula Villarroel | Chile",
+        "count": 2
+      },
+      {
+        "label": "Ramiro Peon-Veiga Cervantes | Chile",
+        "count": 2
+      },
+      {
+        "label": "Rossana Lampasona | Chile",
+        "count": 2
+      },
+      {
+        "label": "Sebastián Zlatar Ayuso | Chile",
+        "count": 2
+      },
+      {
+        "label": "Soledad Fernandez | Chile",
+        "count": 2
+      },
+      {
+        "label": "Alejandra Cambiaso | Chile",
+        "count": 1
+      },
+      {
+        "label": "Alejandra Montt Siegmund | Chile",
+        "count": 1
+      }
+    ],
+    "capturesByAgent": [
+      {
+        "label": "Jorge Zurob | Chile",
+        "count": 20
+      },
+      {
+        "label": "Fernanda Cortés Pradenas | Chile",
+        "count": 18
+      },
+      {
+        "label": "Francisca Rossetti Ossa | Chile",
+        "count": 9
+      },
+      {
+        "label": "Maria de los angeles Carcavilla | Chile",
+        "count": 9
+      },
+      {
+        "label": "Isabel Steverlynck Vanherpe | Chile",
+        "count": 8
+      },
+      {
+        "label": "María Ignacia Labbé Krinfokai",
+        "count": 8
+      },
+      {
+        "label": "Paula Villarroel | Chile",
+        "count": 8
+      },
+      {
+        "label": "María Sol Marsiglia Ventura | Chile",
+        "count": 7
+      },
+      {
+        "label": "Alejandra Montt Siegmund | Chile",
+        "count": 6
+      },
+      {
+        "label": "Maria Alejandra Garcia | Chile",
+        "count": 6
+      },
+      {
+        "label": "Natalia Andrea Cannizzo | Chile",
+        "count": 6
+      },
+      {
+        "label": "Veronica Lagos | Chile",
+        "count": 6
+      }
+    ]
+  },
+  "quality": {
+    "sourceCoverage": 97.6,
+    "issues": [
+      {
+        "severity": "critical",
+        "code": "MISSING_VISITS_2026_02",
+        "title": "Visitas de febrero sin archivo",
+        "detail": "El acumulado semestral de visitas se mantiene como no disponible; solo se informa el total de meses conocidos."
+      },
+      {
+        "severity": "warning",
+        "code": "JUNE_SALES_AUXILIARY_ROWS",
+        "title": "Filas auxiliares en cierres de junio",
+        "detail": "13 filas sin Operacion - Id fueron puestas en cuarentena; junio conserva 8 ventas validas."
+      },
+      {
+        "severity": "info",
+        "code": "OUT_OF_SCOPE_FILTERED",
+        "title": "Alcance comercial aplicado",
+        "detail": "Se excluyeron arriendos, propiedades rentadas, terrenos y duplex. Solo se publican ventas de casas y departamentos en Vitacura."
+      },
+      {
+        "severity": "warning",
+        "code": "TARGETS_NOT_LOADED",
+        "title": "Metas 2026 aun no integradas",
+        "detail": "Los campos de meta y cumplimiento permanecen nulos hasta validar los archivos de Metas 2026."
+      }
+    ]
+  },
+  "actions": {
+    "ceo": [
+      {
+        "priority": "high",
+        "title": "Proteger la cartera disponible",
+        "evidence": "La cartera comparable baja de 386 a 351 propiedades (-35).",
+        "action": "Revisar suspensiones, reposicionamiento y captaciones netas por sucursal."
+      },
+      {
+        "priority": "medium",
+        "title": "Consolidar crecimiento interanual",
+        "evidence": "Las ventas suben 13.3% y el volumen UF 65.5% frente al primer semestre de 2025.",
+        "action": "Separar crecimiento por tipo, sucursal y agente de captacion para definir donde escalar."
+      },
+      {
+        "priority": "medium",
+        "title": "Consolidar el repunte de cierres",
+        "evidence": "Junio registra 8 ventas y UF 158.400, versus 4 ventas en mayo.",
+        "action": "Identificar los segmentos y agentes que explican el repunte antes de asignar presupuesto."
+      }
+    ],
+    "director": [
+      {
+        "priority": "high",
+        "title": "Recuperar leads sin gestion",
+        "evidence": "596 leads aparecen sin gestion por 15 dias en el ultimo corte.",
+        "action": "Distribuir una cola diaria por responsable y registrar resultado de contacto."
+      },
+      {
+        "priority": "high",
+        "title": "Cerrar brecha de clasificacion",
+        "evidence": "925 leads permanecen sin clasificar; la cobertura exportada es 80.6%.",
+        "action": "Exigir clasificacion y proxima accion para cada lead activo priorizado."
+      }
+    ],
+    "seller": [
+      {
+        "priority": "high",
+        "title": "Trabajar primero la cola vencida",
+        "evidence": "La prioridad diaria debe salir de los leads sin gestion y de requerimientos sin visita.",
+        "action": "Contactar, clasificar y fijar siguiente hito verificable."
+      },
+      {
+        "priority": "medium",
+        "title": "Usar origen para adaptar el contacto",
+        "evidence": "El principal origen de junio es Mercado Libre con 159 leads.",
+        "action": "Aplicar guion y SLA diferenciados por canal de adquisicion."
+      }
+    ]
+  },
+  "targetsContract": {
+    "status": "not_loaded",
+    "requiredFields": [
+      "period",
+      "role",
+      "person_or_team_id",
+      "metric",
+      "target_value",
+      "unit",
+      "valid_from",
+      "valid_to",
+      "version"
+    ],
+    "rule": "Targets are never inferred from actual CRM activity."
+  }
+}

@@ -2,27 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import type { KpiSnapshot, Profile, AiReport } from '@/lib/types'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import type { AiReport } from '@/lib/types'
 import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
-
-// â”€â”€ mock fallback data (shown while DB loads or if empty) â”€â”€
-const MOCK_DIRECTORS = [
-  { id: '1', name: 'Juan Morales',  team: 'Equipo Alpha', ventas: 30, uf: 138100, target: 36, comision: 4119000 },
-  { id: '2', name: 'María García',  team: 'Equipo Beta',  ventas: 26, uf: 116700, target: 36, comision: 3528000 },
-  { id: '3', name: 'Carlos López',  team: 'Equipo Gamma', ventas: 17, uf:  75900, target: 28, comision: 2286000 },
-]
-
-const MOCK_CHART = [
-  { mes: 'Feb', alpha: 4, beta: 3, gamma: 2 },
-  { mes: 'Mar', alpha: 5, beta: 4, gamma: 3 },
-  { mes: 'Abr', alpha: 6, beta: 4, gamma: 3 },
-  { mes: 'May', alpha: 5, beta: 6, gamma: 4 },
-  { mes: 'Jun', alpha: 7, beta: 5, gamma: 4 },
-  { mes: 'Jul', alpha: 3, beta: 4, gamma: 2 },
-]
-
-const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+import { buildDirectorFallbackRows, buildOperationalSeries, getDataQuality, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
 
 function fmt(n: number) {
   return n.toLocaleString('es-CL')
@@ -46,68 +29,29 @@ function KpiCard({ label, value, sub, border }: { label: string; value: string; 
 }
 
 export default function CeoDashboard() {
-  const [directors, setDirectors] = useState(MOCK_DIRECTORS)
-  const [chartData, setChartData] = useState(MOCK_CHART)
+  const fallbackSummary = getOperationalSummary()
+  const fallbackSeries = buildOperationalSeries(6).map(({ mes, ventas, captaciones, leads }) => ({ mes, ventas, captaciones, leads }))
+  const directors = buildDirectorFallbackRows()
+  const chartData = fallbackSeries
+  const ytd = getYtdSummary()
+  const dataQuality = getDataQuality()
+  const executiveActions = getRoleActions('ceo')
   const [reports, setReports] = useState<AiReport[]>([])
-  const [totals, setTotals] = useState({ ventas: 73, uf: 330700, comision: 9933000, conversion: 9.6 })
+  const totals = {
+    ventas: ytd.salesCount,
+    uf: ytd.salesUf,
+    conversion: fallbackSummary.leadToSaleProxy,
+  }
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       try {
         const supabase = createClient()
-        const [{ data: snapshots }, { data: reportRows }, { data: profileRows }] = await Promise.all([
-          supabase.from('kpi_snapshots').select('*').is('agent_id', null).not('director_id', 'is', null).order('period_date', { ascending: true }),
-          supabase.from('ai_reports').select('*').order('created_at', { ascending: false }).limit(3),
-          supabase.from('profiles').select('*').eq('role', 'director'),
-        ])
-
-        if (snapshots && snapshots.length > 0 && profileRows && profileRows.length > 0) {
-          // Build director summary from last 6 months of snapshots
-          const dirMap: Record<string, { ventas: number; uf: number; comision: number; target: number }> = {}
-          for (const s of snapshots as KpiSnapshot[]) {
-            if (!s.director_id) continue
-            if (!dirMap[s.director_id]) dirMap[s.director_id] = { ventas: 0, uf: 0, comision: 0, target: 0 }
-            dirMap[s.director_id].ventas   += s.ventas_count
-            dirMap[s.director_id].uf       += s.ventas_uf
-            dirMap[s.director_id].comision += s.comision_total
-            dirMap[s.director_id].target   += s.monthly_target
-          }
-          const newDirs = (profileRows as Profile[]).map(p => ({
-            id: p.id,
-            name: p.full_name || 'Director',
-            team: p.team || 'â€”',
-            ventas:   dirMap[p.id]?.ventas   ?? 0,
-            uf:       dirMap[p.id]?.uf       ?? 0,
-            target:   dirMap[p.id]?.target   ?? 0,
-            comision: dirMap[p.id]?.comision ?? 0,
-          })).sort((a, b) => b.ventas - a.ventas)
-          setDirectors(newDirs)
-
-          const totalVentas   = newDirs.reduce((s, d) => s + d.ventas, 0)
-          const totalUf       = newDirs.reduce((s, d) => s + d.uf, 0)
-          const totalComision = newDirs.reduce((s, d) => s + d.comision, 0)
-          const avgConv = (snapshots as KpiSnapshot[]).reduce((s, k) => s + (k.conversion_rate || 0), 0) / snapshots.length
-          setTotals({ ventas: totalVentas, uf: totalUf, comision: totalComision, conversion: Math.round(avgConv * 10) / 10 })
-
-          // Build 6-month chart grouped by director
-          const months = [...new Set((snapshots as KpiSnapshot[]).map(s => s.period_date.slice(0, 7)))].sort().slice(-6)
-          const dirIds = newDirs.map(d => d.id)
-          const dirNames = newDirs.map(d => d.name.split(' ')[0])
-          const chart = months.map(m => {
-            const entry: Record<string, string | number> = { mes: MONTHS_ES[parseInt(m.slice(5, 7)) - 1] }
-            dirIds.forEach((id, i) => {
-              const snap = (snapshots as KpiSnapshot[]).find(s => s.director_id === id && s.period_date.startsWith(m))
-              entry[dirNames[i]] = snap?.ventas_count ?? 0
-            })
-            return entry
-          })
-          setChartData(chart as typeof MOCK_CHART)
-        }
-
+        const { data: reportRows } = await supabase.from('ai_reports').select('*').order('created_at', { ascending: false }).limit(3)
         if (reportRows) setReports(reportRows as AiReport[])
       } catch (_) {
-        // keep mocks
+        // keep snapshot fallback
       } finally {
         setLoading(false)
       }
@@ -115,21 +59,12 @@ export default function CeoDashboard() {
     load()
   }, [])
 
-  const dirKeys  = directors.map(d => d.name.split(' ')[0])
-  const dirColors = ['var(--n3-teal)', '#6b7280', 'var(--n3-teal)']
   const executiveMetrics = PP_SCORECARD_DEFINITIONS.ceo
   const executiveStates = useMemo(() => {
-    const totalTargets = directors.reduce((sum, d) => sum + d.target, 0) || 1
-    const fulfillmentRate = directors.length > 0
-      ? directors.reduce((sum, d) => sum + (d.target > 0 ? Math.min(1, d.ventas / d.target) : 0), 0) / directors.length
-      : 0
-    const dataQuality = 88
-    const marketSignal = clampScore((totals.conversion / 10) * 100)
-    const forecastDiscipline = clampScore(((fulfillmentRate * 100) + Math.min(100, (totals.ventas / totalTargets) * 100)) / 2)
     const scoreById: Record<string, number | null> = {
-      'data-quality': dataQuality,
-      'market-signal': marketSignal,
-      'forecast-discipline': forecastDiscipline,
+      'data-quality': dataQuality.sourceCoverage,
+      'stock-retention': fallbackSummary.stock > 0 ? Number(((fallbackSummary.stock / (fallbackSummary.stock - ytd.stockChange)) * 100).toFixed(1)) : null,
+      'forecast-discipline': null,
     }
 
     const states = executiveMetrics.map(metric => {
@@ -141,16 +76,15 @@ export default function CeoDashboard() {
       }
     })
 
-    const score = clampScore(
-      states.reduce((sum, metric) => sum + (metric.current ?? 0), 0) / states.length,
-    )
+    const measured = states.filter((metric) => metric.current !== null)
+    const score = measured.length ? clampScore(measured.reduce((sum, metric) => sum + (metric.current ?? 0), 0) / measured.length) : 0
 
     return {
       score,
       states,
       trend: score >= 80 ? 'Estable' : score >= 65 ? 'En vigilancia' : 'Bajo control',
     }
-  }, [directors, executiveMetrics, totals.conversion, totals.ventas])
+  }, [dataQuality.sourceCoverage, executiveMetrics, fallbackSummary.stock, ytd.stockChange])
   const recentReports = reports.slice(0, 3)
 
   return (
@@ -174,9 +108,14 @@ export default function CeoDashboard() {
       {/* KPI Row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <KpiCard label="Ventas totales"     value={fmt(totals.ventas)}           sub="propiedades cerradas (6m)"  border="var(--n3-teal)" />
-        <KpiCard label="UF vendidas"        value={`${(totals.uf/1000).toFixed(0)}K UF`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#6b7280" />
-        <KpiCard label="Comisión acumulada" value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP comisión total" border="var(--n3-teal)" />
-        <KpiCard label="Conversión global"  value={`${totals.conversion}%`}      sub="leads → cierre promedio"   border="#111111" />
+        <KpiCard
+          label="UF vendidas"
+          value={totals.uf > 0 ? `${(totals.uf / 1000).toFixed(0)}K UF` : 'n/d'}
+          sub={totals.uf > 0 ? 'volumen validado enero-junio' : 'UF no disponible en el corte'}
+          border="#6b7280"
+        />
+        <KpiCard label="Cobertura de fuentes" value={`${dataQuality.sourceCoverage}%`} sub="datasets mensuales presentes / esperados" border="var(--n3-teal)" />
+        <KpiCard label="Cierres / leads Jun" value={`${totals.conversion}%`} sub="proxy mensual, no cohorte" border="#111111" />
       </div>
 
       {/* Executive Scorecard */}
@@ -266,23 +205,22 @@ export default function CeoDashboard() {
         {/* Ranking table */}
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ranking de Directores</h2>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas por sucursal</h2>
             <span className="text-xs" style={{ color: '#6b7280' }}>6 meses</span>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: '#f8fbfa' }}>
                 <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>#</th>
-                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Director</th>
+                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Sucursal</th>
                 <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Ventas</th>
                 <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>UF</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Cumpl.</th>
+                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Meta</th>
                 <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Comisión</th>
               </tr>
             </thead>
             <tbody>
               {directors.map((d, i) => {
-                const pct = d.target > 0 ? Math.round((d.ventas / d.target) * 100) : 0
                 const medals = ['#f59e0b', '#6b7280', '#6b7280']
                 return (
                   <tr key={d.id} style={{ borderTop: '1px solid #f0f5f3' }}>
@@ -304,18 +242,13 @@ export default function CeoDashboard() {
                       <span className="text-[13px] font-semibold" style={{ color: '#111111' }}>{d.ventas}</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px]" style={{ color: '#374151' }}>{(d.uf / 1000).toFixed(0)}K</span>
+                      <span className="text-[13px]" style={{ color: '#374151' }}>{d.uf === null ? 'n/d' : `${(d.uf / 1000).toFixed(0)}K`}</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="text-[12px] font-semibold" style={{ color: pct >= 100 ? 'var(--n3-teal)' : pct >= 80 ? '#f59e0b' : '#d97706' }}>{pct}%</span>
-                        <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: '#e8f0ed' }}>
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? 'var(--n3-teal)' : pct >= 80 ? '#f59e0b' : '#d97706' }} />
-                        </div>
-                      </div>
+                      <span className="text-[12px] font-semibold" style={{ color: '#6b7280' }}>No cargada</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px]" style={{ color: '#374151' }}>${fmt(Math.round(d.comision / 1000))}K</span>
+                      <span className="text-[13px]" style={{ color: '#374151' }}>n/d</span>
                     </td>
                   </tr>
                 )
@@ -324,62 +257,65 @@ export default function CeoDashboard() {
           </table>
         </div>
 
-        {/* Sales AreaChart */}
+        {/* Sales trend */}
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas por Director</h2>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Tendencia operativa real</h2>
             <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Últimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">
             <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
-                  {dirKeys.map((k, i) => (
-                    <linearGradient key={k} id={`g${i}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={dirColors[i]} stopOpacity={0.25} />
-                      <stop offset="95%" stopColor={dirColors[i]} stopOpacity={0} />
-                    </linearGradient>
-                  ))}
+                  <linearGradient id="gVentas" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="var(--n3-teal)" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="var(--n3-teal)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gCaptaciones" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#6b7280" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#6b7280" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#111111" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#111111" stopOpacity={0} />
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" />
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
-                {dirKeys.map((k, i) => (
-                  <Area key={k} type="monotone" dataKey={k} stroke={dirColors[i]} strokeWidth={2} fill={`url(#g${i})`} />
-                ))}
-              </AreaChart>
+                <Bar dataKey="ventas" fill="url(#gVentas)" radius={[4, 4, 0, 0]} name="Ventas" />
+                <Bar dataKey="captaciones" fill="url(#gCaptaciones)" radius={[4, 4, 0, 0]} name="Captaciones" />
+                <Bar dataKey="leads" fill="url(#gLeads)" radius={[4, 4, 0, 0]} name="Leads" />
+              </BarChart>
             </ResponsiveContainer>
             <div className="flex gap-4 mt-2 justify-center">
-              {dirKeys.map((k, i) => (
-                <div key={k} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: dirColors[i] }} />
-                  <span className="text-[11px]" style={{ color: '#6b7280' }}>{k}</span>
-                </div>
-              ))}
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--n3-teal)' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Ventas</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: '#6b7280' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Captaciones</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: '#111111' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Leads</span></div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Comision BarChart + Reports */}
+      {/* Decisions + Reports */}
       <div className="grid grid-cols-5 gap-5">
-        {/* Comision bar */}
         <div className="col-span-3 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Comisiones por Director</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>En miles de pesos CLP</p>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Decisiones ejecutivas sugeridas</h2>
+            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Acciones calculadas desde el corte CRM validado</p>
           </div>
-          <div className="px-4 pt-4 pb-4">
-            <ResponsiveContainer width="100%" height={150}>
-              <BarChart data={directors.map(d => ({ name: d.name.split(' ')[0], comision: Math.round(d.comision / 1000) }))} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f5f3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v: unknown) => [`$${fmt(Number(v))}K`, 'Comisión']} contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
-                <Bar dataKey="comision" fill="var(--n3-teal)" radius={[4, 4, 0, 0]} maxBarSize={60} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="divide-y" style={{ borderColor: '#f0f5f3' }}>
+            {executiveActions.map((item) => (
+              <div key={item.title} className="px-5 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-[13px] font-semibold" style={{ color: '#111111' }}>{item.title}</h3>
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase" style={{ background: item.priority === 'high' ? '#fff7ed' : '#f0f7f4', color: item.priority === 'high' ? '#c2410c' : 'var(--n3-teal)' }}>{item.priority}</span>
+                </div>
+                <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>{item.evidence}</p>
+                <p className="mt-2 text-xs font-medium" style={{ color: '#111111' }}>{item.action}</p>
+              </div>
+            ))}
           </div>
         </div>
 

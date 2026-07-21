@@ -1,34 +1,18 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import type { KpiSnapshot, Profile, AgentActivity } from '@/lib/types'
-import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
+import { useMemo } from 'react'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import type { AgentActivity } from '@/lib/types'
+import { PP_SCORECARD_DEFINITIONS, assessMetricStatus } from '@/lib/pp-scorecard'
+import { buildAgentFallbackRows, buildOperationalSeries, getLatestLeadSnapshot, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
 
-const DIRECTOR_ID = 'd0000000-0000-0000-0000-000000000001' // default: Juan Morales
-const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+type StatusKey = 'on_track' | 'warning' | 'behind' | 'inactive'
 
-type StatusKey = 'on_track' | 'warning' | 'behind'
-type AgentRow = { id: string; name: string; team: string; ventas: number; captaciones: number; conversion: number; velocidad: number; status: StatusKey }
-
-const MOCK_AGENTS: AgentRow[] = [
-  { id: '1', name: 'Sofía Ramos',   team: 'Equipo Alpha', ventas: 15, captaciones: 25, conversion: 11.1, velocidad: 31, status: 'on_track' },
-  { id: '2', name: 'Diego Herrera', team: 'Equipo Alpha', ventas: 14, captaciones: 23, conversion:  9.1, velocidad: 34, status: 'warning'  },
-]
-
-const MOCK_CHART = [
-  { mes: 'Feb', ventas: 4, target: 5 },
-  { mes: 'Mar', ventas: 5, target: 5 },
-  { mes: 'Abr', ventas: 6, target: 6 },
-  { mes: 'May', ventas: 5, target: 6 },
-  { mes: 'Jun', ventas: 7, target: 7 },
-  { mes: 'Jul', ventas: 3, target: 7 },
-]
 const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: string }> = {
   on_track: { label: 'En Meta',  bg: '#dcfce7', color: '#16a34a' },
   warning:  { label: 'Atención', bg: '#fef3c7', color: '#d97706' },
   behind:   { label: 'En Riesgo',bg: '#fee2e2', color: '#dc2626' },
+  inactive: { label: 'Sin meta', bg: '#f3f4f6', color: '#6b7280' },
 }
 
 function fmt(n: number) { return n.toLocaleString('es-CL') }
@@ -51,108 +35,22 @@ function KpiCard({ label, value, sub, border }: { label: string; value: string; 
 }
 
 export default function DirectorDashboard() {
-  const [director, setDirector] = useState<Profile | null>(null)
-  const [agents, setAgents] = useState(MOCK_AGENTS)
-  const [chartData, setChartData] = useState(MOCK_CHART)
-  const [activities, setActivities] = useState<AgentActivity[]>([])
-  const [totals, setTotals] = useState({ ventas: 30, uf: 138100, target: 36, conversion: 10.0, comision: 4119000 })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const supabase = createClient()
-        const [{ data: profileData }, { data: agentProfiles }, { data: snapshots }, { data: activityData }] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', DIRECTOR_ID).single(),
-          supabase.from('profiles').select('*').eq('role', 'seller').eq('team', 'Equipo Alpha'),
-          supabase.from('kpi_snapshots').select('*').not('agent_id', 'is', null).eq('director_id', DIRECTOR_ID).order('period_date', { ascending: true }),
-          supabase.from('agent_activities').select('*').in('agent_id', ['a0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000002']).eq('status', 'pending').order('scheduled_at', { ascending: true }).limit(8),
-        ])
-
-        if (profileData) setDirector(profileData as Profile)
-
-        if (agentProfiles && snapshots && snapshots.length > 0) {
-          // Build agent summary
-          const agMap: Record<string, { ventas: number; captaciones: number; conversion: number; velocidad: number; count: number }> = {}
-          for (const s of snapshots as KpiSnapshot[]) {
-            if (!s.agent_id) continue
-            if (!agMap[s.agent_id]) agMap[s.agent_id] = { ventas: 0, captaciones: 0, conversion: 0, velocidad: 0, count: 0 }
-            agMap[s.agent_id].ventas       += s.ventas_count
-            agMap[s.agent_id].captaciones  += s.captaciones_count
-            agMap[s.agent_id].conversion   += s.conversion_rate
-            agMap[s.agent_id].velocidad    += s.velocidad_venta
-            agMap[s.agent_id].count        += 1
-          }
-
-          const dirSnaps = (snapshots as KpiSnapshot[]).filter(s => s.agent_id !== null)
-          const totalVentas = dirSnaps.reduce((acc, s) => acc + (s.ventas_count || 0), 0) / 2 // sum unique by agent
-          const monthlyTarget = dirSnaps.reduce((acc, s) => acc + (s.monthly_target || 0), 0) / dirSnaps.length * 6
-          const avgConv = dirSnaps.reduce((acc, s) => acc + (s.conversion_rate || 0), 0) / dirSnaps.length
-
-          setTotals({
-            ventas: Math.round(totalVentas),
-            uf: dirSnaps.reduce((a, s) => a + (s.ventas_uf || 0), 0) / 2,
-            target: Math.round(monthlyTarget),
-            conversion: Math.round(avgConv * 10) / 10,
-            comision: dirSnaps.reduce((a, s) => a + (s.comision_total || 0), 0) / 2,
-          })
-
-          const newAgents = (agentProfiles as Profile[]).map(p => {
-            const ag = agMap[p.id]
-            const v   = ag?.ventas ?? 0
-            const tgt = (dirSnaps.find(s => s.agent_id === p.id)?.monthly_target ?? 2) * 6
-            const pct = tgt > 0 ? (v / tgt) * 100 : 0
-            return {
-              id: p.id,
-              name: p.full_name || 'Agente',
-              team: p.team || 'â€”',
-              ventas: v,
-              captaciones: ag?.captaciones ?? 0,
-              conversion: ag && ag.count > 0 ? Math.round((ag.conversion / ag.count) * 10) / 10 : 0,
-              velocidad: ag && ag.count > 0 ? Math.round(ag.velocidad / ag.count) : 0,
-              status: (pct >= 90 ? 'on_track' : pct >= 65 ? 'warning' : 'behind') as StatusKey,
-            }
-          }).sort((a, b) => b.ventas - a.ventas)
-          setAgents(newAgents)
-
-          // Monthly chart (team total)
-          const months = [...new Set((snapshots as KpiSnapshot[]).map(s => s.period_date.slice(0, 7)))].sort().slice(-6)
-          const chart = months.map(m => {
-            const monthSnaps = (snapshots as KpiSnapshot[]).filter(s => s.period_date.startsWith(m))
-            return {
-              mes: MONTHS_ES[parseInt(m.slice(5, 7)) - 1],
-              ventas: monthSnaps.reduce((a, s) => a + (s.ventas_count || 0), 0),
-              target: monthSnaps.reduce((a, s) => a + (s.monthly_target || 0), 0),
-            }
-          })
-          setChartData(chart)
-        }
-
-        if (activityData) setActivities(activityData as AgentActivity[])
-      } catch (_) {
-        // keep mocks
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [])
-
-  const pctCumpl = totals.target > 0 ? Math.round((totals.ventas / totals.target) * 100) : 0
+  const fallbackSummary = getOperationalSummary()
+  const agents = buildAgentFallbackRows()
+  const chartData = buildOperationalSeries(6).map(({ mes, ventas, captaciones }) => ({ mes, ventas, captaciones }))
+  const leadSnapshot = getLatestLeadSnapshot()
+  const ytd = getYtdSummary()
+  const directorActions = getRoleActions('director')
+  const activities: AgentActivity[] = []
   const directorScorecard = useMemo(() => {
-    const conversionScore = clampScore(Math.round(totals.conversion * 7))
-    const pipelineCoverage = clampScore(Math.round((totals.ventas / Math.max(1, totals.target)) * 300))
-    const followupCompletion = clampScore(Math.max(0, 100 - activities.length * 12))
-
     const states = PP_SCORECARD_DEFINITIONS.director.map((definition) => {
-      const current =
-        definition.id === 'team-conversion'
-          ? conversionScore
-          : definition.id === 'pipeline-coverage'
-            ? pipelineCoverage
-            : definition.id === 'followup-completion'
-              ? followupCompletion
-              : null
+      const current = definition.id === 'classification-coverage'
+        ? leadSnapshot.classificationCoverage
+        : definition.id === 'stale-lead-rate'
+          ? Number(((leadSnapshot.stale15 / Math.max(1, leadSnapshot.active)) * 100).toFixed(1))
+          : definition.id === 'suspension-pressure'
+            ? Number(((fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100).toFixed(1))
+            : null
 
       return {
         definition,
@@ -161,17 +59,17 @@ export default function DirectorDashboard() {
       }
     })
 
-    const values = states.map((item) => item.current).filter((value): value is number => value !== null)
-    const overall = values.length ? clampScore(values.reduce((sum, value) => sum + value, 0) / values.length) : null
+    const staleRate = (leadSnapshot.stale15 / Math.max(1, leadSnapshot.active)) * 100
+    const suspensionRate = (fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100
+    const overall = Math.round(((leadSnapshot.classificationCoverage ?? 0) + Math.max(0, 100 - staleRate) + Math.max(0, 100 - suspensionRate)) / 3)
 
     return {
       overall,
       states,
       trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
     }
-  }, [activities.length, totals.conversion, totals.target, totals.ventas])
+  }, [fallbackSummary.stock, fallbackSummary.suspended, leadSnapshot.active, leadSnapshot.classificationCoverage, leadSnapshot.stale15])
 
-  const ACTIVITY_ICONS: Record<string, string> = { llamada: 'ðŸ“ž', visita: 'ðŸ ', oferta: 'ðŸ“„', cierre: 'âœï¸' }
   const ACTIVITY_COLORS: Record<string, string> = { llamada: 'var(--n3-teal)', visita: '#6b7280', oferta: '#0ea5e9', cierre: 'var(--n3-teal)' }
 
   return (
@@ -181,33 +79,29 @@ export default function DirectorDashboard() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#6b7280', color: '#fff' }}>Director</span>
-            {director?.team && <span className="text-xs font-medium" style={{ color: 'var(--n3-teal)' }}>{director.team}</span>}
+            <span className="text-xs font-medium" style={{ color: 'var(--n3-teal)' }}>Vitacura CRM</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>
-            {loading ? 'Cargando...' : director?.full_name || 'Juan Morales'}
+            Gestión comercial validada
           </h1>
           <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel de tu equipo · {agents.length} agentes activos</p>
         </div>
         <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-3" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="text-right">
-            <div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b7280' }}>Cumpl. 6 meses</div>
-            <div className="text-xl font-bold" style={{ color: pctCumpl >= 90 ? 'var(--n3-teal)' : pctCumpl >= 70 ? '#f59e0b' : '#d97706' }}>{pctCumpl}%</div>
-          </div>
-          <div className="w-12 h-12 relative">
-            <svg viewBox="0 0 36 36" className="w-12 h-12 -rotate-90">
-              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f0f5f3" strokeWidth="3.8" />
-              <circle cx="18" cy="18" r="15.9" fill="none" stroke={pctCumpl >= 90 ? 'var(--n3-teal)' : pctCumpl >= 70 ? '#f59e0b' : '#d97706'} strokeWidth="3.8" strokeDasharray={`${Math.min(pctCumpl, 100)} 100`} strokeLinecap="round" />
-            </svg>
-          </div>
+          <div className="text-right"><div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b7280' }}>Metas 2026</div><div className="text-sm font-bold" style={{ color: '#6b7280' }}>No cargadas</div></div>
         </div>
       </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Ventas equipo" value={String(totals.ventas)} sub="propiedades cerradas (6m)" border="var(--n3-teal)" />
-        <KpiCard label="UF vendidas"   value={`${(totals.uf/1000).toFixed(0)}K`} sub={`$${fmt(Math.round(totals.uf * 36300 / 1e6))}M CLP`} border="#6b7280" />
-        <KpiCard label="Conversión"    value={`${totals.conversion}%`} sub="leads → cierre promedio" border="var(--n3-teal)" />
-        <KpiCard label="Comisión eq."  value={`$${fmt(Math.round(totals.comision / 1000))}K`} sub="CLP acumulado 6m" border="#111111" />
+        <KpiCard label="Ventas Vitacura" value={String(ytd.salesCount)} sub="cierres validados enero-junio" border="var(--n3-teal)" />
+        <KpiCard
+          label="UF vendidas"
+          value={`${(ytd.salesUf / 1000).toFixed(1)}K`}
+          sub="volumen de ventas validado"
+          border="#6b7280"
+        />
+        <KpiCard label="Leads nuevos" value={String(fallbackSummary.leads)} sub={`${fallbackSummary.monthLabel} · no acumulados`} border="var(--n3-teal)" />
+        <KpiCard label="Sin gestión 15d" value={String(leadSnapshot.stale15)} sub="cola prioritaria del último corte" border="#111111" />
       </div>
 
       {/* Director Scorecard */}
@@ -274,7 +168,7 @@ export default function DirectorDashboard() {
         {/* Agents */}
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Mi Equipo de Agentes</h2>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Mi equipo real de agentes</h2>
             <span className="text-xs" style={{ color: '#6b7280' }}>6 meses · {agents.length} agentes</span>
           </div>
           <table className="w-full text-sm">
@@ -298,8 +192,8 @@ export default function DirectorDashboard() {
                     </td>
                     <td className="px-4 py-3.5 text-right"><span className="text-[13px] font-semibold" style={{ color: '#111111' }}>{a.ventas}</span></td>
                     <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#374151' }}>{a.captaciones}</span></td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#374151' }}>{a.conversion}%</span></td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#374151' }}>{a.velocidad}d</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#6b7280' }}>{a.conversion === null ? 'n/d' : `${a.conversion}%`}</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: '#6b7280' }}>{a.velocidad === null ? 'n/d' : `${a.velocidad}d`}</span></td>
                     <td className="px-4 py-3.5 text-right">
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>
                     </td>
@@ -313,7 +207,7 @@ export default function DirectorDashboard() {
         {/* Trend chart */}
         <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas vs Target</h2>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas vs Captaciones</h2>
             <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Equipo · últimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">
@@ -324,12 +218,12 @@ export default function DirectorDashboard() {
                 <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e8f0ed', borderRadius: 6, fontSize: 12 }} />
                 <Line type="monotone" dataKey="ventas" stroke="var(--n3-teal)" strokeWidth={2.5} dot={{ fill: 'var(--n3-teal)', r: 4 }} name="Ventas" />
-                <Line type="monotone" dataKey="target" stroke="#e5e7eb" strokeWidth={1.5} strokeDasharray="4 3" dot={false} name="Target" />
+                <Line type="monotone" dataKey="captaciones" stroke="#6b7280" strokeWidth={1.5} strokeDasharray="4 3" dot={false} name="Captaciones" />
               </LineChart>
             </ResponsiveContainer>
             <div className="flex gap-4 mt-1 justify-center">
               <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--n3-teal)' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Ventas</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-0.5" style={{ background: '#e5e7eb' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Target</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-0.5" style={{ background: '#e5e7eb' }} /><span className="text-[11px]" style={{ color: '#6b7280' }}>Captaciones</span></div>
             </div>
           </div>
         </div>
@@ -338,11 +232,19 @@ export default function DirectorDashboard() {
       {/* Activities Pending */}
       <div className="bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
         <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-          <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Actividades Pendientes del Equipo</h2>
-          <span className="text-xs" style={{ color: '#6b7280' }}>{activities.length} pendientes hoy</span>
+          <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Acciones recomendadas para dirección</h2>
+          <span className="text-xs" style={{ color: '#6b7280' }}>Corte CRM validado</span>
         </div>
         {activities.length === 0 ? (
-          <div className="px-5 py-8 text-center"><p className="text-xs" style={{ color: '#6b7280' }}>Sin actividades pendientes.</p></div>
+          <div className="grid grid-cols-2 gap-0">
+            {directorActions.map((item, index) => (
+              <div key={item.title} className="px-5 py-4" style={{ borderRight: index % 2 === 0 ? '1px solid #f0f5f3' : undefined }}>
+                <div className="text-[12px] font-semibold" style={{ color: '#111111' }}>{item.title}</div>
+                <p className="mt-1 text-[11px]" style={{ color: '#6b7280' }}>{item.evidence}</p>
+                <p className="mt-2 text-[12px] font-medium" style={{ color: 'var(--n3-teal)' }}>{item.action}</p>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-0">
             {activities.map((act, i) => (

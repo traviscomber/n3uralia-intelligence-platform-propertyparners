@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart } from 'recharts'
 import { TrendingUp, Home, DollarSign, Target, Users, Activity, Sparkles } from 'lucide-react'
+import { buildHomeFallbackCards, buildLatestKpiFallback, buildOperationalSeries, getDataQuality, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
 
 interface KPISnapshot {
   period_date: string
@@ -32,30 +33,43 @@ interface PropertyRow {
 }
 
 export default function DashboardHome() {
-  const [kpis, setKpis] = useState<KPISnapshot[]>([])
-  const [properties, setProperties] = useState<PropertyRow[]>([])
-  const [loading, setLoading] = useState(true)
+    const [properties, setProperties] = useState<PropertyRow[]>([])
+    const [loading, setLoading] = useState(true)
+    const fallbackSummary = getOperationalSummary()
+    const fallbackKpi = buildLatestKpiFallback()
+    const quality = getDataQuality()
+    const ytd = getYtdSummary()
+    const ceoActions = getRoleActions('ceo')
+    const fallbackChart = buildOperationalSeries(6).map(({ period_date, ventas, ventasUf, captaciones, leads, visitas, stock, conversion }) => ({
+      id: `crm-${period_date}`,
+      period_date,
+      period_type: 'monthly' as const,
+      ventas_count: ventas,
+      ventas_uf: ventasUf,
+      captaciones_count: captaciones,
+      visitas_count: visitas ?? 0,
+      leads_count: leads,
+      conversion_rate: conversion,
+      comision_total: 0,
+      stock_count: stock,
+      velocidad_venta: 0,
+      monthly_target: 0,
+      director_id: null,
+      agent_id: null,
+      created_at: `${period_date}T00:00:00.000Z`,
+    })) as KPISnapshot[]
 
   useEffect(() => {
     const fetchKPIs = async () => {
       try {
         const supabase = createClient()
-        const [kpiRes, propertiesRes] = await Promise.all([
-          supabase
-            .from('kpi_snapshots')
-            .select('*')
-            .order('period_date', { ascending: false })
-            .limit(6),
-          supabase
+        const propertiesRes = await supabase
             .from('properties')
             .select('id,address,neighborhood,property_type,description,image_url,source,price_uf,area_m2,days_on_market,created_at')
             .order('created_at', { ascending: false })
-            .limit(300),
-        ])
+            .limit(300)
 
-        if (kpiRes.error) throw kpiRes.error
         if (propertiesRes.error) throw propertiesRes.error
-        setKpis(kpiRes.data || [])
         setProperties((propertiesRes.data || []) as PropertyRow[])
       } catch (err) {
         console.error('Error fetching KPIs:', err)
@@ -67,14 +81,29 @@ export default function DashboardHome() {
     fetchKPIs()
   }, [])
 
-  const latestKPI = kpis[0]
-  const previousKPI = kpis[1] || null
-  const chartData = [...kpis].reverse()
+  const latestKPI = fallbackKpi
+  const previousKPI = fallbackChart.at(-2) ?? null
+  const chartData = fallbackChart
   const propertyMetrics = useMemo(() => {
     const rows = properties.filter((property) => {
       const text = `${property.address || ''} ${property.neighborhood || ''} ${property.source || ''}`.toLowerCase()
       return text.includes('vitacura')
     })
+
+    if (rows.length === 0) {
+      return {
+        total: fallbackSummary.stock,
+        withImage: 0,
+        withDescription: 0,
+        recent24h: 0,
+        recent7d: 0,
+        avgDays: 0,
+        avgPricePerM2: 0,
+        houseCount: 0,
+        departmentCount: 0,
+        sourceCount: fallbackSummary.topOrigins.length,
+      }
+    }
 
     const total = rows.length
     const withImage = rows.filter((property) => Boolean(property.image_url)).length
@@ -114,19 +143,13 @@ export default function DashboardHome() {
       : imageCoverage >= 75 && descriptionCoverage >= 75
         ? 'Cobertura media'
         : 'Cobertura baja'
-  const executiveScore = useMemo(() => {
-    if (!latestKPI) return null
-    const salesComponent = Math.min(35, latestKPI.ventas_count * 1.8)
-    const conversionComponent = Math.min(35, latestKPI.conversion_rate * 4)
-    const captureComponent = Math.min(20, latestKPI.captaciones_count * 1.5)
-    const stockComponent = Math.max(0, 10 - Math.min(latestKPI.stock_count, 10))
-    const momentumBonus = previousKPI && latestKPI.ventas_count > previousKPI.ventas_count ? 8 : 0
-    return Math.max(0, Math.min(100, Math.round(salesComponent + conversionComponent + captureComponent + stockComponent + momentumBonus)))
-  }, [latestKPI, previousKPI])
+  const executiveScore = quality.sourceCoverage
   const salesDelta = latestKPI && previousKPI ? latestKPI.ventas_count - previousKPI.ventas_count : null
   const conversionDelta = latestKPI && previousKPI ? latestKPI.conversion_rate - previousKPI.conversion_rate : null
 
   const audienceCards = useMemo(() => {
+    if (propertyMetrics.total === 0) return buildHomeFallbackCards()
+
     const coverageSignal = imageCoverage >= 90 && descriptionCoverage >= 90
       ? 'Inventario muy sólido para lectura comercial'
       : imageCoverage >= 75 && descriptionCoverage >= 75
@@ -186,7 +209,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Ventas Vitacura</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.ventas_count}</p>
-                <p className="text-xs mt-2" style={{ color: '#6b7280' }}>casas y departamentos</p>
+                <p className="text-xs mt-2" style={{ color: '#6b7280' }}>{fallbackSummary.monthLabel} · casas y departamentos</p>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
                 <Home className="w-6 h-6" />
@@ -200,7 +223,7 @@ export default function DashboardHome() {
               <div className="flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>UF Vendidas</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{(latestKPI.ventas_uf / 1000).toFixed(1)}K</p>
-                <p className="text-xs mt-2" style={{ color: '#6b7280' }}>en volumen de ventas Vitacura</p>
+                <p className="text-xs mt-2" style={{ color: '#6b7280' }}>{fallbackSummary.monthLabel} · volumen validado</p>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110" style={{ background: '#f9fafb', color: '#6b7280' }}>
                 <DollarSign className="w-6 h-6" />
@@ -212,9 +235,9 @@ export default function DashboardHome() {
           <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 border-l-4" style={{ border: '1px solid #e5e7eb', borderLeftColor: 'var(--n3-teal)' }}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasa Conversión</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cierres / leads nuevos</p>
                 <p className="text-4xl font-bold text-gray-900 mt-3">{latestKPI.conversion_rate.toFixed(1)}%</p>
-                <p className="text-xs text-gray-500 mt-2">leads a ventas de Vitacura</p>
+                <p className="text-xs text-gray-500 mt-2">proxy mensual, no atribución de cohorte</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-red-50 flex items-center justify-center transition-transform duration-300 hover:scale-110">
                 <TrendingUp className="w-6 h-6 text-red-600" />
@@ -237,6 +260,27 @@ export default function DashboardHome() {
           </div>
         </div>
       )}
+
+      <div className="rounded-lg border bg-white shadow-sm" style={{ borderColor: '#e5e7eb' }}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Control de cobertura y calidad</h2>
+            <p className="mt-0.5 text-xs" style={{ color: '#6b7280' }}>Reglas, faltantes y exclusiones aplicadas antes de publicar los KPI</p>
+          </div>
+          <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>{quality.sourceCoverage}% de fuentes</span>
+        </div>
+        <div className="grid md:grid-cols-2">
+          {quality.issues.map((issue, index) => (
+            <div key={issue.code} className="px-5 py-4" style={{ borderTop: index >= 2 ? '1px solid #f0f5f3' : undefined, borderRight: index % 2 === 0 ? '1px solid #f0f5f3' : undefined }}>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full" style={{ background: issue.severity === 'critical' ? '#dc2626' : issue.severity === 'warning' ? '#d97706' : 'var(--n3-teal)' }} />
+                <h3 className="text-xs font-semibold text-gray-900">{issue.title}</h3>
+              </div>
+              <p className="mt-2 text-xs leading-5" style={{ color: '#6b7280' }}>{issue.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="rounded-lg p-6 border shadow-sm" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f8fbfa 100%)', borderColor: '#e5e7eb' }}>
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -305,8 +349,8 @@ export default function DashboardHome() {
           <div className="bg-white rounded-lg p-6 shadow-sm border" style={{ borderColor: '#e5e7eb' }}>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Score ejecutivo</p>
-                <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Panel de gestión</h2>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Cobertura de fuentes</p>
+                <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Control de calidad CRM</h2>
               </div>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
                 <Target className="w-6 h-6" />
@@ -319,7 +363,7 @@ export default function DashboardHome() {
               {salesDelta !== null ? `Ventas vs periodo previo: ${salesDelta >= 0 ? '+' : ''}${salesDelta}` : 'Sin comparación previa disponible'}
             </p>
             <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
-              {conversionDelta !== null ? `Conversión vs periodo previo: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts` : 'Sin variación previa disponible'}
+              {conversionDelta !== null ? `Proxy cierres/leads vs periodo previo: ${conversionDelta >= 0 ? '+' : ''}${conversionDelta.toFixed(1)} pts` : 'Sin variación previa disponible'}
             </p>
           </div>
 
@@ -327,8 +371,8 @@ export default function DashboardHome() {
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Lectura actual</p>
             <h2 className="text-xl font-semibold mt-2" style={{ color: '#111111' }}>Qué está pasando hoy</h2>
             <ul className="mt-4 space-y-3 text-sm" style={{ color: '#374151' }}>
-              <li>• Ventas: {latestKPI.ventas_count} transacciones activas.</li>
-              <li>• Conversión: {latestKPI.conversion_rate.toFixed(1)}% de leads a ventas.</li>
+              <li>• Ventas: {latestKPI.ventas_count} cierres validados por ID.</li>
+              <li>• UF vendidas: {latestKPI.ventas_uf.toLocaleString('es-CL')}.</li>
               <li>• Captaciones: {latestKPI.captaciones_count} oportunidades nuevas en Vitacura.</li>
               <li>• Stock: {latestKPI.stock_count} propiedades en el inventario.</li>
             </ul>
@@ -353,7 +397,7 @@ export default function DashboardHome() {
         {/* Ventas Tendencia */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Ventas de Casas (Últimos 6 meses)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Ventas de casas y departamentos</h3>
             <div className="w-2 h-2 rounded-full" style={{ background: 'var(--n3-teal)' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
@@ -385,7 +429,7 @@ export default function DashboardHome() {
           {/* Tasa Conversión */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Tasa Conversión Casas</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Proxy cierres / leads nuevos</h3>
             <div className="w-2 h-2 rounded-full" style={{ background: '#6b7280' }}></div>
           </div>
           <ResponsiveContainer width="100%" height={320}>
@@ -418,19 +462,16 @@ export default function DashboardHome() {
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               Resumen Ejecutivo IA
-              <span className="text-xs px-2 py-1 rounded-full font-semibold text-white" style={{ background: 'var(--n3-teal)' }}>En Tiempo Real</span>
+              <span className="text-xs px-2 py-1 rounded-full font-semibold text-white" style={{ background: 'var(--n3-teal)' }}>Corte validado</span>
             </h3>
             <p className="mt-3 leading-relaxed" style={{ color: '#374151' }}>
-              El mercado inmobiliario continúa mostrando absorción sostenida. Las ventas del mes alcanzaron{' '}
-              <span className="font-bold px-2 py-1 rounded" style={{ color: 'var(--n3-teal)', background: '#f9fafb' }}>{latestKPI.ventas_count} transacciones</span> con una tasa de conversión
-              de <span className="font-bold px-2 py-1 rounded" style={{ color: '#6b7280', background: '#f9fafb' }}>{latestKPI.conversion_rate.toFixed(1)}%</span>. Se recomienda incrementar captaciones en zonas de alta demanda para
-              maximizar el pipeline comercial.
+              El corte enero-junio registra <span className="font-bold px-2 py-1 rounded" style={{ color: 'var(--n3-teal)', background: '#f9fafb' }}>{ytd.salesCount} ventas por UF {ytd.salesUf.toLocaleString('es-CL')}</span>.
+              La cartera comparable cambió en {ytd.stockChange} propiedades y el último mes cerró con {latestKPI.stock_count} casas y departamentos publicados. La recomendación prioriza evidencia CRM y no incorpora metas aún no validadas.
             </p>
             <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(143, 178, 170, 0.2)' }}>
               <p className="text-xs font-semibold uppercase" style={{ color: 'var(--n3-teal)' }}>Próximas Acciones:</p>
               <ul className="mt-2 space-y-1 text-xs" style={{ color: '#374151' }}>
-                <li>• Aumentar prospección en Nueva Costanera (90% absorción)</li>
-                <li>• Optimizar timing de venta en Lo Curro (velocidad: 62 días)</li>
+                {ceoActions.map((item) => <li key={item.title}>• {item.action} Evidencia: {item.evidence}</li>)}
               </ul>
             </div>
           </div>
@@ -445,14 +486,14 @@ export default function DashboardHome() {
           <p className="text-xs mt-2" style={{ color: '#374151' }}>oportunidades nuevas</p>
         </div>
         <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderLeftColor: '#6b7280' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Comisión Total</p>
-          <p className="text-3xl font-bold text-gray-900 mt-3">${(latestKPI.comision_total / 1000000).toFixed(1)}M</p>
-          <p className="text-xs mt-2" style={{ color: '#374151' }}>ingresos acumulados</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Requerimientos</p>
+          <p className="text-3xl font-bold text-gray-900 mt-3">{fallbackSummary.requirements}</p>
+          <p className="text-xs mt-2" style={{ color: '#374151' }}>únicos y dentro de alcance</p>
         </div>
         <div className="rounded-lg p-5 hover:shadow-md transition-all duration-300 border-l-4" style={{ background: '#f9fafb', border: '1px solid var(--n3-teal)', borderLeftColor: 'var(--n3-teal)' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-teal)' }}>Velocidad Venta</p>
-          <p className="text-3xl font-bold text-gray-900 mt-3">{latestKPI.velocidad_venta.toFixed(0)} días</p>
-          <p className="text-xs mt-2" style={{ color: '#374151' }}>promedio de mercado</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-teal)' }}>Ticket mediano</p>
+          <p className="text-3xl font-bold text-gray-900 mt-3">{fallbackSummary.medianSaleUf?.toLocaleString('es-CL') ?? 'n/d'} UF</p>
+          <p className="text-xs mt-2" style={{ color: '#374151' }}>ventas del último corte</p>
         </div>
       </div>
     </div>
