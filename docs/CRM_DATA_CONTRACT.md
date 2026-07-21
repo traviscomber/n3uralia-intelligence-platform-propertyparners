@@ -16,7 +16,7 @@
 | Captadas | `Propiedad - Id` | Evento mensual |
 | Leads del mes | `Lead - Id` | Evento mensual |
 | Requerimientos online | `Requerimiento - Id` | Evento mensual |
-| Visitas | `Visita - Id` | Evento mensual; puede repetirse en filas de detalle |
+| Agendamientos de visita | `Visita - Id` | Evento mensual; puede repetirse en filas de detalle y contiene estados pendiente, cancelada, realizada, confirmada, rechazada u orden enviada |
 | Suspendidas | `Propiedad - Id` | Evento mensual |
 | Total cartera | `Propiedad - Id` | Snapshot al corte |
 | Leads activos / clasificados / sin gestion | `Lead - Id` | Snapshot al corte; nunca se suma como flujo mensual |
@@ -36,6 +36,9 @@
 11. La cobertura de fuentes es datasets mensuales presentes dividido por datasets mensuales esperados. No es un puntaje subjetivo; duplicados, exclusiones y filas malformadas se informan por separado.
 12. Los archivos de leads sin gestion de 15 y 90 dias son grupos disjuntos: la cola mayor a 15 dias es la suma de ambos.
 13. El cierre mensual es autoritativo frente al informe quincenal. La quincena se conserva para auditoria de deriva, no se suma al mes.
+14. `Agendamientos` cuenta todos los `Visita - Id` unicos; `visitas realizadas` cuenta solo registros cuyo estado es `Realizada`.
+15. El ranking individual usa `Propiedad - Agente` y se etiqueta como lado captador. No se equipara al vendedor del cierre.
+16. Cada dataset mensual debe contener sus columnas minimas obligatorias; el verificador bloquea la publicacion si falta alguna.
 
 ## Reconciliacion vigente
 
@@ -46,7 +49,8 @@
 - 193 captaciones.
 - 1.988 leads nuevos.
 - 3.470 requerimientos.
-- 1.591 visitas unicas en los cinco meses disponibles, luego de deduplicar 8 IDs reagendados entre cortes mensuales.
+- 1.591 agendamientos unicos en los cinco meses disponibles, luego de deduplicar 8 IDs reagendados entre cortes mensuales.
+- 979 visitas realizadas en esos cinco meses, equivalentes al 61,5% de los agendamientos conocidos.
 - Visitas semestrales: sin dato por ausencia del archivo de febrero.
 - Cartera comparable: 386 propiedades en el primer corte y 351 en junio.
 
@@ -57,7 +61,7 @@
 - UF 919.970 vendidas en el ano.
 - 4.023 leads nuevos.
 - 4.594 requerimientos dentro del alcance.
-- 3.619 visitas unicas.
+- 3.619 agendamientos unicos; 2.252 figuran como realizados.
 
 ## Incidencias conocidas
 
@@ -66,10 +70,11 @@
 - Cierres de junio incluye 13 filas auxiliares sin `Operacion - Id`; se ponen en cuarentena.
 - Ocho `Visita - Id` aparecen en dos meses por reagendamiento; el acumulado conocido se deduplica globalmente.
 - `total_cartera_cierre_2025.xlsx` contiene 331 celdas con error de formula. Esas celdas no alimentan los KPI publicados y la fuente original permanece inmutable.
+- Tres fuentes 2025 contienen siete columnas auxiliares sin encabezado. No hay encabezados normalizados duplicados y ninguna columna obligatoria del KPI esta ausente.
 - Los snapshots de clasificacion no siempre cubren el 100% de los leads activos exportados.
 - En junio hay 596 leads sin gestion entre 15 y 90 dias y 505 sobre 90 dias: 1.101 en total, equivalentes al 62,2% de los 1.770 activos.
 - El corte quincenal de abril contiene 1 venta, 1 captacion dentro de alcance y 58 leads que no aparecen al cierre mensual. Esto se registra como deriva de snapshot; no se mezcla con el cierre.
-- La identidad del agente vendedor no esta disponible de forma consistente en todos los cierres; el ranking actual se etiqueta como agente captador de la propiedad.
+- El vendedor esta identificado en 33 de 34 cierres de 2026 (97,1%), pero los encabezados y nombres no usan una identidad canonica estable. El ranking actual se etiqueta como agente captador de la propiedad y no como vendedor.
 
 ## Comandos
 

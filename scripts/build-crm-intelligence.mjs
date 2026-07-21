@@ -24,6 +24,16 @@ const ENTITY_IDS = {
   stock: 'propiedad - id',
 }
 
+const REQUIRED_COLUMNS = {
+  sales: ['operacion - id', 'operacion - fecha cierre negocio', 'operacion - moneda', 'operacion - precio de cierre', 'propiedad - estado', 'propiedad - operacion', 'propiedad - tipo', 'propiedad - agente'],
+  captures: ['propiedad - id', 'propiedad - estado', 'propiedad - operacion', 'propiedad - tipo', 'propiedad - agente'],
+  leads: ['lead - id', 'lead - fecha de creacion', 'lead - tipo', 'lead - origen', 'sucursal - nombre'],
+  requirements: ['requerimiento - id', 'requerimiento - fecha de creacion', 'propiedad - operacion', 'propiedad - tipo', 'lead - tipo', 'sucursal - nombre'],
+  visits: ['visita - id', 'visita - fecha programada', 'visita - estado', 'propiedad - operacion', 'propiedad - tipo', 'sucursal - nombre'],
+  suspended: ['propiedad - id', 'propiedad - estado', 'propiedad - operacion', 'propiedad - tipo', 'propiedad - fecha de suspension'],
+  stock: ['propiedad - id', 'propiedad - estado', 'propiedad - operacion', 'propiedad - tipo'],
+}
+
 function parseArgs() {
   const args = process.argv.slice(2)
   const value = (flag) => {
@@ -63,7 +73,7 @@ function readWorkbook(file) {
   const headers = matrix[0] ?? []
   const indexes = new Map(headers.map((header, index) => [normalize(header), index]).filter(([header]) => header))
   const rows = matrix.slice(1).filter((row) => row.some((value) => value !== null && value !== ''))
-  return { sheetName, indexes, rows }
+  return { sheetName, headers, indexes, rows }
 }
 
 function cell(row, indexes, key) {
@@ -83,9 +93,10 @@ function inScope(row, indexes) {
 }
 
 function canonicalRows(file, kind) {
-  if (!file || !fs.existsSync(file)) return { records: [], quality: { rawRows: 0, acceptedRows: 0, duplicateRows: 0, excludedRows: 0, malformedRows: 0, missing: true } }
+  if (!file || !fs.existsSync(file)) return { records: [], quality: { rawRows: 0, acceptedRows: 0, duplicateRows: 0, excludedRows: 0, malformedRows: 0, missingColumns: [], missing: true } }
   const { sheetName, indexes, rows } = readWorkbook(file)
   const idKey = ENTITY_IDS[kind]
+  const missingColumns = REQUIRED_COLUMNS[kind].filter((column) => !indexes.has(column))
   const records = new Map()
   let malformedRows = 0
   let excludedRows = 0
@@ -122,7 +133,7 @@ function canonicalRows(file, kind) {
 
   return {
     records: [...records.values()],
-    quality: { source: path.basename(file), sheet: sheetName, rawRows: rows.length, acceptedRows: records.size, duplicateRows, excludedRows, malformedRows, missing: false },
+    quality: { source: path.basename(file), sheet: sheetName, rawRows: rows.length, acceptedRows: records.size, duplicateRows, excludedRows, malformedRows, missingColumns, missing: false },
   }
 }
 
@@ -140,6 +151,14 @@ function ranked(records, key, limit = 8) {
   return [...values.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, limit)
 }
 
+function firstRecordValue(record, keys) {
+  for (const key of keys) {
+    const value = display(cell(record.row, record.indexes, key))
+    if (value) return value
+  }
+  return ''
+}
+
 function median(values) {
   if (!values.length) return null
   const sorted = [...values].sort((a, b) => a - b)
@@ -151,6 +170,11 @@ function buildMonth(root, config) {
   const base = path.join(root, config.folder, 'raw')
   const loaded = Object.fromEntries(Object.entries(config.names).map(([kind, name]) => [kind, canonicalRows(name ? path.join(base, name) : null, kind)]))
   const sales = loaded.sales.records
+  const identifiedSellers = sales.filter((record) => {
+    const value = normalize(firstRecordValue(record, ['agente vendedor', 'operacion - agente - vendedor', 'vendedor - agente', 'venta agente', 'venta - agente']))
+    return value && value !== 'na' && value !== 'n/a'
+  }).length
+  const realizedVisits = loaded.visits.records.filter((record) => normalize(cell(record.row, record.indexes, 'visita - estado')) === 'realizada').length
   const prices = sales
     .filter((record) => normalize(cell(record.row, record.indexes, 'operacion - moneda')) === 'uf')
     .map((record) => numeric(cell(record.row, record.indexes, 'operacion - precio de cierre')))
@@ -175,12 +199,20 @@ function buildMonth(root, config) {
     newLeadsCount: loaded.leads.records.length,
     requirementsCount: loaded.requirements.records.length,
     visitsCount: loaded.visits.quality.missing ? null : loaded.visits.records.length,
+    realizedVisitsCount: loaded.visits.quality.missing ? null : realizedVisits,
+    realizedVisitsRate: loaded.visits.quality.missing || loaded.visits.records.length === 0 ? null : Number(((realizedVisits / loaded.visits.records.length) * 100).toFixed(1)),
     stockCount: loaded.stock.records.length,
     suspendedCount: loaded.suspended.records.length,
     salesByType: ranked(sales, 'propiedad - tipo'),
     salesByOffice: ranked(sales, 'sub-sucursal - nombre'),
     salesByListingAgent: ranked(sales, 'propiedad - agente', 12),
     capturesByAgent: ranked(loaded.captures.records, 'propiedad - agente', 12),
+    visitStatusCounts: ranked(loaded.visits.records, 'visita - estado', 10),
+    sellerAttribution: {
+      identified: identifiedSellers,
+      missing: sales.length - identifiedSellers,
+      coverage: sales.length ? Number(((identifiedSellers / sales.length) * 100).toFixed(1)) : null,
+    },
     leadOrigins: ranked(loaded.leads.records, 'lead - origen'),
     leadOwners: ranked(loaded.leads.records, 'partner - nombre', 12),
     quality: { sourceCoverage, expectedDatasets, acceptedRecords: accepted, excludedOutsideScope: excluded, duplicateRows: duplicates, malformedRows: malformed, missingDatasets, files: Object.fromEntries(Object.entries(loaded).map(([kind, item]) => [kind, item.quality])) },
@@ -229,7 +261,7 @@ function buildYtdEventDedupe(root) {
       if (!fileName) continue
       for (const record of canonicalRows(path.join(base, fileName), kind).records) {
         if (recordsByKind[kind].has(record.id)) crossPeriodDuplicateIds[kind].add(record.id)
-        else recordsByKind[kind].set(record.id, record)
+        recordsByKind[kind].set(record.id, record)
       }
     }
   }
@@ -243,6 +275,7 @@ function buildYtdEventDedupe(root) {
     uniqueCounts: Object.fromEntries(kinds.map((kind) => [kind, recordsByKind[kind].size])),
     crossPeriodDuplicateIds: Object.fromEntries(kinds.map((kind) => [kind, crossPeriodDuplicateIds[kind].size])),
     salesUf: Math.round(salesUf),
+    knownRealizedVisitsCount: [...recordsByKind.visits.values()].filter((record) => normalize(cell(record.row, record.indexes, 'visita - estado')) === 'realizada').length,
   }
 }
 
@@ -300,7 +333,7 @@ function listWorkbooks(root) {
 
 function auditWorkbooks(root) {
   return listWorkbooks(root).map((file) => {
-    const { sheetName, rows } = readWorkbook(file)
+    const { sheetName, headers, rows } = readWorkbook(file)
     const workbook = XLSX.readFile(file, { cellFormula: true })
     let formulaCells = 0
     let formulaErrorCells = 0
@@ -315,6 +348,9 @@ function auditWorkbooks(root) {
       file: path.relative(root, file).replaceAll('\\', '/'),
       selectedSheet: sheetName,
       dataRows: rows.length,
+      columnCount: headers.length,
+      emptyHeaderCount: headers.filter((header) => !normalize(header)).length,
+      duplicateHeaderCount: headers.map(normalize).filter(Boolean).length - new Set(headers.map(normalize).filter(Boolean)).size,
       formulaCells,
       formulaErrorCells,
     }
@@ -351,7 +387,8 @@ function build2025Baseline(root) {
     salesUf: Math.round(salesUf),
     newLeadsCount: leads.length,
     requirementsCount: requirements.length,
-    uniqueVisitsCount: visits.length,
+    uniqueVisitAppointmentsCount: visits.length,
+    realizedVisitsCount: visits.filter((record) => normalize(cell(record.row, record.indexes, 'visita - estado')) === 'realizada').length,
     firstHalfSalesCount: months.slice(0, 6).reduce((sum, month) => sum + month.salesCount, 0),
     firstHalfSalesUf: Math.round(months.slice(0, 6).reduce((sum, month) => sum + month.salesUf, 0)),
     months,
@@ -379,6 +416,13 @@ function main() {
     requirementsCount: ytdEventDedupe.uniqueCounts.requirements,
     visitsCount: months.some((month) => month.visitsCount === null) ? null : ytdEventDedupe.uniqueCounts.visits,
     knownVisitsCount: ytdEventDedupe.uniqueCounts.visits,
+    knownRealizedVisitsCount: ytdEventDedupe.knownRealizedVisitsCount,
+    knownRealizedVisitsRate: ytdEventDedupe.uniqueCounts.visits ? Number(((ytdEventDedupe.knownRealizedVisitsCount / ytdEventDedupe.uniqueCounts.visits) * 100).toFixed(1)) : null,
+    sellerAttribution: {
+      identified: months.reduce((sum, month) => sum + month.sellerAttribution.identified, 0),
+      missing: months.reduce((sum, month) => sum + month.sellerAttribution.missing, 0),
+      coverage: total('salesCount') ? Number(((months.reduce((sum, month) => sum + month.sellerAttribution.identified, 0) / total('salesCount')) * 100).toFixed(1)) : null,
+    },
     crossPeriodDuplicateIds: ytdEventDedupe.crossPeriodDuplicateIds,
     stockChange: latestStock - firstStock,
     comparison2025: {
@@ -397,14 +441,16 @@ function main() {
     { severity: 'warning', code: 'JUNE_SALES_AUXILIARY_ROWS', title: 'Filas auxiliares en cierres de junio', detail: `${latest.quality.files.sales.malformedRows} filas sin Operacion - Id fueron puestas en cuarentena; junio conserva ${latest.salesCount} ventas validas.` },
     { severity: 'warning', code: 'SOURCE_FORMULA_ERRORS_2025_STOCK', title: 'Errores de formula en cartera 2025', detail: `${workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0)} celdas con error de formula fueron detectadas en las fuentes. No alimentan los KPI publicados y los XLS originales se mantienen inmutables.` },
     { severity: 'warning', code: 'APRIL_FORTNIGHT_SNAPSHOT_DRIFT', title: 'Deriva entre quincena y cierre de abril', detail: `El corte quincenal contiene ${aprilFortnightReconciliation.sales.fortnightOnly} venta, ${aprilFortnightReconciliation.captures.fortnightOnly} captacion y ${aprilFortnightReconciliation.leads.fortnightOnly} leads que no aparecen en el cierre mensual. El cierre mensual es la fuente autoritativa.` },
+    { severity: 'info', code: 'SELLER_ATTRIBUTION_PARTIAL', title: 'Atribucion de vendedor no canonica', detail: `${months.reduce((sum, month) => sum + month.sellerAttribution.identified, 0)} de ${total('salesCount')} cierres identifican vendedor. Los encabezados y nombres varian entre archivos; el ranking publicado se mantiene como lado captador.` },
+    { severity: 'info', code: 'SOURCE_EMPTY_HEADERS', title: 'Columnas auxiliares sin encabezado', detail: `${workbookAudit.reduce((sum, workbook) => sum + workbook.emptyHeaderCount, 0)} columnas sin encabezado fueron detectadas en tres fuentes 2025. No corresponden a campos requeridos por los KPI.` },
     { severity: 'info', code: 'OUT_OF_SCOPE_FILTERED', title: 'Alcance comercial aplicado', detail: 'Se excluyeron arriendos, propiedades rentadas, terrenos y duplex. Solo se publican ventas de casas y departamentos en Vitacura.' },
     { severity: 'warning', code: 'TARGETS_NOT_LOADED', title: 'Metas 2026 aun no integradas', detail: 'Los campos de meta y cumplimiento permanecen nulos hasta validar los archivos de Metas 2026.' },
   ]
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 4,
     generatedAt: new Date().toISOString(),
     scope: { commune: 'Vitacura', operation: 'Venta', propertyTypes: ['Casa', 'Departamento'], excludedOperations: ['Arriendo'], piiIncluded: false },
-    sourceInventory: { workbookCount, periodStart: '2025-01', periodEnd: latest.period, monthlyOperationalStart: '2026-01', aprilFortnightIncluded: true, aprilFortnightReconciliation, formulaErrorCount: workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0), workbooks: workbookAudit },
+    sourceInventory: { workbookCount, periodStart: '2025-01', periodEnd: latest.period, monthlyOperationalStart: '2026-01', aprilFortnightIncluded: true, aprilFortnightReconciliation, formulaErrorCount: workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0), emptyHeaderCount: workbookAudit.reduce((sum, workbook) => sum + workbook.emptyHeaderCount, 0), duplicateHeaderCount: workbookAudit.reduce((sum, workbook) => sum + workbook.duplicateHeaderCount, 0), workbooks: workbookAudit },
     baseline2025,
     months,
     latestLeadSnapshot,

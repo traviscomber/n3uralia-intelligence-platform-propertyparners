@@ -84,7 +84,7 @@ export default function DirectorDashboard() {
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>
             Gestión comercial validada
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel de tu equipo · {agents.length} agentes activos</p>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel lado captador · {agents.length} agentes con cierres validados</p>
         </div>
         <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-3" style={{ border: '1px solid #e8f0ed' }}>
           <div className="text-right"><div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b7280' }}>Metas 2026</div><div className="text-sm font-bold" style={{ color: '#6b7280' }}>No cargadas</div></div>
@@ -168,13 +168,13 @@ export default function DirectorDashboard() {
         {/* Agents */}
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Mi equipo real de agentes</h2>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Desempeño del lado captador</h2>
             <span className="text-xs" style={{ color: '#6b7280' }}>6 meses · {agents.length} agentes</span>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: '#f8fbfa' }}>
-                {['Agente','Ventas','Captac.','Conv.','Veloc.','Estado'].map(h => (
+                {['Agente','Cierres capt.','Captac.','Conv.','Veloc.','Estado'].map(h => (
                   <th key={h} className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider ${h === 'Agente' ? 'text-left' : 'text-right'}`} style={{ color: '#6b7280' }}>{h}</th>
                 ))}
               </tr>

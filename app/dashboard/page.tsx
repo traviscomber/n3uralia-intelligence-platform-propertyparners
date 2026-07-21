@@ -47,7 +47,7 @@ export default function DashboardHome() {
       ventas_count: ventas,
       ventas_uf: ventasUf,
       captaciones_count: captaciones,
-      visitas_count: visitas ?? 0,
+      visitas_count: visitas,
       leads_count: leads,
       conversion_rate: conversion,
       comision_total: 0,
@@ -92,6 +92,7 @@ export default function DashboardHome() {
 
     if (rows.length === 0) {
       return {
+        hasLiveInventory: false,
         total: fallbackSummary.stock,
         withImage: 0,
         withDescription: 0,
@@ -122,6 +123,7 @@ export default function DashboardHome() {
     const departmentCount = rows.filter((property) => (property.property_type || '').toLowerCase().includes('depart')).length
 
     return {
+      hasLiveInventory: true,
       total,
       withImage,
       withDescription,
@@ -134,13 +136,13 @@ export default function DashboardHome() {
       sourceCount: new Set(rows.map((property) => property.source).filter(Boolean)).size,
     }
   }, [properties])
-  const imageCoverage = propertyMetrics.total > 0 ? Math.round((propertyMetrics.withImage / propertyMetrics.total) * 100) : 0
-  const descriptionCoverage = propertyMetrics.total > 0 ? Math.round((propertyMetrics.withDescription / propertyMetrics.total) * 100) : 0
-  const marketTone = propertyMetrics.total === 0
-    ? 'Sin data'
-    : imageCoverage >= 90 && descriptionCoverage >= 90
+  const imageCoverage = propertyMetrics.hasLiveInventory ? Math.round((propertyMetrics.withImage / propertyMetrics.total) * 100) : null
+  const descriptionCoverage = propertyMetrics.hasLiveInventory ? Math.round((propertyMetrics.withDescription / propertyMetrics.total) * 100) : null
+  const marketTone = !propertyMetrics.hasLiveInventory
+    ? 'Sin inventario externo'
+    : imageCoverage !== null && descriptionCoverage !== null && imageCoverage >= 90 && descriptionCoverage >= 90
       ? 'Cobertura fuerte'
-      : imageCoverage >= 75 && descriptionCoverage >= 75
+      : imageCoverage !== null && descriptionCoverage !== null && imageCoverage >= 75 && descriptionCoverage >= 75
         ? 'Cobertura media'
         : 'Cobertura baja'
   const executiveScore = quality.sourceCoverage
@@ -148,11 +150,11 @@ export default function DashboardHome() {
   const conversionDelta = latestKPI && previousKPI ? latestKPI.conversion_rate - previousKPI.conversion_rate : null
 
   const audienceCards = useMemo(() => {
-    if (propertyMetrics.total === 0) return buildHomeFallbackCards()
+    if (!propertyMetrics.hasLiveInventory) return buildHomeFallbackCards()
 
-    const coverageSignal = imageCoverage >= 90 && descriptionCoverage >= 90
+    const coverageSignal = imageCoverage !== null && descriptionCoverage !== null && imageCoverage >= 90 && descriptionCoverage >= 90
       ? 'Inventario muy sólido para lectura comercial'
-      : imageCoverage >= 75 && descriptionCoverage >= 75
+      : imageCoverage !== null && descriptionCoverage !== null && imageCoverage >= 75 && descriptionCoverage >= 75
         ? 'Inventario utilizable, pero con huecos de calidad'
         : 'Inventario con huecos de calidad que requieren limpieza'
 
@@ -296,21 +298,21 @@ export default function DashboardHome() {
           <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb', borderLeft: '3px solid var(--n3-teal)' }}>
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Inventario</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{propertyMetrics.total}</p>
-            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>propiedades Vitacura visibles</p>
+            <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>{propertyMetrics.hasLiveInventory ? 'propiedades Vitacura visibles' : 'stock publicado en corte CRM'}</p>
           </div>
           <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Nuevas 24h</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{propertyMetrics.recent24h}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{propertyMetrics.hasLiveInventory ? propertyMetrics.recent24h : 'n/d'}</p>
             <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>ingresos recientes</p>
           </div>
           <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Cobertura visual</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{imageCoverage}%</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{imageCoverage === null ? 'n/d' : `${imageCoverage}%`}</p>
             <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>fichas con imagen útil</p>
           </div>
           <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Cobertura descriptiva</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{descriptionCoverage}%</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{descriptionCoverage === null ? 'n/d' : `${descriptionCoverage}%`}</p>
             <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>fichas con descripcion</p>
           </div>
           <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: '#e5e7eb' }}>

@@ -14,12 +14,16 @@ export type CrmMonth = {
   newLeadsCount: number
   requirementsCount: number
   visitsCount: number | null
+  realizedVisitsCount: number | null
+  realizedVisitsRate: number | null
   stockCount: number
   suspendedCount: number
   salesByType: RankingEntry[]
   salesByOffice: RankingEntry[]
   salesByListingAgent: RankingEntry[]
   capturesByAgent: RankingEntry[]
+  visitStatusCounts: RankingEntry[]
+  sellerAttribution: { identified: number; missing: number; coverage: number | null }
   leadOrigins: RankingEntry[]
   leadOwners: RankingEntry[]
   quality: {
@@ -58,14 +62,17 @@ type CrmIntelligence = {
     aprilFortnightIncluded: boolean
     aprilFortnightReconciliation: Record<string, { fortnight: number; month: number; overlap: number; fortnightOnly: number; monthOnly: number }>
     formulaErrorCount: number
-    workbooks: Array<{ file: string; selectedSheet: string; dataRows: number; formulaCells: number; formulaErrorCells: number }>
+    emptyHeaderCount: number
+    duplicateHeaderCount: number
+    workbooks: Array<{ file: string; selectedSheet: string; dataRows: number; columnCount: number; emptyHeaderCount: number; duplicateHeaderCount: number; formulaCells: number; formulaErrorCells: number }>
   }
   baseline2025: {
     salesCount: number
     salesUf: number
     newLeadsCount: number
     requirementsCount: number
-    uniqueVisitsCount: number
+    uniqueVisitAppointmentsCount: number
+    realizedVisitsCount: number
     firstHalfSalesCount: number
     firstHalfSalesUf: number
     months: Array<{ period: string; salesCount: number; salesUf: number }>
@@ -90,6 +97,9 @@ type CrmIntelligence = {
     requirementsCount: number
     visitsCount: number | null
     knownVisitsCount: number
+    knownRealizedVisitsCount: number
+    knownRealizedVisitsRate: number | null
+    sellerAttribution: { identified: number; missing: number; coverage: number | null }
     crossPeriodDuplicateIds: Record<'sales' | 'captures' | 'leads' | 'requirements' | 'visits', number>
     stockChange: number
     comparison2025: { salesChangePct: number | null; salesUfChangePct: number | null }
@@ -118,6 +128,8 @@ export type CrmOperationalSummary = {
   leads: number
   captations: number
   visits: number | null
+  realizedVisits: number | null
+  realizedVisitsRate: number | null
   requirements: number
   suspended: number
   stock: number
@@ -147,7 +159,7 @@ export function getOperationalSummary(monthName?: string): CrmOperationalSummary
   if (!month) {
     return {
       month: '', monthLabel: '', sales: 0, salesUf: 0, medianSaleUf: null, leads: 0, captations: 0,
-      visits: null, requirements: 0, suspended: 0, stock: 0, leadToSaleProxy: 0, sourceCoverage: 0,
+      visits: null, realizedVisits: null, realizedVisitsRate: null, requirements: 0, suspended: 0, stock: 0, leadToSaleProxy: 0, sourceCoverage: 0,
       topAgents: [], topPartners: [], topOrigins: [], topStates: [], topTypes: [],
     }
   }
@@ -161,6 +173,8 @@ export function getOperationalSummary(monthName?: string): CrmOperationalSummary
     leads: month.newLeadsCount,
     captations: month.capturesCount,
     visits: month.visitsCount,
+    realizedVisits: month.realizedVisitsCount,
+    realizedVisitsRate: month.realizedVisitsRate,
     requirements: month.requirementsCount,
     suspended: month.suspendedCount,
     stock: month.stockCount,
@@ -198,7 +212,7 @@ function toKpiSnapshot(summary: CrmOperationalSummary): KpiSnapshot {
     ventas_count: summary.sales,
     ventas_uf: summary.salesUf,
     captaciones_count: summary.captations,
-    visitas_count: summary.visits ?? 0,
+    visitas_count: summary.visits,
     leads_count: summary.leads,
     conversion_rate: summary.leadToSaleProxy,
     comision_total: 0,
@@ -230,7 +244,7 @@ export function buildHomeFallbackCards() {
       role: 'Director',
       title: 'Riesgo de gestion',
       body: `${leadSnapshot.staleOver15Total} leads superan 15 dias sin gestion y ${leadSnapshot.unclassified} permanecen sin clasificar en el ultimo corte.`,
-      note: `${latest.requirements} requerimientos y ${latest.visits ?? 'sin dato'} visitas unicas en ${latest.monthLabel}.`,
+      note: `${latest.requirements} requerimientos; ${latest.visits ?? 'sin dato'} agendamientos unicos y ${latest.realizedVisits ?? 'sin dato'} realizados en ${latest.monthLabel}.`,
     },
     {
       role: 'Vendedor',

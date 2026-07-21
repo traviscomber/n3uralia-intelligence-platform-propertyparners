@@ -16,7 +16,7 @@ export interface KpiSnapshot {
   ventas_count: number
   ventas_uf: number
   captaciones_count: number
-  visitas_count: number
+  visitas_count: number | null
   leads_count: number
   conversion_rate: number
   comision_total: number
