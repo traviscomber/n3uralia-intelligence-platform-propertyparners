@@ -83,8 +83,8 @@ export const PP_SCORECARD_DEFINITIONS: Record<ScorecardRoleKey, ScorecardMetricD
     },
     {
       id: 'stale-lead-rate',
-      label: 'Carga sin gestión 15d',
-      formula: 'leads sin gestión 15 días / leads activos',
+      label: 'Carga sin gestión >15d',
+      formula: '(leads sin gestión 15-90 días + leads sobre 90 días) / leads activos',
       threshold: 'Bueno <= 10%, alerta 11-20%, crítico > 20%',
       owner: 'Director',
       cadence: 'Weekly',
@@ -92,7 +92,7 @@ export const PP_SCORECARD_DEFINITIONS: Record<ScorecardRoleKey, ScorecardMetricD
       target: 10,
       warning: 20,
       unit: '%',
-      note: 'Mide la carga que requiere redistribución o contacto inmediato.',
+      note: 'Suma los dos archivos disjuntos de antigüedad para no subestimar la cola vencida.',
     },
     {
       id: 'suspension-pressure',

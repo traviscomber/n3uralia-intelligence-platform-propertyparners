@@ -56,7 +56,9 @@ type CrmIntelligence = {
     periodEnd: string
     monthlyOperationalStart: string
     aprilFortnightIncluded: boolean
-    workbooks: Array<{ file: string; selectedSheet: string; dataRows: number }>
+    aprilFortnightReconciliation: Record<string, { fortnight: number; month: number; overlap: number; fortnightOnly: number; monthOnly: number }>
+    formulaErrorCount: number
+    workbooks: Array<{ file: string; selectedSheet: string; dataRows: number; formulaCells: number; formulaErrorCells: number }>
   }
   baseline2025: {
     salesCount: number
@@ -74,8 +76,10 @@ type CrmIntelligence = {
     active: number
     classified: number
     unclassified: number
-    stale15: number
-    stale90: number
+    stale15To90: number
+    staleOver90: number
+    staleOver15Total: number
+    staleOver15Rate: number | null
     classificationCoverage: number | null
   }
   ytd: {
@@ -86,6 +90,7 @@ type CrmIntelligence = {
     requirementsCount: number
     visitsCount: number | null
     knownVisitsCount: number
+    crossPeriodDuplicateIds: Record<'sales' | 'captures' | 'leads' | 'requirements' | 'visits', number>
     stockChange: number
     comparison2025: { salesChangePct: number | null; salesUfChangePct: number | null }
     salesByOffice: RankingEntry[]
@@ -224,7 +229,7 @@ export function buildHomeFallbackCards() {
     {
       role: 'Director',
       title: 'Riesgo de gestion',
-      body: `${leadSnapshot.stale15} leads sin gestion por 15 dias y ${leadSnapshot.unclassified} sin clasificar en el ultimo corte.`,
+      body: `${leadSnapshot.staleOver15Total} leads superan 15 dias sin gestion y ${leadSnapshot.unclassified} permanecen sin clasificar en el ultimo corte.`,
       note: `${latest.requirements} requerimientos y ${latest.visits ?? 'sin dato'} visitas unicas en ${latest.monthLabel}.`,
     },
     {

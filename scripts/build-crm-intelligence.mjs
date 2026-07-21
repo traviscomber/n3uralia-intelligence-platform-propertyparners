@@ -198,15 +198,78 @@ function leadSnapshot(root, period) {
   }
   const loaded = Object.fromEntries(Object.entries(files).map(([key, name]) => [key, canonicalRows(path.join(base, name), 'leads')]))
   const count = (key) => loaded[key].records.length
+  const activeIds = new Set(loaded.active.records.map((record) => record.id))
+  const classifiedIds = new Set(loaded.classified.records.map((record) => record.id).filter((id) => activeIds.has(id)))
+  const unclassifiedIds = new Set(loaded.unclassified.records.map((record) => record.id).filter((id) => activeIds.has(id)))
+  const classifiedCoverageIds = new Set([...classifiedIds, ...unclassifiedIds])
+  const stale15To90 = count('stale15')
+  const staleOver90 = count('stale90')
   return {
     period: `${period.slice(0, 4)}-${period.slice(4)}`,
     active: count('active'),
     classified: count('classified'),
     unclassified: count('unclassified'),
-    stale15: count('stale15'),
-    stale90: count('stale90'),
-    classificationCoverage: count('active') ? Number((((count('classified') + count('unclassified')) / count('active')) * 100).toFixed(1)) : null,
+    stale15To90,
+    staleOver90,
+    staleOver15Total: stale15To90 + staleOver90,
+    staleOver15Rate: count('active') ? Number((((stale15To90 + staleOver90) / count('active')) * 100).toFixed(1)) : null,
+    classificationCoverage: count('active') ? Number(((classifiedCoverageIds.size / count('active')) * 100).toFixed(1)) : null,
   }
+}
+
+function buildYtdEventDedupe(root) {
+  const kinds = ['sales', 'captures', 'leads', 'requirements', 'visits']
+  const recordsByKind = Object.fromEntries(kinds.map((kind) => [kind, new Map()]))
+  const crossPeriodDuplicateIds = Object.fromEntries(kinds.map((kind) => [kind, new Set()]))
+
+  for (const month of MONTHS) {
+    const base = path.join(root, month.folder, 'raw')
+    for (const kind of kinds) {
+      const fileName = month.names[kind]
+      if (!fileName) continue
+      for (const record of canonicalRows(path.join(base, fileName), kind).records) {
+        if (recordsByKind[kind].has(record.id)) crossPeriodDuplicateIds[kind].add(record.id)
+        else recordsByKind[kind].set(record.id, record)
+      }
+    }
+  }
+
+  const salesUf = [...recordsByKind.sales.values()]
+    .filter((record) => normalize(cell(record.row, record.indexes, 'operacion - moneda')) === 'uf')
+    .map((record) => numeric(cell(record.row, record.indexes, 'operacion - precio de cierre')) ?? 0)
+    .reduce((sum, value) => sum + value, 0)
+
+  return {
+    uniqueCounts: Object.fromEntries(kinds.map((kind) => [kind, recordsByKind[kind].size])),
+    crossPeriodDuplicateIds: Object.fromEntries(kinds.map((kind) => [kind, crossPeriodDuplicateIds[kind].size])),
+    salesUf: Math.round(salesUf),
+  }
+}
+
+function buildAprilFortnightReconciliation(root) {
+  const fortnightBase = path.join(root, 'Datos 202604', 'informe_quincenal', 'raw')
+  const monthBase = path.join(root, 'Datos 202604', 'raw')
+  const sources = {
+    sales: ['ventas_quincena_abril_vitacura.xlsx', 'cierres_abril_2026.xlsx'],
+    captures: ['captadas_este_mes_vitacura.xlsx', 'captadas_abril_2026.xlsx'],
+    leads: ['leads_este_mes_vitacura.xlsx', 'leads_abril_2026.xlsx'],
+    requirements: ['requerimientos_online_este_mes_vitacura.xlsx', 'requerimientos_online_abril_2026.xlsx'],
+    visits: ['visitas_este_mes_vitacura.xlsx', 'visitas_abril_2026.xlsx'],
+    suspended: ['suspendidas_este_mes_vitacura.xlsx', 'suspendidas_abril_2026.xlsx'],
+  }
+
+  return Object.fromEntries(Object.entries(sources).map(([kind, [fortnightName, monthName]]) => {
+    const fortnightIds = new Set(canonicalRows(path.join(fortnightBase, fortnightName), kind).records.map((record) => record.id))
+    const monthIds = new Set(canonicalRows(path.join(monthBase, monthName), kind).records.map((record) => record.id))
+    const overlap = [...fortnightIds].filter((id) => monthIds.has(id)).length
+    return [kind, {
+      fortnight: fortnightIds.size,
+      month: monthIds.size,
+      overlap,
+      fortnightOnly: fortnightIds.size - overlap,
+      monthOnly: monthIds.size - overlap,
+    }]
+  }))
 }
 
 function mergeRankings(months, field, limit = 12) {
@@ -238,10 +301,22 @@ function listWorkbooks(root) {
 function auditWorkbooks(root) {
   return listWorkbooks(root).map((file) => {
     const { sheetName, rows } = readWorkbook(file)
+    const workbook = XLSX.readFile(file, { cellFormula: true })
+    let formulaCells = 0
+    let formulaErrorCells = 0
+    for (const name of workbook.SheetNames) {
+      for (const [address, value] of Object.entries(workbook.Sheets[name])) {
+        if (address.startsWith('!')) continue
+        if (value?.f) formulaCells += 1
+        if (value?.t === 'e') formulaErrorCells += 1
+      }
+    }
     return {
       file: path.relative(root, file).replaceAll('\\', '/'),
       selectedSheet: sheetName,
       dataRows: rows.length,
+      formulaCells,
+      formulaErrorCells,
     }
   })
 }
@@ -290,18 +365,21 @@ function main() {
   const workbookAudit = auditWorkbooks(input)
   const baseline2025 = build2025Baseline(input)
   const latestLeadSnapshot = leadSnapshot(input, '202606')
+  const ytdEventDedupe = buildYtdEventDedupe(input)
+  const aprilFortnightReconciliation = buildAprilFortnightReconciliation(input)
   const total = (field) => months.reduce((sum, month) => sum + (month[field] ?? 0), 0)
   const firstStock = months[0].stockCount
   const latestStock = months.at(-1).stockCount
   const workbookCount = workbookAudit.length
   const ytd = {
-    salesCount: total('salesCount'),
-    salesUf: total('salesUf'),
-    capturesCount: total('capturesCount'),
-    newLeadsCount: total('newLeadsCount'),
-    requirementsCount: total('requirementsCount'),
-    visitsCount: months.some((month) => month.visitsCount === null) ? null : total('visitsCount'),
-    knownVisitsCount: total('visitsCount'),
+    salesCount: ytdEventDedupe.uniqueCounts.sales,
+    salesUf: ytdEventDedupe.salesUf,
+    capturesCount: ytdEventDedupe.uniqueCounts.captures,
+    newLeadsCount: ytdEventDedupe.uniqueCounts.leads,
+    requirementsCount: ytdEventDedupe.uniqueCounts.requirements,
+    visitsCount: months.some((month) => month.visitsCount === null) ? null : ytdEventDedupe.uniqueCounts.visits,
+    knownVisitsCount: ytdEventDedupe.uniqueCounts.visits,
+    crossPeriodDuplicateIds: ytdEventDedupe.crossPeriodDuplicateIds,
     stockChange: latestStock - firstStock,
     comparison2025: {
       salesChangePct: baseline2025.firstHalfSalesCount > 0 ? Number((((total('salesCount') / baseline2025.firstHalfSalesCount) - 1) * 100).toFixed(1)) : null,
@@ -315,15 +393,18 @@ function main() {
   const previous = months.at(-2)
   const qualityIssues = [
     { severity: 'critical', code: 'MISSING_VISITS_2026_02', title: 'Visitas de febrero sin archivo', detail: 'El acumulado semestral de visitas se mantiene como no disponible; solo se informa el total de meses conocidos.' },
+    { severity: 'warning', code: 'CROSS_PERIOD_VISIT_IDS', title: 'Visitas reagendadas entre cortes', detail: `${ytdEventDedupe.crossPeriodDuplicateIds.visits} IDs de visita aparecen en dos meses. El acumulado conocido se deduplica globalmente por Visita - Id.` },
     { severity: 'warning', code: 'JUNE_SALES_AUXILIARY_ROWS', title: 'Filas auxiliares en cierres de junio', detail: `${latest.quality.files.sales.malformedRows} filas sin Operacion - Id fueron puestas en cuarentena; junio conserva ${latest.salesCount} ventas validas.` },
+    { severity: 'warning', code: 'SOURCE_FORMULA_ERRORS_2025_STOCK', title: 'Errores de formula en cartera 2025', detail: `${workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0)} celdas con error de formula fueron detectadas en las fuentes. No alimentan los KPI publicados y los XLS originales se mantienen inmutables.` },
+    { severity: 'warning', code: 'APRIL_FORTNIGHT_SNAPSHOT_DRIFT', title: 'Deriva entre quincena y cierre de abril', detail: `El corte quincenal contiene ${aprilFortnightReconciliation.sales.fortnightOnly} venta, ${aprilFortnightReconciliation.captures.fortnightOnly} captacion y ${aprilFortnightReconciliation.leads.fortnightOnly} leads que no aparecen en el cierre mensual. El cierre mensual es la fuente autoritativa.` },
     { severity: 'info', code: 'OUT_OF_SCOPE_FILTERED', title: 'Alcance comercial aplicado', detail: 'Se excluyeron arriendos, propiedades rentadas, terrenos y duplex. Solo se publican ventas de casas y departamentos en Vitacura.' },
     { severity: 'warning', code: 'TARGETS_NOT_LOADED', title: 'Metas 2026 aun no integradas', detail: 'Los campos de meta y cumplimiento permanecen nulos hasta validar los archivos de Metas 2026.' },
   ]
   const payload = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     scope: { commune: 'Vitacura', operation: 'Venta', propertyTypes: ['Casa', 'Departamento'], excludedOperations: ['Arriendo'], piiIncluded: false },
-    sourceInventory: { workbookCount, periodStart: '2025-01', periodEnd: latest.period, monthlyOperationalStart: '2026-01', aprilFortnightIncluded: true, workbooks: workbookAudit },
+    sourceInventory: { workbookCount, periodStart: '2025-01', periodEnd: latest.period, monthlyOperationalStart: '2026-01', aprilFortnightIncluded: true, aprilFortnightReconciliation, formulaErrorCount: workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0), workbooks: workbookAudit },
     baseline2025,
     months,
     latestLeadSnapshot,
@@ -339,7 +420,7 @@ function main() {
         { priority: 'medium', title: 'Consolidar el repunte de cierres', evidence: `Junio registra ${latest.salesCount} ventas y UF ${latest.salesUf.toLocaleString('es-CL')}, versus ${previous.salesCount} ventas en mayo.`, action: 'Identificar los segmentos y agentes que explican el repunte antes de asignar presupuesto.' },
       ].sort((a, b) => (a.priority === 'high' ? -1 : 1) - (b.priority === 'high' ? -1 : 1)),
       director: [
-        { priority: 'high', title: 'Recuperar leads sin gestion', evidence: `${latestLeadSnapshot.stale15} leads aparecen sin gestion por 15 dias en el ultimo corte.`, action: 'Distribuir una cola diaria por responsable y registrar resultado de contacto.' },
+        { priority: 'high', title: 'Recuperar leads sin gestion', evidence: `${latestLeadSnapshot.staleOver15Total} leads superan 15 dias sin gestion: ${latestLeadSnapshot.stale15To90} entre 15 y 90 dias y ${latestLeadSnapshot.staleOver90} sobre 90 dias.`, action: 'Distribuir una cola diaria por responsable y registrar resultado de contacto.' },
         { priority: 'high', title: 'Cerrar brecha de clasificacion', evidence: `${latestLeadSnapshot.unclassified} leads permanecen sin clasificar; la cobertura exportada es ${latestLeadSnapshot.classificationCoverage}%.`, action: 'Exigir clasificacion y proxima accion para cada lead activo priorizado.' },
       ],
       seller: [

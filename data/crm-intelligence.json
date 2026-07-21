@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-07-21T20:33:17.093Z",
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-21T20:49:48.234Z",
   "scope": {
     "commune": "Vitacura",
     "operation": "Venta",
@@ -19,426 +19,639 @@
     "periodEnd": "2026-06",
     "monthlyOperationalStart": "2026-01",
     "aprilFortnightIncluded": true,
+    "aprilFortnightReconciliation": {
+      "sales": {
+        "fortnight": 6,
+        "month": 8,
+        "overlap": 5,
+        "fortnightOnly": 1,
+        "monthOnly": 3
+      },
+      "captures": {
+        "fortnight": 14,
+        "month": 35,
+        "overlap": 13,
+        "fortnightOnly": 1,
+        "monthOnly": 22
+      },
+      "leads": {
+        "fortnight": 245,
+        "month": 371,
+        "overlap": 187,
+        "fortnightOnly": 58,
+        "monthOnly": 184
+      },
+      "requirements": {
+        "fortnight": 344,
+        "month": 610,
+        "overlap": 344,
+        "fortnightOnly": 0,
+        "monthOnly": 266
+      },
+      "visits": {
+        "fortnight": 182,
+        "month": 324,
+        "overlap": 182,
+        "fortnightOnly": 0,
+        "monthOnly": 142
+      },
+      "suspended": {
+        "fortnight": 18,
+        "month": 43,
+        "overlap": 18,
+        "fortnightOnly": 0,
+        "monthOnly": 25
+      }
+    },
+    "formulaErrorCount": 331,
     "workbooks": [
       {
         "file": "Datos 2025/raw/captaciones_vigentes_y_vendidas_dic_2025.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 218
+        "dataRows": 218,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 2025/raw/leads_2025.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 4023
+        "dataRows": 4023,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 2025/raw/propiedades_suspendidas_2025.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 118
+        "dataRows": 118,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 2025/raw/requerimientos_por_propiedades_2025.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 5069
+        "dataRows": 5069,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 2025/raw/resumen_ventas_2025_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 61
+        "dataRows": 61,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 2025/raw/total_cartera_cierre_2025.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 725
+        "dataRows": 725,
+        "formulaCells": 693,
+        "formulaErrorCells": 331
       },
       {
         "file": "Datos 2025/raw/ventas_2025_vitacura_con_vendedor.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 61
+        "dataRows": 61,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 2025/raw/ventas_2025_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 61
+        "dataRows": 61,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 2025/raw/visitas_agendadas_2025.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 3993
+        "dataRows": 3993,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202601/raw/captadas_enero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 35
+        "dataRows": 35,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202601/raw/cierres_enero_2026_ventas.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 4
+        "dataRows": 4,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202601/raw/leads_enero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 285
+        "dataRows": 285,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202601/raw/requerimientos_online_enero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 506
+        "dataRows": 506,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202601/raw/suspendidas_enero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 13
+        "dataRows": 13,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202601/raw/total_cartera_20260218.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 394
+        "dataRows": 394,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202601/raw/visitas_enero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 269
+        "dataRows": 269,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202602/raw/captadas_febrero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 14
+        "dataRows": 14,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202602/raw/leads_clasificados_febrero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 668
+        "dataRows": 668,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202602/raw/leads_febrero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 198
+        "dataRows": 198,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202602/raw/requerimientos_online_febrero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 423
+        "dataRows": 423,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202602/raw/suspendidas_febrero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 20
+        "dataRows": 20,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202602/raw/total_cartera_febrero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 388
+        "dataRows": 388,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202602/raw/ventas_febrero_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 4
+        "dataRows": 4,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/captadas_marzo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 41
+        "dataRows": 41,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/leads_activos_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 3164
+        "dataRows": 3164,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/leads_clasificados_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 654
+        "dataRows": 654,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/leads_marzo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 328
+        "dataRows": 328,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/leads_sin_clasificar_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 2228
+        "dataRows": 2228,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/leads_sin_gestion_15_dias_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 788
+        "dataRows": 788,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/leads_sin_gestion_90_dias_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 1974
+        "dataRows": 1974,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/misc_undefined_20260402.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 7
+        "dataRows": 7,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/requerimientos_online_marzo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 709
+        "dataRows": 709,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/suspendidas_marzo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 21
+        "dataRows": 21,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/total_cartera_20260402.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 384
+        "dataRows": 384,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/ventas_enero_marzo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 14
+        "dataRows": 14,
+        "formulaCells": 5,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/ventas_marzo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 7
+        "dataRows": 7,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202603/raw/visitas_marzo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 381
+        "dataRows": 381,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/captadas_este_mes_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 16
+        "dataRows": 16,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_activos_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 3671
+        "dataRows": 3671,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_clasificados_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 690
+        "dataRows": 690,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_este_mes_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 245
+        "dataRows": 245,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_sin_gestion_15_dias_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 893
+        "dataRows": 893,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_sin_gestion_90_dias_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 3046
+        "dataRows": 3046,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/requerimientos_online_este_mes_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 420
+        "dataRows": 420,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/suspendidas_este_mes_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 19
+        "dataRows": 19,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/total_cartera_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 393
+        "dataRows": 393,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/ventas_quincena_abril_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 6
+        "dataRows": 6,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/visitas_este_mes_vitacura.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 229
+        "dataRows": 229,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/captadas_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 35
+        "dataRows": 35,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/cierres_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 8
+        "dataRows": 8,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/leads_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 371
+        "dataRows": 371,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/leads_activos_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 3298
+        "dataRows": 3298,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/leads_clasificados_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 658
+        "dataRows": 658,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/leads_sin_clasificar_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 2330
+        "dataRows": 2330,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/leads_sin_gestion_15_dias_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 706
+        "dataRows": 706,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/leads_sin_gestion_90_dias_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 2143
+        "dataRows": 2143,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/requerimientos_online_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 611
+        "dataRows": 611,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/suspendidas_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 43
+        "dataRows": 43,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/total_cartera_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 382
+        "dataRows": 382,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202604/raw/visitas_abril_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 359
+        "dataRows": 359,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/captadas_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 35
+        "dataRows": 35,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/cierres_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 4
+        "dataRows": 4,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/leads_activos_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 2131
+        "dataRows": 2131,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/leads_clasificados_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 959
+        "dataRows": 959,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/leads_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 414
+        "dataRows": 414,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/leads_sin_clasificar_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 1172
+        "dataRows": 1172,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/leads_sin_gestion_15_dias_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 505
+        "dataRows": 505,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/leads_sin_gestion_90_dias_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 904
+        "dataRows": 904,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/requerimientos_online_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 611
+        "dataRows": 611,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/suspendidas_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 67
+        "dataRows": 67,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/total_cartera_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 371
+        "dataRows": 371,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202605/raw/visitas_mayo_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 390
+        "dataRows": 390,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/captadas_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 36
+        "dataRows": 36,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/cierres_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 21
+        "dataRows": 21,
+        "formulaCells": 19,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/leads_activos_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 1770
+        "dataRows": 1770,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/leads_clasificados_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 502
+        "dataRows": 502,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/leads_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 392
+        "dataRows": 392,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/leads_sin_clasificar_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 925
+        "dataRows": 925,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/leads_sin_gestion_15_dias_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 596
+        "dataRows": 596,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/leads_sin_gestion_90_dias_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 505
+        "dataRows": 505,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/requerimientos_online_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 619
+        "dataRows": 619,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/suspendidas_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 64
+        "dataRows": 64,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/total_cartera_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 354
+        "dataRows": 354,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       },
       {
         "file": "Datos 202606/raw/visitas_junio_2026.xlsx",
         "selectedSheet": "Data",
-        "dataRows": 347
+        "dataRows": 347,
+        "formulaCells": 0,
+        "formulaErrorCells": 0
       }
     ]
   },
@@ -2119,8 +2332,10 @@
     "active": 1770,
     "classified": 502,
     "unclassified": 925,
-    "stale15": 596,
-    "stale90": 505,
+    "stale15To90": 596,
+    "staleOver90": 505,
+    "staleOver15Total": 1101,
+    "staleOver15Rate": 62.2,
     "classificationCoverage": 80.6
   },
   "ytd": {
@@ -2130,7 +2345,14 @@
     "newLeadsCount": 1988,
     "requirementsCount": 3470,
     "visitsCount": null,
-    "knownVisitsCount": 1599,
+    "knownVisitsCount": 1591,
+    "crossPeriodDuplicateIds": {
+      "sales": 0,
+      "captures": 0,
+      "leads": 0,
+      "requirements": 0,
+      "visits": 8
+    },
     "stockChange": -35,
     "comparison2025": {
       "salesChangePct": 13.3,
@@ -2262,9 +2484,27 @@
       },
       {
         "severity": "warning",
+        "code": "CROSS_PERIOD_VISIT_IDS",
+        "title": "Visitas reagendadas entre cortes",
+        "detail": "8 IDs de visita aparecen en dos meses. El acumulado conocido se deduplica globalmente por Visita - Id."
+      },
+      {
+        "severity": "warning",
         "code": "JUNE_SALES_AUXILIARY_ROWS",
         "title": "Filas auxiliares en cierres de junio",
         "detail": "13 filas sin Operacion - Id fueron puestas en cuarentena; junio conserva 8 ventas validas."
+      },
+      {
+        "severity": "warning",
+        "code": "SOURCE_FORMULA_ERRORS_2025_STOCK",
+        "title": "Errores de formula en cartera 2025",
+        "detail": "331 celdas con error de formula fueron detectadas en las fuentes. No alimentan los KPI publicados y los XLS originales se mantienen inmutables."
+      },
+      {
+        "severity": "warning",
+        "code": "APRIL_FORTNIGHT_SNAPSHOT_DRIFT",
+        "title": "Deriva entre quincena y cierre de abril",
+        "detail": "El corte quincenal contiene 1 venta, 1 captacion y 58 leads que no aparecen en el cierre mensual. El cierre mensual es la fuente autoritativa."
       },
       {
         "severity": "info",
@@ -2305,7 +2545,7 @@
       {
         "priority": "high",
         "title": "Recuperar leads sin gestion",
-        "evidence": "596 leads aparecen sin gestion por 15 dias en el ultimo corte.",
+        "evidence": "1101 leads superan 15 dias sin gestion: 596 entre 15 y 90 dias y 505 sobre 90 dias.",
         "action": "Distribuir una cola diaria por responsable y registrar resultado de contacto."
       },
       {

@@ -27,12 +27,15 @@
 2. Exigir el identificador canonico de la entidad.
 3. Aplicar el alcance Vitacura, Venta, Casa/Departamento.
 4. Deduplicar dentro de cada archivo por ID canonico.
-5. Mantener filas sin ID en cuarentena y reportar su cantidad.
-6. Representar archivos o periodos faltantes con `null`, nunca con cero.
-7. Una conversion causal solo se publica cuando existe una llave trazable entre etapas.
-8. `ventas / leads nuevos del mismo mes` se etiqueta como proxy, no como conversion de cohorte.
-9. Metas, comisiones y tiempos de venta permanecen sin dato hasta contar con su fuente validada.
-10. La cobertura de fuentes es datasets mensuales presentes dividido por datasets mensuales esperados. No es un puntaje subjetivo; duplicados, exclusiones y filas malformadas se informan por separado.
+5. Deduplicar nuevamente entre periodos para los acumulados YTD de ventas, captaciones, leads, requerimientos y visitas.
+6. Mantener filas sin ID en cuarentena y reportar su cantidad.
+7. Representar archivos o periodos faltantes con `null`, nunca con cero.
+8. Una conversion causal solo se publica cuando existe una llave trazable entre etapas.
+9. `ventas / leads nuevos del mismo mes` se etiqueta como proxy, no como conversion de cohorte.
+10. Metas, comisiones y tiempos de venta permanecen sin dato hasta contar con su fuente validada.
+11. La cobertura de fuentes es datasets mensuales presentes dividido por datasets mensuales esperados. No es un puntaje subjetivo; duplicados, exclusiones y filas malformadas se informan por separado.
+12. Los archivos de leads sin gestion de 15 y 90 dias son grupos disjuntos: la cola mayor a 15 dias es la suma de ambos.
+13. El cierre mensual es autoritativo frente al informe quincenal. La quincena se conserva para auditoria de deriva, no se suma al mes.
 
 ## Reconciliacion vigente
 
@@ -43,7 +46,7 @@
 - 193 captaciones.
 - 1.988 leads nuevos.
 - 3.470 requerimientos.
-- 1.599 visitas unicas en los cinco meses disponibles.
+- 1.591 visitas unicas en los cinco meses disponibles, luego de deduplicar 8 IDs reagendados entre cortes mensuales.
 - Visitas semestrales: sin dato por ausencia del archivo de febrero.
 - Cartera comparable: 386 propiedades en el primer corte y 351 en junio.
 
@@ -61,7 +64,11 @@
 - Febrero 2026 no incluye archivo de visitas.
 - Febrero y el corte quincenal de abril incluyen registros de arriendo, que se excluyen.
 - Cierres de junio incluye 13 filas auxiliares sin `Operacion - Id`; se ponen en cuarentena.
+- Ocho `Visita - Id` aparecen en dos meses por reagendamiento; el acumulado conocido se deduplica globalmente.
+- `total_cartera_cierre_2025.xlsx` contiene 331 celdas con error de formula. Esas celdas no alimentan los KPI publicados y la fuente original permanece inmutable.
 - Los snapshots de clasificacion no siempre cubren el 100% de los leads activos exportados.
+- En junio hay 596 leads sin gestion entre 15 y 90 dias y 505 sobre 90 dias: 1.101 en total, equivalentes al 62,2% de los 1.770 activos.
+- El corte quincenal de abril contiene 1 venta, 1 captacion dentro de alcance y 58 leads que no aparecen al cierre mensual. Esto se registra como deriva de snapshot; no se mezcla con el cierre.
 - La identidad del agente vendedor no esta disponible de forma consistente en todos los cierres; el ranking actual se etiqueta como agente captador de la propiedad.
 
 ## Comandos

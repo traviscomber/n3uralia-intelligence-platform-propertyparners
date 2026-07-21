@@ -47,7 +47,7 @@ export default function DirectorDashboard() {
       const current = definition.id === 'classification-coverage'
         ? leadSnapshot.classificationCoverage
         : definition.id === 'stale-lead-rate'
-          ? Number(((leadSnapshot.stale15 / Math.max(1, leadSnapshot.active)) * 100).toFixed(1))
+          ? leadSnapshot.staleOver15Rate
           : definition.id === 'suspension-pressure'
             ? Number(((fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100).toFixed(1))
             : null
@@ -59,7 +59,7 @@ export default function DirectorDashboard() {
       }
     })
 
-    const staleRate = (leadSnapshot.stale15 / Math.max(1, leadSnapshot.active)) * 100
+    const staleRate = leadSnapshot.staleOver15Rate ?? 0
     const suspensionRate = (fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100
     const overall = Math.round(((leadSnapshot.classificationCoverage ?? 0) + Math.max(0, 100 - staleRate) + Math.max(0, 100 - suspensionRate)) / 3)
 
@@ -68,7 +68,7 @@ export default function DirectorDashboard() {
       states,
       trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
     }
-  }, [fallbackSummary.stock, fallbackSummary.suspended, leadSnapshot.active, leadSnapshot.classificationCoverage, leadSnapshot.stale15])
+  }, [fallbackSummary.stock, fallbackSummary.suspended, leadSnapshot.classificationCoverage, leadSnapshot.staleOver15Rate])
 
   const ACTIVITY_COLORS: Record<string, string> = { llamada: 'var(--n3-teal)', visita: '#6b7280', oferta: '#0ea5e9', cierre: 'var(--n3-teal)' }
 
@@ -101,7 +101,7 @@ export default function DirectorDashboard() {
           border="#6b7280"
         />
         <KpiCard label="Leads nuevos" value={String(fallbackSummary.leads)} sub={`${fallbackSummary.monthLabel} · no acumulados`} border="var(--n3-teal)" />
-        <KpiCard label="Sin gestión 15d" value={String(leadSnapshot.stale15)} sub="cola prioritaria del último corte" border="#111111" />
+        <KpiCard label="Sin gestión >15d" value={String(leadSnapshot.staleOver15Total)} sub={`${leadSnapshot.stale15To90} entre 15-90d · ${leadSnapshot.staleOver90} sobre 90d`} border="#111111" />
       </div>
 
       {/* Director Scorecard */}
