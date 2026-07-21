@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 import path from 'node:path'
 import process from 'node:process'
 import XLSX from 'xlsx'
@@ -42,8 +43,9 @@ function parseArgs() {
   }
   const input = value('--input') || process.env.CRM_XLS_ROOT
   const output = value('--output') || path.resolve('data/crm-intelligence.json')
+  const manifestOutput = value('--manifest-output') || path.resolve('data/crm-cell-manifest.json')
   if (!input) throw new Error('Use --input <Datos CRM> or define CRM_XLS_ROOT.')
-  return { input: path.resolve(input), output: path.resolve(output) }
+  return { input: path.resolve(input), output: path.resolve(output), manifestOutput: path.resolve(manifestOutput) }
 }
 
 function normalize(value) {
@@ -58,6 +60,52 @@ function normalize(value) {
 
 function display(value) {
   return String(value ?? '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function stableValue(value) {
+  if (value instanceof Date) return { $date: value.toISOString() }
+  if (Buffer.isBuffer(value)) return { $buffer: value.toString('base64') }
+  if (Array.isArray(value)) return value.map(stableValue)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, stableValue(item)]))
+  }
+  return value
+}
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(value).digest('hex')
+}
+
+function classifyWorkbook(relativePath) {
+  const name = normalize(path.basename(relativePath)).replace(/[_-]+/g, ' ')
+  if (name.includes('sin gestion 15')) return 'lead_stale_15_90'
+  if (name.includes('sin gestion 90')) return 'lead_stale_over_90'
+  if (name.includes('sin clasificar')) return 'lead_unclassified'
+  if (name.includes('clasificados')) return 'lead_classified'
+  if (name.includes('activos')) return 'lead_active'
+  if (name.includes('leads')) return 'lead_created'
+  if (name.includes('requerimientos')) return 'requirement_created'
+  if (name.includes('visitas')) return 'visit_appointment'
+  if (name.includes('captad') || name.includes('captacion')) return 'property_capture'
+  if (name.includes('suspendid')) return 'property_suspension'
+  if (name.includes('cartera')) return 'property_stock'
+  if (name.includes('venta') || name.includes('cierre') || name.includes('undefined')) return name.includes('resumen') ? 'sales_summary' : 'sale_closed'
+  return 'unclassified'
+}
+
+function periodFromPath(relativePath) {
+  const match = relativePath.replaceAll('\\', '/').match(/Datos (2025|2026\d{2})\//)
+  if (!match) return null
+  return match[1] === '2025' ? '2025' : `${match[1].slice(0, 4)}-${match[1].slice(4)}`
+}
+
+function sourceRole(relativePath) {
+  const normalized = relativePath.replaceAll('\\', '/')
+  if (normalized.includes('/informe_quincenal/')) return 'fortnight_audit'
+  if (/ventas_enero_marzo|misc_undefined|resumen_ventas|ventas_2025_vitacura\.xlsx$/i.test(normalized)) return 'reconciliation'
+  if (/leads_(activos|clasificados|sin_clasificar|sin_gestion)/i.test(normalized)) return 'snapshot'
+  if (/Datos 2025\/raw\/(captaciones|propiedades_suspendidas|total_cartera)/i.test(normalized)) return 'annual_context'
+  return 'authoritative'
 }
 
 function numeric(value) {
@@ -219,34 +267,59 @@ function buildMonth(root, config) {
   }
 }
 
-function leadSnapshot(root, period) {
-  const base = path.join(root, `Datos ${period}`, 'raw')
+function findDatasetFile(folder, dataset) {
+  if (!fs.existsSync(folder)) return null
+  const matches = fs.readdirSync(folder)
+    .filter((name) => name.toLowerCase().endsWith('.xlsx') && classifyWorkbook(name) === dataset)
+    .sort((a, b) => a.localeCompare(b))
+  return matches.length === 1 ? path.join(folder, matches[0]) : null
+}
+
+function leadSnapshotFromFolder(folder, period, source = 'month_end') {
   const files = {
-    active: `leads_activos_${period === '202604' ? 'abril_2026' : period === '202605' ? 'mayo_2026' : period === '202606' ? 'junio_2026' : '2026'}.xlsx`,
-    classified: `leads_clasificados_${period === '202604' ? 'abril_2026' : period === '202605' ? 'mayo_2026' : period === '202606' ? 'junio_2026' : '2026'}.xlsx`,
-    unclassified: `leads_sin_clasificar_${period === '202604' ? 'abril_2026' : period === '202605' ? 'mayo_2026' : period === '202606' ? 'junio_2026' : '2026'}.xlsx`,
-    stale15: `leads_sin_gestion_15_dias_${period === '202604' ? 'abril_2026' : period === '202605' ? 'mayo_2026' : period === '202606' ? 'junio_2026' : '2026'}.xlsx`,
-    stale90: `leads_sin_gestion_90_dias_${period === '202604' ? 'abril_2026' : period === '202605' ? 'mayo_2026' : period === '202606' ? 'junio_2026' : '2026'}.xlsx`,
+    active: findDatasetFile(folder, 'lead_active'),
+    classified: findDatasetFile(folder, 'lead_classified'),
+    unclassified: findDatasetFile(folder, 'lead_unclassified'),
+    stale15: findDatasetFile(folder, 'lead_stale_15_90'),
+    stale90: findDatasetFile(folder, 'lead_stale_over_90'),
   }
-  const loaded = Object.fromEntries(Object.entries(files).map(([key, name]) => [key, canonicalRows(path.join(base, name), 'leads')]))
-  const count = (key) => loaded[key].records.length
+  const loaded = Object.fromEntries(Object.entries(files).map(([key, file]) => [key, canonicalRows(file, 'leads')]))
+  const count = (key) => loaded[key].quality.missing ? null : loaded[key].records.length
   const activeIds = new Set(loaded.active.records.map((record) => record.id))
   const classifiedIds = new Set(loaded.classified.records.map((record) => record.id).filter((id) => activeIds.has(id)))
   const unclassifiedIds = new Set(loaded.unclassified.records.map((record) => record.id).filter((id) => activeIds.has(id)))
   const classifiedCoverageIds = new Set([...classifiedIds, ...unclassifiedIds])
   const stale15To90 = count('stale15')
   const staleOver90 = count('stale90')
+  const active = count('active')
+  const staleOver15Total = stale15To90 === null || staleOver90 === null ? null : stale15To90 + staleOver90
   return {
-    period: `${period.slice(0, 4)}-${period.slice(4)}`,
-    active: count('active'),
+    period,
+    source,
+    active,
     classified: count('classified'),
     unclassified: count('unclassified'),
     stale15To90,
     staleOver90,
-    staleOver15Total: stale15To90 + staleOver90,
-    staleOver15Rate: count('active') ? Number((((stale15To90 + staleOver90) / count('active')) * 100).toFixed(1)) : null,
-    classificationCoverage: count('active') ? Number(((classifiedCoverageIds.size / count('active')) * 100).toFixed(1)) : null,
+    staleOver15Total,
+    staleOver15Rate: active && staleOver15Total !== null && staleOver15Total <= active ? Number(((staleOver15Total / active) * 100).toFixed(1)) : null,
+    classificationCoverage: active && !loaded.classified.quality.missing && !loaded.unclassified.quality.missing
+      ? Number(((classifiedCoverageIds.size / active) * 100).toFixed(1))
+      : null,
+    availableDatasets: Object.fromEntries(Object.entries(loaded).map(([key, value]) => [key, !value.quality.missing])),
   }
+}
+
+function buildLeadSnapshots(root) {
+  const snapshots = ['202602', '202603', '202604', '202605', '202606'].map((period) => (
+    leadSnapshotFromFolder(path.join(root, `Datos ${period}`, 'raw'), `${period.slice(0, 4)}-${period.slice(4)}`)
+  ))
+  const aprilFortnight = leadSnapshotFromFolder(
+    path.join(root, 'Datos 202604', 'informe_quincenal', 'raw'),
+    '2026-04-17',
+    'fortnight_audit',
+  )
+  return { snapshots, aprilFortnight }
 }
 
 function buildYtdEventDedupe(root) {
@@ -334,25 +407,69 @@ function listWorkbooks(root) {
 function auditWorkbooks(root) {
   return listWorkbooks(root).map((file) => {
     const { sheetName, headers, rows } = readWorkbook(file)
-    const workbook = XLSX.readFile(file, { cellFormula: true })
+    const workbook = XLSX.readFile(file, { cellFormula: true, cellStyles: true, cellNF: true, cellDates: true, sheetStubs: true })
     let formulaCells = 0
     let formulaErrorCells = 0
+    let storedCells = 0
+    let populatedCells = 0
+    const sheets = []
     for (const name of workbook.SheetNames) {
-      for (const [address, value] of Object.entries(workbook.Sheets[name])) {
-        if (address.startsWith('!')) continue
+      const sheet = workbook.Sheets[name]
+      const addresses = Object.keys(sheet).filter((address) => !address.startsWith('!')).sort((a, b) => a.localeCompare(b))
+      const digest = crypto.createHash('sha256')
+      let sheetFormulaCells = 0
+      let sheetFormulaErrors = 0
+      let sheetPopulatedCells = 0
+      let commentCells = 0
+      let hyperlinkCells = 0
+      for (const address of addresses) {
+        const value = sheet[address]
+        digest.update(JSON.stringify([address, stableValue(value)]))
         if (value?.f) formulaCells += 1
-        if (value?.t === 'e') formulaErrorCells += 1
+        if (value?.f) sheetFormulaCells += 1
+        if (value?.t === 'e') {
+          formulaErrorCells += 1
+          sheetFormulaErrors += 1
+        }
+        if (value?.v !== undefined || value?.f) {
+          populatedCells += 1
+          sheetPopulatedCells += 1
+        }
+        if (value?.c?.length) commentCells += 1
+        if (value?.l) hyperlinkCells += 1
       }
+      storedCells += addresses.length
+      sheets.push({
+        name,
+        range: sheet['!ref'] ?? null,
+        storedCells: addresses.length,
+        populatedCells: sheetPopulatedCells,
+        formulaCells: sheetFormulaCells,
+        formulaErrorCells: sheetFormulaErrors,
+        commentCells,
+        hyperlinkCells,
+        cellDigest: digest.digest('hex'),
+      })
     }
+    const relativeFile = path.relative(root, file).replaceAll('\\', '/')
     return {
-      file: path.relative(root, file).replaceAll('\\', '/'),
+      file: relativeFile,
+      period: periodFromPath(relativeFile),
+      dataset: classifyWorkbook(relativeFile),
+      sourceRole: sourceRole(relativeFile),
+      byteSize: fs.statSync(file).size,
+      fileSha256: sha256(fs.readFileSync(file)),
       selectedSheet: sheetName,
+      sheetCount: workbook.SheetNames.length,
       dataRows: rows.length,
       columnCount: headers.length,
       emptyHeaderCount: headers.filter((header) => !normalize(header)).length,
       duplicateHeaderCount: headers.map(normalize).filter(Boolean).length - new Set(headers.map(normalize).filter(Boolean)).size,
+      storedCells,
+      populatedCells,
       formulaCells,
       formulaErrorCells,
+      sheets,
     }
   })
 }
@@ -395,19 +512,126 @@ function build2025Baseline(root) {
   }
 }
 
+function compareIdSets(leftRecords, rightRecords) {
+  const left = new Set(leftRecords.map((record) => record.id))
+  const right = new Set(rightRecords.map((record) => record.id))
+  const overlap = [...left].filter((id) => right.has(id)).length
+  return {
+    left: left.size,
+    right: right.size,
+    overlap,
+    leftOnly: left.size - overlap,
+    rightOnly: right.size - overlap,
+    exactMatch: left.size === right.size && overlap === left.size,
+  }
+}
+
+function compareBusinessRows(leftFile, rightFile, keys) {
+  const signatures = (file) => {
+    const { indexes, rows } = readWorkbook(file)
+    const values = new Map()
+    for (const row of rows.filter((candidate) => inScope(candidate, indexes))) {
+      const signature = JSON.stringify(keys.map((key) => stableValue(cell(row, indexes, key))))
+      values.set(signature, (values.get(signature) ?? 0) + 1)
+    }
+    return values
+  }
+  const left = signatures(leftFile)
+  const right = signatures(rightFile)
+  let overlap = 0
+  for (const [signature, count] of left) overlap += Math.min(count, right.get(signature) ?? 0)
+  const leftCount = [...left.values()].reduce((sum, count) => sum + count, 0)
+  const rightCount = [...right.values()].reduce((sum, count) => sum + count, 0)
+  return {
+    left: leftCount,
+    right: rightCount,
+    overlap,
+    leftOnly: leftCount - overlap,
+    rightOnly: rightCount - overlap,
+    exactMatch: leftCount === rightCount && overlap === leftCount,
+    comparisonKey: keys,
+  }
+}
+
+function buildAnnualContext2025(root) {
+  const base = path.join(root, 'Datos 2025', 'raw')
+  const captures = canonicalRows(path.join(base, 'captaciones_vigentes_y_vendidas_dic_2025.xlsx'), 'captures')
+  const suspended = canonicalRows(path.join(base, 'propiedades_suspendidas_2025.xlsx'), 'suspended')
+  const stock = canonicalRows(path.join(base, 'total_cartera_cierre_2025.xlsx'), 'stock')
+  return {
+    captures: captures.records.length,
+    suspended: suspended.records.length,
+    publishedStock: stock.records.length,
+    quality: {
+      captures: captures.quality,
+      suspended: suspended.quality,
+      stock: stock.quality,
+    },
+  }
+}
+
+function buildSourceReconciliations(root) {
+  const base2025 = path.join(root, 'Datos 2025', 'raw')
+  const baseMarch = path.join(root, 'Datos 202603', 'raw')
+  const monthlyQ1 = ['202601', '202602', '202603'].flatMap((period) => {
+    const config = MONTHS.find((month) => month.period.replace('-', '') === period)
+    return canonicalRows(path.join(root, config.folder, 'raw', config.names.sales), 'sales').records
+  })
+  return {
+    sales2025WithoutSellerVsWithSeller: compareIdSets(
+      canonicalRows(path.join(base2025, 'ventas_2025_vitacura.xlsx'), 'sales').records,
+      canonicalRows(path.join(base2025, 'ventas_2025_vitacura_con_vendedor.xlsx'), 'sales').records,
+    ),
+    sales2025SummaryVsAuthoritative: compareBusinessRows(
+      path.join(base2025, 'resumen_ventas_2025_vitacura.xlsx'),
+      path.join(base2025, 'ventas_2025_vitacura_con_vendedor.xlsx'),
+      ['operacion - fecha cierre negocio', 'operacion - moneda', 'operacion - precio de cierre', 'propiedad - agente', 'propiedad - tipo', 'venta - agente'],
+    ),
+    q1CumulativeVsMonthlyUnion: compareIdSets(
+      canonicalRows(path.join(baseMarch, 'ventas_enero_marzo_2026.xlsx'), 'sales').records,
+      monthlyQ1,
+    ),
+    marchMiscVsMarchSales: compareIdSets(
+      canonicalRows(path.join(baseMarch, 'misc_undefined_20260402.xlsx'), 'sales').records,
+      canonicalRows(path.join(baseMarch, 'ventas_marzo_2026.xlsx'), 'sales').records,
+    ),
+  }
+}
+
 function main() {
-  const { input, output } = parseArgs()
+  const { input, output, manifestOutput } = parseArgs()
   if (!fs.existsSync(input)) throw new Error(`Input folder does not exist: ${input}`)
   const months = MONTHS.map((month) => buildMonth(input, month))
   const workbookAudit = auditWorkbooks(input)
   const baseline2025 = build2025Baseline(input)
-  const latestLeadSnapshot = leadSnapshot(input, '202606')
+  const leadSnapshotCoverage = buildLeadSnapshots(input)
+  const latestLeadSnapshot = leadSnapshotCoverage.snapshots.at(-1)
+  const annualContext2025 = buildAnnualContext2025(input)
+  const sourceReconciliations = buildSourceReconciliations(input)
   const ytdEventDedupe = buildYtdEventDedupe(input)
   const aprilFortnightReconciliation = buildAprilFortnightReconciliation(input)
   const total = (field) => months.reduce((sum, month) => sum + (month[field] ?? 0), 0)
   const firstStock = months[0].stockCount
   const latestStock = months.at(-1).stockCount
   const workbookCount = workbookAudit.length
+  const generatedAt = new Date().toISOString()
+  const cellCoverage = {
+    workbookCount,
+    sheetCount: workbookAudit.reduce((sum, workbook) => sum + workbook.sheetCount, 0),
+    storedCells: workbookAudit.reduce((sum, workbook) => sum + workbook.storedCells, 0),
+    populatedCells: workbookAudit.reduce((sum, workbook) => sum + workbook.populatedCells, 0),
+    formulaCells: workbookAudit.reduce((sum, workbook) => sum + workbook.formulaCells, 0),
+    formulaErrorCells: workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0),
+  }
+  const datasetCoverage = Object.values(workbookAudit.reduce((groups, workbook) => {
+    const current = groups[workbook.dataset] ?? { dataset: workbook.dataset, workbookCount: 0, dataRows: 0, periods: new Set(), sourceRoles: new Set() }
+    current.workbookCount += 1
+    current.dataRows += workbook.dataRows
+    if (workbook.period) current.periods.add(workbook.period)
+    current.sourceRoles.add(workbook.sourceRole)
+    groups[workbook.dataset] = current
+    return groups
+  }, {})).map((group) => ({ ...group, periods: [...group.periods].sort(), sourceRoles: [...group.sourceRoles].sort() }))
   const ytd = {
     salesCount: ytdEventDedupe.uniqueCounts.sales,
     salesUf: ytdEventDedupe.salesUf,
@@ -441,19 +665,24 @@ function main() {
     { severity: 'warning', code: 'JUNE_SALES_AUXILIARY_ROWS', title: 'Filas auxiliares en cierres de junio', detail: `${latest.quality.files.sales.malformedRows} filas sin Operacion - Id fueron puestas en cuarentena; junio conserva ${latest.salesCount} ventas validas.` },
     { severity: 'warning', code: 'SOURCE_FORMULA_ERRORS_2025_STOCK', title: 'Errores de formula en cartera 2025', detail: `${workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0)} celdas con error de formula fueron detectadas en las fuentes. No alimentan los KPI publicados y los XLS originales se mantienen inmutables.` },
     { severity: 'warning', code: 'APRIL_FORTNIGHT_SNAPSHOT_DRIFT', title: 'Deriva entre quincena y cierre de abril', detail: `El corte quincenal contiene ${aprilFortnightReconciliation.sales.fortnightOnly} venta, ${aprilFortnightReconciliation.captures.fortnightOnly} captacion y ${aprilFortnightReconciliation.leads.fortnightOnly} leads que no aparecen en el cierre mensual. El cierre mensual es la fuente autoritativa.` },
+    { severity: 'warning', code: 'APRIL_FORTNIGHT_LEAD_BASE_MISMATCH', title: 'Colas quincenales no comparables con activos', detail: `El corte quincenal suma ${leadSnapshotCoverage.aprilFortnight.staleOver15Total} registros en colas sin gestion frente a ${leadSnapshotCoverage.aprilFortnight.active} leads activos y no incluye archivo sin clasificar. Las tasas del corte se publican como n/d.` },
     { severity: 'info', code: 'SELLER_ATTRIBUTION_PARTIAL', title: 'Atribucion de vendedor no canonica', detail: `${months.reduce((sum, month) => sum + month.sellerAttribution.identified, 0)} de ${total('salesCount')} cierres identifican vendedor. Los encabezados y nombres varian entre archivos; el ranking publicado se mantiene como lado captador.` },
     { severity: 'info', code: 'SOURCE_EMPTY_HEADERS', title: 'Columnas auxiliares sin encabezado', detail: `${workbookAudit.reduce((sum, workbook) => sum + workbook.emptyHeaderCount, 0)} columnas sin encabezado fueron detectadas en tres fuentes 2025. No corresponden a campos requeridos por los KPI.` },
     { severity: 'info', code: 'OUT_OF_SCOPE_FILTERED', title: 'Alcance comercial aplicado', detail: 'Se excluyeron arriendos, propiedades rentadas, terrenos y duplex. Solo se publican ventas de casas y departamentos en Vitacura.' },
     { severity: 'warning', code: 'TARGETS_NOT_LOADED', title: 'Metas 2026 aun no integradas', detail: 'Los campos de meta y cumplimiento permanecen nulos hasta validar los archivos de Metas 2026.' },
   ]
   const payload = {
-    schemaVersion: 4,
-    generatedAt: new Date().toISOString(),
+    schemaVersion: 5,
+    generatedAt,
     scope: { commune: 'Vitacura', operation: 'Venta', propertyTypes: ['Casa', 'Departamento'], excludedOperations: ['Arriendo'], piiIncluded: false },
-    sourceInventory: { workbookCount, periodStart: '2025-01', periodEnd: latest.period, monthlyOperationalStart: '2026-01', aprilFortnightIncluded: true, aprilFortnightReconciliation, formulaErrorCount: workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0), emptyHeaderCount: workbookAudit.reduce((sum, workbook) => sum + workbook.emptyHeaderCount, 0), duplicateHeaderCount: workbookAudit.reduce((sum, workbook) => sum + workbook.duplicateHeaderCount, 0), workbooks: workbookAudit },
+    sourceInventory: { workbookCount, periodStart: '2025-01', periodEnd: latest.period, monthlyOperationalStart: '2026-01', aprilFortnightIncluded: true, aprilFortnightReconciliation, cellCoverage, datasetCoverage, formulaErrorCount: workbookAudit.reduce((sum, workbook) => sum + workbook.formulaErrorCells, 0), emptyHeaderCount: workbookAudit.reduce((sum, workbook) => sum + workbook.emptyHeaderCount, 0), duplicateHeaderCount: workbookAudit.reduce((sum, workbook) => sum + workbook.duplicateHeaderCount, 0), workbooks: workbookAudit },
     baseline2025,
+    annualContext2025,
     months,
+    leadSnapshots: leadSnapshotCoverage.snapshots,
+    aprilFortnightLeadSnapshot: leadSnapshotCoverage.aprilFortnight,
     latestLeadSnapshot,
+    sourceReconciliations,
     ytd,
     quality: {
       sourceCoverage: Number((months.reduce((sum, month) => sum + month.quality.sourceCoverage, 0) / months.length).toFixed(1)),
@@ -481,9 +710,24 @@ function main() {
     },
   }
 
+  const manifest = {
+    schemaVersion: 1,
+    generatedAt,
+    privacy: {
+      rawValuesIncluded: false,
+      customerPiiIncluded: false,
+      rule: 'Only workbook, sheet and aggregate cell digests are published. Raw cell values remain in the private XLS sources.',
+    },
+    coverage: cellCoverage,
+    workbooks: workbookAudit,
+  }
+
   fs.mkdirSync(path.dirname(output), { recursive: true })
+  fs.mkdirSync(path.dirname(manifestOutput), { recursive: true })
   fs.writeFileSync(output, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
+  fs.writeFileSync(manifestOutput, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8')
   console.log(`CRM intelligence written to ${output}`)
+  console.log(`CRM cell manifest written to ${manifestOutput}`)
   console.log(JSON.stringify({ workbooks: workbookCount, months: months.length, ytd, latestLeadSnapshot, quality: payload.quality }, null, 2))
 }
 

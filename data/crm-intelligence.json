@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 4,
-  "generatedAt": "2026-07-21T22:23:16.210Z",
+  "schemaVersion": 5,
+  "generatedAt": "2026-07-21T22:49:10.453Z",
   "scope": {
     "commune": "Vitacura",
     "operation": "Venta",
@@ -63,849 +63,2926 @@
         "monthOnly": 25
       }
     },
+    "cellCoverage": {
+      "workbookCount": 84,
+      "sheetCount": 92,
+      "storedCells": 1209831,
+      "populatedCells": 1208765,
+      "formulaCells": 717,
+      "formulaErrorCells": 331
+    },
+    "datasetCoverage": [
+      {
+        "dataset": "property_capture",
+        "workbookCount": 8,
+        "dataRows": 430,
+        "periods": [
+          "2025",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "annual_context",
+          "authoritative",
+          "fortnight_audit"
+        ]
+      },
+      {
+        "dataset": "lead_created",
+        "workbookCount": 8,
+        "dataRows": 6256,
+        "periods": [
+          "2025",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "authoritative",
+          "fortnight_audit"
+        ]
+      },
+      {
+        "dataset": "property_suspension",
+        "workbookCount": 8,
+        "dataRows": 365,
+        "periods": [
+          "2025",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "annual_context",
+          "authoritative",
+          "fortnight_audit"
+        ]
+      },
+      {
+        "dataset": "requirement_created",
+        "workbookCount": 8,
+        "dataRows": 8968,
+        "periods": [
+          "2025",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "authoritative",
+          "fortnight_audit"
+        ]
+      },
+      {
+        "dataset": "sales_summary",
+        "workbookCount": 1,
+        "dataRows": 61,
+        "periods": [
+          "2025"
+        ],
+        "sourceRoles": [
+          "reconciliation"
+        ]
+      },
+      {
+        "dataset": "property_stock",
+        "workbookCount": 8,
+        "dataRows": 3391,
+        "periods": [
+          "2025",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "annual_context",
+          "authoritative",
+          "fortnight_audit"
+        ]
+      },
+      {
+        "dataset": "sale_closed",
+        "workbookCount": 11,
+        "dataRows": 197,
+        "periods": [
+          "2025",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "authoritative",
+          "fortnight_audit",
+          "reconciliation"
+        ]
+      },
+      {
+        "dataset": "visit_appointment",
+        "workbookCount": 7,
+        "dataRows": 5968,
+        "periods": [
+          "2025",
+          "2026-01",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "authoritative",
+          "fortnight_audit"
+        ]
+      },
+      {
+        "dataset": "lead_classified",
+        "workbookCount": 6,
+        "dataRows": 4131,
+        "periods": [
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "fortnight_audit",
+          "snapshot"
+        ]
+      },
+      {
+        "dataset": "lead_active",
+        "workbookCount": 5,
+        "dataRows": 14034,
+        "periods": [
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "fortnight_audit",
+          "snapshot"
+        ]
+      },
+      {
+        "dataset": "lead_unclassified",
+        "workbookCount": 4,
+        "dataRows": 6655,
+        "periods": [
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "snapshot"
+        ]
+      },
+      {
+        "dataset": "lead_stale_15_90",
+        "workbookCount": 5,
+        "dataRows": 3488,
+        "periods": [
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "fortnight_audit",
+          "snapshot"
+        ]
+      },
+      {
+        "dataset": "lead_stale_over_90",
+        "workbookCount": 5,
+        "dataRows": 8572,
+        "periods": [
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06"
+        ],
+        "sourceRoles": [
+          "fortnight_audit",
+          "snapshot"
+        ]
+      }
+    ],
     "formulaErrorCount": 331,
     "emptyHeaderCount": 7,
     "duplicateHeaderCount": 0,
     "workbooks": [
       {
         "file": "Datos 2025/raw/captaciones_vigentes_y_vendidas_dic_2025.xlsx",
+        "period": "2025",
+        "dataset": "property_capture",
+        "sourceRole": "annual_context",
+        "byteSize": 53947,
+        "fileSha256": "b5569d3d078f3c6e14a52f2ee349c370f7d3edaf15388fa99c9828c1ff01a53d",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 218,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 4818,
+        "populatedCells": 4818,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V219",
+            "storedCells": 4818,
+            "populatedCells": 4818,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "65cb326dce675ad602130ce86a800ae80036c17da0b8cef5cf9959b6205256ea"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/leads_2025.xlsx",
+        "period": "2025",
+        "dataset": "lead_created",
+        "sourceRole": "authoritative",
+        "byteSize": 730216,
+        "fileSha256": "fa9f808072f5f9a10c5c1413c58a933c5c4d4d2747405c4163337dcfd2448e82",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 4023,
         "columnCount": 15,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 60452,
+        "populatedCells": 60452,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A1:B47",
+            "storedCells": 92,
+            "populatedCells": 92,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "111a5a762f4f38d4210af1589c15313e2990ef06c70b2076dc8b376c60a34033"
+          },
+          {
+            "name": "Data",
+            "range": "A1:O4024",
+            "storedCells": 60360,
+            "populatedCells": 60360,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "7c8abca5bedb9bf8cf206d0311e10e3c3f29c5e68bbc68ca559423bc4340561e"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/propiedades_suspendidas_2025.xlsx",
+        "period": "2025",
+        "dataset": "property_suspension",
+        "sourceRole": "annual_context",
+        "byteSize": 134538,
+        "fileSha256": "6ce7af60aa6b36ba31bc52495e84606c4ae57f22048dc02c2f8920c52245cd9a",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 118,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 2618,
+        "populatedCells": 2618,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V119",
+            "storedCells": 2618,
+            "populatedCells": 2618,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "77e747b9f33ac60c63caadad2b1eab03b0de1aab8adb6852a32396b76f388a58"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/requerimientos_por_propiedades_2025.xlsx",
+        "period": "2025",
+        "dataset": "requirement_created",
+        "sourceRole": "authoritative",
+        "byteSize": 1706691,
+        "fileSha256": "bcfff5094019f6b511f291467d7c37df698f47d199874f91c06873fa5253b98e",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 5069,
         "columnCount": 33,
         "emptyHeaderCount": 1,
         "duplicateHeaderCount": 0,
+        "storedCells": 155488,
+        "populatedCells": 155487,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A1:B45",
+            "storedCells": 88,
+            "populatedCells": 87,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "49e68633034ae5629d113e08a7fe5575ea4618632a6c1017cba04ffce4025361"
+          },
+          {
+            "name": "Data",
+            "range": "A1:AG5070",
+            "storedCells": 155400,
+            "populatedCells": 155400,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "91e18ec8e41c7e822624dab0300547009835e0dbb4f1535aba8a88bbfb7cff38"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/resumen_ventas_2025_vitacura.xlsx",
+        "period": "2025",
+        "dataset": "sales_summary",
+        "sourceRole": "reconciliation",
+        "byteSize": 31587,
+        "fileSha256": "9664ad6a277bb3cf74bc7bf6017f02a568f9147b717d51eed78ed9561866f790",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 61,
         "columnCount": 8,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 524,
+        "populatedCells": 524,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A3:A30",
+            "storedCells": 28,
+            "populatedCells": 28,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "45c59ef7e55e8a7b6771589312673595ee74c6cca797c1de48bc460e51effacc"
+          },
+          {
+            "name": "Data",
+            "range": "A1:H62",
+            "storedCells": 496,
+            "populatedCells": 496,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "f9b56292dbd8e7c9fdf5982cda266db873a19a36b3fdb8b1afbbc2d2e827ff22"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/total_cartera_cierre_2025.xlsx",
+        "period": "2025",
+        "dataset": "property_stock",
+        "sourceRole": "annual_context",
+        "byteSize": 178371,
+        "fileSha256": "b95fe00313b734c2b8e21046604c5ffe448992228d710cc6788347cd312453d8",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 725,
         "columnCount": 27,
         "emptyHeaderCount": 5,
         "duplicateHeaderCount": 0,
+        "storedCells": 17645,
+        "populatedCells": 16580,
         "formulaCells": 693,
-        "formulaErrorCells": 331
+        "formulaErrorCells": 331,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A3:F33",
+            "storedCells": 97,
+            "populatedCells": 97,
+            "formulaCells": 4,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "30c72c33ff8b12757f7b0037adfbb41d769bd390454839ecdaa0ada907546a52"
+          },
+          {
+            "name": "Data",
+            "range": "A1:AA728",
+            "storedCells": 17548,
+            "populatedCells": 16483,
+            "formulaCells": 689,
+            "formulaErrorCells": 331,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "2fc5abe27d6a95895a55e66b195be8c39111898fd799744c9c965134c645b3e1"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/ventas_2025_vitacura_con_vendedor.xlsx",
+        "period": "2025",
+        "dataset": "sale_closed",
+        "sourceRole": "authoritative",
+        "byteSize": 48938,
+        "fileSha256": "2a82646575c7ce6df201caf3d5b64d004f9215e78fda4085008e167d419a5051",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 61,
         "columnCount": 33,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 2074,
+        "populatedCells": 2074,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A3:A30",
+            "storedCells": 28,
+            "populatedCells": 28,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "45c59ef7e55e8a7b6771589312673595ee74c6cca797c1de48bc460e51effacc"
+          },
+          {
+            "name": "Data",
+            "range": "A1:AG62",
+            "storedCells": 2046,
+            "populatedCells": 2046,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "025162512ac331d0c6057fe45a851fb4ff4b19f1da4eb313e5d0142c17de2381"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/ventas_2025_vitacura.xlsx",
+        "period": "2025",
+        "dataset": "sale_closed",
+        "sourceRole": "reconciliation",
+        "byteSize": 48855,
+        "fileSha256": "99aec7a8a59adac2308000d5030c72ea5330c3fdfb7c809005937f9491d3f7fa",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 61,
         "columnCount": 33,
         "emptyHeaderCount": 1,
         "duplicateHeaderCount": 0,
+        "storedCells": 2073,
+        "populatedCells": 2073,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A3:A30",
+            "storedCells": 28,
+            "populatedCells": 28,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "45c59ef7e55e8a7b6771589312673595ee74c6cca797c1de48bc460e51effacc"
+          },
+          {
+            "name": "Data",
+            "range": "A1:AG62",
+            "storedCells": 2045,
+            "populatedCells": 2045,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "b1d4e7bbfbaccc446aef871ab3dedd00d3893096b505fdfde327fed7e989bc77"
+          }
+        ]
       },
       {
         "file": "Datos 2025/raw/visitas_agendadas_2025.xlsx",
+        "period": "2025",
+        "dataset": "visit_appointment",
+        "sourceRole": "authoritative",
+        "byteSize": 1436171,
+        "fileSha256": "7ff31054dabedf2bf9518362462c954ca77e8efb356a427662f64d6584af4aa9",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 3993,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 127894,
+        "populatedCells": 127894,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A1:B44",
+            "storedCells": 86,
+            "populatedCells": 86,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "0d91542fadd698a37c2904eb07d9fcfcfec860a0ef0f9f01aa3482ec003cd82b"
+          },
+          {
+            "name": "Data",
+            "range": "A1:AF3994",
+            "storedCells": 127808,
+            "populatedCells": 127808,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "e4f6ec0878aef95106636f082d77f45c6140aa9ed557d8471290f85298759c3d"
+          }
+        ]
       },
       {
         "file": "Datos 202601/raw/captadas_enero_2026.xlsx",
+        "period": "2026-01",
+        "dataset": "property_capture",
+        "sourceRole": "authoritative",
+        "byteSize": 16907,
+        "fileSha256": "f4e94e315824c4c8d02176f96daae00886d9ea5b2e6f1079a3425fe33911e37d",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 35,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 792,
+        "populatedCells": 792,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V36",
+            "storedCells": 792,
+            "populatedCells": 792,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "f39c648369479c9fbe0838034ae0ef44656e734dd845ffc085d94312ba76cfce"
+          }
+        ]
       },
       {
         "file": "Datos 202601/raw/cierres_enero_2026_ventas.xlsx",
+        "period": "2026-01",
+        "dataset": "sale_closed",
+        "sourceRole": "authoritative",
+        "byteSize": 10541,
+        "fileSha256": "832262c3830ac7a94410ea3bd891449eb291f24cf38fdff7a07706044de47593",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 4,
         "columnCount": 31,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 155,
+        "populatedCells": 155,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AE5",
+            "storedCells": 155,
+            "populatedCells": 155,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "4d382e535c8813b9328da5541edd0c62ab495d48e9d8ea7a4b777be2fd736509"
+          }
+        ]
       },
       {
         "file": "Datos 202601/raw/leads_enero_2026.xlsx",
+        "period": "2026-01",
+        "dataset": "lead_created",
+        "sourceRole": "authoritative",
+        "byteSize": 42748,
+        "fileSha256": "d43a9f189a0dd32672c66b49e405834dd9da1957ef32cb6c7fe7f976dcd3e658",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 285,
         "columnCount": 15,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 4290,
+        "populatedCells": 4290,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:O286",
+            "storedCells": 4290,
+            "populatedCells": 4290,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "114eabba1bf9bda331a1b47e371c151ebaea34fd154e77824450df9dbda9d659"
+          }
+        ]
       },
       {
         "file": "Datos 202601/raw/requerimientos_online_enero_2026.xlsx",
+        "period": "2026-01",
+        "dataset": "requirement_created",
+        "sourceRole": "authoritative",
+        "byteSize": 126744,
+        "fileSha256": "610b7bb57c4a2b2a285de52034015c0eff0fab4394237f142a788b7bdc7a8a92",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 506,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 16224,
+        "populatedCells": 16224,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF507",
+            "storedCells": 16224,
+            "populatedCells": 16224,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "f7919c6c7e77c139ea38f92a7c20642c2f5f257fa4ccb2c6e71f6f61a6be2782"
+          }
+        ]
       },
       {
         "file": "Datos 202601/raw/suspendidas_enero_2026.xlsx",
+        "period": "2026-01",
+        "dataset": "property_suspension",
+        "sourceRole": "authoritative",
+        "byteSize": 12117,
+        "fileSha256": "d4b7564693b050d4d08eb92f46388534d25888ffe5d2b2098af9c8f79d882e76",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 13,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 308,
+        "populatedCells": 308,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V14",
+            "storedCells": 308,
+            "populatedCells": 308,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "d4cb8afd124faf0bc9ce1f64330cf2d0eb0e95834385091a2b3cd913f4f715db"
+          }
+        ]
       },
       {
         "file": "Datos 202601/raw/total_cartera_20260218.xlsx",
+        "period": "2026-01",
+        "dataset": "property_stock",
+        "sourceRole": "authoritative",
+        "byteSize": 87773,
+        "fileSha256": "92c45e0457762386eabcf518168d2dcdc0f8b30230257211c2336e3625c24140",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 394,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 8690,
+        "populatedCells": 8690,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V395",
+            "storedCells": 8690,
+            "populatedCells": 8690,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "bed4b53469d091996e1b6efcc4021ced0986b6316d0aa597607d4b015c19040a"
+          }
+        ]
       },
       {
         "file": "Datos 202601/raw/visitas_enero_2026.xlsx",
+        "period": "2026-01",
+        "dataset": "visit_appointment",
+        "sourceRole": "authoritative",
+        "byteSize": 73347,
+        "fileSha256": "11773c3a9c2f9ca23898cda325f2a114e9b64ab5ab2a34a4223bb943585c16c8",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 269,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 8640,
+        "populatedCells": 8640,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF270",
+            "storedCells": 8640,
+            "populatedCells": 8640,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "99a599dff88acd40170bd2cfe2b5f9f03f869257b7fcda5184ed3b5f66bc3cfc"
+          }
+        ]
       },
       {
         "file": "Datos 202602/raw/captadas_febrero_2026.xlsx",
+        "period": "2026-02",
+        "dataset": "property_capture",
+        "sourceRole": "authoritative",
+        "byteSize": 30918,
+        "fileSha256": "a9b4dfce8e3149d1507dd2a51990a2b985bc89d9a3982d523dc6f9a9eabe9464",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 14,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 330,
+        "populatedCells": 330,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V15",
+            "storedCells": 330,
+            "populatedCells": 330,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "a5dec5bbc093c6baf84f0edb9117457023601f4a273818b0f70d88764a5cd5ef"
+          }
+        ]
       },
       {
         "file": "Datos 202602/raw/leads_clasificados_febrero_2026.xlsx",
+        "period": "2026-02",
+        "dataset": "lead_classified",
+        "sourceRole": "snapshot",
+        "byteSize": 488157,
+        "fileSha256": "2e7283b67c3b3c0c13a444cd8c710578949ea560f20d5efe30b92f87e3c4ec54",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 668,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 10704,
+        "populatedCells": 10704,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P669",
+            "storedCells": 10704,
+            "populatedCells": 10704,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "9ce22389fdafa7210d1253587ac9a1284a7fe5eb8aed4a8b8057178eb09a4b98"
+          }
+        ]
       },
       {
         "file": "Datos 202602/raw/leads_febrero_2026.xlsx",
+        "period": "2026-02",
+        "dataset": "lead_created",
+        "sourceRole": "authoritative",
+        "byteSize": 147138,
+        "fileSha256": "83a22175320383b04db1d659c44bba08237cc21924379544122e9bfd0ed53903",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 198,
         "columnCount": 15,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 2985,
+        "populatedCells": 2985,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:O199",
+            "storedCells": 2985,
+            "populatedCells": 2985,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "0fd89b3a0baa8ed3fd74bc07a4b5e3fbbee55a1620a1c68521a784accaac8f26"
+          }
+        ]
       },
       {
         "file": "Datos 202602/raw/requerimientos_online_febrero_2026.xlsx",
+        "period": "2026-02",
+        "dataset": "requirement_created",
+        "sourceRole": "authoritative",
+        "byteSize": 624133,
+        "fileSha256": "6633c761d536929ec073f7b1d7ac7fbc038ba06091a15be1c0873f0754758fce",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 423,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 13568,
+        "populatedCells": 13568,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF424",
+            "storedCells": 13568,
+            "populatedCells": 13568,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "635a8c33fe57addfff88d87fce21941010c724b2b7b2ded91fe26209e5c788d7"
+          }
+        ]
       },
       {
         "file": "Datos 202602/raw/suspendidas_febrero_2026.xlsx",
+        "period": "2026-02",
+        "dataset": "property_suspension",
+        "sourceRole": "authoritative",
+        "byteSize": 37730,
+        "fileSha256": "f0ddfad349bf59191e77520d5f25c63617f58a1e10f904274174ac3a6e287a30",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 20,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 462,
+        "populatedCells": 462,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V21",
+            "storedCells": 462,
+            "populatedCells": 462,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "dfc45aa287472ba5d4b3947b1ab2f49d1383f57a111eb400e351da93c5d2c644"
+          }
+        ]
       },
       {
         "file": "Datos 202602/raw/total_cartera_febrero_2026.xlsx",
+        "period": "2026-02",
+        "dataset": "property_stock",
+        "sourceRole": "authoritative",
+        "byteSize": 415387,
+        "fileSha256": "d4424aeea7429fad00408eeddbf5a84a680b98aa041a4080a9cddd5593aae819",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 388,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 8558,
+        "populatedCells": 8558,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V389",
+            "storedCells": 8558,
+            "populatedCells": 8558,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "2fcba1e6d8ef9c924dd66d14f636d63b2ca7ece022560440b49519a0ccf65649"
+          }
+        ]
       },
       {
         "file": "Datos 202602/raw/ventas_febrero_2026.xlsx",
+        "period": "2026-02",
+        "dataset": "sale_closed",
+        "sourceRole": "authoritative",
+        "byteSize": 10447,
+        "fileSha256": "882720cbae31dded8946eee2027ecbebb82afab14ce4d3d7534f2679a7281497",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 4,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 160,
+        "populatedCells": 160,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF5",
+            "storedCells": 160,
+            "populatedCells": 160,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "faf98a189ea0b88d1ee5067fa04dcd65eec22aa141f7d8971bfbadbb6afd8d48"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/captadas_marzo_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "property_capture",
+        "sourceRole": "authoritative",
+        "byteSize": 58311,
+        "fileSha256": "e28626e3bb49f08fd79b1bcb02ed346358e44aee87c7d28cbd01f00736cb2630",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 41,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 924,
+        "populatedCells": 924,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V42",
+            "storedCells": 924,
+            "populatedCells": 924,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "2bf1be278aa1da1a4689f2e6f618fcc5d4432ee3673c57b4ac537ed5780c5044"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/leads_activos_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "lead_active",
+        "sourceRole": "snapshot",
+        "byteSize": 2300901,
+        "fileSha256": "241bf5fe8ebd1fbbe43c54a59fdd6a9f6281c13ef43036f22d0fe73edd2b8df0",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 3164,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 50640,
+        "populatedCells": 50640,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P3165",
+            "storedCells": 50640,
+            "populatedCells": 50640,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "7786de1aa35d94d72b62614b507a4d87f590eba874a87880702d0ed440f36885"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/leads_clasificados_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "lead_classified",
+        "sourceRole": "snapshot",
+        "byteSize": 478760,
+        "fileSha256": "cd3922c3e77a879c6afb9028500c84055d1ddea299d6e450b4ab20de7418dae0",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 654,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 10480,
+        "populatedCells": 10480,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P655",
+            "storedCells": 10480,
+            "populatedCells": 10480,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "f696374cba7ed8f504ef6e9c38a3d8b182d1af9018e934f61f3743b6ab6df8e0"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/leads_marzo_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "lead_created",
+        "sourceRole": "authoritative",
+        "byteSize": 247413,
+        "fileSha256": "896955e1d83c8660942c683b8c83a05251e06a279ca9130232da7eb57ea089c9",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 328,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 5264,
+        "populatedCells": 5264,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P329",
+            "storedCells": 5264,
+            "populatedCells": 5264,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "1a56516a1cb3de6e297274f6d2818ce3194c0127c1847b9b0e7c58938c78bf31"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/leads_sin_clasificar_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "lead_unclassified",
+        "sourceRole": "snapshot",
+        "byteSize": 1621217,
+        "fileSha256": "a1edee83a5e6d7902e529269f55f5c494352df1c287916eb6f486358131a0b48",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 2228,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 35664,
+        "populatedCells": 35664,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P2229",
+            "storedCells": 35664,
+            "populatedCells": 35664,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "62b36cd5646c9f940c915fbfe1db022f99a59c2ad02189bbd1f0f1c592aa69a4"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/leads_sin_gestion_15_dias_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "lead_stale_15_90",
+        "sourceRole": "snapshot",
+        "byteSize": 574808,
+        "fileSha256": "ed9c9a129f338359d7b9c35155ffc2df9eaf0a636c94f21e8fda1389193ecbe9",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 788,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 12624,
+        "populatedCells": 12624,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P789",
+            "storedCells": 12624,
+            "populatedCells": 12624,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "38f344878810b49699f2ff12d0879f0a0b6b1d681da08d55061404ebd4bc263e"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/leads_sin_gestion_90_dias_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "lead_stale_over_90",
+        "sourceRole": "snapshot",
+        "byteSize": 1435231,
+        "fileSha256": "e2530e8db8e36dcbf4b04140db26ba2a7c07ff3f3dac7b166e34d1d7ad5840a7",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 1974,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 31600,
+        "populatedCells": 31600,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P1975",
+            "storedCells": 31600,
+            "populatedCells": 31600,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "9c7b1fc1f1694c0e3652636188e3c6b9d4e8926ea17d2e82964f9b2f3e42cd46"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/misc_undefined_20260402.xlsx",
+        "period": "2026-03",
+        "dataset": "sale_closed",
+        "sourceRole": "reconciliation",
+        "byteSize": 26815,
+        "fileSha256": "60c85d12b8c6d6a42ab15b974de8fe5952bc67f30b66c0d6529e1fd432793220",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 7,
         "columnCount": 31,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 248,
+        "populatedCells": 248,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AE8",
+            "storedCells": 248,
+            "populatedCells": 248,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "c1375dea0aa0a7ebeabc125b073d1202f63c70f6c39f5e3598279191563ecc1f"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/requerimientos_online_marzo_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "requirement_created",
+        "sourceRole": "authoritative",
+        "byteSize": 1067573,
+        "fileSha256": "33eb3b8a9316d45d640f06579444a31db814717dbf8fc1dc370b46f4a2e7307b",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 709,
         "columnCount": 33,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 23430,
+        "populatedCells": 23430,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AG710",
+            "storedCells": 23430,
+            "populatedCells": 23430,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "773726a3c61b7420b90f1a52dc8eb504c96ea0ef6132d2feb97cb2a226de6993"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/suspendidas_marzo_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "property_suspension",
+        "sourceRole": "authoritative",
+        "byteSize": 36394,
+        "fileSha256": "8b6b266f44d26ada94a8d56eb3207a16a82b0d0ebc8937cfe6da182e3bd19f08",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 21,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 484,
+        "populatedCells": 484,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V22",
+            "storedCells": 484,
+            "populatedCells": 484,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "b1622ec289a0db4efe1ca363fe353737a671e22d3b9093212d5b3fe7f760f288"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/total_cartera_20260402.xlsx",
+        "period": "2026-03",
+        "dataset": "property_stock",
+        "sourceRole": "authoritative",
+        "byteSize": 411502,
+        "fileSha256": "da8fef3aa1df6bcfd3be4734b1c02d2a7fe308ce2ace391208beb5d4cee268bf",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 384,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 8470,
+        "populatedCells": 8470,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V385",
+            "storedCells": 8470,
+            "populatedCells": 8470,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "b41a23c1ece230fd429d05be3032cecf8bc79a96e801309dd63d9c05b187eb90"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/ventas_enero_marzo_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "sale_closed",
+        "sourceRole": "reconciliation",
+        "byteSize": 24522,
+        "fileSha256": "72348841c65b3cc750a7b6d76d824bba33c91e74d945711ed49a99f3aab2afca",
         "selectedSheet": "Data",
+        "sheetCount": 2,
         "dataRows": 14,
         "columnCount": 33,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 511,
+        "populatedCells": 511,
         "formulaCells": 5,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Hoja1",
+            "range": "A3:D7",
+            "storedCells": 20,
+            "populatedCells": 20,
+            "formulaCells": 5,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "c728319d25a007728994eb20f3337c5c4983475bc173247ff4a1ff0ccd0fbb4f"
+          },
+          {
+            "name": "Data",
+            "range": "A1:AG15",
+            "storedCells": 491,
+            "populatedCells": 491,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "77aef45fe4b7fb610863aa9af7aa7e05452129e719337dc80bbd6bf2ef05a3bc"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/ventas_marzo_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "sale_closed",
+        "sourceRole": "authoritative",
+        "byteSize": 11772,
+        "fileSha256": "f41307b4244e8633e9be0efbdcb85ee269a6bf1e621decfb4f0e1c5c75e26d02",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 7,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 256,
+        "populatedCells": 256,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF8",
+            "storedCells": 256,
+            "populatedCells": 256,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "caa7a1aeb1c8919630895480f7b30920fddd86e785569dd48bce8e728f74e656"
+          }
+        ]
       },
       {
         "file": "Datos 202603/raw/visitas_marzo_2026.xlsx",
+        "period": "2026-03",
+        "dataset": "visit_appointment",
+        "sourceRole": "authoritative",
+        "byteSize": 564087,
+        "fileSha256": "b8955d36fef4706c66139aeeccef752f7e606371b341a780ef9e63b3743b443b",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 381,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 12224,
+        "populatedCells": 12224,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF382",
+            "storedCells": 12224,
+            "populatedCells": 12224,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "b57670ab91f84e2060c748b1de73e57454a2a040cd731ba270aba27f1f965895"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/captadas_este_mes_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "property_capture",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 33257,
+        "fileSha256": "bfd96d61998e9357362eacd4a3f4cf565f870bb8fb7f3f795917f56311352c03",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 16,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 374,
+        "populatedCells": 374,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V17",
+            "storedCells": 374,
+            "populatedCells": 374,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "c12d26e89c0ec2ec3d8ab868f2838ee17d96caa0dd42839ab8102f599e138b76"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_activos_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_active",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 450213,
+        "fileSha256": "93d2516d1cffb4d0e4134324c6ee19dde8eb7414623607f1d2d9e91bf0e56fd4",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 3671,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 58752,
+        "populatedCells": 58752,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P3672",
+            "storedCells": 58752,
+            "populatedCells": 58752,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "e98a3ea2d35a0395965dadce9c541050143fe32f14e68bb2d9727726464ff12e"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_clasificados_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_classified",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 504091,
+        "fileSha256": "b3b7a7f2f3b0392c6c961df68ae31204b77cc38ecdfa166a35d66e390ac66508",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 690,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 11056,
+        "populatedCells": 11056,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P691",
+            "storedCells": 11056,
+            "populatedCells": 11056,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "3efb4492257c8a96ebf07aaea94af1ef3db162c71ed0d362f4047f32e7c90317"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_este_mes_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_created",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 188777,
+        "fileSha256": "6e5cf383380eb31e63b8ac342564d6059e867cc716a993b1c18f2c5186ea3c9f",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 245,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 3936,
+        "populatedCells": 3936,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P246",
+            "storedCells": 3936,
+            "populatedCells": 3936,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "c2eacb9447591cd0c9afed0586a206f39808bcb2c794e733adea331cb4546b2c"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_sin_gestion_15_dias_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_stale_15_90",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 648511,
+        "fileSha256": "c5ffc41b3336f261e503d08e55c80bf49fa98357d8ad7ba43ef9ae5f070af39e",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 893,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 14304,
+        "populatedCells": 14304,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P894",
+            "storedCells": 14304,
+            "populatedCells": 14304,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "4720aa95a1175c81ac66e316866785be0466286c965ccdb312387b3efa6cdcf2"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/leads_sin_gestion_90_dias_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_stale_over_90",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 2221924,
+        "fileSha256": "5642218397b18a8170e7526d749b2549804f80d5bd2c4896b52d1a5c6a5591fd",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 3046,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 48752,
+        "populatedCells": 48752,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P3047",
+            "storedCells": 48752,
+            "populatedCells": 48752,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "8fcfff70652139e427602eab59363d8cf4b9186c63add3cad38bbd6234586407"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/requerimientos_online_este_mes_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "requirement_created",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 637193,
+        "fileSha256": "f9050de1cca56f839ab338b32068de6d493e16de1534602e0ff6b5c32603dfad",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 420,
         "columnCount": 33,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 13893,
+        "populatedCells": 13893,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AG421",
+            "storedCells": 13893,
+            "populatedCells": 13893,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "e488dd5598434d6ad805ae411fd4e9a2de0bd81cd513ad70977e6748e43c9ecb"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/suspendidas_este_mes_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "property_suspension",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 34469,
+        "fileSha256": "28db3c3b03ac1c65ea5abba11a1b717c1f2291017039c9f8b6f69a98eddda15e",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 19,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 440,
+        "populatedCells": 440,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V20",
+            "storedCells": 440,
+            "populatedCells": 440,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "f3e6207a6fa6f29acfe8104d6245bf8bd4eff84d853d605c71ee8c41dcde16a6"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/total_cartera_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "property_stock",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 420810,
+        "fileSha256": "e69c47b149f3f86a491d688b36ba07e73addbc4217bcd6616f18d45b930ddc01",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 393,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 8668,
+        "populatedCells": 8668,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V394",
+            "storedCells": 8668,
+            "populatedCells": 8668,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "cb7c09bd3ba51014465a5686ea3b888c24d815b510df21bb8fc1e6fd164349f4"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/ventas_quincena_abril_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "sale_closed",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 11250,
+        "fileSha256": "492107e2bf6dccf0891982b61d34d0c22fabbe42323346f65e1460ad07680c0b",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 6,
         "columnCount": 33,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 231,
+        "populatedCells": 231,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AG7",
+            "storedCells": 231,
+            "populatedCells": 231,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "f5bf7d99bb9ace2b78c202a6127e7fa43be14ac482d98a70954a4862f42a59b2"
+          }
+        ]
       },
       {
         "file": "Datos 202604/informe_quincenal/raw/visitas_este_mes_vitacura.xlsx",
+        "period": "2026-04",
+        "dataset": "visit_appointment",
+        "sourceRole": "fortnight_audit",
+        "byteSize": 345345,
+        "fileSha256": "2ab09d37baee038644b5a142837ac89a96e907e626fb6c7992a676922064cb09",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 229,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 7360,
+        "populatedCells": 7360,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF230",
+            "storedCells": 7360,
+            "populatedCells": 7360,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "5caf3dbcd0b3199bdf3f511e3c17e8dfc6532d852e735cc7f5e68b9a66f6af9a"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/captadas_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "property_capture",
+        "sourceRole": "authoritative",
+        "byteSize": 52841,
+        "fileSha256": "0051f4a872401306cbc1a18ca2e2067f56a6b51b4be30047fe347ce1e9c48608",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 35,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 792,
+        "populatedCells": 792,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V36",
+            "storedCells": 792,
+            "populatedCells": 792,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "d7752b9691360a2955c2caf735819596bb216260ba3b1044cf24fa7291e5e405"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/cierres_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "sale_closed",
+        "sourceRole": "authoritative",
+        "byteSize": 12075,
+        "fileSha256": "d782212aa67178981ca9eddfcc57300d4b606f5d069c94463097a78e004b9230",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 8,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 288,
+        "populatedCells": 288,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF9",
+            "storedCells": 288,
+            "populatedCells": 288,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "26ff9b2c1d877c6f681c8acd8f7ceef0690ae41c3b101d09bceea43bc170733b"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/leads_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_created",
+        "sourceRole": "authoritative",
+        "byteSize": 278670,
+        "fileSha256": "0da4d940af4eaace7fc82e4403005125cb22ab2f691345060276ed5a999c1ec2",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 371,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 5952,
+        "populatedCells": 5952,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P372",
+            "storedCells": 5952,
+            "populatedCells": 5952,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "262a7ca265645765004da569ed247f06d0614378fe22c577048fd8f8a0909c83"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/leads_activos_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_active",
+        "sourceRole": "snapshot",
+        "byteSize": 2400036,
+        "fileSha256": "fbe1d8257a9cbd0f71bf6edf7bde532318c56d5bbc9f4859ee6cd93b6a7c2546",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 3298,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 52784,
+        "populatedCells": 52784,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P3299",
+            "storedCells": 52784,
+            "populatedCells": 52784,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "2a710f342d1f580591e2df8232f1bc67bd34cee89217ef3816056a0b7c6433eb"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/leads_clasificados_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_classified",
+        "sourceRole": "snapshot",
+        "byteSize": 481830,
+        "fileSha256": "fd828646c80b5984a76d541a486e1a8baf45726d090aec9aa11435ea397c624c",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 658,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 10544,
+        "populatedCells": 10544,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P659",
+            "storedCells": 10544,
+            "populatedCells": 10544,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "ab72bcdba2cb4315ff9d3595f73a4df69ccf3ae4cc189d94a5978f241f0e4e50"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/leads_sin_clasificar_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_unclassified",
+        "sourceRole": "snapshot",
+        "byteSize": 1697034,
+        "fileSha256": "131fd605b27f96ede46f38a1ab50c016bb46fc597ba1c238247bd7e271c6c688",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 2330,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 37296,
+        "populatedCells": 37296,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P2331",
+            "storedCells": 37296,
+            "populatedCells": 37296,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "ce8497069089bbc26e6c636bd09164ce93820ee83e0001d2573bfd63d6bab473"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/leads_sin_gestion_15_dias_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_stale_15_90",
+        "sourceRole": "snapshot",
+        "byteSize": 515901,
+        "fileSha256": "96433f23cda1482b4c0dca6b33baa0fe2df82fc3b8ec59cfc9639a86ecf3c8e3",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 706,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 11312,
+        "populatedCells": 11312,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P707",
+            "storedCells": 11312,
+            "populatedCells": 11312,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "eb2c0cb9f0d0e9ca7b6f45e26366136f90f4189d98e51a9d2bdc48fab5b93d86"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/leads_sin_gestion_90_dias_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "lead_stale_over_90",
+        "sourceRole": "snapshot",
+        "byteSize": 1559918,
+        "fileSha256": "166968a5cd20d7cbbd44587e373e444e2696ee941d47b22c3d2400f726ec1f60",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 2143,
         "columnCount": 16,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 34304,
+        "populatedCells": 34304,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:P2144",
+            "storedCells": 34304,
+            "populatedCells": 34304,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "da241651db70236ca40173cb18084fcd226fc0d649c8337e039ba803f036a84a"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/requerimientos_online_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "requirement_created",
+        "sourceRole": "authoritative",
+        "byteSize": 922269,
+        "fileSha256": "c4327dc1c47846e741efb99c73074def3459125f6b091851995ba73acb4029db",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 611,
         "columnCount": 33,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 20196,
+        "populatedCells": 20196,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AG612",
+            "storedCells": 20196,
+            "populatedCells": 20196,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "fbab749b26efe37270a24f8da70c4ea39c9b511d77d00538c71adeead337ddc9"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/suspendidas_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "property_suspension",
+        "sourceRole": "authoritative",
+        "byteSize": 58578,
+        "fileSha256": "4a434a7f3640d0877df8745b81c3f594062384a47d7caf3bba2145c4c042e679",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 43,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 968,
+        "populatedCells": 968,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V44",
+            "storedCells": 968,
+            "populatedCells": 968,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "ce266d82958dd7cf94ee7b87cba4541fa70df807d6c7ce3898924c6af8515fb9"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/total_cartera_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "property_stock",
+        "sourceRole": "authoritative",
+        "byteSize": 410608,
+        "fileSha256": "f766fef7cea911fdf7271da49173f4c6ba405cfc95fe9fd2849da1c992132ed2",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 382,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 8426,
+        "populatedCells": 8426,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V383",
+            "storedCells": 8426,
+            "populatedCells": 8426,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "39e9afb69911b2761f35e3413fe1305467a47c9f683e06440a7bfcc447f95947"
+          }
+        ]
       },
       {
         "file": "Datos 202604/raw/visitas_abril_2026.xlsx",
+        "period": "2026-04",
+        "dataset": "visit_appointment",
+        "sourceRole": "authoritative",
+        "byteSize": 536041,
+        "fileSha256": "c3d3a44666e7a1e715996fe873ae8ece77460a1dac746a4cc488a62df15f75ef",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 359,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 11520,
+        "populatedCells": 11520,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF360",
+            "storedCells": 11520,
+            "populatedCells": 11520,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "f05cfb118bd6accbc4a21c9e03732d83c484aa8c2bcb4294d7aa7322159fea35"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/captadas_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "property_capture",
+        "sourceRole": "authoritative",
+        "byteSize": 52318,
+        "fileSha256": "722566475700bcf1fdc48eb906ecb76e0f9b90f24ba1130970bdf3a2d26522c7",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 35,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 792,
+        "populatedCells": 792,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V36",
+            "storedCells": 792,
+            "populatedCells": 792,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "886ae8fa143bee5176fb542bf2487fb06d0cbac39dc6a9cb46c4933635c2d618"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/cierres_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "sale_closed",
+        "sourceRole": "authoritative",
+        "byteSize": 11134,
+        "fileSha256": "af26877d116c3a0184ebfb65d8465b2c943aaad260b6582b1ca45108f4bf2312",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 4,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 160,
+        "populatedCells": 160,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF5",
+            "storedCells": 160,
+            "populatedCells": 160,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 1,
+            "cellDigest": "88b4f1ea0f89e3b159ba983fe7e7bfb1ad38153fd41fdc1787df04b3eda1928f"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/leads_activos_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "lead_active",
+        "sourceRole": "snapshot",
+        "byteSize": 189652,
+        "fileSha256": "c029ab23b25d484732fbdd90b7cbb4e82187dd653ac37963a06a37539ee71985",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 2131,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 25584,
+        "populatedCells": 25584,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L2132",
+            "storedCells": 25584,
+            "populatedCells": 25584,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "3cd6cf1704fc299ccbb1a85555dca9bea805b30658e01ba35a9fd569699d274a"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/leads_clasificados_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "lead_classified",
+        "sourceRole": "snapshot",
+        "byteSize": 91373,
+        "fileSha256": "3b28eea09749122cc26a45b2afb074c77791e72cf96dc7c0dffb653ddc307760",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 959,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 11520,
+        "populatedCells": 11520,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L960",
+            "storedCells": 11520,
+            "populatedCells": 11520,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "d37157d7c1880c8ceb6df8e34c55f7cf2b29220a667f987844c3722b9cdda40c"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/leads_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "lead_created",
+        "sourceRole": "authoritative",
+        "byteSize": 246071,
+        "fileSha256": "286e09a63ed408463ef71f5fedaf6804b33ae40bf807198be22a504325e182ae",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 414,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 4980,
+        "populatedCells": 4980,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L415",
+            "storedCells": 4980,
+            "populatedCells": 4980,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "887741c267548644a7033aefa066d2e24abec6f4324bc46e77cbb0a9cbba0d3e"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/leads_sin_clasificar_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "lead_unclassified",
+        "sourceRole": "snapshot",
+        "byteSize": 674236,
+        "fileSha256": "fbcccd831f4092ef7439a3fb4062904101868e578af3b541c144012e424fb5c8",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 1172,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 14076,
+        "populatedCells": 14076,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L1173",
+            "storedCells": 14076,
+            "populatedCells": 14076,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "276955f5cd4b4e09e69819bb97474c18cc320530c382ae694646b5c77da230bf"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/leads_sin_gestion_15_dias_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "lead_stale_15_90",
+        "sourceRole": "snapshot",
+        "byteSize": 296011,
+        "fileSha256": "d1b49453f177ff2f8af28fe63ac771874800b794af152aa147f399aa2d0d8065",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 505,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 6072,
+        "populatedCells": 6072,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L506",
+            "storedCells": 6072,
+            "populatedCells": 6072,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "d4b9458c02ba2b671c77af93921b77c57295962a22d35fe3d1cc3af9e58b0a3a"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/leads_sin_gestion_90_dias_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "lead_stale_over_90",
+        "sourceRole": "snapshot",
+        "byteSize": 520037,
+        "fileSha256": "9777004239cd122b02d2f9ed6cf6dc490e6a7238291400aed191dd0cd2332050",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 904,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 10860,
+        "populatedCells": 10860,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L905",
+            "storedCells": 10860,
+            "populatedCells": 10860,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "560ef75aa401b71d30621e6cb62370a2ae55d93b40d1532d18aef8fe3d7634bd"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/requerimientos_online_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "requirement_created",
+        "sourceRole": "authoritative",
+        "byteSize": 826370,
+        "fileSha256": "b3a98c34859ecbeed3d5f161099b8eb092b225e4552eaff4ad6a095f2337fc7b",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 611,
         "columnCount": 29,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 17748,
+        "populatedCells": 17748,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AC612",
+            "storedCells": 17748,
+            "populatedCells": 17748,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "4eea8eb161768123084a00a5ee018e2fad46d86d8cd09193872d32c120e7e1d2"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/suspendidas_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "property_suspension",
+        "sourceRole": "authoritative",
+        "byteSize": 84314,
+        "fileSha256": "2e22b77856a626225fb5b19a31e63a330c47be0bc5a27df224700a2b8e723287",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 67,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 1496,
+        "populatedCells": 1496,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V68",
+            "storedCells": 1496,
+            "populatedCells": 1496,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "bbdc9dc325d63e7ec592ef5f438aea2d9779a7e582077e0cf7b01a22943aa878"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/total_cartera_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "property_stock",
+        "sourceRole": "authoritative",
+        "byteSize": 399087,
+        "fileSha256": "ae21f7005894a15935097fcdc62b53f5fa76da1ebb4fe9a3594ee31b64adcd10",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 371,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 8184,
+        "populatedCells": 8184,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V372",
+            "storedCells": 8184,
+            "populatedCells": 8184,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "83b5f4c71c7ea615ff70d13b48d81fb84a216cb5f8a2197ee34e198fbbc79349"
+          }
+        ]
       },
       {
         "file": "Datos 202605/raw/visitas_mayo_2026.xlsx",
+        "period": "2026-05",
+        "dataset": "visit_appointment",
+        "sourceRole": "authoritative",
+        "byteSize": 485843,
+        "fileSha256": "3d716126c38b5e4ce8fe43d6f6b12a6a98367cad89c72df2266a876e501333d9",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 390,
         "columnCount": 26,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 10166,
+        "populatedCells": 10166,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:Z391",
+            "storedCells": 10166,
+            "populatedCells": 10166,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "4e0fc5d32578525355bdf920b885fded8fae0fad3737e3e78e81d804386fc56c"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/captadas_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "property_capture",
+        "sourceRole": "authoritative",
+        "byteSize": 53523,
+        "fileSha256": "0f091969b2676f10030ae9cf99de945514587d7d2ef879b5f487c0a167e8c19c",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 36,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 814,
+        "populatedCells": 814,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V37",
+            "storedCells": 814,
+            "populatedCells": 814,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "a9d1eff03f0574c0fd6f4fd8f09d21a28547f75183c0b234261642a6c07c484c"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/cierres_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "sale_closed",
+        "sourceRole": "authoritative",
+        "byteSize": 13069,
+        "fileSha256": "f7dc81589fae436a4babceab791e08078b8f39d61a96efaaaa6f96625099c911",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 21,
         "columnCount": 32,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 340,
+        "populatedCells": 340,
         "formulaCells": 19,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AF25",
+            "storedCells": 340,
+            "populatedCells": 340,
+            "formulaCells": 19,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "ac2b912ad44fdc791544589f29b491f0ba5bb9c533ebdba6b4db3ed2eb2a0153"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/leads_activos_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "lead_active",
+        "sourceRole": "snapshot",
+        "byteSize": 1009418,
+        "fileSha256": "bd2e85565690070113fc471ab7594042b7bdb1b5d6bd6e28eea08a3852ffffec",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 1770,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 21252,
+        "populatedCells": 21252,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L1771",
+            "storedCells": 21252,
+            "populatedCells": 21252,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "793891e8b6d2a0463a74da61bab36863b0d5dda865f041751f801bc02e557c53"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/leads_clasificados_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "lead_classified",
+        "sourceRole": "snapshot",
+        "byteSize": 291939,
+        "fileSha256": "72681ab41c4b1ff89f7b36f2209926082db2980a2824aa1e8a1aadc7ec96e089",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 502,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 6036,
+        "populatedCells": 6036,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L503",
+            "storedCells": 6036,
+            "populatedCells": 6036,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "73e889a387e21c36fac90ef787a2e926a71f81ea3651c4d9acbf822b2d9a2a4a"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/leads_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "lead_created",
+        "sourceRole": "authoritative",
+        "byteSize": 233822,
+        "fileSha256": "e09aadf12e2b976f16c1c39ba8b86d26df5c304e1327595b873f8993599f0ee1",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 392,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 4716,
+        "populatedCells": 4716,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L393",
+            "storedCells": 4716,
+            "populatedCells": 4716,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "83f07a9eda94bde6bb1a611ff1699293e8e3348e22a2ebcf817df69790bbe3b0"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/leads_sin_clasificar_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "lead_unclassified",
+        "sourceRole": "snapshot",
+        "byteSize": 532946,
+        "fileSha256": "1abbad4ee5492ccd75217a6e3a85ea9d91dfd8d4451a74021956c2465177b951",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 925,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 11112,
+        "populatedCells": 11112,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L926",
+            "storedCells": 11112,
+            "populatedCells": 11112,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "411a6e0d23f8d37253b95b115190cbafa04897aa3b7dbcb103d1d238d3562231"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/leads_sin_gestion_15_dias_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "lead_stale_15_90",
+        "sourceRole": "snapshot",
+        "byteSize": 345614,
+        "fileSha256": "7ba980868943c5447819d6ec7a00a443fe31540d3def2c8b62d19bef7ac55aa6",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 596,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 7164,
+        "populatedCells": 7164,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L597",
+            "storedCells": 7164,
+            "populatedCells": 7164,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "3371ee304db312a1afd113927cb3f11e0da08a165bbf5b0dfc14cbfe1c9da0d6"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/leads_sin_gestion_90_dias_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "lead_stale_over_90",
+        "sourceRole": "snapshot",
+        "byteSize": 296683,
+        "fileSha256": "94ea15c8fe2eff3e728727752e2fd243bc344be7ea9f500c1de851052dfffdfe",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 505,
         "columnCount": 12,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 6072,
+        "populatedCells": 6072,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:L506",
+            "storedCells": 6072,
+            "populatedCells": 6072,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "18b5385be60e1e490d2814837141d601b0f40606486d9669dfe211da4e5f3de3"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/requerimientos_online_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "requirement_created",
+        "sourceRole": "authoritative",
+        "byteSize": 838020,
+        "fileSha256": "6f4b6196b0954c64f0ebba01dc84f0ebccaf836694119a3c80fdcf334dc70544",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 619,
         "columnCount": 29,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 17980,
+        "populatedCells": 17980,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:AC620",
+            "storedCells": 17980,
+            "populatedCells": 17980,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "9b1b2de01562fbb4022e190d9064fe2b9615aa57310234a87ae8913b17a1b4ec"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/suspendidas_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "property_suspension",
+        "sourceRole": "authoritative",
+        "byteSize": 81745,
+        "fileSha256": "aa4bf9b5db5af7461a14368f6c374de4029ab945fba253a89b4dfe3fddcf7932",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 64,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 1430,
+        "populatedCells": 1430,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V65",
+            "storedCells": 1430,
+            "populatedCells": 1430,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "da879ecf1f40883053e448ea85f63872ce78e9138bbc870687f32e347c184af2"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/total_cartera_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "property_stock",
+        "sourceRole": "authoritative",
+        "byteSize": 381758,
+        "fileSha256": "b332e1ab7d991b05c51dbee1d08c92f0ab19980a9092540dba01f6f5bc7a45c0",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 354,
         "columnCount": 22,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 7810,
+        "populatedCells": 7810,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:V355",
+            "storedCells": 7810,
+            "populatedCells": 7810,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "e942c0474857fcc2e3c5eb447e984e8ecf218e4a93ec5411f2a127f30b30d990"
+          }
+        ]
       },
       {
         "file": "Datos 202606/raw/visitas_junio_2026.xlsx",
+        "period": "2026-06",
+        "dataset": "visit_appointment",
+        "sourceRole": "authoritative",
+        "byteSize": 434151,
+        "fileSha256": "865cc9c212ae03c3db4c13cf553ef69e07956d41629ad875be2ecac0c1e85a0b",
         "selectedSheet": "Data",
+        "sheetCount": 1,
         "dataRows": 347,
         "columnCount": 26,
         "emptyHeaderCount": 0,
         "duplicateHeaderCount": 0,
+        "storedCells": 9048,
+        "populatedCells": 9048,
         "formulaCells": 0,
-        "formulaErrorCells": 0
+        "formulaErrorCells": 0,
+        "sheets": [
+          {
+            "name": "Data",
+            "range": "A1:Z348",
+            "storedCells": 9048,
+            "populatedCells": 9048,
+            "formulaCells": 0,
+            "formulaErrorCells": 0,
+            "commentCells": 0,
+            "hyperlinkCells": 0,
+            "cellDigest": "696c5a6ab7acb6c7b7d4663056de3f36b2c1d7b9475faec48de21efb6fcda67e"
+          }
+        ]
       }
     ]
   },
@@ -980,6 +3057,46 @@
         "salesUf": 106750
       }
     ]
+  },
+  "annualContext2025": {
+    "captures": 215,
+    "suspended": 117,
+    "publishedStock": 347,
+    "quality": {
+      "captures": {
+        "source": "captaciones_vigentes_y_vendidas_dic_2025.xlsx",
+        "sheet": "Data",
+        "rawRows": 218,
+        "acceptedRows": 215,
+        "duplicateRows": 0,
+        "excludedRows": 3,
+        "malformedRows": 0,
+        "missingColumns": [],
+        "missing": false
+      },
+      "suspended": {
+        "source": "propiedades_suspendidas_2025.xlsx",
+        "sheet": "Data",
+        "rawRows": 118,
+        "acceptedRows": 117,
+        "duplicateRows": 0,
+        "excludedRows": 1,
+        "malformedRows": 0,
+        "missingColumns": [],
+        "missing": false
+      },
+      "stock": {
+        "source": "total_cartera_cierre_2025.xlsx",
+        "sheet": "Data",
+        "rawRows": 725,
+        "acceptedRows": 347,
+        "duplicateRows": 176,
+        "excludedRows": 192,
+        "malformedRows": 10,
+        "missingColumns": [],
+        "missing": false
+      }
+    }
   },
   "months": [
     {
@@ -2797,8 +4914,125 @@
       }
     }
   ],
+  "leadSnapshots": [
+    {
+      "period": "2026-02",
+      "source": "month_end",
+      "active": null,
+      "classified": 668,
+      "unclassified": null,
+      "stale15To90": null,
+      "staleOver90": null,
+      "staleOver15Total": null,
+      "staleOver15Rate": null,
+      "classificationCoverage": null,
+      "availableDatasets": {
+        "active": false,
+        "classified": true,
+        "unclassified": false,
+        "stale15": false,
+        "stale90": false
+      }
+    },
+    {
+      "period": "2026-03",
+      "source": "month_end",
+      "active": 3164,
+      "classified": 654,
+      "unclassified": 2228,
+      "stale15To90": 788,
+      "staleOver90": 1974,
+      "staleOver15Total": 2762,
+      "staleOver15Rate": 87.3,
+      "classificationCoverage": 91.1,
+      "availableDatasets": {
+        "active": true,
+        "classified": true,
+        "unclassified": true,
+        "stale15": true,
+        "stale90": true
+      }
+    },
+    {
+      "period": "2026-04",
+      "source": "month_end",
+      "active": 3298,
+      "classified": 658,
+      "unclassified": 2330,
+      "stale15To90": 706,
+      "staleOver90": 2143,
+      "staleOver15Total": 2849,
+      "staleOver15Rate": 86.4,
+      "classificationCoverage": 90.6,
+      "availableDatasets": {
+        "active": true,
+        "classified": true,
+        "unclassified": true,
+        "stale15": true,
+        "stale90": true
+      }
+    },
+    {
+      "period": "2026-05",
+      "source": "month_end",
+      "active": 2131,
+      "classified": 959,
+      "unclassified": 1172,
+      "stale15To90": 505,
+      "staleOver90": 904,
+      "staleOver15Total": 1409,
+      "staleOver15Rate": 66.1,
+      "classificationCoverage": 100,
+      "availableDatasets": {
+        "active": true,
+        "classified": true,
+        "unclassified": true,
+        "stale15": true,
+        "stale90": true
+      }
+    },
+    {
+      "period": "2026-06",
+      "source": "month_end",
+      "active": 1770,
+      "classified": 502,
+      "unclassified": 925,
+      "stale15To90": 596,
+      "staleOver90": 505,
+      "staleOver15Total": 1101,
+      "staleOver15Rate": 62.2,
+      "classificationCoverage": 80.6,
+      "availableDatasets": {
+        "active": true,
+        "classified": true,
+        "unclassified": true,
+        "stale15": true,
+        "stale90": true
+      }
+    }
+  ],
+  "aprilFortnightLeadSnapshot": {
+    "period": "2026-04-17",
+    "source": "fortnight_audit",
+    "active": 3671,
+    "classified": 690,
+    "unclassified": null,
+    "stale15To90": 893,
+    "staleOver90": 3046,
+    "staleOver15Total": 3939,
+    "staleOver15Rate": null,
+    "classificationCoverage": null,
+    "availableDatasets": {
+      "active": true,
+      "classified": true,
+      "unclassified": false,
+      "stale15": true,
+      "stale90": true
+    }
+  },
   "latestLeadSnapshot": {
     "period": "2026-06",
+    "source": "month_end",
     "active": 1770,
     "classified": 502,
     "unclassified": 925,
@@ -2806,7 +5040,56 @@
     "staleOver90": 505,
     "staleOver15Total": 1101,
     "staleOver15Rate": 62.2,
-    "classificationCoverage": 80.6
+    "classificationCoverage": 80.6,
+    "availableDatasets": {
+      "active": true,
+      "classified": true,
+      "unclassified": true,
+      "stale15": true,
+      "stale90": true
+    }
+  },
+  "sourceReconciliations": {
+    "sales2025WithoutSellerVsWithSeller": {
+      "left": 61,
+      "right": 61,
+      "overlap": 61,
+      "leftOnly": 0,
+      "rightOnly": 0,
+      "exactMatch": true
+    },
+    "sales2025SummaryVsAuthoritative": {
+      "left": 61,
+      "right": 61,
+      "overlap": 61,
+      "leftOnly": 0,
+      "rightOnly": 0,
+      "exactMatch": true,
+      "comparisonKey": [
+        "operacion - fecha cierre negocio",
+        "operacion - moneda",
+        "operacion - precio de cierre",
+        "propiedad - agente",
+        "propiedad - tipo",
+        "venta - agente"
+      ]
+    },
+    "q1CumulativeVsMonthlyUnion": {
+      "left": 14,
+      "right": 14,
+      "overlap": 14,
+      "leftOnly": 0,
+      "rightOnly": 0,
+      "exactMatch": true
+    },
+    "marchMiscVsMarchSales": {
+      "left": 7,
+      "right": 7,
+      "overlap": 7,
+      "leftOnly": 0,
+      "rightOnly": 0,
+      "exactMatch": true
+    }
   },
   "ytd": {
     "salesCount": 34,
@@ -2982,6 +5265,12 @@
         "code": "APRIL_FORTNIGHT_SNAPSHOT_DRIFT",
         "title": "Deriva entre quincena y cierre de abril",
         "detail": "El corte quincenal contiene 1 venta, 1 captacion y 58 leads que no aparecen en el cierre mensual. El cierre mensual es la fuente autoritativa."
+      },
+      {
+        "severity": "warning",
+        "code": "APRIL_FORTNIGHT_LEAD_BASE_MISMATCH",
+        "title": "Colas quincenales no comparables con activos",
+        "detail": "El corte quincenal suma 3939 registros en colas sin gestion frente a 3671 leads activos y no incluye archivo sin clasificar. Las tasas del corte se publican como n/d."
       },
       {
         "severity": "info",

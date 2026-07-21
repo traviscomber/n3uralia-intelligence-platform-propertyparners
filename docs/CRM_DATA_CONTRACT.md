@@ -39,6 +39,9 @@
 14. `Agendamientos` cuenta todos los `Visita - Id` unicos; `visitas realizadas` cuenta solo registros cuyo estado es `Realizada`.
 15. El ranking individual usa `Propiedad - Agente` y se etiqueta como lado captador. No se equipara al vendedor del cierre.
 16. Cada dataset mensual debe contener sus columnas minimas obligatorias; el verificador bloquea la publicacion si falta alguna.
+17. Cada XLS se identifica por SHA-256 binario y cada hoja por un digest reproducible de direccion, valor, formula, tipo, formato, estilo, comentario e hipervinculo.
+18. La auditoria cubre todas las hojas y celdas almacenadas, incluso las que no alimentan KPI. La aplicacion publica conteos y huellas, nunca valores crudos ni PII.
+19. Los snapshots incompletos no producen tasas. Si falta una de las bases necesarias o una cola supera el universo activo, la tasa se publica como `null`.
 
 ## Reconciliacion vigente
 
@@ -74,16 +77,30 @@
 - Los snapshots de clasificacion no siempre cubren el 100% de los leads activos exportados.
 - En junio hay 596 leads sin gestion entre 15 y 90 dias y 505 sobre 90 dias: 1.101 en total, equivalentes al 62,2% de los 1.770 activos.
 - El corte quincenal de abril contiene 1 venta, 1 captacion dentro de alcance y 58 leads que no aparecen al cierre mensual. Esto se registra como deriva de snapshot; no se mezcla con el cierre.
+- Las colas sin gestion del corte quincenal de abril suman 3.939 registros frente a 3.671 activos y no existe archivo sin clasificar. Sus tasas se mantienen como `null`; los conteos fuente quedan visibles para auditoria.
 - El vendedor esta identificado en 33 de 34 cierres de 2026 (97,1%), pero los encabezados y nombres no usan una identidad canonica estable. El ranking actual se etiqueta como agente captador de la propiedad y no como vendedor.
+
+## Cobertura exhaustiva
+
+- 84 libros XLS.
+- 92 hojas.
+- 1.209.831 celdas almacenadas.
+- 1.208.765 celdas con valor o formula.
+- 717 celdas con formula.
+- 331 celdas con error de formula, preservadas como incidencia de origen.
+- 13 familias semanticas de datos, desde ventas y captaciones hasta snapshots de gestion de leads.
+
+`data/crm-cell-manifest.json` contiene solo metadatos, conteos y hashes. Permite demostrar que ninguna hoja o celda cambio sin incorporar nombres, RUT, correos, telefonos, direcciones u otros valores fuente al bundle de la aplicacion.
 
 ## Comandos
 
 ```powershell
 pnpm crm:build -- --input "C:\ruta\a\Datos CRM"
 pnpm crm:verify
+pnpm crm:verify:cells -- --input "C:\ruta\a\Datos CRM"
 ```
 
-El generador produce `data/crm-intelligence.json`. El verificador bloquea cambios que rompan alcance o reconciliaciones criticas.
+El generador produce `data/crm-intelligence.json` y `data/crm-cell-manifest.json`. El primer verificador bloquea cambios que rompan alcance o reconciliaciones criticas. El segundo reabre independientemente los 84 XLS y compara hashes, hojas, rangos y celdas contra el manifiesto.
 
 ## Contrato para Metas 2026
 

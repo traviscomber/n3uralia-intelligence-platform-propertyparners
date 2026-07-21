@@ -18,6 +18,11 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,12 5,8 8,10 11,5 14,7" /><line x1="2" y1="14" x2="14" y2="14" /></svg>,
   },
   {
+    label: 'Datos CRM',
+    href: '/dashboard/datos-crm',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v4c0 1.1 2.7 2 6 2s6-.9 6-2V4" /><path d="M2 8v4c0 1.1 2.7 2 6 2s6-.9 6-2V8" /></svg>,
+  },
+  {
     label: 'Casas Vitacura',
     href: '/dashboard/properties',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7L8 2l6 5v7H10v-4H6v4H2z" /></svg>,

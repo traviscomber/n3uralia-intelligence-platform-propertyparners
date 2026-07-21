@@ -44,6 +44,30 @@ type CrmAction = {
   action: string
 }
 
+export type CrmLeadSnapshot = {
+  period: string
+  source: 'month_end' | 'fortnight_audit'
+  active: number | null
+  classified: number | null
+  unclassified: number | null
+  stale15To90: number | null
+  staleOver90: number | null
+  staleOver15Total: number | null
+  staleOver15Rate: number | null
+  classificationCoverage: number | null
+  availableDatasets: Record<'active' | 'classified' | 'unclassified' | 'stale15' | 'stale90', boolean>
+}
+
+type Reconciliation = {
+  left: number
+  right: number
+  overlap: number
+  leftOnly: number
+  rightOnly: number
+  exactMatch: boolean
+  comparisonKey?: string[]
+}
+
 type CrmIntelligence = {
   schemaVersion: number
   generatedAt: string
@@ -61,10 +85,30 @@ type CrmIntelligence = {
     monthlyOperationalStart: string
     aprilFortnightIncluded: boolean
     aprilFortnightReconciliation: Record<string, { fortnight: number; month: number; overlap: number; fortnightOnly: number; monthOnly: number }>
+    cellCoverage: { workbookCount: number; sheetCount: number; storedCells: number; populatedCells: number; formulaCells: number; formulaErrorCells: number }
+    datasetCoverage: Array<{ dataset: string; workbookCount: number; dataRows: number; periods: string[]; sourceRoles: string[] }>
     formulaErrorCount: number
     emptyHeaderCount: number
     duplicateHeaderCount: number
-    workbooks: Array<{ file: string; selectedSheet: string; dataRows: number; columnCount: number; emptyHeaderCount: number; duplicateHeaderCount: number; formulaCells: number; formulaErrorCells: number }>
+    workbooks: Array<{
+      file: string
+      period: string | null
+      dataset: string
+      sourceRole: string
+      byteSize: number
+      fileSha256: string
+      selectedSheet: string
+      sheetCount: number
+      dataRows: number
+      columnCount: number
+      emptyHeaderCount: number
+      duplicateHeaderCount: number
+      storedCells: number
+      populatedCells: number
+      formulaCells: number
+      formulaErrorCells: number
+      sheets: Array<{ name: string; range: string | null; storedCells: number; populatedCells: number; formulaCells: number; formulaErrorCells: number; commentCells: number; hyperlinkCells: number; cellDigest: string }>
+    }>
   }
   baseline2025: {
     salesCount: number
@@ -77,18 +121,17 @@ type CrmIntelligence = {
     firstHalfSalesUf: number
     months: Array<{ period: string; salesCount: number; salesUf: number }>
   }
-  months: CrmMonth[]
-  latestLeadSnapshot: {
-    period: string
-    active: number
-    classified: number
-    unclassified: number
-    stale15To90: number
-    staleOver90: number
-    staleOver15Total: number
-    staleOver15Rate: number | null
-    classificationCoverage: number | null
+  annualContext2025: {
+    captures: number
+    suspended: number
+    publishedStock: number
+    quality: Record<string, { rawRows: number; acceptedRows: number; duplicateRows: number; excludedRows: number; malformedRows: number; missingColumns: string[]; missing: boolean }>
   }
+  months: CrmMonth[]
+  leadSnapshots: CrmLeadSnapshot[]
+  aprilFortnightLeadSnapshot: CrmLeadSnapshot
+  latestLeadSnapshot: CrmLeadSnapshot
+  sourceReconciliations: Record<'sales2025WithoutSellerVsWithSeller' | 'sales2025SummaryVsAuthoritative' | 'q1CumulativeVsMonthlyUnion' | 'marchMiscVsMarchSales', Reconciliation>
   ytd: {
     salesCount: number
     salesUf: number

@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "crm:build": "node scripts/build-crm-intelligence.mjs",
     "crm:verify": "node scripts/verify-crm-intelligence.mjs",
+    "crm:verify:cells": "node scripts/verify-crm-cell-manifest.mjs",
     "scrape": "node scripts/run-scrapers.mjs",
     "scrape:vitacura": "node scripts/run-scrapers.mjs --source=portal --kind=all"
   },
