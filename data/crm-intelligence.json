@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "generatedAt": "2026-07-21T22:49:10.453Z",
+  "generatedAt": "2026-07-21T23:43:04.782Z",
   "scope": {
     "commune": "Vitacura",
     "operation": "Venta",
@@ -3120,6 +3120,77 @@
         }
       ],
       "salesByOffice": [],
+      "salesUfByOffice": [],
+      "requirementsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 176
+        },
+        {
+          "label": "Santa María",
+          "count": 168
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 160
+        }
+      ],
+      "leadsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 110
+        },
+        {
+          "label": "Santa María",
+          "count": 88
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 85
+        }
+      ],
+      "visitsByOffice": [
+        {
+          "label": "Santa María",
+          "count": 54
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 43
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 33
+        }
+      ],
+      "realizedVisitsByOffice": [
+        {
+          "label": "Santa María",
+          "count": 40
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 21
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 10
+        }
+      ],
+      "stockByOffice": [
+        {
+          "label": "Santa María",
+          "count": 157
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 127
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 100
+        }
+      ],
       "salesByListingAgent": [
         {
           "label": "Soledad Fernandez | Chile",
@@ -3418,6 +3489,60 @@
           "count": 1
         }
       ],
+      "salesUfByOffice": [
+        {
+          "label": "Santa María",
+          "value": 33000
+        },
+        {
+          "label": "Nueva Costanera",
+          "value": 15800
+        }
+      ],
+      "requirementsByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "count": 145
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 144
+        },
+        {
+          "label": "Santa María",
+          "count": 130
+        }
+      ],
+      "leadsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 83
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 60
+        },
+        {
+          "label": "Santa María",
+          "count": 54
+        }
+      ],
+      "visitsByOffice": [],
+      "realizedVisitsByOffice": [],
+      "stockByOffice": [
+        {
+          "label": "Santa María",
+          "count": 158
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 128
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 97
+        }
+      ],
       "salesByListingAgent": [
         {
           "label": "Alejandra Cambiaso | Chile",
@@ -3681,6 +3806,90 @@
         {
           "label": "Santa María",
           "count": 1
+        }
+      ],
+      "salesUfByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "value": 95770
+        },
+        {
+          "label": "Lo Beltrán",
+          "value": 53800
+        },
+        {
+          "label": "Santa María",
+          "value": 6400
+        }
+      ],
+      "requirementsByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "count": 291
+        },
+        {
+          "label": "Santa María",
+          "count": 212
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 203
+        }
+      ],
+      "leadsByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "count": 112
+        },
+        {
+          "label": "Santa María",
+          "count": 110
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 103
+        }
+      ],
+      "visitsByOffice": [
+        {
+          "label": "Santa María",
+          "count": 67
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 60
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 57
+        }
+      ],
+      "realizedVisitsByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "count": 37
+        },
+        {
+          "label": "Santa María",
+          "count": 35
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 30
+        }
+      ],
+      "stockByOffice": [
+        {
+          "label": "Santa María",
+          "count": 167
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 118
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 94
         }
       ],
       "salesByListingAgent": [
@@ -4005,6 +4214,90 @@
           "count": 2
         }
       ],
+      "salesUfByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "value": 38850
+        },
+        {
+          "label": "Nueva Costanera",
+          "value": 36650
+        },
+        {
+          "label": "Santa María",
+          "value": 32000
+        }
+      ],
+      "requirementsByOffice": [
+        {
+          "label": "Santa María",
+          "count": 226
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 194
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 187
+        }
+      ],
+      "leadsByOffice": [
+        {
+          "label": "Santa María",
+          "count": 144
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 121
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 100
+        }
+      ],
+      "visitsByOffice": [
+        {
+          "label": "Santa María",
+          "count": 109
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 92
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 91
+        }
+      ],
+      "realizedVisitsByOffice": [
+        {
+          "label": "Santa María",
+          "count": 56
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 53
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 48
+        }
+      ],
+      "stockByOffice": [
+        {
+          "label": "Santa María",
+          "count": 165
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 115
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 97
+        }
+      ],
       "salesByListingAgent": [
         {
           "label": "Maria de los angeles Carcavilla | Chile",
@@ -4323,6 +4616,86 @@
           "count": 1
         }
       ],
+      "salesUfByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "value": 38400
+        },
+        {
+          "label": "Lo Beltrán",
+          "value": 31450
+        }
+      ],
+      "requirementsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 214
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 202
+        },
+        {
+          "label": "Santa María",
+          "count": 192
+        }
+      ],
+      "leadsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 147
+        },
+        {
+          "label": "Santa María",
+          "count": 132
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 129
+        }
+      ],
+      "visitsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 133
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 111
+        },
+        {
+          "label": "Santa María",
+          "count": 105
+        }
+      ],
+      "realizedVisitsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 79
+        },
+        {
+          "label": "Santa María",
+          "count": 76
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 57
+        }
+      ],
+      "stockByOffice": [
+        {
+          "label": "Santa María",
+          "count": 164
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 111
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 91
+        }
+      ],
       "salesByListingAgent": [
         {
           "label": "Jorge Zurob | Chile",
@@ -4627,6 +5000,90 @@
         {
           "label": "Lo Beltrán",
           "count": 1
+        }
+      ],
+      "salesUfByOffice": [
+        {
+          "label": "Nueva Costanera",
+          "value": 73150
+        },
+        {
+          "label": "Santa María",
+          "value": 63850
+        },
+        {
+          "label": "Lo Beltrán",
+          "value": 21400
+        }
+      ],
+      "requirementsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 231
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 228
+        },
+        {
+          "label": "Santa María",
+          "count": 157
+        }
+      ],
+      "leadsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 146
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 127
+        },
+        {
+          "label": "Santa María",
+          "count": 115
+        }
+      ],
+      "visitsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 121
+        },
+        {
+          "label": "Santa María",
+          "count": 101
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 96
+        }
+      ],
+      "realizedVisitsByOffice": [
+        {
+          "label": "Lo Beltrán",
+          "count": 69
+        },
+        {
+          "label": "Santa María",
+          "count": 68
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 47
+        }
+      ],
+      "stockByOffice": [
+        {
+          "label": "Santa María",
+          "count": 154
+        },
+        {
+          "label": "Nueva Costanera",
+          "count": 99
+        },
+        {
+          "label": "Lo Beltrán",
+          "count": 96
         }
       ],
       "salesByListingAgent": [
@@ -5292,9 +5749,9 @@
       },
       {
         "severity": "warning",
-        "code": "TARGETS_NOT_LOADED",
-        "title": "Metas 2026 aun no integradas",
-        "detail": "Los campos de meta y cumplimiento permanecen nulos hasta validar los archivos de Metas 2026."
+        "code": "TARGETS_SOURCE_ISSUES",
+        "title": "Metas 2026 integradas con incidencias de origen",
+        "detail": "2 incidencias criticas y 25 observaciones se preservan sin corregir ni omitir celdas."
       }
     ]
   },
@@ -5349,7 +5806,12 @@
     ]
   },
   "targetsContract": {
-    "status": "not_loaded",
+    "status": "loaded_with_critical_issues",
+    "version": "202607",
+    "workbookCount": 3,
+    "storedCells": 4382,
+    "sourceIssueCount": 25,
+    "criticalSourceIssueCount": 2,
     "requiredFields": [
       "period",
       "role",
@@ -5361,6 +5823,6 @@
       "valid_to",
       "version"
     ],
-    "rule": "Targets are never inferred from actual CRM activity."
+    "rule": "Targets are read from the three versioned workbooks and never inferred from actual CRM activity."
   }
 }

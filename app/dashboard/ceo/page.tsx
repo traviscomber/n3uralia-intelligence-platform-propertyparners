@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import type { AiReport } from '@/lib/types'
 import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
 import { buildDirectorFallbackRows, buildOperationalSeries, getDataQuality, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
+import { getCompanySalesCompliance } from '@/lib/targets-2026'
 
 function fmt(n: number) {
   return n.toLocaleString('es-CL')
@@ -36,6 +37,7 @@ export default function CeoDashboard() {
   const ytd = getYtdSummary()
   const dataQuality = getDataQuality()
   const executiveActions = getRoleActions('ceo')
+  const salesCompliance = getCompanySalesCompliance('2026-06')
   const [reports, setReports] = useState<AiReport[]>([])
   const totals = {
     ventas: ytd.salesCount,
@@ -64,7 +66,7 @@ export default function CeoDashboard() {
     const scoreById: Record<string, number | null> = {
       'data-quality': dataQuality.sourceCoverage,
       'stock-retention': fallbackSummary.stock > 0 ? Number(((fallbackSummary.stock / (fallbackSummary.stock - ytd.stockChange)) * 100).toFixed(1)) : null,
-      'forecast-discipline': null,
+      'forecast-discipline': salesCompliance.compliance,
     }
 
     const states = executiveMetrics.map(metric => {
@@ -84,7 +86,7 @@ export default function CeoDashboard() {
       states,
       trend: score >= 80 ? 'Estable' : score >= 65 ? 'En vigilancia' : 'Bajo control',
     }
-  }, [dataQuality.sourceCoverage, executiveMetrics, fallbackSummary.stock, ytd.stockChange])
+  }, [dataQuality.sourceCoverage, executiveMetrics, fallbackSummary.stock, salesCompliance.compliance, ytd.stockChange])
   const recentReports = reports.slice(0, 3)
 
   return (

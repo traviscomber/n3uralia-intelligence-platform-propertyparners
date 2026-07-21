@@ -1,7 +1,9 @@
 import crmIntelligence from '@/data/crm-intelligence.json'
+import targets2026 from '@/data/targets-2026.json'
 import type { KpiSnapshot } from '@/lib/types'
 
 type RankingEntry = { label: string; count: number }
+type ValueRankingEntry = { label: string; value: number }
 type QualitySeverity = 'critical' | 'warning' | 'info'
 
 export type CrmMonth = {
@@ -20,6 +22,12 @@ export type CrmMonth = {
   suspendedCount: number
   salesByType: RankingEntry[]
   salesByOffice: RankingEntry[]
+  salesUfByOffice: ValueRankingEntry[]
+  requirementsByOffice: RankingEntry[]
+  leadsByOffice: RankingEntry[]
+  visitsByOffice: RankingEntry[]
+  realizedVisitsByOffice: RankingEntry[]
+  stockByOffice: RankingEntry[]
   salesByListingAgent: RankingEntry[]
   capturesByAgent: RankingEntry[]
   visitStatusCounts: RankingEntry[]
@@ -156,7 +164,12 @@ type CrmIntelligence = {
   }
   actions: Record<'ceo' | 'director' | 'seller', CrmAction[]>
   targetsContract: {
-    status: 'not_loaded' | 'loaded'
+    status: 'not_loaded' | 'loaded_with_source_issues' | 'loaded_with_critical_issues'
+    version: string | null
+    workbookCount: number
+    storedCells: number
+    sourceIssueCount: number
+    criticalSourceIssueCount: number
     requiredFields: string[]
     rule: string
   }
@@ -261,7 +274,7 @@ function toKpiSnapshot(summary: CrmOperationalSummary): KpiSnapshot {
     comision_total: 0,
     stock_count: summary.stock,
     velocidad_venta: 0,
-    monthly_target: 0,
+    monthly_target: targets2026.companyMonthlyTargets.sales_count[summary.month as keyof typeof targets2026.companyMonthlyTargets.sales_count] ?? 0,
     director_id: null,
     agent_id: null,
     created_at: CRM_INTELLIGENCE.generatedAt,
@@ -281,7 +294,7 @@ export function buildHomeFallbackCards() {
       role: 'CEO',
       title: 'Resultado y cartera',
       body: `${ytd.salesCount} ventas por UF ${ytd.salesUf.toLocaleString('es-CL')} en 2026; cartera ${ytd.stockChange} propiedades frente al primer corte.`,
-      note: `Cobertura de fuentes ${CRM_INTELLIGENCE.quality.sourceCoverage}%. Metas aun no cargadas.`,
+      note: `Cobertura de fuentes ${CRM_INTELLIGENCE.quality.sourceCoverage}%. Metas 2026 integradas desde ${targets2026.cellCoverage.workbookCount} libros y ${targets2026.cellCoverage.storedCells.toLocaleString('es-CL')} celdas.`,
     },
     {
       role: 'Director',

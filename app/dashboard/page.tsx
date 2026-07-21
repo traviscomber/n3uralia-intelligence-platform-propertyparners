@@ -468,7 +468,7 @@ export default function DashboardHome() {
             </h3>
             <p className="mt-3 leading-relaxed" style={{ color: '#374151' }}>
               El corte enero-junio registra <span className="font-bold px-2 py-1 rounded" style={{ color: 'var(--n3-teal)', background: '#f9fafb' }}>{ytd.salesCount} ventas por UF {ytd.salesUf.toLocaleString('es-CL')}</span>.
-              La cartera comparable cambió en {ytd.stockChange} propiedades y el último mes cerró con {latestKPI.stock_count} casas y departamentos publicados. La recomendación prioriza evidencia CRM y no incorpora metas aún no validadas.
+              La cartera comparable cambió en {ytd.stockChange} propiedades y el último mes cerró con {latestKPI.stock_count} casas y departamentos publicados. Las metas 2026 están integradas desde sus libros fuente y las discrepancias de origen permanecen visibles.
             </p>
             <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(143, 178, 170, 0.2)' }}>
               <p className="text-xs font-semibold uppercase" style={{ color: 'var(--n3-teal)' }}>Próximas Acciones:</p>

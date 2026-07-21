@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import type { AgentActivity } from '@/lib/types'
 import { PP_SCORECARD_DEFINITIONS, assessMetricStatus } from '@/lib/pp-scorecard'
 import { buildAgentFallbackRows, buildOperationalSeries, getLatestLeadSnapshot, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
+import { getTargetSource } from '@/lib/targets-2026'
 
 type StatusKey = 'on_track' | 'warning' | 'behind' | 'inactive'
 
@@ -41,6 +42,7 @@ export default function DirectorDashboard() {
   const leadSnapshot = getLatestLeadSnapshot()
   const ytd = getYtdSummary()
   const directorActions = getRoleActions('director')
+  const targets = getTargetSource()
   const activities: AgentActivity[] = []
   const directorScorecard = useMemo(() => {
     const states = PP_SCORECARD_DEFINITIONS.director.map((definition) => {
@@ -87,7 +89,7 @@ export default function DirectorDashboard() {
           <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Panel lado captador · {agents.length} agentes con cierres validados</p>
         </div>
         <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-3" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="text-right"><div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b7280' }}>Metas 2026</div><div className="text-sm font-bold" style={{ color: '#6b7280' }}>No cargadas</div></div>
+          <div className="text-right"><div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b7280' }}>Metas 2026</div><div className="text-sm font-bold" style={{ color: 'var(--n3-teal)' }}>{targets.cellCoverage.workbookCount} sucursales cargadas</div><div className="text-[10px] text-[#6b7280]">{targets.quality.criticalCount} incidencias críticas visibles</div></div>
         </div>
       </div>
 

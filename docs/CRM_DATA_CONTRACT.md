@@ -32,7 +32,7 @@
 7. Representar archivos o periodos faltantes con `null`, nunca con cero.
 8. Una conversion causal solo se publica cuando existe una llave trazable entre etapas.
 9. `ventas / leads nuevos del mismo mes` se etiqueta como proxy, no como conversion de cohorte.
-10. Metas, comisiones y tiempos de venta permanecen sin dato hasta contar con su fuente validada.
+10. Metas se leen exclusivamente de los tres libros versionados de Metas 2026. Comisiones y tiempos de venta permanecen sin dato hasta contar con su fuente validada.
 11. La cobertura de fuentes es datasets mensuales presentes dividido por datasets mensuales esperados. No es un puntaje subjetivo; duplicados, exclusiones y filas malformadas se informan por separado.
 12. Los archivos de leads sin gestion de 15 y 90 dias son grupos disjuntos: la cola mayor a 15 dias es la suma de ambos.
 13. El cierre mensual es autoritativo frente al informe quincenal. La quincena se conserva para auditoria de deriva, no se suma al mes.
@@ -104,16 +104,19 @@ El generador produce `data/crm-intelligence.json` y `data/crm-cell-manifest.json
 
 ## Contrato para Metas 2026
 
-Las metas se integraran como una entidad independiente con los campos:
+Las metas están integradas como una entidad independiente, versión `202607`, desde los libros de Lo Beltrán, Nueva Costanera y Santa María.
 
-- `period`
-- `role`
-- `person_or_team_id`
-- `metric`
-- `target_value`
-- `unit`
-- `valid_from`
-- `valid_to`
-- `version`
+- Cobertura: 3 libros, 3 hojas, 4.382 celdas almacenadas, 3.280 con contenido y 715 fórmulas.
+- Errores de fórmula: 0.
+- Métricas: cartera, requerimientos, leads, visitas, ofertas, cierres y cierres UF.
+- Periodos: enero a diciembre de 2026, incluyendo valores nulos y ceros.
+- Columnas anuales: todas se conservan en paralelo; ninguna se elige o elimina silenciosamente.
+- Colores: se conservan como marcas literales de la fuente, sin inferir estado laboral.
+- Identidades: cuatro filas permanecen no resueltas y se muestran con su fila fuente.
+- Celdas fuera de bloque: cinco, conservadas con coordenada, valor y fórmula.
 
-Nunca se infiere una meta a partir de captaciones, leads, stock o ventas reales.
+El total de sucursal de cada libro es la meta corporativa publicada para esa sucursal. La suma de partners se expone como reconciliación independiente. Nueva Costanera contiene discrepancias de origen en cartera de junio y requerimientos de abril, mayo y junio; no se corrigen ni ocultan.
+
+El cumplimiento solo se calcula cuando existe un valor real CRM de la misma sucursal, métrica y mes. Para visitas se muestran agendadas y realizadas, pero el cumplimiento permanece `n/d` hasta definir cuál corresponde a la meta. Ofertas no cuenta con un actual CRM compatible. Nunca se infiere una meta a partir de actividad real.
+
+`data/targets-cell-manifest.json` conserva dirección, valor, fórmula, tipo, formato, estilo y color de cada celda almacenada. `data/targets-2026.json` contiene la capa normalizada y todas las incidencias de origen.

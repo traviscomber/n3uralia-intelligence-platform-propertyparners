@@ -72,7 +72,13 @@ expect(data.annualContext2025?.captures === 215, 'The 2025 annual context must r
 expect(data.annualContext2025?.suspended === 117, 'The 2025 annual context must retain 117 in-scope suspended properties.')
 expect(data.annualContext2025?.publishedStock === 347, 'The 2025 annual context must retain 347 unique published stock properties.')
 expect(Object.values(data.sourceReconciliations ?? {}).every((reconciliation) => reconciliation.exactMatch), 'All auxiliary sales sources must reconcile exactly to their authoritative comparison.')
-expect(data.targetsContract?.status === 'not_loaded', 'Targets must remain inactive until Metas 2026 is validated.')
+expect(data.targetsContract?.status === 'loaded_with_critical_issues', 'Targets must retain their validated source status and critical source issues.')
+expect(data.targetsContract?.workbookCount === 3, 'Targets must include all three branch workbooks.')
+expect(data.targetsContract?.storedCells === 4382, 'Targets must retain all 4,382 stored source cells.')
+expect(data.targetsContract?.sourceIssueCount === 25, 'Targets must retain all 25 source observations.')
+expect(data.targetsContract?.criticalSourceIssueCount === 2, 'Targets must retain both critical source discrepancies.')
+expect(data.months?.find((month) => month.period === '2026-06')?.salesByOffice?.reduce((sum, item) => sum + item.count, 0) === 8, 'June branch sales must reconcile to all 8 validated sales.')
+expect(data.months?.find((month) => month.period === '2026-06')?.salesUfByOffice?.reduce((sum, item) => sum + item.value, 0) === 158400, 'June branch UF volume must reconcile to UF 158,400.')
 
 if (failures.length) {
   console.error('CRM intelligence verification failed:')

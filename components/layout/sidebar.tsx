@@ -23,6 +23,11 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v4c0 1.1 2.7 2 6 2s6-.9 6-2V4" /><path d="M2 8v4c0 1.1 2.7 2 6 2s6-.9 6-2V8" /></svg>,
   },
   {
+    label: 'Metas 2026',
+    href: '/dashboard/metas',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><circle cx="8" cy="8" r="3" /><path d="M8 1v3M15 8h-3" /></svg>,
+  },
+  {
     label: 'Casas Vitacura',
     href: '/dashboard/properties',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7L8 2l6 5v7H10v-4H6v4H2z" /></svg>,

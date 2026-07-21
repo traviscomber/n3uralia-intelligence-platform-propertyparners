@@ -199,6 +199,20 @@ function ranked(records, key, limit = 8) {
   return [...values.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, limit)
 }
 
+function summed(records, groupKey, valueKey, limit = 12) {
+  const totals = new Map()
+  for (const record of records) {
+    const label = display(cell(record.row, record.indexes, groupKey))
+    const value = numeric(cell(record.row, record.indexes, valueKey))
+    if (!label || value === null) continue
+    totals.set(label, (totals.get(label) ?? 0) + value)
+  }
+  return [...totals.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+    .slice(0, limit)
+}
+
 function firstRecordValue(record, keys) {
   for (const key of keys) {
     const value = display(cell(record.row, record.indexes, key))
@@ -253,6 +267,20 @@ function buildMonth(root, config) {
     suspendedCount: loaded.suspended.records.length,
     salesByType: ranked(sales, 'propiedad - tipo'),
     salesByOffice: ranked(sales, 'sub-sucursal - nombre'),
+    salesUfByOffice: summed(
+      sales.filter((record) => normalize(cell(record.row, record.indexes, 'operacion - moneda')) === 'uf'),
+      'sub-sucursal - nombre',
+      'operacion - precio de cierre',
+    ),
+    requirementsByOffice: ranked(loaded.requirements.records, 'sub-sucursal - nombre', 12),
+    leadsByOffice: ranked(loaded.leads.records, 'sub-sucursal - nombre', 12),
+    visitsByOffice: ranked(loaded.visits.records, 'sub-sucursal - nombre', 12),
+    realizedVisitsByOffice: ranked(
+      loaded.visits.records.filter((record) => normalize(cell(record.row, record.indexes, 'visita - estado')) === 'realizada'),
+      'sub-sucursal - nombre',
+      12,
+    ),
+    stockByOffice: ranked(loaded.stock.records, 'sub-sucursal - nombre', 12),
     salesByListingAgent: ranked(sales, 'propiedad - agente', 12),
     capturesByAgent: ranked(loaded.captures.records, 'propiedad - agente', 12),
     visitStatusCounts: ranked(loaded.visits.records, 'visita - estado', 10),
@@ -615,6 +643,8 @@ function main() {
   const latestStock = months.at(-1).stockCount
   const workbookCount = workbookAudit.length
   const generatedAt = new Date().toISOString()
+  const targetsPath = path.resolve('data/targets-2026.json')
+  const targets = fs.existsSync(targetsPath) ? JSON.parse(fs.readFileSync(targetsPath, 'utf8')) : null
   const cellCoverage = {
     workbookCount,
     sheetCount: workbookAudit.reduce((sum, workbook) => sum + workbook.sheetCount, 0),
@@ -669,7 +699,7 @@ function main() {
     { severity: 'info', code: 'SELLER_ATTRIBUTION_PARTIAL', title: 'Atribucion de vendedor no canonica', detail: `${months.reduce((sum, month) => sum + month.sellerAttribution.identified, 0)} de ${total('salesCount')} cierres identifican vendedor. Los encabezados y nombres varian entre archivos; el ranking publicado se mantiene como lado captador.` },
     { severity: 'info', code: 'SOURCE_EMPTY_HEADERS', title: 'Columnas auxiliares sin encabezado', detail: `${workbookAudit.reduce((sum, workbook) => sum + workbook.emptyHeaderCount, 0)} columnas sin encabezado fueron detectadas en tres fuentes 2025. No corresponden a campos requeridos por los KPI.` },
     { severity: 'info', code: 'OUT_OF_SCOPE_FILTERED', title: 'Alcance comercial aplicado', detail: 'Se excluyeron arriendos, propiedades rentadas, terrenos y duplex. Solo se publican ventas de casas y departamentos en Vitacura.' },
-    { severity: 'warning', code: 'TARGETS_NOT_LOADED', title: 'Metas 2026 aun no integradas', detail: 'Los campos de meta y cumplimiento permanecen nulos hasta validar los archivos de Metas 2026.' },
+    ...(targets ? [{ severity: 'warning', code: 'TARGETS_SOURCE_ISSUES', title: 'Metas 2026 integradas con incidencias de origen', detail: `${targets.quality.criticalCount} incidencias criticas y ${targets.quality.issueCount} observaciones se preservan sin corregir ni omitir celdas.` }] : [{ severity: 'warning', code: 'TARGETS_NOT_LOADED', title: 'Metas 2026 aun no integradas', detail: 'Los campos de meta y cumplimiento permanecen nulos hasta validar los archivos de Metas 2026.' }]),
   ]
   const payload = {
     schemaVersion: 5,
@@ -704,9 +734,14 @@ function main() {
       ],
     },
     targetsContract: {
-      status: 'not_loaded',
+      status: targets ? targets.status : 'not_loaded',
+      version: targets?.version ?? null,
+      workbookCount: targets?.cellCoverage?.workbookCount ?? 0,
+      storedCells: targets?.cellCoverage?.storedCells ?? 0,
+      sourceIssueCount: targets?.quality?.issueCount ?? 0,
+      criticalSourceIssueCount: targets?.quality?.criticalCount ?? 0,
       requiredFields: ['period', 'role', 'person_or_team_id', 'metric', 'target_value', 'unit', 'valid_from', 'valid_to', 'version'],
-      rule: 'Targets are never inferred from actual CRM activity.',
+      rule: 'Targets are read from the three versioned workbooks and never inferred from actual CRM activity.',
     },
   }
 
