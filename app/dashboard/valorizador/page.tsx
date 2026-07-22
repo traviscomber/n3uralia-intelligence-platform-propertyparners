@@ -144,8 +144,8 @@ export default function ValorizadorPage() {
       <section className="grid gap-px bg-[#cacaca] md:grid-cols-4">
         <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Plantillas</p><p className="mt-2 text-2xl font-semibold">2</p><p className="text-xs text-[#666]">Casas y departamentos</p></div>
         <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Fórmulas auditadas</p><p className="mt-2 text-2xl font-semibold">122</p><p className="text-xs text-[#666]">0 errores Excel</p></div>
-        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Oferta elegible</p><p className="mt-2 text-2xl font-semibold">5.190</p><p className="text-xs text-[#666]">7 avisos con señal de arriendo en cuarentena</p></div>
-        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Registros CBRS</p><p className="mt-2 text-2xl font-semibold">40.843</p><p className="text-xs text-[#666]">Ventas y otras inscripciones</p></div>
+        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Publicaciones sin señal de arriendo</p><p className="mt-2 text-2xl font-semibold">5.190</p><p className="text-xs text-[#666]">7 avisos con señal explícita de arriendo excluidos</p></div>
+        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Activos registrales CBRS</p><p className="mt-2 text-2xl font-semibold">40.843</p><p className="text-xs text-[#666]">34.755 eventos; incluye activos no residenciales</p></div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">

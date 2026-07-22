@@ -34,7 +34,7 @@ export default function MarketSourcesPage() {
       </section>
 
       <section className="border border-[#d6d6d6] bg-white">
-        <div className="border-b border-[#d6d6d6] bg-black p-5 text-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#e23b31]">CBRS Vitacura</p><h2 className="mt-2 text-xl font-semibold">40.843 registros · 2014 a 9 enero 2026</h2></div>
+        <div className="border-b border-[#d6d6d6] bg-black p-5 text-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#e23b31]">CBRS Vitacura</p><h2 className="mt-2 text-xl font-semibold">40.843 activos · 34.755 eventos · 2014 a 9 enero 2026</h2></div>
         <div className="grid gap-px bg-[#ddd] lg:grid-cols-3">
           <div className="bg-[#f5f5f5] p-5"><h3 className="font-semibold">Tipos registrales</h3><div className="mt-3 space-y-2 text-xs">{cbrsTypes.map(([label, value]) => <p key={label}>{label}<strong className="float-right">{number(value)}</strong></p>)}</div></div>
           <div className="bg-[#f5f5f5] p-5"><h3 className="font-semibold">Operaciones</h3><div className="mt-3 space-y-2 text-xs">{cbrsOperations.map(([label, value]) => <p key={label}>{label}<strong className="float-right">{number(value)}</strong></p>)}</div></div>

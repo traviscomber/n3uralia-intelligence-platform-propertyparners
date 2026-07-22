@@ -47,8 +47,8 @@ export default function MlLabPage() {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ['Ofertas válidas', lab.validOffers, 'Portal Inmobiliario'],
-          ['Ofertas venta', lab.eligibleOffers, '7 registros en cuarentena'],
-          ['Inscripciones CBRS', lab.cbrsRows, 'Vitacura'],
+          ['Publicaciones sin señal de arriendo', lab.eligibleOffers, '7 señales de arriendo excluidas'],
+          ['Activos registrales CBRS', lab.cbrsRows, 'No equivale a compraventas residenciales'],
           ['Polígonos', lab.polygonCount, 'Barrios fuente'],
           ['Versiones ML', lab.modelVersions, 'Ninguna entrenada'],
         ].map(([label, value, detail]) => <article key={label} className="border border-[#dedede] bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6d746f]">{label}</p><p className="mt-2 text-3xl font-semibold text-black">{number(Number(value))}</p><p className="mt-2 text-[11px] text-[#777]">{detail}</p></article>)}

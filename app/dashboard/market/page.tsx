@@ -8,6 +8,11 @@ export default function MarketPage() {
   const portalFiles = market.cross.portal
   const cbrs = market.cross.cbrs
   const reconciliation = valuation.sourceReconciliation
+  const portalRows = portalFiles.reduce((sum, file) => sum + file.rows, 0)
+  const noOperationSignal = portalFiles.reduce((sum, file) => sum + (file.operationIndicators.no_explicit_indicator || 0), 0)
+  const missingCoordinates = portalFiles.reduce((sum, file) => sum + (file.coordinateQuality.both_missing || 0), 0)
+  const cbrsEvents = cbrs.candidateKeyCardinality.event_comuna_tomo_foja_numero_fecha.unique
+  const residentialCbrsRows = cbrs.categories.DESCRIPCION.filter(([name]) => name === 'DEPARTAMENTO' || name === 'CASA-HABITACION').reduce((sum, [, count]) => sum + Number(count), 0)
   const portalAssignments = new Map<string, number>()
   for (const file of portalFiles) {
     for (const [barrio, count] of Object.entries(file.kmlPolygonAssignments)) {
@@ -27,12 +32,19 @@ export default function MarketPage() {
 
     <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
       {[
-        ['Publicaciones únicas', n(reconciliation.currentPortalValidListings), 'IDs únicos en los tres Excel Portal'],
-        ['Elegibles para venta', n(reconciliation.currentPortalSaleEligibleListings), 'Universo usado por valorización'],
-        ['En cuarentena', n(reconciliation.portalListingsQuarantinedByRentIndicator), 'Señal explícita de arriendo'],
-        ['Inscripciones CBRS', n(reconciliation.currentCbrsRows), 'Registros de ventas registrales'],
+        ['Publicaciones con ID único', n(reconciliation.currentPortalValidListings), 'No equivale a inmuebles canónicos ni inventario activo'],
+        ['Sin señal de arriendo', n(reconciliation.currentPortalSaleEligibleListings), 'Contexto de venta por archivo; operación no confirmada fila a fila'],
+        ['Excluidas por arriendo', n(reconciliation.portalListingsQuarantinedByRentIndicator), 'Señal explícita conservada'],
+        ['Activos registrales CBRS', n(reconciliation.currentCbrsRows), `${n(cbrsEvents)} eventos registrales únicos`],
       ].map(([label, value, detail]) => <article key={label} className="bg-[#0c1111] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-3xl font-semibold text-[var(--n3-text-light)]">{value}</p><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{detail}</p></article>)}
     </section>
+
+    <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">{[
+      ['Sin indicador de operación', `${n(noOperationSignal)} · ${((noOperationSignal / portalRows) * 100).toFixed(1)}%`],
+      ['Sin coordenadas Portal', `${n(missingCoordinates)} · ${((missingCoordinates / portalRows) * 100).toFixed(1)}%`],
+      ['Filas CBRS residenciales', n(residentialCbrsRows)],
+      ['Corte registral', '2014 · 09 ene 2026'],
+    ].map(([label, value]) => <article key={label} className="bg-[#0c1111] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-xl font-semibold">{value}</p></article>)}</section>
 
     <section className="grid gap-5 xl:grid-cols-2">
       <article className="border border-[var(--n3-line)] bg-[#0c1111]">

@@ -33,7 +33,7 @@ export function getMlLabSnapshot() {
       label: 'Oferta Portal',
       status: 'ready',
       value: `${eligibleOffers.toLocaleString('es-CL')} elegibles`,
-      evidence: `${validOffers.toLocaleString('es-CL')} publicaciones válidas; ${valuation.sourceReconciliation.portalListingsQuarantinedByRentIndicator} señales de arriendo permanecen en cuarentena.`,
+      evidence: `${validOffers.toLocaleString('es-CL')} publicaciones con ID único; ${valuation.sourceReconciliation.portalListingsQuarantinedByRentIndicator} señales explícitas de arriendo están excluidas.`,
     },
     {
       label: 'Ventas CBRS',

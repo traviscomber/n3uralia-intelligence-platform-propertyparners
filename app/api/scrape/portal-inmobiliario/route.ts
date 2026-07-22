@@ -43,6 +43,7 @@ export async function POST(request: Request) {
       for (const card of cards) {
         if (!card.url) continue
         const id = card.url.match(/(?:MLC-?|\/)(\d{6,})/i)?.[1] || null
+        const priceUf = numberFrom(card.price, /UF\s*([\d.,]+)/i)
         observed.push({
           source: 'portal_inmobiliario_live',
           capturedAt: new Date().toISOString(),
@@ -52,8 +53,16 @@ export async function POST(request: Request) {
           listingId: id,
           sourceUrl: card.url,
           title: card.title,
-          priceUf: numberFrom(card.price, /UF\s*([\d.,]+)/i),
+          priceUf,
+          currency: priceUf === null ? null : 'UF',
+          publishedAt: null,
+          updatedAt: null,
+          listingStatus: null,
           areaM2: null,
+          usefulAreaM2: null,
+          terraceAreaM2: null,
+          builtAreaM2: null,
+          landAreaM2: null,
           attributesRaw: card.attributes,
           bedrooms: numberFrom(card.attributes, /(\d+)\s*dorm/i),
           bathrooms: numberFrom(card.attributes, /(\d+)\s*bañ/i),
@@ -61,6 +70,7 @@ export async function POST(request: Request) {
           latitude: null,
           longitude: null,
           daysOnMarket: null,
+          geographicQuality: 'missing',
         })
       }
       await page.close()
