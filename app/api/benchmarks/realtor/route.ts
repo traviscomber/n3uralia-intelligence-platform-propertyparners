@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { persistScrapeHealthSnapshot } from '@/lib/scrape-health'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,32 +110,9 @@ async function fetchRealtorSnapshot(): Promise<RealtorSnapshot> {
   }
 }
 
-async function persistBenchmark(snapshot: RealtorSnapshot) {
-  const supabase = getSupabaseClient()
-  const { error } = await supabase.from('external_market_benchmarks').insert(snapshot)
-  if (error) throw error
-
-  await supabase.from('data_sources').upsert(
-    [
-      {
-        name: 'Realtor International',
-        source_type: 'external_api',
-        status: 'active',
-        records_count: snapshot.offer_count,
-        last_sync: snapshot.recorded_at,
-        error_message: null,
-        pipeline_order: 5,
-      },
-    ],
-    { onConflict: 'name' },
-  )
-}
-
 export async function GET() {
   try {
     const snapshot = await withTimeout(fetchRealtorSnapshot())
-    await persistBenchmark(snapshot)
-    await persistScrapeHealthSnapshot()
 
     return NextResponse.json({
       benchmark: snapshot,
@@ -144,6 +120,7 @@ export async function GET() {
       recordedAt: snapshot.recorded_at,
       provenance: 'live_unreconciled',
       eligibleForAuditedViews: false,
+      persisted: false,
     })
   } catch (err) {
     const fallback = await getLatestBenchmark().catch(() => null)

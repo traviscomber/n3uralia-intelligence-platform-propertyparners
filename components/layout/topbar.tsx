@@ -10,17 +10,15 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
   const router = useRouter()
   const pathname = usePathname()
 
-  const auditedReportPaths = ['/dashboard/reportes/autonomos', '/dashboard/reportes/directorio', '/dashboard/reportes/audiencias']
+  const auditedPaths = ['/dashboard', '/dashboard/ceo', '/dashboard/director', '/dashboard/control', '/dashboard/datos-crm', '/dashboard/inteligencia', '/dashboard/market', '/dashboard/metas', '/dashboard/ml-lab', '/dashboard/presentaciones', '/dashboard/properties', '/dashboard/reportes/autonomos', '/dashboard/reportes/directorio', '/dashboard/reportes/audiencias', '/dashboard/valorizador']
   const livePaths = ['/dashboard/sources', '/dashboard/market/import', '/dashboard/knowledge']
-  const isAuditedReport = auditedReportPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
-  const isLegacyReport = !isAuditedReport && (pathname === '/dashboard/reportes' || pathname.startsWith('/dashboard/reportes/'))
+  const isAudited = auditedPaths.some((path) => pathname === path || (path !== '/dashboard' && pathname.startsWith(`${path}/`)))
   const isLive = livePaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
-  const isExperimental = isLegacyReport
-  const provenance = isExperimental
-    ? { label: 'Experimental · no auditado', color: '#f6c453' }
-    : isLive
+  const provenance = isLive
       ? { label: 'Fuente viva · separada', color: '#6aa9ff' }
-      : { label: 'Fuente auditada', color: '#65d3a5' }
+      : isAudited
+        ? { label: 'Fuente auditada', color: '#65d3a5' }
+        : { label: 'Procedencia pendiente', color: '#f6c453' }
 
   async function handleLogout() {
     const supabase = createClient()

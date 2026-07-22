@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { Buffer } from 'node:buffer'
 import { persistNeighborhoodMarketSnapshot } from '@/lib/market-history'
+import { requireExecutiveAccess } from '@/lib/api-access'
 import {
   normalizeBenchmarkImportRows,
   normalizeMarketImportRows,
@@ -53,6 +54,10 @@ async function readJsonBody(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const access = await requireExecutiveAccess()
+    if (!access.allowed) {
+      return NextResponse.json({ error: 'Acceso restringido a CEO y administradores.' }, { status: access.status })
+    }
     const contentType = req.headers.get('content-type') || ''
     const url = new URL(req.url)
     const queryMode = parseMode(url.searchParams.get('mode'))
