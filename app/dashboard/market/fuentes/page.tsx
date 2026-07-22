@@ -12,7 +12,7 @@ export default function MarketSourcesPage() {
   const cbrsGeo = category(categories, 'GEO_STATUS')
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-6 pb-16 text-[#242424]">
+    <div className="mx-auto max-w-[1500px] space-y-6 pb-16 text-[var(--n3-text-light)]">
       <header className="overflow-hidden border border-white/10 bg-black text-white">
         <div className="grid gap-8 p-7 lg:grid-cols-[1fr_430px] lg:p-10">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e23b31]">Fuentes de mercado · alcance auditado</p><h1 className="mt-3 text-3xl font-semibold lg:text-4xl">Oferta, territorio y registros CBRS</h1><p className="mt-3 max-w-3xl text-sm leading-6 text-[#aaa]">Portal Inmobiliario contiene oferta publicada. CBRS contiene registros de inscripciones. El KML define polígonos territoriales. Los cruces requieren evidencia explícita.</p></div>

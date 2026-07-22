@@ -34,7 +34,7 @@ export default async function BoardReportPage({ searchParams }: { searchParams: 
   const presentation = report.company.presentation
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-6 pb-16 text-[#222] print:max-w-none print:bg-white print:pb-0">
+    <div className="pp-report-paper mx-auto max-w-[1500px] space-y-6 pb-16 text-[var(--n3-text-light)] print:max-w-none print:pb-0">
       <header className="overflow-hidden bg-black text-white print:break-after-page">
         <div className="grid min-h-[430px] gap-8 p-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:p-12">
           <div className="flex flex-col justify-between">

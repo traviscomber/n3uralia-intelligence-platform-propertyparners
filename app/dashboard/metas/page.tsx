@@ -47,17 +47,17 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="space-y-8 pb-14">
-      <header className="rounded-2xl border border-[#dfe9e5] bg-[linear-gradient(135deg,#0d1714_0%,#172923_68%,#244137_100%)] p-7 text-white shadow-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9ed0bf]">Metas 2026 · revisión 202607</p>
+      <header className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-7 text-[var(--n3-text-light)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--n3-teal-soft)]">Metas 2026 · revisión 202607</p>
         <div className="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Gestión por metas con trazabilidad total</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#d9e7e1]">Tres libros reales, siete métricas y cada celda fuente preservada. Las diferencias de origen se muestran; no se corrigen, promedian ni omiten.</p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Tres libros reales, siete métricas y cada celda fuente preservada. Las diferencias de origen se muestran; no se corrigen, promedian ni omiten.</p>
           </div>
-          <div className="rounded-xl border border-white/15 bg-white/5 px-5 py-4 text-right">
-            <div className="text-xs text-[#b9ccc5]">Ventas Vitacura · {MONTHS[monthNumber - 1]} 2026</div>
+          <div className="border border-[var(--n3-line)] bg-black/20 px-5 py-4 text-right">
+            <div className="text-xs text-[var(--n3-text-muted)]">Ventas Vitacura · {MONTHS[monthNumber - 1]} 2026</div>
             <div className="mt-1 text-2xl font-bold">{format(companySales.actual)} / {format(companySales.target)}</div>
-            <div className="text-xs text-[#9ed0bf]">{companySales.compliance === null ? 'Cumplimiento n/d' : `${companySales.compliance}% de la meta fuente`}</div>
+            <div className="text-xs text-[var(--n3-teal-soft)]">{companySales.compliance === null ? 'Cumplimiento n/d' : `${companySales.compliance}% de la meta fuente`}</div>
           </div>
         </div>
       </header>

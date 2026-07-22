@@ -130,7 +130,7 @@ export default function MarketImportPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-xl bg-white p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+        <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Carga guiada</p>
@@ -222,8 +222,7 @@ export default function MarketImportPage() {
               type="button"
               onClick={() => void runImport('import')}
               disabled={loading || !file}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60"
-              style={{ background: '#0b2545', color: '#fff' }}
+              className="inline-flex items-center gap-2 border border-[var(--n3-line)] bg-black/20 px-4 py-2 text-sm font-medium text-[var(--n3-text-light)] disabled:opacity-60"
             >
               {loading && mode === 'import' ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Importar a datos de mercado
@@ -376,4 +375,3 @@ export default function MarketImportPage() {
     </div>
   )
 }
-

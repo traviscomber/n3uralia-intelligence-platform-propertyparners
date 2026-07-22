@@ -149,11 +149,21 @@
   }
 }
 
+@media print {
+  .pp-report-paper {
+    background: #ffffff !important;
+    color: #222222 !important;
+  }
+}
+
 /* Screen theme normalization
  * Legacy modules used white Tailwind cards. Inside the Property Partners
  * product they become the same charcoal/red system used by Datos CRM.
  * Print remains untouched so board reports keep a white paper canvas. */
 @media screen {
+  /* React serializes inline hex colors as rgb() in the browser. Keep both
+   * representations in the legacy bridge until every audited module uses
+   * semantic Property Partners surfaces directly. */
   .dashboard-content :is(
     .bg-white,
     .bg-gray-50,
@@ -183,6 +193,14 @@
     [style*="background: #f5"], [style*="background:#f5"],
     [style*="background: #f0"], [style*="background:#f0"],
     [style*="background: #ee"], [style*="background:#ee"]
+    ,[style*="background: rgb(255, 255, 255)"],
+    [style*="background: rgb(251, 251, 250)"],
+    [style*="background: rgb(249, 250, 251)"],
+    [style*="background: rgb(248, 251, 250)"],
+    [style*="background: rgb(248, 250, 252)"],
+    [style*="background: rgb(244, 247, 247)"],
+    [style*="background: rgb(240, 247, 244)"],
+    [style*="background: rgb(240, 240, 240)"]
   ) {
     background-color: #0c1111 !important;
     color: var(--n3-text-light) !important;
@@ -207,7 +225,10 @@
     [style*="color: #111827"],
     [style*="color:#111827"],
     [style*="color: #374151"],
-    [style*="color:#374151"]
+    [style*="color:#374151"],
+    [style*="color: rgb(17, 17, 17)"],
+    [style*="color: rgb(17, 24, 39)"],
+    [style*="color: rgb(55, 65, 81)"]
   ) {
     color: var(--n3-text-light) !important;
   }
@@ -222,8 +243,31 @@
     [class~="text-[#728079]"], [class~="text-[#737373]"], [class~="text-[#75827c]"],
     [class~="text-[#87928d]"], [class~="text-[#8f8f8f]"]
   ),
-  .dashboard-content :is([style*="color: #6b7280"], [style*="color:#6b7280"]) {
+  .dashboard-content :is([style*="color: #6b7280"], [style*="color:#6b7280"], [style*="color: rgb(107, 114, 128)"]) {
     color: var(--n3-text-muted) !important;
+  }
+
+  .dashboard-content :is(.rounded, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl) {
+    border-radius: 0 !important;
+  }
+
+  .dashboard-content :is(.shadow, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl) {
+    box-shadow: none !important;
+  }
+
+  .dashboard-content :is(.recharts-cartesian-axis-tick-value, .recharts-legend-item-text) {
+    fill: var(--n3-text-muted) !important;
+    color: var(--n3-text-muted) !important;
+  }
+
+  .dashboard-content .recharts-cartesian-grid line {
+    stroke: rgba(182, 193, 191, 0.28) !important;
+  }
+
+  .dashboard-content .recharts-default-tooltip {
+    background: var(--n3-deep) !important;
+    border: 1px solid var(--n3-line) !important;
+    color: var(--n3-text-light) !important;
   }
 
   .dashboard-content :is(

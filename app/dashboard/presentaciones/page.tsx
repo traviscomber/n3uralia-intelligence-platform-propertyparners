@@ -28,7 +28,7 @@ export default async function PresentationsPage({ searchParams }: { searchParams
   const selectedSlide = selectedDeck.slides.find((slide) => slide.index === selectedSlideNumber) || selectedDeck.slides[0]
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 pb-16 text-[#242424]">
+    <div className="mx-auto max-w-[1600px] space-y-6 pb-16 text-[var(--n3-text-light)]">
       <header className="overflow-hidden border border-white/10 bg-black text-white">
         <div className="grid gap-8 p-7 lg:grid-cols-[minmax(0,1fr)_420px] lg:p-10">
           <div>

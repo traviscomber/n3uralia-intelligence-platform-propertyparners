@@ -71,9 +71,10 @@ export default function KnowledgePage() {
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-gray-200 pb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Base de Conocimiento</h1>
-        <p className="text-sm text-gray-600 mt-2">Acceso a reportes, estudios y análisis del mercado de casas en Vitacura</p>
+      <div className="border-b border-[var(--n3-line)] pb-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--n3-teal-soft)]">Repositorio interno</p>
+        <h1 className="mt-3 text-3xl font-semibold text-[var(--n3-text-light)]">Base de conocimiento</h1>
+        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Acceso a reportes, estudios y análisis del mercado de casas en Vitacura</p>
       </div>
 
       {/* Search & Filter */}
@@ -84,7 +85,7 @@ export default function KnowledgePage() {
             placeholder="Buscar documentos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full border border-[var(--n3-line)] bg-[var(--n3-deep)] py-2 pl-10 pr-4 text-sm text-[var(--n3-text-light)] focus:border-[var(--n3-teal)]"
           />
         </div>
       </div>
@@ -95,7 +96,7 @@ export default function KnowledgePage() {
           <button
             onClick={() => setSelectedTag(null)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              selectedTag === null ? 'var(--n3-teal) text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              selectedTag === null ? 'bg-[var(--n3-teal)] text-white' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-muted)]'
             }`}
           >
             Todos
@@ -105,7 +106,7 @@ export default function KnowledgePage() {
               key={tag}
               onClick={() => setSelectedTag(tag)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                selectedTag === tag ? 'var(--n3-teal) text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                selectedTag === tag ? 'bg-[var(--n3-teal)] text-white' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-muted)]'
               }`}
             >
               {tag}
@@ -118,17 +119,17 @@ export default function KnowledgePage() {
       {loading ? (
         <div className="text-center py-12 text-gray-500">Cargando documentos...</div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-12 text-center">
           <BookOpen size={32} className="mx-auto mb-3 text-gray-400" />
           <p className="text-gray-500">No hay documentos que coincidan con tu busqueda</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((doc) => (
-            <div key={doc.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:border-cyan-300 cursor-pointer transition-colors">
+            <div key={doc.id} className="cursor-pointer border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4 transition-colors hover:border-[var(--n3-teal)]">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg #f9fafb flex items-center justify-center flex-shrink-0">
-                  <BookOpen size={18} className="#6b7280" />
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border border-[var(--n3-line)] bg-black/20">
+                  <BookOpen size={18} className="text-[var(--n3-text-muted)]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-gray-900">{doc.title}</h3>
@@ -150,5 +151,4 @@ export default function KnowledgePage() {
     </div>
   )
 }
-
 

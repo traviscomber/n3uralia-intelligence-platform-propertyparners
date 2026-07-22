@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
+    "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
     "tone:internal": "node scripts/audit-internal-tone.mjs",
     "access:verify": "node --import tsx scripts/verify-dashboard-access.ts",
     "data:provenance": "node scripts/audit-runtime-provenance.mjs",

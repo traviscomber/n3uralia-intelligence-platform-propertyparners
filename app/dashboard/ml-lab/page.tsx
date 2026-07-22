@@ -24,7 +24,7 @@ export default function MlLabPage() {
   const laterSale = sourceCase.laterRegisteredEvent
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-7 pb-16 text-[#202522]">
+    <div className="mx-auto max-w-[1600px] space-y-7 pb-16 text-[var(--n3-text-light)]">
       <header className="overflow-hidden border border-white/10 bg-black text-white">
         <div className="grid gap-8 p-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:p-10">
           <div>
