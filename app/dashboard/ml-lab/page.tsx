@@ -135,6 +135,19 @@ export default function MlLabPage() {
         <div className="mt-4 flex flex-wrap gap-2">{lab.prohibitedAdjustments.map((item) => <span key={item} className="border border-[#d4d4d4] bg-white px-3 py-2 text-xs">{item}</span>)}</div>
       </section>
 
+      <section className="border border-[#d4d4d4] bg-black p-5 text-white lg:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e23b31]">Contrato verificable · v{lab.experimentContract.version}</p><h2 className="mt-2 text-xl font-semibold">Linaje y activación del experimento</h2><p className="mt-2 max-w-2xl text-xs leading-5 text-[#aaa]">Este contrato es leído por la aplicación y por la verificación automática; un cambio de metodología debe modificar ambos de forma explícita.</p></div>
+          <span className="border border-[#d7332b] bg-[#160d0c] px-3 py-2 text-xs font-semibold text-[#ff766f]">Activación profesional requerida</span>
+        </div>
+        <div className="mt-5 grid gap-px bg-white/15 sm:grid-cols-2 lg:grid-cols-4">{[
+          ['Objetivo', 'Precio de cierre registrado en UF'],
+          ['Segmentos', 'Departamento · Casa'],
+          ['Validación', 'Separación temporal'],
+          ['Fuentes con hash', `${lab.experimentContract.sourceHashes.length}`],
+        ].map(([label, value]) => <div key={label} className="bg-[#101313] p-4"><p className="text-[10px] uppercase tracking-[0.14em] text-[#888]">{label}</p><p className="mt-2 text-sm font-semibold">{value}</p></div>)}</div>
+      </section>
+
       <footer className="border border-[#d4d4d4] bg-black p-5 text-white">
         <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm font-semibold">Principio de seguridad del ML Lab</p><p className="mt-1 text-xs text-[#aaa]">Un modelo experimental nunca modifica la data, las reglas de valorización ni una estimación comercial aprobada.</p></div><div className="flex gap-2"><Link href="/dashboard/inteligencia" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Observatorio</Link><Link href="/dashboard/valorizador" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Baseline</Link><Link href="/dashboard/market/fuentes" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Fuentes</Link></div></div>
       </footer>

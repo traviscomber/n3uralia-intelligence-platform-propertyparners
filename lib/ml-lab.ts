@@ -12,6 +12,18 @@ export type MlLabCheck = {
   blocksTraining: boolean
 }
 
+export type MlExperimentContract = {
+  version: '1.0.0'
+  target: 'registered_sale_price_uf'
+  segments: readonly ['apartment', 'house']
+  splitStrategy: 'temporal'
+  baseline: 'property_partners_excel_rules'
+  sourceHashes: string[]
+  confirmedPairs: number
+  trainingEnabled: boolean
+  activation: 'professional_approval_required'
+}
+
 function percentage(part: number, total: number) {
   return total ? (part / total) * 100 : 0
 }
@@ -75,6 +87,21 @@ export function getMlLabSnapshot() {
     },
   ]
 
+  const experimentContract: MlExperimentContract = {
+    version: '1.0.0',
+    target: 'registered_sale_price_uf',
+    segments: ['apartment', 'house'],
+    splitStrategy: 'temporal',
+    baseline: 'property_partners_excel_rules',
+    sourceHashes: [
+      ...market.sourceInventory.files.map((file) => file.sha256),
+      ...valuation.sourceInventory.map((file) => file.sha256),
+    ],
+    confirmedPairs: market.operatingModel.matchPolicy.currentConfirmedMatches,
+    trainingEnabled: false,
+    activation: 'professional_approval_required',
+  }
+
   return {
     status: 'research_only' as const, canTrainPriceModel: false, modelVersions: 0, approvedVersions: 0,
     validOffers, eligibleOffers, cbrsRows: cbrs.rows, cbrsEvents, residentialCbrsRows,
@@ -83,7 +110,7 @@ export function getMlLabSnapshot() {
     projectRows, houseRows, houseGeoAssigned: houseSource?.coordinateQuality.single_polygon || 0,
     readyChecks: checks.filter((check) => check.status === 'ready').length,
     blockingChecks: checks.filter((check) => check.blocksTraining && check.status !== 'ready').length,
-    checks, historicalCase: valuation.templateCase,
+    checks, experimentContract, historicalCase: valuation.templateCase,
     prohibitedAdjustments: valuation.methodology.prohibitedAutomaticAdjustments,
   }
 }
