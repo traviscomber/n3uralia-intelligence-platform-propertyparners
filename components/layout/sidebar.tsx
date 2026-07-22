@@ -116,15 +116,12 @@ const roleNavItems = [
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const isCeo = profile?.role === 'ceo'
-  const ceoNavigation = new Set([
-    '/dashboard',
-    '/dashboard/inteligencia',
-    '/dashboard/control',
-    '/dashboard/valorizador',
-    '/dashboard/reportes/autonomos',
-    '/dashboard/settings',
+  const ceoHiddenNavigation = new Set([
+    '/dashboard/market/import',
+    '/dashboard/knowledge',
+    '/dashboard/sources',
   ])
-  const visibleNavItems = isCeo ? navItems.filter((item) => ceoNavigation.has(item.href)) : navItems
+  const visibleNavItems = isCeo ? navItems.filter((item) => !ceoHiddenNavigation.has(item.href)) : navItems
   const visibleRoleNavItems = isCeo ? roleNavItems.filter((item) => item.href === '/dashboard/ceo') : roleNavItems
 
   return (
