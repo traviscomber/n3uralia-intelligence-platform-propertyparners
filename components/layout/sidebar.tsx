@@ -7,23 +7,23 @@ import type { Profile } from '@/lib/types'
 
 const navItems = [
   {
-    label: 'Panel',
+    label: 'Inicio',
     href: '/dashboard',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="6" height="6" rx="1" /><rect x="9" y="1" width="6" height="6" rx="1" /><rect x="1" y="9" width="6" height="6" rx="1" /><rect x="9" y="9" width="6" height="6" rx="1" /></svg>,
     exact: true,
   },
   {
-    label: 'Observatorio',
+    label: 'Gestión corporativa',
     href: '/dashboard/inteligencia',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1.5 8s2.3-4 6.5-4 6.5 4 6.5 4-2.3 4-6.5 4-6.5-4-6.5-4Z" /><circle cx="8" cy="8" r="2" /><path d="M8 1v1.5M8 13.5V15" /></svg>,
   },
   {
-    label: 'ML Lab',
+    label: 'Modelos y validación',
     href: '/dashboard/ml-lab',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 2v3l-3 7a1.4 1.4 0 0 0 1.3 2h9.4a1.4 1.4 0 0 0 1.3-2l-3-7V2" /><path d="M4 9h8M6.5 2h3" /><circle cx="6" cy="11" r=".6" fill="currentColor" stroke="none" /><circle cx="10" cy="12" r=".6" fill="currentColor" stroke="none" /></svg>,
   },
   {
-    label: 'Control de Gestion',
+    label: 'Control de gestión',
     href: '/dashboard/control',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,12 5,8 8,10 11,5 14,7" /><line x1="2" y1="14" x2="14" y2="14" /></svg>,
   },
@@ -48,7 +48,7 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7L8 2l6 5v7H10v-4H6v4H2z" /></svg>,
   },
   {
-    label: 'Inteligencia de Mercado',
+    label: 'Mercado Vitacura',
     href: '/dashboard/market',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><line x1="8" y1="2" x2="8" y2="14" /><line x1="2" y1="8" x2="14" y2="8" /><path d="M4.5 4.5c1 .4 2.3.8 3.5.8s2.5-.4 3.5-.8" /><path d="M4.5 11.5c1-.4 2.3-.8 3.5-.8s2.5.4 3.5.8" /></svg>,
   },
@@ -68,7 +68,7 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="3" /><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4" /></svg>,
   },
   {
-    label: 'Reportes automaticos',
+    label: 'Reportes programados',
     href: '/dashboard/reportes/autonomos',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="10" /><path d="M5 15h6M8 12v3" /><path d="M4.5 9V7M7 9V5M9.5 9V6M12 9V4" /></svg>,
   },
@@ -91,7 +91,7 @@ const navItems = [
 
 const roleNavItems = [
   {
-    label: 'Vista CEO',
+    label: 'Resumen ejecutivo',
     href: '/dashboard/ceo',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="8,2 14,6 14,10 8,14 2,10 2,6" /><circle cx="8" cy="8" r="2" /></svg>,
   },
@@ -110,13 +110,8 @@ const roleNavItems = [
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const isCeo = profile?.role === 'ceo'
-  const ceoHiddenNavigation = new Set([
-    '/dashboard/market/import',
-    '/dashboard/knowledge',
-    '/dashboard/sources',
-  ])
-  const visibleNavItems = isCeo ? navItems.filter((item) => !ceoHiddenNavigation.has(item.href)) : navItems
-  const visibleRoleNavItems = isCeo ? roleNavItems.filter((item) => item.href === '/dashboard/ceo') : roleNavItems
+  const visibleNavItems = isCeo ? [roleNavItems[0], ...navItems] : navItems
+  const visibleRoleNavItems = isCeo ? [] : roleNavItems
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)]">
@@ -127,7 +122,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <ul className="flex flex-col gap-0.5">
           {visibleNavItems.map((item) => {
-            const isActive = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
+            const isActive = 'exact' in item && item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <li key={item.href}>
                 <Link

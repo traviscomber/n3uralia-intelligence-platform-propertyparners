@@ -30,7 +30,7 @@ function Status({ children, tone = 'fact' }: { children: React.ReactNode; tone?:
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${styles}`}>{children}</span>
 }
 
-export default function IntelligenceObservatoryPage() {
+export default function CorporateManagementPage() {
   const months = crm.months
   const january = months[0]
   const may = months[4]
@@ -39,6 +39,8 @@ export default function IntelligenceObservatoryPage() {
   const ticket2026 = crm.ytd.salesUf / crm.ytd.salesCount
   const ticket2025 = crm.baseline2025.firstHalfSalesUf / crm.baseline2025.firstHalfSalesCount
   const ticketChange = ((ticket2026 / ticket2025) - 1) * 100
+  const juneStockTarget = targets.companyMonthlyTargets.stock_count['2026-06']
+  const stockAttainment = (june.stockCount / juneStockTarget) * 100
   const portalListings = market.cross.portal.reduce((sum, source) => sum + source.rows, 0)
   const branchRows = presentations.management.branches.map((branch) => ({
     name: branch.name,
@@ -74,17 +76,17 @@ export default function IntelligenceObservatoryPage() {
       <header className="overflow-hidden border border-white/10 bg-black text-white">
         <div className="grid gap-8 p-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:p-10">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#e23b31]">Observatorio de Inteligencia</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight lg:text-4xl">Una lectura trazable del negocio</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-[#bcbcbc]">Hechos y relaciones calculados directamente desde la inteligencia auditada. Ningún dato fuente se corrige, completa, reemplaza ni promedia.</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#e23b31]">Gestión corporativa · uso interno</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight lg:text-4xl">Resultados y control de gestión</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[#bcbcbc]">Resumen para CEO y dirección. Corte acumulado enero–junio 2026, con comparación 2025, cartera, actividad comercial y alertas de calidad.</p>
           </div>
           <div className="grid grid-cols-2 gap-px self-end bg-white/15">
             {[
-              ['Excel CRM', crm.sourceInventory.workbookCount],
-              ['Excel Metas', targets.cellCoverage.workbookCount],
-              ['Presentaciones', presentations.source.presentationCount],
-              ['Láminas', presentations.source.slideCount],
-            ].map(([label, value]) => <div key={label} className="bg-[#111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[#888]">{label}</p><p className="mt-2 text-2xl font-semibold">{number(Number(value))}</p></div>)}
+              ['Variación cierres', percent(crm.ytd.comparison2025.salesChangePct)],
+              ['Variación UF', percent(crm.ytd.comparison2025.salesUfChangePct)],
+              ['Variación cartera', number(crm.ytd.stockChange)],
+              ['Alertas críticas', targets.quality.criticalCount],
+            ].map(([label, value]) => <div key={label} className="bg-[#111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[#888]">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>)}
           </div>
         </div>
         <div className="h-1 bg-[#d7332b]" />
@@ -100,22 +102,31 @@ export default function IntelligenceObservatoryPage() {
         ))}
       </section>
 
+      <section className="border border-[#d4d4d4] bg-white">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#d4d4d4] p-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d7332b]">Revisión de gestión</p><h2 className="mt-2 text-xl font-semibold">Excepciones del corte</h2></div><p className="text-xs text-[#777]">Valores reportados; no incluyen diagnóstico causal</p></div>
+        <div className="grid gap-px bg-[#d4d4d4] md:grid-cols-3">
+          <article className="bg-[#f6f6f6] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#777]">Cartera vs. meta junio</p><p className="mt-2 text-2xl font-semibold">{percent(stockAttainment)}</p><p className="mt-2 text-xs leading-5 text-[#666]">{number(june.stockCount)} propiedades informadas frente a meta de {number(juneStockTarget)}.</p></article>
+          <article className="bg-[#f6f6f6] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#777]">Leads sin gestión +90 días</p><p className="mt-2 text-2xl font-semibold">{number(crm.latestLeadSnapshot.staleOver90)}</p><p className="mt-2 text-xs leading-5 text-[#666]">Parte de los {number(crm.latestLeadSnapshot.staleOver15Total)} leads con más de 15 días sin gestión.</p></article>
+          <article className="bg-[#f6f6f6] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#777]">Calidad de metas</p><p className="mt-2 text-2xl font-semibold">{targets.quality.criticalCount} críticas</p><p className="mt-2 text-xs leading-5 text-[#666]">{targets.quality.issueCount} observaciones conservadas en Metas 2026.</p></article>
+        </div>
+      </section>
+
       <section className="grid gap-4 xl:grid-cols-3">
         <article className="border border-[#d8d8d8] bg-[#f3f3f3] p-5">
           <Status>Hecho</Status>
-          <h2 className="mt-4 text-xl font-semibold">Más cierres y más UF que en 2025</h2>
+          <h2 className="mt-4 text-xl font-semibold">Cierres y volumen vs. primer semestre 2025</h2>
           <p className="mt-3 text-sm leading-6 text-[#4f5753]">El primer semestre registra {crm.ytd.salesCount} ventas y {uf(crm.ytd.salesUf)}. Frente al mismo período de 2025, los cierres aumentan {percent(crm.ytd.comparison2025.salesChangePct)} y el volumen {percent(crm.ytd.comparison2025.salesUfChangePct)}.</p>
           <Evidence>Fuente: CRM normalizado 2026 y baseline CRM enero–junio 2025.</Evidence>
         </article>
         <article className="border border-[#d8d8d8] bg-[#f3f3f3] p-5">
           <Status tone="relation">Relación observada</Status>
-          <h2 className="mt-4 text-xl font-semibold">El ticket medio también aumenta</h2>
+          <h2 className="mt-4 text-xl font-semibold">Variación del ticket promedio</h2>
           <p className="mt-3 text-sm leading-6 text-[#4f5753]">El cociente UF/cierres pasa de {uf(ticket2025)} en el primer semestre de 2025 a {uf(ticket2026)} en 2026, una diferencia calculada de {percent(ticketChange)}.</p>
           <Evidence>Cálculo derivado: volumen UF dividido por cantidad de cierres en cada período. No atribuye causalidad.</Evidence>
         </article>
         <article className="border border-[#d8d8d8] bg-[#f3f3f3] p-5">
           <Status tone="relation">Relación observada</Status>
-          <h2 className="mt-4 text-xl font-semibold">La cartera disponible se contrae</h2>
+          <h2 className="mt-4 text-xl font-semibold">Variación de la cartera disponible</h2>
           <p className="mt-3 text-sm leading-6 text-[#4f5753]">El stock comparable baja de {number(january.stockCount)} en enero a {number(june.stockCount)} en junio: {number(Math.abs(crm.ytd.stockChange))} propiedades, equivalentes a {percent(stockChangePct)}.</p>
           <Evidence>Fuente: snapshots mensuales CRM. La relación no determina la causa de la reducción.</Evidence>
         </article>
@@ -123,7 +134,7 @@ export default function IntelligenceObservatoryPage() {
 
       <section className="border border-[#d4d4d4] bg-white">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#d4d4d4] bg-black p-5 text-white">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e23b31]">Evolución mensual</p><h2 className="mt-2 text-xl font-semibold">Actividad comercial auditada</h2></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e23b31]">Seguimiento mensual</p><h2 className="mt-2 text-xl font-semibold">Actividad comercial</h2></div>
           <p className="text-xs text-[#aaa]">Los cocientes mensuales no son conversiones de cohorte</p>
         </div>
         <div className="overflow-x-auto">
@@ -136,13 +147,13 @@ export default function IntelligenceObservatoryPage() {
 
       <section className="grid gap-4 xl:grid-cols-[1.55fr_1fr]">
         <article className="border border-[#d4d4d4] bg-white">
-          <div className="border-b border-[#d4d4d4] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d7332b]">Sucursales · snapshot de gestión</p><h2 className="mt-2 text-xl font-semibold">Patrones distintos, definiciones preservadas</h2></div>
+          <div className="border-b border-[#d4d4d4] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d7332b]">Sucursales · corte de gestión</p><h2 className="mt-2 text-xl font-semibold">Cumplimiento y actividad por sucursal</h2></div>
           <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead className="bg-[#ededed] text-[#555]"><tr><th className="px-4 py-3">Sucursal</th><th>Score gestión</th><th>Cumpl. cierres</th><th>Cumpl. UF</th><th>Leads clasificados</th><th>Sin gestión +90d</th><th>Visitas realizadas</th></tr></thead><tbody>{branchRows.map((branch) => <tr key={branch.name} className="border-t border-[#e3e3e3]"><td className="px-4 py-3 font-semibold">{branch.name}</td><td>{number(branch.management, 1)}</td><td>{percent(branch.countAttainment)}</td><td>{percent(branch.ufAttainment)}</td><td>{percent(branch.classifiedRate)}</td><td>{percent(branch.stale90Rate)}</td><td>{percent(branch.visitCompletion)}</td></tr>)}</tbody></table></div>
           <Evidence>Fuente: Jun_Directorio_5.pptx. Los cierres fraccionarios y scores se conservan exactamente como snapshot de presentación.</Evidence>
         </article>
         <article className="border border-[#d4d4d4] bg-[#f3f3f3] p-5">
           <Status tone="relation">Relación observada</Status>
-          <h2 className="mt-4 text-xl font-semibold">Mayo y junio muestran resultados diferentes</h2>
+          <h2 className="mt-4 text-xl font-semibold">Comparación mayo–junio</h2>
           <div className="mt-5 grid grid-cols-2 gap-px bg-[#ccc]">
             {[['Mayo', may], ['Junio', june]].map(([label, raw]) => {
               const month = raw as typeof may
@@ -172,7 +183,7 @@ export default function IntelligenceObservatoryPage() {
       </section>
 
       <section className="border border-[#d4d4d4] bg-black p-6 text-white">
-        <div className="flex flex-wrap items-start justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e23b31]">Trazabilidad</p><h2 className="mt-2 text-xl font-semibold">La evidencia siempre queda a un clic</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#bcbcbc]">Este observatorio no almacena una segunda versión de los datos. Lee las capas auditadas y calcula solamente relaciones reproducibles en tiempo de render.</p></div><div className="flex flex-wrap gap-2">{[
+        <div className="flex flex-wrap items-start justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e23b31]">Detalle y respaldo</p><h2 className="mt-2 text-xl font-semibold">Fuentes del reporte</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#bcbcbc]">Los indicadores se calculan desde las capas auditadas. El detalle de CRM, metas, presentaciones y mercado está disponible en los módulos correspondientes.</p></div><div className="flex flex-wrap gap-2">{[
           ['/dashboard/datos-crm', 'CRM'], ['/dashboard/metas', 'Metas'], ['/dashboard/presentaciones', 'Presentaciones'], ['/dashboard/market/fuentes', 'Portal + CBRS'], ['/dashboard/valorizador', 'Valorizador'],
         ].map(([href, label]) => <Link key={href} href={href} className="border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold hover:bg-white/10">{label}</Link>)}</div></div>
         <div className="mt-5 grid gap-px bg-white/15 sm:grid-cols-3">{[
