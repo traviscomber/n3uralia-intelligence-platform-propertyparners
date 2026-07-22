@@ -112,7 +112,7 @@ Las metas están integradas como una entidad independiente, versión `202607`, d
 - Periodos: enero a diciembre de 2026, incluyendo valores nulos y ceros.
 - Columnas anuales: todas se conservan en paralelo; ninguna se elige o elimina silenciosamente.
 - Colores: se conservan como marcas literales de la fuente, sin inferir estado laboral.
-- Identidades: cuatro filas permanecen no resueltas y se muestran con su fila fuente.
+- Identidades: tres filas `NN` permanecen no resueltas. Una fila sin nombre se conserva como tal, pero muestra una identidad inferida por referencias de fórmula con su evidencia.
 - Celdas fuera de bloque: cinco, conservadas con coordenada, valor y fórmula.
 - Incidencias: 27 observaciones de origen, de las cuales cuatro son diferencias mensuales críticas.
 
@@ -122,4 +122,6 @@ El cumplimiento solo se calcula cuando existe un valor real CRM de la misma sucu
 
 `data/targets-cell-manifest.json` conserva dirección, valor, fórmula, tipo, formato, estilo y color de cada celda almacenada. `data/targets-2026.json` contiene la capa normalizada y todas las incidencias de origen.
 
-Advertencia de acceso: ambos archivos están actualmente versionados en un repositorio público. La autenticación del dashboard no vuelve privados los datos del repositorio. Deben migrarse a almacenamiento privado de servidor antes de tratar `private_dashboard_only` como una garantía de confidencialidad.
+El verificador recalcula las 715 fórmulas soportadas y exige igualdad con el valor almacenado por Excel. También conserva tanto el valor bruto como el texto formateado que Excel presenta en pantalla.
+
+Advertencia de acceso: ambos archivos están actualmente versionados en un repositorio público. La autenticación del dashboard no vuelve privados los datos del repositorio. Los metadatos declaran `repositoryExposure: public_repository` y `confidentialityGuaranteed: false` hasta completar la migración a almacenamiento privado de servidor.

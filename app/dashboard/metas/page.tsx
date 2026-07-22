@@ -14,6 +14,10 @@ function formatSource(value: number | null, unit?: string) {
   return unit === 'uf' ? `UF ${String(value)}` : String(value)
 }
 
+function ExactSourceValue({ value, displayedValue, unit }: { value: number | null; displayedValue?: string | null; unit?: string }) {
+  return <span>{formatSource(value, unit)}{displayedValue !== null && displayedValue !== undefined && <span className="ml-2 font-normal text-[#87928d]">Excel: {displayedValue}</span>}</span>
+}
+
 function issueContext(issue: object) {
   const row = issue as Record<string, unknown>
   return [row.period, row.cell ? `celda ${row.cell}` : null, row.sourceRow ? `fila ${row.sourceRow}` : null].filter(Boolean).join(' · ')
@@ -84,6 +88,8 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-800">Incidencias conservadas</p>
             <p className="mt-1 text-sm text-amber-950">{source.quality.criticalCount} críticas y {source.quality.issueCount} observaciones de origen. El estado no invalida ni borra la data.</p>
+            <p className="mt-1 text-xs text-amber-900">Además, {source.quality.displayRoundingDifferenceCount} totales mensuales difieren al sumar los números visibles redondeados por Excel; se controlan aparte y no se clasifican como error fuente.</p>
+            <p className="mt-1 text-xs text-amber-900">Las {source.quality.fractionalMonthlyCountTargetCellCount.toLocaleString('es-CL')} celdas mensuales fraccionarias de metas de conteo se conservan sin redondear.</p>
           </div>
           <span className="rounded-full bg-amber-200 px-3 py-1 text-xs font-bold text-amber-900">{source.status}</span>
         </div>
@@ -127,6 +133,7 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
                 </div>
                 <p className="mt-2 text-xs text-[#66756e]">{metric.compliance === null ? metric.compatibility === 'definition_pending' ? 'Cumplimiento pendiente de definición: agendada vs realizada.' : metric.compatibility === 'actual_unavailable' ? 'No existe actual compatible en CRM.' : 'Atribución CRM no disponible.' : `${metric.compliance}% de cumplimiento`}</p>
                 {metric.reconciliation && !metric.reconciliation.exact && <p className="mt-2 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">Fuente exacta: total {formatSource(metric.reconciliation.sourceTotal, metric.unit)} · partners {formatSource(metric.reconciliation.partnerSum, metric.unit)} · diferencia {formatSource(metric.reconciliation.delta, metric.unit)}</p>}
+                {metric.reconciliation && !metric.reconciliation.display.exact && <p className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-800">Vista Excel redondeada: total {formatSource(metric.reconciliation.display.sourceTotal, metric.unit)} · suma visible partners {formatSource(metric.reconciliation.display.partnerSum, metric.unit)} · diferencia visual {formatSource(metric.reconciliation.display.delta, metric.unit)}. No altera el valor crudo.</p>}
               </article>
             ))}
           </div>
@@ -142,13 +149,17 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
                       {metric.partners.map((partner) => (
                         <tr key={partner.sourceRow} className="border-t border-[#edf2f0]">
                           <td className="px-4 py-2 text-[#75827c]">{partner.sourceRow}</td>
-                          <td className="px-4 py-2 font-medium text-[#1b2b25]">{partner.name ?? 'Sin nombre'} {partner.identityStatus === 'unresolved' && <span className="ml-2 text-red-700">Identidad no resuelta</span>}</td>
+                          <td className="px-4 py-2 font-medium text-[#1b2b25]">
+                            {partner.name ?? 'Sin nombre'}
+                            {partner.identityStatus === 'unresolved' && <span className="ml-2 text-red-700">Identidad no resuelta</span>}
+                            {partner.identityStatus === 'inferred_from_formula' && <span className="ml-2 text-amber-700">Inferida por fórmula: {partner.inferredName}</span>}
+                          </td>
                           <td className="px-4 py-2">{partner.sourceColor ? <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: partner.sourceColor === 'green' ? '#92d050' : '#ff0000' }} />{partner.sourceColor}</span> : 'sin marca'}</td>
-                          <td className="px-4 py-2 font-semibold">{formatSource(partner.target, metric.unit)}</td>
-                          {partner.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2">{formatSource(annual.value, metric.unit)} <span className="text-[#87928d]">({annual.cell})</span></td>)}
+                          <td className="px-4 py-2 font-semibold"><ExactSourceValue value={partner.target} displayedValue={partner.targetDisplayedValue} unit={metric.unit} /></td>
+                          {partner.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2"><ExactSourceValue value={annual.value} displayedValue={annual.displayedValue} unit={metric.unit} /> <span className="text-[#87928d]">({annual.cell})</span></td>)}
                         </tr>
                       ))}
-                      <tr className="border-t-2 border-[#cbd8d2] bg-[#f7faf8] font-bold"><td className="px-4 py-2" colSpan={3}>Total sucursal fuente</td><td className="px-4 py-2">{formatSource(metric.target, metric.unit)}</td>{metric.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2">{formatSource(annual.value, metric.unit)} <span className="font-normal text-[#87928d]">({annual.cell})</span></td>)}</tr>
+                      <tr className="border-t-2 border-[#cbd8d2] bg-[#f7faf8] font-bold"><td className="px-4 py-2" colSpan={3}>Total sucursal fuente</td><td className="px-4 py-2"><ExactSourceValue value={metric.target} displayedValue={metric.targetDisplayedValue} unit={metric.unit} /></td>{metric.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2"><ExactSourceValue value={annual.value} displayedValue={annual.displayedValue} unit={metric.unit} /> <span className="font-normal text-[#87928d]">({annual.cell})</span></td>)}</tr>
                     </tbody>
                   </table>
                 </div>
@@ -166,7 +177,7 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
       ))}
 
       <footer className="rounded-xl border border-[#dfe8e4] bg-white p-5 text-xs leading-5 text-[#5f7068]">
-        El manifiesto privado conserva las {source.cellCoverage.storedCells.toLocaleString('es-CL')} celdas almacenadas con dirección, valor, fórmula, tipo, formato, estilo y color. Las columnas anuales paralelas se muestran en forma independiente. Los colores se describen como marcas de la fuente y no se interpretan como estado laboral.
+        El manifiesto de auditoría conserva las {source.cellCoverage.storedCells.toLocaleString('es-CL')} celdas almacenadas con dirección, valor, visualización Excel, fórmula, tipo, formato, estilo y color. Las columnas anuales paralelas se muestran en forma independiente. Los colores se describen como marcas de la fuente y no se interpretan como estado laboral. El repositorio actual es público; el manifiesto no debe considerarse privado hasta migrarlo a almacenamiento servidor.
       </footer>
     </div>
   )

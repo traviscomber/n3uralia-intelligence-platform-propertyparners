@@ -84,6 +84,25 @@ function sourceColor(cell) {
   return normalized
 }
 
+function displayedValue(cell) {
+  if (!cell) return null
+  return cell.w ?? XLSX.utils.format_cell(cell) ?? null
+}
+
+function displayedNumeric(value, rawValue) {
+  if (value === null || value === '') return null
+  const normalized = String(value).replace(/[^0-9,.-]/g, '')
+  if (!normalized) return null
+  const candidates = [
+    Number(normalized),
+    Number(normalized.replace(/,/g, '')),
+    Number(normalized.replace(/\./g, '').replace(',', '.')),
+  ].filter((candidate) => Number.isFinite(candidate))
+  if (candidates.length === 0) return null
+  if (rawValue === null) return candidates[0]
+  return candidates.sort((left, right) => Math.abs(left - rawValue) - Math.abs(right - rawValue))[0]
+}
+
 function buildSourceAudit(file, root) {
   const workbook = XLSX.readFile(file, { cellDates: true, cellFormula: true, cellStyles: true, cellNF: true, sheetStubs: true })
   const sheets = workbook.SheetNames.map((name) => {
@@ -96,6 +115,7 @@ function buildSourceAudit(file, root) {
       return {
         address,
         value: stableValue(cell?.v ?? null),
+        displayedValue: displayedValue(cell),
         formula: cell?.f ?? null,
         type: cell?.t ?? null,
         numberFormat: cell?.z ?? null,
@@ -110,6 +130,9 @@ function buildSourceAudit(file, root) {
       populatedCells: cells.filter((cell) => cell.value !== null || cell.formula).length,
       formulaCells: cells.filter((cell) => cell.formula).length,
       formulaErrorCells: cells.filter((cell) => cell.type === 'e').length,
+      merges: (sheet['!merges'] ?? []).map((range) => XLSX.utils.encode_range(range)),
+      hiddenRows: (sheet['!rows'] ?? []).flatMap((row, index) => row?.hidden ? [index + 1] : []),
+      hiddenColumns: (sheet['!cols'] ?? []).flatMap((column, index) => column?.hidden ? [XLSX.utils.encode_col(index)] : []),
       cellDigest: digest.digest('hex'),
       cells,
     }
@@ -123,6 +146,8 @@ function buildSourceAudit(file, root) {
     populatedCells: sheets.reduce((sum, sheet) => sum + sheet.populatedCells, 0),
     formulaCells: sheets.reduce((sum, sheet) => sum + sheet.formulaCells, 0),
     formulaErrorCells: sheets.reduce((sum, sheet) => sum + sheet.formulaErrorCells, 0),
+    definedNameCount: workbook.Workbook?.Names?.length ?? 0,
+    hiddenSheetCount: workbook.Workbook?.Sheets?.filter((sheet) => sheet.Hidden).length ?? 0,
     sheets,
   }
 }
@@ -176,6 +201,7 @@ function parseWorkbook(file, root) {
           value: numeric(row[monthColumns[monthIndex]]),
           cell: XLSX.utils.encode_cell({ r: sourceRow - 1, c: monthColumns[monthIndex] }),
           formula: sheet[XLSX.utils.encode_cell({ r: sourceRow - 1, c: monthColumns[monthIndex] })]?.f ?? null,
+          displayedValue: displayedValue(sheet[XLSX.utils.encode_cell({ r: sourceRow - 1, c: monthColumns[monthIndex] })]),
         },
       ]))
       const annualValues = annualColumns.map(({ header, column }) => ({
@@ -184,6 +210,7 @@ function parseWorkbook(file, root) {
         cell: XLSX.utils.encode_cell({ r: sourceRow - 1, c: column }),
         value: numeric(row[column]),
         formula: sheet[XLSX.utils.encode_cell({ r: sourceRow - 1, c: column })]?.f ?? null,
+        displayedValue: displayedValue(sheet[XLSX.utils.encode_cell({ r: sourceRow - 1, c: column })]),
       }))
       return {
         sourceRow,
@@ -201,13 +228,31 @@ function parseWorkbook(file, root) {
         value: numeric(totalRow[monthColumns[monthIndex]]),
         cell: XLSX.utils.encode_cell({ r: totalRowIndex, c: monthColumns[monthIndex] }),
         formula: sheet[XLSX.utils.encode_cell({ r: totalRowIndex, c: monthColumns[monthIndex] })]?.f ?? null,
+        displayedValue: displayedValue(sheet[XLSX.utils.encode_cell({ r: totalRowIndex, c: monthColumns[monthIndex] })]),
       },
     ]))
     const monthlyReconciliation = MONTHS.map((month, monthIndex) => {
       const period = `2026-${String(monthIndex + 1).padStart(2, '0')}`
       const sourceTotal = branchMonths[period].value
       const partnerSum = partners.reduce((sum, partner) => sum + (partner.months[period].value ?? 0), 0)
-      return { period, sourceTotal, partnerSum, delta: sourceTotal === null ? null : sourceTotal - partnerSum, exact: almostEqual(sourceTotal, partnerSum) }
+      const sourceDisplayedTotal = displayedNumeric(branchMonths[period].displayedValue, sourceTotal)
+      const partnerDisplayedSum = partners.reduce((sum, partner) => {
+        const cell = partner.months[period]
+        return sum + (displayedNumeric(cell.displayedValue, cell.value) ?? 0)
+      }, 0)
+      return {
+        period,
+        sourceTotal,
+        partnerSum,
+        delta: sourceTotal === null ? null : sourceTotal - partnerSum,
+        exact: almostEqual(sourceTotal, partnerSum),
+        display: {
+          sourceTotal: sourceDisplayedTotal,
+          partnerSum: partnerDisplayedSum,
+          delta: sourceDisplayedTotal === null ? null : sourceDisplayedTotal - partnerDisplayedSum,
+          exact: almostEqual(sourceDisplayedTotal, partnerDisplayedSum),
+        },
+      }
     })
 
     sections.push({
@@ -227,10 +272,28 @@ function parseWorkbook(file, root) {
         cell: XLSX.utils.encode_cell({ r: totalRowIndex, c: column }),
         value: numeric(totalRow[column]),
         formula: sheet[XLSX.utils.encode_cell({ r: totalRowIndex, c: column })]?.f ?? null,
+        displayedValue: displayedValue(sheet[XLSX.utils.encode_cell({ r: totalRowIndex, c: column })]),
       })),
       monthlyReconciliation,
       allMonthlyTotalsExact: monthlyReconciliation.every((item) => item.exact),
     })
+  }
+
+  const namedRows = new Map(sections.flatMap((section) => section.partners.filter((partner) => partner.identityStatus === 'named').map((partner) => [partner.sourceRow, partner.name])))
+  for (const section of sections) {
+    for (const partner of section.partners.filter((item) => item.identityStatus === 'unresolved')) {
+      const formulaCells = [
+        ...Object.values(partner.months).map((month) => ({ cell: month.cell, formula: month.formula })),
+        ...partner.annualValues.map((annual) => ({ cell: annual.cell, formula: annual.formula })),
+      ].filter((item) => item.formula)
+      const referencedRows = [...new Set(formulaCells.flatMap((item) => [...String(item.formula).matchAll(/\$?[A-Z]{1,3}\$?(\d+)/g)].map((match) => Number(match[1]))))]
+      const inferredNames = [...new Set(referencedRows.map((row) => namedRows.get(row)).filter(Boolean))]
+      if (inferredNames.length === 1) {
+        partner.identityStatus = 'inferred_from_formula'
+        partner.inferredName = inferredNames[0]
+        partner.identityEvidence = { type: 'formula_reference', referencedRows: referencedRows.filter((row) => namedRows.get(row) === inferredNames[0]), cells: formulaCells.filter((item) => item.formula && referencedRows.some((row) => namedRows.get(row) === inferredNames[0] && new RegExp(`\\$?[A-Z]{1,3}\\$?${row}(?!\\d)`).test(item.formula))).map((item) => ({ cell: item.cell, formula: item.formula })) }
+      }
+    }
   }
 
   const sourceAudit = buildSourceAudit(file, root)
@@ -286,6 +349,9 @@ function main() {
       for (const partner of section.partners.filter((item) => item.identityStatus === 'unresolved')) {
         qualityIssues.push({ severity: 'warning', code: 'UNRESOLVED_PARTNER_IDENTITY', branch: branch.branch, metric: section.metric, sourceRow: partner.sourceRow, detail: `La fila ${partner.sourceRow} no contiene una identidad de partner resoluble.` })
       }
+      for (const partner of section.partners.filter((item) => item.identityStatus === 'inferred_from_formula')) {
+        qualityIssues.push({ severity: 'warning', code: 'INFERRED_PARTNER_IDENTITY', branch: branch.branch, metric: section.metric, sourceRow: partner.sourceRow, inferredName: partner.inferredName, evidence: partner.identityEvidence, detail: `La fila ${partner.sourceRow} no tiene nombre fuente; la identidad ${partner.inferredName} se infiere únicamente por referencias de fórmula y no reemplaza el valor original.` })
+      }
     }
     for (const cell of branch.unmappedCells) qualityIssues.push({ severity: 'warning', code: 'UNMAPPED_SOURCE_CELL', branch: branch.branch, cell: cell.address, value: cell.value, formula: cell.formula, detail: 'Celda con contenido fuera de los bloques mensuales detectados; se preserva sin asignarla a una métrica.' })
   }
@@ -298,6 +364,15 @@ function main() {
     formulaCells: branches.reduce((sum, branch) => sum + branch.sourceAudit.formulaCells, 0),
     formulaErrorCells: branches.reduce((sum, branch) => sum + branch.sourceAudit.formulaErrorCells, 0),
   }
+  const displayRoundingDifferences = branches.flatMap((branch) => branch.sections.flatMap((section) => section.monthlyReconciliation.filter((item) => !item.display.exact)))
+  const fractionalMonthlyCountTargetsByBranch = branches.map((branch) => ({
+    branch: branch.branch,
+    count: branch.sections.filter((section) => section.unit !== 'uf').reduce((count, section) => {
+      const branchCount = Object.values(section.branchMonths).filter((cell) => typeof cell.value === 'number' && !Number.isInteger(cell.value)).length
+      const partnerCount = section.partners.reduce((sum, partner) => sum + Object.values(partner.months).filter((cell) => typeof cell.value === 'number' && !Number.isInteger(cell.value)).length, 0)
+      return count + branchCount + partnerCount
+    }, 0),
+  }))
 
   const payload = {
     schemaVersion: 1,
@@ -313,7 +388,14 @@ function main() {
     cellCoverage,
     companyMonthlyTargets,
     branches: branches.map(({ sourceAudit, ...branch }) => branch),
-    quality: { issueCount: qualityIssues.length, criticalCount: qualityIssues.filter((issue) => issue.severity === 'critical').length, issues: qualityIssues },
+    quality: {
+      issueCount: qualityIssues.length,
+      criticalCount: qualityIssues.filter((issue) => issue.severity === 'critical').length,
+      displayRoundingDifferenceCount: displayRoundingDifferences.length,
+      fractionalMonthlyCountTargetCellCount: fractionalMonthlyCountTargetsByBranch.reduce((sum, branch) => sum + branch.count, 0),
+      fractionalMonthlyCountTargetsByBranch,
+      issues: qualityIssues,
+    },
   }
   const manifest = {
     schemaVersion: 1,

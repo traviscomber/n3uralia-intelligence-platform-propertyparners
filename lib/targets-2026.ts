@@ -50,13 +50,15 @@ export function getBranchTargetPerformance(period = '2026-06') {
     file: branch.file,
     metrics: branch.sections.map((section) => {
       const metric = section.metric as TargetMetric
-      const target = section.branchMonths[period as keyof typeof section.branchMonths]?.value ?? null
+      const targetCell = section.branchMonths[period as keyof typeof section.branchMonths]
+      const target = targetCell?.value ?? null
       const actual = month ? officeActual(month, branch.branch, metric) : null
       return {
         metric,
         label: section.label,
         unit: section.unit,
         target,
+        targetDisplayedValue: targetCell?.displayedValue ?? null,
         actual,
         compliance: target && actual !== null ? Number(((actual / target) * 100).toFixed(1)) : null,
         compatibility: ACTUAL_FIELD[metric] ? 'compatible' as const : metric === 'visits_count' ? 'definition_pending' as const : 'actual_unavailable' as const,
@@ -66,8 +68,11 @@ export function getBranchTargetPerformance(period = '2026-06') {
           sourceRow: partner.sourceRow,
           name: partner.name,
           identityStatus: partner.identityStatus,
+          inferredName: 'inferredName' in partner ? partner.inferredName : null,
+          identityEvidence: 'identityEvidence' in partner ? partner.identityEvidence : null,
           sourceColor: partner.sourceColor,
           target: partner.months[period as keyof typeof partner.months]?.value ?? null,
+          targetDisplayedValue: partner.months[period as keyof typeof partner.months]?.displayedValue ?? null,
           annualValues: partner.annualValues,
         })),
       }

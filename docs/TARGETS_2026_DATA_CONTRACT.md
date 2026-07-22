@@ -21,11 +21,15 @@ Los originales permanecen fuera del bundle público. El repositorio contiene agr
 - 3.280 celdas con valor o fórmula.
 - 715 fórmulas.
 - 0 errores de fórmula.
+- 715 fórmulas recalculadas independientemente; 0 diferencias entre resultado recalculado y caché almacenado por Excel.
+- 0 hojas, filas o columnas ocultas; 0 nombres definidos; una combinación `A2:N2` por libro.
 - 7 bloques métricos por sucursal.
 - 12 meses por bloque y por fila de partner.
-- 4 filas con identidad no resuelta.
+- 3 filas `NN` con identidad no resuelta y 1 fila sin nombre con identidad inferida por fórmula, sin reemplazar el valor fuente.
 - 5 celdas con contenido fuera de los bloques detectados.
 - 27 observaciones de origen: 4 diferencias mensuales críticas y 23 advertencias de trazabilidad.
+- 144 reconciliaciones mensuales difieren al sumar los valores visibles redondeados por Excel. Se registran como efecto de presentación, separado de las 4 diferencias de valor crudo.
+- 1.525 celdas mensuales fraccionarias en metas de conteo, incluyendo filas de partner y totales de sucursal: 475 Lo Beltran, 596 Nueva Costanera y 454 Santa María.
 
 ## Incidencias de origen
 
@@ -33,7 +37,7 @@ Los originales permanecen fuera del bundle público. El repositorio contiene agr
 - Nueva Costanera, requerimientos abril: total 277,2028994152047, suma 273,20890846497844, diferencia 3,993990950226248.
 - Nueva Costanera, requerimientos mayo: total 329,7475899061379, suma 334,2750107206175, diferencia -4,527420814479626.
 - Nueva Costanera, requerimientos junio: total 335,079462184874, suma 322,09515190691667, diferencia 12,98431027795732.
-- Lo Beltran, fila 78 de cierres UF: sin nombre, con valores y meta anual preservados.
+- Lo Beltran, fila 78 de cierres UF: sin nombre fuente, con valores y meta anual preservados. Las fórmulas `I78:M78` referencian la fila 66 de Fernanada Motta Gonzalez, por lo que la app muestra esa identidad como inferencia trazable, no como dato original.
 - Nueva Costanera: filas `NN` en visitas, ofertas y cierres UF.
 - Nueva Costanera: celdas `H54`, `N54` y `N122` fuera de bloque.
 - Santa María: celdas `G104` y `G105` fuera de bloque.
@@ -54,9 +58,11 @@ Las metas individuales se publican como fuente. Los resultados CRM no se atribuy
 
 En el acumulado enero-junio, 30 de 34 cierres y UF 540.520 de UF 643.670 tienen sucursal atribuible en los archivos CRM. Los cuatro cierres y UF 103.150 sin sucursal no se reparten artificialmente entre oficinas.
 
+La aplicación muestra por separado el valor numérico bruto y la visualización formateada por Excel. Esta distinción es necesaria porque las metas de conteo incluyen asignaciones fraccionarias que Excel puede redondear visualmente. Para cada sucursal, métrica y mes también se conservan dos reconciliaciones: total contra partners usando valores crudos y total visible contra suma de partners visibles.
+
 ## Confidencialidad pendiente
 
-La interfaz exige autenticación, pero `data/targets-2026.json` y `data/targets-cell-manifest.json` están versionados actualmente en un repositorio GitHub público. Por lo tanto, la etiqueta `private_dashboard_only` describe la intención de acceso de la aplicación, no una garantía efectiva sobre los archivos versionados. La corrección profesional es mover ambos datasets a almacenamiento privado con acceso de servidor y retirar su historial del repositorio; no debe simularse privacidad solo ocultando enlaces en la interfaz.
+La interfaz exige autenticación, pero `data/targets-2026.json` y `data/targets-cell-manifest.json` están versionados actualmente en un repositorio GitHub público. Los metadatos declaran explícitamente `repositoryExposure: public_repository` y `confidentialityGuaranteed: false`. La corrección profesional es mover ambos datasets a almacenamiento privado con acceso de servidor y retirar su historial del repositorio; no debe simularse privacidad solo ocultando enlaces en la interfaz.
 
 ## Verificación
 
