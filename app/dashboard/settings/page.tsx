@@ -3,6 +3,7 @@ import ReportDeliveryTargetsManager from '@/components/settings/ReportDeliveryTa
 import ProfileEditor from '@/components/settings/ProfileEditor'
 import DeliveryTelemetryPanel from '@/components/settings/DeliveryTelemetryPanel'
 import ProfileDirectory from '@/components/settings/ProfileDirectory'
+import ReportDirectoryManager from '@/components/settings/ReportDirectoryManager'
 
 const systemRows = [
   { label: 'Version', value: 'v1.0.0 - Produccion' },
@@ -82,6 +83,16 @@ export default async function SettingsPage() {
         </div>
       </div>
 
+      <div className="border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6">
+        <h3 className="text-lg font-semibold text-[var(--n3-text-light)]">Personas, equipos y reportes</h3>
+        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">
+          Administra directores y ejecutivos, sus sucursales y la distribución de reportes sin modificar las fuentes auditadas.
+        </p>
+        <div className="mt-5">
+          <ReportDirectoryManager />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="rounded-2xl border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6">
           <h3 className="text-lg font-semibold text-[var(--n3-text-light)]">Directorio de perfiles</h3>
@@ -138,5 +149,4 @@ export default async function SettingsPage() {
     </div>
   )
 }
-
 
