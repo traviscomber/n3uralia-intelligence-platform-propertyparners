@@ -71,6 +71,12 @@ const navItems = [
     label: 'Reportes IA',
     href: '/dashboard/reportes',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h7l3 3v9H3z" /><polyline points="10,2 10,5 13,5" /><line x1="5" y1="8" x2="11" y2="8" /><line x1="5" y1="11" x2="9" y2="11" /></svg>,
+    exact: true,
+  },
+  {
+    label: 'Reportes automaticos',
+    href: '/dashboard/reportes/autonomos',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="10" /><path d="M5 15h6M8 12v3" /><path d="M4.5 9V7M7 9V5M9.5 9V6M12 9V4" /></svg>,
   },
   {
     label: 'Conocimiento Casas',
