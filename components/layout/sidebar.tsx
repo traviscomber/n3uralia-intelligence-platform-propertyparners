@@ -2,10 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import type { ReactNode } from 'react'
 import { PPLogo } from '@/components/brand/pp-logo'
 import type { Profile } from '@/lib/types'
 
-const navItems = [
+type SidebarItem = { label: string; href: string; icon: ReactNode; exact?: boolean }
+
+const navItems: SidebarItem[] = [
   {
     label: 'Inicio',
     href: '/dashboard',
@@ -58,7 +61,7 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v8c0 1.1 2.7 2 6 2s6-.9 6-2V4" /><path d="M2 8c0 1.1 2.7 2 6 2s6-.9 6-2" /></svg>,
   },
   {
-    label: 'Importar Mercado · MANUAL',
+    label: 'Importar mercado',
     href: '/dashboard/market/import',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1v8" /><path d="M5.5 6.5L8 9l2.5-2.5" /><path d="M3 11.5h10" /><path d="M3 13.5h10" /></svg>,
   },
@@ -78,18 +81,18 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h5l1 1h6v9H2z" /><line x1="5" y1="8" x2="11" y2="8" /><line x1="5" y1="10.5" x2="9" y2="10.5" /></svg>,
   },
   {
-    label: 'Fuentes Casas · VIVO',
+    label: 'Fuentes de casas',
     href: '/dashboard/sources',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><ellipse cx="8" cy="5" rx="5" ry="2" /><path d="M3 5v3c0 1.1 2.2 2 5 2s5-.9 5-2V5" /><path d="M3 8v3c0 1.1 2.2 2 5 2s5-.9 5-2V8" /></svg>,
   },
   {
-    label: 'Configuracion',
+    label: 'Configuración',
     href: '/dashboard/settings',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2.5" /><path d="M8 1.5v1.2M8 13.3v1.2M1.5 8h1.2M13.3 8h1.2M3.3 3.3l.85.85M11.85 11.85l.85.85M11.85 4.15l-.85.85M4.15 11.85l-.85.85" /></svg>,
   },
 ]
 
-const roleNavItems = [
+const roleNavItems: SidebarItem[] = [
   {
     label: 'Resumen ejecutivo',
     href: '/dashboard/ceo',
@@ -107,11 +110,23 @@ const roleNavItems = [
   },
 ]
 
+const ceoSections = [
+  { label: 'Dirección', items: [roleNavItems[0], navItems[1], navItems[12]] },
+  { label: 'Negocio', items: [navItems[7], navItems[8], navItems[11]] },
+  { label: 'Operación', items: [navItems[3], navItems[4], navItems[5], navItems[6]] },
+  { label: 'Administración', items: [navItems[9], navItems[10], navItems[14], navItems[13], navItems[2], navItems[15]] },
+]
+
+function NavigationLinks({ items, pathname }: { items: SidebarItem[]; pathname: string }) {
+  return <ul className="flex flex-col gap-0.5">{items.map((item) => {
+    const isActive = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
+    return <li key={item.href}><Link href={item.href} className="flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-all" style={{ color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)', background: isActive ? 'rgba(215,51,43,0.1)' : 'transparent', borderLeft: isActive ? '2px solid var(--n3-teal)' : '2px solid transparent' }}><span style={{ color: isActive ? 'var(--n3-teal)' : 'var(--n3-text-muted)' }}>{item.icon}</span><span className="truncate text-[13px]">{item.label}</span></Link></li>
+  })}</ul>
+}
+
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const isCeo = profile?.role === 'ceo'
-  const visibleNavItems = isCeo ? [roleNavItems[0], ...navItems] : navItems
-  const visibleRoleNavItems = isCeo ? [] : roleNavItems
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)]">
@@ -120,53 +135,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        <ul className="flex flex-col gap-0.5">
-          {visibleNavItems.map((item) => {
-            const isActive = 'exact' in item && item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-all"
-                  style={{
-                    color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
-                    background: isActive ? 'rgba(215,51,43,0.1)' : 'transparent',
-                    borderLeft: isActive ? '2px solid var(--n3-teal)' : '2px solid transparent',
-                  }}
-                >
-                  <span style={{ color: isActive ? 'var(--n3-teal)' : 'var(--n3-text-muted)' }}>{item.icon}</span>
-                  <span className="truncate text-[13px]">{item.label}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-
-        <div className="mt-4 mb-1 flex items-center gap-2 px-3">
-          <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--n3-text-muted)' }}>Paneles</span>
-          <div className="h-px flex-1" style={{ background: 'var(--n3-line)' }} />
-        </div>
-        <ul className="flex flex-col gap-0.5">
-          {visibleRoleNavItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-all"
-                  style={{
-                    color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
-                    background: isActive ? 'rgba(139,169,167,0.08)' : 'transparent',
-                    borderLeft: isActive ? '2px solid var(--n3-teal)' : '2px solid transparent',
-                  }}
-                >
-                  <span style={{ color: isActive ? 'var(--n3-teal)' : 'var(--n3-text-muted)' }}>{item.icon}</span>
-                  <span className="truncate text-[13px]">{item.label}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+        {isCeo ? ceoSections.map((section) => <div key={section.label} className="mb-4"><div className="mb-1 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">{section.label}</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={section.items} pathname={pathname} /></div>) : <><NavigationLinks items={navItems} pathname={pathname} /><div className="mb-1 mt-4 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">Paneles</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={roleNavItems} pathname={pathname} /></>}
       </nav>
 
       <div className="border-t border-[var(--n3-line)] px-3 py-3">

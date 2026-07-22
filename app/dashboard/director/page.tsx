@@ -111,7 +111,7 @@ export default function DirectorDashboard() {
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold" style={{ color: directorScorecard.overall !== null && directorScorecard.overall >= 80 ? '#16a34a' : directorScorecard.overall !== null && directorScorecard.overall >= 65 ? '#d97706' : '#dc2626' }}>
-                {directorScorecard.overall === null ? 'â€”' : directorScorecard.overall}
+                {directorScorecard.overall === null ? 'n/d' : directorScorecard.overall}
               </div>
               <div className="text-[11px]" style={{ color: '#6b7280' }}>{directorScorecard.trend}</div>
             </div>
@@ -124,7 +124,7 @@ export default function DirectorDashboard() {
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(status) }} />
                 </div>
                 <div className="text-lg font-bold" style={{ color: '#111111' }}>
-                  {current === null ? 'â€”' : `${current}${definition.unit ? definition.unit : ''}`}
+                  {current === null ? 'n/d' : `${current}${definition.unit ? definition.unit : ''}`}
                 </div>
                 <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{definition.note}</div>
               </div>
@@ -229,4 +229,3 @@ export default function DirectorDashboard() {
     </div>
   )
 }
-

@@ -1,12 +1,20 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import crm from '@/data/crm-intelligence.json'
 import valuation from '@/data/valuation-intelligence.json'
 import market from '@/data/market-source-intelligence.json'
 import { buildBoardReport } from '@/lib/board-report'
+import { createClient } from '@/lib/supabase/server'
 
 function n(value: number | null, digits = 0) { return value == null ? 'n/d' : value.toLocaleString('es-CL', { maximumFractionDigits: digits }) }
 
-export default function DashboardHome() {
+export default async function DashboardHome() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+    if (profile?.role === 'ceo') redirect('/dashboard/ceo')
+  }
   const report = buildBoardReport('2026-06')
   const month = crm.months.find((item) => item.period === report.period)!
   return <div className="mx-auto max-w-[1600px] space-y-7 pb-16">

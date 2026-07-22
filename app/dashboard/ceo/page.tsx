@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
@@ -71,25 +71,25 @@ export default function CeoDashboard() {
   }, [dataQuality.sourceCoverage, executiveMetrics, fallbackSummary.stock, salesCompliance.compliance, ytd.stockChange])
 
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8" style={{ background: '#fbfbfa' }}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: '#111111', color: 'var(--n3-teal)' }}>CEO</span>
-            <span className="text-xs" style={{ color: '#6b7280' }}>Vista Ejecutiva</span>
+            <span className="text-xs" style={{ color: '#6b7280' }}>Resumen ejecutivo</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>Panel de Comando</h1>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>Panel de gestión</h1>
             <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Resumen global del negocio · corte auditado enero–junio 2026</p>
         </div>
         <div className="text-right">
-          <div className="text-xs" style={{ color: '#6b7280' }}>Acumulado 6 meses</div>
-          <div className="text-sm font-semibold" style={{ color: '#111111' }}>{new Date().toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}</div>
+          <div className="text-xs" style={{ color: '#6b7280' }}>Corte de datos</div>
+          <div className="text-sm font-semibold" style={{ color: '#111111' }}>Junio 2026</div>
         </div>
       </div>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Ventas totales"     value={fmt(totals.ventas)}           sub="propiedades cerradas (6m)"  border="var(--n3-teal)" />
         <KpiCard
           label="UF vendidas"
@@ -102,11 +102,11 @@ export default function CeoDashboard() {
       </div>
 
       {/* Executive Scorecard */}
-      <div className="grid grid-cols-5 gap-5 mb-8">
-        <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+      <div className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-5">
+        <div className="bg-white rounded-lg p-5 xl:col-span-2" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score ejecutivo</h2>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Índice ejecutivo</h2>
               <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Resumen para CEO y directorio</p>
             </div>
             <div className="text-right">
@@ -116,7 +116,7 @@ export default function CeoDashboard() {
               <div className="text-[11px]" style={{ color: '#6b7280' }}>{executiveStates.trend}</div>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {executiveStates.states.map(metric => (
               <div key={metric.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -124,7 +124,7 @@ export default function CeoDashboard() {
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(metric.status) }} />
                 </div>
                 <div className="text-lg font-bold" style={{ color: '#111111' }}>
-                  {metric.current === null ? 'â€”' : metric.unit ? `${metric.current}${metric.unit}` : metric.current}
+                  {metric.current === null ? 'n/d' : metric.unit ? `${metric.current}${metric.unit}` : metric.current}
                 </div>
                 <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{metric.note}</div>
               </div>
@@ -132,7 +132,7 @@ export default function CeoDashboard() {
           </div>
         </div>
 
-        <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+        <div className="bg-white rounded-lg p-5 xl:col-span-2" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
               <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas CEO</h2>
@@ -150,7 +150,7 @@ export default function CeoDashboard() {
                   </div>
                   <div className="text-right">
                     <div className="text-[11px] font-medium" style={{ color: '#111111' }}>{metric.cadence}</div>
-                    <div className="text-[11px]" style={{ color: '#6b7280' }}>Owner: {metric.owner}</div>
+                    <div className="text-[11px]" style={{ color: '#6b7280' }}>Responsable: {metric.owner}</div>
                   </div>
                 </div>
                 <div className="text-[11px] mt-2" style={{ color: '#6b7280' }}>{metric.threshold}</div>
@@ -159,7 +159,7 @@ export default function CeoDashboard() {
           </div>
         </div>
 
-        <div className="col-span-1 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
+        <div className="bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Reportes auditados</h2>
@@ -174,14 +174,14 @@ export default function CeoDashboard() {
       </div>
 
       {/* Director Ranking + Sales Chart */}
-      <div className="grid grid-cols-5 gap-5 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-5">
         {/* Ranking table */}
-        <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
+        <div className="overflow-hidden rounded-lg bg-white xl:col-span-3" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas por sucursal</h2>
             <span className="text-xs text-right" style={{ color: '#6b7280' }}>6 meses · {attributedBranchSales}/{ytd.salesCount} cierres y UF {attributedBranchUf.toLocaleString('es-CL')}/{ytd.salesUf.toLocaleString('es-CL')} atribuibles a sucursal</span>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="min-w-[720px] w-full text-sm">
             <thead>
               <tr style={{ background: '#f8fbfa' }}>
                 <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>#</th>
@@ -227,13 +227,13 @@ export default function CeoDashboard() {
                 )
               })}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {/* Sales trend */}
-        <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
+        <div className="rounded-lg bg-white xl:col-span-2" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Tendencia operativa real</h2>
+            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Tendencia operativa</h2>
             <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Últimos 6 meses</p>
           </div>
           <div className="px-4 pt-4 pb-2">

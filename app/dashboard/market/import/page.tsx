@@ -136,7 +136,7 @@ export default function MarketImportPage() {
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Carga guiada</p>
               <h2 className="mt-1 text-xl font-semibold text-gray-900">Archivo de Inteligencia de Mercado</h2>
               <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
-                Mapea automÃ¡ticamente nombres de columnas frecuentes como `barrio`, `precio_uf`, `precio_m2_uf`, `absorcion`, `inventario` y `dias_en_mercado`.
+                Reconoce nombres de columnas frecuentes como `barrio`, `precio_uf`, `precio_m2_uf`, `absorcion`, `inventario` y `dias_en_mercado`.
               </p>
             </div>
             <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
@@ -364,11 +364,11 @@ export default function MarketImportPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Formato esperado</p>
             <ul className="mt-3 space-y-2 text-sm" style={{ color: '#374151' }}>
-              <li>â€¢ `neighborhood` o `barrio` es obligatorio.</li>
-              <li>â€¢ `absorption_rate` acepta `0.85` o `85`.</li>
-              <li>â€¢ `source` y `snapshot_date` son opcionales.</li>
-              <li>â€¢ `kind=market_data` actualiza `market_data` y el historico `neighborhood_market_data`.</li>
-              <li>â€¢ `kind=benchmark_data` inserta en `external_market_benchmarks`.</li>
+              <li>• `neighborhood` o `barrio` es obligatorio.</li>
+              <li>• `absorption_rate` acepta `0.85` o `85`.</li>
+              <li>• `source` y `snapshot_date` son opcionales.</li>
+              <li>• `kind=market_data` actualiza `market_data` y el histórico `neighborhood_market_data`.</li>
+              <li>• `kind=benchmark_data` inserta en `external_market_benchmarks`.</li>
             </ul>
           </div>
         </div>
@@ -376,5 +376,4 @@ export default function MarketImportPage() {
     </div>
   )
 }
-
 

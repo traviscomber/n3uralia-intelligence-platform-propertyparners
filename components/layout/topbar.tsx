@@ -27,11 +27,12 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
     router.refresh()
   }
 
-  const dateStr = new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const consultationDate = new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+  const dateLabel = isAudited ? 'Corte de datos: junio 2026' : `Fecha de consulta: ${consultationDate}`
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--n3-line)] bg-[var(--n3-black)] px-6 py-4">
-      <p className="text-xs capitalize" style={{ color: 'var(--n3-text-muted)' }}>{dateStr}</p>
+      <p className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>{dateLabel}</p>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 rounded-full border border-[var(--n3-line)] px-2.5 py-1 text-xs" style={{ background: 'rgba(255,255,255,0.04)', color: provenance.color }}>
           <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: provenance.color }} />

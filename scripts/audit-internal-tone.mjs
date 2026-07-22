@@ -3,6 +3,7 @@ import path from 'node:path'
 
 const root = path.resolve('app/dashboard')
 const forbidden = [
+  /(?:â|Ã|�)/u,
   /\brevoluciona\w*/iu,
   /\btransforma\w*/iu,
   /\bpotencia\w*/iu,
