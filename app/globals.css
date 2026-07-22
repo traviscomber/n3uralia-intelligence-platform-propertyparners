@@ -149,6 +149,108 @@
   }
 }
 
+/* Screen theme normalization
+ * Legacy modules used white Tailwind cards. Inside the Property Partners
+ * product they become the same charcoal/red system used by Datos CRM.
+ * Print remains untouched so board reports keep a white paper canvas. */
+@media screen {
+  .dashboard-content :is(
+    .bg-white,
+    .bg-gray-50,
+    .bg-gray-100,
+    [class*="bg-[#cacaca]"],
+    [class*="bg-[#cfcfcf]"],
+    [class*="bg-[#d5d5d5]"],
+    [class*="bg-[#d6d6d6]"],
+    [class*="bg-[#ededed]"],
+    [class*="bg-[#edf"],
+    [class*="bg-[#f0"],
+    [class*="bg-[#f2"],
+    [class*="bg-[#f3"],
+    [class*="bg-[#f4"],
+    [class*="bg-[#f5"],
+    [class*="bg-[#f6"],
+    [class*="bg-[#f7"],
+    [class*="bg-[#f8"],
+    [class*="bg-[#fa"],
+    [class*="bg-[#fff"]
+  ),
+  .dashboard-content :is(
+    [style*="background: #fff"], [style*="background:#fff"],
+    [style*="background: #fb"], [style*="background:#fb"],
+    [style*="background: #f9"], [style*="background:#f9"],
+    [style*="background: #f8"], [style*="background:#f8"],
+    [style*="background: #f5"], [style*="background:#f5"],
+    [style*="background: #f0"], [style*="background:#f0"],
+    [style*="background: #ee"], [style*="background:#ee"]
+  ) {
+    background-color: #0c1111 !important;
+    color: var(--n3-text-light) !important;
+    border-color: var(--n3-line) !important;
+  }
+
+  .dashboard-content :is(.border-gray-100, .border-gray-200, .border-gray-300) {
+    border-color: var(--n3-line) !important;
+  }
+
+  .dashboard-content :is(.text-black, .text-gray-700, .text-gray-800, .text-gray-900),
+  .dashboard-content :is(
+    [class~="text-[#102019]"],
+    [class~="text-[#173b31]"],
+    [class~="text-[#1b2b25]"],
+    [class~="text-[#202522]"],
+    [class~="text-[#242424]"]
+  ),
+  .dashboard-content :is(
+    [style*="color: #111111"],
+    [style*="color:#111111"],
+    [style*="color: #111827"],
+    [style*="color:#111827"],
+    [style*="color: #374151"],
+    [style*="color:#374151"]
+  ) {
+    color: var(--n3-text-light) !important;
+  }
+
+  .dashboard-content :is(.text-gray-400, .text-gray-500, .text-gray-600),
+  .dashboard-content :is(
+    [class~="text-[#4f5753]"], [class~="text-[#5f6864]"], [class~="text-[#5f7068]"],
+    [class~="text-[#607169]"], [class~="text-[#616161]"], [class~="text-[#626262]"],
+    [class~="text-[#656b68]"], [class~="text-[#66756e]"], [class~="text-[#686868]"],
+    [class~="text-[#686e6b]"], [class~="text-[#688078]"], [class~="text-[#6a6a6a]"],
+    [class~="text-[#6b7280]"], [class~="text-[#6d746f]"], [class~="text-[#718078]"],
+    [class~="text-[#728079]"], [class~="text-[#737373]"], [class~="text-[#75827c]"],
+    [class~="text-[#87928d]"], [class~="text-[#8f8f8f]"]
+  ),
+  .dashboard-content :is([style*="color: #6b7280"], [style*="color:#6b7280"]) {
+    color: var(--n3-text-muted) !important;
+  }
+
+  .dashboard-content :is(
+    [class~="text-[#155946]"], [class~="text-[#175343]"], [class~="text-[#1b6451]"]
+  ) { color: #65d3a5 !important; }
+
+  .dashboard-content [class~="text-[#1565c0]"] { color: #6aa9ff !important; }
+
+  .dashboard-content :is(
+    [class~="text-[#5b4518]"], [class~="text-[#705d19]"], [class~="text-[#735d12]"]
+  ) { color: #f6c453 !important; }
+
+  .dashboard-content :is(
+    [class~="text-[#8f2822]"], [class~="text-[#982d27]"], [class~="text-[#a72f28]"]
+  ) { color: #ff766f !important; }
+
+  .dashboard-content :is(input, select, textarea) {
+    background-color: #080d0d !important;
+    color: var(--n3-text-light) !important;
+    border-color: rgba(215, 51, 43, 0.35) !important;
+  }
+
+  .dashboard-content :is(input, textarea)::placeholder {
+    color: #87928d !important;
+  }
+}
+
 .dark {
   color-scheme: dark;
 }
