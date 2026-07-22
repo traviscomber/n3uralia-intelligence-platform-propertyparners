@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
+    "tone:internal": "node scripts/audit-internal-tone.mjs",
     "data:provenance": "node scripts/audit-runtime-provenance.mjs",
     "crm:build": "node scripts/build-crm-intelligence.mjs",
     "crm:verify": "node scripts/verify-crm-intelligence.mjs",

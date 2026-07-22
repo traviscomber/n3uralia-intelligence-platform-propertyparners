@@ -133,8 +133,8 @@ export default function ValorizadorPage() {
         <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e23b31]">Property Partners Vitacura</p>
-            <h1 className="mt-2 text-3xl font-semibold">Valorización profesional</h1>
-            <p className="mt-2 max-w-3xl text-sm text-[#aaa]">Motor determinístico basado en las dos plantillas reales. Sin bonos automáticos por edad, piso, dormitorios o amenities.</p>
+            <h1 className="mt-2 text-3xl font-semibold">Valorización de propiedades</h1>
+            <p className="mt-2 max-w-3xl text-sm text-[#aaa]">Cálculo determinístico basado en las dos plantillas fuente. Sin ajustes automáticos por edad, piso, dormitorios o equipamiento.</p>
           </div>
           <Link href="/dashboard/market/fuentes" className="border border-[#d7332b] px-4 py-2 text-xs font-semibold hover:bg-[#d7332b]">Revisar Portal, KML y CBRS</Link>
         </div>
@@ -183,7 +183,7 @@ export default function ValorizadorPage() {
           )}
 
           <div className="mt-5 border-l-4 border-[#f39c12] bg-[#fff7e6] p-3 text-xs leading-relaxed text-[#5b4518]">
-            El UF/m² es una decisión profesional sustentada en comparables revisados. El sistema no lo completa con promedios, IA o factores ocultos.
+            El UF/m² debe ser definido por el responsable a partir de comparables revisados. El sistema no lo completa con promedios, IA ni factores adicionales.
           </div>
         </div>
 

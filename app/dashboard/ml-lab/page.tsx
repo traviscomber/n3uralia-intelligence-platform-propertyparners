@@ -28,9 +28,9 @@ export default function MlLabPage() {
       <header className="overflow-hidden border border-white/10 bg-black text-white">
         <div className="grid gap-8 p-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:p-10">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#e23b31]">ML Lab · Research only</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight lg:text-4xl">Aprender sin alterar la fuente</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-[#bcbcbc]">Laboratorio para construir, evaluar y comparar modelos de valorización. La data auditada es inmutable y el valorizador determinístico permanece como baseline profesional.</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#e23b31]">ML Lab · uso interno</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight lg:text-4xl">Estado de preparación del modelo</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[#bcbcbc]">Control de datasets, requisitos y validaciones para modelos de valorización. La data auditada es inmutable y las reglas Excel son el baseline.</p>
           </div>
           <div className="grid grid-cols-2 gap-px self-end bg-white/15">
             {[
@@ -83,14 +83,14 @@ export default function MlLabPage() {
               ['Validación', 'Split temporal; nunca mezclar futuro dentro del entrenamiento.'],
               ['Baseline', 'Comparación obligatoria contra reglas Property Partners.'],
               ['Privacidad', 'Sin nombres, RUT, compradores ni vendedores.'],
-              ['Activación', 'Revisión profesional previa a cualquier uso asistido.'],
+              ['Activación', 'Aprobación responsable previa a cualquier uso asistido.'],
             ].map(([title, detail]) => <div key={title} className="bg-white p-4"><p className="text-xs font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-[#666]">{detail}</p></div>)}
           </div>
         </article>
 
         <article className="border border-[#d4d4d4] bg-white p-5 lg:p-6">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#666]">Métricas requeridas</p>
-          <h2 className="mt-2 text-xl font-semibold">Cómo se demostrará una mejora</h2>
+          <h2 className="mt-2 text-xl font-semibold">Criterios de evaluación</h2>
           <div className="mt-5 space-y-3">
             {[
               ['MAE en UF', 'Error absoluto promedio fuera de muestra.'],
@@ -138,7 +138,7 @@ export default function MlLabPage() {
       <section className="border border-[#d4d4d4] bg-black p-5 text-white lg:p-6">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e23b31]">Contrato verificable · v{lab.experimentContract.version}</p><h2 className="mt-2 text-xl font-semibold">Linaje y activación del experimento</h2><p className="mt-2 max-w-2xl text-xs leading-5 text-[#aaa]">Este contrato es leído por la aplicación y por la verificación automática; un cambio de metodología debe modificar ambos de forma explícita.</p></div>
-          <span className="border border-[#d7332b] bg-[#160d0c] px-3 py-2 text-xs font-semibold text-[#ff766f]">Activación profesional requerida</span>
+          <span className="border border-[#d7332b] bg-[#160d0c] px-3 py-2 text-xs font-semibold text-[#ff766f]">Aprobación responsable requerida</span>
         </div>
         <div className="mt-5 grid gap-px bg-white/15 sm:grid-cols-2 lg:grid-cols-4">{[
           ['Objetivo', 'Precio de cierre registrado en UF'],
@@ -149,7 +149,7 @@ export default function MlLabPage() {
       </section>
 
       <footer className="border border-[#d4d4d4] bg-black p-5 text-white">
-        <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm font-semibold">Principio de seguridad del ML Lab</p><p className="mt-1 text-xs text-[#aaa]">Un modelo experimental nunca modifica la data, las reglas de valorización ni una estimación comercial aprobada.</p></div><div className="flex gap-2"><Link href="/dashboard/inteligencia" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Observatorio</Link><Link href="/dashboard/valorizador" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Baseline</Link><Link href="/dashboard/market/fuentes" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Fuentes</Link></div></div>
+        <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm font-semibold">Restricción de uso</p><p className="mt-1 text-xs text-[#aaa]">Un modelo experimental no modifica la data, las reglas de valorización ni una estimación comercial aprobada.</p></div><div className="flex gap-2"><Link href="/dashboard/inteligencia" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Observatorio</Link><Link href="/dashboard/valorizador" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Baseline</Link><Link href="/dashboard/market/fuentes" className="border border-white/20 px-3 py-2 text-xs font-semibold hover:bg-white/10">Fuentes</Link></div></div>
       </footer>
     </div>
   )

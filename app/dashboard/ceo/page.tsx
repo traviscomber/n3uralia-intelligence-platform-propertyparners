@@ -107,7 +107,7 @@ export default function CeoDashboard() {
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
               <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score ejecutivo</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Lectura profesional para CEO y directorio</p>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Resumen para CEO y directorio</p>
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold" style={{ color: executiveStates.score >= 80 ? 'var(--n3-teal)' : executiveStates.score >= 65 ? '#f59e0b' : '#ef4444' }}>
