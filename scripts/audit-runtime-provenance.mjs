@@ -1,21 +1,26 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { dirname, extname, join, relative, resolve } from 'node:path'
 
-const auditedViews = [
-  'app/dashboard/page.tsx',
-  'app/dashboard/ceo/page.tsx',
-  'app/dashboard/director/page.tsx',
-  'app/dashboard/control/page.tsx',
-  'app/dashboard/datos-crm/page.tsx',
-  'app/dashboard/inteligencia/page.tsx',
-  'app/dashboard/market/page.tsx',
-  'app/dashboard/market/fuentes/page.tsx',
-  'app/dashboard/metas/page.tsx',
-  'app/dashboard/ml-lab/page.tsx',
-  'app/dashboard/presentaciones/page.tsx',
-  'app/dashboard/properties/page.tsx',
-  'app/dashboard/reportes/directorio/page.tsx',
-  'app/dashboard/valorizador/page.tsx',
-]
+const root = process.cwd()
+const dashboardRoot = join(root, 'app/dashboard')
+const operationalRoutes = new Set([
+  'app/dashboard/knowledge/page.tsx',
+  'app/dashboard/market/import/page.tsx',
+  'app/dashboard/settings/page.tsx',
+  'app/dashboard/sources/page.tsx',
+])
+
+function walk(dir) {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name)
+    return statSync(path).isDirectory() ? walk(path) : [path]
+  })
+}
+
+const auditedViews = walk(dashboardRoot)
+  .filter((file) => file.endsWith('/page.tsx'))
+  .map((file) => relative(root, file).replaceAll('\\', '/'))
+  .filter((file) => !operationalRoutes.has(file))
 
 const forbidden = [
   [/Math\.random\s*\(/, 'random values'],
@@ -25,16 +30,29 @@ const forbidden = [
   [/@\/lib\/vitacura/, 'hardcoded neighborhood intelligence'],
 ]
 
-let failed = false
-for (const file of auditedViews) {
-  const source = readFileSync(file, 'utf8')
-  for (const [pattern, label] of forbidden) {
-    if (pattern.test(source)) {
-      console.error(`FAIL ${file}: ${label}`)
-      failed = true
-    }
-  }
+function resolveImport(fromFile, specifier) {
+  const base = specifier.startsWith('@/') ? join(root, specifier.slice(2)) : resolve(dirname(fromFile), specifier)
+  const candidates = extname(base) ? [base] : [`${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx')]
+  return candidates.find((candidate) => existsSync(candidate))
 }
 
-if (failed) process.exit(1)
-console.log(`PASS ${auditedViews.length} audited views contain no mock, synthetic, random or unreconciled business sources.`)
+const checked = new Set()
+function inspect(file, entry) {
+  if (checked.has(file)) return []
+  checked.add(file)
+  const source = readFileSync(file, 'utf8')
+  const failures = forbidden.filter(([pattern]) => pattern.test(source)).map(([, label]) => `${entry} -> ${relative(root, file)}: ${label}`)
+  const imports = [...source.matchAll(/(?:from\s+|import\s*\()['"]([^'"]+)['"]/g)]
+    .map((match) => match[1])
+    .filter((specifier) => specifier.startsWith('@/') || specifier.startsWith('.'))
+    .map((specifier) => resolveImport(file, specifier))
+    .filter(Boolean)
+  return failures.concat(imports.flatMap((dependency) => inspect(dependency, entry)))
+}
+
+const failures = auditedViews.flatMap((entry) => inspect(join(root, entry), entry))
+if (failures.length) {
+  failures.forEach((failure) => console.error(`FAIL ${failure}`))
+  process.exit(1)
+}
+console.log(`PASS ${auditedViews.length} audited routes and ${checked.size} local dependencies contain no mock, synthetic, random or unreconciled business sources.`)

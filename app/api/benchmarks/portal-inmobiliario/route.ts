@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import puppeteer from 'puppeteer'
+import { requireExecutiveAccess } from '@/lib/api-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -158,7 +159,12 @@ async function getLatestBenchmark() {
   return (data?.[0] || null) as PortalBenchmarkSnapshot | null
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido a CEO y administradores.' }, { status: access.status })
+  if (request.headers.get('x-live-source-confirmed') !== 'true') {
+    return NextResponse.json({ error: 'Debes confirmar explícitamente la consulta de una fuente viva no conciliada.' }, { status: 428 })
+  }
   try {
     const snapshot = await withTimeout(fetchPortalBenchmarkSnapshot())
 

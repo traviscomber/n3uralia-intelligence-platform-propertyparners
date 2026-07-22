@@ -47,6 +47,23 @@ export async function updateSession(request: NextRequest) {
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
     }
+
+    if (user && request.nextUrl.pathname.startsWith('/dashboard')) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      const role = profile?.role || user.user_metadata?.role || 'seller'
+      const executiveOnly = ['/dashboard/ceo', '/dashboard/settings', '/dashboard/sources', '/dashboard/market/import', '/dashboard/knowledge']
+      const directorOrExecutive = ['/dashboard/director', '/dashboard/control']
+      const needsExecutive = executiveOnly.some((path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(`${path}/`))
+      const needsDirector = directorOrExecutive.some((path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(`${path}/`))
+      const isExecutive = role === 'admin' || role === 'ceo'
+      const isDirector = isExecutive || role === 'director'
+
+      if ((needsExecutive && !isExecutive) || (needsDirector && !isDirector)) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   return supabaseResponse
