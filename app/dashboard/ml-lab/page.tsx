@@ -34,7 +34,7 @@ export default function MlLabPage() {
           </div>
           <div className="grid grid-cols-2 gap-px self-end bg-white/15">
             {[
-              ['Estado', 'Laboratorio'],
+              ['Entrenamiento precio', lab.canTrainPriceModel ? 'Habilitado' : 'Bloqueado'],
               ['Modelos entrenados', lab.modelVersions],
               ['Modelos aprobados', lab.approvedVersions],
               ['Uso comercial', 'Desactivado'],
@@ -46,21 +46,29 @@ export default function MlLabPage() {
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {[
-          ['Ofertas válidas', lab.validOffers, 'Portal Inmobiliario'],
-          ['Publicaciones sin señal de arriendo', lab.eligibleOffers, '7 señales de arriendo excluidas'],
-          ['Activos registrales CBRS', lab.cbrsRows, 'No equivale a compraventas residenciales'],
-          ['Polígonos', lab.polygonCount, 'Barrios fuente'],
-          ['Versiones ML', lab.modelVersions, 'Ninguna entrenada'],
+          ['Publicaciones únicas', lab.validOffers, 'IDs Portal; no propiedades canónicas'],
+          ['Eventos registrales', lab.cbrsEvents, `${number(lab.cbrsRows)} activos CBRS`],
+          ['Activos residenciales', lab.residentialCbrsRows, 'Departamento o casa-habitación'],
+          ['Gates disponibles', lab.readyChecks, `${lab.blockingChecks} gates bloquean entrenamiento`],
+          ['Pares confirmados', 0, 'Portal ↔ CBRS'],
         ].map(([label, value, detail]) => <article key={label} className="border border-[#dedede] bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6d746f]">{label}</p><p className="mt-2 text-3xl font-semibold text-black">{number(Number(value))}</p><p className="mt-2 text-[11px] text-[#777]">{detail}</p></article>)}
       </section>
 
       <section className="border border-[#d4d4d4] bg-white">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#d4d4d4] p-5">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d7332b]">Preparación real</p><h2 className="mt-2 text-xl font-semibold">Condiciones antes de entrenar</h2></div>
-          <p className="text-xs text-[#777]">Ningún estado se completa manualmente</p>
+          <p className="text-xs text-[#777]">Estados calculados desde la inteligencia auditada</p>
         </div>
         <div className="grid gap-px bg-[#d5d5d5] md:grid-cols-2 xl:grid-cols-3">
-          {lab.checks.map((check) => <article key={check.label} className="bg-[#f6f6f6] p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6d746f]">{check.label}</p><p className="mt-2 text-xl font-semibold">{check.value}</p></div><span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${statusStyle(check.status)}`}>{statusLabel(check.status)}</span></div><p className="mt-4 text-xs leading-5 text-[#656b68]">{check.evidence}</p></article>)}
+          {lab.checks.map((check) => <article key={check.label} className="bg-[#f6f6f6] p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6d746f]">{check.label}</p><p className="mt-2 text-xl font-semibold">{check.value}</p></div><span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${statusStyle(check.status)}`}>{statusLabel(check.status)}</span></div><p className="mt-4 text-xs font-semibold text-[#343936]">Requisito: {check.requirement}</p><p className="mt-2 text-xs leading-5 text-[#656b68]">{check.evidence}</p></article>)}
+        </div>
+      </section>
+
+      <section className="border border-[#d4d4d4] bg-white">
+        <div className="border-b border-[#d4d4d4] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d7332b]">Separación obligatoria</p><h2 className="mt-2 text-xl font-semibold">Preparación por tipo de propiedad</h2></div>
+        <div className="grid gap-px bg-[#d5d5d5] md:grid-cols-2">
+          <article className="bg-[#f6f6f6] p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">Departamentos</h3><span className={`${statusStyle('partial')} rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase`}>Parcial</span></div><p className="mt-4 text-3xl font-semibold">{number(lab.apartmentRows)}</p><p className="mt-1 text-xs text-[#666]">filas Portal auditadas</p><p className="mt-4 text-xs leading-5 text-[#555]">{number(lab.apartmentGeoAssigned)} tienen asignación geográfica única. Los {number(lab.projectRows)} registros de proyectos permanecen identificados como universo separado.</p></article>
+          <article className="bg-[#f6f6f6] p-5"><div className="flex items-center justify-between"><h3 className="font-semibold">Casas</h3><span className={`${statusStyle('blocked')} rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase`}>Bloqueado</span></div><p className="mt-4 text-3xl font-semibold">{number(lab.houseRows)}</p><p className="mt-1 text-xs text-[#666]">filas Portal auditadas</p><p className="mt-4 text-xs leading-5 text-[#555]">{number(lab.houseGeoAssigned)} tienen asignación geográfica por coordenadas. La fuente no habilita todavía las áreas construida y de terreno separadas exigidas por el baseline.</p></article>
         </div>
       </section>
 
@@ -114,10 +122,17 @@ export default function MlLabPage() {
 
       <section className="grid gap-4 lg:grid-cols-3">
         {[
-          ['01', 'Construir pares canónicos', 'Relacionar oferta y cierre con reglas auditables, sin coincidencias aproximadas silenciosas.', 'Bloqueado'],
-          ['02', 'Versionar dataset', 'Registrar alcance, exclusiones, hashes, período y cobertura de cada conjunto derivado.', 'Pendiente'],
-          ['03', 'Entrenar challenger', 'Ejecutar modelos separados y compararlos con el baseline determinístico.', 'Pendiente'],
+          ['01', 'Canonizar propiedades y eventos', 'Derivar snapshots Portal y eventos residenciales CBRS sin modificar las fuentes.', 'Pendiente'],
+          ['02', 'Construir pares y versionar', 'Relacionar oferta y cierre con reglas auditables; registrar hashes, período, exclusiones y cobertura.', 'Bloqueado'],
+          ['03', 'Entrenar challenger temporal', 'Separar casas y departamentos y compararlos fuera de muestra con el baseline Excel.', 'Pendiente'],
         ].map(([step, title, detail, state]) => <article key={step} className="border border-[#d4d4d4] bg-[#f3f3f3] p-5"><div className="flex items-center justify-between"><span className="text-xs font-bold text-[#d7332b]">{step}</span><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#777]">{state}</span></div><h3 className="mt-4 text-lg font-semibold">{title}</h3><p className="mt-2 text-xs leading-5 text-[#666]">{detail}</p></article>)}
+      </section>
+
+      <section className="border border-[#d4d4d4] bg-[#f3f3f3] p-5 lg:p-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d7332b]">Guardrails del modelo</p>
+        <h2 className="mt-2 text-xl font-semibold">Variables que no se inventarán</h2>
+        <p className="mt-2 text-xs leading-5 text-[#666]">La metodología fuente prohíbe ajustes automáticos que no estén respaldados por sus Excel.</p>
+        <div className="mt-4 flex flex-wrap gap-2">{lab.prohibitedAdjustments.map((item) => <span key={item} className="border border-[#d4d4d4] bg-white px-3 py-2 text-xs">{item}</span>)}</div>
       </section>
 
       <footer className="border border-[#d4d4d4] bg-black p-5 text-white">
