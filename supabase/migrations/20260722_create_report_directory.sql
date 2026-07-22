@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS report_branch_assignments (
 );
 
 CREATE INDEX IF NOT EXISTS report_branch_assignments_lookup_idx ON report_branch_assignments(branch_name, assignment_role, active);
+CREATE INDEX IF NOT EXISTS report_branch_assignments_person_id_idx ON report_branch_assignments(person_id);
 
 CREATE TABLE IF NOT EXISTS report_subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -65,7 +66,8 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = pg_catalog;
 
 DROP TRIGGER IF EXISTS report_people_updated_at ON report_people;
 CREATE TRIGGER report_people_updated_at BEFORE UPDATE ON report_people FOR EACH ROW EXECUTE FUNCTION report_directory_set_updated_at();
@@ -81,3 +83,4 @@ ALTER TABLE report_directory_audit_log ENABLE ROW LEVEL SECURITY;
 
 -- Access is intentionally service-role only through authenticated CEO/admin APIs.
 REVOKE ALL ON report_people, report_branch_assignments, report_subscriptions, report_directory_audit_log FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION report_directory_set_updated_at() FROM PUBLIC, anon, authenticated;
