@@ -2,9 +2,8 @@
 
 import { useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import type { AgentActivity } from '@/lib/types'
 import { PP_SCORECARD_DEFINITIONS, assessMetricStatus } from '@/lib/pp-scorecard'
-import { buildAgentFallbackRows, buildOperationalSeries, getLatestLeadSnapshot, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
+import { buildAgentFallbackRows, buildOperationalSeries, getLatestLeadSnapshot, getOperationalSummary, getYtdSummary } from '@/lib/crm-snapshot'
 import { getTargetSource } from '@/lib/targets-2026'
 
 type StatusKey = 'on_track' | 'warning' | 'behind' | 'inactive'
@@ -41,9 +40,7 @@ export default function DirectorDashboard() {
   const chartData = buildOperationalSeries(6).map(({ mes, ventas, captaciones }) => ({ mes, ventas, captaciones }))
   const leadSnapshot = getLatestLeadSnapshot()
   const ytd = getYtdSummary()
-  const directorActions = getRoleActions('director')
   const targets = getTargetSource()
-  const activities: AgentActivity[] = []
   const directorScorecard = useMemo(() => {
     const states = PP_SCORECARD_DEFINITIONS.director.map((definition) => {
       const current = definition.id === 'classification-coverage'
@@ -71,8 +68,6 @@ export default function DirectorDashboard() {
       trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
     }
   }, [fallbackSummary.stock, fallbackSummary.suspended, leadSnapshot.classificationCoverage, leadSnapshot.staleOver15Rate])
-
-  const ACTIVITY_COLORS: Record<string, string> = { llamada: 'var(--n3-teal)', visita: '#6b7280', oferta: '#0ea5e9', cierre: 'var(--n3-teal)' }
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
@@ -231,44 +226,7 @@ export default function DirectorDashboard() {
         </div>
       </div>
 
-      {/* Activities Pending */}
-      <div className="bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
-        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
-          <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Acciones recomendadas para dirección</h2>
-          <span className="text-xs" style={{ color: '#6b7280' }}>Corte CRM validado</span>
-        </div>
-        {activities.length === 0 ? (
-          <div className="grid grid-cols-2 gap-0">
-            {directorActions.map((item, index) => (
-              <div key={item.title} className="px-5 py-4" style={{ borderRight: index % 2 === 0 ? '1px solid #f0f5f3' : undefined }}>
-                <div className="text-[12px] font-semibold" style={{ color: '#111111' }}>{item.title}</div>
-                <p className="mt-1 text-[11px]" style={{ color: '#6b7280' }}>{item.evidence}</p>
-                <p className="mt-2 text-[12px] font-medium" style={{ color: 'var(--n3-teal)' }}>{item.action}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-0">
-            {activities.map((act, i) => (
-              <div key={act.id} className="px-5 py-3 flex items-start gap-3" style={{ borderTop: i >= 2 ? '1px solid #f0f5f3' : undefined, borderRight: i % 2 === 0 ? '1px solid #f0f5f3' : undefined }}>
-                <div className="w-7 h-7 rounded flex items-center justify-center shrink-0 mt-0.5" style={{ background: `${ACTIVITY_COLORS[act.activity_type]}20` }}>
-                  <div className="w-2 h-2 rounded-full" style={{ background: ACTIVITY_COLORS[act.activity_type] }} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[11px] font-semibold capitalize" style={{ color: ACTIVITY_COLORS[act.activity_type] }}>{act.activity_type}</span>
-                    {act.scheduled_at && <span className="text-[10px]" style={{ color: '#6b7280' }}>{new Date(act.scheduled_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>}
-                  </div>
-                  <p className="text-[12px] leading-snug truncate" style={{ color: '#111111' }}>{act.description || 'â€”'}</p>
-                  {act.value_uf && <span className="text-[11px]" style={{ color: '#6b7280' }}>{fmt(act.value_uf)} UF</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   )
 }
-
 

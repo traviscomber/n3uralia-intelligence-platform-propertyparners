@@ -1,89 +1,15 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, FunnelChart, Funnel, Cell } from 'recharts'
 import { Target } from 'lucide-react'
 import { buildOperationalSeries, CRM_INTELLIGENCE, getOperationalSummary } from '@/lib/crm-snapshot'
 import { getBranchTargetPerformance, getTargetSource } from '@/lib/targets-2026'
 import presentationsSummary from '@/data/presentations-2026-summary.json'
 
-interface AiReport {
-  report_type: string
-  title: string
-  created_at: string
-}
-
-interface WeeklyReport {
-  report_scope: string
-  generated_at: string
-}
-
 const COLORS = ['var(--n3-teal)', '#6b7280', 'var(--n3-teal)', '#f59e0b']
 
 export default function ControlPage() {
-  const [aiReports, setAiReports] = useState<AiReport[]>([])
-  const [weeklyReports, setWeeklyReports] = useState<WeeklyReport[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const reportFreshness = useMemo(() => {
-    const pickLatest = (types: string[]) => {
-      const latest = aiReports
-        .filter((report) => types.includes(report.report_type))
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
-
-      if (!latest) return { title: 'Sin reporte', ageHours: null as number | null, source: 'n/d' }
-
-      const ageHours = (Date.now() - new Date(latest.created_at).getTime()) / 3600000
-      return { title: latest.title, ageHours, source: 'AI' }
-    }
-
-    const latestWeekly = weeklyReports
-      .slice()
-      .sort((a, b) => new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime())[0]
-
-    const weeklyAgeHours = latestWeekly ? (Date.now() - new Date(latestWeekly.generated_at).getTime()) / 3600000 : null
-
-    return {
-      ceo: pickLatest(['ceo_brief', 'monthly_ceo']),
-      director: pickLatest(['director_accounts', 'weekly_directors']),
-      seller: pickLatest(['seller_playbook', 'captation_alert']),
-      weekly: {
-        title: latestWeekly?.report_scope || 'Sin weekly',
-        ageHours: weeklyAgeHours,
-      },
-    }
-  }, [aiReports, weeklyReports])
-
-  useEffect(() => {
-    const fetchKPIs = async () => {
-      try {
-        const supabase = createClient()
-        const [aiRes, weeklyRes] = await Promise.all([
-          supabase
-            .from('ai_reports')
-            .select('report_type,title,created_at')
-            .order('created_at', { ascending: false })
-            .limit(20),
-          supabase
-            .from('weekly_reports')
-            .select('report_scope,generated_at')
-            .order('generated_at', { ascending: false })
-            .limit(12),
-        ])
-
-        setAiReports((aiRes.data || []) as AiReport[])
-        setWeeklyReports((weeklyRes.data || []) as WeeklyReport[])
-      } catch (err) {
-        console.error('Error:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchKPIs()
-  }, [])
 
   const operational = getOperationalSummary()
   const targets = getTargetSource()
@@ -104,17 +30,6 @@ export default function ControlPage() {
     { name: 'Visitas agendadas', value: operational.visits ?? 0 },
     { name: 'Cierres', value: operational.sales },
   ]
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando datos...</p>
-        </div>
-      </div>
-    )
-  }
 
   const measuredPerformance = chartKpis.filter((item) => item.monthly_target > 0)
   const avgPerformance = measuredPerformance.length ? (measuredPerformance.reduce((sum, item) => sum + item.ventas_count / item.monthly_target, 0) / measuredPerformance.length * 100).toFixed(0) : 'n/d'
@@ -152,40 +67,6 @@ export default function ControlPage() {
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Sucursales</p>
           <p className="text-3xl font-bold mt-3" style={{ color: 'var(--n3-teal)' }}>{branchPerformance.length}</p>
           <p className="text-xs mt-1" style={{ color: '#6b7280' }}>sucursales con metas fuente</p>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: '#e5e7eb' }}>
-        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Frescura de reportes</p>
-            <h2 className="mt-1 text-lg font-semibold text-gray-900">CEO, director y vendedor</h2>
-          </div>
-          <span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}>
-            {weeklyReports.length} weekly snapshots
-          </span>
-        </div>
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {([
-            ['ceo', 'CEO', reportFreshness.ceo],
-            ['director', 'Director', reportFreshness.director],
-            ['seller', 'Vendedor', reportFreshness.seller],
-          ] as const).map(([key, label, report]) => (
-            <div key={key} className="rounded-xl border p-4" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>{label}</p>
-              <p className="mt-2 text-lg font-semibold text-gray-900">{report.title}</p>
-              <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
-                {report.ageHours === null ? 'Sin reporte registrado' : report.ageHours < 24 ? 'Actualizado hoy' : `${Math.round(report.ageHours / 24)} dias de antiguedad`}
-              </p>
-            </div>
-          ))}
-          <div className="rounded-xl border p-4" style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b7280' }}>Weekly base</p>
-            <p className="mt-2 text-lg font-semibold text-gray-900">{reportFreshness.weekly.title}</p>
-            <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
-              {reportFreshness.weekly.ageHours === null ? 'Sin weekly persistido' : `${Math.round(reportFreshness.weekly.ageHours)} horas desde la ultima corrida`}
-            </p>
-          </div>
         </div>
       </div>
 
@@ -272,6 +153,5 @@ export default function ControlPage() {
     </div>
   )
 }
-
 
 

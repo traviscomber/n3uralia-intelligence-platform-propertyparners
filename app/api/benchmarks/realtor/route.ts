@@ -142,6 +142,8 @@ export async function GET() {
       benchmark: snapshot,
       source: 'realtor_international',
       recordedAt: snapshot.recorded_at,
+      provenance: 'live_unreconciled',
+      eligibleForAuditedViews: false,
     })
   } catch (err) {
     const fallback = await getLatestBenchmark().catch(() => null)
@@ -151,6 +153,8 @@ export async function GET() {
         source: 'realtor_international',
         recordedAt: fallback.recorded_at,
         fallback: true,
+        provenance: 'live_cached_unreconciled',
+        eligibleForAuditedViews: false,
         warning: err instanceof Error ? err.message : 'Using cached Realtor benchmark',
       })
     }

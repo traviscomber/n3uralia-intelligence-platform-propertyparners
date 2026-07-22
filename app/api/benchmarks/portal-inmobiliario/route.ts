@@ -159,37 +159,6 @@ async function getLatestBenchmark() {
   return (data?.[0] || null) as PortalBenchmarkSnapshot | null
 }
 
-async function getSyntheticFallback(): Promise<PortalBenchmarkSnapshot> {
-  const supabase = getSupabaseClient()
-  const { data } = await supabase
-    .from('market_data')
-    .select('neighborhood, avg_price_uf, avg_price_m2_uf, inventory_count')
-    .eq('neighborhood', 'Vitacura')
-    .limit(12)
-
-  const rows = (data || []) as Array<{
-    neighborhood: string
-    avg_price_uf: number | null
-    avg_price_m2_uf: number | null
-    inventory_count: number | null
-  }>
-  const fallbackPrice = rows.reduce((sum, row) => sum + (row.avg_price_uf || 0), 0)
-  const totalInventory = rows.reduce((sum, row) => sum + (row.inventory_count || 0), 0)
-  const averagePrice = rows.length ? Math.round((fallbackPrice / rows.length) * UF_VALUE) : null
-
-  return {
-    source: 'portal_inmobiliario_benchmark',
-    source_url: SEARCH_URLS[0],
-    neighborhood: 'Vitacura',
-    listing_title: 'Portal Inmobiliario Vitacura',
-    offer_count: Math.max(1, rows.length || totalInventory || 1),
-    low_price_clp: averagePrice,
-    high_price_clp: averagePrice ? Math.round(averagePrice * 1.08) : null,
-    price_currency: 'CLP',
-    recorded_at: new Date().toISOString(),
-  }
-}
-
 async function persistBenchmark(snapshot: PortalBenchmarkSnapshot) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('external_market_benchmarks').insert(snapshot)
@@ -221,6 +190,8 @@ export async function GET() {
       benchmark: snapshot,
       source: 'portal_inmobiliario_benchmark',
       recordedAt: snapshot.recorded_at,
+      provenance: 'live_unreconciled',
+      eligibleForAuditedViews: false,
     })
   } catch (err) {
     const fallback = await getLatestBenchmark().catch(() => null)
@@ -230,18 +201,9 @@ export async function GET() {
         source: 'portal_inmobiliario_benchmark',
         recordedAt: fallback.recorded_at,
         fallback: true,
+        provenance: 'live_cached_unreconciled',
+        eligibleForAuditedViews: false,
         warning: err instanceof Error ? err.message : 'Using cached Portal Inmobiliario benchmark',
-      })
-    }
-
-    const syntheticFallback = await getSyntheticFallback().catch(() => null)
-    if (syntheticFallback) {
-      return NextResponse.json({
-        benchmark: syntheticFallback,
-        source: 'portal_inmobiliario_benchmark',
-        recordedAt: syntheticFallback.recorded_at,
-        fallback: true,
-        warning: err instanceof Error ? err.message : 'Using synthetic Portal Inmobiliario benchmark',
       })
     }
 

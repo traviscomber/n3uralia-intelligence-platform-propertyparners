@@ -43,7 +43,7 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="9" /><path d="M5 14h6M8 11v3" /><path d="m5 8 2-2 2 1 2-2" /></svg>,
   },
   {
-    label: 'Casas Vitacura',
+    label: 'Propiedades auditadas',
     href: '/dashboard/properties',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7L8 2l6 5v7H10v-4H6v4H2z" /></svg>,
   },
@@ -58,7 +58,7 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v8c0 1.1 2.7 2 6 2s6-.9 6-2V4" /><path d="M2 8c0 1.1 2.7 2 6 2s6-.9 6-2" /></svg>,
   },
   {
-    label: 'Importar Mercado',
+    label: 'Importar Mercado · MANUAL',
     href: '/dashboard/market/import',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1v8" /><path d="M5.5 6.5L8 9l2.5-2.5" /><path d="M3 11.5h10" /><path d="M3 13.5h10" /></svg>,
   },
@@ -66,12 +66,6 @@ const navItems = [
     label: 'Valorización de propiedades',
     href: '/dashboard/valorizador',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="3" /><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4" /></svg>,
-  },
-  {
-    label: 'Reportes IA',
-    href: '/dashboard/reportes',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h7l3 3v9H3z" /><polyline points="10,2 10,5 13,5" /><line x1="5" y1="8" x2="11" y2="8" /><line x1="5" y1="11" x2="9" y2="11" /></svg>,
-    exact: true,
   },
   {
     label: 'Reportes automaticos',
@@ -84,7 +78,7 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h5l1 1h6v9H2z" /><line x1="5" y1="8" x2="11" y2="8" /><line x1="5" y1="10.5" x2="9" y2="10.5" /></svg>,
   },
   {
-    label: 'Fuentes Casas',
+    label: 'Fuentes Casas · VIVO',
     href: '/dashboard/sources',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><ellipse cx="8" cy="5" rx="5" ry="2" /><path d="M3 5v3c0 1.1 2.2 2 5 2s5-.9 5-2V5" /><path d="M3 8v3c0 1.1 2.2 2 5 2s5-.9 5-2V8" /></svg>,
   },
@@ -107,8 +101,8 @@ const roleNavItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><circle cx="13" cy="5" r="1.5" /><path d="M14.5 12c0-1.7 1.3-3 3-3" strokeWidth="1.2" /></svg>,
   },
   {
-    label: 'Agente',
-    href: '/dashboard/agente',
+    label: 'Ejecutivos / Partners',
+    href: '/dashboard/reportes/audiencias/ejecutivo',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><polyline points="6,10 8,12 11,9" /></svg>,
   },
 ]

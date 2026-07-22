@@ -1,11 +1,9 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import type { AiReport } from '@/lib/types'
 import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
-import { buildOperationalSeries, getDataQuality, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
+import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary } from '@/lib/crm-snapshot'
 import { getBranchSalesYtdPerformance, getCompanySalesCompliance } from '@/lib/targets-2026'
 
 function fmt(n: number) {
@@ -38,30 +36,12 @@ export default function CeoDashboard() {
   const chartData = fallbackSeries
   const ytd = getYtdSummary()
   const dataQuality = getDataQuality()
-  const executiveActions = getRoleActions('ceo')
   const salesCompliance = getCompanySalesCompliance('2026-06')
-  const [reports, setReports] = useState<AiReport[]>([])
   const totals = {
     ventas: ytd.salesCount,
     uf: ytd.salesUf,
     conversion: fallbackSummary.leadToSaleProxy,
   }
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const supabase = createClient()
-        const { data: reportRows } = await supabase.from('ai_reports').select('*').order('created_at', { ascending: false }).limit(3)
-        if (reportRows) setReports(reportRows as AiReport[])
-      } catch (_) {
-        // keep snapshot fallback
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [])
 
   const executiveMetrics = PP_SCORECARD_DEFINITIONS.ceo
   const executiveStates = useMemo(() => {
@@ -89,7 +69,6 @@ export default function CeoDashboard() {
       trend: score >= 80 ? 'Estable' : score >= 65 ? 'En vigilancia' : 'Bajo control',
     }
   }, [dataQuality.sourceCoverage, executiveMetrics, fallbackSummary.stock, salesCompliance.compliance, ytd.stockChange])
-  const recentReports = reports.slice(0, 3)
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
@@ -101,7 +80,7 @@ export default function CeoDashboard() {
             <span className="text-xs" style={{ color: '#6b7280' }}>Vista Ejecutiva</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#111111' }}>Panel de Comando</h1>
-            <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Resumen global del negocio · {loading ? 'Cargando...' : 'Actualizado ahora'}</p>
+            <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Resumen global del negocio · corte auditado enero–junio 2026</p>
         </div>
         <div className="text-right">
           <div className="text-xs" style={{ color: '#6b7280' }}>Acumulado 6 meses</div>
@@ -302,57 +281,6 @@ export default function CeoDashboard() {
         </div>
       </div>
 
-      {/* Decisions + Reports */}
-      <div className="grid grid-cols-5 gap-5">
-        <div className="col-span-3 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Decisiones ejecutivas sugeridas</h2>
-            <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Acciones calculadas desde el corte CRM validado</p>
-          </div>
-          <div className="divide-y" style={{ borderColor: '#f0f5f3' }}>
-            {executiveActions.map((item) => (
-              <div key={item.title} className="px-5 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-[13px] font-semibold" style={{ color: '#111111' }}>{item.title}</h3>
-                  <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase" style={{ background: item.priority === 'high' ? '#fff7ed' : '#f0f7f4', color: item.priority === 'high' ? '#c2410c' : 'var(--n3-teal)' }}>{item.priority}</span>
-                </div>
-                <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>{item.evidence}</p>
-                <p className="mt-2 text-xs font-medium" style={{ color: '#111111' }}>{item.action}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Latest AI Reports */}
-        <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Reportes IA Recientes</h2>
-          </div>
-          <div className="divide-y" style={{ borderColor: '#f0f5f3' }}>
-            {reports.length === 0 ? (
-              <div className="px-5 py-8 text-center">
-            <p className="text-xs" style={{ color: '#6b7280' }}>Sin reportes generados aún.</p>
-                <a href="/dashboard/reportes" className="text-xs mt-1 block hover:underline" style={{ color: 'var(--n3-teal)' }}>Generar primer reporte</a>
-              </div>
-            ) : (
-              reports.map(r => (
-                <div key={r.id} className="px-5 py-3.5">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="text-[12px] font-medium leading-snug" style={{ color: '#111111' }}>{r.title}</span>
-                    <span className="text-[10px] shrink-0" style={{ color: '#6b7280' }}>
-                      {r.period_date ? new Date(r.period_date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : 'â€”'}
-                    </span>
-                  </div>
-                  {r.summary && <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: '#6b7280' }}>{r.summary}</p>}
-                  <span className="inline-block mt-1.5 text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>{r.report_type}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
-
-

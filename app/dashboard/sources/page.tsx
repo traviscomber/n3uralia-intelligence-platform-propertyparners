@@ -162,6 +162,7 @@ export default function SourcesPage() {
   const [loading, setLoading] = useState(true)
   const [runsLoading, setRunsLoading] = useState(true)
   const [refreshingAll, setRefreshingAll] = useState(false)
+  const [liveRefreshEnabled, setLiveRefreshEnabled] = useState(false)
   const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
   const [health, setHealth] = useState<ScrapeHealth | null>(null)
   const [propertyTelemetry, setPropertyTelemetry] = useState<PropertyTelemetry | null>(null)
@@ -305,14 +306,18 @@ export default function SourcesPage() {
           Pipeline de inteligencia con fuentes integradas en tiempo real
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs text-[var(--n3-text-muted)]">
+            <input type="checkbox" checked={liveRefreshEnabled} onChange={(event) => setLiveRefreshEnabled(event.target.checked)} />
+            Habilitar actualización viva fuera del snapshot auditado
+          </label>
           <button
             onClick={() => void handleRefreshAll()}
-            disabled={refreshingAll}
+            disabled={refreshingAll || !liveRefreshEnabled}
             aria-label="Refrescar scraper y benchmark"
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             style={{ background: 'var(--n3-teal)' }}
           >
-            {refreshingAll ? 'Refrescando...' : 'Refrescar scraper + benchmark'}
+            {refreshingAll ? 'Refrescando...' : 'Ejecutar scraper + benchmark vivo'}
           </button>
           {refreshMsg && (
             <span className="text-sm" style={{ color: '#374151' }}>{refreshMsg}</span>
@@ -711,6 +716,5 @@ export default function SourcesPage() {
     </div>
   )
 }
-
 
 
