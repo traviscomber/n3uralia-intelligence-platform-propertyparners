@@ -18,6 +18,11 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1.5 8s2.3-4 6.5-4 6.5 4 6.5 4-2.3 4-6.5 4-6.5-4-6.5-4Z" /><circle cx="8" cy="8" r="2" /><path d="M8 1v1.5M8 13.5V15" /></svg>,
   },
   {
+    label: 'ML Lab',
+    href: '/dashboard/ml-lab',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 2v3l-3 7a1.4 1.4 0 0 0 1.3 2h9.4a1.4 1.4 0 0 0 1.3-2l-3-7V2" /><path d="M4 9h8M6.5 2h3" /><circle cx="6" cy="11" r=".6" fill="currentColor" stroke="none" /><circle cx="10" cy="12" r=".6" fill="currentColor" stroke="none" /></svg>,
+  },
+  {
     label: 'Control de Gestion',
     href: '/dashboard/control',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,12 5,8 8,10 11,5 14,7" /><line x1="2" y1="14" x2="14" y2="14" /></svg>,
