@@ -80,7 +80,7 @@ export default function KnowledgePage() {
       {/* Search & Filter */}
       <div className="flex gap-3 flex-wrap">
         <div className="flex-1 min-w-64 relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--n3-text-muted)]" />
           <input
             placeholder="Buscar documentos..."
             value={searchTerm}
@@ -117,11 +117,11 @@ export default function KnowledgePage() {
 
       {/* Documents List */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Cargando documentos...</div>
+        <div className="text-center py-12 text-[var(--n3-text-muted)]">Cargando documentos...</div>
       ) : filtered.length === 0 ? (
         <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-12 text-center">
-          <BookOpen size={32} className="mx-auto mb-3 text-gray-400" />
-          <p className="text-gray-500">No hay documentos que coincidan con tu busqueda</p>
+          <BookOpen size={32} className="mx-auto mb-3 text-[var(--n3-text-muted)]" />
+          <p className="text-[var(--n3-text-muted)]">No hay documentos que coincidan con tu busqueda</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -132,14 +132,14 @@ export default function KnowledgePage() {
                   <BookOpen size={18} className="text-[var(--n3-text-muted)]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm text-gray-900">{doc.title}</h3>
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">{doc.content?.slice(0, 150)}...</p>
+                  <h3 className="font-semibold text-sm text-[var(--n3-text-light)]">{doc.title}</h3>
+                  <p className="text-xs text-[var(--n3-text-muted)] mt-1 line-clamp-2">{doc.content?.slice(0, 150)}...</p>
                   <div className="flex gap-2 mt-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                    <span className="px-2 py-0.5 rounded text-xs bg-[var(--n3-black)] text-[var(--n3-text-muted)]">
                       {docTypeLabels[doc.doc_type] || doc.doc_type}
                     </span>
                     {doc.neighborhood && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">{doc.neighborhood}</span>
+                      <span className="px-2 py-0.5 rounded text-xs bg-[var(--n3-black)] text-[var(--n3-text-muted)]">{doc.neighborhood}</span>
                     )}
                   </div>
                 </div>
@@ -151,4 +151,3 @@ export default function KnowledgePage() {
     </div>
   )
 }
-

@@ -7,7 +7,7 @@ import { buildOperationalSeries, CRM_INTELLIGENCE, getOperationalSummary } from 
 import { getBranchTargetPerformance, getTargetSource } from '@/lib/targets-2026'
 import presentationsSummary from '@/data/presentations-2026-summary.json'
 
-const COLORS = ['var(--n3-teal)', '#6b7280', 'var(--n3-teal)', '#f59e0b']
+const COLORS = ['var(--n3-teal)', 'var(--n3-text-muted)', 'var(--n3-teal)', 'var(--warning)']
 
 export default function ControlPage() {
 
@@ -39,34 +39,34 @@ export default function ControlPage() {
     <div className="space-y-6">
       <header className="overflow-hidden border border-white/10 bg-black text-white">
         <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e23b31]">Property Partners Vitacura</p><h1 className="mt-2 text-3xl font-semibold">Control de gestión</h1><p className="mt-2 text-sm text-[#aaa]">Una sola lectura trazable entre operación CRM, metas 2026 y presentaciones reales.</p></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal)]">Property Partners Vitacura</p><h1 className="mt-2 text-3xl font-semibold">Control de gestión</h1><p className="mt-2 text-sm text-[var(--n3-text-muted)]">Una sola lectura trazable entre operación CRM, metas 2026 y presentaciones reales.</p></div>
           <Link href="/dashboard/presentaciones" className="border border-[#d7332b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#d7332b]">Abrir conciliación de 304 láminas</Link>
         </div>
         <div className="h-1 bg-[#d7332b]" />
       </header>
 
-      <section className="grid gap-px bg-[#cfcfcf] md:grid-cols-3">
-        <Link href="/dashboard/datos-crm" className="bg-[#f0f0f0] p-5 text-[#222] hover:bg-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#777]">01 · Hechos</p><h2 className="mt-2 text-lg font-semibold">Datos CRM</h2><p className="mt-2 text-xs text-[#666]">{CRM_INTELLIGENCE.sourceInventory.workbookCount} libros · {CRM_INTELLIGENCE.sourceInventory.cellCoverage.populatedCells.toLocaleString('es-CL')} celdas con contenido</p></Link>
-        <Link href="/dashboard/metas" className="bg-[#f0f0f0] p-5 text-[#222] hover:bg-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#777]">02 · Contrato</p><h2 className="mt-2 text-lg font-semibold">Metas 2026</h2><p className="mt-2 text-xs text-[#666]">3 sucursales · 7 métricas · revisión 202607</p></Link>
-        <Link href="/dashboard/presentaciones" className="bg-[#f0f0f0] p-5 text-[#222] hover:bg-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">03 · Interpretación</p><h2 className="mt-2 text-lg font-semibold">Presentaciones 2026</h2><p className="mt-2 text-xs text-[#666]">{presentationsSummary.source.slideCount} láminas · {presentationsSummary.reconciliation.counts.different} diferencias identificadas</p></Link>
+      <section className="grid gap-px bg-[var(--n3-line)] md:grid-cols-3">
+        <Link href="/dashboard/datos-crm" className="bg-[var(--n3-deep)] p-5 text-[var(--n3-text-light)] hover:bg-[var(--n3-deep)]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">01 · Hechos</p><h2 className="mt-2 text-lg font-semibold">Datos CRM</h2><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{CRM_INTELLIGENCE.sourceInventory.workbookCount} libros · {CRM_INTELLIGENCE.sourceInventory.cellCoverage.populatedCells.toLocaleString('es-CL')} celdas con contenido</p></Link>
+        <Link href="/dashboard/metas" className="bg-[var(--n3-deep)] p-5 text-[var(--n3-text-light)] hover:bg-[var(--n3-deep)]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">02 · Contrato</p><h2 className="mt-2 text-lg font-semibold">Metas 2026</h2><p className="mt-2 text-xs text-[var(--n3-text-muted)]">3 sucursales · 7 métricas · revisión 202607</p></Link>
+        <Link href="/dashboard/presentaciones" className="bg-[var(--n3-deep)] p-5 text-[var(--n3-text-light)] hover:bg-[var(--n3-deep)]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">03 · Interpretación</p><h2 className="mt-2 text-lg font-semibold">Presentaciones 2026</h2><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{presentationsSummary.source.slideCount} láminas · {presentationsSummary.reconciliation.counts.different} diferencias identificadas</p></Link>
       </section>
 
       {/* KPI Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #e5e7eb' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Desempeno promedio</p>
+        <div className="bg-[var(--n3-deep)] rounded-lg p-4" style={{ border: '1px solid var(--n3-line)' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Desempeno promedio</p>
           <p className="text-3xl font-bold mt-3" style={{ color: 'var(--n3-teal)' }}>{avgPerformance}%</p>
-          <p className="text-xs mt-1" style={{ color: '#6b7280' }}>Cumplimiento vs objetivo</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--n3-text-muted)' }}>Cumplimiento vs objetivo</p>
         </div>
-        <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #e5e7eb' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Velocidad Promedio</p>
-          <p className="text-3xl font-bold mt-3" style={{ color: '#6b7280' }}>{avgVelocity}</p>
-          <p className="text-xs mt-1" style={{ color: '#6b7280' }}>dias promedio de venta</p>
+        <div className="bg-[var(--n3-deep)] rounded-lg p-4" style={{ border: '1px solid var(--n3-line)' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Velocidad Promedio</p>
+          <p className="text-3xl font-bold mt-3" style={{ color: 'var(--n3-text-muted)' }}>{avgVelocity}</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--n3-text-muted)' }}>dias promedio de venta</p>
         </div>
-        <div className="bg-white rounded-lg p-4" style={{ border: '1px solid #e5e7eb' }}>
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Sucursales</p>
+        <div className="bg-[var(--n3-deep)] rounded-lg p-4" style={{ border: '1px solid var(--n3-line)' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Sucursales</p>
           <p className="text-3xl font-bold mt-3" style={{ color: 'var(--n3-teal)' }}>{branchPerformance.length}</p>
-          <p className="text-xs mt-1" style={{ color: '#6b7280' }}>sucursales con metas fuente</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--n3-text-muted)' }}>sucursales con metas fuente</p>
         </div>
       </div>
 
@@ -78,24 +78,24 @@ export default function ControlPage() {
             const achievement = branch.compliance
             const onTrack = achievement !== null && achievement >= 100
             return (
-              <div key={branch.name} className="bg-white rounded-lg p-5" style={{ border: '1px solid #e5e7eb' }}>
+              <div key={branch.name} className="bg-[var(--n3-deep)] rounded-lg p-5" style={{ border: '1px solid var(--n3-line)' }}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <p className="font-semibold text-gray-900">{branch.name}</p>
-                    <p className="text-xs mt-1" style={{ color: '#6b7280' }}>Sucursal · CRM vs libro de metas</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--n3-text-muted)' }}>Sucursal · CRM vs libro de metas</p>
                   </div>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: onTrack ? '#f9fafb' : '#fef3f2' }}>
-                    <Target className="w-4 h-4" style={{ color: onTrack ? 'var(--n3-teal)' : '#d97706' }} />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: onTrack ? 'var(--n3-black)' : 'var(--accent)' }}>
+                    <Target className="w-4 h-4" style={{ color: onTrack ? 'var(--n3-teal)' : 'var(--warning)' }} />
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs uppercase font-semibold mb-1" style={{ color: '#374151' }}>Ventas Mes</p>
+                    <p className="text-xs uppercase font-semibold mb-1" style={{ color: 'var(--n3-text-light)' }}>Ventas Mes</p>
                     <p className="text-2xl font-bold text-gray-900">{branch.actual ?? 'n/d'}/{branch.target ?? 'n/d'}</p>
-                    <div className="w-full rounded-full h-1.5 mt-2" style={{ background: '#e5e7eb' }}>
-                      <div className="h-1.5 rounded-full" style={{ background: onTrack ? 'var(--n3-teal)' : '#f59e0b', width: `${Math.min(achievement ?? 0, 100)}%` }}></div>
+                    <div className="w-full rounded-full h-1.5 mt-2" style={{ background: 'var(--n3-line)' }}>
+                      <div className="h-1.5 rounded-full" style={{ background: onTrack ? 'var(--n3-teal)' : 'var(--warning)', width: `${Math.min(achievement ?? 0, 100)}%` }}></div>
                     </div>
-                    <p className="text-xs mt-1" style={{ color: '#6b7280' }}>{achievement === null ? 'Atribución CRM no disponible' : `${achievement}% del target`}</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--n3-text-muted)' }}>{achievement === null ? 'Atribución CRM no disponible' : `${achievement}% del target`}</p>
                   </div>
                 </div>
               </div>
@@ -106,42 +106,42 @@ export default function ControlPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #e5e7eb' }}>
+        <div className="bg-[var(--n3-deep)] rounded-lg p-6" style={{ border: '1px solid var(--n3-line)' }}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Ventas vs Objetivo (12 meses)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartKpis}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="period_date" stroke="#6b7280" tick={{ fontSize: 12 }} />
-              <YAxis stroke="#6b7280" />
-              <Tooltip contentStyle={{ background: '#fbfbfa', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--n3-line)" />
+              <XAxis dataKey="period_date" stroke="var(--n3-text-muted)" tick={{ fontSize: 12 }} />
+              <YAxis stroke="var(--n3-text-muted)" />
+              <Tooltip contentStyle={{ background: 'var(--n3-deep)', border: '1px solid var(--n3-line)', borderRadius: '8px' }} />
               <Legend />
               <Bar dataKey="ventas_count" fill="var(--n3-teal)" name="Ventas Reales" />
-              <Bar dataKey="monthly_target" fill="#e5e7eb" name="Objetivo" />
+              <Bar dataKey="monthly_target" fill="var(--n3-line)" name="Objetivo" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #e5e7eb' }}>
+        <div className="bg-[var(--n3-deep)] rounded-lg p-6" style={{ border: '1px solid var(--n3-line)' }}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Conversión (Tendencia)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartKpis}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="period_date" stroke="#6b7280" tick={{ fontSize: 12 }} />
-              <YAxis stroke="#6b7280" />
-              <Tooltip contentStyle={{ background: '#fbfbfa', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-              <Line type="monotone" dataKey="conversion_rate" stroke="#6b7280" strokeWidth={2} name="Conversión %" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--n3-line)" />
+              <XAxis dataKey="period_date" stroke="var(--n3-text-muted)" tick={{ fontSize: 12 }} />
+              <YAxis stroke="var(--n3-text-muted)" />
+              <Tooltip contentStyle={{ background: 'var(--n3-deep)', border: '1px solid var(--n3-line)', borderRadius: '8px' }} />
+              <Line type="monotone" dataKey="conversion_rate" stroke="var(--n3-text-muted)" strokeWidth={2} name="Conversión %" />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Operational activity. These stages are not presented as a causal cohort funnel. */}
-      <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #e5e7eb' }}>
+      <div className="bg-[var(--n3-deep)] rounded-lg p-6" style={{ border: '1px solid var(--n3-line)' }}>
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Actividad operacional del último corte</h3>
         <p className="mb-4 text-xs text-gray-500">Conteos independientes; no representan conversión de cohorte.</p>
         <ResponsiveContainer width="100%" height={250}>
           <FunnelChart>
-            <Tooltip contentStyle={{ background: '#fbfbfa', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
+            <Tooltip contentStyle={{ background: 'var(--n3-deep)', border: '1px solid var(--n3-line)', borderRadius: '8px' }} />
             <Funnel dataKey="value" data={activityData} fill="var(--n3-teal)">
               {activityData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -153,5 +153,3 @@ export default function ControlPage() {
     </div>
   )
 }
-
-

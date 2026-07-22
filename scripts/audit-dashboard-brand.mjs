@@ -3,6 +3,17 @@ import path from 'node:path'
 
 const root = path.resolve('app/dashboard')
 const pages = []
+const approvedHex = new Set([
+  '#050807', '#edf4f3', '#0c1111', '#d7332b', '#111111', '#ffffff',
+  '#27ae60', '#f39c12', '#e74c3c', '#1565c0', '#7f8c8d', '#ff766f',
+  '#2a1716', '#160d0c',
+])
+
+function normalizeHex(value) {
+  const hex = value.toLowerCase()
+  if (hex.length === 4) return `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+  return hex
+}
 
 function walk(folder) {
   for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
@@ -19,12 +30,13 @@ const debt = []
 for (const file of pages.sort()) {
   const source = fs.readFileSync(file, 'utf8')
   const relative = path.relative(process.cwd(), file)
+  const printOptimized = source.includes('pp-report-paper')
   const invalidClasses = source.match(/className=(?:"[^"]*|\{`[^`]*)(?:^|\s)(?:#[0-9a-f]{3,8}|var\(--[^)]+\))/giu) || []
   if (invalidClasses.length) malformed.push(`${relative}: ${invalidClasses.length} clase(s) inválida(s)`)
 
   const lightSurfaces = (source.match(/\bbg-white\b|\bbg-gray-(?:50|100)\b|background:\s*['"]?#(?:fff|fb|f9|f8|f5|f0)/giu) || []).length
-  const directColors = (source.match(/#[0-9a-f]{3,8}/giu) || []).length
-  if (lightSurfaces || directColors > 24) debt.push(`${relative}: ${lightSurfaces} superficies claras heredadas, ${directColors} colores directos`)
+  const unapprovedColors = (source.match(/#[0-9a-f]{3,8}/giu) || []).map(normalizeHex).filter((color) => !approvedHex.has(color)).length
+  if (!printOptimized && (lightSurfaces || unapprovedColors > 8)) debt.push(`${relative}: ${lightSurfaces} superficies claras heredadas, ${unapprovedColors} colores fuera de paleta`)
 }
 
 if (malformed.length) {

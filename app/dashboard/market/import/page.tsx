@@ -106,16 +106,16 @@ export default function MarketImportPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex items-center justify-between gap-4 border-b border-gray-200 pb-5">
+      <div className="flex items-center justify-between gap-4 border-b border-[var(--n3-line)] pb-5">
         <div>
           <div className="flex items-center gap-3">
-            <Link href="/dashboard/market" className="inline-flex items-center gap-2 text-sm font-medium" style={{ color: '#374151' }}>
+            <Link href="/dashboard/market" className="inline-flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--n3-text-light)' }}>
               <ArrowLeft className="w-4 h-4" />
               Volver a Inteligencia de Mercado
             </Link>
           </div>
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">Importar datos de mercado</h1>
-          <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
+          <h1 className="mt-3 text-3xl font-bold text-[var(--n3-text-light)]">Importar datos de mercado</h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--n3-text-muted)' }}>
             Sube archivos `.csv`, `.xls` o `.xlsx` con barrios de Vitacura. El endpoint queda listo para pipeline automatizado y carga manual.
           </p>
         </div>
@@ -133,21 +133,21 @@ export default function MarketImportPage() {
         <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Carga guiada</p>
-              <h2 className="mt-1 text-xl font-semibold text-gray-900">Archivo de Inteligencia de Mercado</h2>
-              <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Carga guiada</p>
+              <h2 className="mt-1 text-xl font-semibold text-[var(--n3-text-light)]">Archivo de Inteligencia de Mercado</h2>
+              <p className="mt-1 text-sm" style={{ color: 'var(--n3-text-muted)' }}>
                 Reconoce nombres de columnas frecuentes como `barrio`, `precio_uf`, `precio_m2_uf`, `absorcion`, `inventario` y `dias_en_mercado`.
               </p>
             </div>
-            <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
+            <div className="rounded-lg px-3 py-2 text-xs font-semibold" style={{ background: 'var(--n3-black)', color: 'var(--n3-teal)' }}>
               Solo Vitacura
             </div>
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Archivo</span>
-              <div className="flex items-center gap-3 rounded-lg border border-dashed p-4" style={{ borderColor: '#e5e7eb', background: '#f9fbfa' }}>
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Archivo</span>
+              <div className="flex items-center gap-3 rounded-lg border border-dashed p-4" style={{ borderColor: 'var(--n3-line)', background: 'var(--n3-black)' }}>
                 <FileSpreadsheet className="h-5 w-5" style={{ color: 'var(--n3-teal)' }} />
                 <input
                   type="file"
@@ -159,34 +159,34 @@ export default function MarketImportPage() {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Fuente</span>
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Fuente</span>
               <input
                 value={source}
                 onChange={(event) => setSource(event.target.value)}
                 className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
-                style={{ borderColor: '#e5e7eb' }}
+                style={{ borderColor: 'var(--n3-line)' }}
                 placeholder="claude_code_pipeline"
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Fecha de corte</span>
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Fecha de corte</span>
               <input
                 type="date"
                 value={snapshotDate}
                 onChange={(event) => setSnapshotDate(event.target.value)}
                 className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
-                style={{ borderColor: '#e5e7eb' }}
+                style={{ borderColor: 'var(--n3-line)' }}
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Modo</span>
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Modo</span>
               <select
                 value={mode}
                 onChange={(event) => setMode(event.target.value as 'preview' | 'import')}
                 className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
-                style={{ borderColor: '#e5e7eb' }}
+                style={{ borderColor: 'var(--n3-line)' }}
               >
                 <option value="preview">Vista previa</option>
                 <option value="import">Importar</option>
@@ -194,12 +194,12 @@ export default function MarketImportPage() {
             </label>
 
             <label className="block md:col-span-2">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Tipo de importacion</span>
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Tipo de importacion</span>
               <select
                 value={kind}
                 onChange={(event) => setKind(event.target.value as 'market_data' | 'benchmark_data')}
                 className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
-                style={{ borderColor: '#e5e7eb' }}
+                style={{ borderColor: 'var(--n3-line)' }}
               >
                 <option value="market_data">Inteligencia de mercado por barrio</option>
                 <option value="benchmark_data">Benchmarks externos</option>
@@ -230,7 +230,7 @@ export default function MarketImportPage() {
           </div>
 
           {error && (
-            <div className="mt-5 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <div className="mt-5 flex items-start gap-3 rounded-lg border border-[var(--n3-line)] bg-[#160d0c] px-4 py-3 text-sm text-[var(--n3-teal-soft)]">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -238,30 +238,30 @@ export default function MarketImportPage() {
 
           {result && (
             <div className="mt-6 space-y-4">
-              <div className="rounded-lg px-4 py-3 text-sm" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', color: '#374151' }}>
+              <div className="rounded-lg px-4 py-3 text-sm" style={{ background: 'var(--n3-black)', border: '1px solid var(--n3-line)', color: 'var(--n3-text-light)' }}>
                 {result.message || 'Proceso completado.'}
               </div>
 
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {stats?.map((stat) => (
-                  <div key={stat.label} className="rounded-lg p-3" style={{ background: '#fff', border: '1px solid #e5e7eb' }}>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>{stat.label}</p>
-                    <p className="mt-2 text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <div key={stat.label} className="rounded-lg p-3" style={{ background: 'var(--n3-deep)', border: '1px solid var(--n3-line)' }}>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>{stat.label}</p>
+                    <p className="mt-2 text-2xl font-bold text-[var(--n3-text-light)]">{stat.value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="rounded-lg" style={{ border: '1px solid #e5e7eb' }}>
-                <div className="flex items-center justify-between border-b px-4 py-3" style={{ background: '#f9fbfa', borderColor: '#e5e7eb' }}>
-                  <h3 className="text-sm font-semibold text-gray-900">
+              <div className="rounded-lg" style={{ border: '1px solid var(--n3-line)' }}>
+                <div className="flex items-center justify-between border-b px-4 py-3" style={{ background: 'var(--n3-black)', borderColor: 'var(--n3-line)' }}>
+                  <h3 className="text-sm font-semibold text-[var(--n3-text-light)]">
                     {kind === 'benchmark_data' ? 'Vista previa de benchmarks' : 'Vista previa normalizada'}
                   </h3>
-                  <span className="text-xs" style={{ color: '#6b7280' }}>{result.preview.length} filas visibles</span>
+                  <span className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>{result.preview.length} filas visibles</span>
                 </div>
                 <div className="overflow-auto">
                   <table className="min-w-full text-left text-sm">
-                    <thead className="bg-white">
-                      <tr className="text-xs uppercase tracking-wide" style={{ color: '#374151' }}>
+                    <thead className="bg-[var(--n3-deep)]">
+                      <tr className="text-xs uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>
                         {kind === 'benchmark_data' ? (
                           <>
                             <th className="px-4 py-3">Fuente</th>
@@ -293,7 +293,7 @@ export default function MarketImportPage() {
                           const benchmarkRow = row as BenchmarkImportPreviewRow
                           return (
                             <tr key={`row-${kind}-${keyField}`} className="border-t" style={{ borderColor: '#eef2f2' }}>
-                              <td className="px-4 py-3 font-medium text-gray-900">{benchmarkRow.source}</td>
+                              <td className="px-4 py-3 font-medium text-[var(--n3-text-light)]">{benchmarkRow.source}</td>
                               <td className="px-4 py-3">{benchmarkRow.neighborhood}</td>
                               <td className="px-4 py-3">{benchmarkRow.offer_count}</td>
                               <td className="px-4 py-3">{formatValue(benchmarkRow.low_price_clp)}</td>
@@ -310,7 +310,7 @@ export default function MarketImportPage() {
 
                         return (
                           <tr key={`row-${kind}-${keyField}`} className="border-t" style={{ borderColor: '#eef2f2' }}>
-                            <td className="px-4 py-3 font-medium text-gray-900">{marketRow.neighborhood}</td>
+                            <td className="px-4 py-3 font-medium text-[var(--n3-text-light)]">{marketRow.neighborhood}</td>
                             <td className="px-4 py-3">{formatValue(marketRow.avg_price_uf)}</td>
                             <td className="px-4 py-3">{formatValue(marketRow.avg_price_m2_uf)}</td>
                             <td className="px-4 py-3">{absorptionText}</td>
@@ -329,10 +329,10 @@ export default function MarketImportPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-xl bg-white p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Contrato API</p>
-            <h2 className="mt-1 text-lg font-semibold text-gray-900">Listo para Claude Code</h2>
-            <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
+          <div className="rounded-xl bg-[var(--n3-deep)] p-6 shadow-sm" style={{ border: '1px solid var(--n3-line)' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Contrato API</p>
+            <h2 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">Listo para Claude Code</h2>
+            <p className="mt-2 text-sm" style={{ color: 'var(--n3-text-muted)' }}>
               El pipeline puede enviar `multipart/form-data` con `file` o un POST JSON con `rows`/`records`. Cambia el tipo a `benchmarks`
               para cargar Realtor o Portal Inmobiliario.
             </p>
@@ -360,9 +360,9 @@ export default function MarketImportPage() {
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Formato esperado</p>
-            <ul className="mt-3 space-y-2 text-sm" style={{ color: '#374151' }}>
+          <div className="rounded-xl bg-[var(--n3-deep)] p-6 shadow-sm" style={{ border: '1px solid var(--n3-line)' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--n3-text-light)' }}>Formato esperado</p>
+            <ul className="mt-3 space-y-2 text-sm" style={{ color: 'var(--n3-text-light)' }}>
               <li>• `neighborhood` o `barrio` es obligatorio.</li>
               <li>• `absorption_rate` acepta `0.85` o `85`.</li>
               <li>• `source` y `snapshot_date` son opcionales.</li>

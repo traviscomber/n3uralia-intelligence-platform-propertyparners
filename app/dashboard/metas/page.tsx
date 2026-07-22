@@ -15,7 +15,7 @@ function formatSource(value: number | null, unit?: string) {
 }
 
 function ExactSourceValue({ value, displayedValue, unit }: { value: number | null; displayedValue?: string | null; unit?: string }) {
-  return <span>{formatSource(value, unit)}{displayedValue !== null && displayedValue !== undefined && <span className="ml-2 font-normal text-[#87928d]">Excel: {displayedValue}</span>}</span>
+  return <span>{formatSource(value, unit)}{displayedValue !== null && displayedValue !== undefined && <span className="ml-2 font-normal text-[var(--n3-text-muted)]">Excel: {displayedValue}</span>}</span>
 }
 
 function issueContext(issue: object) {
@@ -70,16 +70,16 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
           ['Fórmulas', source.cellCoverage.formulaCells],
           ['Errores de fórmula', source.cellCoverage.formulaErrorCells],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-[#e2e9e6] bg-white p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#728079]">{label}</p>
-            <p className="mt-2 text-2xl font-bold text-[#102019]">{Number(value).toLocaleString('es-CL')}</p>
+          <div key={label} className="rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p>
+            <p className="mt-2 text-2xl font-bold text-[var(--n3-text-light)]">{Number(value).toLocaleString('es-CL')}</p>
           </div>
         ))}
       </section>
 
       <nav className="flex flex-wrap gap-2" aria-label="Mes de metas">
         {MONTHS.map((label, index) => (
-          <Link key={label} href={`/dashboard/metas?month=${index + 1}`} className="rounded-full border px-3 py-1.5 text-xs font-semibold" style={{ borderColor: index + 1 === monthNumber ? '#183f34' : '#dfe7e3', background: index + 1 === monthNumber ? '#183f34' : '#fff', color: index + 1 === monthNumber ? '#fff' : '#43534c' }}>{label}</Link>
+          <Link key={label} href={`/dashboard/metas?month=${index + 1}`} className="rounded-full border px-3 py-1.5 text-xs font-semibold" style={{ borderColor: index + 1 === monthNumber ? 'var(--n3-deep)' : 'var(--n3-line)', background: index + 1 === monthNumber ? 'var(--n3-deep)' : '#fff', color: index + 1 === monthNumber ? '#fff' : 'var(--n3-text-muted)' }}>{label}</Link>
         ))}
       </nav>
 
@@ -95,14 +95,14 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
         </div>
       </section>
 
-      <details className="overflow-hidden rounded-2xl border border-[#dfe8e4] bg-white">
-        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-[#173b31]">Registro completo de {source.quality.issueCount} incidencias fuente</summary>
-        <div className="overflow-x-auto border-t border-[#e8efec]">
+      <details className="overflow-hidden rounded-2xl border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-[var(--n3-text-light)]">Registro completo de {source.quality.issueCount} incidencias fuente</summary>
+        <div className="overflow-x-auto border-t border-[var(--n3-line)]">
           <table className="w-full min-w-[820px] text-left text-xs">
-            <thead className="bg-[#f4f7f5] text-[#607169]"><tr><th className="px-4 py-2">Severidad</th><th className="px-4 py-2">Sucursal</th><th className="px-4 py-2">Métrica</th><th className="px-4 py-2">Referencia</th><th className="px-4 py-2">Detalle exacto</th></tr></thead>
+            <thead className="bg-[var(--n3-black)] text-[var(--n3-text-muted)]"><tr><th className="px-4 py-2">Severidad</th><th className="px-4 py-2">Sucursal</th><th className="px-4 py-2">Métrica</th><th className="px-4 py-2">Referencia</th><th className="px-4 py-2">Detalle exacto</th></tr></thead>
             <tbody>{source.quality.issues.map((issue, index) => (
-              <tr key={`${issue.code}-${issue.branch}-${index}`} className="border-t border-[#edf2f0] align-top">
-                <td className="px-4 py-2 font-bold" style={{ color: issue.severity === 'critical' ? '#b91c1c' : '#9a6700' }}>{issue.severity}</td>
+              <tr key={`${issue.code}-${issue.branch}-${index}`} className="border-t border-[var(--n3-line)] align-top">
+                <td className="px-4 py-2 font-bold" style={{ color: issue.severity === 'critical' ? '#b91c1c' : 'var(--warning)' }}>{issue.severity}</td>
                 <td className="px-4 py-2">{issue.branch}</td>
                 <td className="px-4 py-2">{'metric' in issue ? issue.metric : 'fuera de bloque'}</td>
                 <td className="px-4 py-2">{issueContext(issue) || 'bloque completo'}</td>
@@ -114,25 +114,25 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
       </details>
 
       {branches.map((branch) => (
-        <section key={branch.branch} className="space-y-4 rounded-2xl border border-[#dfe8e4] bg-[#f8faf9] p-5 lg:p-6">
+        <section key={branch.branch} className="space-y-4 rounded-2xl border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5 lg:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#688078]">Sucursal</p>
-              <h2 className="mt-1 text-2xl font-semibold text-[#102019]">{branch.branch}</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Sucursal</p>
+              <h2 className="mt-1 text-2xl font-semibold text-[var(--n3-text-light)]">{branch.branch}</h2>
             </div>
-            <p className="text-xs text-[#718078]">Fuente: {branch.file}</p>
+            <p className="text-xs text-[var(--n3-text-muted)]">Fuente: {branch.file}</p>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {branch.metrics.map((metric) => (
-              <article key={metric.metric} className="rounded-xl border border-[#e1e9e5] bg-white p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#718078]">{metric.label}</p>
+              <article key={metric.metric} className="rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--n3-text-muted)]">{metric.label}</p>
                 <div className="mt-2 flex items-end justify-between gap-3">
-                  <div><p className="text-xs text-[#718078]">Real CRM</p><p className="text-xl font-bold text-[#102019]">{format(metric.actual, metric.unit)}</p></div>
-                  <div className="text-right"><p className="text-xs text-[#718078]">Meta fuente</p><p className="text-xl font-bold text-[#1b6451]">{format(metric.target, metric.unit)}</p></div>
+                  <div><p className="text-xs text-[var(--n3-text-muted)]">Real CRM</p><p className="text-xl font-bold text-[var(--n3-text-light)]">{format(metric.actual, metric.unit)}</p></div>
+                  <div className="text-right"><p className="text-xs text-[var(--n3-text-muted)]">Meta fuente</p><p className="text-xl font-bold text-[var(--success)]">{format(metric.target, metric.unit)}</p></div>
                 </div>
-                <p className="mt-2 text-xs text-[#66756e]">{metric.compliance === null ? metric.compatibility === 'definition_pending' ? 'Cumplimiento pendiente de definición: agendada vs realizada.' : metric.compatibility === 'actual_unavailable' ? 'No existe actual compatible en CRM.' : 'Atribución CRM no disponible.' : `${metric.compliance}% de cumplimiento`}</p>
-                {metric.reconciliation && !metric.reconciliation.exact && <p className="mt-2 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">Fuente exacta: total {formatSource(metric.reconciliation.sourceTotal, metric.unit)} · partners {formatSource(metric.reconciliation.partnerSum, metric.unit)} · diferencia {formatSource(metric.reconciliation.delta, metric.unit)}</p>}
+                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{metric.compliance === null ? metric.compatibility === 'definition_pending' ? 'Cumplimiento pendiente de definición: agendada vs realizada.' : metric.compatibility === 'actual_unavailable' ? 'No existe actual compatible en CRM.' : 'Atribución CRM no disponible.' : `${metric.compliance}% de cumplimiento`}</p>
+                {metric.reconciliation && !metric.reconciliation.exact && <p className="mt-2 rounded-md bg-[#160d0c] px-2 py-1 text-xs font-semibold text-red-700">Fuente exacta: total {formatSource(metric.reconciliation.sourceTotal, metric.unit)} · partners {formatSource(metric.reconciliation.partnerSum, metric.unit)} · diferencia {formatSource(metric.reconciliation.delta, metric.unit)}</p>}
                 {metric.reconciliation && !metric.reconciliation.display.exact && <p className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-800">Vista Excel redondeada: total {formatSource(metric.reconciliation.display.sourceTotal, metric.unit)} · suma visible partners {formatSource(metric.reconciliation.display.partnerSum, metric.unit)} · diferencia visual {formatSource(metric.reconciliation.display.delta, metric.unit)}. No altera el valor crudo.</p>}
               </article>
             ))}
@@ -140,26 +140,26 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
 
           <div className="space-y-4">
             {branch.metrics.map((metric) => (
-              <details key={metric.metric} className="overflow-hidden rounded-xl border border-[#e1e9e5] bg-white">
-                <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[#173b31]">Detalle completo · {metric.label} · {metric.partners.length} filas fuente</summary>
-                <div className="overflow-x-auto border-t border-[#edf2f0]">
+              <details key={metric.metric} className="overflow-hidden rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[var(--n3-text-light)]">Detalle completo · {metric.label} · {metric.partners.length} filas fuente</summary>
+                <div className="overflow-x-auto border-t border-[var(--n3-line)]">
                   <table className="w-full min-w-[760px] text-left text-xs">
-                    <thead className="bg-[#f4f7f5] text-[#607169]"><tr><th className="px-4 py-2">Fila</th><th className="px-4 py-2">Partner fuente</th><th className="px-4 py-2">Marca fuente</th><th className="px-4 py-2">Meta {MONTHS[monthNumber - 1]}</th>{metric.annualValues.map((annual) => <th key={annual.cell} className="px-4 py-2">{annual.header} · col. {annual.column}</th>)}</tr></thead>
+                    <thead className="bg-[var(--n3-black)] text-[var(--n3-text-muted)]"><tr><th className="px-4 py-2">Fila</th><th className="px-4 py-2">Partner fuente</th><th className="px-4 py-2">Marca fuente</th><th className="px-4 py-2">Meta {MONTHS[monthNumber - 1]}</th>{metric.annualValues.map((annual) => <th key={annual.cell} className="px-4 py-2">{annual.header} · col. {annual.column}</th>)}</tr></thead>
                     <tbody>
                       {metric.partners.map((partner) => (
-                        <tr key={partner.sourceRow} className="border-t border-[#edf2f0]">
-                          <td className="px-4 py-2 text-[#75827c]">{partner.sourceRow}</td>
-                          <td className="px-4 py-2 font-medium text-[#1b2b25]">
+                        <tr key={partner.sourceRow} className="border-t border-[var(--n3-line)]">
+                          <td className="px-4 py-2 text-[var(--n3-text-muted)]">{partner.sourceRow}</td>
+                          <td className="px-4 py-2 font-medium text-[var(--n3-deep)]">
                             {partner.name ?? 'Sin nombre'}
                             {partner.identityStatus === 'unresolved' && <span className="ml-2 text-red-700">Identidad no resuelta</span>}
                             {partner.identityStatus === 'inferred_from_formula' && <span className="ml-2 text-amber-700">Inferida por fórmula: {partner.inferredName}</span>}
                           </td>
-                          <td className="px-4 py-2">{partner.sourceColor ? <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: partner.sourceColor === 'green' ? '#92d050' : '#ff0000' }} />{partner.sourceColor}</span> : 'sin marca'}</td>
+                          <td className="px-4 py-2">{partner.sourceColor ? <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: partner.sourceColor === 'green' ? 'var(--success)' : 'var(--destructive)' }} />{partner.sourceColor}</span> : 'sin marca'}</td>
                           <td className="px-4 py-2 font-semibold"><ExactSourceValue value={partner.target} displayedValue={partner.targetDisplayedValue} unit={metric.unit} /></td>
-                          {partner.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2"><ExactSourceValue value={annual.value} displayedValue={annual.displayedValue} unit={metric.unit} /> <span className="text-[#87928d]">({annual.cell})</span></td>)}
+                          {partner.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2"><ExactSourceValue value={annual.value} displayedValue={annual.displayedValue} unit={metric.unit} /> <span className="text-[var(--n3-text-muted)]">({annual.cell})</span></td>)}
                         </tr>
                       ))}
-                      <tr className="border-t-2 border-[#cbd8d2] bg-[#f7faf8] font-bold"><td className="px-4 py-2" colSpan={3}>Total sucursal fuente</td><td className="px-4 py-2"><ExactSourceValue value={metric.target} displayedValue={metric.targetDisplayedValue} unit={metric.unit} /></td>{metric.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2"><ExactSourceValue value={annual.value} displayedValue={annual.displayedValue} unit={metric.unit} /> <span className="font-normal text-[#87928d]">({annual.cell})</span></td>)}</tr>
+                      <tr className="border-t-2 border-[var(--n3-line)] bg-[var(--n3-deep)] font-bold"><td className="px-4 py-2" colSpan={3}>Total sucursal fuente</td><td className="px-4 py-2"><ExactSourceValue value={metric.target} displayedValue={metric.targetDisplayedValue} unit={metric.unit} /></td>{metric.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2"><ExactSourceValue value={annual.value} displayedValue={annual.displayedValue} unit={metric.unit} /> <span className="font-normal text-[var(--n3-text-muted)]">({annual.cell})</span></td>)}</tr>
                     </tbody>
                   </table>
                 </div>
@@ -168,15 +168,15 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
           </div>
 
           {branch.unmappedCells.length > 0 && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-red-800">Celdas fuera de bloque preservadas</p>
-              <div className="mt-3 grid gap-2 md:grid-cols-2">{branch.unmappedCells.map((cell) => <div key={cell.address} className="rounded-lg bg-white px-3 py-2 text-xs text-red-950"><strong>{cell.address}</strong> · {String(cell.value)}{cell.formula ? ` · fórmula ${cell.formula}` : ''}</div>)}</div>
+            <div className="rounded-xl border border-[var(--n3-line)] bg-[#160d0c] p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">Celdas fuera de bloque preservadas</p>
+              <div className="mt-3 grid gap-2 md:grid-cols-2">{branch.unmappedCells.map((cell) => <div key={cell.address} className="rounded-lg bg-[var(--n3-deep)] px-3 py-2 text-xs text-red-950"><strong>{cell.address}</strong> · {String(cell.value)}{cell.formula ? ` · fórmula ${cell.formula}` : ''}</div>)}</div>
             </div>
           )}
         </section>
       ))}
 
-      <footer className="rounded-xl border border-[#dfe8e4] bg-white p-5 text-xs leading-5 text-[#5f7068]">
+      <footer className="rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5 text-xs leading-5 text-[var(--n3-text-muted)]">
         El manifiesto de auditoría conserva las {source.cellCoverage.storedCells.toLocaleString('es-CL')} celdas almacenadas con dirección, valor, visualización Excel, fórmula, tipo, formato, estilo y color. Las columnas anuales paralelas se muestran en forma independiente. Los colores se describen como marcas de la fuente y no se interpretan como estado laboral. El repositorio actual es público; el manifiesto no debe considerarse privado hasta migrarlo a almacenamiento servidor.
       </footer>
     </div>
