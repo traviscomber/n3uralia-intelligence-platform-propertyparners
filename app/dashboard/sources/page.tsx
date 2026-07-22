@@ -222,12 +222,12 @@ export default function SourcesPage() {
     setRefreshingAll(true)
     setRefreshMsg(null)
     try {
-      const res = await fetch('/api/cron/refresh-sources', { method: 'GET' })
+      const res = await fetch('/api/scrape/portal-inmobiliario', { method: 'POST', headers: { 'x-live-source-confirmed': 'true' } })
       const json = await res.json()
       if (!res.ok) {
         throw new Error(json.error || 'No pudimos refrescar las fuentes.')
       }
-      setRefreshMsg(`Refresco completado: scraping y benchmark actualizados a ${new Date(json.refreshedAt).toLocaleTimeString('es-CL')}`)
+      setRefreshMsg(`Muestra capturada: ${json.captured} observados, ${json.validForReconciliation} listos para conciliar, ${json.rejected} rechazados. Cero escrituras.`)
       const supabase = createClient()
       const [sourcesRes, healthRes, propertiesRes] = await Promise.all([
         supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
@@ -308,16 +308,16 @@ export default function SourcesPage() {
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs text-[var(--n3-text-muted)]">
             <input type="checkbox" checked={liveRefreshEnabled} onChange={(event) => setLiveRefreshEnabled(event.target.checked)} />
-            Habilitar actualización viva fuera del snapshot auditado
+            Activar captura de fuente viva para validación
           </label>
           <button
             onClick={() => void handleRefreshAll()}
             disabled={refreshingAll || !liveRefreshEnabled}
-            aria-label="Refrescar scraper y benchmark"
+            aria-label="Capturar muestra viva para validación"
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             style={{ background: 'var(--n3-teal)' }}
           >
-            {refreshingAll ? 'Refrescando...' : 'Ejecutar scraper + benchmark vivo'}
+            {refreshingAll ? 'Capturando...' : 'Capturar nueva muestra'}
           </button>
           {refreshMsg && (
             <span className="text-sm" style={{ color: '#374151' }}>{refreshMsg}</span>
@@ -716,5 +716,4 @@ export default function SourcesPage() {
     </div>
   )
 }
-
 

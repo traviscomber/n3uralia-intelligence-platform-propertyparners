@@ -16,13 +16,13 @@ Regla: la información enviada y auditada es la única fuente autoritativa para 
 | Importar Mercado | Manual separado | Requiere acción humana; no altera JSON auditados |
 | Knowledge | Operacional separado | Documentos persistidos por usuarios |
 
-## Elementos retirados o en cuarentena
+## Elementos retirados o en validación
 
 - Reportes IA heredados y recomendaciones automáticas.
 - Insights calculados desde `market_data` no conciliado.
 - Narrativa IA de valorización con factores no presentes en Excel.
 - Inventario `properties` contaminado por imputaciones históricas.
-- Scrapers Portal/DataInmobiliaria anteriores: cero escrituras y respuesta `409 quarantined`.
+- Scraper Portal habilitado como captura manual de muestras: cero escrituras, sin imputaciones y pendiente de conciliación.
 - Fallback sintético de Portal Inmobiliario.
 - Cron de scraping y cron de reportes heredados.
 

@@ -13,7 +13,6 @@ export type VitacuraSource =
   | 'yapo_search'
   | 'chilepropiedades_houses_search'
   | 'chilepropiedades_departments_search'
-  | 'datainmobiliaria'
   | 'other'
 
 export interface RawProperty {
