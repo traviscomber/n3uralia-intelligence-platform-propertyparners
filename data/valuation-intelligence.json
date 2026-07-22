@@ -1,0 +1,344 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-22T01:47:47.149Z",
+  "scope": {
+    "commune": "Vitacura",
+    "operation": "Venta",
+    "propertyTypes": [
+      "Casa",
+      "Departamento"
+    ],
+    "excludedOperation": "Arriendo"
+  },
+  "sourceInventory": [
+    {
+      "file": "Plantilla de Valorización Casas.xlsx",
+      "bytes": 105569,
+      "sha256": "b8e68128f76d1144f7bf8ef4c9244774f4baf9d7508559e8bbde3c1586254d1d",
+      "modifiedAt": "2020-09-11T19:51:34.000Z",
+      "sheetCount": 2,
+      "sheets": [
+        {
+          "name": "Hoja1",
+          "range": "A1:Q68",
+          "populatedCells": 171,
+          "formulaCells": 63,
+          "formulaErrorCells": 0
+        },
+        {
+          "name": "Hoja2",
+          "range": "A1",
+          "populatedCells": 1,
+          "formulaCells": 0,
+          "formulaErrorCells": 0
+        }
+      ]
+    },
+    {
+      "file": "Plantilla de Valorización Departamentos.xlsx",
+      "bytes": 108136,
+      "sha256": "c71c7441de75da94cb4d661b639634db5026f4d1000cba9f9ab47c6d23114555",
+      "modifiedAt": "2020-09-10T23:03:55.000Z",
+      "sheetCount": 2,
+      "sheets": [
+        {
+          "name": "Hoja1",
+          "range": "B1:P61",
+          "populatedCells": 233,
+          "formulaCells": 59,
+          "formulaErrorCells": 0
+        },
+        {
+          "name": "Hoja2",
+          "range": "A1:D8",
+          "populatedCells": 31,
+          "formulaCells": 0,
+          "formulaErrorCells": 0
+        }
+      ]
+    }
+  ],
+  "methodology": {
+    "house": {
+      "effectiveAreaFormula": "builtAreaM2 + landAreaM2 / 4",
+      "commercialValueFormula": "builtAreaM2 * builtUfM2 + landAreaM2 * landUfM2",
+      "sourceCells": [
+        "Hoja1!K12:K17",
+        "Hoja1!K22:K25",
+        "Hoja1!F31:F36",
+        "Hoja1!H41:N63"
+      ]
+    },
+    "apartment": {
+      "effectiveAreaFormula": "usefulAreaM2 + terraceAreaM2 / 2",
+      "offerComparableFormula": "priceUf / (usefulAreaM2 + (totalAreaM2 - usefulAreaM2) / 2)",
+      "registeredComparableFormula": "priceUf / usefulAreaM2",
+      "commercialValueFormula": "appliedUfM2 * usefulAreaM2",
+      "sourceCells": [
+        "Hoja1!K12:K17",
+        "Hoja1!K22:K27",
+        "Hoja1!F31:F35",
+        "Hoja1!H39:N61"
+      ]
+    },
+    "publicationScenarios": [
+      0,
+      0.05,
+      0.1
+    ],
+    "publicationFormula": "commercialValueUf / (1 - margin)",
+    "prohibitedAutomaticAdjustments": [
+      "age bonus",
+      "floor bonus",
+      "bedroom bonus",
+      "condition bonus",
+      "parking bonus",
+      "storage bonus",
+      "pool bonus"
+    ]
+  },
+  "templateCase": {
+    "status": "HISTORICAL_SOURCE_CASE",
+    "subject": {
+      "propertyType": "Departamento",
+      "branch": "Nueva Costanera",
+      "commune": "Vitacura",
+      "neighborhood": "Las Nieves",
+      "address": "Navidad 1427, depto 81",
+      "rol": "413-293",
+      "usefulAreaM2": 227,
+      "terraceAreaM2": 53,
+      "constructionYear": 1994
+    },
+    "sourceCalculation": {
+      "appliedUfM2": 70,
+      "commercialValueUf": 15890,
+      "scenarios": [
+        {
+          "margin": 0,
+          "publicationUf": 15890,
+          "weightedUfM2": 62.7
+        },
+        {
+          "margin": 0.05,
+          "publicationUf": 16726,
+          "weightedUfM2": 66
+        },
+        {
+          "margin": 0.1,
+          "publicationUf": 17656,
+          "weightedUfM2": 69.6
+        }
+      ]
+    },
+    "offerComparables": {
+      "rawCount": 6,
+      "sourceStats": {
+        "count": 6,
+        "min": 56.5,
+        "average": 60.45,
+        "median": 59.23,
+        "max": 68.18
+      },
+      "explicitDuplicateGroup": {
+        "sourceRows": [
+          16,
+          17
+        ],
+        "evidenceCell": "Hoja1!B19"
+      },
+      "canonicalCount": 5,
+      "dedupeAwareAverageUfM2Range": [
+        58.9,
+        60.05
+      ],
+      "presentInCurrentPortalSnapshot": 0
+    },
+    "registeredComparables": {
+      "sourceCount": 6,
+      "sourceStats": {
+        "count": 6,
+        "min": 61.09,
+        "average": 67.79,
+        "median": 66.16,
+        "max": 74.15
+      },
+      "exactInCurrentCbrs": 2
+    },
+    "laterRegisteredEvent": {
+      "date": "2024-10-15T03:00:45.000Z",
+      "address": "NAVIDAD 1427 DP 81",
+      "rol": "413-293",
+      "priceUf": 16700,
+      "usefulArea": 227,
+      "constructionYear": 1994,
+      "neighborhood": "Las Nieves",
+      "geoStatus": "GEO_OK",
+      "status": "NOT_COMPARABLE_TEMPORALLY",
+      "reason": "The template was modified in 2020 and the registered transaction occurred in 2024.",
+      "deltaToCommercialValueUf": 810,
+      "deltaToCommercialValuePct": 0.051,
+      "deltaToFivePercentScenarioUf": -26
+    }
+  },
+  "sourceReconciliation": {
+    "currentPortalValidListings": 5197,
+    "currentPortalSaleEligibleListings": 5190,
+    "portalListingsQuarantinedByRentIndicator": 7,
+    "currentCbrsRows": 40843,
+    "portalTemplateRows": [
+      {
+        "sourceRow": 12,
+        "ids": [
+          "5470670"
+        ],
+        "currentMatchCount": 0,
+        "status": "NOT_IN_CURRENT_SNAPSHOT"
+      },
+      {
+        "sourceRow": 13,
+        "ids": [
+          "5797748"
+        ],
+        "currentMatchCount": 0,
+        "status": "NOT_IN_CURRENT_SNAPSHOT"
+      },
+      {
+        "sourceRow": 14,
+        "ids": [
+          "542195511"
+        ],
+        "currentMatchCount": 0,
+        "status": "NOT_IN_CURRENT_SNAPSHOT"
+      },
+      {
+        "sourceRow": 15,
+        "ids": [
+          "1332506"
+        ],
+        "currentMatchCount": 0,
+        "status": "NOT_IN_CURRENT_SNAPSHOT"
+      },
+      {
+        "sourceRow": 16,
+        "ids": [
+          "524477645"
+        ],
+        "currentMatchCount": 0,
+        "status": "NOT_IN_CURRENT_SNAPSHOT"
+      },
+      {
+        "sourceRow": 17,
+        "ids": [
+          "531771382"
+        ],
+        "currentMatchCount": 0,
+        "status": "NOT_IN_CURRENT_SNAPSHOT"
+      }
+    ],
+    "registeredTemplateRows": [
+      {
+        "sourceRow": 22,
+        "exactMatchCount": 0,
+        "status": "NOT_REPRODUCIBLE",
+        "matches": []
+      },
+      {
+        "sourceRow": 23,
+        "exactMatchCount": 0,
+        "status": "NOT_REPRODUCIBLE",
+        "matches": []
+      },
+      {
+        "sourceRow": 24,
+        "exactMatchCount": 0,
+        "status": "NOT_REPRODUCIBLE",
+        "matches": []
+      },
+      {
+        "sourceRow": 25,
+        "exactMatchCount": 0,
+        "status": "NOT_REPRODUCIBLE",
+        "matches": []
+      },
+      {
+        "sourceRow": 26,
+        "exactMatchCount": 1,
+        "status": "EXACT",
+        "matches": [
+          {
+            "date": "2018-05-18T04:00:45.000Z",
+            "address": "NAVIDAD 1427 DP 41",
+            "rol": "413-285",
+            "priceUf": 16800,
+            "usefulArea": 227,
+            "constructionYear": 1994,
+            "neighborhood": "Las Nieves",
+            "geoStatus": "GEO_OK"
+          }
+        ]
+      },
+      {
+        "sourceRow": 27,
+        "exactMatchCount": 1,
+        "status": "EXACT",
+        "matches": [
+          {
+            "date": "2020-01-22T03:00:45.000Z",
+            "address": "ALONSO DE CORDOVA 2901 DP 40",
+            "rol": "521-240",
+            "priceUf": 15350,
+            "usefulArea": 207,
+            "constructionYear": 1995,
+            "neighborhood": "Nueva Costanera",
+            "geoStatus": "GEO_OK"
+          }
+        ]
+      }
+    ],
+    "subjectRolMatches": 1
+  },
+  "qualityIssues": [
+    {
+      "severity": "critical",
+      "code": "MISPLACED_RUT_VALUE",
+      "sourceCell": "Hoja1!I4",
+      "detail": "The RUT field contains a useful-area description and must not be interpreted as an identifier."
+    },
+    {
+      "severity": "critical",
+      "code": "EXPLICIT_DUPLICATE_INCLUDED_IN_FORMULAS",
+      "sourceCell": "Hoja1!B19",
+      "detail": "Rows 16 and 17 are declared to be the same apartment but both feed the source averages."
+    },
+    {
+      "severity": "warning",
+      "code": "STALE_PORTAL_COMPARABLES",
+      "detail": "None of the six template offer URLs appears in the supplied current Portal snapshot."
+    },
+    {
+      "severity": "warning",
+      "code": "PARTIAL_CBRS_REPRODUCIBILITY",
+      "detail": "2 of 6 template registered comparables reproduce exactly in the supplied CBRS base."
+    },
+    {
+      "severity": "warning",
+      "code": "HOUSE_TEMPLATE_HAS_NO_CASE_DATA",
+      "detail": "The house workbook supplies methodology and formulas but no populated valuation case."
+    },
+    {
+      "severity": "warning",
+      "code": "SOURCE_VINTAGE_2020",
+      "detail": "Both valuation workbooks were last modified in 2020."
+    }
+  ],
+  "privacy": {
+    "excludedFields": [
+      "owner name",
+      "RUT",
+      "buyer name",
+      "seller name"
+    ],
+    "rawTransactionRowsCommitted": false
+  }
+}

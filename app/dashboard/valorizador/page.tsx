@@ -1,1439 +1,269 @@
-﻿'use client'
+'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { TrendingUp, Home, DollarSign, BarChart2, RefreshCw, Download, FileText, Send } from 'lucide-react'
-import {
-  buildFallbackValuationAnalysis,
-  type ValuationAnalysis,
-  type ValuationComparable,
-  type ValuationRequest,
-} from '@/lib/valuation-ai'
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { AlertTriangle, Calculator, Database, ShieldCheck } from 'lucide-react'
+import valuationData from '@/data/valuation-intelligence.json'
+import { calculateDeterministicValuation } from '@/lib/valuation-model'
 
-interface Neighborhood {
-  name: string
-  price_per_sqm_uf: number
-  velocity_days: number
-  absorption_rate: number
-  inventory_count: number
-  zona_prc: string
-}
+type PropertyType = 'Casa' | 'Departamento'
 
-interface ExternalBenchmark {
-  source: string
-  source_url: string
-  neighborhood: string
-  listing_title: string | null
-  offer_count: number
-  low_price_clp: number | null
-  high_price_clp: number | null
-  price_currency: string | null
-  recorded_at: string
-}
-
-interface PropertyComparable {
-  id: string
+type FormState = {
+  propertyType: PropertyType
   address: string
   neighborhood: string
-  price_uf: number
-  area_m2: number
-  bedrooms: number
-  bathrooms: number
-  status: string
-  days_on_market: number
-  created_at: string
-  source?: string | null
-  latitude?: number | null
-  longitude?: number | null
+  rol: string
+  usefulAreaM2: string
+  terraceAreaM2: string
+  appliedUsefulUfM2: string
+  builtAreaM2: string
+  landAreaM2: string
+  builtUfM2: string
+  landUfM2: string
 }
 
-interface ValorizationResult {
-  price_uf: number
-  price_uf_m2: number
-  price_clp: number
-  confidence: number
-  comp_neighborhood: string
-  market_velocity: number
-  market_absorption: number
-  comparable_properties: number
-  comparable_source: string
-  comparable_range_uf: string
+const emptyForm: FormState = {
+  propertyType: 'Departamento',
+  address: '',
+  neighborhood: '',
+  rol: '',
+  usefulAreaM2: '',
+  terraceAreaM2: '',
+  appliedUsefulUfM2: '',
+  builtAreaM2: '',
+  landAreaM2: '',
+  builtUfM2: '',
+  landUfM2: '',
 }
 
-interface ValuationHistoryItem {
-  quote_key: string
-  neighborhood: string
-  estimated_uf: number
-  publication_price_uf: number
-  closing_price_uf: number
-  confidence: number
-  created_at: string
+const issueCopy: Record<string, { title: string; detail: string }> = {
+  MISPLACED_RUT_VALUE: {
+    title: 'Campo RUT inconsistente',
+    detail: 'La celda destinada al RUT contiene una descripción de superficie útil. No se interpreta como identificador.',
+  },
+  EXPLICIT_DUPLICATE_INCLUDED_IN_FORMULAS: {
+    title: 'Duplicado incluido en el promedio',
+    detail: 'La plantilla declara que dos filas son el mismo departamento, pero ambas alimentan el promedio Excel.',
+  },
+  STALE_PORTAL_COMPARABLES: {
+    title: 'Comparables Portal fuera del snapshot actual',
+    detail: 'Ninguno de los seis enlaces históricos aparece en los 5.197 avisos válidos del snapshot suministrado.',
+  },
+  PARTIAL_CBRS_REPRODUCIBILITY: {
+    title: 'Reproducibilidad CBRS parcial',
+    detail: 'Solo dos de los seis comparables históricos se reproducen exactamente en la base CBRS entregada.',
+  },
+  HOUSE_TEMPLATE_HAS_NO_CASE_DATA: {
+    title: 'Plantilla de casas sin caso poblado',
+    detail: 'El libro define la metodología, pero no incluye una valorización de casa completa para validar resultados.',
+  },
+  SOURCE_VINTAGE_2020: {
+    title: 'Metodología fuente de 2020',
+    detail: 'Ambas plantillas fueron modificadas por última vez en 2020. Su vigencia debe revisarse antes de cambiar reglas.',
+  },
 }
 
-const UF_VALUE = 37500
-
-function sourceQualityWeight(source?: string | null) {
-  switch ((source || '').toLowerCase()) {
-    case 'portal_inmobiliario':
-      return 14
-    case 'icasas_search':
-      return 12
-    case 'yapo_search':
-      return 10
-    case 'toctoc_search':
-      return 9
-    case 'manual':
-      return 6
-    default:
-      return 8
-  }
+function asNumber(value: string) {
+  const parsed = Number(value.replace(',', '.'))
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
-function daysSince(iso?: string | null) {
-  if (!iso) return Number.POSITIVE_INFINITY
-  const parsed = new Date(iso)
-  if (Number.isNaN(parsed.getTime())) return Number.POSITIVE_INFINITY
-  return (Date.now() - parsed.getTime()) / (1000 * 60 * 60 * 24)
+function formatUf(value: number) {
+  return `${Math.round(value).toLocaleString('es-CL')} UF`
+}
+
+function InputField({ label, value, onChange, suffix, min = 0 }: { label: string; value: string; onChange: (value: string) => void; suffix?: string; min?: number }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#555]">{label}</span>
+      <div className="flex border border-[#c9c9c9] bg-white focus-within:border-[#d7332b]">
+        <input type="number" min={min} step="0.1" value={value} onChange={(event) => onChange(event.target.value)} className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-black outline-none" />
+        {suffix ? <span className="flex items-center border-l border-[#ddd] bg-[#f4f4f4] px-3 text-xs text-[#666]">{suffix}</span> : null}
+      </div>
+    </label>
+  )
 }
 
 export default function ValorizadorPage() {
-  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
-  const [properties, setProperties] = useState<PropertyComparable[]>([])
-  const [externalBenchmark, setExternalBenchmark] = useState<ExternalBenchmark | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [calculating, setCalculating] = useState(false)
-  const [result, setResult] = useState<ValorizationResult | null>(null)
-  const [comparables, setComparables] = useState<ValuationComparable[]>([])
-  const [aiAnalysis, setAiAnalysis] = useState<ValuationAnalysis | null>(null)
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState<string | null>(null)
-  const [roleReportLoading, setRoleReportLoading] = useState<string | null>(null)
-  const [roleReportMessage, setRoleReportMessage] = useState<string | null>(null)
-  const [roleReportError, setRoleReportError] = useState<string | null>(null)
-  const [pdfLoading, setPdfLoading] = useState(false)
-  const [pdfError, setPdfError] = useState<string | null>(null)
-  const [history, setHistory] = useState<ValuationHistoryItem[]>([])
-  const [historyNeighborhoodFilter, setHistoryNeighborhoodFilter] = useState('all')
-  const analysisSeq = useRef(0)
+  const [form, setForm] = useState<FormState>(emptyForm)
 
-  const [form, setForm] = useState({
-    neighborhood: '',
-    area_m2: '100',
-    bedrooms: '3',
-    bathrooms: '2',
-    age_years: '5',
-    floor: '3',
-    has_parking: true,
-    has_storage: false,
-    has_pool: false,
-    condition: 'bueno' as 'excelente' | 'bueno' | 'regular' | 'a_renovar',
-  })
-
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const [nRes, pRes, bRes, qRes] = await Promise.all([
-        supabase
-          .from('neighborhoods')
-          .select('name, price_per_sqm_uf, velocity_days, absorption_rate, inventory_count, zona_prc')
-          .not('barrio_id', 'is', null)
-          .order('price_per_sqm_uf', { ascending: false }),
-        supabase
-          .from('properties')
-          .select('id, address, neighborhood, price_uf, area_m2, bedrooms, bathrooms, status, days_on_market, created_at, source, latitude, longitude')
-          .order('created_at', { ascending: false })
-          .limit(250),
-        supabase
-          .from('external_market_benchmarks')
-          .select('source, source_url, neighborhood, listing_title, offer_count, low_price_clp, high_price_clp, price_currency, recorded_at')
-          .order('recorded_at', { ascending: false })
-          .limit(1),
-        supabase
-          .from('valuation_quotes')
-          .select('quote_key, neighborhood, estimated_uf, publication_price_uf, closing_price_uf, confidence, created_at')
-          .order('created_at', { ascending: false })
-          .limit(200),
-      ])
-
-      setNeighborhoods((nRes.data || []) as Neighborhood[])
-      setProperties((pRes.data || []) as PropertyComparable[])
-      setExternalBenchmark((bRes.data?.[0] || null) as ExternalBenchmark | null)
-      setHistory((qRes.data || []) as ValuationHistoryItem[])
-
-      if (nRes.data && nRes.data.length > 0) {
-        setForm((f) => ({ ...f, neighborhood: nRes.data[0].name }))
-      }
-
-      setLoading(false)
+  const result = useMemo(() => {
+    if (form.propertyType === 'Casa') {
+      const builtAreaM2 = asNumber(form.builtAreaM2)
+      const builtUfM2 = asNumber(form.builtUfM2)
+      const landAreaM2 = asNumber(form.landAreaM2)
+      const landUfM2 = asNumber(form.landUfM2)
+      if (builtAreaM2 <= 0 || builtUfM2 <= 0 || (landAreaM2 > 0 && landUfM2 <= 0)) return null
+      return calculateDeterministicValuation({ propertyType: 'Casa', builtAreaM2, builtUfM2, landAreaM2, landUfM2 })
     }
 
-    void load()
-  }, [])
-
-  const selectedNb = useMemo(
-    () => neighborhoods.find((n) => n.name === form.neighborhood) || null,
-    [form.neighborhood, neighborhoods],
-  )
-
-  const selectedBands = useMemo(() => {
-    if (!result || !selectedNb) return null
-    const analysis: ValuationAnalysis = aiAnalysis || buildFallbackValuationAnalysis({
-      neighborhood: selectedNb,
-      area_m2: Number(form.area_m2),
-      bedrooms: Number(form.bedrooms),
-      bathrooms: Number(form.bathrooms),
-      age_years: Number(form.age_years),
-      floor: Number(form.floor),
-      condition: form.condition,
-      has_parking: form.has_parking,
-      has_storage: form.has_storage,
-      has_pool: form.has_pool,
-      estimated_uf: result.price_uf,
-      estimated_uf_m2: result.price_uf_m2,
-      estimated_clp: result.price_clp,
-      confidence: result.confidence,
-      comparable_source: result.comparable_source,
-      comparable_range_uf: result.comparable_range_uf,
-      market_velocity: result.market_velocity,
-      market_absorption: result.market_absorption,
-      comparable_properties: result.comparable_properties,
-      selected_comparables: comparables,
-      benchmark: externalBenchmark,
+    const usefulAreaM2 = asNumber(form.usefulAreaM2)
+    const appliedUsefulUfM2 = asNumber(form.appliedUsefulUfM2)
+    if (usefulAreaM2 <= 0 || appliedUsefulUfM2 <= 0) return null
+    return calculateDeterministicValuation({
+      propertyType: 'Departamento',
+      usefulAreaM2,
+      terraceAreaM2: asNumber(form.terraceAreaM2),
+      appliedUsefulUfM2,
     })
+  }, [form])
 
-    return {
-      publication: analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || result.price_uf,
-      closing: analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || result.price_uf,
-      floor: analysis.price_bands.find((band) => band.label === 'piso_negociacion')?.value_uf || result.price_uf,
-      analysis,
-    }
-  }, [aiAnalysis, comparables, externalBenchmark, form, result, selectedNb])
+  function update<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
 
-  const historyNeighborhoodOptions = useMemo(
-    () => [...new Set(history.map((item) => item.neighborhood).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
-    [history],
-  )
-
-  const visibleHistory = useMemo(() => {
-    if (historyNeighborhoodFilter === 'all') return history
-    return history.filter((item) => item.neighborhood === historyNeighborhoodFilter)
-  }, [history, historyNeighborhoodFilter])
-
-  const comparisonSummary = useMemo(() => {
-    if (!result) return null
-    const previous = visibleHistory[0] || null
-    const averageClosing = visibleHistory.length
-      ? visibleHistory.reduce((sum, item) => sum + Number(item.closing_price_uf || 0), 0) / visibleHistory.length
-      : result.price_uf
-    const averageConfidence = visibleHistory.length
-      ? visibleHistory.reduce((sum, item) => sum + Number(item.confidence || 0), 0) / visibleHistory.length
-      : result.confidence
-    return {
-      previous,
-      averageClosing,
-      averageConfidence,
-    }
-  }, [result, visibleHistory])
-
-  const neighborhoodComparison = useMemo(() => {
-    if (!result) return null
-
-    const grouped = new Map<string, ValuationHistoryItem[]>()
-    visibleHistory.forEach((item) => {
-      const list = grouped.get(item.neighborhood) || []
-      list.push(item)
-      grouped.set(item.neighborhood, list)
+  function loadHistoricalCase() {
+    const subject = valuationData.templateCase.subject
+    const calculation = valuationData.templateCase.sourceCalculation
+    setForm({
+      ...emptyForm,
+      propertyType: 'Departamento',
+      address: subject.address,
+      neighborhood: subject.neighborhood,
+      rol: subject.rol,
+      usefulAreaM2: String(subject.usefulAreaM2),
+      terraceAreaM2: String(subject.terraceAreaM2),
+      appliedUsefulUfM2: String(calculation.appliedUfM2),
     })
-
-    const rows = [...grouped.entries()]
-      .map(([neighborhood, items]) => {
-        const sorted = items
-          .map((item) => Number(item.closing_price_uf || 0))
-          .filter((value) => Number.isFinite(value) && value > 0)
-          .sort((a, b) => a - b)
-        const percentile = (p: number) => {
-          if (!sorted.length) return 0
-          const index = (sorted.length - 1) * p
-          const lower = Math.floor(index)
-          const upper = Math.ceil(index)
-          if (lower === upper) return sorted[lower]
-          return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower)
-        }
-        const averageClosing = items.reduce((sum, item) => sum + Number(item.closing_price_uf || 0), 0) / items.length
-        return {
-          neighborhood,
-          averageClosing,
-          count: items.length,
-          p25: percentile(0.25),
-          p50: percentile(0.5),
-          p75: percentile(0.75),
-        }
-      })
-      .sort((a, b) => b.averageClosing - a.averageClosing)
-
-    const currentNeighborhood = rows.find((row) => row.neighborhood === result.comp_neighborhood) || {
-      neighborhood: result.comp_neighborhood,
-      averageClosing: result.price_uf,
-      count: 0,
-      p25: result.price_uf,
-      p50: result.price_uf,
-      p75: result.price_uf,
-    }
-
-    const maxValue = Math.max(result.price_uf, ...rows.slice(0, 4).map((row) => row.averageClosing))
-
-    return {
-      currentNeighborhood,
-      rows: rows.slice(0, 4),
-      maxValue,
-      totalRows: rows.length,
-    }
-  }, [result, visibleHistory])
-
-  function buildValuationRequest(): ValuationRequest | null {
-    if (!result || !selectedNb) return null
-
-    return {
-      neighborhood: selectedNb,
-      area_m2: Number(form.area_m2),
-      bedrooms: Number(form.bedrooms),
-      bathrooms: Number(form.bathrooms),
-      age_years: Number(form.age_years),
-      floor: Number(form.floor),
-      condition: form.condition,
-      has_parking: form.has_parking,
-      has_storage: form.has_storage,
-      has_pool: form.has_pool,
-      estimated_uf: result.price_uf,
-      estimated_uf_m2: result.price_uf_m2,
-      estimated_clp: result.price_clp,
-      confidence: result.confidence,
-      comparable_source: result.comparable_source,
-      comparable_range_uf: result.comparable_range_uf,
-      market_velocity: result.market_velocity,
-      market_absorption: result.market_absorption,
-      comparable_properties: result.comparable_properties,
-      selected_comparables: comparables,
-      benchmark: externalBenchmark,
-    }
-  }
-
-  const exportQuery = useMemo(() => {
-    const params = new URLSearchParams()
-    if (historyNeighborhoodFilter !== 'all') {
-      params.set('neighborhood', historyNeighborhoodFilter)
-    }
-    return params.toString()
-  }, [historyNeighborhoodFilter])
-
-  function exportUrl(format: 'csv' | 'xlsx') {
-    const params = new URLSearchParams(exportQuery)
-    params.set('format', format)
-    return `/api/valorizador/export?${params.toString()}`
-  }
-
-  function buildComparables(
-    targetNeighborhood: string,
-    targetArea: number,
-    targetBedrooms: number,
-    targetBathrooms: number,
-    baseUFm2: number,
-    estimateUF: number,
-  ) {
-    const neighborhoodPool = properties.filter((property) => property.neighborhood === targetNeighborhood)
-    const candidatePool = neighborhoodPool.length >= 3 ? neighborhoodPool : properties
-    const recentCutoffDays = 180
-
-    return candidatePool
-      .map((property) => {
-        const areaDeltaRatio = Math.abs(property.area_m2 - targetArea) / Math.max(targetArea, property.area_m2, 1)
-        const bedroomDelta = Math.abs(property.bedrooms - targetBedrooms)
-        const bathroomDelta = Math.abs(property.bathrooms - targetBathrooms)
-        const pricePerM2 = property.area_m2 > 0 ? property.price_uf / property.area_m2 : property.price_uf
-        const referenceGapPct = baseUFm2 > 0 ? Math.abs(pricePerM2 - baseUFm2) / baseUFm2 : 0
-        const status = property.status?.toLowerCase() || 'activo'
-        const recencyDays = daysSince(property.created_at)
-        const marketAgePenalty = Number.isFinite(recencyDays) ? Math.min(14, recencyDays / 15) : 6
-        const onMarketPenalty = Math.min(8, (property.days_on_market || 0) / 18)
-        const sourceBonus = sourceQualityWeight(property.source)
-        const neighborhoodBonus = property.neighborhood === targetNeighborhood ? 18 : 0
-        const areaScore = Math.max(0, 28 - areaDeltaRatio * 35)
-        const bedroomScore = Math.max(0, 16 - bedroomDelta * 6)
-        const bathroomScore = Math.max(0, 12 - bathroomDelta * 5)
-        const priceMatchScore = baseUFm2 > 0
-          ? Math.max(0, 20 - referenceGapPct * 20)
-          : 10
-        const marketAlignmentScore = baseUFm2 > 0
-          ? Math.max(0, 12 - referenceGapPct * 12)
-          : 6
-        const freshnessScore = Number.isFinite(recencyDays) && recencyDays <= recentCutoffDays
-          ? Math.max(0, 12 - recencyDays / 16)
-          : 2
-        const soldPenalty = status.includes('vend') ? 10 : 0
-        const score = Math.max(
-          0,
-          Math.min(
-            100,
-            neighborhoodBonus
-              + areaScore
-              + bedroomScore
-              + bathroomScore
-              + priceMatchScore
-              + marketAlignmentScore
-              + freshnessScore
-              + sourceBonus
-              - marketAgePenalty
-              - onMarketPenalty
-              - soldPenalty,
-          ),
-        )
-        const similarity = score
-        const reasons = [
-          property.neighborhood === targetNeighborhood ? 'same neighborhood' : 'nearby inventory',
-          sourceBonus >= 12 ? 'strong source' : 'market source',
-          areaDeltaRatio <= 0.15 ? 'area match' : 'area variance',
-          referenceGapPct <= 0.1 ? 'market aligned' : 'market spread',
-          bedroomDelta === 0 ? 'bedroom match' : 'bedroom variance',
-          bathroomDelta === 0 ? 'bathroom match' : 'bathroom variance',
-        ]
-
-        return {
-          id: property.id,
-          address: property.address,
-          neighborhood: property.neighborhood,
-          price_uf: property.price_uf,
-          area_m2: property.area_m2,
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          status: property.status,
-          source: property.source,
-          similarity,
-          score,
-          price_per_m2: pricePerM2,
-          delta_to_estimate_uf: property.price_uf - estimateUF,
-          match_label: reasons.slice(0, 3).join(' � '),
-        }
-      })
-      .filter((item) => item.score >= 35)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6)
-  }
-
-  async function requestAiAnalysis(payload: ValuationRequest) {
-    const currentSeq = ++analysisSeq.current
-    setAiLoading(true)
-    setAiError(null)
-
-    try {
-      const response = await fetch('/api/valorizador/analisis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Analisis IA respondio con estado ${response.status}`)
-      }
-
-      const data = await response.json().catch(() => ({}))
-      const analysis = (data?.analysis as ValuationAnalysis | undefined) || buildFallbackValuationAnalysis(payload)
-
-      if (analysisSeq.current !== currentSeq) return
-      setAiAnalysis(analysis)
-      if (data?.quote_key) {
-        const publicationPrice = analysis.price_bands.find((band) => band.label === 'aspiracional')?.value_uf || payload.estimated_uf
-        const closingPrice = analysis.price_bands.find((band) => band.label === 'mercado')?.value_uf || payload.estimated_uf
-        setHistory((current) => [
-          {
-            quote_key: String(data.quote_key),
-            neighborhood: payload.neighborhood.name,
-            estimated_uf: payload.estimated_uf,
-            publication_price_uf: publicationPrice,
-            closing_price_uf: closingPrice,
-            confidence: payload.confidence,
-            created_at: new Date().toISOString(),
-          },
-          ...current,
-        ].slice(0, 5))
-      }
-    } catch (error) {
-      if (analysisSeq.current !== currentSeq) return
-      setAiAnalysis(buildFallbackValuationAnalysis(payload))
-      setAiError(error instanceof Error ? error.message : 'No pudimos conectar la capa IA.')
-    } finally {
-      if (analysisSeq.current === currentSeq) {
-        setAiLoading(false)
-      }
-    }
-  }
-
-  async function downloadValuationPdf() {
-    const valuation = buildValuationRequest()
-    const analysis = selectedBands?.analysis || aiAnalysis
-    if (!valuation) return
-
-    setPdfLoading(true)
-    setPdfError(null)
-
-    try {
-      const response = await fetch('/api/valorizador/pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ valuation, analysis }),
-      })
-
-      if (!response.ok) {
-        throw new Error('No pudimos generar el PDF de valorizacion.')
-      }
-
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = `${new Date().toISOString().slice(0, 10)}_Valorizacion_Vitacura.pdf`
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      setPdfError(error instanceof Error ? error.message : 'No pudimos generar el PDF de valorizacion.')
-    } finally {
-      setPdfLoading(false)
-    }
-  }
-
-  async function generateRoleReport(reportType: 'ceo_brief' | 'director_accounts' | 'seller_playbook') {
-    const valuation = buildValuationRequest()
-    if (!valuation) return
-
-    setRoleReportLoading(reportType)
-    setRoleReportError(null)
-    setRoleReportMessage(null)
-
-    const marketContext = {
-      source: 'valorizador',
-      neighborhood: valuation.neighborhood.name,
-      area_m2: valuation.area_m2,
-      price_uf: result?.price_uf || 0,
-      price_uf_m2: result?.price_uf_m2 || 0,
-      price_clp: result?.price_clp || 0,
-      confidence: result?.confidence || 0,
-      market_velocity: result?.market_velocity || 0,
-      market_absorption: result?.market_absorption || 0,
-      comparable_source: result?.comparable_source || '',
-      comparable_range_uf: result?.comparable_range_uf || '',
-      comparable_properties: result?.comparable_properties || 0,
-      top_comparables: comparables.slice(0, 3).map((item) => ({
-        id: item.id,
-        address: item.address,
-        neighborhood: item.neighborhood,
-        price_uf: item.price_uf,
-        score: item.score,
-      })),
-      publication_price_uf: selectedBands?.publication || result?.price_uf || 0,
-      closing_price_uf: selectedBands?.closing || result?.price_uf || 0,
-      negotiation_floor_uf: selectedBands?.floor || result?.price_uf || 0,
-      report_role: reportType,
-      insights: aiAnalysis
-        ? {
-            title: aiAnalysis.title,
-            summary: aiAnalysis.summary,
-            why_now: aiAnalysis.why_now,
-            risks: aiAnalysis.risks,
-            actions: aiAnalysis.actions,
-            band_recommendation: aiAnalysis.band_recommendation,
-          }
-        : null,
-    }
-
-    try {
-      const response = await fetch('/api/reports/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          report_type: reportType,
-          market_context: marketContext,
-        }),
-      })
-
-      const data = (await response.json().catch(() => ({}))) as {
-        error?: string
-        report?: { id?: string; title?: string; summary?: string }
-      }
-
-      if (!response.ok || !data.report) {
-        throw new Error(data.error || 'No pudimos generar el reporte.')
-      }
-
-      const label = reportType === 'ceo_brief' ? 'CEO' : reportType === 'director_accounts' ? 'Director' : 'Vendedor'
-      setRoleReportMessage(`Reporte ${label} generado: ${data.report.title || 'sin titulo'}`)
-    } catch (error) {
-      setRoleReportError(error instanceof Error ? error.message : 'No pudimos generar el reporte.')
-    } finally {
-      setRoleReportLoading(null)
-    }
-  }
-
-  function calculate() {
-    const nb = selectedNb
-    if (!nb || !nb.price_per_sqm_uf) return
-
-    setCalculating(true)
-    setAiAnalysis(null)
-    setAiError(null)
-    setRoleReportMessage(null)
-    setRoleReportError(null)
-    setPdfError(null)
-
-    const area = Number.parseFloat(form.area_m2)
-    const ageYears = Number.parseInt(form.age_years, 10)
-    const bedrooms = Number.parseInt(form.bedrooms, 10)
-    const bathrooms = Number.parseInt(form.bathrooms, 10)
-    const floorNum = Number.parseInt(form.floor, 10)
-
-    const basePriceUFm2 = nb.price_per_sqm_uf
-    const ageFactor = Math.max(0.75, 1 - ageYears * 0.02)
-    const conditionFactor: Record<string, number> = {
-      excelente: 1.08,
-      bueno: 1.0,
-      regular: 0.9,
-      a_renovar: 0.78,
-    }
-    const bedroomFactor = bedrooms <= 1 ? 0.92 : bedrooms === 2 ? 0.97 : bedrooms === 3 ? 1.0 : bedrooms === 4 ? 1.03 : 1.05
-    const parkingBonus = form.has_parking ? 0.04 : 0
-    const storageBonus = form.has_storage ? 0.02 : 0
-    const poolBonus = form.has_pool ? 0.03 : 0
-    const floorFactor = floorNum <= 1 ? 0.95 : floorNum <= 3 ? 0.98 : floorNum <= 8 ? 1.02 : 1.01
-
-    const benchmarkTotalUF = externalBenchmark?.low_price_clp && externalBenchmark?.high_price_clp
-      ? ((externalBenchmark.low_price_clp + externalBenchmark.high_price_clp) / 2) / UF_VALUE
-      : null
-
-    const baselineUF = basePriceUFm2 * area
-    const initialUF = baselineUF
-      * ageFactor
-      * conditionFactor[form.condition]
-      * bedroomFactor
-      * floorFactor
-      * (1 + parkingBonus + storageBonus + poolBonus)
-
-    const comparableMatches = buildComparables(nb.name, area, bedrooms, bathrooms, basePriceUFm2, initialUF)
-    const weightedComparableUF = comparableMatches.length
-      ? comparableMatches.reduce((sum, item) => sum + item.price_uf * item.score, 0) / comparableMatches.reduce((sum, item) => sum + item.score, 0)
-      : null
-    const topComparableScores = comparableMatches.slice(0, 3)
-    const comparableLow = topComparableScores.length
-      ? Math.min(...topComparableScores.map((item) => item.price_uf))
-      : Math.round(initialUF * 0.92)
-    const comparableHigh = topComparableScores.length
-      ? Math.max(...topComparableScores.map((item) => item.price_uf))
-      : Math.round(initialUF * 1.08)
-
-    const blendedUF = (() => {
-      const baselineWeight = comparableMatches.length ? 0.45 : 0.65
-      const comparableWeight = weightedComparableUF ? 0.35 : 0
-      const benchmarkWeight = benchmarkTotalUF ? 0.12 : 0
-      const fallbackWeight = Math.max(0, 1 - baselineWeight - comparableWeight - benchmarkWeight)
-      const comparableAnchor = weightedComparableUF || initialUF
-      const benchmarkAnchor = benchmarkTotalUF || initialUF
-      return (
-        initialUF * baselineWeight +
-        comparableAnchor * comparableWeight +
-        benchmarkAnchor * benchmarkWeight +
-        baselineUF * fallbackWeight
-      )
-    })()
-
-    const totalUF = Math.round(blendedUF)
-    const adjustedUFm2 = totalUF / Math.max(area, 1)
-
-    const baseConf = 68
-    const absConf = nb.absorption_rate > 0.85 ? 14 : nb.absorption_rate > 0.75 ? 10 : 5
-    const invConf = nb.inventory_count > 30 ? 10 : nb.inventory_count > 15 ? 6 : 2
-    const sourceConf = externalBenchmark ? 6 : 0
-    const compConf = comparableMatches.length ? Math.min(12, Math.round(comparableMatches[0].score / 8)) : 0
-    const confidence = Math.min(97, baseConf + absConf + invConf + sourceConf + compConf)
-
-    const resultPayload = {
-      price_uf: Math.round(totalUF),
-      price_uf_m2: Math.round(adjustedUFm2 * 10) / 10,
-      price_clp: Math.round(totalUF * UF_VALUE),
-      confidence,
-      comp_neighborhood: nb.name,
-      market_velocity: nb.velocity_days,
-      market_absorption: Math.round(nb.absorption_rate * 100),
-      comparable_properties: comparableMatches.length,
-      comparable_source: comparableMatches.length ? 'weighted_properties' : externalBenchmark ? 'external_benchmark' : 'neighborhood_index',
-      comparable_range_uf: `${comparableLow.toLocaleString('es-CL')} - ${comparableHigh.toLocaleString('es-CL')}`,
-    }
-
-    const analysisPayload: ValuationRequest = {
-      neighborhood: nb,
-      area_m2: area,
-      bedrooms,
-      bathrooms,
-      age_years: ageYears,
-      floor: floorNum,
-      condition: form.condition,
-      has_parking: form.has_parking,
-      has_storage: form.has_storage,
-      has_pool: form.has_pool,
-      estimated_uf: resultPayload.price_uf,
-      estimated_uf_m2: resultPayload.price_uf_m2,
-      estimated_clp: resultPayload.price_clp,
-      confidence: resultPayload.confidence,
-      comparable_source: resultPayload.comparable_source,
-      comparable_range_uf: resultPayload.comparable_range_uf,
-      market_velocity: resultPayload.market_velocity,
-      market_absorption: resultPayload.market_absorption,
-      comparable_properties: resultPayload.comparable_properties,
-      selected_comparables: comparableMatches,
-      benchmark: externalBenchmark,
-    }
-
-    setTimeout(() => {
-      setResult(resultPayload)
-      setComparables(comparableMatches)
-      setCalculating(false)
-      void requestAiAnalysis(analysisPayload)
-    }, 350)
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#e5e7eb', borderTopColor: 'var(--n3-teal)' }} />
-      </div>
-    )
   }
 
   return (
-    <div className="space-y-6 pb-8">
-      <div className="pb-5" style={{ borderBottom: '1px solid #e5e7eb' }}>
-        <h1 className="text-3xl font-bold text-gray-900">Valorizador IA</h1>
-        <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-          Estimacion basada en datos reales de Vitacura, comparables recientes y un benchmark externo cuando esta disponible.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm space-y-4" style={{ border: '1px solid #e5e7eb' }}>
-          <h2 className="font-semibold text-gray-900">Datos de la propiedad</h2>
-
+    <div className="space-y-6 pb-10">
+      <header className="overflow-hidden border border-white/10 bg-black text-white">
+        <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Barrio</label>
-            <select
-              value={form.neighborhood}
-              onChange={(e) => { setForm({ ...form, neighborhood: e.target.value }); setResult(null) }}
-              className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-              style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
-            >
-              {neighborhoods.map((n) => <option key={n.name} value={n.name}>{n.name}</option>)}
-            </select>
-            {selectedNb && (
-              <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
-                Precio de referencia: <strong>{selectedNb.price_per_sqm_uf} UF/m2</strong> � Zona {selectedNb.zona_prc}
-              </p>
-            )}
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e23b31]">Property Partners Vitacura</p>
+            <h1 className="mt-2 text-3xl font-semibold">Valorización profesional</h1>
+            <p className="mt-2 max-w-3xl text-sm text-[#aaa]">Motor determinístico basado en las dos plantillas reales. Sin bonos automáticos por edad, piso, dormitorios o amenities.</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Area m2</label>
-              <input
-                type="number"
-                min="20"
-                value={form.area_m2}
-                onChange={(e) => { setForm({ ...form, area_m2: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Antiguedad</label>
-              <input
-                type="number"
-                min="0"
-                max="50"
-                value={form.age_years}
-                onChange={(e) => { setForm({ ...form, age_years: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Dormitorios</label>
-              <input
-                type="number"
-                min="1"
-                max="8"
-                value={form.bedrooms}
-                onChange={(e) => { setForm({ ...form, bedrooms: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Banos</label>
-              <input
-                type="number"
-                min="1"
-                max="6"
-                value={form.bathrooms}
-                onChange={(e) => { setForm({ ...form, bathrooms: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Piso</label>
-              <input
-                type="number"
-                min="1"
-                max="30"
-                value={form.floor}
-                onChange={(e) => { setForm({ ...form, floor: e.target.value }); setResult(null) }}
-                className="w-full px-3 py-2 rounded-lg text-sm text-gray-900"
-                style={{ border: '1px solid #e5e7eb', background: '#f9fafb' }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Estado</label>
-            <div className="grid grid-cols-2 gap-2">
-              {(['excelente', 'bueno', 'regular', 'a_renovar'] as const).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => { setForm({ ...form, condition: c }); setResult(null) }}
-                  className="px-3 py-1.5 rounded text-xs font-medium capitalize transition-all"
-                  style={{
-                    background: form.condition === c ? 'var(--n3-teal)' : '#f9fafb',
-                    color: form.condition === c ? '#fff' : '#374151',
-                    border: `1px solid ${form.condition === c ? 'var(--n3-teal)' : '#e5e7eb'}`,
-                  }}
-                >
-                  {c.replace('_', ' ')}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wide block mb-1.5" style={{ color: '#374151' }}>Extras</label>
-            <div className="flex gap-2 flex-wrap">
-              {[
-                { key: 'has_parking', label: 'Estacionamiento' },
-                { key: 'has_storage', label: 'Bodega' },
-                { key: 'has_pool', label: 'Piscina' },
-              ].map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => { setForm((f) => ({ ...f, [key]: !f[key as keyof typeof f] })); setResult(null) }}
-                  className="px-3 py-1.5 rounded text-xs font-medium transition-all"
-                  style={{
-                    background: form[key as keyof typeof form] ? '#f9fafb' : '#f9fafb',
-                    color: form[key as keyof typeof form] ? '#111111' : '#6b7280',
-                    border: `1px solid ${form[key as keyof typeof form] ? 'var(--n3-teal)' : '#e5e7eb'}`,
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={calculate}
-            disabled={calculating || !form.neighborhood}
-            className="w-full py-2.5 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-            style={{ background: 'var(--n3-teal)' }}
-          >
-            {calculating ? <><RefreshCw size={15} className="animate-spin" /> Calculando...</> : <><BarChart2 size={15} /> Calcular valor</>}
-          </button>
+          <Link href="/dashboard/market/fuentes" className="border border-[#d7332b] px-4 py-2 text-xs font-semibold hover:bg-[#d7332b]">Revisar Portal, KML y CBRS</Link>
         </div>
+        <div className="h-1 bg-[#d7332b]" />
+      </header>
 
-        <div className="lg:col-span-3 space-y-4">
-          {result ? (
-            <>
-              <div className="bg-white rounded-lg p-6 shadow-sm" style={{ border: '1px solid var(--n3-teal)', borderLeft: '4px solid var(--n3-teal)' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#374151' }}>Valor estimado</p>
-                <p className="text-4xl font-bold text-gray-900">{result.price_uf.toLocaleString('es-CL')} <span className="text-xl font-semibold" style={{ color: 'var(--n3-teal)' }}>UF</span></p>
-                <p className="text-sm mt-1" style={{ color: '#6b7280' }}>~ ${result.price_clp.toLocaleString('es-CL')} CLP</p>
+      <section className="grid gap-px bg-[#cacaca] md:grid-cols-4">
+        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Plantillas</p><p className="mt-2 text-2xl font-semibold">2</p><p className="text-xs text-[#666]">Casas y departamentos</p></div>
+        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Fórmulas auditadas</p><p className="mt-2 text-2xl font-semibold">122</p><p className="text-xs text-[#666]">0 errores Excel</p></div>
+        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Oferta elegible</p><p className="mt-2 text-2xl font-semibold">5.190</p><p className="text-xs text-[#666]">7 avisos con señal de arriendo en cuarentena</p></div>
+        <div className="bg-[#f0f0f0] p-4 text-black"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Registros CBRS</p><p className="mt-2 text-2xl font-semibold">40.843</p><p className="text-xs text-[#666]">Ventas y otras inscripciones</p></div>
+      </section>
 
-                <div className="flex items-center gap-2 mt-4">
-                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#e5e7eb' }}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${result.confidence}%`, background: result.confidence > 85 ? 'var(--n3-teal)' : result.confidence > 70 ? '#f59e0b' : '#d97706' }} />
-                  </div>
-                  <span className="text-sm font-semibold" style={{ color: result.confidence > 85 ? 'var(--n3-teal)' : '#f59e0b' }}>{result.confidence}% confianza</span>
-                </div>
-              </div>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+        <div className="border border-[#d5d5d5] bg-[#f5f5f3] p-5 text-black">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">01 · Inputs trazables</p><h2 className="mt-1 text-xl font-semibold">Datos de la propiedad</h2></div>
+            <button type="button" onClick={loadHistoricalCase} className="border border-black px-3 py-2 text-xs font-semibold hover:bg-black hover:text-white">Cargar caso histórico</button>
+          </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign size={15} style={{ color: 'var(--n3-teal)' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Precio / m2</p>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.price_uf_m2} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>UF/m2</span></p>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp size={15} style={{ color: '#6b7280' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Velocidad del barrio</p>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.market_velocity} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>dias</span></p>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart2 size={15} style={{ color: 'var(--n3-teal)' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Absorcion</p>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.market_absorption}<span className="text-sm font-normal" style={{ color: '#6b7280' }}>%</span></p>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Home size={15} style={{ color: '#f59e0b' }} />
-                    <p className="text-xs font-semibold uppercase" style={{ color: '#374151' }}>Comparables</p>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">{result.comparable_properties} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>props</span></p>
-                </div>
-              </div>
+          <div className="mt-5 grid grid-cols-2 gap-px bg-[#bbb]">
+            {(['Departamento', 'Casa'] as PropertyType[]).map((type) => (
+              <button key={type} type="button" onClick={() => update('propertyType', type)} className={`px-4 py-3 text-sm font-semibold ${form.propertyType === type ? 'bg-black text-white' : 'bg-white text-black hover:bg-[#eee]'}`}>{type}</button>
+            ))}
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio de publicacion</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.publication?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
-                  <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>Nivel aspiracional para abrir la negociacion con margen comercial.</p>
-                </div>
-                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio de cierre objetivo</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.closing?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
-                  <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>Nivel de mercado para cerrar con buena velocidad y menos friccion.</p>
-                </div>
-                <div className="rounded-lg p-4 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Piso de negociacion</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">{selectedBands?.floor?.toLocaleString('es-CL') || result.price_uf.toLocaleString('es-CL')} UF</p>
-                  <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>Umbral minimo recomendado para no regalar valor.</p>
-                </div>
-              </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <label className="block"><span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#555]">Dirección</span><input value={form.address} onChange={(event) => update('address', event.target.value)} className="w-full border border-[#c9c9c9] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#d7332b]" /></label>
+            <label className="block"><span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#555]">Barrio</span><input value={form.neighborhood} onChange={(event) => update('neighborhood', event.target.value)} className="w-full border border-[#c9c9c9] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#d7332b]" /></label>
+            <label className="block"><span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#555]">ROL</span><input value={form.rol} onChange={(event) => update('rol', event.target.value)} className="w-full border border-[#c9c9c9] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#d7332b]" /></label>
+          </div>
 
-              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Activar reportes por rol</p>
-                    <p className="text-sm mt-1 max-w-2xl" style={{ color: '#6b7280' }}>
-                      Usa esta valorizacion como insumo para el vendedor, el director o el CEO sin volver a rearmar contexto.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => void generateRoleReport('seller_playbook')}
-                      disabled={Boolean(roleReportLoading)}
-                      className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                      style={{ background: 'var(--n3-teal)' }}
-                    >
-                      <Send size={14} />
-                      {roleReportLoading === 'seller_playbook' ? 'Generando...' : 'Vendedor'}
-                    </button>
-                    <button
-                      onClick={() => void generateRoleReport('director_accounts')}
-                      disabled={Boolean(roleReportLoading)}
-                      className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                      style={{ background: '#6f8f89' }}
-                    >
-                      <Send size={14} />
-                      {roleReportLoading === 'director_accounts' ? 'Generando...' : 'Director'}
-                    </button>
-                    <button
-                      onClick={() => void generateRoleReport('ceo_brief')}
-                      disabled={Boolean(roleReportLoading)}
-                      className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                      style={{ background: '#111111' }}
-                    >
-                      <Send size={14} />
-                      {roleReportLoading === 'ceo_brief' ? 'Generando...' : 'CEO'}
-                    </button>
-                  </div>
-                </div>
-                {roleReportMessage && (
-                  <p className="mt-3 text-sm text-red-700">{roleReportMessage}</p>
-                )}
-                {roleReportError && (
-                  <p className="mt-3 text-sm text-rose-700">{roleReportError}</p>
-                )}
-              </div>
-
-              {comparisonSummary && (
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Comparacion rapida</p>
-                      <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Compara esta valorizacion con el historial guardado para leer tendencia y consistencia.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <a
-                        href={exportUrl('csv')}
-                        className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
-                        style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
-                      >
-                        <Download size={14} />
-                        CSV
-                      </a>
-                      <a
-                        href={exportUrl('xlsx')}
-                        className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
-                        style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
-                      >
-                        <Download size={14} />
-                        XLSX
-                      </a>
-                    </div>
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Actual</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{result?.price_uf.toLocaleString('es-CL')} UF</p>
-                      <p className="text-xs" style={{ color: '#6b7280' }}>Cierre objetivo: {selectedBands?.closing?.toLocaleString('es-CL')} UF</p>
-                    </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Promedio historico</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(comparisonSummary.averageClosing).toLocaleString('es-CL')} UF</p>
-                      <p className="text-xs" style={{ color: '#6b7280' }}>Confianza media: {Math.round(comparisonSummary.averageConfidence)}%</p>
-                    </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Ultima cotizacion</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{comparisonSummary.previous ? Math.round(comparisonSummary.previous.closing_price_uf).toLocaleString('es-CL') : 'N/A'} UF</p>
-                      <p className="text-xs" style={{ color: '#6b7280' }}>{comparisonSummary.previous ? comparisonSummary.previous.neighborhood : 'Sin historial'}</p>
-                    </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Tendencia</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">
-                        {comparisonSummary.previous
-                          ? `${(result.price_uf - Number(comparisonSummary.previous.closing_price_uf || 0)).toLocaleString('es-CL')} UF`
-                          : 'N/A'}
-                      </p>
-                      <p className="text-xs" style={{ color: '#6b7280' }}>Vs. ultima cotizacion guardada</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {neighborhoodComparison && (
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Comparacion por barrio</p>
-                      <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Promedio de cierres guardados por barrio para leer posicion relativa.</p>
-                    </div>
-                    <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
-                      {neighborhoodComparison.currentNeighborhood.count || 0} registros
-                    </span>
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Promedio</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
-                    </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>P25</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p25 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
-                    </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Mediana</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p50 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
-                    </div>
-                    <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>P75</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{Math.round(neighborhoodComparison.currentNeighborhood.p75 || neighborhoodComparison.currentNeighborhood.averageClosing).toLocaleString('es-CL')} UF</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    {[
-                      {
-                        label: neighborhoodComparison.currentNeighborhood.neighborhood,
-                        value: neighborhoodComparison.currentNeighborhood.averageClosing,
-                        accent: '#111111',
-                      },
-                      ...neighborhoodComparison.rows.filter((row) => row.neighborhood !== neighborhoodComparison.currentNeighborhood.neighborhood).map((row) => ({
-                        label: row.neighborhood,
-                        value: row.averageClosing,
-                        accent: 'var(--n3-teal)',
-                      })),
-                    ].slice(0, 4).map((item) => {
-                      const width = Math.max(12, Math.round((item.value / neighborhoodComparison.maxValue) * 100))
-                      return (
-                        <div key={item.label} className="flex items-center gap-3">
-                          <div className="w-36 text-xs font-medium uppercase tracking-wide" style={{ color: '#374151' }}>
-                            {item.label}
-                          </div>
-                          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: '#eef4f2', border: '1px solid #e5e7eb' }}>
-                            <div className="h-full rounded-full" style={{ width: `${width}%`, background: item.accent }} />
-                          </div>
-                          <div className="w-24 text-right text-sm font-semibold text-gray-900">
-                            {Math.round(item.value).toLocaleString('es-CL')} UF
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {visibleHistory.length > 0 && (
-                <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Historial de cotizaciones</p>
-                      <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Ultimas valuaciones guardadas para seguimiento comercial y comparacion rapida.</p>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>
-                        Filtrar barrio
-                      </label>
-                      <select
-                        value={historyNeighborhoodFilter}
-                        onChange={(e) => setHistoryNeighborhoodFilter(e.target.value)}
-                        className="rounded-md px-3 py-2 text-sm"
-                        style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
-                      >
-                        <option value="all">Todos los barrios</option>
-                        {historyNeighborhoodOptions.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {visibleHistory.map((item) => (
-                      <div key={item.quote_key} className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">{item.neighborhood}</p>
-                            <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
-                              {new Date(item.created_at).toLocaleString('es-CL')}
-                            </p>
-                          </div>
-                          <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#fff', color: '#374151', border: '1px solid #e5e7eb' }}>
-                            {item.confidence}% confianza
-                          </span>
-                        </div>
-                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                          <div>
-                            <p style={{ color: '#6b7280' }}>Publicacion</p>
-                            <p className="font-semibold text-gray-900">{Math.round(item.publication_price_uf).toLocaleString('es-CL')} UF</p>
-                          </div>
-                          <div>
-                            <p style={{ color: '#6b7280' }}>Cierre</p>
-                            <p className="font-semibold text-gray-900">{Math.round(item.closing_price_uf).toLocaleString('es-CL')} UF</p>
-                          </div>
-                          <div>
-                            <p style={{ color: '#6b7280' }}>Base</p>
-                            <p className="font-semibold text-gray-900">{Math.round(item.estimated_uf).toLocaleString('es-CL')} UF</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Lectura IA</p>
-                    <h3 className="mt-1 text-lg font-semibold text-gray-900">{aiAnalysis?.title || 'Analisis comercial asistido'}</h3>
-                    <p className="text-sm mt-1 max-w-3xl" style={{ color: '#6b7280' }}>
-                      {aiLoading
-                        ? 'La IA esta revisando comparables, absorcion y contexto del barrio para reforzar el relato comercial.'
-                        : aiAnalysis?.summary || 'Se generara una lectura comercial apenas termine el calculo.'}
-                    </p>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full self-start" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
-                    {aiLoading ? 'Analizando' : aiAnalysis?.source === 'openai' ? 'OpenAI' : 'Fallback local'}
-                  </span>
-                </div>
-                {aiError && (
-                  <p className="mt-3 text-xs px-3 py-2 rounded-md" style={{ background: '#fff7ed', color: '#92400e', border: '1px solid #fdba74' }}>
-                    {aiError}
-                  </p>
-                )}
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-                  {(aiAnalysis?.price_bands || buildFallbackValuationAnalysis({
-                    neighborhood: {
-                      name: result.comp_neighborhood,
-                      price_per_sqm_uf: selectedNb?.price_per_sqm_uf || 0,
-                      velocity_days: result.market_velocity,
-                      absorption_rate: result.market_absorption / 100,
-                      inventory_count: selectedNb?.inventory_count || 0,
-                      zona_prc: selectedNb?.zona_prc || '',
-                    },
-                    area_m2: Number(form.area_m2),
-                    bedrooms: Number(form.bedrooms),
-                    bathrooms: Number(form.bathrooms),
-                    age_years: Number(form.age_years),
-                    floor: Number(form.floor),
-                    condition: form.condition,
-                    has_parking: form.has_parking,
-                    has_storage: form.has_storage,
-                    has_pool: form.has_pool,
-                    estimated_uf: result.price_uf,
-                    estimated_uf_m2: result.price_uf_m2,
-                    estimated_clp: result.price_clp,
-                    confidence: result.confidence,
-                    comparable_source: result.comparable_source,
-                    comparable_range_uf: result.comparable_range_uf,
-                    market_velocity: result.market_velocity,
-                    market_absorption: result.market_absorption,
-                    comparable_properties: result.comparable_properties,
-                    selected_comparables: comparables,
-                    benchmark: externalBenchmark,
-                  }).price_bands).map((band) => (
-                    <div key={band.label} className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>
-                        {band.label.replace('_', ' ')}
-                      </p>
-                      <p className="mt-2 text-xl font-semibold text-gray-900">{band.value_uf.toLocaleString('es-CL')} UF</p>
-                      <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>{band.note}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Por que este valor</p>
-                    <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
-                      {(aiAnalysis?.why_now || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
-                    </ul>
-                  </div>
-                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Riesgos</p>
-                    <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
-                      {(aiAnalysis?.risks || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
-                    </ul>
-                  </div>
-                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Acciones</p>
-                    <ul className="mt-2 space-y-2 text-sm" style={{ color: '#374151' }}>
-                      {(aiAnalysis?.actions || []).slice(0, 3).map((item) => <li key={item}>- {item}</li>)}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Sensibilidad de precio</p>
-                    <div className="mt-2 space-y-2">
-                      {(aiAnalysis?.sensitivities || buildFallbackValuationAnalysis({
-                        neighborhood: {
-                          name: result.comp_neighborhood,
-                          price_per_sqm_uf: selectedNb?.price_per_sqm_uf || 0,
-                          velocity_days: result.market_velocity,
-                          absorption_rate: result.market_absorption / 100,
-                          inventory_count: selectedNb?.inventory_count || 0,
-                          zona_prc: selectedNb?.zona_prc || '',
-                        },
-                        area_m2: Number(form.area_m2),
-                        bedrooms: Number(form.bedrooms),
-                        bathrooms: Number(form.bathrooms),
-                        age_years: Number(form.age_years),
-                        floor: Number(form.floor),
-                        condition: form.condition,
-                        has_parking: form.has_parking,
-                        has_storage: form.has_storage,
-                        has_pool: form.has_pool,
-                        estimated_uf: result.price_uf,
-                        estimated_uf_m2: result.price_uf_m2,
-                        estimated_clp: result.price_clp,
-                        confidence: result.confidence,
-                        comparable_source: result.comparable_source,
-                        comparable_range_uf: result.comparable_range_uf,
-                        market_velocity: result.market_velocity,
-                        market_absorption: result.market_absorption,
-                        comparable_properties: result.comparable_properties,
-                        selected_comparables: comparables,
-                        benchmark: externalBenchmark,
-                      }).sensitivities).map((item) => (
-                        <div key={item.factor} className="flex items-center justify-between gap-3 text-sm">
-                          <div>
-                            <p className="font-medium text-gray-900">{item.factor}</p>
-                            <p className="text-xs" style={{ color: '#6b7280' }}>{item.note}</p>
-                          </div>
-                          <span className="font-semibold text-gray-900">
-                            {item.direction === 'down' ? '-' : '+'}{item.impact_uf.toLocaleString('es-CL')} UF
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Posicion comercial</p>
-                    <p className="mt-2 text-sm font-medium text-gray-900">{aiAnalysis?.market_position || 'Se reforzara la posicion con la lectura IA.'}</p>
-                    <p className="mt-2 text-sm" style={{ color: '#6b7280' }}>
-                      {aiAnalysis?.band_recommendation || 'La IA ajustara el relato de salida, el piso y el espacio de negociacion.'}
-                    </p>
-                    <div className="mt-3 rounded-md px-3 py-2 text-xs" style={{ background: '#fff', border: '1px solid #e5e7eb', color: '#374151' }}>
-                      {aiAnalysis?.confidence_note || 'La confianza del relato dependera de la calidad de los comparables y la frescura del mercado.'}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    onClick={downloadValuationPdf}
-                    disabled={pdfLoading}
-                    className="px-3 py-2 rounded-md text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
-                    style={{ background: '#111111' }}
-                  >
-                    <Download size={14} />
-                    {pdfLoading ? 'Generando PDF...' : 'Descargar PDF'}
-                  </button>
-                  <a
-                    href="/dashboard/reportes"
-                    className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
-                    style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
-                  >
-                    <FileText size={14} />
-                    Ir a reportes
-                  </a>
-                </div>
-                {pdfError && (
-                  <p className="mt-3 text-sm text-rose-700">{pdfError}</p>
-                )}
-              </div>
-
-              <div className="bg-white rounded-lg p-4 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Rango comparable</p>
-                    <p className="text-lg font-semibold text-gray-900">{result.comparable_range_uf} UF</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
-                    Fuente: {result.comparable_source}
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  {comparables.length ? (
-                    comparables.map((item) => (
-                      <div key={item.id} className="rounded-lg px-3 py-2" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{item.address}</p>
-                            <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
-                              {item.neighborhood} � {item.bedrooms}D/{item.bathrooms}B � {item.area_m2} m� � {item.source || 'properties'}
-                            </p>
-                            <p className="text-xs mt-1" style={{ color: '#374151' }}>{item.match_label}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-gray-900">{item.price_uf.toLocaleString('es-CL')} UF</p>
-                            <p className="text-xs" style={{ color: '#6b7280' }}>Score {item.score.toFixed(0)}% � Similarity {item.similarity.toFixed(0)}%</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm" style={{ color: '#6b7280' }}>No hay comparables suficientes en `properties` todavia.</p>
-                  )}
-                </div>
-              </div>
-
-              <p className="text-xs px-1" style={{ color: '#6b7280' }}>
-                Estimacion basada en datos reales de mercado para {result.comp_neighborhood}, comparables recientes de `properties` y el benchmark externo cuando esta disponible.
-              </p>
-            </>
+          {form.propertyType === 'Departamento' ? (
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              <InputField label="M² útiles" value={form.usefulAreaM2} onChange={(value) => update('usefulAreaM2', value)} suffix="m²" />
+              <InputField label="M² terraza" value={form.terraceAreaM2} onChange={(value) => update('terraceAreaM2', value)} suffix="m²" />
+              <InputField label="UF/M² útil aplicado" value={form.appliedUsefulUfM2} onChange={(value) => update('appliedUsefulUfM2', value)} suffix="UF/m²" />
+            </div>
           ) : (
-            <div className="bg-white rounded-lg p-12 text-center shadow-sm flex flex-col items-center justify-center h-full min-h-[300px]" style={{ border: '1px dashed #e5e7eb' }}>
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: '#f9fafb' }}>
-                <Home size={26} style={{ color: 'var(--n3-teal)' }} />
-              </div>
-              <p className="font-semibold text-gray-900">Ingresa los datos de la propiedad</p>
-              <p className="text-sm mt-1" style={{ color: '#6b7280' }}>El modelo usara precios reales de {neighborhoods.length} barrios de Vitacura</p>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <InputField label="M² construidos" value={form.builtAreaM2} onChange={(value) => update('builtAreaM2', value)} suffix="m²" />
+              <InputField label="UF/M² construcción" value={form.builtUfM2} onChange={(value) => update('builtUfM2', value)} suffix="UF/m²" />
+              <InputField label="M² terreno" value={form.landAreaM2} onChange={(value) => update('landAreaM2', value)} suffix="m²" />
+              <InputField label="UF/M² terreno" value={form.landUfM2} onChange={(value) => update('landUfM2', value)} suffix="UF/m²" />
             </div>
           )}
-        </div>
-      </div>
 
-      {externalBenchmark && (
-        <div className="bg-white rounded-lg p-5 shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Benchmark externo</p>
-              <h3 className="mt-1 text-lg font-semibold text-gray-900">Realtor International</h3>
-              <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-                {externalBenchmark.offer_count} ofertas detectadas en {externalBenchmark.neighborhood} � {new Date(externalBenchmark.recorded_at).toLocaleString('es-CL')}
-              </p>
-            </div>
-            <a href={externalBenchmark.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors" style={{ background: '#f9fafb', color: '#374151', border: '1px solid #e5e7eb' }}>
-              Abrir fuente
-            </a>
-          </div>
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio minimo</p>
-              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.low_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
-            </div>
-            <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Precio maximo</p>
-              <p className="mt-2 text-xl font-semibold text-gray-900">{externalBenchmark.high_price_clp?.toLocaleString('es-CL') || 'N/A'} <span className="text-sm font-normal" style={{ color: '#6b7280' }}>{externalBenchmark.price_currency || 'CLP'}</span></p>
-            </div>
-            <div className="rounded-lg p-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Titulo</p>
-              <p className="mt-2 text-sm font-medium text-gray-900">{externalBenchmark.listing_title || 'Sin titulo'}</p>
-            </div>
+          <div className="mt-5 border-l-4 border-[#f39c12] bg-[#fff7e6] p-3 text-xs leading-relaxed text-[#5b4518]">
+            El UF/m² es una decisión profesional sustentada en comparables revisados. El sistema no lo completa con promedios, IA o factores ocultos.
           </div>
         </div>
-      )}
 
-      {neighborhoods.length > 0 && (
-        <div className="bg-white rounded-lg overflow-hidden shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-          <div className="px-5 py-3" style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
-            <h3 className="text-sm font-semibold text-gray-900">Precios de referencia por barrio</h3>
+        <div className="border border-[#222] bg-black p-5 text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#e23b31]">02 · Cálculo fuente</p>
+          <h2 className="mt-1 text-xl font-semibold">Resultado determinístico</h2>
+          {result ? (
+            <div className="mt-5 space-y-5">
+              <div className="grid grid-cols-2 gap-px bg-[#333]">
+                <div className="bg-[#111] p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-[#888]">Valor comercial</p><p className="mt-2 text-2xl font-semibold">{formatUf(result.commercialValueUf)}</p></div>
+                <div className="bg-[#111] p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-[#888]">Área ponderada</p><p className="mt-2 text-2xl font-semibold">{result.effectiveAreaM2.toLocaleString('es-CL')} m²</p></div>
+              </div>
+              <div><p className="text-[10px] uppercase tracking-[0.12em] text-[#888]">UF/m² comercial ponderado</p><p className="mt-1 text-xl font-semibold text-[#ef6b63]">{result.commercialWeightedUfM2.toLocaleString('es-CL')} UF/m²</p></div>
+              <div className="space-y-2">{result.componentValues.map((component) => <div key={component.label} className="flex justify-between border-b border-[#333] pb-2 text-sm"><span className="text-[#aaa]">{component.label}</span><strong>{formatUf(component.valueUf)}</strong></div>)}</div>
+              <p className="text-xs leading-relaxed text-[#aaa]">{result.method}</p>
+            </div>
+          ) : (
+            <div className="mt-5 border border-[#333] p-6 text-center"><Calculator className="mx-auto text-[#666]" size={28} /><p className="mt-3 text-sm text-[#aaa]">Completa superficies y UF/m² para obtener un cálculo.</p></div>
+          )}
+        </div>
+      </section>
+
+      {result ? (
+        <section>
+          <div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">03 · Estrategia de publicación</p><h2 className="mt-1 text-xl font-semibold text-white">Escenarios exactos de plantilla</h2></div>
+          <div className="grid gap-px bg-[#444] md:grid-cols-3">
+            {result.scenarios.map((scenario) => (
+              <div key={scenario.margin} className="bg-[#f0f0f0] p-5 text-black">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#666]">Margen {(scenario.margin * 100).toFixed(0)}%</p>
+                <p className="mt-2 text-2xl font-semibold">{formatUf(scenario.publicationUf)}</p>
+                <p className="mt-1 text-xs text-[#666]">{scenario.weightedUfM2.toLocaleString('es-CL')} UF/m² ponderado</p>
+                <p className="mt-3 border-t border-[#ccc] pt-3 font-mono text-[10px] text-[#555]">Valor comercial / (1 - margen)</p>
+              </div>
+            ))}
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  {['Barrio', 'UF/m2', 'Velocidad', 'Absorcion', 'Inventario'].map((h) => (
-                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {neighborhoods.map((n) => (
-                  <tr
-                    key={n.name}
-                    onClick={() => { setForm((f) => ({ ...f, neighborhood: n.name })); setResult(null) }}
-                    className="cursor-pointer transition-colors"
-                    style={{
-                      borderBottom: '1px solid #f5f5f5',
-                      background: form.neighborhood === n.name ? '#f9fafb' : undefined,
-                    }}
-                  >
-                    <td className="px-4 py-2.5 font-medium text-gray-900">{n.name}</td>
-                    <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--n3-teal)' }}>{n.price_per_sqm_uf}</td>
-                    <td className="px-4 py-2.5 text-gray-600">{n.velocity_days}d</td>
-                    <td className="px-4 py-2.5 text-gray-600">{(n.absorption_rate * 100).toFixed(0)}%</td>
-                    <td className="px-4 py-2.5 text-gray-600">{n.inventory_count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        </section>
+      ) : null}
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div className="border border-[#d5d5d5] bg-[#f0f0f0] p-5 text-black">
+          <div className="flex items-center gap-2"><Database size={17} className="text-[#d7332b]" /><h2 className="text-lg font-semibold">Caso histórico de la plantilla</h2></div>
+          <div className="mt-4 grid gap-px bg-[#ccc] sm:grid-cols-3">
+            <div className="bg-white p-3"><p className="text-[10px] uppercase text-[#777]">Valor comercial</p><strong className="mt-1 block">15.890 UF</strong></div>
+            <div className="bg-white p-3"><p className="text-[10px] uppercase text-[#777]">Oferta Portal histórica</p><strong className="mt-1 block">6 filas / 5 entidades</strong></div>
+            <div className="bg-white p-3"><p className="text-[10px] uppercase text-[#777]">CBRS reproducible</p><strong className="mt-1 block">2 de 6</strong></div>
+          </div>
+          <div className="mt-4 text-sm leading-relaxed text-[#444]">
+            <p>El ROL 413-293 aparece una vez en CBRS: 16.700 UF, 227 m² útiles, Las Nieves, octubre de 2024.</p>
+            <p className="mt-2 border-l-4 border-[#f39c12] pl-3 text-xs"><strong>No comparable temporalmente:</strong> la plantilla fue modificada en 2020 y la inscripción ocurrió cuatro años después. La diferencia de 810 UF no mide precisión del modelo.</p>
+          </div>
+          <div className="mt-4 grid gap-2 text-xs sm:grid-cols-2">
+            <div className="border border-[#ccc] bg-white p-3"><strong>Promedio Portal fuente</strong><span className="mt-1 block text-[#666]">60,45 UF/m² incluyendo el duplicado</span></div>
+            <div className="border border-[#ccc] bg-white p-3"><strong>Promedio deduplicado</strong><span className="mt-1 block text-[#666]">Rango 58,90 a 60,05 UF/m² según fila canónica</span></div>
           </div>
         </div>
-      )}
+
+        <div className="border border-[#d5d5d5] bg-[#f0f0f0] p-5 text-black">
+          <div className="flex items-center gap-2"><ShieldCheck size={17} className="text-[#d7332b]" /><h2 className="text-lg font-semibold">Control de evidencia</h2></div>
+          <div className="mt-4 space-y-2">
+            {valuationData.qualityIssues.map((issue) => {
+              const copy = issueCopy[issue.code]
+              return (
+                <div key={issue.code} className="flex gap-3 border border-[#d0d0d0] bg-white p-3">
+                  <AlertTriangle size={16} className={issue.severity === 'critical' ? 'mt-0.5 shrink-0 text-[#c0392b]' : 'mt-0.5 shrink-0 text-[#f39c12]'} />
+                  <div><p className="text-sm font-semibold">{copy?.title || issue.code}</p><p className="mt-1 text-xs leading-relaxed text-[#666]">{copy?.detail || issue.detail}</p>{'sourceCell' in issue && issue.sourceCell ? <p className="mt-1 font-mono text-[10px] text-[#999]">{issue.sourceCell}</p> : null}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="border border-[#333] bg-[#101010] p-5 text-white">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#e23b31]">Acción por rol</p>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div><h3 className="font-semibold">Ejecutivo de venta</h3><p className="mt-1 text-xs leading-relaxed text-[#aaa]">Completar ROL, superficies y comparables vigentes; proponer UF/m² con evidencia revisada.</p></div>
+          <div><h3 className="font-semibold">Director de venta</h3><p className="mt-1 text-xs leading-relaxed text-[#aaa]">Aprobar comparables canónicos, resolver duplicados y validar el escenario de publicación.</p></div>
+          <div><h3 className="font-semibold">CEO</h3><p className="mt-1 text-xs leading-relaxed text-[#aaa]">Monitorear vigencia metodológica, cobertura CBRS/Portal y error temporal de valorizaciones cerradas.</p></div>
+        </div>
+      </section>
     </div>
   )
 }
-
-
-
-
-

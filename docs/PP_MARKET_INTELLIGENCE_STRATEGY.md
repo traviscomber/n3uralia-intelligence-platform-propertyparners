@@ -236,6 +236,8 @@ The operating model uses each supplied source for the question it can actually a
 | Inteligencia de Negocios | Portal Inmobiliario exports | Published offer and asking conditions | Keep source ID and quality flags; exclude explicit rental records |
 | Inteligencia de Negocios | Barrios Vitacura KML | Polygon geometry | Mark points in overlapping polygons as `AMBIGUOUS_POLYGON` |
 | Inteligencia de Negocios | CBRS Vitacura workbook | Registered transactions | Preserve operation, property type, date, ROL and geocoding status |
+| Valorizacion de Propiedades | Plantilla Casas | Commercial valuation method for houses | Preserve separate construction and land rates; weight land at 25% only for comparison |
+| Valorizacion de Propiedades | Plantilla Departamentos | Commercial valuation method for apartments | Value useful area; weight terrace at 50% only for comparison |
 
 ### Current verified coverage
 
@@ -245,6 +247,8 @@ The operating model uses each supplied source for the question it can actually a
 - KML: 19 polygons and 12 candidate overlap pairs; two supplied Portal coordinates fall in more than one polygon.
 - CBRS: 40,843 rows and 1,287,176 populated cells in the principal sheet, covering 2014-01-02 through 2026-01-09.
 - Portal to CBRS: zero confirmed deterministic matches with the supplied fields. The system must not manufacture this join.
+- Valuation templates: 2 workbooks, 4 sheets, 436 populated cells and 122 formulas with zero stored formula errors.
+- Historical valuation case: 6 Portal rows represent 5 declared entities; 2 of 6 registered comparables reproduce exactly in the supplied CBRS base.
 
 ## Connected Decision Loop
 
@@ -255,6 +259,25 @@ The operating model uses each supplied source for the question it can actually a
 5. `Conciliacion`: every mismatch remains visible with source, period, metric and delta.
 6. `Accion`: the role report converts only supported findings into a task, decision, forecast change or data-quality correction.
 
+### Valuation decision loop
+
+1. Identify the asset with address, neighborhood and ROL; identifiers do not alter the formula.
+2. Select reviewed Portal offer and CBRS registered comparables without mixing asking and closing prices.
+3. Resolve duplicate groups before using averages or medians.
+4. Apply a professionally approved UF/m2 input. The system does not invent this value from age, floor, bedrooms or amenities.
+5. Calculate the source commercial value and the exact 0%, 5% and 10% publication scenarios.
+6. Compare a later close only when dates and definitions make the observation temporally comparable.
+
+House source method:
+
+- Commercial value: `built area * built UF/m2 + land area * land UF/m2`.
+- Comparative weighted area: `built area + land area / 4`.
+
+Apartment source method:
+
+- Commercial value: `useful area * applied useful UF/m2`.
+- Comparative weighted area: `useful area + terrace area / 2`.
+
 ## Evidence States
 
 - `EXACT`: source values agree after documented normalization.
@@ -263,6 +286,7 @@ The operating model uses each supplied source for the question it can actually a
 - `AMBIGUOUS_POLYGON`: a coordinate belongs to multiple supplied KML polygons.
 - `PENDING_MATCH`: potentially related records lack a deterministic shared key.
 - `CONFIRMED_MATCH`: only available when deterministic identifiers or reviewed evidence prove identity.
+- `NOT_COMPARABLE_TEMPORALLY`: the same asset is identified, but the dates do not support model-accuracy measurement.
 
 ## Role Outputs
 

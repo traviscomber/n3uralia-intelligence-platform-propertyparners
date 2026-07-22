@@ -16,6 +16,9 @@
     "presentations:verify": "node scripts/verify-presentations-2026.mjs",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
+    "valuation:build": "node scripts/build-valuation-intelligence.mjs",
+    "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
+    "valuation:model:verify": "tsx scripts/verify-valuation-model.ts",
     "scrape": "node scripts/run-scrapers.mjs",
     "scrape:vitacura": "node scripts/run-scrapers.mjs --source=portal --kind=all"
   },
