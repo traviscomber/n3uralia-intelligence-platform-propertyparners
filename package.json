@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "crm:build": "node scripts/build-crm-intelligence.mjs",
     "crm:verify": "node scripts/verify-crm-intelligence.mjs",
     "crm:verify:cells": "node scripts/verify-crm-cell-manifest.mjs",

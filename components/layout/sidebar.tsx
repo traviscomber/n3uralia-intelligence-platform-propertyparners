@@ -115,6 +115,17 @@ const roleNavItems = [
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
+  const isCeo = profile?.role === 'ceo'
+  const ceoNavigation = new Set([
+    '/dashboard',
+    '/dashboard/inteligencia',
+    '/dashboard/control',
+    '/dashboard/valorizador',
+    '/dashboard/reportes/autonomos',
+    '/dashboard/settings',
+  ])
+  const visibleNavItems = isCeo ? navItems.filter((item) => ceoNavigation.has(item.href)) : navItems
+  const visibleRoleNavItems = isCeo ? roleNavItems.filter((item) => item.href === '/dashboard/ceo') : roleNavItems
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)]">
@@ -124,7 +135,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <ul className="flex flex-col gap-0.5">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <li key={item.href}>
@@ -150,7 +161,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
           <div className="h-px flex-1" style={{ background: 'var(--n3-line)' }} />
         </div>
         <ul className="flex flex-col gap-0.5">
-          {roleNavItems.map((item) => {
+          {visibleRoleNavItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <li key={item.href}>

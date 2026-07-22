@@ -84,16 +84,69 @@
   --n3-deep: #0c1111;
   --n3-dark-surface: #0c1111;
   --n3-teal: #d7332b;
-  --n3-teal-soft: #ef6b63;
+  --n3-teal-soft: #ff766f;
   --n3-teal-dim: rgba(215, 51, 43, 0.2);
   --n3-line: rgba(215, 51, 43, 0.2);
   --n3-text-light: #edf4f3;
-  --n3-text-muted: #9ca9a7;
+  --n3-text-muted: #b6c1bf;
   --n3-light-bg: #e7eceb;
   --n3-light-surface: #f4f7f7;
   --n3-light-text: #0b1111;
   --n3-light-muted: #5b6867;
   --n3-border-light: rgba(11, 17, 17, 0.14);
+}
+
+/* Property Partners dashboard contrast contract.
+ * Dark canvas: light foregrounds. Light report/data surfaces retain ink colors.
+ * These rules also protect legacy Tailwind gray utilities from becoming
+ * unreadable when a light page section is hosted inside the dark shell. */
+.dashboard-shell {
+  --pp-dark-bg: #050807;
+  --pp-dark-text: #edf4f3;
+  --pp-dark-muted: #b6c1bf;
+  --pp-light-bg: #ffffff;
+  --pp-light-text: #111827;
+  --pp-light-muted: #4b5563;
+}
+
+.dashboard-content {
+  color: var(--pp-dark-text);
+}
+
+.dashboard-content :is(.text-gray-700, .text-gray-800, .text-gray-900):not(.bg-white *, [class*="bg-[#f"] *, [class*="bg-[#e"] *) {
+  color: var(--pp-dark-text) !important;
+}
+
+.dashboard-content :is(.text-gray-400, .text-gray-500, .text-gray-600):not(.bg-white *, [class*="bg-[#f"] *, [class*="bg-[#e"] *) {
+  color: var(--pp-dark-muted) !important;
+}
+
+.dashboard-content .bg-white,
+.dashboard-content [class*="bg-[#f"],
+.dashboard-content [class*="bg-[#e"] {
+  color: var(--pp-light-text);
+}
+
+.dashboard-content .bg-white :is(.text-gray-400, .text-gray-500, .text-gray-600),
+.dashboard-content [class*="bg-[#f"] :is(.text-gray-400, .text-gray-500, .text-gray-600),
+.dashboard-content [class*="bg-[#e"] :is(.text-gray-400, .text-gray-500, .text-gray-600) {
+  color: var(--pp-light-muted) !important;
+}
+
+.dashboard-shell :focus-visible {
+  outline: 3px solid #ff766f;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell *,
+  .dashboard-shell *::before,
+  .dashboard-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .dark {

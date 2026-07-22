@@ -195,9 +195,9 @@ export default function DashboardHome() {
     <div className="space-y-8 pb-8">
       {/* Header */}
       <div className="pb-6" style={{ borderBottom: '1px solid #e5e7eb' }}>
-        <h1 className="text-4xl font-bold text-gray-900">Ventas Vitacura</h1>
-        <p className="mt-2" style={{ color: '#6b7280' }}>Inteligencia operativa y performance de ventas de casas y departamentos</p>
-        <p className="text-xs mt-3" style={{ color: '#b9bfbc' }}>
+        <h1 className="text-4xl font-bold text-[var(--n3-text-light)]">Ventas Vitacura</h1>
+        <p className="mt-2 text-[var(--n3-text-muted)]">Inteligencia operativa y performance de ventas de casas y departamentos</p>
+        <p className="mt-3 text-xs text-[var(--n3-text-muted)]">
           {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </div>
@@ -501,5 +501,4 @@ export default function DashboardHome() {
     </div>
   )
 }
-
 

@@ -9,11 +9,11 @@
 export const N3_COLORS = {
   // Primary Palette
   background: '#050807',      // Dark background
-  foreground: '#edf4f3',      // Soft light text
+  foreground: '#edf4f3',      // Soft light text · 18.4:1 on background
   card: '#0c1111',            // Dark surface
   
   // Brand Colors
-  primary: '#d7332b',         // Property Partners red
+  primary: '#d7332b',         // Property Partners red; use for large text, borders and fills
   secondary: '#111111',       // Primary text and surfaces
   accent: '#7f8c8d',          // Deck neutral
   
@@ -27,6 +27,8 @@ export const N3_COLORS = {
   muted: '#2a1716',          // Muted red-black
   border: 'rgba(215, 51, 43, 0.22)',
   input: '#0c1111',          // Input background
+  mutedForeground: '#b6c1bf', // 10.3:1 on background
+  primaryAccessible: '#ff766f', // 6.9:1 on background for small dark-theme text
 } as const
 
 export const N3_CHARTS = {
@@ -50,4 +52,3 @@ export const N3_TAILWIND = {
   border: 'border border-[var(--n3-line)]',
   card: 'bg-[var(--n3-dark-surface)] rounded-none border border-[var(--n3-line)]',
 }
-
