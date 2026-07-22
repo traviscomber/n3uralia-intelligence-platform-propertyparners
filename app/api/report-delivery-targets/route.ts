@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { requireExecutiveAccess } from '@/lib/api-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +33,8 @@ function cleanRecipient(value: string) {
 
 export async function GET() {
   try {
+    const access = await requireExecutiveAccess()
+    if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('report_delivery_targets')
@@ -50,6 +53,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const body = await req.json().catch(() => ({})) as Partial<DeliveryTarget>
     const label = cleanRecipient(body.label || '')
@@ -86,6 +91,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const body = await req.json().catch(() => ({})) as Partial<DeliveryTarget>
     if (!body.id) {
@@ -125,6 +132,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const body = await req.json().catch(() => ({})) as { id?: number }
     if (!body.id) {

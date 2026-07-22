@@ -162,23 +162,13 @@ export default function CeoDashboard() {
         <div className="col-span-1 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Últimos reportes IA</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Señales recientes para decisión</p>
+              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Reportes auditados</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Acceso por audiencia</p>
             </div>
           </div>
           <div className="space-y-3">
-            {recentReports.length === 0 ? (
-              <div className="text-xs rounded-lg p-3" style={{ background: '#f8fbfa', color: '#6b7280', border: '1px dashed #dbe7e3' }}>
-                No hay reportes aún.
-              </div>
-            ) : (
-              recentReports.map(report => (
-                <div key={report.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
-                  <div className="text-[12px] font-semibold leading-snug" style={{ color: '#111111' }}>{report.title}</div>
-                  <div className="text-[11px] mt-1 line-clamp-3" style={{ color: '#6b7280' }}>{report.summary || 'Sin resumen disponible.'}</div>
-                </div>
-              ))
-            )}
+            <a href="/dashboard/reportes/autonomos" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: '#f8fbfa', border: '1px solid #edf4f1', color: '#111111' }}>Reportes automáticos</a>
+            <a href="/dashboard/reportes/directorio" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: '#f8fbfa', border: '1px solid #edf4f1', color: '#111111' }}>Reporte de directorio</a>
           </div>
         </div>
       </div>

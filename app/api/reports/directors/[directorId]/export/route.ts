@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireRoleAccess } from '@/lib/api-access'
 import { loadDirectorReportBundle } from '@/lib/director-reports'
 
 export const dynamic = 'force-dynamic'
@@ -45,6 +46,8 @@ function getFormat(value: string | null): ExportFormat {
 }
 
 export async function GET(request: NextRequest, context: { params: Promise<{ directorId: string }> }) {
+  const access = await requireRoleAccess(['admin', 'ceo', 'director'])
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const { directorId: rawDirectorId } = await context.params
     const directorId = decodeURIComponent(rawDirectorId)

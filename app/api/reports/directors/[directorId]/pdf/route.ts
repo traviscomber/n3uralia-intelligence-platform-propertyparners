@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireRoleAccess } from '@/lib/api-access'
 import { buildDirectorReportPdfBuffer } from '@/lib/report-pdf'
 import { loadDirectorReportBundle } from '@/lib/director-reports'
 
@@ -18,6 +19,8 @@ function getServiceClient() {
 }
 
 export async function GET(request: Request, context: { params: Promise<{ directorId: string }> }) {
+  const access = await requireRoleAccess(['admin', 'ceo', 'director'])
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const { directorId: rawDirectorId } = await context.params
     const directorId = decodeURIComponent(rawDirectorId)

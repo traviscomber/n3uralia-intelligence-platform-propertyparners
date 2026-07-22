@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { requireExecutiveAccess } from '@/lib/api-access'
 
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -13,6 +14,8 @@ function getSupabaseClient() {
 }
 
 export async function GET(request: NextRequest) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const supabase = getSupabaseClient()
     const { searchParams } = new URL(request.url)

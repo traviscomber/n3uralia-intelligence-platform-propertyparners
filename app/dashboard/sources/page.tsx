@@ -71,6 +71,19 @@ interface PropertyTelemetry {
 
 type PropertyRow = { neighborhood: string | null; source: string | null; created_at: string | null }
 
+type LiveSample = {
+  listingId: string
+  sourceUrl: string
+  propertyType: string
+  title: string | null
+  priceUf: number | null
+  attributesRaw: string | null
+  areaM2: null
+  bedrooms: number | null
+  bathrooms: number | null
+  location: string | null
+}
+
 function buildPropertyTelemetry(rows: PropertyRow[]): PropertyTelemetry {
   const now = new Date()
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
@@ -164,6 +177,7 @@ export default function SourcesPage() {
   const [refreshingAll, setRefreshingAll] = useState(false)
   const [liveRefreshEnabled, setLiveRefreshEnabled] = useState(false)
   const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
+  const [liveSample, setLiveSample] = useState<LiveSample[]>([])
   const [health, setHealth] = useState<ScrapeHealth | null>(null)
   const [propertyTelemetry, setPropertyTelemetry] = useState<PropertyTelemetry | null>(null)
   const [propertyRows, setPropertyRows] = useState<PropertyRow[]>([])
@@ -228,28 +242,22 @@ export default function SourcesPage() {
         throw new Error(json.error || 'No pudimos refrescar las fuentes.')
       }
       setRefreshMsg(`Muestra capturada: ${json.captured} observados, ${json.validForReconciliation} listos para conciliar, ${json.rejected} rechazados. Cero escrituras.`)
-      const supabase = createClient()
-      const [sourcesRes, healthRes, propertiesRes] = await Promise.all([
-        supabase.from('data_sources').select('*').order('pipeline_order', { ascending: true }),
-        fetch('/api/scrape/health').then((r) => r.json()),
-        supabase.from('properties').select('neighborhood,source,created_at'),
-      ])
-      setSources(sourcesRes.data || [])
-      setHealth(healthRes as ScrapeHealth)
-      const rows = (propertiesRes.data || []) as PropertyRow[]
-      setPropertyRows(rows)
-      setPropertyTelemetry(buildPropertyTelemetry(rows))
-      const runsParams = new URLSearchParams()
-      runsParams.set('limit', '20')
-      if (runSourceFilter) runsParams.set('source', runSourceFilter)
-      if (runStatusFilter) runsParams.set('status', runStatusFilter)
-      const runsRes = await fetch(`/api/scrape/runs?${runsParams.toString()}`).then((r) => r.json())
-      setRuns((runsRes.runs || []) as ScrapeRun[])
+      setLiveSample(Array.isArray(json.records) ? json.records : [])
     } catch (err) {
       setRefreshMsg(err instanceof Error ? err.message : 'No pudimos refrescar las fuentes.')
     } finally {
       setRefreshingAll(false)
     }
+  }
+
+  function downloadLiveSample() {
+    const blob = new Blob([JSON.stringify({ provenance: 'live_unreconciled', writesPerformed: 0, records: liveSample }, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `portal_muestra_validacion_${new Date().toISOString().slice(0, 10)}.json`
+    anchor.click()
+    URL.revokeObjectURL(url)
   }
 
   const getStatusIcon = (status: string) => {
@@ -324,6 +332,16 @@ export default function SourcesPage() {
           )}
         </div>
       </div>
+
+      {liveSample.length > 0 && (
+        <section className="border border-[#6aa9ff] bg-[#0c1111] p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#6aa9ff]">Fuente viva · no conciliada · cero escrituras</p><h2 className="mt-2 text-lg font-semibold">Muestra Portal para revisión</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">La superficie tipada permanece n/d; se conserva el atributo crudo para evitar confundir útil, total o terreno.</p></div>
+            <button type="button" onClick={downloadLiveSample} className="border border-[#6aa9ff] px-3 py-2 text-xs font-semibold text-[#6aa9ff]">Descargar JSON</button>
+          </div>
+          <div className="mt-4 overflow-x-auto"><table className="min-w-full text-xs"><thead><tr className="border-b border-[var(--n3-line)] text-left text-[var(--n3-text-muted)]"><th className="p-2">ID</th><th className="p-2">Tipo</th><th className="p-2">Precio observado</th><th className="p-2">Atributos crudos</th><th className="p-2">Fuente</th></tr></thead><tbody>{liveSample.slice(0, 25).map((row) => <tr key={row.sourceUrl} className="border-b border-[var(--n3-line)]"><td className="p-2">{row.listingId}</td><td className="p-2">{row.propertyType}</td><td className="p-2">{row.priceUf === null ? 'n/d' : `UF ${row.priceUf.toLocaleString('es-CL')}`}</td><td className="p-2 text-[var(--n3-text-muted)]">{row.attributesRaw || 'n/d'}</td><td className="p-2"><a className="text-[#6aa9ff] underline" href={row.sourceUrl} target="_blank" rel="noreferrer">Abrir</a></td></tr>)}</tbody></table></div>
+        </section>
+      )}
 
       {!loading && health && health.summary && (
         <div className="rounded-lg p-5 bg-white" style={{ border: '1px solid #e5e7eb' }}>
@@ -412,9 +430,10 @@ export default function SourcesPage() {
         <div className="bg-white rounded-lg p-6" style={{ border: '1px solid #e5e7eb' }}>
           <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="font-semibold text-gray-900">Telemetr�a de casas por barrio y fuente</h2>
+              <p className="mb-2 inline-flex border border-[#f59e0b] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#f59e0b]">Legacy · no conciliado · no oficial</p>
+              <h2 className="font-semibold text-gray-900">Telemetría histórica por barrio y fuente</h2>
               <p className="text-sm" style={{ color: '#6b7280' }}>
-                {propertyTelemetry.total.toLocaleString()} casas normalizadas en el cat�logo.
+                {propertyTelemetry.total.toLocaleString()} registros históricos del catálogo operacional; no alimentan indicadores auditados.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 lg:min-w-[520px]">
@@ -716,4 +735,3 @@ export default function SourcesPage() {
     </div>
   )
 }
-

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { requireRoleAccess } from '@/lib/api-access'
 import type { WeeklyReport as WeeklyReportRow } from '@/lib/types'
 import {
   buildPpLearningSnapshot,
@@ -274,6 +275,8 @@ async function persistLearningSnapshot(generatedAt: string) {
 }
 
 export async function GET() {
+  const access = await requireRoleAccess(['admin', 'ceo', 'director'])
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const supabase = getServiceClient()
     const { data, error } = await supabase

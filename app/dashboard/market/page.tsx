@@ -41,7 +41,7 @@ export default function MarketPage() {
       </article>
       <article className="border border-[var(--n3-line)] bg-[#0c1111]">
         <div className="border-b border-[var(--n3-line)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff766f]">Registro CBRS</p><h2 className="mt-2 text-xl font-semibold">Inscripciones por barrio asignado</h2><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Conteo histórico del archivo registral. No equivale a oferta vigente ni a publicaciones Portal.</p></div>
-        <div>{cbrsBarrios.map(([name, count], index) => <div key={name} className="grid grid-cols-[32px_1fr_auto] items-center gap-3 border-b border-[var(--n3-line)] px-5 py-3 last:border-0"><span className="text-xs text-[#ff766f]">{String(index + 1).padStart(2, '0')}</span><span className="text-sm">{name}</span><strong className="text-sm">{n(count)}</strong></div>)}</div>
+        <div>{cbrsBarrios.map(([name, count], index) => <div key={name} className="grid grid-cols-[32px_1fr_auto] items-center gap-3 border-b border-[var(--n3-line)] px-5 py-3 last:border-0"><span className="text-xs text-[#ff766f]">{String(index + 1).padStart(2, '0')}</span><span className="text-sm">{name}</span><strong className="text-sm">{n(Number(count))}</strong></div>)}</div>
       </article>
     </section>
 

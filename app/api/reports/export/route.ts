@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireRoleAccess } from '@/lib/api-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,6 +95,8 @@ function parseIsoDate(value: string | null) {
 }
 
 export async function GET(req: NextRequest) {
+  const access = await requireRoleAccess(['admin', 'ceo', 'director'])
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const supabase = getServiceClient()
     const { searchParams } = new URL(req.url)

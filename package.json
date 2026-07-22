@@ -20,9 +20,7 @@
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
     "valuation:build": "node scripts/build-valuation-intelligence.mjs",
     "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
-    "valuation:model:verify": "tsx scripts/verify-valuation-model.ts",
-    "scrape": "node scripts/run-scrapers.mjs",
-    "scrape:vitacura": "node scripts/run-scrapers.mjs --source=portal --kind=all"
+    "valuation:model:verify": "tsx scripts/verify-valuation-model.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireExecutiveAccess } from '@/lib/api-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,8 @@ function getServiceClient() {
 }
 
 export async function GET(request: NextRequest) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const supabase = getServiceClient()
     const { searchParams } = new URL(request.url)

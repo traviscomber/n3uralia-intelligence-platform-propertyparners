@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { requireExecutiveAccess } from '@/lib/api-access'
 import {
   evaluateScrapeHealth,
   loadOperationalAnomalies,
@@ -33,6 +34,8 @@ function getSupabaseClient() {
 }
 
 export async function GET() {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const supabase = getSupabaseClient()
 

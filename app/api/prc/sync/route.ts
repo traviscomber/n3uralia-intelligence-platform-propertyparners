@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireExecutiveAccess } from '@/lib/api-access'
 
 const ARCGIS_URL =
   'https://ideserver.sma.gob.cl/arcgis/rest/services/IDE/PRC/MapServer/312/query'
@@ -69,6 +70,8 @@ function esriToWkt(geometry: any): string | null {
 }
 
 export async function POST() {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const supabase = getSupabaseClient()
     const features = await fetchAllFeatures()
@@ -126,6 +129,8 @@ export async function POST() {
 
 // GET: preview — how many PRC features are available in ArcGIS
 export async function GET() {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
     const params = new URLSearchParams({
       where: '1=1',
