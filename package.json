@@ -12,6 +12,10 @@
     "crm:verify:cells": "node scripts/verify-crm-cell-manifest.mjs",
     "targets:build": "node scripts/build-targets-2026.mjs",
     "targets:verify": "node scripts/verify-targets-2026.mjs",
+    "presentations:build": "node scripts/build-presentations-2026.mjs",
+    "presentations:verify": "node scripts/verify-presentations-2026.mjs",
+    "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
+    "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
     "scrape": "node scripts/run-scrapers.mjs",
     "scrape:vitacura": "node scripts/run-scrapers.mjs --source=portal --kind=all"
   },

@@ -53,40 +53,40 @@
   --card-foreground: #edf4f3;
   --popover: #0c1111;
   --popover-foreground: #edf4f3;
-  --primary: #8ba9a7;
-  --primary-foreground: #081010;
+  --primary: #d7332b;
+  --primary-foreground: #ffffff;
   --secondary: #111111;
   --secondary-foreground: #ffffff;
-  --accent: #223333;
+  --accent: #2a1716;
   --accent-foreground: #edf4f3;
-  --destructive: #8ba9a7;
+  --destructive: #e74c3c;
   --muted: #0f1616;
   --muted-foreground: #9ca9a7;
-  --border: rgba(139, 169, 167, 0.18);
+  --border: rgba(215, 51, 43, 0.22);
   --input: #0c1111;
-  --ring: #8ba9a7;
-  --chart-1: #8ba9a7;
-  --chart-2: #6b7280;
-  --chart-3: #111111;
-  --chart-4: #f59e0b;
-  --chart-5: #d97706;
+  --ring: #d7332b;
+  --chart-1: #1565c0;
+  --chart-2: #e74c3c;
+  --chart-3: #27ae60;
+  --chart-4: #f39c12;
+  --chart-5: #7f8c8d;
   --radius: 0px;
   --sidebar: #060b0b;
   --sidebar-foreground: #edf4f3;
-  --sidebar-primary: #8ba9a7;
-  --sidebar-primary-foreground: #081010;
-  --sidebar-accent: #0f1616;
+  --sidebar-primary: #d7332b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #241312;
   --sidebar-accent-foreground: #edf4f3;
-  --sidebar-border: rgba(139, 169, 167, 0.18);
-  --sidebar-ring: #8ba9a7;
+  --sidebar-border: rgba(215, 51, 43, 0.22);
+  --sidebar-ring: #d7332b;
 
   --n3-black: #050807;
   --n3-deep: #0c1111;
   --n3-dark-surface: #0c1111;
-  --n3-teal: #8ba9a7;
-  --n3-teal-soft: #a6c0be;
-  --n3-teal-dim: rgba(139, 169, 167, 0.24);
-  --n3-line: rgba(139, 169, 167, 0.18);
+  --n3-teal: #d7332b;
+  --n3-teal-soft: #ef6b63;
+  --n3-teal-dim: rgba(215, 51, 43, 0.2);
+  --n3-line: rgba(215, 51, 43, 0.2);
   --n3-text-light: #edf4f3;
   --n3-text-muted: #9ca9a7;
   --n3-light-bg: #e7eceb;
@@ -112,11 +112,11 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-montserrat), system-ui, sans-serif;
+    font-family: Calibri, Carlito, var(--font-montserrat), sans-serif;
     background:
-      radial-gradient(circle at 20% 10%, rgba(139, 169, 167, 0.12), transparent 30%),
-      radial-gradient(circle at 80% 0%, rgba(139, 169, 167, 0.08), transparent 24%),
-      linear-gradient(180deg, #050807 0%, #0a1110 100%);
+      radial-gradient(circle at 20% 10%, rgba(215, 51, 43, 0.1), transparent 30%),
+      radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.035), transparent 24%),
+      linear-gradient(180deg, #050505 0%, #111111 100%);
   }
 
   h1,
@@ -126,15 +126,15 @@
   h5,
   h6,
   .font-display {
-    font-family: var(--font-rajdhani), sans-serif;
-    font-weight: 300;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-family: Calibri, Carlito, var(--font-montserrat), sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
     line-height: 1.08;
   }
 
   ::selection {
-    background: rgba(139, 169, 167, 0.28);
-    color: #050807;
+    background: rgba(215, 51, 43, 0.35);
+    color: #ffffff;
   }
 }

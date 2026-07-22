@@ -37,8 +37,8 @@ export default function SignUpPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--n3-black)]">
         <div className="w-full max-w-sm rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-8 text-center shadow-sm">
-          <div className="mb-4 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
-            <PPLogo className="h-7 w-auto" priority />
+          <div className="mb-4 inline-flex w-56 items-center justify-center bg-black px-3 py-2">
+            <PPLogo className="w-full" priority />
           </div>
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full" style={{ background: 'rgba(139,169,167,0.08)' }}>
             <svg width="24" height="24" fill="none" stroke="var(--n3-teal)" strokeWidth="2">
@@ -61,15 +61,15 @@ export default function SignUpPage() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--n3-black)]">
       <div className="w-full max-w-sm px-4">
         <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex items-center justify-center rounded-md bg-[var(--n3-dark-surface)] px-3 py-1.5">
-            <PPLogo className="h-7 w-auto" priority />
+          <div className="mb-3 inline-flex w-56 items-center justify-center bg-black px-3 py-2">
+            <PPLogo className="w-full" priority />
           </div>
-          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>N3uralia</p>
+          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>Inteligencia de mercado Vitacura</p>
         </div>
         <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
           <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Crear cuenta</h1>
-          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Unete a N3uralia y accede a inteligencia operativa</p>
-          {error && <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(139,169,167,0.08)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>{error}</div>}
+          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Crea tu acceso a la plataforma Property Partners Vitacura</p>
+          {error && <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(215,51,43,0.1)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>{error}</div>}
           <form onSubmit={handleSignUp} className="flex flex-col gap-4">
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
@@ -118,7 +118,7 @@ export default function SignUpPage() {
               type="submit"
               disabled={loading}
               className="w-full rounded py-2.5 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-60"
-              style={{ background: 'var(--n3-teal)', color: 'var(--n3-black)' }}
+              style={{ background: 'var(--n3-teal)', color: '#ffffff' }}
             >
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>

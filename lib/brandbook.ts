@@ -1,8 +1,8 @@
 /**
- * N3uralia Design System - Brandbook
- * Dark graphite and muted teal palette for the intelligent operations platform
+ * Property Partners Vitacura Design System - Brandbook
+ * Property Partners Vitacura control-management palette, derived from the 2026 decks.
  *
- * Reference: n3uralia.com
+ * Reference: supplied Property Partners 2026 presentations
  * Updated: July 2026
  */
 
@@ -13,29 +13,29 @@ export const N3_COLORS = {
   card: '#0c1111',            // Dark surface
   
   // Brand Colors
-  primary: '#8ba9a7',         // Primary brand accent
+  primary: '#d7332b',         // Property Partners red
   secondary: '#111111',       // Primary text and surfaces
-  accent: '#9ca9a7',          // Neutral accent
+  accent: '#7f8c8d',          // Deck neutral
   
   // Status Colors
-  success: '#8ba9a7',         // Success is represented with the brand accent
-  warning: '#f59e0b',         // Amber
-  destructive: '#d97706',     // Orange-red
-  info: '#0ea5e9',           // Blue
+  success: '#27ae60',         // Deck green
+  warning: '#f39c12',         // Deck amber
+  destructive: '#e74c3c',     // Deck red
+  info: '#1565c0',            // Deck blue
   
   // Surfaces
-  muted: '#223333',          // Muted gray
-  border: 'rgba(139, 169, 167, 0.18)',         // Light neutral border
+  muted: '#2a1716',          // Muted red-black
+  border: 'rgba(215, 51, 43, 0.22)',
   input: '#0c1111',          // Input background
 } as const
 
 export const N3_CHARTS = {
   colors: [
-    '#8ba9a7',  // Primary brand accent
-    '#9ca9a7',  // Neutral accent
-    '#111111',  // Primary text
-    '#f59e0b',  // Warning amber
-    '#d97706',  // Destructive
+    '#1565c0',  // Portfolio and target
+    '#e74c3c',  // Alert
+    '#27ae60',  // Compliance
+    '#f39c12',  // Transition
+    '#7f8c8d',  // Neutral
   ]
 } as const
 

@@ -28,6 +28,11 @@ const navItems = [
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><circle cx="8" cy="8" r="3" /><path d="M8 1v3M15 8h-3" /></svg>,
   },
   {
+    label: 'Presentaciones 2026',
+    href: '/dashboard/presentaciones',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="9" /><path d="M5 14h6M8 11v3" /><path d="m5 8 2-2 2 1 2-2" /></svg>,
+  },
+  {
     label: 'Casas Vitacura',
     href: '/dashboard/properties',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7L8 2l6 5v7H10v-4H6v4H2z" /></svg>,
@@ -36,6 +41,11 @@ const navItems = [
     label: 'Inteligencia de Mercado',
     href: '/dashboard/market',
     icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><line x1="8" y1="2" x2="8" y2="14" /><line x1="2" y1="8" x2="14" y2="8" /><path d="M4.5 4.5c1 .4 2.3.8 3.5.8s2.5-.4 3.5-.8" /><path d="M4.5 11.5c1-.4 2.3-.8 3.5-.8s2.5.4 3.5.8" /></svg>,
+  },
+  {
+    label: 'Fuentes Portal + CBRS',
+    href: '/dashboard/market/fuentes',
+    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v8c0 1.1 2.7 2 6 2s6-.9 6-2V4" /><path d="M2 8c0 1.1 2.7 2 6 2s6-.9 6-2" /></svg>,
   },
   {
     label: 'Importar Mercado',
@@ -92,14 +102,8 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)]">
-      <div className="flex items-center gap-2.5 border-b border-[var(--n3-line)] px-4 py-4">
-        <div className="w-24 shrink-0 rounded-md bg-[var(--n3-dark-surface)] px-2 py-1">
-          <PPLogo className="h-6 w-auto" priority />
-        </div>
-        <div>
-          <div className="text-sm font-semibold leading-none tracking-tight text-[var(--n3-text-light)]">N3uralia</div>
-          <div className="mt-0.5 text-[10px]" style={{ color: 'var(--n3-text-muted)' }}>Intelligent operations</div>
-        </div>
+      <div className="border-b border-[var(--n3-line)] px-4 py-4">
+        <PPLogo className="w-full" priority />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
@@ -113,7 +117,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                   className="flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-all"
                   style={{
                     color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
-                    background: isActive ? 'rgba(139,169,167,0.08)' : 'transparent',
+                    background: isActive ? 'rgba(215,51,43,0.1)' : 'transparent',
                     borderLeft: isActive ? '2px solid var(--n3-teal)' : '2px solid transparent',
                   }}
                 >
@@ -155,7 +159,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       <div className="border-t border-[var(--n3-line)] px-3 py-3">
         {profile ? (
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style={{ background: 'rgba(139,169,167,0.14)', color: 'var(--n3-teal)' }}>
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style={{ background: 'rgba(215,51,43,0.16)', color: 'var(--n3-teal-soft)' }}>
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">

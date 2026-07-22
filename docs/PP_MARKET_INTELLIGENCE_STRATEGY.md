@@ -223,3 +223,61 @@ What still matters most:
 - Keep dedupe strict enough to protect trust in the canonical inventory.
 - Keep report outputs short, specific, and tied to a decision.
 - Keep the whole system anchored to Vitacura and sales only.
+
+## Real Source Architecture
+
+The operating model uses each supplied source for the question it can actually answer. A presentation never replaces a CRM fact, an asking price never becomes a registered sale, and a geographic overlap never becomes an inferred neighborhood.
+
+| Pillar | Source | Operational role | Update rule |
+| --- | --- | --- | --- |
+| Control de Gestion | 84 CRM workbooks | Observed commercial activity | Rebuild and verify every received workbook and cell manifest |
+| Control de Gestion | 3 Metas 2026 workbooks | Monthly contract by branch and partner | Preserve raw values and source revision |
+| Control de Gestion | 5 Presentaciones 2026 decks | Management interpretation and historical reporting | Compare every comparable table or chart against CRM and targets |
+| Inteligencia de Negocios | Portal Inmobiliario exports | Published offer and asking conditions | Keep source ID and quality flags; exclude explicit rental records |
+| Inteligencia de Negocios | Barrios Vitacura KML | Polygon geometry | Mark points in overlapping polygons as `AMBIGUOUS_POLYGON` |
+| Inteligencia de Negocios | CBRS Vitacura workbook | Registered transactions | Preserve operation, property type, date, ROL and geocoding status |
+
+### Current verified coverage
+
+- Presentations: 5 decks, 304 slides, 320 tables, 210 charts and 210 embedded workbooks.
+- Presentation reconciliation: 115 comparable observations, with 60 exact, 45 different and 10 not comparable.
+- Portal: 5,197 globally unique publication IDs across departments, projects and houses.
+- KML: 19 polygons and 12 candidate overlap pairs; two supplied Portal coordinates fall in more than one polygon.
+- CBRS: 40,843 rows and 1,287,176 populated cells in the principal sheet, covering 2014-01-02 through 2026-01-09.
+- Portal to CBRS: zero confirmed deterministic matches with the supplied fields. The system must not manufacture this join.
+
+## Connected Decision Loop
+
+1. `Hecho`: CRM and CBRS preserve observed activity and registered transactions.
+2. `Contrato`: Metas 2026 defines expected performance by branch and partner.
+3. `Contexto`: Portal and KML describe supply, asking conditions and neighborhood geometry.
+4. `Interpretacion`: Presentations preserve management's reported reading at a point in time.
+5. `Conciliacion`: every mismatch remains visible with source, period, metric and delta.
+6. `Accion`: the role report converts only supported findings into a task, decision, forecast change or data-quality correction.
+
+## Evidence States
+
+- `EXACT`: source values agree after documented normalization.
+- `DIFFERENT`: both source values exist and the delta is retained.
+- `NOT_COMPARABLE`: definitions, periods or granularity do not support a valid comparison.
+- `AMBIGUOUS_POLYGON`: a coordinate belongs to multiple supplied KML polygons.
+- `PENDING_MATCH`: potentially related records lack a deterministic shared key.
+- `CONFIRMED_MATCH`: only available when deterministic identifiers or reviewed evidence prove identity.
+
+## Role Outputs
+
+- `Ejecutivo de venta`: overdue follow-up, visits, active requirements, property priorities and supported talking points.
+- `Director de venta`: target gap, funnel conversion, stale leads, branch comparisons, data incidents and coaching priorities.
+- `CEO`: closing and UF trend, forecast gap, source reliability, portfolio concentration and allocation decisions.
+
+## Refresh and Quality Gates
+
+- CRM, targets and presentations: rebuild on every new file delivery; reject publication when source hashes or cell coverage differ from the manifest.
+- Portal: scheduled ingest with source-level freshness, row-quality checks and strict deduplication before canonical inventory.
+- KML: versioned geometry; rerun spatial assignment after any polygon change.
+- CBRS: append by source period, verify formulas independently and flag partial-period coverage.
+- AI: generate recommendations only from cited records and expose unsupported or non-comparable claims instead of completing them heuristically.
+
+## Privacy and Repository Policy
+
+The repository stores verified aggregates, schemas, hashes and reconciliation evidence needed by the application. Raw personal CRM rows and unrestricted transaction-level source files remain outside the public code history unless an approved access-controlled data store is configured.

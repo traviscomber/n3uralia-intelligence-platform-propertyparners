@@ -1,0 +1,1247 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-22T01:05:29.109Z",
+  "source": {
+    "file": "presentation-summary.json",
+    "sha256": "cf74c62f2a3e36908c7e590451b0a199a582da4baf1325f4ad5b988753b2790e",
+    "presentationCount": 5,
+    "slideCount": 304,
+    "contentCoverage": {
+      "slides": 304,
+      "tables": 320,
+      "charts": 210,
+      "textObjects": 2905,
+      "embeddedWorkbooks": 210
+    }
+  },
+  "scope": {
+    "commune": "Vitacura",
+    "operation": "Venta",
+    "period": "2026-01/2026-06",
+    "audiences": [
+      "Directorio",
+      "Partners"
+    ]
+  },
+  "brandbook": {
+    "provenance": "Frecuencias y geometría extraídas de las cinco presentaciones reales; no corresponde al tema Office declarado.",
+    "font": "Calibri",
+    "backgrounds": [
+      [
+        "#F0F0F0",
+        285
+      ],
+      [
+        "#000000",
+        19
+      ]
+    ],
+    "textColors": [
+      [
+        "#333333",
+        2543
+      ],
+      [
+        "#FFFFFF",
+        2417
+      ],
+      [
+        "#7F8C8D",
+        2146
+      ],
+      [
+        "#E74C3C",
+        1892
+      ],
+      [
+        "#27AE60",
+        1680
+      ],
+      [
+        "#F39C12",
+        864
+      ],
+      [
+        "#1565C0",
+        393
+      ],
+      [
+        "#C0392B",
+        180
+      ]
+    ],
+    "fills": [
+      [
+        "#FFFFFF",
+        630
+      ],
+      [
+        "#000000",
+        320
+      ],
+      [
+        "#F39C12",
+        167
+      ],
+      [
+        "#E74C3C",
+        147
+      ],
+      [
+        "#27AE60",
+        141
+      ],
+      [
+        "#1565C0",
+        105
+      ],
+      [
+        "#2E7D32",
+        70
+      ],
+      [
+        "#E65100",
+        70
+      ],
+      [
+        "#C0392B",
+        35
+      ]
+    ],
+    "rules": [
+      "Portadas negras con logotipo Property Partners Vitacura centrado y línea blanca.",
+      "Láminas analíticas en gris #F0F0F0 con encabezado negro y acento rojo.",
+      "Rojo #E74C3C para alerta o bajo desempeño, ámbar #F39C12 para transición, verde #27AE60 para cumplimiento y azul #1565C0 para cartera/metas.",
+      "Tablas compactas, encabezados negros, cifras de alta densidad y títulos sin ornamentación."
+    ]
+  },
+  "management": {
+    "company": {
+      "name": "PL Real Estate Spa",
+      "branch": null,
+      "slideRange": [
+        4,
+        11
+      ],
+      "salesSummary": {
+        "source": {
+          "deck": "Jun_Directorio_5.pptx",
+          "slide": 4,
+          "title": "PL Real Estate — Venta Jun"
+        },
+        "currentSalesCount": 7,
+        "currentSalesUf": 135600,
+        "currentTargetSalesCount": 8.8,
+        "currentTargetSalesUf": 130830,
+        "cumulativeSalesCount": 33,
+        "cumulativeSalesUf": 620870,
+        "cumulativeTargetSalesCount": 43,
+        "cumulativeTargetSalesUf": 687075,
+        "rawTable": [
+          [
+            "",
+            "Jun 2026",
+            "Meta Jun",
+            "% Cumpl",
+            "Jun 2025",
+            "Δ% AA",
+            "Acum 2026",
+            "Meta Acum",
+            "% Cumpl",
+            "Acum 2025",
+            "Δ% AA"
+          ],
+          [
+            "Cierres",
+            "7.0",
+            "8.8",
+            "80%",
+            "6.0",
+            "+17%",
+            "33.0",
+            "43.0",
+            "77%",
+            "30.0",
+            "+10%"
+          ],
+          [
+            "UF",
+            "135.600",
+            "130.830",
+            "104%",
+            "74.350",
+            "+82%",
+            "620.870",
+            "687.075",
+            "90%",
+            "388.820",
+            "+60%"
+          ]
+        ]
+      },
+      "sales": {
+        "source": {
+          "deck": "Jun_Directorio_5.pptx",
+          "slide": 5,
+          "title": "PL Real Estate — Evolución Venta"
+        },
+        "salesCount": {
+          "2026-01": 4,
+          "2026-02": 3,
+          "2026-03": 7,
+          "2026-04": 8,
+          "2026-05": 4,
+          "2026-06": 7
+        },
+        "salesUf": {
+          "2026-01": 103150,
+          "2026-02": 48800,
+          "2026-03": 155970,
+          "2026-04": 107500,
+          "2026-05": 69850,
+          "2026-06": 135600
+        },
+        "targetSalesCount": {
+          "2026-01": 5.86,
+          "2026-02": 4.63,
+          "2026-03": 7.8,
+          "2026-04": 7.33,
+          "2026-05": 8.6,
+          "2026-06": 8.8
+        },
+        "targetSalesUf": {
+          "2026-01": 99306,
+          "2026-02": 77955,
+          "2026-03": 131874,
+          "2026-04": 118087,
+          "2026-05": 129023,
+          "2026-06": 130830
+        },
+        "cumulativeSalesCount": {
+          "2026-01": 4,
+          "2026-02": 7,
+          "2026-03": 14,
+          "2026-04": 22,
+          "2026-05": 26,
+          "2026-06": 33
+        },
+        "cumulativeSalesUf": {
+          "2026-01": 103150,
+          "2026-02": 151950,
+          "2026-03": 307920,
+          "2026-04": 415420,
+          "2026-05": 485270,
+          "2026-06": 620870
+        },
+        "cumulativeTargetSalesCount": {
+          "2026-01": 5.86,
+          "2026-02": 10.49,
+          "2026-03": 18.29,
+          "2026-04": 25.61,
+          "2026-05": 34.2,
+          "2026-06": 43
+        },
+        "cumulativeTargetSalesUf": {
+          "2026-01": 99306,
+          "2026-02": 177261,
+          "2026-03": 309135,
+          "2026-04": 427222,
+          "2026-05": 556245,
+          "2026-06": 687075
+        }
+      },
+      "scores": {
+        "source": {
+          "deck": "Jun_Directorio_5.pptx",
+          "slide": 6,
+          "title": "PL Real Estate — Scores Jun"
+        },
+        "management": 63.3,
+        "portfolio": 68,
+        "followUp": 59.4,
+        "conversion": 61,
+        "classification": "🔧 Desarrollo",
+        "rawText": "PL Real Estate — Scores Jun | Calidad Gestión | 63.3 | 🔧 Desarrollo | Calidad Cartera (40%) | 68.0 | Calidad Seguim (30%) | 59.4 | Calidad Conversión (30%) | 61.0 | Calidad Cartera: 68.0 | Meta cartera (33%) | 60.0 | Cartera/Meta | Reqs x Tipo Prop (33%) | 86.4 | min(Ratio,1)×100 | Calidad Precio (33%) | 57.6 | Pricing prom | Calidad Seguim: 59.4 | % Leads Clasif (33%) | 30.2 | Clasif/Activos | % Leads c-g90 (33%) | 85.1 | 1-L90d/Act | %LeadsA c-g15 (33%) | 62.9 | 1-L15dA/CliA | Calidad Conversión: 61.0 | Vis Realiz/Meta (33%) | 46.0 | Vis/Meta | %Vis realizad/agend (33%) | 60.6 | Vis/Agend | TC 6m/leads tot (33%) | 76.6 | min(TC%,2.86)×35 | Calidad Gestión: 63.3 | 🔧 Desarrollo |"
+      },
+      "indicators": {
+        "source": {
+          "deck": "Jun_Directorio_5.pptx",
+          "slide": 7,
+          "title": "PL Real Estate — Indicadores Ene-Jun"
+        },
+        "stock": 316,
+        "stockTarget": 527,
+        "requirements": 500,
+        "requirementsReference": 579,
+        "classifiedLeads": 434,
+        "activeLeads": 1439,
+        "activeALeads": 124,
+        "stale90Leads": 215,
+        "stale15ALeads": 46,
+        "stale15ADenominator": 124,
+        "realizedVisits": 198,
+        "scheduledVisits": 327,
+        "conversionClosings": 31.5,
+        "conversionLeadBase": 1439,
+        "rawTables": [
+          [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "316",
+              "527",
+              "60%"
+            ],
+            [
+              "Requerimientos",
+              "500",
+              "Esp:579",
+              "86%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:122 | ≤1.10:60 | >1.10:82",
+              "Score",
+              "57.6"
+            ]
+          ],
+          [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "434/1439",
+              "A: 124",
+              "30.2"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "215/1439",
+              "15% sin gest",
+              "85.1"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "46/124",
+              "37% sin gest",
+              "62.9"
+            ]
+          ],
+          [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "198",
+              "Meta: 431",
+              "46.0"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "198 / 327",
+              "Ratio cumplimiento",
+              "60.6"
+            ],
+            [
+              "TC 6 meses",
+              "31.5 ci / 1439 ld",
+              "Tasa conversión",
+              "2.2%"
+            ]
+          ]
+        ]
+      },
+      "trendSlides": [
+        8,
+        9,
+        10,
+        11
+      ]
+    },
+    "branches": [
+      {
+        "name": "Santa María",
+        "branch": "Santa María",
+        "slideRange": [
+          13,
+          20
+        ],
+        "salesSummary": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 13,
+            "title": "Santa María — Venta Jun"
+          },
+          "currentSalesCount": 2.5,
+          "currentSalesUf": 44750,
+          "currentTargetSalesCount": 2.8,
+          "currentTargetSalesUf": 54246,
+          "cumulativeSalesCount": 7.5,
+          "cumulativeSalesUf": 166725,
+          "cumulativeTargetSalesCount": 14.1,
+          "cumulativeTargetSalesUf": 280922,
+          "rawTable": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "2.5",
+              "2.8",
+              "89%",
+              "0.5",
+              "+400%",
+              "7.5",
+              "14.1",
+              "53%",
+              "4.5",
+              "+67%"
+            ],
+            [
+              "UF",
+              "44.750",
+              "54.246",
+              "82%",
+              "5.400",
+              "+729%",
+              "166.725",
+              "280.922",
+              "59%",
+              "52.245",
+              "+219%"
+            ]
+          ]
+        },
+        "sales": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 14,
+            "title": "Santa María — Evolución Venta"
+          },
+          "salesCount": {
+            "2026-01": 0.5,
+            "2026-02": 1,
+            "2026-03": 1.5,
+            "2026-04": 2,
+            "2026-05": 0,
+            "2026-06": 2.5
+          },
+          "salesUf": {
+            "2026-01": 13000,
+            "2026-02": 33000,
+            "2026-03": 44025,
+            "2026-04": 31950,
+            "2026-05": 0,
+            "2026-06": 44750
+          },
+          "targetSalesCount": {
+            "2026-01": 1.93,
+            "2026-02": 1.53,
+            "2026-03": 2.66,
+            "2026-04": 2.38,
+            "2026-05": 2.8,
+            "2026-06": 2.8
+          },
+          "targetSalesUf": {
+            "2026-01": 39597,
+            "2026-02": 30996,
+            "2026-03": 53546,
+            "2026-04": 47438,
+            "2026-05": 55100,
+            "2026-06": 54246
+          },
+          "cumulativeSalesCount": {
+            "2026-01": 0.5,
+            "2026-02": 1.5,
+            "2026-03": 3,
+            "2026-04": 5,
+            "2026-05": 5,
+            "2026-06": 7.5
+          },
+          "cumulativeSalesUf": {
+            "2026-01": 13000,
+            "2026-02": 46000,
+            "2026-03": 90025,
+            "2026-04": 121975,
+            "2026-05": 121975,
+            "2026-06": 166725
+          },
+          "cumulativeTargetSalesCount": {
+            "2026-01": 1.93,
+            "2026-02": 3.46,
+            "2026-03": 6.12,
+            "2026-04": 8.51,
+            "2026-05": 11.3,
+            "2026-06": 14.1
+          },
+          "cumulativeTargetSalesUf": {
+            "2026-01": 39597,
+            "2026-02": 70592,
+            "2026-03": 124139,
+            "2026-04": 171576,
+            "2026-05": 226676,
+            "2026-06": 280922
+          }
+        },
+        "scores": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 15,
+            "title": "Santa María — Scores Jun"
+          },
+          "management": 56,
+          "portfolio": 60.3,
+          "followUp": 51.1,
+          "conversion": 55.1,
+          "classification": "🔧 Desarrollo",
+          "rawText": "Santa María — Scores Jun | Calidad Gestión | 56.0 | 🔧 Desarrollo | Calidad Cartera (40%) | 60.3 | Calidad Seguim (30%) | 51.1 | Calidad Conversión (30%) | 55.1 | Calidad Cartera: 60.3 | Meta cartera (33%) | 60.7 | Cartera/Meta | Reqs x Tipo Prop (33%) | 66.3 | min(Ratio,1)×100 | Calidad Precio (33%) | 53.8 | Pricing prom | Calidad Seguim: 51.1 | % Leads Clasif (33%) | 23.4 | Clasif/Activos | % Leads c-g90 (33%) | 75.4 | 1-L90d/Act | %LeadsA c-g15 (33%) | 54.5 | 1-L15dA/CliA | Calidad Conversión: 55.1 | Vis Realiz/Meta (33%) | 50.6 | Vis/Meta | %Vis realizad/agend (33%) | 70.2 | Vis/Agend | TC 6m/leads tot (33%) | 44.6 | min(TC%,2.86)×35 | Calidad Gestión: 56.0 | 🔧 Desarrollo |"
+        },
+        "indicators": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 16,
+            "title": "Santa María — Indicadores Ene-Jun"
+          },
+          "stock": 128,
+          "stockTarget": 211,
+          "requirements": 117,
+          "requirementsReference": 176,
+          "classifiedLeads": 156,
+          "activeLeads": 667,
+          "activeALeads": 44,
+          "stale90Leads": 164,
+          "stale15ALeads": 20,
+          "stale15ADenominator": 44,
+          "realizedVisits": 66,
+          "scheduledVisits": 94,
+          "conversionClosings": 8.5,
+          "conversionLeadBase": 667,
+          "rawTables": [
+            [
+              [
+                "Indicador",
+                "Valor",
+                "Meta Jun",
+                "% Cumpl"
+              ],
+              [
+                "Cartera actual",
+                "128",
+                "211",
+                "61%"
+              ],
+              [
+                "Requerimientos",
+                "117",
+                "Esp:176",
+                "66%"
+              ],
+              [
+                "Pricing",
+                "≤1.05:47 | ≤1.10:18 | >1.10:39",
+                "Score",
+                "53.8"
+              ]
+            ],
+            [
+              [
+                "Indicador",
+                "Dato",
+                "Detalle",
+                "Score"
+              ],
+              [
+                "Leads clasif/activos",
+                "156/667",
+                "A: 44",
+                "23.4"
+              ],
+              [
+                "Leads sg 90d / activos",
+                "164/667",
+                "25% sin gest",
+                "75.4"
+              ],
+              [
+                "Leads A sg 15d / A",
+                "20/44",
+                "45% sin gest",
+                "54.5"
+              ]
+            ],
+            [
+              [
+                "Indicador",
+                "Valor",
+                "Referencia",
+                "% / Score"
+              ],
+              [
+                "Visitas realizadas",
+                "66",
+                "Meta: 130",
+                "50.6"
+              ],
+              [
+                "Vis realizadas / agendadas",
+                "66 / 94",
+                "Ratio cumplimiento",
+                "70.2"
+              ],
+              [
+                "TC 6 meses",
+                "8.5 ci / 667 ld",
+                "Tasa conversión",
+                "1.3%"
+              ]
+            ]
+          ]
+        },
+        "trendSlides": [
+          17,
+          18,
+          19,
+          20
+        ]
+      },
+      {
+        "name": "Nueva Costanera",
+        "branch": "Nueva Costanera",
+        "slideRange": [
+          22,
+          29
+        ],
+        "salesSummary": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 22,
+            "title": "Nueva Costanera — Venta Jun"
+          },
+          "currentSalesCount": 3,
+          "currentSalesUf": 60325,
+          "currentTargetSalesCount": 3.3,
+          "currentTargetSalesUf": 42540,
+          "cumulativeSalesCount": 15.5,
+          "cumulativeSalesUf": 303970,
+          "cumulativeTargetSalesCount": 16.4,
+          "cumulativeTargetSalesUf": 252665,
+          "rawTable": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "3.0",
+              "3.3",
+              "91%",
+              "5.0",
+              "-40%",
+              "15.5",
+              "16.4",
+              "95%",
+              "16.0",
+              "-3%"
+            ],
+            [
+              "UF",
+              "60.325",
+              "42.540",
+              "142%",
+              "63.825",
+              "-5%",
+              "303.970",
+              "252.665",
+              "120%",
+              "220.905",
+              "+38%"
+            ]
+          ]
+        },
+        "sales": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 23,
+            "title": "Nueva Costanera — Evolución Venta"
+          },
+          "salesCount": {
+            "2026-01": 3,
+            "2026-02": 2,
+            "2026-03": 2.5,
+            "2026-04": 3.5,
+            "2026-05": 1.5,
+            "2026-06": 3
+          },
+          "salesUf": {
+            "2026-01": 81075,
+            "2026-02": 15800,
+            "2026-03": 58145,
+            "2026-04": 46400,
+            "2026-05": 42225,
+            "2026-06": 60325
+          },
+          "targetSalesCount": {
+            "2026-01": 2.2,
+            "2026-02": 1.76,
+            "2026-03": 3.06,
+            "2026-04": 2.78,
+            "2026-05": 3.3,
+            "2026-06": 3.3
+          },
+          "targetSalesUf": {
+            "2026-01": 37844,
+            "2026-02": 30033,
+            "2026-03": 52089,
+            "2026-04": 44781,
+            "2026-05": 45378,
+            "2026-06": 42540
+          },
+          "cumulativeSalesCount": {
+            "2026-01": 3,
+            "2026-02": 5,
+            "2026-03": 7.5,
+            "2026-04": 11,
+            "2026-05": 12.5,
+            "2026-06": 15.5
+          },
+          "cumulativeSalesUf": {
+            "2026-01": 81075,
+            "2026-02": 96875,
+            "2026-03": 155020,
+            "2026-04": 201420,
+            "2026-05": 243645,
+            "2026-06": 303970
+          },
+          "cumulativeTargetSalesCount": {
+            "2026-01": 2.2,
+            "2026-02": 3.96,
+            "2026-03": 7.02,
+            "2026-04": 9.8,
+            "2026-05": 13.1,
+            "2026-06": 16.4
+          },
+          "cumulativeTargetSalesUf": {
+            "2026-01": 37844,
+            "2026-02": 67876,
+            "2026-03": 119965,
+            "2026-04": 164747,
+            "2026-05": 210125,
+            "2026-06": 252665
+          }
+        },
+        "scores": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 24,
+            "title": "Nueva Costanera — Scores Jun"
+          },
+          "management": 64.7,
+          "portfolio": 66.4,
+          "followUp": 64.1,
+          "conversion": 63,
+          "classification": "🔧 Desarrollo",
+          "rawText": "Nueva Costanera — Scores Jun | Calidad Gestión | 64.7 | 🔧 Desarrollo | Calidad Cartera (40%) | 66.4 | Calidad Seguim (30%) | 64.1 | Calidad Conversión (30%) | 63.0 | Calidad Cartera: 66.4 | Meta cartera (33%) | 56.1 | Cartera/Meta | Reqs x Tipo Prop (33%) | 88.6 | min(Ratio,1)×100 | Calidad Precio (33%) | 54.7 | Pricing prom | Calidad Seguim: 64.1 | % Leads Clasif (33%) | 41.6 | Clasif/Activos | % Leads c-g90 (33%) | 90.9 | 1-L90d/Act | %LeadsA c-g15 (33%) | 60.0 | 1-L15dA/CliA | Calidad Conversión: 63.0 | Vis Realiz/Meta (33%) | 36.0 | Vis/Meta | %Vis realizad/agend (33%) | 52.9 | Vis/Agend | TC 6m/leads tot (33%) | 100.1 | min(TC%,2.86)×35 | Calidad Gestión: 64.7 | 🔧 Desarrollo |"
+        },
+        "indicators": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 25,
+            "title": "Nueva Costanera — Indicadores Ene-Jun"
+          },
+          "stock": 92,
+          "stockTarget": 164,
+          "requirements": 164,
+          "requirementsReference": 185,
+          "classifiedLeads": 155,
+          "activeLeads": 373,
+          "activeALeads": 45,
+          "stale90Leads": 34,
+          "stale15ALeads": 18,
+          "stale15ADenominator": 45,
+          "realizedVisits": 54,
+          "scheduledVisits": 102,
+          "conversionClosings": 13.5,
+          "conversionLeadBase": 373,
+          "rawTables": [
+            [
+              [
+                "Indicador",
+                "Valor",
+                "Meta Jun",
+                "% Cumpl"
+              ],
+              [
+                "Cartera actual",
+                "92",
+                "164",
+                "56%"
+              ],
+              [
+                "Requerimientos",
+                "164",
+                "Esp:185",
+                "89%"
+              ],
+              [
+                "Pricing",
+                "≤1.05:31 | ≤1.10:20 | >1.10:24",
+                "Score",
+                "54.7"
+              ]
+            ],
+            [
+              [
+                "Indicador",
+                "Dato",
+                "Detalle",
+                "Score"
+              ],
+              [
+                "Leads clasif/activos",
+                "155/373",
+                "A: 45",
+                "41.6"
+              ],
+              [
+                "Leads sg 90d / activos",
+                "34/373",
+                "9% sin gest",
+                "90.9"
+              ],
+              [
+                "Leads A sg 15d / A",
+                "18/45",
+                "40% sin gest",
+                "60.0"
+              ]
+            ],
+            [
+              [
+                "Indicador",
+                "Valor",
+                "Referencia",
+                "% / Score"
+              ],
+              [
+                "Visitas realizadas",
+                "54",
+                "Meta: 150",
+                "36.0"
+              ],
+              [
+                "Vis realizadas / agendadas",
+                "54 / 102",
+                "Ratio cumplimiento",
+                "52.9"
+              ],
+              [
+                "TC 6 meses",
+                "13.5 ci / 373 ld",
+                "Tasa conversión",
+                "3.6%"
+              ]
+            ]
+          ]
+        },
+        "trendSlides": [
+          26,
+          27,
+          28,
+          29
+        ]
+      },
+      {
+        "name": "Lo Beltrán",
+        "branch": "Lo Beltrán",
+        "slideRange": [
+          31,
+          38
+        ],
+        "salesSummary": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 31,
+            "title": "Lo Beltrán — Venta Jun"
+          },
+          "currentSalesCount": 1.5,
+          "currentSalesUf": 30525,
+          "currentTargetSalesCount": 2.7,
+          "currentTargetSalesUf": 34044,
+          "cumulativeSalesCount": 10,
+          "cumulativeSalesUf": 150175,
+          "cumulativeTargetSalesCount": 12.5,
+          "cumulativeTargetSalesUf": 153488,
+          "rawTable": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "1.5",
+              "2.7",
+              "56%",
+              "0.5",
+              "+200%",
+              "10.0",
+              "12.5",
+              "80%",
+              "9.5",
+              "+5%"
+            ],
+            [
+              "UF",
+              "30.525",
+              "34.044",
+              "90%",
+              "5.125",
+              "+496%",
+              "150.175",
+              "153.488",
+              "98%",
+              "115.670",
+              "+30%"
+            ]
+          ]
+        },
+        "sales": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 32,
+            "title": "Lo Beltrán — Evolución Venta"
+          },
+          "salesCount": {
+            "2026-01": 0.5,
+            "2026-02": 0,
+            "2026-03": 3,
+            "2026-04": 2.5,
+            "2026-05": 2.5,
+            "2026-06": 1.5
+          },
+          "salesUf": {
+            "2026-01": 9075,
+            "2026-02": 0,
+            "2026-03": 53800,
+            "2026-04": 29150,
+            "2026-05": 27625,
+            "2026-06": 30525
+          },
+          "targetSalesCount": {
+            "2026-01": 1.73,
+            "2026-02": 1.34,
+            "2026-03": 2.07,
+            "2026-04": 2.16,
+            "2026-05": 2.5,
+            "2026-06": 2.7
+          },
+          "targetSalesUf": {
+            "2026-01": 21866,
+            "2026-02": 16927,
+            "2026-03": 26238,
+            "2026-04": 25868,
+            "2026-05": 28545,
+            "2026-06": 34044
+          },
+          "cumulativeSalesCount": {
+            "2026-01": 0.5,
+            "2026-02": 0.5,
+            "2026-03": 3.5,
+            "2026-04": 6,
+            "2026-05": 8.5,
+            "2026-06": 10
+          },
+          "cumulativeSalesUf": {
+            "2026-01": 9075,
+            "2026-02": 9075,
+            "2026-03": 62875,
+            "2026-04": 92025,
+            "2026-05": 119650,
+            "2026-06": 150175
+          },
+          "cumulativeTargetSalesCount": {
+            "2026-01": 1.73,
+            "2026-02": 3.07,
+            "2026-03": 5.14,
+            "2026-04": 7.3,
+            "2026-05": 9.8,
+            "2026-06": 12.5
+          },
+          "cumulativeTargetSalesUf": {
+            "2026-01": 21866,
+            "2026-02": 38793,
+            "2026-03": 65031,
+            "2026-04": 90899,
+            "2026-05": 119444,
+            "2026-06": 153488
+          }
+        },
+        "scores": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 33,
+            "title": "Lo Beltrán — Scores Jun"
+          },
+          "management": 70.2,
+          "portfolio": 76,
+          "followUp": 67.9,
+          "conversion": 65,
+          "classification": "📈 Potencial",
+          "rawText": "Lo Beltrán — Scores Jun | Calidad Gestión | 70.2 | 📈 Potencial | Calidad Cartera (40%) | 76.0 | Calidad Seguim (30%) | 67.9 | Calidad Conversión (30%) | 65.0 | Calidad Cartera: 76.0 | Meta cartera (33%) | 63.2 | Cartera/Meta | Reqs x Tipo Prop (33%) | 100.0 | min(Ratio,1)×100 | Calidad Precio (33%) | 64.7 | Pricing prom | Calidad Seguim: 67.9 | % Leads Clasif (33%) | 30.8 | Clasif/Activos | % Leads c-g90 (33%) | 95.7 | 1-L90d/Act | %LeadsA c-g15 (33%) | 77.1 | 1-L15dA/CliA | Calidad Conversión: 65.0 | Vis Realiz/Meta (33%) | 52.0 | Vis/Meta | %Vis realizad/agend (33%) | 59.5 | Vis/Agend | TC 6m/leads tot (33%) | 83.3 | min(TC%,2.86)×35 | Calidad Gestión: 70.2 | 📈 Potencial |"
+        },
+        "indicators": {
+          "source": {
+            "deck": "Jun_Directorio_5.pptx",
+            "slide": 34,
+            "title": "Lo Beltrán — Indicadores Ene-Jun"
+          },
+          "stock": 96,
+          "stockTarget": 152,
+          "requirements": 219,
+          "requirementsReference": 217,
+          "classifiedLeads": 123,
+          "activeLeads": 399,
+          "activeALeads": 35,
+          "stale90Leads": 17,
+          "stale15ALeads": 8,
+          "stale15ADenominator": 35,
+          "realizedVisits": 78,
+          "scheduledVisits": 131,
+          "conversionClosings": 9.5,
+          "conversionLeadBase": 399,
+          "rawTables": [
+            [
+              [
+                "Indicador",
+                "Valor",
+                "Meta Jun",
+                "% Cumpl"
+              ],
+              [
+                "Cartera actual",
+                "96",
+                "152",
+                "63%"
+              ],
+              [
+                "Requerimientos",
+                "219",
+                "Esp:217",
+                "101%"
+              ],
+              [
+                "Pricing",
+                "≤1.05:44 | ≤1.10:22 | >1.10:19",
+                "Score",
+                "64.7"
+              ]
+            ],
+            [
+              [
+                "Indicador",
+                "Dato",
+                "Detalle",
+                "Score"
+              ],
+              [
+                "Leads clasif/activos",
+                "123/399",
+                "A: 35",
+                "30.8"
+              ],
+              [
+                "Leads sg 90d / activos",
+                "17/399",
+                "4% sin gest",
+                "95.7"
+              ],
+              [
+                "Leads A sg 15d / A",
+                "8/35",
+                "23% sin gest",
+                "77.1"
+              ]
+            ],
+            [
+              [
+                "Indicador",
+                "Valor",
+                "Referencia",
+                "% / Score"
+              ],
+              [
+                "Visitas realizadas",
+                "78",
+                "Meta: 150",
+                "52.0"
+              ],
+              [
+                "Vis realizadas / agendadas",
+                "78 / 131",
+                "Ratio cumplimiento",
+                "59.5"
+              ],
+              [
+                "TC 6 meses",
+                "9.5 ci / 399 ld",
+                "Tasa conversión",
+                "2.4%"
+              ]
+            ]
+          ]
+        },
+        "trendSlides": [
+          35,
+          36,
+          37,
+          38
+        ]
+      }
+    ],
+    "partnerCount": 24
+  },
+  "reconciliation": {
+    "rule": "Una diferencia no se corrige ni se promedia. Se conserva cada valor con su corte, definición y fuente.",
+    "counts": {
+      "total": 115,
+      "exact": 60,
+      "different": 45,
+      "notComparable": 10
+    },
+    "internalCounts": {
+      "total": 48,
+      "exact": 34,
+      "different": 14
+    },
+    "headline": {
+      "presentationYtdSales": 33,
+      "crmYtdSales": 34,
+      "salesDelta": -1,
+      "presentationYtdUf": 620870,
+      "crmYtdUf": 643670,
+      "ufDelta": -22800
+    }
+  },
+  "decks": [
+    {
+      "file": "Jun_Directorio_5.pptx",
+      "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+      "byteSize": 1252175,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      }
+    },
+    {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      }
+    },
+    {
+      "file": "Jun_Partners_Nueva_Costanera.pptx",
+      "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+      "byteSize": 2764734,
+      "slideCount": 84,
+      "mediaCount": 84,
+      "embeddingCount": 60,
+      "stats": {
+        "objects": 1454,
+        "textObjects": 829,
+        "tables": 91,
+        "charts": 60,
+        "pictures": 84,
+        "notes": 84
+      }
+    },
+    {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      }
+    },
+    {
+      "file": "Q2_Directorio_1.pptx",
+      "sha256": "dd2f364521aa74027bc9495ec829d21db2e704b79dc8479c3318f15cd1f22f2d",
+      "byteSize": 1241665,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      }
+    }
+  ]
+}

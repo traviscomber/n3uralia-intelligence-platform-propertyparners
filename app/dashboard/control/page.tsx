@@ -1,11 +1,13 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, FunnelChart, Funnel, Cell } from 'recharts'
 import { Target } from 'lucide-react'
-import { buildOperationalSeries, getOperationalSummary } from '@/lib/crm-snapshot'
+import { buildOperationalSeries, CRM_INTELLIGENCE, getOperationalSummary } from '@/lib/crm-snapshot'
 import { getBranchTargetPerformance, getTargetSource } from '@/lib/targets-2026'
+import presentationsSummary from '@/data/presentations-2026-summary.json'
 
 interface AiReport {
   report_type: string
@@ -120,10 +122,19 @@ export default function ControlPage() {
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-gray-200 pb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Control de Gestión</h1>
-        <p className="text-sm text-gray-600 mt-2">Monitoreo de objetivos por sucursal y actividad comercial real</p>
-      </div>
+      <header className="overflow-hidden border border-white/10 bg-black text-white">
+        <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e23b31]">Property Partners Vitacura</p><h1 className="mt-2 text-3xl font-semibold">Control de gestión</h1><p className="mt-2 text-sm text-[#aaa]">Una sola lectura trazable entre operación CRM, metas 2026 y presentaciones reales.</p></div>
+          <Link href="/dashboard/presentaciones" className="border border-[#d7332b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#d7332b]">Abrir conciliación de 304 láminas</Link>
+        </div>
+        <div className="h-1 bg-[#d7332b]" />
+      </header>
+
+      <section className="grid gap-px bg-[#cfcfcf] md:grid-cols-3">
+        <Link href="/dashboard/datos-crm" className="bg-[#f0f0f0] p-5 text-[#222] hover:bg-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#777]">01 · Hechos</p><h2 className="mt-2 text-lg font-semibold">Datos CRM</h2><p className="mt-2 text-xs text-[#666]">{CRM_INTELLIGENCE.sourceInventory.workbookCount} libros · {CRM_INTELLIGENCE.sourceInventory.cellCoverage.populatedCells.toLocaleString('es-CL')} celdas con contenido</p></Link>
+        <Link href="/dashboard/metas" className="bg-[#f0f0f0] p-5 text-[#222] hover:bg-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#777]">02 · Contrato</p><h2 className="mt-2 text-lg font-semibold">Metas 2026</h2><p className="mt-2 text-xs text-[#666]">3 sucursales · 7 métricas · revisión 202607</p></Link>
+        <Link href="/dashboard/presentaciones" className="bg-[#f0f0f0] p-5 text-[#222] hover:bg-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">03 · Interpretación</p><h2 className="mt-2 text-lg font-semibold">Presentaciones 2026</h2><p className="mt-2 text-xs text-[#666]">{presentationsSummary.source.slideCount} láminas · {presentationsSummary.reconciliation.counts.different} diferencias identificadas</p></Link>
+      </section>
 
       {/* KPI Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

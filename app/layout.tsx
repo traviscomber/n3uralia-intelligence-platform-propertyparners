@@ -3,14 +3,14 @@ import { Montserrat, Rajdhani } from 'next/font/google'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'N3uralia | Turn complexity into intelligent execution',
-  description: 'N3uralia converts scattered data, workflows, documents, and AI into operational intelligence for complex teams.',
+  title: 'Property Partners Vitacura | Inteligencia de mercado',
+  description: 'Control de gestion e inteligencia de mercado para ventas de casas y departamentos en Vitacura. Powered by N3uralia.',
   generator: 'N3uralia',
 }
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#0a1110',
+  themeColor: '#050505',
 }
 
 const rajdhani = Rajdhani({

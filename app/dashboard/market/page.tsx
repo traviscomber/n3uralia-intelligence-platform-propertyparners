@@ -282,6 +282,13 @@ export default function MarketPage() {
         </div>
           <div className="flex items-center gap-3 mt-1">
             <Link
+              href="/dashboard/market/fuentes"
+              className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors"
+              style={{ background: '#000', color: '#fff', border: '1px solid #d7332b' }}
+            >
+              Fuentes Portal + CBRS
+            </Link>
+            <Link
               href="/dashboard/market/import"
               className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors"
               style={{ background: '#f9fafb', color: '#111111', border: '1px solid #e5e7eb' }}
@@ -315,7 +322,7 @@ export default function MarketPage() {
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#374151' }}>Benchmarks externos</p>
               <h2 className="mt-1 text-lg font-semibold text-gray-900">Realtor International + Portal Inmobiliario</h2>
               <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-                Comparaci�n de fuentes externas para reforzar `Inteligencia de Mercado`.
+                Comparación de fuentes externas para reforzar `Inteligencia de Mercado`.
               </p>
             </div>
             <button
