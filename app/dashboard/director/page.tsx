@@ -1,8 +1,6 @@
-﻿'use client'
+'use client'
 
-import { useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { PP_SCORECARD_DEFINITIONS, assessMetricStatus } from '@/lib/pp-scorecard'
 import { buildAgentFallbackRows, buildOperationalSeries, getLatestLeadSnapshot, getOperationalSummary, getYtdSummary } from '@/lib/crm-snapshot'
 import { getTargetSource } from '@/lib/targets-2026'
 
@@ -16,13 +14,6 @@ const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: strin
 }
 
 function fmt(n: number) { return n.toLocaleString('es-CL') }
-
-function scoreTone(status: 'good' | 'warning' | 'critical' | 'inactive') {
-  if (status === 'good') return '#16a34a'
-  if (status === 'warning') return '#d97706'
-  if (status === 'critical') return '#dc2626'
-  return '#6b7280'
-}
 
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
   return (
@@ -41,33 +32,7 @@ export default function DirectorDashboard() {
   const leadSnapshot = getLatestLeadSnapshot()
   const ytd = getYtdSummary()
   const targets = getTargetSource()
-  const directorScorecard = useMemo(() => {
-    const states = PP_SCORECARD_DEFINITIONS.director.map((definition) => {
-      const current = definition.id === 'classification-coverage'
-        ? leadSnapshot.classificationCoverage
-        : definition.id === 'stale-lead-rate'
-          ? leadSnapshot.staleOver15Rate
-          : definition.id === 'suspension-pressure'
-            ? Number(((fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100).toFixed(1))
-            : null
-
-      return {
-        definition,
-        current,
-        status: assessMetricStatus(current, definition),
-      }
-    })
-
-    const staleRate = leadSnapshot.staleOver15Rate ?? 0
-    const suspensionRate = (fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100
-    const overall = Math.round(((leadSnapshot.classificationCoverage ?? 0) + Math.max(0, 100 - staleRate) + Math.max(0, 100 - suspensionRate)) / 3)
-
-    return {
-      overall,
-      states,
-      trend: overall === null ? 'Sin data' : overall >= 80 ? 'Equipo sólido' : overall >= 65 ? 'En vigilancia' : 'Requiere foco',
-    }
-  }, [fallbackSummary.stock, fallbackSummary.suspended, leadSnapshot.classificationCoverage, leadSnapshot.staleOver15Rate])
+  const suspensionRate = Number(((fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100).toFixed(1))
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: '#fbfbfa' }}>
@@ -89,7 +54,7 @@ export default function DirectorDashboard() {
       </div>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Ventas Vitacura" value={String(ytd.salesCount)} sub="cierres validados enero-junio" border="var(--n3-teal)" />
         <KpiCard
           label="UF vendidas"
@@ -101,74 +66,17 @@ export default function DirectorDashboard() {
         <KpiCard label="Sin gestión >15d" value={String(leadSnapshot.staleOver15Total)} sub={`${leadSnapshot.stale15To90} entre 15-90d · ${leadSnapshot.staleOver90} sobre 90d`} border="#111111" />
       </div>
 
-      {/* Director Scorecard */}
-      <div className="grid grid-cols-5 gap-5 mb-8">
-        <div className="col-span-2 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Score de gestión</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Lectura operativa del equipo y su disciplina comercial</p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold" style={{ color: directorScorecard.overall !== null && directorScorecard.overall >= 80 ? '#16a34a' : directorScorecard.overall !== null && directorScorecard.overall >= 65 ? '#d97706' : '#dc2626' }}>
-                {directorScorecard.overall === null ? 'n/d' : directorScorecard.overall}
-              </div>
-              <div className="text-[11px]" style={{ color: '#6b7280' }}>{directorScorecard.trend}</div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            {directorScorecard.states.map(({ definition, current, status }) => (
-              <div key={definition.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>{definition.label}</span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(status) }} />
-                </div>
-                <div className="text-lg font-bold" style={{ color: '#111111' }}>
-                  {current === null ? 'n/d' : `${current}${definition.unit ? definition.unit : ''}`}
-                </div>
-                <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{definition.note}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="col-span-3 bg-white rounded-lg p-5" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas del director</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Definición, umbral y cadencia para el equipo</p>
-            </div>
-            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>Vitacura ventas</span>
-          </div>
-          <div className="space-y-3">
-            {PP_SCORECARD_DEFINITIONS.director.map((metric) => (
-              <div key={metric.id} className="rounded-lg p-3" style={{ background: '#fbfbfa', border: '1px solid #edf4f1' }}>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-[13px] font-semibold" style={{ color: '#111111' }}>{metric.label}</div>
-                    <div className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>{metric.formula}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[11px] font-medium" style={{ color: '#111111' }}>{metric.cadence}</div>
-                    <div className="text-[11px]" style={{ color: '#6b7280' }}>Owner: {metric.owner}</div>
-                  </div>
-                </div>
-                <div className="text-[11px] mt-2" style={{ color: '#6b7280' }}>{metric.threshold}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <div className="mb-8 rounded-lg bg-white p-5" style={{ border: '1px solid #e8f0ed' }}><div className="mb-4"><h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Indicadores operativos</h2><p className="mt-0.5 text-xs" style={{ color: '#6b7280' }}>Valores del corte; no forman un índice ni aplican umbrales adicionales.</p></div><div className="grid grid-cols-1 gap-3 md:grid-cols-3"><div className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Cobertura de clasificación</div><div className="mt-1 text-lg font-bold" style={{ color: '#111111' }}>{leadSnapshot.classificationCoverage}%</div><div className="mt-1 text-[11px]" style={{ color: '#6b7280' }}>(Clasificados + sin clasificar) / leads activos exportados.</div></div><div className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Sin gestión +15 días</div><div className="mt-1 text-lg font-bold" style={{ color: '#111111' }}>{leadSnapshot.staleOver15Rate}%</div><div className="mt-1 text-[11px]" style={{ color: '#6b7280' }}>Leads sin gestión / leads activos.</div></div><div className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Suspensiones / cartera</div><div className="mt-1 text-lg font-bold" style={{ color: '#111111' }}>{suspensionRate}%</div><div className="mt-1 text-[11px]" style={{ color: '#6b7280' }}>Suspensiones del mes / stock publicado al cierre.</div></div></div></div>
 
       {/* Agents Table + Chart */}
-      <div className="grid grid-cols-5 gap-5 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-5">
         {/* Agents */}
-        <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
+        <div className="overflow-hidden rounded-lg bg-white xl:col-span-3" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Desempeño del lado captador</h2>
             <span className="text-xs" style={{ color: '#6b7280' }}>6 meses · {agents.length} agentes</span>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="min-w-[760px] w-full text-sm">
             <thead>
               <tr style={{ background: '#f8fbfa' }}>
                 {['Agente','Cierres capt.','Captac.','Conv.','Veloc.','Estado'].map(h => (
@@ -198,11 +106,11 @@ export default function DirectorDashboard() {
                 )
               })}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {/* Trend chart */}
-        <div className="col-span-2 bg-white rounded-lg" style={{ border: '1px solid #e8f0ed' }}>
+        <div className="rounded-lg bg-white xl:col-span-2" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas vs Captaciones</h2>
             <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Equipo · últimos 6 meses</p>

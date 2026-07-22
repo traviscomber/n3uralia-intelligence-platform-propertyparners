@@ -28,7 +28,18 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
   }
 
   const consultationDate = new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
-  const dateLabel = isAudited ? 'Corte de datos: junio 2026' : `Fecha de consulta: ${consultationDate}`
+  const cutoffLabel = pathname.startsWith('/dashboard/market') || pathname.startsWith('/dashboard/properties')
+    ? 'Cortes: Portal n/d · CBRS 9 ene 2026'
+    : pathname.startsWith('/dashboard/valorizador')
+      ? 'Plantillas: septiembre 2020'
+      : pathname.startsWith('/dashboard/metas')
+        ? 'Metas 2026 · versión julio 2026'
+        : pathname.startsWith('/dashboard/presentaciones')
+          ? 'Presentaciones: corte junio 2026'
+          : pathname.startsWith('/dashboard/ml-lab')
+            ? 'Cortes declarados por fuente'
+            : 'Corte operativo: junio 2026'
+  const dateLabel = isAudited ? cutoffLabel : `Fecha de consulta: ${consultationDate}`
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--n3-line)] bg-[var(--n3-black)] px-6 py-4">

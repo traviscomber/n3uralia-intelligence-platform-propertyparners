@@ -204,11 +204,10 @@ export default function ReportDeliveryTargetsManager() {
             </div>
           ))
         ) : (
-          <p className="text-sm" style={{ color: '#6b7280' }}>TodavÃ­a no hay destinatarios configurados.</p>
+          <p className="text-sm" style={{ color: '#6b7280' }}>Todavía no hay destinatarios configurados.</p>
         )}
       </div>
     </div>
   )
 }
-
 

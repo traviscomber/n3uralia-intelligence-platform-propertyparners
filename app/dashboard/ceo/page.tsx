@@ -1,20 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
+import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
 import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary } from '@/lib/crm-snapshot'
 import { getBranchSalesYtdPerformance, getCompanySalesCompliance } from '@/lib/targets-2026'
 
 function fmt(n: number) {
   return n.toLocaleString('es-CL')
-}
-
-function scoreTone(status: 'good' | 'warning' | 'critical' | 'inactive') {
-  if (status === 'good') return 'var(--n3-teal)'
-  if (status === 'warning') return '#f59e0b'
-  if (status === 'critical') return '#ef4444'
-  return '#6b7280'
 }
 
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
@@ -37,38 +29,13 @@ export default function CeoDashboard() {
   const ytd = getYtdSummary()
   const dataQuality = getDataQuality()
   const salesCompliance = getCompanySalesCompliance('2026-06')
+  const januaryStock = fallbackSummary.stock - ytd.stockChange
+  const stockRetention = januaryStock > 0 ? Number(((fallbackSummary.stock / januaryStock) * 100).toFixed(1)) : null
   const totals = {
     ventas: ytd.salesCount,
     uf: ytd.salesUf,
     conversion: fallbackSummary.leadToSaleProxy,
   }
-
-  const executiveMetrics = PP_SCORECARD_DEFINITIONS.ceo
-  const executiveStates = useMemo(() => {
-    const scoreById: Record<string, number | null> = {
-      'data-quality': dataQuality.sourceCoverage,
-      'stock-retention': fallbackSummary.stock > 0 ? Number(((fallbackSummary.stock / (fallbackSummary.stock - ytd.stockChange)) * 100).toFixed(1)) : null,
-      'forecast-discipline': salesCompliance.compliance,
-    }
-
-    const states = executiveMetrics.map(metric => {
-      const current = scoreById[metric.id] ?? null
-      return {
-        ...metric,
-        current,
-        status: assessMetricStatus(current, metric),
-      }
-    })
-
-    const measured = states.filter((metric) => metric.current !== null)
-    const score = measured.length ? clampScore(measured.reduce((sum, metric) => sum + (metric.current ?? 0), 0) / measured.length) : 0
-
-    return {
-      score,
-      states,
-      trend: score >= 80 ? 'Estable' : score >= 65 ? 'En vigilancia' : 'Bajo control',
-    }
-  }, [dataQuality.sourceCoverage, executiveMetrics, fallbackSummary.stock, salesCompliance.compliance, ytd.stockChange])
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8" style={{ background: '#fbfbfa' }}>
@@ -101,61 +68,14 @@ export default function CeoDashboard() {
         <KpiCard label="Cierres / leads Jun" value={`${totals.conversion}%`} sub="proxy mensual, no cohorte" border="#111111" />
       </div>
 
-      {/* Executive Scorecard */}
+      {/* Source-backed controls */}
       <div className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-5">
-        <div className="bg-white rounded-lg p-5 xl:col-span-2" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Índice ejecutivo</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Resumen para CEO y directorio</p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold" style={{ color: executiveStates.score >= 80 ? 'var(--n3-teal)' : executiveStates.score >= 65 ? '#f59e0b' : '#ef4444' }}>
-                {executiveStates.score}
-              </div>
-              <div className="text-[11px]" style={{ color: '#6b7280' }}>{executiveStates.trend}</div>
-            </div>
-          </div>
+        <div className="rounded-lg bg-white p-5 xl:col-span-4" style={{ border: '1px solid #e8f0ed' }}>
+          <div className="mb-4"><h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Indicadores de control</h2><p className="mt-0.5 text-xs" style={{ color: '#6b7280' }}>Valores derivados directamente de CRM y Metas 2026; no forman un índice agregado.</p></div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {executiveStates.states.map(metric => (
-              <div key={metric.id} className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>{metric.label}</span>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: scoreTone(metric.status) }} />
-                </div>
-                <div className="text-lg font-bold" style={{ color: '#111111' }}>
-                  {metric.current === null ? 'n/d' : metric.unit ? `${metric.current}${metric.unit}` : metric.current}
-                </div>
-                <div className="text-[11px] leading-snug mt-1" style={{ color: '#6b7280' }}>{metric.note}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-5 xl:col-span-2" style={{ border: '1px solid #e8f0ed' }}>
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Métricas CEO</h2>
-              <p className="text-xs mt-0.5" style={{ color: '#6b7280' }}>Umbrales, cadencia y responsables</p>
-            </div>
-            <span className="text-[11px] px-2 py-1 rounded-full" style={{ background: '#f0f7f4', color: 'var(--n3-teal)' }}>Vitacura ventas</span>
-          </div>
-          <div className="space-y-3">
-            {executiveMetrics.map(metric => (
-              <div key={metric.id} className="rounded-lg p-3" style={{ background: '#fbfbfa', border: '1px solid #edf4f1' }}>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-[13px] font-semibold" style={{ color: '#111111' }}>{metric.label}</div>
-                    <div className="text-[11px] mt-0.5" style={{ color: '#6b7280' }}>{metric.formula}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[11px] font-medium" style={{ color: '#111111' }}>{metric.cadence}</div>
-                    <div className="text-[11px]" style={{ color: '#6b7280' }}>Responsable: {metric.owner}</div>
-                  </div>
-                </div>
-                <div className="text-[11px] mt-2" style={{ color: '#6b7280' }}>{metric.threshold}</div>
-              </div>
-            ))}
+            <div className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Cobertura de fuentes</div><div className="mt-1 text-lg font-bold" style={{ color: '#111111' }}>{dataQuality.sourceCoverage}%</div><div className="mt-1 text-[11px] leading-snug" style={{ color: '#6b7280' }}>Datasets mensuales presentes / esperados.</div></div>
+            <div className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Cartera junio / enero</div><div className="mt-1 text-lg font-bold" style={{ color: '#111111' }}>{stockRetention === null ? 'n/d' : `${stockRetention}%`}</div><div className="mt-1 text-[11px] leading-snug" style={{ color: '#6b7280' }}>Stock de junio dividido por stock de enero.</div></div>
+            <div className="rounded-lg p-3" style={{ background: '#f8fbfa', border: '1px solid #edf4f1' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Cumplimiento de cierres</div><div className="mt-1 text-lg font-bold" style={{ color: '#111111' }}>{salesCompliance.compliance}%</div><div className="mt-1 text-[11px] leading-snug" style={{ color: '#6b7280' }}>Cierres CRM / meta acumulada compatible.</div></div>
           </div>
         </div>
 
@@ -167,8 +87,8 @@ export default function CeoDashboard() {
             </div>
           </div>
           <div className="space-y-3">
-            <a href="/dashboard/reportes/autonomos" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: '#f8fbfa', border: '1px solid #edf4f1', color: '#111111' }}>Reportes automáticos</a>
-            <a href="/dashboard/reportes/directorio" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: '#f8fbfa', border: '1px solid #edf4f1', color: '#111111' }}>Reporte de directorio</a>
+            <Link href="/dashboard/reportes/autonomos" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: '#f8fbfa', border: '1px solid #edf4f1', color: '#111111' }}>Reportes programados</Link>
+            <Link href="/dashboard/reportes/directorio" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: '#f8fbfa', border: '1px solid #edf4f1', color: '#111111' }}>Reporte de directorio</Link>
           </div>
         </div>
       </div>

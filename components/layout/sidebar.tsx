@@ -110,11 +110,25 @@ const roleNavItems: SidebarItem[] = [
   },
 ]
 
+const itemByHref = new Map([...navItems, ...roleNavItems].map((item) => [item.href, item]))
+function itemsByHref(...hrefs: string[]) { return hrefs.map((href) => itemByHref.get(href)).filter((item): item is SidebarItem => Boolean(item)) }
+
 const ceoSections = [
-  { label: 'Dirección', items: [roleNavItems[0], navItems[1], navItems[12]] },
-  { label: 'Negocio', items: [navItems[7], navItems[8], navItems[11]] },
-  { label: 'Operación', items: [navItems[3], navItems[4], navItems[5], navItems[6]] },
-  { label: 'Administración', items: [navItems[9], navItems[10], navItems[14], navItems[13], navItems[2], navItems[15]] },
+  { label: 'Dirección', items: itemsByHref('/dashboard/ceo', '/dashboard/inteligencia', '/dashboard/reportes/autonomos') },
+  { label: 'Negocio', items: itemsByHref('/dashboard/properties', '/dashboard/market', '/dashboard/valorizador') },
+  { label: 'Operación', items: itemsByHref('/dashboard/control', '/dashboard/datos-crm', '/dashboard/metas', '/dashboard/presentaciones') },
+  { label: 'Administración', items: itemsByHref('/dashboard/market/fuentes', '/dashboard/market/import', '/dashboard/sources', '/dashboard/knowledge', '/dashboard/ml-lab', '/dashboard/settings') },
+]
+
+const directorSections = [
+  { label: 'Gestión', items: itemsByHref('/dashboard/director', '/dashboard/control', '/dashboard/inteligencia', '/dashboard/reportes/autonomos') },
+  { label: 'Negocio', items: itemsByHref('/dashboard/properties', '/dashboard/market', '/dashboard/valorizador') },
+  { label: 'Fuentes', items: itemsByHref('/dashboard/datos-crm', '/dashboard/metas', '/dashboard/presentaciones', '/dashboard/market/fuentes') },
+]
+
+const sellerSections = [
+  { label: 'Trabajo', items: itemsByHref('/dashboard', '/dashboard/reportes/audiencias/ejecutivo') },
+  { label: 'Negocio', items: itemsByHref('/dashboard/properties', '/dashboard/market', '/dashboard/valorizador') },
 ]
 
 function NavigationLinks({ items, pathname }: { items: SidebarItem[]; pathname: string }) {
@@ -126,7 +140,9 @@ function NavigationLinks({ items, pathname }: { items: SidebarItem[]; pathname: 
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
-  const isCeo = profile?.role === 'ceo'
+  const isExecutive = profile?.role === 'ceo' || profile?.role === 'admin'
+  const isDirector = profile?.role === 'director'
+  const sections = isExecutive ? ceoSections : isDirector ? directorSections : sellerSections
 
   return (
     <aside className="flex h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)]">
@@ -135,7 +151,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {isCeo ? ceoSections.map((section) => <div key={section.label} className="mb-4"><div className="mb-1 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">{section.label}</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={section.items} pathname={pathname} /></div>) : <><NavigationLinks items={navItems} pathname={pathname} /><div className="mb-1 mt-4 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">Paneles</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={roleNavItems} pathname={pathname} /></>}
+        {sections.map((section) => <div key={section.label} className="mb-4"><div className="mb-1 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">{section.label}</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={section.items} pathname={pathname} /></div>)}
       </nav>
 
       <div className="border-t border-[var(--n3-line)] px-3 py-3">

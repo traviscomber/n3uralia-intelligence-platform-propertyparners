@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const root = path.resolve('app/dashboard')
+const roots = [path.resolve('app/dashboard'), path.resolve('components')]
 const forbidden = [
   /(?:â|Ã|�)/u,
   /\brevoluciona\w*/iu,
@@ -24,7 +24,7 @@ function files(folder) {
 }
 
 const failures = []
-for (const file of files(root)) {
+for (const file of roots.flatMap(files)) {
   const lines = fs.readFileSync(file, 'utf8').split('\n')
   lines.forEach((line, index) => {
     for (const pattern of forbidden) {
