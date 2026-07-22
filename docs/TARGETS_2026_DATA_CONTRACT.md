@@ -25,6 +25,7 @@ Los originales permanecen fuera del bundle público. El repositorio contiene agr
 - 12 meses por bloque y por fila de partner.
 - 4 filas con identidad no resuelta.
 - 5 celdas con contenido fuera de los bloques detectados.
+- 27 observaciones de origen: 4 diferencias mensuales críticas y 23 advertencias de trazabilidad.
 
 ## Incidencias de origen
 
@@ -50,6 +51,12 @@ Los originales permanecen fuera del bundle público. El repositorio contiene agr
 | Cierres UF | UF vendidas por sucursal | Meta, real y cumplimiento |
 
 Las metas individuales se publican como fuente. Los resultados CRM no se atribuyen a una persona mientras los nombres no tengan una identidad canónica demostrada.
+
+En el acumulado enero-junio, 30 de 34 cierres y UF 540.520 de UF 643.670 tienen sucursal atribuible en los archivos CRM. Los cuatro cierres y UF 103.150 sin sucursal no se reparten artificialmente entre oficinas.
+
+## Confidencialidad pendiente
+
+La interfaz exige autenticación, pero `data/targets-2026.json` y `data/targets-cell-manifest.json` están versionados actualmente en un repositorio GitHub público. Por lo tanto, la etiqueta `private_dashboard_only` describe la intención de acceso de la aplicación, no una garantía efectiva sobre los archivos versionados. La corrección profesional es mover ambos datasets a almacenamiento privado con acceso de servidor y retirar su historial del repositorio; no debe simularse privacidad solo ocultando enlaces en la interfaz.
 
 ## Verificación
 

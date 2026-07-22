@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-21T23:37:38.106Z",
+  "generatedAt": "2026-07-22T00:07:13.148Z",
   "coverage": {
     "workbookCount": 3,
     "sheetCount": 3,
@@ -12,7 +12,9 @@
   "privacy": {
     "rawValuesIncluded": true,
     "containsEmployeeNames": true,
-    "access": "private_dashboard_only"
+    "access": "authenticated_dashboard_intent",
+    "repositoryExposure": "public_repository",
+    "confidentialityGuaranteed": false
   },
   "workbooks": [
     {

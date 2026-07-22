@@ -114,9 +114,12 @@ Las metas están integradas como una entidad independiente, versión `202607`, d
 - Colores: se conservan como marcas literales de la fuente, sin inferir estado laboral.
 - Identidades: cuatro filas permanecen no resueltas y se muestran con su fila fuente.
 - Celdas fuera de bloque: cinco, conservadas con coordenada, valor y fórmula.
+- Incidencias: 27 observaciones de origen, de las cuales cuatro son diferencias mensuales críticas.
 
 El total de sucursal de cada libro es la meta corporativa publicada para esa sucursal. La suma de partners se expone como reconciliación independiente. Nueva Costanera contiene discrepancias de origen en cartera de junio y requerimientos de abril, mayo y junio; no se corrigen ni ocultan.
 
 El cumplimiento solo se calcula cuando existe un valor real CRM de la misma sucursal, métrica y mes. Para visitas se muestran agendadas y realizadas, pero el cumplimiento permanece `n/d` hasta definir cuál corresponde a la meta. Ofertas no cuenta con un actual CRM compatible. Nunca se infiere una meta a partir de actividad real.
 
 `data/targets-cell-manifest.json` conserva dirección, valor, fórmula, tipo, formato, estilo y color de cada celda almacenada. `data/targets-2026.json` contiene la capa normalizada y todas las incidencias de origen.
+
+Advertencia de acceso: ambos archivos están actualmente versionados en un repositorio público. La autenticación del dashboard no vuelve privados los datos del repositorio. Deben migrarse a almacenamiento privado de servidor antes de tratar `private_dashboard_only` como una garantía de confidencialidad.

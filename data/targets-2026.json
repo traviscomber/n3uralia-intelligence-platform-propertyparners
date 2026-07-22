@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-21T23:37:38.106Z",
+  "generatedAt": "2026-07-22T00:07:13.148Z",
   "version": "202607",
   "status": "loaded_with_critical_issues",
   "scope": {
@@ -12,7 +12,8 @@
       "Santa María"
     ],
     "piiIncluded": true,
-    "access": "private_dashboard_only"
+    "access": "authenticated_dashboard_intent",
+    "repositoryExposure": "public_repository"
   },
   "rules": {
     "monthlyValues": "Every January-December source cell is retained exactly, including null and zero.",
@@ -21162,57 +21163,148 @@
     }
   ],
   "quality": {
-    "issueCount": 25,
-    "criticalCount": 2,
+    "issueCount": 27,
+    "criticalCount": 4,
     "issues": [
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Lo Beltran",
         "metric": "stock_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N14",
+            "value": 180,
+            "formula": "SUM(N6:N13)"
+          },
+          {
+            "cell": "P14",
+            "value": 163,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 1,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 1 fila de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Lo Beltran",
         "metric": "requirements_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N26",
+            "value": 3420.009203126351,
+            "formula": "SUM(N18:N25)"
+          },
+          {
+            "cell": "P26",
+            "value": 3333.6092031263506,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 1,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 1 fila de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Lo Beltran",
         "metric": "leads_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N38",
+            "value": 2408.4081478936655,
+            "formula": "SUM(N30:N37)"
+          },
+          {
+            "cell": "P38",
+            "value": 2347.6121148777124,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 1,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 1 fila de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Lo Beltran",
         "metric": "visits_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N50",
+            "value": 1776.670438762017,
+            "formula": "SUM(N42:N49)"
+          },
+          {
+            "cell": "P50",
+            "value": 1668.2599124462276,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 1,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 1 fila de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Lo Beltran",
         "metric": "offers_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N62",
+            "value": 261.44897459165156,
+            "formula": "SUM(N54:N61)"
+          },
+          {
+            "cell": "P62",
+            "value": 61.19676406533575,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 1,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 1 fila de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Lo Beltran",
         "metric": "sales_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N74",
+            "value": 31.494382032667875,
+            "formula": "SUM(N66:N73)"
+          },
+          {
+            "cell": "P74",
+            "value": 30.598382032667875,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 1,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 1 fila de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Lo Beltran",
         "metric": "sales_uf",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N86",
+            "value": 380129.24228675145,
+            "formula": "SUM(N78:N85)"
+          },
+          {
+            "cell": "P86",
+            "value": 379940.40018148825,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 2,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 2 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
@@ -21227,14 +21319,44 @@
         "code": "MONTHLY_TOTAL_MISMATCH",
         "branch": "Nueva Costanera",
         "metric": "stock_count",
-        "detail": "La suma de partners no coincide con el total mensual de sucursal."
+        "period": "2026-06",
+        "sourceTotal": 164,
+        "partnerSum": 163,
+        "delta": 1,
+        "detail": "La suma de partners no coincide con el total mensual de sucursal en 2026-06."
       },
       {
         "severity": "critical",
         "code": "MONTHLY_TOTAL_MISMATCH",
         "branch": "Nueva Costanera",
         "metric": "requirements_count",
-        "detail": "La suma de partners no coincide con el total mensual de sucursal."
+        "period": "2026-04",
+        "sourceTotal": 277.2028994152047,
+        "partnerSum": 273.20890846497844,
+        "delta": 3.993990950226248,
+        "detail": "La suma de partners no coincide con el total mensual de sucursal en 2026-04."
+      },
+      {
+        "severity": "critical",
+        "code": "MONTHLY_TOTAL_MISMATCH",
+        "branch": "Nueva Costanera",
+        "metric": "requirements_count",
+        "period": "2026-05",
+        "sourceTotal": 329.7475899061379,
+        "partnerSum": 334.2750107206175,
+        "delta": -4.527420814479626,
+        "detail": "La suma de partners no coincide con el total mensual de sucursal en 2026-05."
+      },
+      {
+        "severity": "critical",
+        "code": "MONTHLY_TOTAL_MISMATCH",
+        "branch": "Nueva Costanera",
+        "metric": "requirements_count",
+        "period": "2026-06",
+        "sourceTotal": 335.079462184874,
+        "partnerSum": 322.09515190691667,
+        "delta": 12.98431027795732,
+        "detail": "La suma de partners no coincide con el total mensual de sucursal en 2026-06."
       },
       {
         "severity": "warning",
@@ -21292,49 +21414,140 @@
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Santa María",
         "metric": "stock_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N16",
+            "value": 241,
+            "formula": "+M16"
+          },
+          {
+            "cell": "P16",
+            "value": 217,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 8,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 8 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Santa María",
         "metric": "requirements_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N30",
+            "value": 3346.2,
+            "formula": "+SUM(N20:N29)"
+          },
+          {
+            "cell": "P30",
+            "value": 3229,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 8,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 8 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Santa María",
         "metric": "leads_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N44",
+            "value": 1758.9652851581743,
+            "formula": "+SUM(N34:N43)"
+          },
+          {
+            "cell": "P44",
+            "value": 1678.9426149353667,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 8,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 8 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Santa María",
         "metric": "visits_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N58",
+            "value": 1407.4638217980753,
+            "formula": "+SUM(N48:N57)"
+          },
+          {
+            "cell": "P58",
+            "value": 1433.7893217980752,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 8,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 8 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Santa María",
         "metric": "offers_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N72",
+            "value": 62.3918055509681,
+            "formula": "+SUM(N62:N71)"
+          },
+          {
+            "cell": "P72",
+            "value": 60.584234304283754,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 8,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 8 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Santa María",
         "metric": "sales_count",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N86",
+            "value": 30.041682775484055,
+            "formula": "+SUM(N76:N85)"
+          },
+          {
+            "cell": "P86",
+            "value": 30.292117152141877,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 8,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 8 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",
         "code": "PARALLEL_ANNUAL_COLUMNS",
         "branch": "Santa María",
         "metric": "sales_uf",
-        "detail": "La fuente contiene 2 columnas anuales paralelas; ambas se preservan."
+        "annualValues": [
+          {
+            "cell": "N100",
+            "value": 602434.0484203284,
+            "formula": "+SUM(N90:N99)"
+          },
+          {
+            "cell": "P100",
+            "value": 601066.3125582593,
+            "formula": null
+          }
+        ],
+        "partnerRowsWithDifferentAnnualValues": 8,
+        "detail": "La fuente contiene 2 columnas anuales paralelas con totales de sucursal diferentes y 8 filas de partner con valores diferentes; todas se preservan."
       },
       {
         "severity": "warning",

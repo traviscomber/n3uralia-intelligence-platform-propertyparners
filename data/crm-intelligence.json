@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "generatedAt": "2026-07-21T23:43:04.782Z",
+  "generatedAt": "2026-07-22T00:06:01.259Z",
   "scope": {
     "commune": "Vitacura",
     "operation": "Venta",
@@ -5751,7 +5751,7 @@
         "severity": "warning",
         "code": "TARGETS_SOURCE_ISSUES",
         "title": "Metas 2026 integradas con incidencias de origen",
-        "detail": "2 incidencias criticas y 25 observaciones se preservan sin corregir ni omitir celdas."
+        "detail": "4 incidencias criticas y 27 observaciones se preservan sin corregir ni omitir celdas."
       }
     ]
   },
@@ -5810,8 +5810,8 @@
     "version": "202607",
     "workbookCount": 3,
     "storedCells": 4382,
-    "sourceIssueCount": 25,
-    "criticalSourceIssueCount": 2,
+    "sourceIssueCount": 27,
+    "criticalSourceIssueCount": 4,
     "requiredFields": [
       "period",
       "role",

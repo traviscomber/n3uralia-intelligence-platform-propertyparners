@@ -75,3 +75,25 @@ export function getBranchTargetPerformance(period = '2026-06') {
     unmappedCells: branch.unmappedCells,
   }))
 }
+
+export function getBranchSalesYtdPerformance(endPeriod = '2026-06') {
+  const months = crm.months.filter((month) => month.period <= endPeriod)
+  return targets.branches.map((branch) => {
+    const salesSection = branch.sections.find((section) => section.metric === 'sales_count')!
+    const ufSection = branch.sections.find((section) => section.metric === 'sales_uf')!
+    const periods = Object.keys(salesSection.branchMonths).filter((period) => period <= endPeriod)
+    const targetSales = periods.reduce((sum, period) => sum + (salesSection.branchMonths[period as keyof typeof salesSection.branchMonths].value ?? 0), 0)
+    const targetUf = periods.reduce((sum, period) => sum + (ufSection.branchMonths[period as keyof typeof ufSection.branchMonths].value ?? 0), 0)
+    const actualSales = months.reduce((sum, month) => sum + (officeActual(month, branch.branch, 'sales_count') ?? 0), 0)
+    const actualUf = months.reduce((sum, month) => sum + (officeActual(month, branch.branch, 'sales_uf') ?? 0), 0)
+    return {
+      id: normalized(branch.branch).replace(/[^a-z0-9]+/g, '-'),
+      branch: branch.branch,
+      actualSales,
+      actualUf,
+      targetSales,
+      targetUf,
+      compliance: targetSales > 0 ? Number(((actualSales / targetSales) * 100).toFixed(1)) : null,
+    }
+  }).sort((a, b) => b.actualSales - a.actualSales)
+}

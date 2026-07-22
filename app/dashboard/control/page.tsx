@@ -7,14 +7,6 @@ import { Target } from 'lucide-react'
 import { buildOperationalSeries, getOperationalSummary } from '@/lib/crm-snapshot'
 import { getBranchTargetPerformance, getTargetSource } from '@/lib/targets-2026'
 
-interface KPISnapshot {
-  period_date: string
-  ventas_count: number
-  monthly_target: number
-  velocidad_venta: number
-  conversion_rate: number
-}
-
 interface AiReport {
   report_type: string
   title: string
@@ -29,7 +21,6 @@ interface WeeklyReport {
 const COLORS = ['var(--n3-teal)', '#6b7280', 'var(--n3-teal)', '#f59e0b']
 
 export default function ControlPage() {
-  const [kpis, setKpis] = useState<KPISnapshot[]>([])
   const [aiReports, setAiReports] = useState<AiReport[]>([])
   const [weeklyReports, setWeeklyReports] = useState<WeeklyReport[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,8 +58,7 @@ export default function ControlPage() {
     const fetchKPIs = async () => {
       try {
         const supabase = createClient()
-        const [kpiRes, aiRes, weeklyRes] = await Promise.all([
-          supabase.from('kpi_snapshots').select('*').order('period_date', { ascending: false }).limit(12),
+        const [aiRes, weeklyRes] = await Promise.all([
           supabase
             .from('ai_reports')
             .select('report_type,title,created_at')
@@ -81,7 +71,6 @@ export default function ControlPage() {
             .limit(12),
         ])
 
-        setKpis((kpiRes.data || []).reverse())
         setAiReports((aiRes.data || []) as AiReport[])
         setWeeklyReports((weeklyRes.data || []) as WeeklyReport[])
       } catch (err) {
@@ -96,14 +85,13 @@ export default function ControlPage() {
 
   const operational = getOperationalSummary()
   const targets = getTargetSource()
-  const fallbackKpis = buildOperationalSeries(6).map((month) => ({
+  const chartKpis = buildOperationalSeries(6).map((month) => ({
     period_date: month.period_date,
     ventas_count: month.ventas,
     monthly_target: targets.companyMonthlyTargets.sales_count[month.period_date.slice(0, 7) as keyof typeof targets.companyMonthlyTargets.sales_count] ?? 0,
     velocidad_venta: 0,
     conversion_rate: month.conversion,
   }))
-  const chartKpis = kpis.length > 0 ? kpis : fallbackKpis
   const branchPerformance = getBranchTargetPerformance('2026-06').map((branch) => {
     const sales = branch.metrics.find((metric) => metric.metric === 'sales_count')!
     return { name: branch.branch, target: sales.target, actual: sales.actual, compliance: sales.compliance }
@@ -128,8 +116,7 @@ export default function ControlPage() {
 
   const measuredPerformance = chartKpis.filter((item) => item.monthly_target > 0)
   const avgPerformance = measuredPerformance.length ? (measuredPerformance.reduce((sum, item) => sum + item.ventas_count / item.monthly_target, 0) / measuredPerformance.length * 100).toFixed(0) : 'n/d'
-  const measuredVelocity = kpis.filter((item) => item.velocidad_venta > 0)
-  const avgVelocity = measuredVelocity.length ? (measuredVelocity.reduce((sum, item) => sum + item.velocidad_venta, 0) / measuredVelocity.length).toFixed(1) : 'n/d'
+  const avgVelocity = 'n/d'
 
   return (
     <div className="space-y-6">

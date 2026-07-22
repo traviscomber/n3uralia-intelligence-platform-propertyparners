@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import type { AiReport } from '@/lib/types'
 import { PP_SCORECARD_DEFINITIONS, assessMetricStatus, clampScore } from '@/lib/pp-scorecard'
-import { buildDirectorFallbackRows, buildOperationalSeries, getDataQuality, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
-import { getCompanySalesCompliance } from '@/lib/targets-2026'
+import { buildOperationalSeries, getDataQuality, getOperationalSummary, getRoleActions, getYtdSummary } from '@/lib/crm-snapshot'
+import { getBranchSalesYtdPerformance, getCompanySalesCompliance } from '@/lib/targets-2026'
 
 function fmt(n: number) {
   return n.toLocaleString('es-CL')
@@ -32,7 +32,9 @@ function KpiCard({ label, value, sub, border }: { label: string; value: string; 
 export default function CeoDashboard() {
   const fallbackSummary = getOperationalSummary()
   const fallbackSeries = buildOperationalSeries(6).map(({ mes, ventas, captaciones, leads }) => ({ mes, ventas, captaciones, leads }))
-  const directors = buildDirectorFallbackRows()
+  const branches = getBranchSalesYtdPerformance('2026-06')
+  const attributedBranchSales = branches.reduce((sum, branch) => sum + branch.actualSales, 0)
+  const attributedBranchUf = branches.reduce((sum, branch) => sum + branch.actualUf, 0)
   const chartData = fallbackSeries
   const ytd = getYtdSummary()
   const dataQuality = getDataQuality()
@@ -208,7 +210,7 @@ export default function CeoDashboard() {
         <div className="col-span-3 bg-white rounded-lg overflow-hidden" style={{ border: '1px solid #e8f0ed' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f0f5f3' }}>
             <h2 className="text-sm font-semibold" style={{ color: '#111111' }}>Ventas por sucursal</h2>
-            <span className="text-xs" style={{ color: '#6b7280' }}>6 meses</span>
+            <span className="text-xs text-right" style={{ color: '#6b7280' }}>6 meses · {attributedBranchSales}/{ytd.salesCount} cierres y UF {attributedBranchUf.toLocaleString('es-CL')}/{ytd.salesUf.toLocaleString('es-CL')} atribuibles a sucursal</span>
           </div>
           <table className="w-full text-sm">
             <thead>
@@ -222,32 +224,32 @@ export default function CeoDashboard() {
               </tr>
             </thead>
             <tbody>
-              {directors.map((d, i) => {
+              {branches.map((branch, i) => {
                 const medals = ['#f59e0b', '#6b7280', '#6b7280']
                 return (
-                  <tr key={d.id} style={{ borderTop: '1px solid #f0f5f3' }}>
+                  <tr key={branch.id} style={{ borderTop: '1px solid #f0f5f3' }}>
                     <td className="px-5 py-3.5">
                       <span className="text-sm font-bold" style={{ color: medals[i] || '#6b7280' }}>{i + 1}</span>
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: '#f9fafb', color: 'var(--n3-teal)' }}>
-                          {d.name.charAt(0)}
+                          {branch.branch.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-[13px] font-medium" style={{ color: '#111111' }}>{d.name}</div>
-                          <div className="text-[11px]" style={{ color: '#6b7280' }}>{d.team}</div>
+                          <div className="text-[13px] font-medium" style={{ color: '#111111' }}>{branch.branch}</div>
+                          <div className="text-[11px]" style={{ color: '#6b7280' }}>{branch.compliance}% de meta atribuida</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px] font-semibold" style={{ color: '#111111' }}>{d.ventas}</span>
+                      <span className="text-[13px] font-semibold" style={{ color: '#111111' }}>{branch.actualSales}</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px]" style={{ color: '#374151' }}>{d.uf === null ? 'n/d' : `${(d.uf / 1000).toFixed(0)}K`}</span>
+                      <span className="text-[13px]" style={{ color: '#374151' }}>{`${(branch.actualUf / 1000).toFixed(1)}K`}</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-[12px] font-semibold" style={{ color: '#6b7280' }}>No cargada</span>
+                      <span className="text-[12px] font-semibold" style={{ color: '#6b7280' }}>{branch.targetSales.toLocaleString('es-CL', { maximumFractionDigits: 1 })}</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <span className="text-[13px]" style={{ color: '#374151' }}>n/d</span>

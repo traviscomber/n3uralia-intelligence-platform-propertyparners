@@ -256,8 +256,33 @@ function main() {
   const qualityIssues = []
   for (const branch of branches) {
     for (const section of branch.sections) {
-      if (!section.allMonthlyTotalsExact) qualityIssues.push({ severity: 'critical', code: 'MONTHLY_TOTAL_MISMATCH', branch: branch.branch, metric: section.metric, detail: 'La suma de partners no coincide con el total mensual de sucursal.' })
-      if (section.branchAnnualValues.length > 1) qualityIssues.push({ severity: 'warning', code: 'PARALLEL_ANNUAL_COLUMNS', branch: branch.branch, metric: section.metric, detail: `La fuente contiene ${section.branchAnnualValues.length} columnas anuales paralelas; ambas se preservan.` })
+      for (const mismatch of section.monthlyReconciliation.filter((item) => !item.exact)) {
+        qualityIssues.push({
+          severity: 'critical',
+          code: 'MONTHLY_TOTAL_MISMATCH',
+          branch: branch.branch,
+          metric: section.metric,
+          period: mismatch.period,
+          sourceTotal: mismatch.sourceTotal,
+          partnerSum: mismatch.partnerSum,
+          delta: mismatch.delta,
+          detail: `La suma de partners no coincide con el total mensual de sucursal en ${mismatch.period}.`,
+        })
+      }
+      if (section.branchAnnualValues.length > 1) {
+        const partnerRowsWithDifferentAnnualValues = section.partners.filter((partner) => new Set(partner.annualValues.map((annual) => annual.value)).size > 1).length
+        const partnerRowsLabel = partnerRowsWithDifferentAnnualValues === 1 ? '1 fila de partner' : `${partnerRowsWithDifferentAnnualValues} filas de partner`
+        const annualValues = section.branchAnnualValues.map((annual) => ({ cell: annual.cell, value: annual.value, formula: annual.formula }))
+        qualityIssues.push({
+          severity: 'warning',
+          code: 'PARALLEL_ANNUAL_COLUMNS',
+          branch: branch.branch,
+          metric: section.metric,
+          annualValues,
+          partnerRowsWithDifferentAnnualValues,
+          detail: `La fuente contiene ${section.branchAnnualValues.length} columnas anuales paralelas con totales de sucursal diferentes y ${partnerRowsLabel} con valores diferentes; todas se preservan.`,
+        })
+      }
       for (const partner of section.partners.filter((item) => item.identityStatus === 'unresolved')) {
         qualityIssues.push({ severity: 'warning', code: 'UNRESOLVED_PARTNER_IDENTITY', branch: branch.branch, metric: section.metric, sourceRow: partner.sourceRow, detail: `La fila ${partner.sourceRow} no contiene una identidad de partner resoluble.` })
       }
@@ -279,7 +304,7 @@ function main() {
     generatedAt,
     version: '202607',
     status: qualityIssues.some((issue) => issue.severity === 'critical') ? 'loaded_with_critical_issues' : 'loaded_with_source_issues',
-    scope: { year: 2026, commune: 'Vitacura', branches: branches.map((branch) => branch.branch), piiIncluded: true, access: 'private_dashboard_only' },
+    scope: { year: 2026, commune: 'Vitacura', branches: branches.map((branch) => branch.branch), piiIncluded: true, access: 'authenticated_dashboard_intent', repositoryExposure: 'public_repository' },
     rules: {
       monthlyValues: 'Every January-December source cell is retained exactly, including null and zero.',
       annualValues: 'Every annual source column is retained independently. No annual column is discarded or silently promoted over another.',
@@ -294,7 +319,7 @@ function main() {
     schemaVersion: 1,
     generatedAt,
     coverage: cellCoverage,
-    privacy: { rawValuesIncluded: true, containsEmployeeNames: true, access: 'private_dashboard_only' },
+    privacy: { rawValuesIncluded: true, containsEmployeeNames: true, access: 'authenticated_dashboard_intent', repositoryExposure: 'public_repository', confidentialityGuaranteed: false },
     workbooks: branches.map((branch) => branch.sourceAudit),
   }
 

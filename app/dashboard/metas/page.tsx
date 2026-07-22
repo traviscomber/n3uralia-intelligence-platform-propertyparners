@@ -9,6 +9,30 @@ function format(value: number | null, unit?: string) {
   return unit === 'uf' ? `UF ${formatted}` : formatted
 }
 
+function formatSource(value: number | null, unit?: string) {
+  if (value === null) return 'n/d'
+  return unit === 'uf' ? `UF ${String(value)}` : String(value)
+}
+
+function issueContext(issue: object) {
+  const row = issue as Record<string, unknown>
+  return [row.period, row.cell ? `celda ${row.cell}` : null, row.sourceRow ? `fila ${row.sourceRow}` : null].filter(Boolean).join(' · ')
+}
+
+function issueExactDetails(issue: object) {
+  const row = issue as Record<string, unknown>
+  const details = [String(row.detail)]
+  if ('delta' in row) details.push(`Total ${String(row.sourceTotal)} · suma partners ${String(row.partnerSum)} · diferencia ${String(row.delta)}.`)
+  if ('value' in row) details.push(`Valor ${String(row.value)}${row.formula ? ` · fórmula ${String(row.formula)}` : ''}.`)
+  if (Array.isArray(row.annualValues)) {
+    details.push(row.annualValues.map((annual) => {
+      const value = annual as Record<string, unknown>
+      return `${String(value.cell)}=${String(value.value)}${value.formula ? ` [${String(value.formula)}]` : ''}`
+    }).join(' · '))
+  }
+  return details.join(' ')
+}
+
 export default async function TargetsPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
   const params = await searchParams
   const monthNumber = Math.min(12, Math.max(1, Number(params.month) || 6))
@@ -65,6 +89,24 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
         </div>
       </section>
 
+      <details className="overflow-hidden rounded-2xl border border-[#dfe8e4] bg-white">
+        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-[#173b31]">Registro completo de {source.quality.issueCount} incidencias fuente</summary>
+        <div className="overflow-x-auto border-t border-[#e8efec]">
+          <table className="w-full min-w-[820px] text-left text-xs">
+            <thead className="bg-[#f4f7f5] text-[#607169]"><tr><th className="px-4 py-2">Severidad</th><th className="px-4 py-2">Sucursal</th><th className="px-4 py-2">Métrica</th><th className="px-4 py-2">Referencia</th><th className="px-4 py-2">Detalle exacto</th></tr></thead>
+            <tbody>{source.quality.issues.map((issue, index) => (
+              <tr key={`${issue.code}-${issue.branch}-${index}`} className="border-t border-[#edf2f0] align-top">
+                <td className="px-4 py-2 font-bold" style={{ color: issue.severity === 'critical' ? '#b91c1c' : '#9a6700' }}>{issue.severity}</td>
+                <td className="px-4 py-2">{issue.branch}</td>
+                <td className="px-4 py-2">{'metric' in issue ? issue.metric : 'fuera de bloque'}</td>
+                <td className="px-4 py-2">{issueContext(issue) || 'bloque completo'}</td>
+                <td className="px-4 py-2">{issueExactDetails(issue)}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      </details>
+
       {branches.map((branch) => (
         <section key={branch.branch} className="space-y-4 rounded-2xl border border-[#dfe8e4] bg-[#f8faf9] p-5 lg:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -84,7 +126,7 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
                   <div className="text-right"><p className="text-xs text-[#718078]">Meta fuente</p><p className="text-xl font-bold text-[#1b6451]">{format(metric.target, metric.unit)}</p></div>
                 </div>
                 <p className="mt-2 text-xs text-[#66756e]">{metric.compliance === null ? metric.compatibility === 'definition_pending' ? 'Cumplimiento pendiente de definición: agendada vs realizada.' : metric.compatibility === 'actual_unavailable' ? 'No existe actual compatible en CRM.' : 'Atribución CRM no disponible.' : `${metric.compliance}% de cumplimiento`}</p>
-                {metric.reconciliation && !metric.reconciliation.exact && <p className="mt-2 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">Fuente: total vs partners difiere en {format(metric.reconciliation.delta, metric.unit)}</p>}
+                {metric.reconciliation && !metric.reconciliation.exact && <p className="mt-2 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">Fuente exacta: total {formatSource(metric.reconciliation.sourceTotal, metric.unit)} · partners {formatSource(metric.reconciliation.partnerSum, metric.unit)} · diferencia {formatSource(metric.reconciliation.delta, metric.unit)}</p>}
               </article>
             ))}
           </div>
@@ -102,11 +144,11 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
                           <td className="px-4 py-2 text-[#75827c]">{partner.sourceRow}</td>
                           <td className="px-4 py-2 font-medium text-[#1b2b25]">{partner.name ?? 'Sin nombre'} {partner.identityStatus === 'unresolved' && <span className="ml-2 text-red-700">Identidad no resuelta</span>}</td>
                           <td className="px-4 py-2">{partner.sourceColor ? <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: partner.sourceColor === 'green' ? '#92d050' : '#ff0000' }} />{partner.sourceColor}</span> : 'sin marca'}</td>
-                          <td className="px-4 py-2 font-semibold">{format(partner.target, metric.unit)}</td>
-                          {partner.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2">{format(annual.value, metric.unit)} <span className="text-[#87928d]">({annual.cell})</span></td>)}
+                          <td className="px-4 py-2 font-semibold">{formatSource(partner.target, metric.unit)}</td>
+                          {partner.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2">{formatSource(annual.value, metric.unit)} <span className="text-[#87928d]">({annual.cell})</span></td>)}
                         </tr>
                       ))}
-                      <tr className="border-t-2 border-[#cbd8d2] bg-[#f7faf8] font-bold"><td className="px-4 py-2" colSpan={3}>Total sucursal fuente</td><td className="px-4 py-2">{format(metric.target, metric.unit)}</td>{metric.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2">{format(annual.value, metric.unit)} <span className="font-normal text-[#87928d]">({annual.cell})</span></td>)}</tr>
+                      <tr className="border-t-2 border-[#cbd8d2] bg-[#f7faf8] font-bold"><td className="px-4 py-2" colSpan={3}>Total sucursal fuente</td><td className="px-4 py-2">{formatSource(metric.target, metric.unit)}</td>{metric.annualValues.map((annual) => <td key={annual.cell} className="px-4 py-2">{formatSource(annual.value, metric.unit)} <span className="font-normal text-[#87928d]">({annual.cell})</span></td>)}</tr>
                     </tbody>
                   </table>
                 </div>
