@@ -24,7 +24,16 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     const isAuthPath = request.nextUrl.pathname.startsWith('/auth')
     const isLandingPage = request.nextUrl.pathname === '/'
+    const isLegacyMarketingPath = request.nextUrl.pathname === '/es' || request.nextUrl.pathname.startsWith('/es/')
     const isPublicPath = isLandingPage || request.nextUrl.pathname.startsWith('/about') || request.nextUrl.pathname.startsWith('/contact')
+
+    // This deployment is the private Property Partners portal. Keep legacy
+    // N3uralia marketing pages out of the production navigation for every user.
+    if (isLegacyMarketingPath) {
+      const url = request.nextUrl.clone()
+      url.pathname = user ? '/dashboard' : '/auth/login'
+      return NextResponse.redirect(url)
+    }
 
     // Allow public access to landing page and public routes
     if (!user && !isAuthPath && !isPublicPath) {
