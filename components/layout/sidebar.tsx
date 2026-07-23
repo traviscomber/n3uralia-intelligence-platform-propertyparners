@@ -7,188 +7,151 @@ import { PPLogo } from '@/components/brand/pp-logo'
 import type { Profile } from '@/lib/types'
 
 type SidebarItem = { label: string; href: string; icon: ReactNode; exact?: boolean }
+type SidebarSection = { label: string; items: SidebarItem[] }
 
-const navItems: SidebarItem[] = [
-  {
-    label: 'Inicio',
-    href: '/dashboard',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="6" height="6" rx="1" /><rect x="9" y="1" width="6" height="6" rx="1" /><rect x="1" y="9" width="6" height="6" rx="1" /><rect x="9" y="9" width="6" height="6" rx="1" /></svg>,
-    exact: true,
-  },
-  {
-    label: 'Gestión corporativa',
-    href: '/dashboard/inteligencia',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1.5 8s2.3-4 6.5-4 6.5 4 6.5 4-2.3 4-6.5 4-6.5-4-6.5-4Z" /><circle cx="8" cy="8" r="2" /><path d="M8 1v1.5M8 13.5V15" /></svg>,
-  },
-  {
-    label: 'Modelos y validación',
-    href: '/dashboard/ml-lab',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 2v3l-3 7a1.4 1.4 0 0 0 1.3 2h9.4a1.4 1.4 0 0 0 1.3-2l-3-7V2" /><path d="M4 9h8M6.5 2h3" /><circle cx="6" cy="11" r=".6" fill="currentColor" stroke="none" /><circle cx="10" cy="12" r=".6" fill="currentColor" stroke="none" /></svg>,
-  },
-  {
-    label: 'Control de gestión',
-    href: '/dashboard/control',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,12 5,8 8,10 11,5 14,7" /><line x1="2" y1="14" x2="14" y2="14" /></svg>,
-  },
-  {
-    label: 'Datos CRM',
-    href: '/dashboard/datos-crm',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v4c0 1.1 2.7 2 6 2s6-.9 6-2V4" /><path d="M2 8v4c0 1.1 2.7 2 6 2s6-.9 6-2V8" /></svg>,
-  },
-  {
-    label: 'Metas 2026',
-    href: '/dashboard/metas',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><circle cx="8" cy="8" r="3" /><path d="M8 1v3M15 8h-3" /></svg>,
-  },
-  {
-    label: 'Presentaciones 2026',
-    href: '/dashboard/presentaciones',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="9" /><path d="M5 14h6M8 11v3" /><path d="m5 8 2-2 2 1 2-2" /></svg>,
-  },
-  {
-    label: 'Propiedades auditadas',
-    href: '/dashboard/properties',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7L8 2l6 5v7H10v-4H6v4H2z" /></svg>,
-  },
-  {
-    label: 'Mercado Vitacura',
-    href: '/dashboard/market',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><line x1="8" y1="2" x2="8" y2="14" /><line x1="2" y1="8" x2="14" y2="8" /><path d="M4.5 4.5c1 .4 2.3.8 3.5.8s2.5-.4 3.5-.8" /><path d="M4.5 11.5c1-.4 2.3-.8 3.5-.8s2.5.4 3.5.8" /></svg>,
-  },
-  {
-    label: 'Fuentes Portal + CBRS',
-    href: '/dashboard/market/fuentes',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v8c0 1.1 2.7 2 6 2s6-.9 6-2V4" /><path d="M2 8c0 1.1 2.7 2 6 2s6-.9 6-2" /></svg>,
-  },
-  {
-    label: 'Importar mercado',
-    href: '/dashboard/market/import',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1v8" /><path d="M5.5 6.5L8 9l2.5-2.5" /><path d="M3 11.5h10" /><path d="M3 13.5h10" /></svg>,
-  },
-  {
-    label: 'Valorización de propiedades',
-    href: '/dashboard/valorizador',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="3" /><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4" /></svg>,
-  },
-  {
-    label: 'Reportes programados',
-    href: '/dashboard/reportes/autonomos',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="10" /><path d="M5 15h6M8 12v3" /><path d="M4.5 9V7M7 9V5M9.5 9V6M12 9V4" /></svg>,
-  },
-  {
-    label: 'Conocimiento Casas',
-    href: '/dashboard/knowledge',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h5l1 1h6v9H2z" /><line x1="5" y1="8" x2="11" y2="8" /><line x1="5" y1="10.5" x2="9" y2="10.5" /></svg>,
-  },
-  {
-    label: 'Fuentes de casas',
-    href: '/dashboard/sources',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><ellipse cx="8" cy="5" rx="5" ry="2" /><path d="M3 5v3c0 1.1 2.2 2 5 2s5-.9 5-2V5" /><path d="M3 8v3c0 1.1 2.2 2 5 2s5-.9 5-2V8" /></svg>,
-  },
-  {
-    label: 'Configuración',
-    href: '/dashboard/settings',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2.5" /><path d="M8 1.5v1.2M8 13.3v1.2M1.5 8h1.2M13.3 8h1.2M3.3 3.3l.85.85M11.85 11.85l.85.85M11.85 4.15l-.85.85M4.15 11.85l-.85.85" /></svg>,
-  },
-]
-
-const roleNavItems: SidebarItem[] = [
-  {
-    label: 'Resumen ejecutivo',
-    href: '/dashboard/ceo',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="8,2 14,6 14,10 8,14 2,10 2,6" /><circle cx="8" cy="8" r="2" /></svg>,
-  },
-  {
-    label: 'Vista Director',
-    href: '/dashboard/director',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><circle cx="13" cy="5" r="1.5" /><path d="M14.5 12c0-1.7 1.3-3 3-3" strokeWidth="1.2" /></svg>,
-  },
-  {
-    label: 'Ejecutivos / Partners',
-    href: '/dashboard/reportes/audiencias/ejecutivo',
-    icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="2.5" /><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5" /><polyline points="6,10 8,12 11,9" /></svg>,
-  },
-]
-
-const itemByHref = new Map([...navItems, ...roleNavItems].map((item) => [item.href, item]))
-function itemsByHref(...hrefs: string[]) { return hrefs.map((href) => itemByHref.get(href)).filter((item): item is SidebarItem => Boolean(item)) }
-
-const ceoSections = [
-  { label: 'Dirección', items: itemsByHref('/dashboard/ceo', '/dashboard/inteligencia', '/dashboard/reportes/autonomos') },
-  { label: 'Negocio', items: itemsByHref('/dashboard/properties', '/dashboard/market', '/dashboard/valorizador') },
-  { label: 'Operación', items: itemsByHref('/dashboard/control', '/dashboard/datos-crm', '/dashboard/metas', '/dashboard/presentaciones') },
-  { label: 'Administración', items: itemsByHref('/dashboard/market/fuentes', '/dashboard/market/import', '/dashboard/sources', '/dashboard/knowledge', '/dashboard/ml-lab', '/dashboard/settings') },
-]
-
-const directorSections = [
-  { label: 'Gestión', items: itemsByHref('/dashboard/director', '/dashboard/control', '/dashboard/inteligencia', '/dashboard/reportes/autonomos') },
-  { label: 'Negocio', items: itemsByHref('/dashboard/properties', '/dashboard/market', '/dashboard/valorizador') },
-  { label: 'Fuentes', items: itemsByHref('/dashboard/datos-crm', '/dashboard/metas', '/dashboard/presentaciones', '/dashboard/market/fuentes') },
-]
-
-const sellerSections = [
-  { label: 'Trabajo', items: itemsByHref('/dashboard', '/dashboard/reportes/audiencias/ejecutivo') },
-  { label: 'Negocio', items: itemsByHref('/dashboard/properties', '/dashboard/market', '/dashboard/valorizador') },
-]
-
-function NavigationLinks({ items, pathname }: { items: SidebarItem[]; pathname: string }) {
-  return <ul className="flex flex-col gap-0.5">{items.map((item) => {
-    const isActive = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
-    return <li key={item.href}><Link href={item.href} onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')} className="flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-all" style={{ color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)', background: isActive ? 'rgba(215,51,43,0.1)' : 'transparent', borderLeft: isActive ? '2px solid var(--n3-teal)' : '2px solid transparent' }}><span style={{ color: isActive ? 'var(--n3-teal-soft)' : 'var(--n3-text-muted)' }}>{item.icon}</span><span className="truncate text-[13px]">{item.label}</span></Link></li>
-  })}</ul>
+const icons = {
+  dashboard: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1.5" y="1.5" width="5" height="5" /><rect x="9.5" y="1.5" width="5" height="5" /><rect x="1.5" y="9.5" width="5" height="5" /><rect x="9.5" y="9.5" width="5" height="5" /></svg>,
+  market: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c2 1.7 3 3.7 3 6s-1 4.3-3 6c-2-1.7-3-3.7-3-6s1-4.3 3-6Z" /></svg>,
+  valuation: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7 8 2l6 5v7H2Z" /><path d="M5 10h6M8 7v6" /></svg>,
+  reports: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="12" /><path d="M5 11V8M8 11V5M11 11V7" /></svg>,
+  properties: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 7 8 2l6 5v7H10v-4H6v4H2Z" /></svg>,
+  crm: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4c0-1.1 2.7-2 6-2s6 .9 6 2-2.7 2-6 2-6-.9-6-2Z" /><path d="M2 4v4c0 1.1 2.7 2 6 2s6-.9 6-2V4M2 8v4c0 1.1 2.7 2 6 2s6-.9 6-2V8" /></svg>,
+  control: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m2 12 3-4 3 2 3-5 3 2" /><path d="M2 14h12" /></svg>,
+  sources: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><ellipse cx="8" cy="4" rx="5" ry="2" /><path d="M3 4v4c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8v4c0 1.1 2.2 2 5 2s5-.9 5-2V8" /></svg>,
+  settings: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2.5" /><path d="M8 1.5v1.3M8 13.2v1.3M1.5 8h1.3M13.2 8h1.3M3.4 3.4l.9.9M11.7 11.7l.9.9M12.6 3.4l-.9.9M4.3 11.7l-.9.9" /></svg>,
+  lab: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 2v3l-3 7a1.4 1.4 0 0 0 1.3 2h9.4a1.4 1.4 0 0 0 1.3-2l-3-7V2M4 9h8M6.5 2h3" /></svg>,
 }
 
-function SectionNavigation({ sections, pathname }: { sections: Array<{ label: string; items: SidebarItem[] }>; pathname: string }) {
-  return sections.map((section) => <div key={section.label} className="mb-4"><div className="mb-1 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">{section.label}</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={section.items} pathname={pathname} /></div>)
+const items = {
+  home: { label: 'Dashboard', href: '/dashboard', icon: icons.dashboard, exact: true },
+  ceo: { label: 'Resumen ejecutivo', href: '/dashboard/ceo', icon: icons.dashboard },
+  director: { label: 'Vista director', href: '/dashboard/director', icon: icons.dashboard },
+  intelligence: { label: 'Inteligencia corporativa', href: '/dashboard/inteligencia', icon: icons.market },
+  market: { label: 'Inteligencia de mercado', href: '/dashboard/market', icon: icons.market },
+  valuation: { label: 'Inteligencia de valorización', href: '/dashboard/valorizador', icon: icons.valuation },
+  reports: { label: 'Reportes ejecutivos', href: '/dashboard/reportes/autonomos', icon: icons.reports },
+  partnerReports: { label: 'Reportes para partners', href: '/dashboard/reportes/audiencias/ejecutivo', icon: icons.reports },
+  properties: { label: 'Propiedades', href: '/dashboard/properties', icon: icons.properties },
+  control: { label: 'Control de gestión', href: '/dashboard/control', icon: icons.control },
+  crm: { label: 'Datos CRM', href: '/dashboard/datos-crm', icon: icons.crm },
+  targets: { label: 'Metas 2026', href: '/dashboard/metas', icon: icons.control },
+  presentations: { label: 'Presentaciones', href: '/dashboard/presentaciones', icon: icons.reports },
+  marketSources: { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', icon: icons.sources },
+  marketImport: { label: 'Importar mercado', href: '/dashboard/market/import', icon: icons.sources },
+  sources: { label: 'Fuentes de propiedades', href: '/dashboard/sources', icon: icons.sources },
+  knowledge: { label: 'Conocimiento', href: '/dashboard/knowledge', icon: icons.sources },
+  lab: { label: 'Modelos y validación', href: '/dashboard/ml-lab', icon: icons.lab },
+  settings: { label: 'Configuración', href: '/dashboard/settings', icon: icons.settings },
+} satisfies Record<string, SidebarItem>
+
+const executiveSections: SidebarSection[] = [
+  { label: 'Executive', items: [items.ceo] },
+  { label: 'Intelligence', items: [items.market, items.valuation, items.reports] },
+  { label: 'Business', items: [items.properties, items.control, items.crm] },
+  { label: 'Administration', items: [items.marketSources, items.marketImport, items.sources, items.knowledge, items.targets, items.presentations, items.lab, items.settings] },
+]
+
+const directorSections: SidebarSection[] = [
+  { label: 'Executive', items: [items.director] },
+  { label: 'Intelligence', items: [items.market, items.valuation, items.reports] },
+  { label: 'Business', items: [items.properties, items.control, items.crm] },
+  { label: 'Sources', items: [items.marketSources, items.targets, items.presentations] },
+]
+
+const sellerSections: SidebarSection[] = [
+  { label: 'Workspace', items: [items.home] },
+  { label: 'Intelligence', items: [items.market, items.valuation, items.partnerReports] },
+  { label: 'Business', items: [items.properties] },
+]
+
+function NavigationLinks({ items: sectionItems, pathname }: { items: SidebarItem[]; pathname: string }) {
+  return (
+    <ul className="flex flex-col gap-0.5">
+      {sectionItems.map((item) => {
+        const isActive = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
+        return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')}
+              className="flex items-center gap-2.5 border-l-2 px-3 py-2.5 text-sm transition-colors"
+              style={{
+                color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
+                background: isActive ? 'rgba(255,255,255,0.035)' : 'transparent',
+                borderLeftColor: isActive ? '#d7332b' : 'transparent',
+              }}
+            >
+              <span style={{ color: isActive ? '#ff766f' : 'var(--n3-text-muted)' }}>{item.icon}</span>
+              <span className="truncate text-[13px]">{item.label}</span>
+            </Link>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+function SectionNavigation({ sections, pathname }: { sections: SidebarSection[]; pathname: string }) {
+  return sections.map((section) => (
+    <div key={section.label} className="mb-5">
+      <div className="mb-1.5 flex items-center gap-2 px-3">
+        <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">{section.label}</span>
+        <div className="h-px flex-1 bg-[var(--n3-line)]" />
+      </div>
+      <NavigationLinks items={section.items} pathname={pathname} />
+    </div>
+  ))
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const isExecutive = profile?.role === 'ceo' || profile?.role === 'admin'
   const isDirector = profile?.role === 'director'
-  const sections = isExecutive ? ceoSections : isDirector ? directorSections : sellerSections
+  const sections = isExecutive ? executiveSections : isDirector ? directorSections : sellerSections
 
-  return <>
-    <details className="group fixed left-0 top-0 z-50 md:hidden">
-      <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] [&::-webkit-details-marker]:hidden">
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
-      </summary>
-      <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl">
-        <div className="border-b border-[var(--n3-line)] px-5 py-4"><PPLogo className="w-48" priority /></div>
-        <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-4">
-          <SectionNavigation sections={sections} pathname={pathname} />
-        </nav>
-      </div>
-    </details>
-
-    <aside className="hidden h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)] md:flex">
-      <div className="border-b border-[var(--n3-line)] px-4 py-4">
+  const navigation = (
+    <>
+      <div className="border-b border-[var(--n3-line)] px-5 py-5">
         <PPLogo className="w-full" priority />
+        <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Intelligence Platform</p>
       </div>
-
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
+      <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
         <SectionNavigation sections={sections} pathname={pathname} />
       </nav>
-
-      <div className="border-t border-[var(--n3-line)] px-3 py-3">
+      <div className="border-t border-[var(--n3-line)] px-4 py-4">
         {profile ? (
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style={{ background: 'rgba(215,51,43,0.16)', color: 'var(--n3-teal-soft)' }}>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--n3-line)] text-xs font-semibold text-[#ff766f]">
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <div className="truncate text-xs font-medium text-[var(--n3-text-light)]">{profile.full_name || 'Usuario'}</div>
-              <div className="text-[10px] capitalize" style={{ color: 'var(--n3-text-muted)' }}>{profile.role}</div>
+              <div className="text-[10px] capitalize text-[var(--n3-text-muted)]">{profile.role}</div>
             </div>
           </div>
         ) : null}
-        <div className="mt-3 border-t border-[var(--n3-line)] pt-3 text-[11px] leading-tight" style={{ color: 'var(--n3-text-muted)' }}>
-          Powered by{' '}
-          <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium hover:opacity-80" style={{ color: 'var(--n3-teal-soft)' }}>
-            N3uralia
-          </a>
+        <div className="mt-4 border-t border-[var(--n3-line)] pt-3 text-[10px] leading-4 text-[var(--n3-text-muted)]">
+          Motor de inteligencia{' '}
+          <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium text-[var(--n3-text-light)] hover:opacity-80">N3uralia</a>
         </div>
       </div>
-    </aside>
-  </>
+    </>
+  )
+
+  return (
+    <>
+      <details className="group fixed left-0 top-0 z-50 md:hidden">
+        <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] [&::-webkit-details-marker]:hidden">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
+        </summary>
+        <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl">
+          {navigation}
+        </div>
+      </details>
+
+      <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)] md:flex">
+        {navigation}
+      </aside>
+    </>
+  )
 }
