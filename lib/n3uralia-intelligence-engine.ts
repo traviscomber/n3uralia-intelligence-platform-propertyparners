@@ -347,3 +347,13 @@ export function getN3uraliaDomainContext(domain: IntelligenceDomain, audience: I
     actions: context.actions.filter((item) => item.domain === domain || domain === 'executive'),
   }
 }
+
+export type ExecutiveDecision = {
+  id: string
+  priority: 'high' | 'medium' | 'low'
+  action: string
+  subject: string
+  reason: string
+  href: string
+  confidence: 'high' | 'medium' | 'low'
+}
