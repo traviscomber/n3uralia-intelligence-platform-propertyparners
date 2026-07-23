@@ -1,196 +1,211 @@
 'use client'
 
 import Link from 'next/link'
+import { AlertTriangle, ArrowRight, BarChart3, Building2, FileText, ShieldCheck, Target, TrendingUp } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary } from '@/lib/crm-snapshot'
+import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary, CRM_INTELLIGENCE } from '@/lib/crm-snapshot'
 import { getBranchSalesYtdPerformance, getCompanySalesCompliance } from '@/lib/targets-2026'
+import {
+  IntelligenceHeader,
+  IntelligencePage,
+  IntelligencePanel,
+  MethodologyNote,
+  MetricCard,
+  MetricGrid,
+  RankedRow,
+  SectionHeading,
+} from '@/components/intelligence/design-system'
 
-function fmt(n: number) {
-  return n.toLocaleString('es-CL')
+function fmt(value: number) {
+  return value.toLocaleString('es-CL')
 }
 
-function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
-  return (
-    <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5 flex flex-col gap-1" style={{ border: '1px solid var(--n3-line)', borderLeft: `3px solid ${border}` }}>
-      <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: 'var(--n3-text-muted)' }}>{label}</span>
-      <span className="text-2xl font-bold tracking-tight" style={{ color: 'var(--n3-text-light)' }}>{value}</span>
-      {sub && <span className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>{sub}</span>}
-    </div>
-  )
+function compactUf(value: number) {
+  if (value <= 0) return 'n/d'
+  return `${(value / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 })}K UF`
 }
 
 export default function CeoDashboard() {
-  const fallbackSummary = getOperationalSummary()
-  const fallbackSeries = buildOperationalSeries(6).map(({ mes, ventas, captaciones, leads }) => ({ mes, ventas, captaciones, leads }))
+  const operational = getOperationalSummary()
+  const chartData = buildOperationalSeries(6).map(({ mes, ventas, captaciones, leads }) => ({ mes, ventas, captaciones, leads }))
   const branches = getBranchSalesYtdPerformance('2026-06')
-  const attributedBranchSales = branches.reduce((sum, branch) => sum + branch.actualSales, 0)
-  const attributedBranchUf = branches.reduce((sum, branch) => sum + branch.actualUf, 0)
-  const chartData = fallbackSeries
   const ytd = getYtdSummary()
   const dataQuality = getDataQuality()
   const salesCompliance = getCompanySalesCompliance('2026-06')
-  const januaryStock = fallbackSummary.stock - ytd.stockChange
-  const stockRetention = januaryStock > 0 ? Number(((fallbackSummary.stock / januaryStock) * 100).toFixed(1)) : null
-  const totals = {
-    ventas: ytd.salesCount,
-    uf: ytd.salesUf,
-    conversion: fallbackSummary.leadToSaleProxy,
-  }
+  const januaryStock = operational.stock - ytd.stockChange
+  const stockRetention = januaryStock > 0 ? Number(((operational.stock / januaryStock) * 100).toFixed(1)) : null
+  const attributedBranchSales = branches.reduce((sum, branch) => sum + branch.actualSales, 0)
+  const attributedBranchUf = branches.reduce((sum, branch) => sum + branch.actualUf, 0)
+  const maxBranchSales = Math.max(...branches.map((branch) => branch.actualSales), 1)
+  const ceoActions = CRM_INTELLIGENCE.actions.ceo
+  const criticalIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'critical')
+  const warningIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'warning')
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8" style={{ background: 'var(--n3-black)' }}>
-      {/* Header */}
-      <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: 'var(--n3-deep)', color: 'var(--n3-teal-soft)' }}>CEO</span>
-            <span className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>Resumen ejecutivo</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--n3-text-light)' }}>Panel de gestión</h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--n3-text-muted)' }}>Resumen global del negocio · corte auditado enero–junio 2026</p>
-        </div>
-        <div className="text-right">
-          <div className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>Corte de datos</div>
-          <div className="text-sm font-semibold" style={{ color: 'var(--n3-text-light)' }}>Junio 2026</div>
-        </div>
-      </div>
+    <IntelligencePage>
+      <IntelligenceHeader
+        eyebrow="Executive Intelligence Hub · CEO"
+        title="Centro de Mando Ejecutivo"
+        description="Una vista única para entender desempeño comercial, cumplimiento, calidad de datos, riesgos y acciones prioritarias. Cada indicador conserva acceso directo al módulo que explica su origen."
+        actions={[
+          { label: 'Abrir Reporte de Directorio', href: '/dashboard/reportes/directorio', primary: true },
+          { label: 'Ver Control de Gestión', href: '/dashboard/control' },
+        ]}
+        meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Corte auditado enero–junio 2026 · Motor de inteligencia N3uralia</div>}
+      />
 
-      {/* KPI Row */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Ventas totales"     value={fmt(totals.ventas)}           sub="propiedades cerradas (6m)"  border="var(--n3-teal)" />
-        <KpiCard
-          label="UF vendidas"
-          value={totals.uf > 0 ? `${(totals.uf / 1000).toFixed(0)}K UF` : 'n/d'}
-          sub={totals.uf > 0 ? 'volumen validado enero-junio' : 'UF no disponible en el corte'}
-          border="var(--n3-text-muted)"
-        />
-        <KpiCard label="Cobertura de fuentes" value={`${dataQuality.sourceCoverage}%`} sub="datasets mensuales presentes / esperados" border="var(--n3-teal)" />
-        <KpiCard label="Cierres / leads Jun" value={`${totals.conversion}%`} sub="proxy mensual, no cohorte" border="var(--n3-teal)" />
-      </div>
+      <section>
+        <SectionHeading eyebrow="Executive Pulse" title="Estado general del negocio" description="Indicadores consolidados desde CRM, metas y fuentes auditadas. No forman un índice sintético." />
+        <MetricGrid>
+          <MetricCard label="Ventas acumuladas" value={fmt(ytd.salesCount)} detail={`${compactUf(ytd.salesUf)} de volumen validado.`} />
+          <MetricCard label="Cumplimiento de cierres" value={`${salesCompliance.compliance}%`} detail="Cierres CRM frente a la meta acumulada compatible." />
+          <MetricCard label="Cobertura de fuentes" value={`${dataQuality.sourceCoverage}%`} detail="Datasets mensuales presentes frente a los esperados." />
+          <MetricCard label="Cierres / leads junio" value={`${operational.leadToSaleProxy}%`} detail="Proxy mensual; no representa conversión de cohorte." />
+        </MetricGrid>
+      </section>
 
-      {/* Source-backed controls */}
-      <div className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-5">
-        <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5 xl:col-span-4" style={{ border: '1px solid var(--n3-line)' }}>
-          <div className="mb-4"><h2 className="text-sm font-semibold" style={{ color: 'var(--n3-text-light)' }}>Indicadores de control</h2><p className="mt-0.5 text-xs" style={{ color: 'var(--n3-text-muted)' }}>Valores derivados directamente de CRM y Metas 2026; no forman un índice agregado.</p></div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg p-3" style={{ background: 'var(--n3-black)', border: '1px solid var(--n3-line)' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Cobertura de fuentes</div><div className="mt-1 text-lg font-bold" style={{ color: 'var(--n3-text-light)' }}>{dataQuality.sourceCoverage}%</div><div className="mt-1 text-[11px] leading-snug" style={{ color: 'var(--n3-text-muted)' }}>Datasets mensuales presentes / esperados.</div></div>
-            <div className="rounded-lg p-3" style={{ background: 'var(--n3-black)', border: '1px solid var(--n3-line)' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Cartera junio / enero</div><div className="mt-1 text-lg font-bold" style={{ color: 'var(--n3-text-light)' }}>{stockRetention === null ? 'n/d' : `${stockRetention}%`}</div><div className="mt-1 text-[11px] leading-snug" style={{ color: 'var(--n3-text-muted)' }}>Stock de junio dividido por stock de enero.</div></div>
-            <div className="rounded-lg p-3" style={{ background: 'var(--n3-black)', border: '1px solid var(--n3-line)' }}><div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Cumplimiento de cierres</div><div className="mt-1 text-lg font-bold" style={{ color: 'var(--n3-text-light)' }}>{salesCompliance.compliance}%</div><div className="mt-1 text-[11px] leading-snug" style={{ color: 'var(--n3-text-muted)' }}>Cierres CRM / meta acumulada compatible.</div></div>
-          </div>
+      <section>
+        <SectionHeading eyebrow="01 · Executive Actions" title="Qué debería hacer esta semana" description="Acciones priorizadas desde evidencia operacional existente; no son recomendaciones generadas sin respaldo." />
+        <div className="grid gap-4 lg:grid-cols-3">
+          {ceoActions.map((item) => (
+            <article key={item.title} className={`border bg-[#0c1111] p-5 ${item.priority === 'high' ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <Target size={18} className={item.priority === 'high' ? 'text-[#ff766f]' : 'text-[var(--n3-teal-soft)]'} />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{item.priority === 'high' ? 'Prioridad alta' : item.priority === 'medium' ? 'Prioridad media' : 'Seguimiento'}</span>
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-[var(--n3-text-light)]">{item.title}</h3>
+              <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{item.evidence}</p>
+              <div className="mt-4 flex gap-2 border-t border-[var(--n3-line)] pt-4 text-xs font-semibold text-[var(--n3-text-light)]"><ArrowRight size={15} className="mt-0.5 shrink-0 text-[#ff766f]" />{item.action}</div>
+            </article>
+          ))}
         </div>
+      </section>
 
-        <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5" style={{ border: '1px solid var(--n3-line)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--n3-text-light)' }}>Reportes auditados</h2>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--n3-text-muted)' }}>Acceso por audiencia</p>
+      <section>
+        <SectionHeading eyebrow="02 · Business Performance" title="Desempeño y velocidad comercial" />
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(380px,0.8fr)]">
+          <IntelligencePanel eyebrow="Operational Trend" title="Últimos seis meses" description="Ventas, captaciones y leads provenientes de los cortes mensuales disponibles.">
+            <div className="p-5">
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--n3-line)" />
+                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: 'var(--n3-text-muted)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--n3-text-muted)' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: '#0c1111', border: '1px solid var(--n3-line)', borderRadius: 0, fontSize: 12 }} />
+                  <Bar dataKey="ventas" fill="var(--n3-teal-soft)" name="Ventas" />
+                  <Bar dataKey="captaciones" fill="var(--n3-text-muted)" name="Captaciones" />
+                  <Bar dataKey="leads" fill="var(--n3-text-light)" name="Leads" />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="mt-4 flex flex-wrap justify-center gap-5 text-[11px] text-[var(--n3-text-muted)]">
+                <span>Ventas</span><span>Captaciones</span><span>Leads</span>
+              </div>
+            </div>
+          </IntelligencePanel>
+
+          <IntelligencePanel eyebrow="Control Indicators" title="Señales de gestión" description="Lecturas independientes para evitar ocultar diferencias detrás de un único score." critical>
+            <div className="grid grid-cols-2 gap-px bg-[var(--n3-line)] p-5">
+              {[
+                ['Cartera junio / enero', stockRetention === null ? 'n/d' : `${stockRetention}%`, 'Retención de stock disponible.'],
+                ['Ventas atribuibles', `${attributedBranchSales}/${ytd.salesCount}`, 'Cierres con sucursal identificada.'],
+                ['UF atribuibles', compactUf(attributedBranchUf), `Sobre ${compactUf(ytd.salesUf)} acumuladas.`],
+                ['Cobertura vendedor', ytd.sellerAttribution.coverage === null ? 'n/d' : `${ytd.sellerAttribution.coverage}%`, `${ytd.sellerAttribution.missing} ventas sin vendedor.`],
+              ].map(([label, value, note]) => (
+                <div key={label} className="bg-[#080d0d] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
+                  <p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{value}</p>
+                  <p className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{note}</p>
+                </div>
+              ))}
+            </div>
+          </IntelligencePanel>
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading eyebrow="03 · Branch Performance" title="Resultado por sucursal" description={`${attributedBranchSales} de ${ytd.salesCount} cierres cuentan con atribución a sucursal en el corte.`} />
+        <IntelligencePanel eyebrow="Branch Ranking" title="Ventas y cumplimiento" description="Comparación contra metas acumuladas compatibles con el período disponible.">
+          <div className="grid gap-5 p-5 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+            <div className="space-y-2">
+              {branches.map((branch, index) => <RankedRow key={branch.id} rank={index + 1} label={branch.branch} value={`${branch.actualSales} ventas`} share={(branch.actualSales / maxBranchSales) * 100} />)}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[620px] text-left text-xs">
+                <thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">
+                  <tr><th className="py-3">Sucursal</th><th className="text-right">Ventas</th><th className="text-right">UF</th><th className="text-right">Meta</th><th className="text-right">Cumplimiento</th></tr>
+                </thead>
+                <tbody>
+                  {branches.map((branch) => (
+                    <tr key={branch.id} className="border-b border-[var(--n3-line)] text-[var(--n3-text-light)]">
+                      <td className="py-3 font-semibold">{branch.branch}</td>
+                      <td className="text-right">{branch.actualSales}</td>
+                      <td className="text-right">{compactUf(branch.actualUf)}</td>
+                      <td className="text-right">{branch.targetSales.toLocaleString('es-CL', { maximumFractionDigits: 1 })}</td>
+                      <td className="text-right font-semibold text-[#ff766f]">{branch.compliance}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-          <div className="space-y-3">
-            <Link href="/dashboard/reportes/autonomos" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: 'var(--n3-black)', border: '1px solid var(--n3-line)', color: 'var(--n3-text-light)' }}>Reportes programados</Link>
-            <Link href="/dashboard/reportes/directorio" className="block rounded-lg p-3 text-xs font-semibold" style={{ background: 'var(--n3-black)', border: '1px solid var(--n3-line)', color: 'var(--n3-text-light)' }}>Reporte de directorio</Link>
-          </div>
-        </div>
-      </div>
+        </IntelligencePanel>
+      </section>
 
-      {/* Director Ranking + Sales Chart */}
-      <div className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-5">
-        {/* Ranking table */}
-        <div className="overflow-hidden border border-[var(--n3-line)] bg-[var(--n3-deep)] xl:col-span-3" style={{ border: '1px solid var(--n3-line)' }}>
-          <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--n3-line)' }}>
-            <h2 className="text-sm font-semibold" style={{ color: 'var(--n3-text-light)' }}>Ventas por sucursal</h2>
-            <span className="text-xs text-right" style={{ color: 'var(--n3-text-muted)' }}>6 meses · {attributedBranchSales}/{ytd.salesCount} cierres y UF {attributedBranchUf.toLocaleString('es-CL')}/{ytd.salesUf.toLocaleString('es-CL')} atribuibles a sucursal</span>
-          </div>
-          <div className="overflow-x-auto"><table className="min-w-[720px] w-full text-sm">
-            <thead>
-              <tr style={{ background: 'var(--n3-black)' }}>
-                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>#</th>
-                <th className="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Sucursal</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Ventas</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>UF</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Meta</th>
-                <th className="text-right px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Comisión</th>
-              </tr>
-            </thead>
-            <tbody>
-              {branches.map((branch, i) => {
-                const medals = ['var(--warning)', 'var(--n3-text-muted)', 'var(--n3-text-muted)']
-                return (
-                  <tr key={branch.id} style={{ borderTop: '1px solid var(--n3-line)' }}>
-                    <td className="px-5 py-3.5">
-                      <span className="text-sm font-bold" style={{ color: medals[i] || 'var(--n3-text-muted)' }}>{i + 1}</span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: 'var(--n3-black)', color: 'var(--n3-teal)' }}>
-                          {branch.branch.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="text-[13px] font-medium" style={{ color: 'var(--n3-text-light)' }}>{branch.branch}</div>
-                          <div className="text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>{branch.compliance}% de meta atribuida</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px] font-semibold" style={{ color: 'var(--n3-text-light)' }}>{branch.actualSales}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px]" style={{ color: 'var(--n3-text-light)' }}>{`${(branch.actualUf / 1000).toFixed(1)}K`}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="text-[12px] font-semibold" style={{ color: 'var(--n3-text-muted)' }}>{branch.targetSales.toLocaleString('es-CL', { maximumFractionDigits: 1 })}</span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="text-[13px]" style={{ color: 'var(--n3-text-light)' }}>n/d</span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table></div>
+      <section>
+        <SectionHeading eyebrow="04 · Intelligence Modules" title="Acceso a la evidencia" description="Cada módulo responde una pregunta ejecutiva distinta y mantiene su propia metodología." />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ['/dashboard/market', 'Inteligencia de Mercado', '¿Qué está ocurriendo en el mercado y qué tan confiables son las fuentes?', TrendingUp],
+            ['/dashboard/valorizador', 'Inteligencia de Valorización', '¿Cómo se construye y aprueba una recomendación de valor?', Building2],
+            ['/dashboard/datos-crm', 'CRM Intelligence', '¿Dónde están las oportunidades, riesgos y acciones comerciales?', BarChart3],
+            ['/dashboard/reportes/autonomos', 'Reportes Ejecutivos', '¿Cómo se publica una lectura consistente para cada audiencia?', FileText],
+          ].map(([href, title, detail, Icon]) => (
+            <Link key={String(href)} href={String(href)} className="group border border-[var(--n3-line)] bg-[#0c1111] p-5 transition hover:border-[#d7332b]">
+              <Icon size={20} className="text-[#ff766f]" />
+              <h3 className="mt-4 text-lg font-semibold text-[var(--n3-text-light)]">{String(title)}</h3>
+              <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{String(detail)}</p>
+              <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-[var(--n3-text-light)]">Abrir módulo <ArrowRight size={14} className="transition group-hover:translate-x-1" /></div>
+            </Link>
+          ))}
         </div>
+      </section>
 
-        {/* Sales trend */}
-        <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] xl:col-span-2" style={{ border: '1px solid var(--n3-line)' }}>
-          <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--n3-line)' }}>
-            <h2 className="text-sm font-semibold" style={{ color: 'var(--n3-text-light)' }}>Tendencia operativa</h2>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--n3-text-muted)' }}>Últimos 6 meses</p>
-          </div>
-          <div className="px-4 pt-4 pb-2">
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gVentas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--n3-teal-soft)" stopOpacity={0.95} />
-                    <stop offset="95%" stopColor="var(--n3-teal)" stopOpacity={0.65} />
-                  </linearGradient>
-                  <linearGradient id="gCaptaciones" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--n3-text-muted)" stopOpacity={0.9} />
-                    <stop offset="95%" stopColor="var(--n3-text-muted)" stopOpacity={0.55} />
-                  </linearGradient>
-                  <linearGradient id="gLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--n3-text-light)" stopOpacity={0.9} />
-                    <stop offset="95%" stopColor="var(--n3-text-light)" stopOpacity={0.5} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--n3-line)" />
-                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: 'var(--n3-text-muted)' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--n3-text-muted)' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: 'var(--n3-deep)', border: '1px solid var(--n3-line)', borderRadius: 0, fontSize: 12 }} />
-                <Bar dataKey="ventas" fill="url(#gVentas)" radius={[4, 4, 0, 0]} name="Ventas" />
-                <Bar dataKey="captaciones" fill="url(#gCaptaciones)" radius={[4, 4, 0, 0]} name="Captaciones" />
-                <Bar dataKey="leads" fill="url(#gLeads)" radius={[4, 4, 0, 0]} name="Leads" />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex gap-4 mt-2 justify-center">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--n3-teal)' }} /><span className="text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>Ventas</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--n3-text-muted)' }} /><span className="text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>Captaciones</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--n3-text-light)' }} /><span className="text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>Leads</span></div>
+      <section>
+        <SectionHeading eyebrow="05 · Risk & Confidence" title="Riesgos visibles del sistema" />
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <IntelligencePanel eyebrow="Executive Risk" title="Incidencias críticas" description="Problemas que pueden afectar lectura, atribución o comparabilidad de los resultados." critical>
+            <div className="space-y-3 p-5">
+              {criticalIssues.length > 0 ? criticalIssues.map((issue) => (
+                <div key={issue.code} className="flex gap-3 border border-[var(--n3-line)] bg-[#080d0d] p-4">
+                  <AlertTriangle size={17} className="mt-0.5 shrink-0 text-[var(--destructive)]" />
+                  <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{issue.code}</p><h3 className="mt-1 text-sm font-semibold text-[var(--n3-text-light)]">{issue.title}</h3><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{issue.detail}</p></div>
+                </div>
+              )) : <p className="text-sm text-[var(--n3-text-muted)]">No hay incidencias críticas registradas en el corte.</p>}
             </div>
-          </div>
-        </div>
-      </div>
+          </IntelligencePanel>
 
-    </div>
+          <IntelligencePanel eyebrow="Confidence Context" title="Advertencias y cobertura" description={`${warningIssues.length} advertencias documentadas y ${dataQuality.sourceCoverage}% de cobertura de fuentes.`}>
+            <div className="space-y-3 p-5">
+              {warningIssues.slice(0, 4).map((issue) => (
+                <div key={issue.code} className="flex gap-3 border-b border-[var(--n3-line)] pb-3">
+                  <ShieldCheck size={16} className="mt-0.5 shrink-0 text-amber-400" />
+                  <div><p className="text-sm font-semibold text-[var(--n3-text-light)]">{issue.title}</p><p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{issue.detail}</p></div>
+                </div>
+              ))}
+              <Link href="/dashboard/datos-crm" className="inline-flex items-center gap-2 pt-2 text-xs font-semibold text-[#ff766f]">Revisar control completo de datos <ArrowRight size={14} /></Link>
+            </div>
+          </IntelligencePanel>
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading eyebrow="Methodology" title="Regla ejecutiva" />
+        <MethodologyNote>
+          Esta vista reúne indicadores de módulos distintos, pero no los mezcla en un score único. Ventas, metas, stock, leads y calidad de fuentes conservan universos, períodos y reglas propias. Las decisiones deben abrir el módulo correspondiente cuando requieran detalle o validación.
+        </MethodologyNote>
+      </section>
+
+      <footer className="flex items-center gap-2 border-t border-[var(--n3-line)] pt-5 text-xs text-[var(--n3-text-muted)]"><ShieldCheck size={15} /> Property Partners · Executive Intelligence Hub · Powered by N3uralia Intelligence</footer>
+    </IntelligencePage>
   )
 }
