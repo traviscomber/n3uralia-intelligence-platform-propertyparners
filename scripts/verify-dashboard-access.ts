@@ -22,5 +22,7 @@ assert.equal(canAccessDashboardPath('seller', '/dashboard/reportes/audiencias/ej
 assert.equal(canAccessDashboardPath('seller', '/dashboard/inteligencia'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/datos-crm'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/metas'), false)
+assert.equal(canAccessDashboardPath('unauthorized', '/dashboard'), false)
+assert.equal(canAccessDashboardPath('', '/dashboard/properties'), false)
 
 console.log('Dashboard access verified for CEO, admin, director and seller route boundaries.')

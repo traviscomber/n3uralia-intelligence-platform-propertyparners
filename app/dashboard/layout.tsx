@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Sidebar profile={profile} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar user={user} profile={profile} />
-        <main className="dashboard-content flex-1 overflow-y-auto bg-[var(--n3-black)] p-6">
+        <main className="dashboard-content flex-1 overflow-y-auto bg-[var(--n3-black)] p-3 sm:p-4 md:p-6">
           {children}
         </main>
       </div>

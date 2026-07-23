@@ -129,7 +129,7 @@ export default function ReportDeliveryTargetsManager() {
         <input
           value={form.recipient}
           onChange={(e) => setForm({ ...form, recipient: e.target.value })}
-          placeholder={form.channel === 'email' ? 'correo@empresa.com' : form.channel === 'whatsapp_web' ? '+56912345678' : 'https://hooks.example.com/report'}
+          placeholder={form.channel === 'email' ? 'correo@empresa.com' : form.channel === 'whatsapp_web' ? '+56912345678' : 'URL HTTPS del webhook'}
           className="rounded-lg border px-3 py-2 text-sm text-gray-900 md:col-span-2"
           style={{ borderColor: '#e5e7eb', background: '#f9fafb' }}
         />
@@ -210,4 +210,3 @@ export default function ReportDeliveryTargetsManager() {
     </div>
   )
 }
-

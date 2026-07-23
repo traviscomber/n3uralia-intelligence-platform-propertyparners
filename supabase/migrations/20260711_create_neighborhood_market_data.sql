@@ -8,9 +8,10 @@ CREATE TABLE IF NOT EXISTS neighborhood_market_data (
   absorption_rate NUMERIC(6, 4),
   inventory_count INTEGER NOT NULL DEFAULT 0,
   avg_days_on_market NUMERIC(8, 2),
-  opportunity_score INTEGER NOT NULL DEFAULT 0,
   data_points INTEGER NOT NULL DEFAULT 0,
   source VARCHAR(100) NOT NULL DEFAULT 'market_data',
+  source_url TEXT,
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -29,4 +30,3 @@ CREATE POLICY "neighborhood_market_data_read_all" ON neighborhood_market_data
 CREATE POLICY "neighborhood_market_data_insert_auth" ON neighborhood_market_data
   FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
-

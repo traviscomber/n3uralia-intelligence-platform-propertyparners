@@ -48,44 +48,8 @@ BEFORE UPDATE ON neighborhoods
 FOR EACH ROW
 EXECUTE FUNCTION update_neighborhoods_timestamp();
 
-INSERT INTO neighborhoods (name, sector_name, geometry, velocity_days, price_per_sqm) VALUES
-('Vitacura Centro', 'Vitacura Centro', 
-  ST_GeomFromText('POLYGON((-70.5935 -33.3834, -70.5915 -33.3834, -70.5915 -33.3854, -70.5935 -33.3854, -70.5935 -33.3834))', 4326),
-  45, 8500.00),
-('Lo Castillo', 'Lo Castillo',
-  ST_GeomFromText('POLYGON((-70.5905 -33.3780, -70.5885 -33.3780, -70.5885 -33.3800, -70.5905 -33.3800, -70.5905 -33.3780))', 4326),
-  38, 9200.00),
-('Villa El Dorado', 'Villa El Dorado',
-  ST_GeomFromText('POLYGON((-70.5960 -33.3750, -70.5940 -33.3750, -70.5940 -33.3770, -70.5960 -33.3770, -70.5960 -33.3750))', 4326),
-  52, 10100.00),
-('Lo Curro', 'Lo Curro',
-  ST_GeomFromText('POLYGON((-70.5875 -33.3820, -70.5855 -33.3820, -70.5855 -33.3840, -70.5875 -33.3840, -70.5875 -33.3820))', 4326),
-  35, 9800.00),
-('Santa Maria de Manquehue', 'Santa Maria de Manquehue',
-  ST_GeomFromText('POLYGON((-70.5845 -33.3850, -70.5825 -33.3850, -70.5825 -33.3870, -70.5845 -33.3870, -70.5845 -33.3850))', 4326),
-  40, 9100.00),
-('Nueva Costanera', 'Nueva Costanera',
-  ST_GeomFromText('POLYGON((-70.6015 -33.3800, -70.5995 -33.3800, -70.5995 -33.3820, -70.6015 -33.3820, -70.6015 -33.3800))', 4326),
-  48, 8300.00),
-('Jardin del Este', 'Jardin del Este',
-  ST_GeomFromText('POLYGON((-70.5820 -33.3900, -70.5800 -33.3900, -70.5800 -33.3920, -70.5820 -33.3920, -70.5820 -33.3900))', 4326),
-  42, 8900.00),
-('Las Hualtatas', 'Las Hualtatas',
-  ST_GeomFromText('POLYGON((-70.5980 -33.3880, -70.5960 -33.3880, -70.5960 -33.3900, -70.5980 -33.3900, -70.5980 -33.3880))', 4326),
-  46, 8600.00),
-('Las Tranqueras', 'Las Tranqueras',
-  ST_GeomFromText('POLYGON((-70.6045 -33.3750, -70.6025 -33.3750, -70.6025 -33.3770, -70.6045 -33.3770, -70.6045 -33.3750))', 4326),
-  50, 8200.00),
-('Luis Pasteur', 'Luis Pasteur',
-  ST_GeomFromText('POLYGON((-70.5890 -33.3900, -70.5870 -33.3900, -70.5870 -33.3920, -70.5890 -33.3920, -70.5890 -33.3900))', 4326),
-  44, 8950.00),
-('Juan XXIII', 'Juan XXIII',
-  ST_GeomFromText('POLYGON((-70.6000 -33.3920, -70.5980 -33.3920, -70.5980 -33.3940, -70.6000 -33.3940, -70.6000 -33.3920))', 4326),
-  47, 8750.00),
-('Estadio Manquehue', 'Estadio Manquehue',
-  ST_GeomFromText('POLYGON((-70.5950 -33.3940, -70.5930 -33.3940, -70.5930 -33.3960, -70.5950 -33.3960, -70.5950 -33.3940))', 4326),
-  49, 8400.00)
-ON CONFLICT (name) DO NOTHING;
+-- No neighborhoods are seeded here. Geometry and metrics must come from the
+-- audited KML and market-source ingestion pipeline.
 
 CREATE TABLE IF NOT EXISTS properties (
   id BIGSERIAL PRIMARY KEY,

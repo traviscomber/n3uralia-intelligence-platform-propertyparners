@@ -192,9 +192,10 @@ export interface NeighborhoodMarketSnapshot {
   absorption_rate: number | null
   inventory_count: number
   avg_days_on_market: number | null
-  opportunity_score: number
   data_points: number
   source: string
+  source_url: string | null
+  recorded_at: string
   created_at: string
 }
 

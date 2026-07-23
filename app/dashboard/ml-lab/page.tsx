@@ -38,7 +38,7 @@ export default function MlLabPage() {
               ['Modelos entrenados', lab.modelVersions],
               ['Modelos aprobados', lab.approvedVersions],
               ['Uso comercial', 'Desactivado'],
-            ].map(([label, value]) => <div key={label} className="bg-[var(--n3-text-light)] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-xl font-semibold">{typeof value === 'number' ? number(value) : value}</p></div>)}
+            ].map(([label, value]) => <div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{typeof value === 'number' ? number(value) : value}</p></div>)}
           </div>
         </div>
         <div className="h-1 bg-[#d7332b]" />

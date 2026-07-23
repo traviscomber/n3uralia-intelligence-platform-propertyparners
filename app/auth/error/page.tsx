@@ -1,4 +1,13 @@
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
+
 export default function AuthErrorPage() {
+  async function returnToLogin() {
+    await createClient().auth.signOut()
+    window.location.href = '/auth/login'
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--n3-black)]">
       <div className="w-full max-w-sm rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-8 text-center shadow-sm">
@@ -9,9 +18,9 @@ export default function AuthErrorPage() {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </div>
-        <h2 className="mb-2 font-semibold text-[var(--n3-text-light)]">Error de autenticacion</h2>
-        <p className="mb-4 text-sm" style={{ color: 'var(--n3-text-muted)' }}>El enlace expiro o no es valido.</p>
-        <a href="/auth/login" className="inline-block rounded px-4 py-2 text-sm font-medium transition-colors hover:opacity-90" style={{ background: 'var(--n3-teal)', color: 'var(--n3-black)' }}>Volver al ingreso</a>
+        <h2 className="mb-2 font-semibold text-[var(--n3-text-light)]">Acceso no habilitado</h2>
+        <p className="mb-4 text-sm" style={{ color: 'var(--n3-text-muted)' }}>El portal interno requiere una invitación administrada y un perfil activo.</p>
+        <button type="button" onClick={returnToLogin} className="inline-block rounded px-4 py-2 text-sm font-medium transition-colors hover:opacity-90" style={{ background: 'var(--n3-teal)', color: 'var(--n3-black)' }}>Cerrar sesión</button>
       </div>
     </div>
   )

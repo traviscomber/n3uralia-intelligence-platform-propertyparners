@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    if (user && isAuthPath && !request.nextUrl.pathname.startsWith('/auth/callback')) {
+    if (user && isAuthPath && !request.nextUrl.pathname.startsWith('/auth/callback') && request.nextUrl.pathname !== '/auth/error') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
@@ -51,10 +51,11 @@ export async function updateSession(request: NextRequest) {
 
     if (user && request.nextUrl.pathname.startsWith('/dashboard')) {
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      const role = profile?.role || user.user_metadata?.role || 'seller'
+      // Unknown or missing roles are rejected by canAccessDashboardPath.
+      const role = profile?.role || user.app_metadata?.role || 'unauthorized'
       if (!canAccessDashboardPath(role, request.nextUrl.pathname)) {
         const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
+        url.pathname = '/auth/error'
         return NextResponse.redirect(url)
       }
     }

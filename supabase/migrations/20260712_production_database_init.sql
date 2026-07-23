@@ -396,33 +396,8 @@ LEFT JOIN properties p ON n.id = p.neighborhood_id
 GROUP BY n.id, n.name, n.sector_name, n.velocity_days, n.absorption_rate, n.price_trend_5yr, n.last_updated
 ORDER BY n.velocity_days ASC;
 
--- ============================================================================
--- SEED DATA - 12 Vitacura neighborhoods
--- ============================================================================
-
-INSERT INTO neighborhoods (name, sector_name, geometry, velocity_days, price_per_sqm, absorption_rate, inventory_count)
-VALUES
-  ('Vitacura Centro', 'Centro', ST_GeomFromText('POLYGON((-70.5935 -33.3834, -70.5915 -33.3834, -70.5915 -33.3854, -70.5935 -33.3854, -70.5935 -33.3834))', 4326), 48, 8500.00, 0.85, 45),
-  ('El Golf', 'Golf', ST_GeomFromText('POLYGON((-70.5905 -33.3780, -70.5885 -33.3780, -70.5885 -33.3800, -70.5905 -33.3800, -70.5905 -33.3780))', 4326), 45, 9200.00, 0.88, 52),
-  ('La Dehesa', 'Dehesa', ST_GeomFromText('POLYGON((-70.5960 -33.3750, -70.5940 -33.3750, -70.5940 -33.3770, -70.5960 -33.3770, -70.5960 -33.3750))', 4326), 55, 7800.00, 0.78, 38),
-  ('Nueva Costanera', 'Costanera', ST_GeomFromText('POLYGON((-70.5875 -33.3820, -70.5855 -33.3820, -70.5855 -33.3840, -70.5875 -33.3840, -70.5875 -33.3820))', 4326), 50, 8900.00, 0.82, 40),
-  ('Costanera Sur', 'Sur', ST_GeomFromText('POLYGON((-70.5845 -33.3850, -70.5825 -33.3850, -70.5825 -33.3870, -70.5845 -33.3870, -70.5845 -33.3850))', 4326), 58, 7500.00, 0.75, 28),
-  ('Cerro San Cristóbal', 'Cerro', ST_GeomFromText('POLYGON((-70.6015 -33.3800, -70.5995 -33.3800, -70.5995 -33.3820, -70.6015 -33.3820, -70.6015 -33.3800))', 4326), 60, 6900.00, 0.70, 22),
-  ('La Florida', 'Florida', ST_GeomFromText('POLYGON((-70.5820 -33.3900, -70.5800 -33.3900, -70.5800 -33.3920, -70.5820 -33.3920, -70.5820 -33.3900))', 4326), 52, 8100.00, 0.80, 35),
-  ('Andrés Bello', 'Bello', ST_GeomFromText('POLYGON((-70.5980 -33.3880, -70.5960 -33.3880, -70.5960 -33.3900, -70.5980 -33.3900, -70.5980 -33.3880))', 4326), 49, 8700.00, 0.84, 48),
-  ('Huérfanos', 'Huérfanos', ST_GeomFromText('POLYGON((-70.6045 -33.3750, -70.6025 -33.3750, -70.6025 -33.3770, -70.6045 -33.3770, -70.6045 -33.3750))', 4326), 65, 6500.00, 0.65, 18),
-  ('Apoquindo Alto', 'Alto', ST_GeomFromText('POLYGON((-70.5890 -33.3900, -70.5870 -33.3900, -70.5870 -33.3920, -70.5890 -33.3920, -70.5890 -33.3900))', 4326), 51, 8300.00, 0.83, 42),
-  ('Alonso de Córdova', 'Córdova', ST_GeomFromText('POLYGON((-70.6000 -33.3920, -70.5980 -33.3920, -70.5980 -33.3940, -70.6000 -33.3940, -70.6000 -33.3920))', 4326), 54, 8000.00, 0.79, 36),
-  ('Manquehue', 'Manquehue', ST_GeomFromText('POLYGON((-70.5950 -33.3940, -70.5930 -33.3940, -70.5930 -33.3960, -70.5950 -33.3960, -70.5950 -33.3940))', 4326), 53, 8200.00, 0.81, 44)
-ON CONFLICT (name) DO NOTHING;
-
--- ============================================================================
--- INITIAL KPI SNAPSHOT
--- ============================================================================
-
-INSERT INTO kpi_snapshots (ventas_count, ventas_uf, captaciones, visitas, leads, comision)
-VALUES (0, 0, 0, 0, 0, 0)
-ON CONFLICT DO NOTHING;
+-- No business data is seeded here. Neighborhoods and KPI snapshots must come
+-- from audited source pipelines.
 
 -- ============================================================================
 -- GRANTS FOR PUBLIC SCHEMA ACCESS

@@ -161,16 +161,16 @@ export default function CeoDashboard() {
               <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gVentas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="var(--n3-teal)" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="var(--n3-teal)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--n3-teal-soft)" stopOpacity={0.95} />
+                    <stop offset="95%" stopColor="var(--n3-teal)" stopOpacity={0.65} />
                   </linearGradient>
                   <linearGradient id="gCaptaciones" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="var(--n3-text-muted)" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="var(--n3-text-muted)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--n3-text-muted)" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="var(--n3-text-muted)" stopOpacity={0.55} />
                   </linearGradient>
                   <linearGradient id="gLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="var(--n3-text-light)" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="var(--n3-text-light)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--n3-text-light)" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="var(--n3-text-light)" stopOpacity={0.5} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--n3-line)" />

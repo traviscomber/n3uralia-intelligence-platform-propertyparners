@@ -44,23 +44,10 @@ export async function PATCH(req: NextRequest) {
     if (existingError) throw existingError
 
     if (!existing) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .upsert(
-          {
-            id: user.id,
-            full_name: updates.full_name ?? user.user_metadata?.full_name ?? user.email ?? null,
-            team: updates.team ?? null,
-            avatar_url: updates.avatar_url ?? null,
-            role: user.user_metadata?.role || 'seller',
-          },
-          { onConflict: 'id' },
-        )
-        .select('*')
-        .single()
-
-      if (error) throw error
-      return NextResponse.json({ profile: data })
+      return NextResponse.json(
+        { error: 'El acceso interno requiere una invitación administrada.' },
+        { status: 403 },
+      )
     }
 
     const { data, error } = await supabase

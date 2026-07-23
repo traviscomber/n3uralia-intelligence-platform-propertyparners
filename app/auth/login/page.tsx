@@ -86,11 +86,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
-            <a href="/auth/sign-up" className="text-xs hover:opacity-80" style={{ color: 'var(--n3-text-muted)' }}>
-              No tienes cuenta? <span className="font-medium" style={{ color: 'var(--n3-teal)' }}>Registrarse</span>
-            </a>
-          </div>
+          <p className="mt-4 text-center text-xs" style={{ color: 'var(--n3-text-muted)' }}>
+            Acceso administrado internamente.
+          </p>
 
           <div className="mt-5 border-t border-[var(--n3-line)] pt-3 text-center text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>
             Powered by{' '}

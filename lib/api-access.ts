@@ -10,7 +10,10 @@ export async function requireRoleAccess(allowedRoles: string[]) {
     .select('role')
     .eq('id', user.id)
     .maybeSingle()
-  const role = profile?.role || user.user_metadata?.role
+  // Authorization must never depend on user_metadata: users can edit it.
+  // The database profile is authoritative; app_metadata is a safe fallback
+  // for invited users whose profile has not been materialized yet.
+  const role = profile?.role || user.app_metadata?.role
   return { allowed: allowedRoles.includes(role), status: 403, userId: user.id, role: role || null }
 }
 

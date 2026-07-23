@@ -11,5 +11,6 @@ export function canAccessDashboardPath(role: DashboardRole, pathname: string) {
   if (role === 'admin' || role === 'ceo') return true
   if (EXECUTIVE_ONLY.some((route) => matches(pathname, route))) return false
   if (role === 'director') return true
+  if (role !== 'seller') return false
   return SELLER_ALLOWED.some((route) => matches(pathname, route))
 }

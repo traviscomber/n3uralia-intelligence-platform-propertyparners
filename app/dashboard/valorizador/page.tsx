@@ -192,9 +192,9 @@ export default function ValorizadorPage() {
           <h2 className="mt-1 text-xl font-semibold">Resultado determinístico</h2>
           {result ? (
             <div className="mt-5 space-y-5">
-              <div className="grid grid-cols-2 gap-px bg-[var(--n3-text-light)]">
-                <div className="bg-[var(--n3-text-light)] p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Valor comercial</p><p className="mt-2 text-2xl font-semibold">{formatUf(result.commercialValueUf)}</p></div>
-                <div className="bg-[var(--n3-text-light)] p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Área ponderada</p><p className="mt-2 text-2xl font-semibold">{result.effectiveAreaM2.toLocaleString('es-CL')} m²</p></div>
+              <div className="grid grid-cols-2 gap-px bg-[var(--n3-line)]">
+                <div className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Valor comercial</p><p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{formatUf(result.commercialValueUf)}</p></div>
+                <div className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Área ponderada</p><p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{result.effectiveAreaM2.toLocaleString('es-CL')} m²</p></div>
               </div>
               <div><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">UF/m² comercial ponderado</p><p className="mt-1 text-xl font-semibold text-[var(--n3-teal-soft)]">{result.commercialWeightedUfM2.toLocaleString('es-CL')} UF/m²</p></div>
               <div className="space-y-2">{result.componentValues.map((component) => <div key={component.label} className="flex justify-between border-b border-[var(--n3-text-light)] pb-2 text-sm"><span className="text-[var(--n3-text-muted)]">{component.label}</span><strong>{formatUf(component.valueUf)}</strong></div>)}</div>

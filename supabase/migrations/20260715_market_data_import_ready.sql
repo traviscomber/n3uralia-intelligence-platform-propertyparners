@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS market_data (
   inventory_count INTEGER NOT NULL DEFAULT 0,
   avg_days_on_market NUMERIC(8, 2),
   source VARCHAR(100) NOT NULL DEFAULT 'market_data',
+  source_url TEXT,
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -20,6 +21,7 @@ ALTER TABLE market_data
   ADD COLUMN IF NOT EXISTS inventory_count INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS avg_days_on_market NUMERIC(8, 2),
   ADD COLUMN IF NOT EXISTS source VARCHAR(100) NOT NULL DEFAULT 'market_data',
+  ADD COLUMN IF NOT EXISTS source_url TEXT,
   ADD COLUMN IF NOT EXISTS recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
@@ -43,4 +45,3 @@ CREATE POLICY market_data_update_auth ON market_data
   FOR UPDATE
   USING (auth.role() = 'authenticated')
   WITH CHECK (auth.role() = 'authenticated');
-

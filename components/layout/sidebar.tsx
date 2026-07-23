@@ -134,8 +134,12 @@ const sellerSections = [
 function NavigationLinks({ items, pathname }: { items: SidebarItem[]; pathname: string }) {
   return <ul className="flex flex-col gap-0.5">{items.map((item) => {
     const isActive = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/')
-    return <li key={item.href}><Link href={item.href} className="flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-all" style={{ color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)', background: isActive ? 'rgba(215,51,43,0.1)' : 'transparent', borderLeft: isActive ? '2px solid var(--n3-teal)' : '2px solid transparent' }}><span style={{ color: isActive ? 'var(--n3-teal)' : 'var(--n3-text-muted)' }}>{item.icon}</span><span className="truncate text-[13px]">{item.label}</span></Link></li>
+    return <li key={item.href}><Link href={item.href} onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')} className="flex items-center gap-2.5 rounded px-3 py-2 text-sm transition-all" style={{ color: isActive ? 'var(--n3-text-light)' : 'var(--n3-text-muted)', background: isActive ? 'rgba(215,51,43,0.1)' : 'transparent', borderLeft: isActive ? '2px solid var(--n3-teal)' : '2px solid transparent' }}><span style={{ color: isActive ? 'var(--n3-teal-soft)' : 'var(--n3-text-muted)' }}>{item.icon}</span><span className="truncate text-[13px]">{item.label}</span></Link></li>
   })}</ul>
+}
+
+function SectionNavigation({ sections, pathname }: { sections: Array<{ label: string; items: SidebarItem[] }>; pathname: string }) {
+  return sections.map((section) => <div key={section.label} className="mb-4"><div className="mb-1 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">{section.label}</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={section.items} pathname={pathname} /></div>)
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
@@ -144,14 +148,26 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   const isDirector = profile?.role === 'director'
   const sections = isExecutive ? ceoSections : isDirector ? directorSections : sellerSections
 
-  return (
-    <aside className="flex h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)]">
+  return <>
+    <details className="group fixed left-0 top-0 z-50 md:hidden">
+      <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] [&::-webkit-details-marker]:hidden">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
+      </summary>
+      <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl">
+        <div className="border-b border-[var(--n3-line)] px-5 py-4"><PPLogo className="w-48" priority /></div>
+        <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-4">
+          <SectionNavigation sections={sections} pathname={pathname} />
+        </nav>
+      </div>
+    </details>
+
+    <aside className="hidden h-full w-56 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)] md:flex">
       <div className="border-b border-[var(--n3-line)] px-4 py-4">
         <PPLogo className="w-full" priority />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {sections.map((section) => <div key={section.label} className="mb-4"><div className="mb-1 flex items-center gap-2 px-3"><span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--n3-text-muted)]">{section.label}</span><div className="h-px flex-1 bg-[var(--n3-line)]" /></div><NavigationLinks items={section.items} pathname={pathname} /></div>)}
+        <SectionNavigation sections={sections} pathname={pathname} />
       </nav>
 
       <div className="border-t border-[var(--n3-line)] px-3 py-3">
@@ -168,11 +184,11 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
         ) : null}
         <div className="mt-3 border-t border-[var(--n3-line)] pt-3 text-[11px] leading-tight" style={{ color: 'var(--n3-text-muted)' }}>
           Powered by{' '}
-          <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium hover:opacity-80" style={{ color: 'var(--n3-teal)' }}>
+          <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium hover:opacity-80" style={{ color: 'var(--n3-teal-soft)' }}>
             N3uralia
           </a>
         </div>
       </div>
     </aside>
-  )
+  </>
 }

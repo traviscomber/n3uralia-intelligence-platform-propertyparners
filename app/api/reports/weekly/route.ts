@@ -274,7 +274,7 @@ async function persistLearningSnapshot(generatedAt: string) {
   return (data || []) as LearningSnapshotRow[]
 }
 
-export async function GET() {
+async function buildWeeklyResponse(persist: boolean) {
   const access = await requireRoleAccess(['admin', 'ceo', 'director'])
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   try {
@@ -291,8 +291,22 @@ export async function GET() {
     const generatedAt = new Date().toISOString()
     const reports = groupWeekly(rows)
     const directors = groupDirectors(rows)
-    const history = await persistWeeklyReports(reports, directors, generatedAt)
-    const learning = await persistLearningSnapshot(generatedAt)
+    const [history, learning] = persist
+      ? await Promise.all([
+          persistWeeklyReports(reports, directors, generatedAt),
+          persistLearningSnapshot(generatedAt),
+        ])
+      : await Promise.all([
+          supabase.from('weekly_reports').select('*').order('generated_at', { ascending: false }).limit(12),
+          supabase.from('pp_ai_learning_snapshots').select('*').order('generated_at', { ascending: false }).limit(6),
+        ]).then(([historyResult, learningResult]) => {
+          if (historyResult.error) throw historyResult.error
+          if (learningResult.error) throw learningResult.error
+          return [
+            (historyResult.data || []) as WeeklyReportRow[],
+            (learningResult.data || []) as LearningSnapshotRow[],
+          ] as const
+        })
 
     return NextResponse.json({
       reports,
@@ -307,4 +321,16 @@ export async function GET() {
       { status: 500 },
     )
   }
+}
+
+// Reading reports is side-effect free.
+export async function GET() {
+  return buildWeeklyResponse(false)
+}
+
+// Generation and persistence are restricted to executive roles.
+export async function POST() {
+  const access = await requireRoleAccess(['admin', 'ceo'])
+  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+  return buildWeeklyResponse(true)
 }

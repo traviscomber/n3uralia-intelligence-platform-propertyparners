@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { benchmarkImportTemplateRows, marketImportTemplateRows } from '@/lib/market-import'
+import { BENCHMARK_IMPORT_TEMPLATE_HEADERS, MARKET_IMPORT_TEMPLATE_HEADERS } from '@/lib/market-import'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,12 +16,8 @@ function getKind(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const kind = getKind(request)
-  const rows = kind === 'benchmark_data' ? benchmarkImportTemplateRows() : marketImportTemplateRows()
-  const headers = Object.keys(rows[0] || {})
-  const csv = [
-    headers.join(','),
-    ...rows.map((row) => headers.map((header) => csvEscape(row[header as keyof typeof row])).join(',')),
-  ].join('\n') + '\n'
+  const headers = kind === 'benchmark_data' ? BENCHMARK_IMPORT_TEMPLATE_HEADERS : MARKET_IMPORT_TEMPLATE_HEADERS
+  const csv = `${headers.map(csvEscape).join(',')}\n`
 
   return new NextResponse(csv, {
     headers: {
@@ -31,4 +27,3 @@ export async function GET(request: NextRequest) {
     },
   })
 }
-

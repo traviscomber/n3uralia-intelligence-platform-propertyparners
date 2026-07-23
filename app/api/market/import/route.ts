@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const normalized = normalizeMarketImportRows(inputRows, sourceLabel)
+    const normalized = normalizeMarketImportRows(inputRows, sourceLabel, snapshotDate)
     const skipped = Math.max(0, inputRows.length - normalized.length)
     const summary = summarizeRows(normalized)
     const preview = normalized.slice(0, 12)
@@ -208,6 +208,9 @@ export async function POST(req: NextRequest) {
       absorption_rate: row.absorption_rate,
       inventory_count: row.inventory_count,
       avg_days_on_market: row.avg_days_on_market,
+      source: row.source,
+      source_url: row.source_url,
+      recorded_at: row.recorded_at,
     }))
 
     const { error: marketError } = await supabase
@@ -225,6 +228,10 @@ export async function POST(req: NextRequest) {
         absorption_rate: row.absorption_rate,
         inventory_count: row.inventory_count,
         avg_days_on_market: row.avg_days_on_market,
+        source: row.source,
+        source_url: row.source_url,
+        recorded_at: row.recorded_at,
+        snapshot_date: row.snapshot_date,
       })),
     )
 

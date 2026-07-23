@@ -7,8 +7,8 @@ import ReportDirectoryManager from '@/components/settings/ReportDirectoryManager
 
 const systemRows = [
   { label: 'Version', value: 'v1.0.0 - Produccion' },
-  { label: 'Motor IA', value: 'N3uralia Intelligence v3' },
-  { label: 'Actualizacion de datos', value: 'Cada 2 horas' },
+  { label: 'Motor analitico', value: 'Reglas y fuentes auditadas' },
+  { label: 'Actualizacion de datos', value: 'Carga manual con validacion' },
   { label: 'Zona horaria', value: 'America/Santiago (UTC-4)' },
   { label: 'Idioma', value: 'Espanol (Chile)' },
 ]
@@ -149,4 +149,3 @@ export default async function SettingsPage() {
     </div>
   )
 }
-

@@ -138,6 +138,19 @@
   outline-offset: 2px;
 }
 
+/* Brand red remains the structural accent. Small copy uses the official
+ * accessible red token so labels and links meet AA on the dark canvas. */
+.dashboard-content :is(
+  [class*="text-[var(--n3-teal)]"][class*="text-[10px]"],
+  [class*="text-[var(--n3-teal)]"][class*="text-[11px]"],
+  [class*="text-[var(--n3-teal)]"][class*="text-xs"],
+  [class*="text-[#d7332b]"][class*="text-[10px]"],
+  [class*="text-[#d7332b]"][class*="text-[11px]"],
+  [class*="text-[#d7332b]"][class*="text-xs"]
+) {
+  color: var(--n3-teal-soft) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dashboard-shell *,
   .dashboard-shell *::before,

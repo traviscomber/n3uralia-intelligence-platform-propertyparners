@@ -41,7 +41,7 @@ export default async function PresentationsPage({ searchParams }: { searchParams
             {[
               ['Presentaciones', data.source.presentationCount], ['Láminas', data.source.slideCount],
               ['Tablas', data.source.contentCoverage.tables], ['Gráficos', data.source.contentCoverage.charts],
-            ].map(([label, value]) => <div key={label} className="bg-[var(--n3-text-light)] p-4"><p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold text-white">{Number(value).toLocaleString('es-CL')}</p></div>)}
+            ].map(([label, value]) => <div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{Number(value).toLocaleString('es-CL')}</p></div>)}
           </div>
         </div>
         <div className="h-1 bg-[#d7332b]" />
@@ -78,7 +78,7 @@ export default async function PresentationsPage({ searchParams }: { searchParams
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1050px] text-left text-xs">
             <thead className="bg-black text-white"><tr><th className="px-4 py-3">Ámbito</th><th>Métrica</th><th>Período</th><th>PPT</th><th>Comparación</th><th>Delta</th><th>Fuente PPT</th><th>Fuente comparada</th></tr></thead>
-            <tbody>{comparisons.map((item, index) => <tr key={`${item.scope}-${item.metric}-${item.period}-${index}`} className="border-t border-[var(--n3-line)] bg-[var(--n3-deep)] align-top"><td className="px-4 py-3 font-semibold">{item.scope}</td><td>{METRICS[item.metric] || item.metric}</td><td>{item.period}</td><td className="font-semibold">{format(item.presentation, item.metric)}</td><td>{format(item.comparison, item.metric)}</td><td className={item.status === 'different' ? 'font-bold text-[#d7332b]' : ''}>{format(item.delta, item.metric)}</td><td>{item.presentationSource.deck} · lámina {item.presentationSource.slide}</td><td className="pr-4">{item.comparisonSource}</td></tr>)}</tbody>
+            <tbody>{comparisons.map((item, index) => <tr key={`${item.scope}-${item.metric}-${item.period}-${index}`} className="border-t border-[var(--n3-line)] bg-[var(--n3-deep)] align-top"><td className="px-4 py-3 font-semibold">{item.scope}</td><td>{METRICS[item.metric] || item.metric}</td><td>{item.period}</td><td className="font-semibold">{format(item.presentation, item.metric)}</td><td>{format(item.comparison, item.metric)}</td><td className={item.status === 'different' ? 'font-bold text-[var(--n3-teal-soft)]' : ''}>{format(item.delta, item.metric)}</td><td>{item.presentationSource.deck} · lámina {item.presentationSource.slide}</td><td className="pr-4">{item.comparisonSource}</td></tr>)}</tbody>
           </table>
         </div>
       </section>

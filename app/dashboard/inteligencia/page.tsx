@@ -86,7 +86,7 @@ export default function CorporateManagementPage() {
               ['Variación UF', percent(crm.ytd.comparison2025.salesUfChangePct)],
               ['Variación cartera', number(crm.ytd.stockChange)],
               ['Alertas críticas', targets.quality.criticalCount],
-            ].map(([label, value]) => <div key={label} className="bg-[var(--n3-text-light)] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>)}
+            ].map(([label, value]) => <div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{value}</p></div>)}
           </div>
         </div>
         <div className="h-1 bg-[#d7332b]" />
@@ -178,7 +178,7 @@ export default function CorporateManagementPage() {
         </article>
         <article className="border border-[var(--n3-line)] bg-[#160d0c] p-5">
           <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--destructive)]">Límites visibles</p><h2 className="mt-2 text-xl font-semibold">Lo que la fuente no permite afirmar</h2></div><Status tone="limit">Límite</Status></div>
-          <ul className="mt-5 space-y-2 text-sm leading-6 text-[var(--n3-deep)]"><li>• Febrero no contiene archivo de visitas; el acumulado semestral permanece no disponible.</li><li>• Los ratios mensuales no representan conversión de cohorte.</li><li>• Las diferencias CRM/PPT se conservan por corte y definición.</li><li>• El caso histórico de valorización no constituye validación predictiva.</li></ul>
+          <ul className="mt-5 space-y-2 text-sm leading-6 text-[var(--n3-text-muted)]"><li>• Febrero no contiene archivo de visitas; el acumulado semestral permanece no disponible.</li><li>• Los ratios mensuales no representan conversión de cohorte.</li><li>• Las diferencias CRM/PPT se conservan por corte y definición.</li><li>• El caso histórico de valorización no constituye validación predictiva.</li></ul>
         </article>
       </section>
 
@@ -188,7 +188,7 @@ export default function CorporateManagementPage() {
         ].map(([href, label]) => <Link key={href} href={href} className="border border-white/20 bg-[var(--n3-deep)]/5 px-3 py-2 text-xs font-semibold hover:bg-[var(--n3-deep)]/10">{label}</Link>)}</div></div>
         <div className="mt-5 grid gap-px bg-[var(--n3-deep)]/15 sm:grid-cols-3">{[
           ['Hecho', 'Valor leído directamente de una fuente auditada.'], ['Relación observada', 'Cálculo reproducible; no implica causalidad.'], ['Límite', 'Ausencia, diferencia o restricción que permanece visible.'],
-        ].map(([label, detail]) => <div key={label} className="bg-[var(--n3-text-light)] p-4"><p className="text-xs font-semibold">{label}</p><p className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{detail}</p></div>)}</div>
+        ].map(([label, detail]) => <div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-xs font-semibold text-[var(--n3-text-light)]">{label}</p><p className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{detail}</p></div>)}</div>
       </section>
     </div>
   )

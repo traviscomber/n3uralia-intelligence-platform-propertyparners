@@ -338,25 +338,12 @@ export default function MarketImportPage() {
             </p>
             <div className="mt-4 rounded-lg bg-slate-950 p-4 text-xs text-slate-100">
               <div className="mb-2 font-semibold text-slate-300">POST /api/market/import</div>
-              <pre className="overflow-auto whitespace-pre-wrap leading-5">{`{
-  "mode": "import",
-  "kind": "benchmark_data",
-  "source": "claude_code_pipeline",
-  "snapshot_date": "2026-07-15",
-  "rows": [
-    {
-      "source": "portal_inmobiliario_benchmark",
-      "source_url": "https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana",
-      "neighborhood": "Vitacura",
-      "listing_title": "Casas en venta en Vitacura",
-      "offer_count": 120,
-      "low_price_clp": 320000000,
-      "high_price_clp": 1450000000,
-      "price_currency": "CLP",
-      "recorded_at": "2026-07-15T00:00:00.000Z"
-    }
-  ]
-}`}</pre>
+              <pre className="overflow-auto whitespace-pre-wrap leading-5">{`POST /api/market/import
+Campos obligatorios para benchmark:
+source, source_url, neighborhood, recorded_at
+
+Use primero mode=preview. Solo cambie a mode=import
+después de verificar la fuente y el corte.`}</pre>
             </div>
           </div>
 

@@ -147,8 +147,16 @@ function toIsoDateTime(value: unknown, fallback = new Date()) {
   return fallback.toISOString()
 }
 
-export function normalizeMarketImportRows(rows: MarketImportInputRow[], fallbackSource = 'market_intelligence_import') {
+export function normalizeMarketImportRows(
+  rows: MarketImportInputRow[],
+  fallbackSource = 'market_intelligence_import',
+  fallbackSnapshotDate?: string,
+) {
   const now = new Date()
+  const requestedSnapshotDate = fallbackSnapshotDate
+    ? new Date(`${fallbackSnapshotDate}T00:00:00.000Z`)
+    : now
+  const snapshotFallback = Number.isNaN(requestedSnapshotDate.getTime()) ? now : requestedSnapshotDate
 
   const normalized = rows
     .map((row) => {
@@ -167,7 +175,7 @@ export function normalizeMarketImportRows(rows: MarketImportInputRow[], fallback
         source,
         source_url: toStringValue(pickValue(row, FIELD_ALIASES.source_url)) || null,
         recorded_at: toIsoDateTime(pickValue(row, FIELD_ALIASES.recorded_at), now),
-        snapshot_date: toIsoDate(pickValue(row, FIELD_ALIASES.snapshot_date), now),
+        snapshot_date: toIsoDate(pickValue(row, FIELD_ALIASES.snapshot_date), snapshotFallback),
       } satisfies NormalizedMarketImportRow
     })
     .filter((row): row is NormalizedMarketImportRow => Boolean(row))
@@ -196,22 +204,18 @@ export function parseMarketImportBuffer(buffer: Buffer, filename: string) {
   return rows
 }
 
-export function marketImportTemplateRows() {
-  return [
-    {
-      neighborhood: 'Vitacura Centro',
-      avg_price_uf: 8500,
-      avg_price_m2_uf: 112.5,
-      absorption_rate: 0.85,
-      inventory_count: 45,
-      avg_days_on_market: 48,
-      source: 'claude_code_pipeline',
-      source_url: 'https://example.com/fuente',
-      recorded_at: new Date().toISOString(),
-      snapshot_date: new Date().toISOString().slice(0, 10),
-    },
-  ]
-}
+export const MARKET_IMPORT_TEMPLATE_HEADERS = [
+  'neighborhood',
+  'avg_price_uf',
+  'avg_price_m2_uf',
+  'absorption_rate',
+  'inventory_count',
+  'avg_days_on_market',
+  'source',
+  'source_url',
+  'recorded_at',
+  'snapshot_date',
+] as const
 
 export function normalizeBenchmarkImportRows(rows: MarketImportInputRow[], fallbackSource = 'market_intelligence_import') {
   const now = new Date()
@@ -245,18 +249,14 @@ export function normalizeBenchmarkImportRows(rows: MarketImportInputRow[], fallb
     .filter((row): row is NormalizedBenchmarkImportRow => Boolean(row))
 }
 
-export function benchmarkImportTemplateRows() {
-  return [
-    {
-      source: 'portal_inmobiliario_benchmark',
-      source_url: 'https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana',
-      neighborhood: 'Vitacura',
-      listing_title: 'Casas en venta en Vitacura',
-      offer_count: 120,
-      low_price_clp: 320000000,
-      high_price_clp: 1450000000,
-      price_currency: 'CLP',
-      recorded_at: new Date().toISOString(),
-    },
-  ]
-}
+export const BENCHMARK_IMPORT_TEMPLATE_HEADERS = [
+  'source',
+  'source_url',
+  'neighborhood',
+  'listing_title',
+  'offer_count',
+  'low_price_clp',
+  'high_price_clp',
+  'price_currency',
+  'recorded_at',
+] as const

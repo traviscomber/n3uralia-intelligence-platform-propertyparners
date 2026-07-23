@@ -42,8 +42,8 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
   const dateLabel = isAudited ? cutoffLabel : `Fecha de consulta: ${consultationDate}`
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--n3-line)] bg-[var(--n3-black)] px-6 py-4">
-      <p className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>{dateLabel}</p>
+    <header className="sticky top-0 z-40 flex min-h-14 items-center justify-between gap-2 border-b border-[var(--n3-line)] bg-[var(--n3-black)] py-3 pl-16 pr-3 md:px-6 md:py-4">
+      <p className="hidden text-xs sm:block" style={{ color: 'var(--n3-text-muted)' }}>{dateLabel}</p>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 rounded-full border border-[var(--n3-line)] px-2.5 py-1 text-xs" style={{ background: 'rgba(255,255,255,0.04)', color: provenance.color }}>
           <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: provenance.color }} />
