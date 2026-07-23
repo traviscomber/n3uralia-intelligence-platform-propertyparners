@@ -361,5 +361,40 @@ export type ExecutiveDecision = {
 export function buildExecutiveDecisionFeed(
   audience: IntelligenceAudience = 'ceo'
 ): ExecutiveDecision[] {
-  return []
+  const context = buildN3uraliaIntelligenceContext(audience)
+  const priorityRank: Record<ExecutiveDecision['priority'], number> = {
+    high: 0,
+    medium: 1,
+    low: 2,
+  }
+  const confidenceRank: Record<ExecutiveDecision['confidence'], number> = {
+    high: 0,
+    medium: 1,
+    low: 2,
+  }
+
+  return context.actions
+    .map((item): ExecutiveDecision => {
+      const evidenceIds = new Set(item.evidenceIds)
+      const relatedSignal = context.signals.find((signal) =>
+        signal.evidenceIds.some((evidenceId) => evidenceIds.has(evidenceId)),
+      ) ?? context.signals.find((signal) => signal.domain === item.domain)
+
+      const confidence: ExecutiveDecision['confidence'] = relatedSignal?.confidence
+        ?? (item.evidenceIds.length > 0 ? 'medium' : 'low')
+
+      return {
+        id: item.id,
+        priority: item.priority,
+        action: item.action,
+        subject: item.title,
+        reason: item.rationale,
+        href: item.href,
+        confidence,
+      }
+    })
+    .sort((left, right) =>
+      priorityRank[left.priority] - priorityRank[right.priority]
+      || confidenceRank[left.confidence] - confidenceRank[right.confidence],
+    )
 }
