@@ -357,3 +357,9 @@ export type ExecutiveDecision = {
   href: string
   confidence: 'high' | 'medium' | 'low'
 }
+
+export function buildExecutiveDecisionFeed(
+  audience: IntelligenceAudience = 'ceo'
+): ExecutiveDecision[] {
+  return []
+}
