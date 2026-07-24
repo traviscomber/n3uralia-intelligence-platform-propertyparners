@@ -1,19 +1,25 @@
 'use client'
 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
-import { buildAgentFallbackRows, buildOperationalSeries, getLatestLeadSnapshot, getOperationalSummary, getYtdSummary } from '@/lib/crm-snapshot'
+import { buildOperationalSeries, getLatestLeadSnapshot, getOperationalSummary, getYtdSummary } from '@/lib/crm-snapshot'
 import { getTargetSource } from '@/lib/targets-2026'
+import { getManagementEntities } from '@/lib/presentations-2026'
 
 type StatusKey = 'on_track' | 'warning' | 'behind' | 'inactive'
 
 const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: string }> = {
-  on_track: { label: 'En Meta',  bg: 'var(--n3-deep)', color: 'var(--success)' },
-  warning:  { label: 'Atención', bg: 'var(--accent)', color: 'var(--warning)' },
-  behind:   { label: 'En Riesgo',bg: 'var(--accent)', color: 'var(--destructive)' },
+  on_track: { label: 'En Meta',  bg: 'var(--n3-deep)', color: 'var(--success, #4ade80)' },
+  warning:  { label: 'Atenci\u00f3n', bg: 'var(--accent)', color: 'var(--warning, #fbbf24)' },
+  behind:   { label: 'En Riesgo', bg: 'var(--accent)', color: 'var(--destructive, #f87171)' },
   inactive: { label: 'Sin meta', bg: 'var(--n3-black)', color: 'var(--n3-text-muted)' },
 }
 
-function fmt(n: number) { return n.toLocaleString('es-CL') }
+function statusFromCompliance(pct: number | null): StatusKey {
+  if (pct == null) return 'inactive'
+  if (pct >= 100) return 'on_track'
+  if (pct >= 70) return 'warning'
+  return 'behind'
+}
 
 function KpiCard({ label, value, sub, border }: { label: string; value: string; sub?: string; border: string }) {
   return (
@@ -27,12 +33,31 @@ function KpiCard({ label, value, sub, border }: { label: string; value: string; 
 
 export default function DirectorDashboard() {
   const fallbackSummary = getOperationalSummary()
-  const agents = buildAgentFallbackRows()
   const chartData = buildOperationalSeries(6).map(({ mes, ventas, captaciones }) => ({ mes, ventas, captaciones }))
   const leadSnapshot = getLatestLeadSnapshot()
   const ytd = getYtdSummary()
   const targets = getTargetSource()
   const suspensionRate = Number(((fallbackSummary.suspended / Math.max(1, fallbackSummary.stock)) * 100).toFixed(1))
+
+  // Real partner data from presentations-2026.json
+  const { partners } = getManagementEntities()
+  const agents = partners.map((p) => {
+    const cumTarget = (p.salesSummary as any).cumulativeTargetSalesCount ?? null
+    const cumActual = p.salesSummary.cumulativeSalesCount
+    const pct = cumTarget && cumTarget > 0 ? Math.round((cumActual / cumTarget) * 100) : null
+    const captures = ytd.capturesByAgent.find((e) => e.label.toLowerCase().includes(p.name.toLowerCase().split(' ')[0]))?.count ?? 0
+    return {
+      id: p.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-'),
+      name: p.name,
+      team: p.branch ?? 'Vitacura',
+      ventas: cumActual,
+      captaciones: captures,
+      conversion: p.scores.conversion != null ? Number(p.scores.conversion.toFixed(1)) : null,
+      velocidad: null,
+      status: statusFromCompliance(pct),
+      compliancePct: pct,
+    }
+  }).sort((a, b) => b.ventas - a.ventas)
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ background: 'var(--n3-black)' }}>
@@ -46,7 +71,7 @@ export default function DirectorDashboard() {
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--n3-text-light)' }}>
             Gestión comercial validada
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--n3-text-muted)' }}>Panel lado captador · {agents.length} agentes con cierres validados</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--n3-text-muted)' }}>Panel comercial · {agents.length} partners · 3 sucursales · Enero–Junio 2026</p>
         </div>
         <div className="flex items-center gap-3 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-4 py-3" style={{ border: '1px solid var(--n3-line)' }}>
           <div className="text-right"><div className="text-[11px] uppercase tracking-wider" style={{ color: 'var(--n3-text-muted)' }}>Metas 2026</div><div className="text-sm font-bold" style={{ color: 'var(--n3-teal)' }}>{targets.cellCoverage.workbookCount} sucursales cargadas</div><div className="text-[10px] text-[var(--n3-text-muted)]">{targets.quality.criticalCount} incidencias críticas visibles</div></div>
@@ -74,12 +99,12 @@ export default function DirectorDashboard() {
         <div className="overflow-hidden border border-[var(--n3-line)] bg-[var(--n3-deep)] xl:col-span-3" style={{ border: '1px solid var(--n3-line)' }}>
           <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--n3-line)' }}>
             <h2 className="text-sm font-semibold" style={{ color: 'var(--n3-text-light)' }}>Desempeño del lado captador</h2>
-            <span className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>6 meses · {agents.length} agentes</span>
+            <span className="text-xs" style={{ color: 'var(--n3-text-muted)' }}>Enero–Junio · {agents.length} partners · fuente: presentaciones</span>
           </div>
-          <div className="overflow-x-auto"><table className="min-w-[760px] w-full text-sm">
+          <div className="overflow-x-auto"><table className="min-w-[900px] w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--n3-black)' }}>
-                {['Agente','Cierres capt.','Captac.','Conv.','Veloc.','Estado'].map(h => (
+                {['Agente','Sucursal','Cierres acum.','Captac.','Conv.','Cumpl.','Estado'].map(h => (
                   <th key={h} className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider ${h === 'Agente' ? 'text-left' : 'text-right'}`} style={{ color: 'var(--n3-text-muted)' }}>{h}</th>
                 ))}
               </tr>
@@ -95,12 +120,17 @@ export default function DirectorDashboard() {
                         <span className="text-[13px] font-medium" style={{ color: 'var(--n3-text-light)' }}>{a.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px] font-semibold" style={{ color: 'var(--n3-text-light)' }}>{a.ventas}</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>{a.team}</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px] font-semibold" style={{ color: 'var(--n3-text-light)' }}>{a.ventas.toLocaleString('es-CL', { maximumFractionDigits: 1 })}</span></td>
                     <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: 'var(--n3-text-light)' }}>{a.captaciones}</span></td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: 'var(--n3-text-muted)' }}>{a.conversion === null ? 'n/d' : `${a.conversion}%`}</span></td>
-                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: 'var(--n3-text-muted)' }}>{a.velocidad === null ? 'n/d' : `${a.velocidad}d`}</span></td>
+                    <td className="px-4 py-3.5 text-right"><span className="text-[13px]" style={{ color: 'var(--n3-text-muted)' }}>{a.conversion === null ? 'n/d' : `${a.conversion}`}</span></td>
                     <td className="px-4 py-3.5 text-right">
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>
+                      <span className="text-[13px] font-semibold" style={{ color: s.color }}>
+                        {a.compliancePct != null ? `${a.compliancePct}%` : '—'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      <span className="text-[11px] font-semibold px-2 py-0.5" style={{ color: s.color, border: `1px solid ${s.color}` }}>{s.label}</span>
                     </td>
                   </tr>
                 )

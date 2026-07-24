@@ -1,0 +1,10 @@
+{
+  "criterios_evaluacion": [
+    "Precio por m²",
+    "Velocidad de venta por zona",
+    "Tipo de propiedad",
+    "Ubicación y accesibilidad",
+    "Condiciones de mercado"
+  ],
+  "metodologia": "Análisis multi-factor según ubicación, tipo de propiedad, condiciones de mercado"
+}
