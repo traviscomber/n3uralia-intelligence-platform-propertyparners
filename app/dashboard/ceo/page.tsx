@@ -40,6 +40,12 @@ export default function CeoDashboard() {
   const attributedBranchUf = branches.reduce((sum, branch) => sum + branch.actualUf, 0)
   const maxBranchSales = Math.max(...branches.map((branch) => branch.actualSales), 1)
   const executiveCases = buildExecutiveCases('ceo')
+  const blockedCases = executiveCases.filter((item) => item.readiness === 'blocked')
+  const readyCases = executiveCases.filter((item) => item.readiness === 'ready_for_validation')
+  const pendingHumanCases = executiveCases.filter((item) => item.validationStatus === 'pending_human_validation')
+  const validatedCases = executiveCases.filter((item) => item.status === 'validated')
+  const closedCases = executiveCases.filter((item) => item.status === 'closed')
+  const totalOpenQuestions = executiveCases.reduce((sum, item) => sum + item.openQuestionCount, 0)
   const executiveContext = buildN3uraliaIntelligenceContext('ceo')
   const criticalIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'critical')
   const warningIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'warning')
@@ -61,9 +67,73 @@ export default function CeoDashboard() {
         <SectionHeading
           eyebrow="01 · Executive Cases"
           title="Casos ejecutivos prioritarios"
-          description="Casos ordenados por prioridad y confianza, con recomendación, preguntas abiertas, evidencia, estado de validación e historial trazable."
+          description="Pipeline operativo con casos ordenados por prioridad, readiness, confianza y estado de validación humana."
         />
-        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+
+        <div className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-6">
+          {[
+            ['Generados', executiveCases.length, 'Casos activos en el pipeline.'],
+            ['Bloqueados', blockedCases.length, 'Mantienen preguntas abiertas.'],
+            ['Listos', readyCases.length, 'Preparados para validación.'],
+            ['Validación humana', pendingHumanCases.length, 'Esperando decisión explícita.'],
+            ['Validados', validatedCases.length, 'Aprobados por una persona.'],
+            ['Cerrados', closedCases.length, 'Con resultado documentado.'],
+          ].map(([label, value, note]) => (
+            <div key={String(label)} className="bg-[#0c1111] p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--n3-text-light)]">{value}</p>
+              <p className="mt-1 text-[10px] leading-4 text-[var(--n3-text-muted)]">{note}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-4 xl:grid-cols-3">
+          {[
+            {
+              title: 'Necesitan atención',
+              description: `${blockedCases.length} casos bloqueados · ${totalOpenQuestions} preguntas abiertas`,
+              cases: blockedCases,
+              accent: 'border-[#d7332b]',
+              text: 'text-[#ff766f]',
+              empty: 'No hay casos bloqueados.',
+            },
+            {
+              title: 'Esperando validación humana',
+              description: `${pendingHumanCases.length} casos requieren responsable y decisión`,
+              cases: pendingHumanCases,
+              accent: 'border-amber-500/60',
+              text: 'text-amber-300',
+              empty: 'No hay validaciones humanas pendientes.',
+            },
+            {
+              title: 'Listos para validar',
+              description: `${readyCases.length} casos sin preguntas abiertas`,
+              cases: readyCases,
+              accent: 'border-emerald-500/60',
+              text: 'text-emerald-300',
+              empty: 'Todavía no hay casos listos para validación.',
+            },
+          ].map((column) => (
+            <div key={column.title} className={`border bg-[#0c1111] p-5 ${column.accent}`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${column.text}`}>Executive Inbox</p>
+              <h3 className="mt-2 text-lg font-semibold text-[var(--n3-text-light)]">{column.title}</h3>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{column.description}</p>
+              <div className="mt-4 space-y-2">
+                {column.cases.length > 0 ? column.cases.slice(0, 4).map((item) => (
+                  <Link key={item.id} href={item.href} className="flex items-center justify-between gap-3 border border-[var(--n3-line)] bg-[#080d0d] p-3 transition hover:border-[var(--n3-teal-soft)]">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-[var(--n3-text-light)]">{item.subject}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">{item.openQuestionCount} preguntas abiertas · confianza {item.confidence}</p>
+                    </div>
+                    <ArrowRight size={14} className="shrink-0 text-[var(--n3-text-muted)]" />
+                  </Link>
+                )) : <p className="border border-dashed border-[var(--n3-line)] p-3 text-xs text-[var(--n3-text-muted)]">{column.empty}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {executiveCases.map((executiveCase, index) => {
             const sourceAction = executiveContext.actions.find((item) => item.id === executiveCase.decisionId)
             const evidenceIds = new Set(sourceAction?.evidenceIds ?? [])
@@ -85,6 +155,12 @@ export default function CeoDashboard() {
               : executiveCase.validationStatus === 'rejected'
                 ? 'border-red-500/50 text-red-300'
                 : 'border-amber-500/50 text-amber-300'
+            const readinessLabel = executiveCase.readiness === 'blocked'
+              ? `Bloqueado · ${executiveCase.openQuestionCount} abiertas`
+              : 'Listo para validación'
+            const readinessClass = executiveCase.readiness === 'blocked'
+              ? 'border-[#d7332b] text-[#ff766f]'
+              : 'border-emerald-500/50 text-emerald-300'
 
             return (
               <article
@@ -105,6 +181,9 @@ export default function CeoDashboard() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
+                  <div className={`inline-flex w-fit items-center border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${readinessClass}`}>
+                    {readinessLabel}
+                  </div>
                   <div className={`inline-flex w-fit items-center border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${validationClass}`}>
                     {validationLabel}
                   </div>
@@ -322,7 +401,7 @@ export default function CeoDashboard() {
       <section>
         <SectionHeading eyebrow="Methodology" title="Regla ejecutiva" />
         <MethodologyNote>
-          Esta vista reúne indicadores de módulos distintos, pero no los mezcla en un score único. Ventas, metas, stock, leads y calidad de fuentes conservan universos, períodos y reglas propias. Los casos ejecutivos deben resolver sus preguntas abiertas y abrir el módulo correspondiente cuando requieran detalle o validación.
+          Esta vista reúne indicadores de módulos distintos, pero no los mezcla en un score único. Un caso bloqueado mantiene al menos una pregunta abierta; solamente un caso sin preguntas abiertas puede quedar listo para validación humana. Ventas, metas, stock, leads y calidad de fuentes conservan universos, períodos y reglas propias.
         </MethodologyNote>
       </section>
 
