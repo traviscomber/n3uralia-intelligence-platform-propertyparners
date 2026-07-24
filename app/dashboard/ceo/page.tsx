@@ -4,21 +4,16 @@ import Link from 'next/link'
 import { AlertTriangle, ArrowRight, BarChart3, Building2, FileText, ShieldCheck, Target, TrendingUp } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary, CRM_INTELLIGENCE } from '@/lib/crm-snapshot'
-import { getBranchSalesYtdPerformance, getCompanySalesCompliance } from '@/lib/targets-2026'
+import { getBranchSalesYtdPerformance } from '@/lib/targets-2026'
+import { buildExecutiveDecisionFeed } from '@/lib/n3uralia-intelligence-engine'
 import {
   IntelligenceHeader,
   IntelligencePage,
   IntelligencePanel,
   MethodologyNote,
-  MetricCard,
-  MetricGrid,
   RankedRow,
   SectionHeading,
 } from '@/components/intelligence/design-system'
-
-function fmt(value: number) {
-  return value.toLocaleString('es-CL')
-}
 
 function compactUf(value: number) {
   if (value <= 0) return 'n/d'
@@ -31,13 +26,12 @@ export default function CeoDashboard() {
   const branches = getBranchSalesYtdPerformance('2026-06')
   const ytd = getYtdSummary()
   const dataQuality = getDataQuality()
-  const salesCompliance = getCompanySalesCompliance('2026-06')
   const januaryStock = operational.stock - ytd.stockChange
   const stockRetention = januaryStock > 0 ? Number(((operational.stock / januaryStock) * 100).toFixed(1)) : null
   const attributedBranchSales = branches.reduce((sum, branch) => sum + branch.actualSales, 0)
   const attributedBranchUf = branches.reduce((sum, branch) => sum + branch.actualUf, 0)
   const maxBranchSales = Math.max(...branches.map((branch) => branch.actualSales), 1)
-  const ceoActions = CRM_INTELLIGENCE.actions.ceo
+  const executiveDecisions = buildExecutiveDecisionFeed('ceo')
   const criticalIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'critical')
   const warningIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'warning')
 
@@ -55,28 +49,42 @@ export default function CeoDashboard() {
       />
 
       <section>
-        <SectionHeading eyebrow="Executive Pulse" title="Estado general del negocio" description="Indicadores consolidados desde CRM, metas y fuentes auditadas. No forman un índice sintético." />
-        <MetricGrid>
-          <MetricCard label="Ventas acumuladas" value={fmt(ytd.salesCount)} detail={`${compactUf(ytd.salesUf)} de volumen validado.`} />
-          <MetricCard label="Cumplimiento de cierres" value={`${salesCompliance.compliance}%`} detail="Cierres CRM frente a la meta acumulada compatible." />
-          <MetricCard label="Cobertura de fuentes" value={`${dataQuality.sourceCoverage}%`} detail="Datasets mensuales presentes frente a los esperados." />
-          <MetricCard label="Cierres / leads junio" value={`${operational.leadToSaleProxy}%`} detail="Proxy mensual; no representa conversión de cohorte." />
-        </MetricGrid>
-      </section>
-
-      <section>
-        <SectionHeading eyebrow="01 · Executive Actions" title="Qué debería hacer esta semana" description="Acciones priorizadas desde evidencia operacional existente; no son recomendaciones generadas sin respaldo." />
-        <div className="grid gap-4 lg:grid-cols-3">
-          {ceoActions.map((item) => (
-            <article key={item.title} className={`border bg-[#0c1111] p-5 ${item.priority === 'high' ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}>
-              <div className="flex items-center justify-between gap-3">
-                <Target size={18} className={item.priority === 'high' ? 'text-[#ff766f]' : 'text-[var(--n3-teal-soft)]'} />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{item.priority === 'high' ? 'Prioridad alta' : item.priority === 'medium' ? 'Prioridad media' : 'Seguimiento'}</span>
+        <SectionHeading
+          eyebrow="01 · Executive Decision Feed"
+          title="Decisiones prioritarias"
+          description="Acciones ordenadas por prioridad y confianza a partir de evidencia, señales e inferencias declaradas por el motor de inteligencia."
+        />
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {executiveDecisions.map((decision, index) => (
+            <Link
+              key={decision.id}
+              href={decision.href}
+              className={`group flex min-h-[260px] flex-col border bg-[#0c1111] p-5 transition hover:border-[#ff766f] ${decision.priority === 'high' ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{String(index + 1).padStart(2, '0')}</span>
+                  <Target size={18} className={decision.priority === 'high' ? 'text-[#ff766f]' : 'text-[var(--n3-teal-soft)]'} />
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">
+                    {decision.priority === 'high' ? 'Prioridad alta' : decision.priority === 'medium' ? 'Prioridad media' : 'Seguimiento'}
+                  </p>
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Confianza {decision.confidence}</p>
+                </div>
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-[var(--n3-text-light)]">{item.title}</h3>
-              <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{item.evidence}</p>
-              <div className="mt-4 flex gap-2 border-t border-[var(--n3-line)] pt-4 text-xs font-semibold text-[var(--n3-text-light)]"><ArrowRight size={15} className="mt-0.5 shrink-0 text-[#ff766f]" />{item.action}</div>
-            </article>
+
+              <h3 className="mt-5 text-xl font-semibold text-[var(--n3-text-light)]">{decision.subject}</h3>
+              <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{decision.reason}</p>
+
+              <div className="mt-auto border-t border-[var(--n3-line)] pt-4">
+                <div className="flex gap-2 text-sm font-semibold leading-5 text-[var(--n3-text-light)]">
+                  <ArrowRight size={16} className="mt-0.5 shrink-0 text-[#ff766f] transition group-hover:translate-x-1" />
+                  <span>{decision.action}</span>
+                </div>
+                <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Abrir evidencia y contexto</p>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
