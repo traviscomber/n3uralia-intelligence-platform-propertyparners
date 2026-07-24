@@ -6,7 +6,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary, CRM_INTELLIGENCE } from '@/lib/crm-snapshot'
 import { getBranchSalesYtdPerformance } from '@/lib/targets-2026'
 import { buildExecutiveCases } from '@/lib/executive-cases'
+import { buildExecutiveDecisionGraph } from '@/lib/executive-decision-graph'
 import { buildN3uraliaIntelligenceContext } from '@/lib/n3uralia-intelligence-engine'
+import { ExecutiveDecisionGraphView } from '@/components/intelligence/executive-decision-graph'
 import {
   IntelligenceHeader,
   IntelligencePage,
@@ -40,6 +42,7 @@ export default function CeoDashboard() {
   const attributedBranchUf = branches.reduce((sum, branch) => sum + branch.actualUf, 0)
   const maxBranchSales = Math.max(...branches.map((branch) => branch.actualSales), 1)
   const executiveCases = buildExecutiveCases('ceo')
+  const executiveGraph = buildExecutiveDecisionGraph('ceo')
   const blockedCases = executiveCases.filter((item) => item.readiness === 'blocked')
   const readyCases = executiveCases.filter((item) => item.readiness === 'ready_for_validation')
   const pendingHumanCases = executiveCases.filter((item) => item.validationStatus === 'pending_human_validation')
@@ -131,6 +134,10 @@ export default function CeoDashboard() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-5">
+          <ExecutiveDecisionGraphView graph={executiveGraph} />
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
