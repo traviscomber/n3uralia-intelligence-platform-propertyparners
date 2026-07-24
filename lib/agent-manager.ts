@@ -1,47 +1,57 @@
 export type AgentType =
+  | 'directorio'
   | 'ceo'
-  | 'market'
-  | 'risk'
-  | 'board'
-  | 'document'
-  | 'data'
+  | 'director_unidad'
+  | 'ejecutiva'
+  | 'mercado'
+  | 'riesgo'
+  | 'documental'
+  | 'datos'
 
 export type AgentTask = {
-  question: string
-  requiredAgent: AgentType
-  reason: string
+  pregunta: string
+  agenteRequerido: AgentType
+  razon: string
 }
 
-export function selectAgent(question: string): AgentTask {
-  const text = question.toLowerCase()
+export function seleccionarAgente(pregunta: string): AgentTask {
+  const texto = pregunta.toLowerCase()
 
-  if (text.includes('mercado')) {
+  if (texto.includes('mercado')) {
     return {
-      question,
-      requiredAgent: 'market',
-      reason: 'Market intelligence required.',
+      pregunta,
+      agenteRequerido: 'mercado',
+      razon: 'Se requiere inteligencia de mercado.',
     }
   }
 
-  if (text.includes('riesgo')) {
+  if (texto.includes('riesgo')) {
     return {
-      question,
-      requiredAgent: 'risk',
-      reason: 'Risk analysis required.',
+      pregunta,
+      agenteRequerido: 'riesgo',
+      razon: 'Se requiere análisis preventivo.',
     }
   }
 
-  if (text.includes('documento')) {
+  if (texto.includes('sucursal') || texto.includes('unidad')) {
     return {
-      question,
-      requiredAgent: 'document',
-      reason: 'Document knowledge required.',
+      pregunta,
+      agenteRequerido: 'director_unidad',
+      razon: 'Se requiere inteligencia de unidad.',
+    }
+  }
+
+  if (texto.includes('directorio') || texto.includes('board')) {
+    return {
+      pregunta,
+      agenteRequerido: 'directorio',
+      razon: 'Se requiere preparación ejecutiva para directorio.',
     }
   }
 
   return {
-    question,
-    requiredAgent: 'ceo',
-    reason: 'Executive reasoning required.',
+    pregunta,
+    agenteRequerido: 'ceo',
+    razon: 'Se requiere razonamiento ejecutivo.',
   }
 }
