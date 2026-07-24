@@ -1,13 +1,16 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { CheckCircle2, CircleHelp, FileSearch, Flag, Lightbulb, Radio, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CheckCircle2, CircleHelp, FileSearch, Flag, Lightbulb, Radio, ShieldCheck } from 'lucide-react'
 import type { EvidenceTimelineEvent } from '@/lib/executive-decision-graph'
 import type { ExecutiveCase } from '@/lib/executive-cases'
 
 type Props = {
   cases: ExecutiveCase[]
   events: EvidenceTimelineEvent[]
+  selectedCaseId: string
+  onSelectCase: (caseId: string) => void
 }
 
 const stageMeta = {
@@ -23,29 +26,28 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
-export function EvidenceTimeline({ cases, events }: Props) {
-  const [caseId, setCaseId] = useState(cases[0]?.id ?? '')
+export function EvidenceTimeline({ cases, events, selectedCaseId, onSelectCase }: Props) {
   const [stage, setStage] = useState<'all' | EvidenceTimelineEvent['stage']>('all')
-  const selectedCase = cases.find((item) => item.id === caseId)
+  const selectedCase = cases.find((item) => item.id === selectedCaseId)
   const visible = useMemo(
     () => events
-      .filter((event) => event.caseId === caseId && (stage === 'all' || event.stage === stage))
+      .filter((event) => event.caseId === selectedCaseId && (stage === 'all' || event.stage === stage))
       .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime()),
-    [caseId, events, stage],
+    [events, selectedCaseId, stage],
   )
 
   return (
-    <div className="border border-[var(--n3-line)] bg-[#0c1111]">
+    <div id="executive-evidence-timeline" className="border border-[var(--n3-line)] bg-[#0c1111]">
       <div className="border-b border-[var(--n3-line)] p-5">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">Evidence Timeline</p>
         <div className="mt-2 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <h3 className="text-xl font-semibold text-[var(--n3-text-light)]">Expediente auditable de decisiones</h3>
-            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Evidencia, preguntas, validación humana y resultados conservados en secuencia trazable.</p>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Evidencia, preguntas, validación humana y resultados conservados en una secuencia trazable y reutilizable.</p>
           </div>
           <label className="min-w-72 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
             Caso ejecutivo
-            <select value={caseId} onChange={(event) => setCaseId(event.target.value)} className="mt-2 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-2 text-xs normal-case tracking-normal text-[var(--n3-text-light)] outline-none">
+            <select value={selectedCaseId} onChange={(event) => onSelectCase(event.target.value)} className="mt-2 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-2 text-xs normal-case tracking-normal text-[var(--n3-text-light)] outline-none">
               {cases.map((item) => <option key={item.id} value={item.id}>{item.subject}</option>)}
             </select>
           </label>
@@ -73,6 +75,7 @@ export function EvidenceTimeline({ cases, events }: Props) {
                 <CheckCircle2 size={15} className={selectedCase.status === 'closed' ? 'text-emerald-300' : 'text-[var(--n3-text-muted)]'} />
                 <span>Resultado {selectedCase.outcome.status}</span>
               </div>
+              <Link href={selectedCase.href} className="inline-flex items-center gap-2 pt-2 font-semibold text-[#ff766f]">Abrir expediente completo <ArrowRight size={14} /></Link>
             </div>
           )}
         </aside>
@@ -95,7 +98,10 @@ export function EvidenceTimeline({ cases, events }: Props) {
                         <time className="text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">{formatDate(event.occurredAt)}</time>
                       </div>
                       <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{event.detail}</p>
-                      <p className="mt-3 border-t border-[var(--n3-line)] pt-3 text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">Fuente · {event.source}</p>
+                      <div className="mt-3 flex flex-col gap-2 border-t border-[var(--n3-line)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">Fuente · {event.source}</p>
+                        {selectedCase && <Link href={selectedCase.href} className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#ff766f]">Abrir evidencia <ArrowRight size={12} /></Link>}
+                      </div>
                     </div>
                   </li>
                 )
