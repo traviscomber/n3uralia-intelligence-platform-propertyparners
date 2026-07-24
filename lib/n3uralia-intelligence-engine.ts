@@ -348,6 +348,11 @@ export function getN3uraliaDomainContext(domain: IntelligenceDomain, audience: I
   }
 }
 
+export type ExecutiveDecisionValidationStatus =
+  | 'pending_human_validation'
+  | 'validated'
+  | 'rejected'
+
 export type ExecutiveDecision = {
   id: string
   priority: 'high' | 'medium' | 'low'
@@ -356,6 +361,7 @@ export type ExecutiveDecision = {
   reason: string
   href: string
   confidence: 'high' | 'medium' | 'low'
+  validationStatus: ExecutiveDecisionValidationStatus
 }
 
 export function buildExecutiveDecisionFeed(
@@ -391,6 +397,7 @@ export function buildExecutiveDecisionFeed(
         reason: item.rationale,
         href: item.href,
         confidence,
+        validationStatus: 'pending_human_validation',
       }
     })
     .sort((left, right) =>
