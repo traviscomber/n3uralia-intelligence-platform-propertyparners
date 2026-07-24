@@ -38,13 +38,7 @@ export function IntelligenceHeader({
             {actions.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {actions.map((action) => (
-                  <Link
-                    key={action.href}
-                    href={action.href}
-                    className={action.primary
-                      ? 'border border-[#d7332b] bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#b72a24]'
-                      : 'border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold text-[var(--n3-text-light)] transition hover:border-[#d7332b]'}
-                  >
+                  <Link key={action.href} href={action.href} className={action.primary ? 'border border-[#d7332b] bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#b72a24]' : 'border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold text-[var(--n3-text-light)] transition hover:border-[#d7332b]'}>
                     {action.label}
                   </Link>
                 ))}
@@ -57,12 +51,13 @@ export function IntelligenceHeader({
   )
 }
 
-export function SectionHeading({ eyebrow, title, action }: { eyebrow: string; title: string; action?: ReactNode }) {
+export function SectionHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">{eyebrow}</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em]">{title}</h2>
+        {description ? <p className="mt-2 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}
       </div>
       {action}
     </div>
@@ -84,19 +79,7 @@ export function MetricCard({ label, value, detail }: { label: string; value: Rea
   )
 }
 
-export function IntelligencePanel({
-  eyebrow,
-  title,
-  description,
-  children,
-  critical = false,
-}: {
-  eyebrow: string
-  title: string
-  description?: string
-  children?: ReactNode
-  critical?: boolean
-}) {
+export function IntelligencePanel({ eyebrow, title, description, children, critical = false }: { eyebrow: string; title: string; description?: string; children?: ReactNode; critical?: boolean }) {
   return (
     <article className={critical ? 'border border-[#d7332b] bg-[#160d0c]' : 'border border-[var(--n3-line)] bg-[#0c1111]'}>
       <div className={children ? 'border-b border-[var(--n3-line)] p-5' : 'p-6'}>
