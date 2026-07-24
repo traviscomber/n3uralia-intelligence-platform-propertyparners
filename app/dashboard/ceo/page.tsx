@@ -5,7 +5,7 @@ import { AlertTriangle, ArrowRight, BarChart3, Building2, FileText, ShieldCheck,
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary, CRM_INTELLIGENCE } from '@/lib/crm-snapshot'
 import { getBranchSalesYtdPerformance } from '@/lib/targets-2026'
-import { buildExecutiveDecisionFeed } from '@/lib/n3uralia-intelligence-engine'
+import { buildExecutiveDecisionFeed, buildN3uraliaIntelligenceContext } from '@/lib/n3uralia-intelligence-engine'
 import {
   IntelligenceHeader,
   IntelligencePage,
@@ -32,6 +32,7 @@ export default function CeoDashboard() {
   const attributedBranchUf = branches.reduce((sum, branch) => sum + branch.actualUf, 0)
   const maxBranchSales = Math.max(...branches.map((branch) => branch.actualSales), 1)
   const executiveDecisions = buildExecutiveDecisionFeed('ceo')
+  const executiveContext = buildN3uraliaIntelligenceContext('ceo')
   const criticalIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'critical')
   const warningIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'warning')
 
@@ -55,37 +56,87 @@ export default function CeoDashboard() {
           description="Acciones ordenadas por prioridad y confianza a partir de evidencia, señales e inferencias declaradas por el motor de inteligencia."
         />
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          {executiveDecisions.map((decision, index) => (
-            <Link
-              key={decision.id}
-              href={decision.href}
-              className={`group flex min-h-[260px] flex-col border bg-[#0c1111] p-5 transition hover:border-[#ff766f] ${decision.priority === 'high' ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{String(index + 1).padStart(2, '0')}</span>
-                  <Target size={18} className={decision.priority === 'high' ? 'text-[#ff766f]' : 'text-[var(--n3-teal-soft)]'} />
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">
-                    {decision.priority === 'high' ? 'Prioridad alta' : decision.priority === 'medium' ? 'Prioridad media' : 'Seguimiento'}
-                  </p>
-                  <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Confianza {decision.confidence}</p>
-                </div>
-              </div>
+          {executiveDecisions.map((decision, index) => {
+            const sourceAction = executiveContext.actions.find((item) => item.id === decision.id)
+            const evidenceIds = new Set(sourceAction?.evidenceIds ?? [])
+            const relatedEvidence = executiveContext.evidence.filter((item) => evidenceIds.has(item.id))
+            const relatedRisks = executiveContext.risks.filter((risk) =>
+              risk.domain === sourceAction?.domain
+              || risk.evidenceIds.some((evidenceId) => evidenceIds.has(evidenceId)),
+            )
+            const changeCondition = relatedEvidence.length === 0
+              ? 'La recomendación debe revisarse cuando exista evidencia externa o interna adicional para este dominio.'
+              : 'La recomendación puede cambiar si se actualizan los datos fuente, el período analizado o la atribución de los registros.'
 
-              <h3 className="mt-5 text-xl font-semibold text-[var(--n3-text-light)]">{decision.subject}</h3>
-              <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{decision.reason}</p>
-
-              <div className="mt-auto border-t border-[var(--n3-line)] pt-4">
-                <div className="flex gap-2 text-sm font-semibold leading-5 text-[var(--n3-text-light)]">
-                  <ArrowRight size={16} className="mt-0.5 shrink-0 text-[#ff766f] transition group-hover:translate-x-1" />
-                  <span>{decision.action}</span>
+            return (
+              <article
+                key={decision.id}
+                className={`flex min-h-[300px] flex-col border bg-[#0c1111] p-5 ${decision.priority === 'high' ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{String(index + 1).padStart(2, '0')}</span>
+                    <Target size={18} className={decision.priority === 'high' ? 'text-[#ff766f]' : 'text-[var(--n3-teal-soft)]'} />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">
+                      {decision.priority === 'high' ? 'Prioridad alta' : decision.priority === 'medium' ? 'Prioridad media' : 'Seguimiento'}
+                    </p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Confianza {decision.confidence}</p>
+                  </div>
                 </div>
-                <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Abrir evidencia y contexto</p>
-              </div>
-            </Link>
-          ))}
+
+                <h3 className="mt-5 text-xl font-semibold text-[var(--n3-text-light)]">{decision.subject}</h3>
+                <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{decision.reason}</p>
+
+                <div className="mt-5 border-t border-[var(--n3-line)] pt-4">
+                  <div className="flex gap-2 text-sm font-semibold leading-5 text-[var(--n3-text-light)]">
+                    <ArrowRight size={16} className="mt-0.5 shrink-0 text-[#ff766f]" />
+                    <span>{decision.action}</span>
+                  </div>
+                </div>
+
+                <details className="mt-5 border-t border-[var(--n3-line)] pt-4 text-xs text-[var(--n3-text-muted)]">
+                  <summary className="cursor-pointer font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-light)]">Ver trazabilidad</summary>
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <p className="font-semibold text-[var(--n3-text-light)]">Evidencia utilizada</p>
+                      {relatedEvidence.length > 0 ? (
+                        <ul className="mt-2 space-y-2">
+                          {relatedEvidence.map((evidence) => (
+                            <li key={evidence.id} className="border-l border-[var(--n3-teal-soft)] pl-3">
+                              <span className="font-semibold text-[var(--n3-text-light)]">{evidence.label}:</span> {evidence.value ?? 'n/d'}
+                              <span className="block text-[10px]">{evidence.source}{evidence.period ? ` · ${evidence.period}` : ''}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : <p className="mt-2">No hay evidencia directa vinculada; la decisión se apoya en una señal de contexto que requiere validación adicional.</p>}
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-[var(--n3-text-light)]">Riesgos asociados</p>
+                      {relatedRisks.length > 0 ? (
+                        <ul className="mt-2 space-y-2">
+                          {relatedRisks.slice(0, 3).map((risk) => (
+                            <li key={risk.id}><span className="font-semibold text-[#ff766f]">{risk.title}:</span> {risk.detail}</li>
+                          ))}
+                        </ul>
+                      ) : <p className="mt-2">No se identificaron riesgos específicos adicionales para esta decisión.</p>}
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-[var(--n3-text-light)]">Qué podría cambiar esta recomendación</p>
+                      <p className="mt-2">{changeCondition}</p>
+                    </div>
+                  </div>
+                </details>
+
+                <Link href={decision.href} className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#ff766f]">
+                  Abrir evidencia y contexto <ArrowRight size={14} />
+                </Link>
+              </article>
+            )
+          })}
         </div>
       </section>
 
