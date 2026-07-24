@@ -1,0 +1,327 @@
+{
+  "metadata": {
+    "empresa": "Property Partners Group",
+    "version": "1.0",
+    "fecha": "2026-07-24T22:34:46.935Z",
+    "generado_por": "N3uralia Data Ingestion Pipeline"
+  },
+  "presentations": {
+    "empresa": {
+      "nombre": "Property Partners Group",
+      "fundacion": 2018,
+      "rut": "77357401-4",
+      "email": "info@ppartnersgroup.com",
+      "vision": "Ser la plataforma inmobiliaria más inteligente e innovadora de Latinoamérica",
+      "mision": "Transformar el mercado inmobiliario con tecnología de IA y data intelligence",
+      "industria": "Real Estate Technology & Corretaje Inmobiliario",
+      "ubicacion_principal": "Santiago, Chile"
+    },
+    "estrategia": {
+      "objetivo_principal": "Posicionarse como IA principal en real estate de LatAm",
+      "pilares": [
+        {
+          "nombre": "Inteligencia Artificial",
+          "descripcion": "N3uralia como motor de decisiones de la empresa",
+          "iniciativas": [
+            "Agentes IA por rol",
+            "Análisis predictivo",
+            "Automatización CRM"
+          ]
+        },
+        {
+          "nombre": "Expansión Geográfica",
+          "descripcion": "De Vitacura a 5 regiones de Chile",
+          "iniciativas": [
+            "Nuevas oficinas",
+            "Equipos locales",
+            "Partnerships regionales"
+          ]
+        },
+        {
+          "nombre": "Tecnología",
+          "descripcion": "Plataforma integrada (web + IA + data)",
+          "iniciativas": [
+            "Dashboard real-time",
+            "Predicción de precios",
+            "CRM automático"
+          ]
+        }
+      ],
+      "presupuesto_anual": 1500000,
+      "roi_esperado": 3.2
+    },
+    "presentaciones": [
+      {
+        "titulo": "Estrategia 2026 - Pedro Ferrer",
+        "fecha": "2026-01-15",
+        "audiencia": "Equipo ejecutivo",
+        "temas": [
+          "Visión IA",
+          "Expansión",
+          "N3uralia como diferenciador"
+        ]
+      },
+      {
+        "titulo": "N3uralia Intelligence Platform",
+        "fecha": "2026-02-01",
+        "audiencia": "Directores",
+        "temas": [
+          "Dashboards",
+          "Agentes IA",
+          "KPIs reales"
+        ]
+      }
+    ],
+    "fecha_generacion": "2026-07-24T22:34:32.462Z",
+    "version": "1.0"
+  },
+  "targets": {
+    "empresa": "Property Partners Group",
+    "objetivos": [
+      {
+        "nombre": "Inteligencia Artificial",
+        "descripcion": "N3uralia como motor de decisiones de la empresa",
+        "iniciativas": [
+          "Agentes IA por rol",
+          "Análisis predictivo",
+          "Automatización CRM"
+        ]
+      },
+      {
+        "nombre": "Expansión Geográfica",
+        "descripcion": "De Vitacura a 5 regiones de Chile",
+        "iniciativas": [
+          "Nuevas oficinas",
+          "Equipos locales",
+          "Partnerships regionales"
+        ]
+      },
+      {
+        "nombre": "Tecnología",
+        "descripcion": "Plataforma integrada (web + IA + data)",
+        "iniciativas": [
+          "Dashboard real-time",
+          "Predicción de precios",
+          "CRM automático"
+        ]
+      }
+    ],
+    "kpis": {
+      "ventas": {
+        "meta_mensual_min": 15000,
+        "meta_anual": 180000,
+        "distribucion": {
+          "vitacura": 0.4,
+          "la_dehesa": 0.35,
+          "el_bosque": 0.25
+        }
+      },
+      "conversion": {
+        "leads_a_visita": 0.15,
+        "visita_a_oferta": 0.45,
+        "oferta_a_cierre": 0.3,
+        "target_general": 0.02
+      },
+      "velocidad": {
+        "dias_en_mercado_target": 35,
+        "comision_promedio": 2.5
+      },
+      "equipo": {
+        "agents_target": 9,
+        "retention_rate": 0.95,
+        "productivity_per_agent": 2000
+      }
+    },
+    "presupuesto": 1500000,
+    "roi_esperado": 3.2,
+    "directores": [
+      {
+        "id": "d0000000-0000-0000-0000-000000000001",
+        "nombre": "Juan Morales",
+        "equipo": "Equipo Alpha",
+        "region": "Vitacura",
+        "agentes": [
+          "Sofía Ramos",
+          "Diego Herrera"
+        ],
+        "meta_ventas_anual": 240000,
+        "kpi_conversion": 9.5
+      },
+      {
+        "id": "d0000000-0000-0000-0000-000000000002",
+        "nombre": "María García",
+        "equipo": "Equipo Beta",
+        "region": "La Dehesa",
+        "agentes": [
+          "Valentina Torres",
+          "Andrés Muñoz"
+        ],
+        "meta_ventas_anual": 210000,
+        "kpi_conversion": 8.8
+      },
+      {
+        "id": "d0000000-0000-0000-0000-000000000003",
+        "nombre": "Carlos López",
+        "equipo": "Equipo Gamma",
+        "region": "El Bosque",
+        "agentes": [
+          "Camila Pérez",
+          "Matías Silva"
+        ],
+        "meta_ventas_anual": 180000,
+        "kpi_conversion": 7.9
+      }
+    ],
+    "fecha_generacion": "2026-07-24T22:34:32.465Z",
+    "version": "1.0"
+  },
+  "crm": {
+    "empresa": "Property Partners Group",
+    "estructura": {
+      "ceo": {
+        "id": "09e1d747-5e3d-4e78-8cbb-829eafaa3e02",
+        "nombre": "Pedro Pablo Ferrer",
+        "email": "pedro.ferrer@ppartnersgroup.com",
+        "rol": "CEO",
+        "responsabilidades": [
+          "Visión estratégica",
+          "Relaciones clave",
+          "Decisiones críticas"
+        ]
+      },
+      "directores": [
+        {
+          "id": "d0000000-0000-0000-0000-000000000001",
+          "nombre": "Juan Morales",
+          "equipo": "Equipo Alpha",
+          "region": "Vitacura",
+          "agentes": [
+            "Sofía Ramos",
+            "Diego Herrera"
+          ],
+          "meta_ventas_anual": 240000,
+          "kpi_conversion": 9.5
+        },
+        {
+          "id": "d0000000-0000-0000-0000-000000000002",
+          "nombre": "María García",
+          "equipo": "Equipo Beta",
+          "region": "La Dehesa",
+          "agentes": [
+            "Valentina Torres",
+            "Andrés Muñoz"
+          ],
+          "meta_ventas_anual": 210000,
+          "kpi_conversion": 8.8
+        },
+        {
+          "id": "d0000000-0000-0000-0000-000000000003",
+          "nombre": "Carlos López",
+          "equipo": "Equipo Gamma",
+          "region": "El Bosque",
+          "agentes": [
+            "Camila Pérez",
+            "Matías Silva"
+          ],
+          "meta_ventas_anual": 180000,
+          "kpi_conversion": 7.9
+        }
+      ]
+    },
+    "clientes": [
+      {
+        "nombre": "Clientes Corporativos",
+        "tipo": "Empresas",
+        "volumen": "Alto",
+        "frecuencia": "Mensual",
+        "valor_promedio": 5000000
+      },
+      {
+        "nombre": "Inversionistas Individuales",
+        "tipo": "Personas",
+        "volumen": "Medio",
+        "frecuencia": "Trimestral",
+        "valor_promedio": 1500000
+      }
+    ],
+    "kpis_equipo": {
+      "agents_target": 9,
+      "retention_rate": 0.95,
+      "productivity_per_agent": 2000
+    },
+    "fecha_generacion": "2026-07-24T22:34:32.465Z",
+    "version": "1.0"
+  },
+  "market": {
+    "empresa": "Property Partners Group",
+    "mercado": {
+      "zonas_operacion": [
+        "Vitacura",
+        "La Dehesa",
+        "El Bosque",
+        "Las Condes"
+      ],
+      "competencia": [
+        "Colliers",
+        "Cushman & Wakefield",
+        "Jones Lang LaSalle"
+      ],
+      "ventaja_competitiva": "IA + Data Intelligence + Agentes especializados",
+      "tendencias_mercado": [
+        "Aumento demanda por inteligencia de mercado",
+        "Transacciones digitales en aumento",
+        "Valoración por datos, no solo intuición"
+      ]
+    },
+    "zonas": [
+      "Vitacura",
+      "La Dehesa",
+      "El Bosque",
+      "Las Condes"
+    ],
+    "competencia": [
+      "Colliers",
+      "Cushman & Wakefield",
+      "Jones Lang LaSalle"
+    ],
+    "ventaja_diferenciador": "IA + Data Intelligence + Agentes especializados",
+    "tendencias": [
+      "Aumento demanda por inteligencia de mercado",
+      "Transacciones digitales en aumento",
+      "Valoración por datos, no solo intuición"
+    ],
+    "fecha_generacion": "2026-07-24T22:34:32.465Z",
+    "version": "1.0"
+  },
+  "valuation": {
+    "empresa": "Property Partners Group",
+    "modelo_valuation": {
+      "zonas": [
+        {
+          "zona": "Vitacura",
+          "precio_m2_promedio": 8500,
+          "velocidad_dias": 32
+        },
+        {
+          "zona": "La Dehesa",
+          "precio_m2_promedio": 9200,
+          "velocidad_dias": 28
+        },
+        {
+          "zona": "El Bosque",
+          "precio_m2_promedio": 7800,
+          "velocidad_dias": 38
+        }
+      ],
+      "comision_promedio": 2.5,
+      "criterios": [
+        "ubicación",
+        "antigüedad",
+        "superficie",
+        "amenidades"
+      ]
+    },
+    "fecha_generacion": "2026-07-24T22:34:32.465Z",
+    "version": "1.0"
+  }
+}

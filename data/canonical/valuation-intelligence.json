@@ -1,0 +1,31 @@
+{
+  "empresa": "Property Partners Group",
+  "modelo_valuation": {
+    "zonas": [
+      {
+        "zona": "Vitacura",
+        "precio_m2_promedio": 8500,
+        "velocidad_dias": 32
+      },
+      {
+        "zona": "La Dehesa",
+        "precio_m2_promedio": 9200,
+        "velocidad_dias": 28
+      },
+      {
+        "zona": "El Bosque",
+        "precio_m2_promedio": 7800,
+        "velocidad_dias": 38
+      }
+    ],
+    "comision_promedio": 2.5,
+    "criterios": [
+      "ubicación",
+      "antigüedad",
+      "superficie",
+      "amenidades"
+    ]
+  },
+  "fecha_generacion": "2026-07-24T22:34:32.465Z",
+  "version": "1.0"
+}

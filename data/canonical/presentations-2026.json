@@ -1,0 +1,70 @@
+{
+  "empresa": {
+    "nombre": "Property Partners Group",
+    "fundacion": 2018,
+    "rut": "77357401-4",
+    "email": "info@ppartnersgroup.com",
+    "vision": "Ser la plataforma inmobiliaria más inteligente e innovadora de Latinoamérica",
+    "mision": "Transformar el mercado inmobiliario con tecnología de IA y data intelligence",
+    "industria": "Real Estate Technology & Corretaje Inmobiliario",
+    "ubicacion_principal": "Santiago, Chile"
+  },
+  "estrategia": {
+    "objetivo_principal": "Posicionarse como IA principal en real estate de LatAm",
+    "pilares": [
+      {
+        "nombre": "Inteligencia Artificial",
+        "descripcion": "N3uralia como motor de decisiones de la empresa",
+        "iniciativas": [
+          "Agentes IA por rol",
+          "Análisis predictivo",
+          "Automatización CRM"
+        ]
+      },
+      {
+        "nombre": "Expansión Geográfica",
+        "descripcion": "De Vitacura a 5 regiones de Chile",
+        "iniciativas": [
+          "Nuevas oficinas",
+          "Equipos locales",
+          "Partnerships regionales"
+        ]
+      },
+      {
+        "nombre": "Tecnología",
+        "descripcion": "Plataforma integrada (web + IA + data)",
+        "iniciativas": [
+          "Dashboard real-time",
+          "Predicción de precios",
+          "CRM automático"
+        ]
+      }
+    ],
+    "presupuesto_anual": 1500000,
+    "roi_esperado": 3.2
+  },
+  "presentaciones": [
+    {
+      "titulo": "Estrategia 2026 - Pedro Ferrer",
+      "fecha": "2026-01-15",
+      "audiencia": "Equipo ejecutivo",
+      "temas": [
+        "Visión IA",
+        "Expansión",
+        "N3uralia como diferenciador"
+      ]
+    },
+    {
+      "titulo": "N3uralia Intelligence Platform",
+      "fecha": "2026-02-01",
+      "audiencia": "Directores",
+      "temas": [
+        "Dashboards",
+        "Agentes IA",
+        "KPIs reales"
+      ]
+    }
+  ],
+  "fecha_generacion": "2026-07-24T22:34:32.462Z",
+  "version": "1.0"
+}
