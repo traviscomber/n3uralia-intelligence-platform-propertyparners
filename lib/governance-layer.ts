@@ -1,7 +1,7 @@
 export type UserRole =
   | 'board_director'
   | 'ceo'
-  | 'account_director'
+  | 'unit_director'
   | 'executive'
 
 export type GovernanceAction = {
@@ -12,10 +12,18 @@ export type GovernanceAction = {
   approvedBy?: string
 }
 
+// Official N3uralia hierarchy:
+// Board Director (owners/directorio)
+//        ↓
+// CEO (Pedro)
+//        ↓
+// Unit / Branch Directors
+//        ↓
+// Executives
 const roleHierarchy: Record<UserRole, number> = {
   board_director: 4,
   ceo: 3,
-  account_director: 2,
+  unit_director: 2,
   executive: 1,
 }
 
@@ -24,6 +32,21 @@ export function canApprove(
   requiredRole: UserRole
 ) {
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole]
+}
+
+export function canAccessScope(
+  role: UserRole,
+  scope: 'company' | 'unit' | 'assigned'
+) {
+  if (scope === 'company') {
+    return role === 'board_director' || role === 'ceo'
+  }
+
+  if (scope === 'unit') {
+    return role !== 'executive'
+  }
+
+  return true
 }
 
 export function createAuditRecord(input: {
