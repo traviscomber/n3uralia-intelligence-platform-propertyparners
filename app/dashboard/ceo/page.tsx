@@ -61,7 +61,7 @@ export default function CeoDashboard() {
         <SectionHeading
           eyebrow="01 · Executive Cases"
           title="Casos ejecutivos prioritarios"
-          description="Casos ordenados por prioridad y confianza, con recomendación, evidencia, estado de validación e historial trazable."
+          description="Casos ordenados por prioridad y confianza, con recomendación, preguntas abiertas, evidencia, estado de validación e historial trazable."
         />
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {executiveCases.map((executiveCase, index) => {
@@ -137,6 +137,23 @@ export default function CeoDashboard() {
                           </li>
                         ))}
                       </ol>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-[var(--n3-text-light)]">Preguntas abiertas</p>
+                      <ul className="mt-2 space-y-2">
+                        {executiveCase.openQuestions.map((question) => (
+                          <li key={question.id} className="border-l border-amber-500/60 pl-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="font-semibold text-[var(--n3-text-light)]">{question.question}</span>
+                              <span className={`shrink-0 text-[9px] font-semibold uppercase tracking-[0.12em] ${question.status === 'answered' ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                {question.status === 'answered' ? 'Respondida' : 'Abierta'}
+                              </span>
+                            </div>
+                            <span className="mt-1 block text-[10px] leading-4">{question.rationale}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
 
                     <div>
@@ -305,7 +322,7 @@ export default function CeoDashboard() {
       <section>
         <SectionHeading eyebrow="Methodology" title="Regla ejecutiva" />
         <MethodologyNote>
-          Esta vista reúne indicadores de módulos distintos, pero no los mezcla en un score único. Ventas, metas, stock, leads y calidad de fuentes conservan universos, períodos y reglas propias. Los casos ejecutivos deben abrir el módulo correspondiente cuando requieran detalle o validación.
+          Esta vista reúne indicadores de módulos distintos, pero no los mezcla en un score único. Ventas, metas, stock, leads y calidad de fuentes conservan universos, períodos y reglas propias. Los casos ejecutivos deben resolver sus preguntas abiertas y abrir el módulo correspondiente cuando requieran detalle o validación.
         </MethodologyNote>
       </section>
 
