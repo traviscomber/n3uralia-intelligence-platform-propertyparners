@@ -67,6 +67,16 @@ export default function CeoDashboard() {
             const changeCondition = relatedEvidence.length === 0
               ? 'La recomendación debe revisarse cuando exista evidencia externa o interna adicional para este dominio.'
               : 'La recomendación puede cambiar si se actualizan los datos fuente, el período analizado o la atribución de los registros.'
+            const validationLabel = decision.validationStatus === 'validated'
+              ? 'Validada'
+              : decision.validationStatus === 'rejected'
+                ? 'Rechazada'
+                : 'Pendiente de validación humana'
+            const validationClass = decision.validationStatus === 'validated'
+              ? 'border-emerald-500/50 text-emerald-300'
+              : decision.validationStatus === 'rejected'
+                ? 'border-red-500/50 text-red-300'
+                : 'border-amber-500/50 text-amber-300'
 
             return (
               <article
@@ -84,6 +94,10 @@ export default function CeoDashboard() {
                     </p>
                     <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Confianza {decision.confidence}</p>
                   </div>
+                </div>
+
+                <div className={`mt-4 inline-flex w-fit items-center border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${validationClass}`}>
+                  {validationLabel}
                 </div>
 
                 <h3 className="mt-5 text-xl font-semibold text-[var(--n3-text-light)]">{decision.subject}</h3>
