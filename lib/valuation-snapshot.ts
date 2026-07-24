@@ -28,11 +28,12 @@ export function getValuationSnapshot(): ValuationEvidence[] {
   // Extract methodology evidence
   if (Object.keys(methodology).length > 0) {
     const methodKeys = Object.keys(methodology)
+    const scopeTypes = scope.propertyTypes as string[] | undefined
     evidence.push({
       id: `valuation-model-${Date.now()}`,
       type: 'valuation_model',
       domain: 'valuation',
-      propertyType: scope.primaryPropertyTypes?.[0] || 'residential',
+      propertyType: scopeTypes?.[0] || 'residential',
       title: 'Modelo de valuación deterministico',
       summary: `Modelo de valuación con ${methodKeys.length} componentes clave: ${methodKeys.slice(0, 3).join(', ')}`,
       detail: `Metodología de valuación con enfoque deterministico. Incluye: ${methodKeys.join(', ')}. Aplicable a ${scope.commune || 'todas las propiedades'}`,
@@ -47,22 +48,24 @@ export function getValuationSnapshot(): ValuationEvidence[] {
   }
 
   // Extract template case evidence
-  if (templateCase.propertyType && templateCase.inputs) {
-    const inputKeys = Object.keys(templateCase.inputs as Record<string, unknown>)
+  const templateSubject = (templateCase as any)?.subject
+  if (templateSubject?.propertyType || templateCase) {
+    const caseKeys = Object.keys(templateCase)
+    const propType = templateSubject?.propertyType || 'residential'
     evidence.push({
       id: `valuation-template-${Date.now()}`,
       type: 'valuation_model',
       domain: 'valuation',
-      propertyType: templateCase.propertyType as string,
-      title: `Caso template de valuación: ${templateCase.propertyType}`,
-      summary: `Caso ejemplo para ${templateCase.propertyType} con ${inputKeys.length} variables de entrada`,
-      detail: `Caso template que ilustra aplicación de modelo para ${templateCase.propertyType}. Variables: ${inputKeys.slice(0, 5).join(', ')}. Incluye validación de resultado y rango de confianza.`,
+      propertyType: propType,
+      title: `Caso template de valuación: ${propType}`,
+      summary: `Caso ejemplo para ${propType} con ${caseKeys.length} componentes`,
+      detail: `Caso template que ilustra aplicación de modelo para ${propType}. Componentes: ${caseKeys.slice(0, 5).join(', ')}. Incluye validación de resultado y rango de confianza.`,
       confidence: 'high',
       sourceClass: 'client_evidence',
       sourceId: 'valuation-intelligence.json#templateCase',
       timestamp: now,
       metrics: {
-        inputVariables: inputKeys.length,
+        components: caseKeys.length,
       },
     })
   }
@@ -119,8 +122,8 @@ export function getValuationSnapshot(): ValuationEvidence[] {
   }
 
   // Extract scope evidence
-  const scopeZones = scope.zones as string[] | undefined
-  const scopeTypes = scope.primaryPropertyTypes as string[] | undefined
+  const scopeZones = (scope as any).zones as string[] | undefined
+  const scopeTypes = scope.propertyTypes as string[] | undefined
   if (scope.commune || scopeZones?.length) {
     evidence.push({
       id: `valuation-scope-${Date.now()}`,

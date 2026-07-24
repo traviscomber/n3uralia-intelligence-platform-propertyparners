@@ -47,21 +47,21 @@ export function getMarketSnapshot(): MarketEvidence[] {
   }
 
   // Extract evidence from workbooks (Excel sources)
-  workbooks.forEach((wb) => {
-    const wbName = wb.name || 'Workbook'
-    const sheetCount = wb.sheets?.length || 0
+  workbooks.forEach((wb: any) => {
+    const wbFile = wb.file || 'Workbook'
+    const sheetCount = wb.sheetCount || wb.sheets?.length || 0
 
     if (sheetCount > 0) {
       evidence.push({
-        id: `market-workbook-${wb.name?.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        id: `market-workbook-${wbFile.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
         type: 'market_signal',
         domain: 'market',
-        title: `Datos de mercado: ${wbName}`,
+        title: `Datos de mercado: ${wbFile}`,
         summary: `${sheetCount} hojas de datos inmobiliarios con información de precios, transacciones y tendencias`,
-        detail: `Libro de trabajo: ${wbName}. Contiene ${sheetCount} hojas con datos actualizados de mercado inmobiliario. Fuente: ${wb.source || 'datos internos'}`,
+        detail: `Libro de trabajo: ${wbFile}. Contiene ${sheetCount} hojas con datos de mercado inmobiliario. Fuente: ${wb.sourceRole || 'datos internos'}`,
         confidence: 'high',
         sourceClass: 'client_evidence',
-        sourceId: `workbook:${wb.name}`,
+        sourceId: `workbook:${wbFile}`,
         timestamp: now,
         metrics: {
           sheetCount,
@@ -71,25 +71,24 @@ export function getMarketSnapshot(): MarketEvidence[] {
   })
 
   // Extract source inventory evidence (available data sources)
-  const sources = inventory.sources || []
-  if (sources.length > 0) {
-    const activeSources = sources.filter((s) => s.status === 'active')
+  const files = (inventory.files as any[]) || []
+  if (files.length > 0) {
+    const fileRoles = [...new Set(files.map((f) => f.role || 'unknown'))]
 
     evidence.push({
       id: `market-sources-${Date.now()}`,
       type: 'market_trend',
       domain: 'market',
       title: 'Fuentes de datos de mercado disponibles',
-      summary: `${activeSources.length} fuentes activas de datos inmobiliarios: ${activeSources.map((s) => s.name).join(', ')}`,
-      detail: `Inventario de fuentes de datos inmobiliarios. Total de fuentes: ${sources.length}, activas: ${activeSources.length}. Coverage: ${scope.zones?.length || 0} zonas.`,
+      summary: `${files.length} archivos de datos inmobiliarios disponibles con roles: ${fileRoles.join(', ')}`,
+      detail: `Inventario de fuentes de datos inmobiliarios. Total de archivos: ${files.length}. Roles: ${fileRoles.join(', ')}. Cobertura: ${scope.commune || 'múltiples comunas'}`,
       confidence: 'high',
       sourceClass: 'client_evidence',
       sourceId: 'market-source-intelligence.json#sourceInventory',
       timestamp: now,
       metrics: {
-        totalSources: sources.length,
-        activeSources: activeSources.length,
-        zones: scope.zones?.length || 0,
+        totalFiles: files.length,
+        uniqueRoles: fileRoles.length,
       },
     })
   }
@@ -114,40 +113,27 @@ export function getMarketSnapshot(): MarketEvidence[] {
     })
   }
 
-  // Opportunties and risks at territory level
-  if (scope.zones && scope.zones.length > 0) {
-    scope.zones.forEach((zone) => {
-      if (zone.opportunity) {
-        evidence.push({
-          id: `market-opp-${zone.name?.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
-          type: 'market_opportunity',
-          domain: 'market',
-          territory: zone.name,
-          title: `Oportunidad en ${zone.name}`,
-          summary: zone.opportunity,
-          detail: `Zona: ${zone.name}. Oportunidad identificada en análisis de mercado.`,
-          confidence: 'medium',
-          sourceClass: 'client_evidence',
-          sourceId: `market-source-intelligence.json#zones[${zone.name}]`,
-          timestamp: now,
-        })
-      }
-
-      if (zone.risk) {
-        evidence.push({
-          id: `market-risk-${zone.name?.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
-          type: 'market_risk',
-          domain: 'market',
-          territory: zone.name,
-          title: `Riesgo en ${zone.name}`,
-          summary: zone.risk,
-          detail: `Zona: ${zone.name}. Riesgo identificado en análisis de mercado.`,
-          confidence: 'medium',
-          sourceClass: 'client_evidence',
-          sourceId: `market-source-intelligence.json#zones[${zone.name}]`,
-          timestamp: now,
-        })
-      }
+  // Add summary of available data types from workbooks
+  const uniqueSheetNames = new Set<string>()
+  workbooks.forEach((wb: any) => {
+    ;(wb.sheetNames || []).forEach((name: string) => uniqueSheetNames.add(name))
+  })
+  
+  if (uniqueSheetNames.size > 0) {
+    evidence.push({
+      id: `market-datatypes-${Date.now()}`,
+      type: 'market_opportunity',
+      domain: 'market',
+      title: 'Tipos de datos inmobiliarios disponibles',
+      summary: `${uniqueSheetNames.size} categorías de datos disponibles: ${Array.from(uniqueSheetNames).join(', ')}`,
+      detail: `Los datos disponibles cubren múltiples aspectos del mercado inmobiliario. Incluyendo: ${Array.from(uniqueSheetNames).join(', ')}`,
+      confidence: 'high',
+      sourceClass: 'client_evidence',
+      sourceId: 'market-source-intelligence.json#workbooks',
+      timestamp: now,
+      metrics: {
+        dataCategories: uniqueSheetNames.size,
+      },
     })
   }
 
