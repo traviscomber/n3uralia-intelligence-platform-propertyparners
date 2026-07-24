@@ -23,13 +23,15 @@ export default async function DashboardHome() {
       </header>
 
       <section className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-4">
-        {[
-          ['Portfolio', data.portfolio],
-          ['Evidence', data.evidenceCount],
-          ['Decisions', data.decisionCount],
-          ['Market Signals', data.marketSignalCount],
-        ].map(([label, value]) => (
-          <article key={label as string} className="bg-[#0c1111] p-6">
+        {(
+          [
+            ['Portfolio', data.portfolio] as const,
+            ['Evidence', data.evidenceCount] as const,
+            ['Decisions', data.decisionCount] as const,
+            ['Market Signals', data.marketSignalCount] as const,
+          ] as const
+        ).map(([label, value]) => (
+          <article key={label} className="bg-[#0c1111] p-6">
             <p className="text-xs uppercase tracking-wider text-[var(--n3-text-muted)]">{label}</p>
             <p className="mt-4 text-3xl font-semibold">
               {typeof value === 'number' ? format(value) : 'LIVE'}
