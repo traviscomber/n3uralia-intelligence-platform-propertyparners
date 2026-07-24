@@ -26,6 +26,13 @@ export type ExecutiveCaseOutcome = {
   measuredAt: string | null
 }
 
+export type ExecutiveCaseOpenQuestion = {
+  id: string
+  question: string
+  status: 'open' | 'answered'
+  rationale: string
+}
+
 export type ExecutiveCase = {
   id: string
   decisionId: string
@@ -41,6 +48,7 @@ export type ExecutiveCase = {
   createdAt: string
   updatedAt: string
   history: ExecutiveCaseHistoryEvent[]
+  openQuestions: ExecutiveCaseOpenQuestion[]
   outcome: ExecutiveCaseOutcome
 }
 
@@ -50,6 +58,34 @@ function mapValidationToCaseStatus(
   if (validationStatus === 'validated') return 'validated'
   if (validationStatus === 'rejected') return 'rejected'
   return 'generated'
+}
+
+function buildOpenQuestions(decision: ExecutiveDecision): ExecutiveCaseOpenQuestion[] {
+  const questions: ExecutiveCaseOpenQuestion[] = [
+    {
+      id: `executive-case.${decision.id}.question.current-evidence`,
+      question: `¿Qué evidencia adicional confirma que “${decision.subject}” sigue vigente para el período actual?`,
+      status: 'open',
+      rationale: 'La recomendación debe contrastarse con evidencia reciente antes de ejecutarse.',
+    },
+    {
+      id: `executive-case.${decision.id}.question.human-owner`,
+      question: '¿Qué responsable humano validará esta recomendación y registrará la decisión final?',
+      status: decision.validationStatus === 'pending_human_validation' ? 'open' : 'answered',
+      rationale: 'Toda recomendación ejecutiva requiere propiedad y validación humana explícita.',
+    },
+  ]
+
+  if (decision.confidence !== 'high') {
+    questions.push({
+      id: `executive-case.${decision.id}.question.confidence-gap`,
+      question: `¿Qué dato faltante permitiría elevar la confianza actual (${decision.confidence})?`,
+      status: 'open',
+      rationale: 'La confianza no debe aumentar sin nueva evidencia verificable.',
+    })
+  }
+
+  return questions
 }
 
 export function buildExecutiveCases(
@@ -79,6 +115,7 @@ export function buildExecutiveCases(
         note: 'Caso ejecutivo generado desde una recomendación del motor de inteligencia.',
       },
     ],
+    openQuestions: buildOpenQuestions(decision),
     outcome: {
       status: 'pending',
       summary: null,
