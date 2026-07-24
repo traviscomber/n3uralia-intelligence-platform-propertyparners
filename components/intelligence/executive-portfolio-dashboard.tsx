@@ -8,6 +8,7 @@ import {
   CircleGauge,
   Clock3,
   Layers3,
+  Network,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
@@ -21,6 +22,14 @@ type Props = {
 
 const priorityWeight = { high: 3, medium: 2, low: 1 } as const
 const confidenceWeight = { high: 3, medium: 2, low: 1 } as const
+const magnitudeWeight = { high: 3, medium: 2, low: 1 } as const
+
+const edgeLabels = {
+  shared_domain: 'Dominio compartido',
+  shared_evidence: 'Evidencia compartida',
+  shared_risk: 'Riesgo compartido',
+  validation_dependency: 'Dependencia de validación',
+} as const
 
 export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelectCase }: Props) {
   const { metrics, cases, graph, simulations, memory } = portfolio
@@ -34,13 +43,30 @@ export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelec
     + (1 - blockedRatio) * 100 * 0.12,
   )))
 
-  const rankedCases = [...cases]
-    .sort((left, right) => {
-      const leftScore = priorityWeight[left.priority] * 10 + confidenceWeight[left.confidence] * 3 - left.openQuestionCount * 2
-      const rightScore = priorityWeight[right.priority] * 10 + confidenceWeight[right.confidence] * 3 - right.openQuestionCount * 2
-      return rightScore - leftScore
-    })
-    .slice(0, 5)
+  const scoredCases = cases.map((item) => {
+    const simulation = simulations.find((entry) => entry.caseId === item.id)
+    const connectedEdges = graph.edges.filter((edge) => edge.from === item.id || edge.to === item.id)
+    const urgency = priorityWeight[item.priority] * 20
+    const confidence = confidenceWeight[item.confidence] * 10
+    const impact = magnitudeWeight[simulation?.estimatedMagnitude ?? 'low'] * 10
+    const networkEffect = Math.min(15, connectedEdges.length * 3)
+    const validationPenalty = item.readiness === 'blocked' ? 18 : 0
+    const questionPenalty = Math.min(20, item.openQuestionCount * 4)
+    const score = Math.max(0, Math.min(100, urgency + confidence + impact + networkEffect - validationPenalty - questionPenalty))
+
+    return {
+      item,
+      score,
+      urgency,
+      confidence,
+      impact,
+      networkEffect,
+      validationPenalty,
+      questionPenalty,
+    }
+  }).sort((left, right) => right.score - left.score)
+
+  const rankedCases = scoredCases.slice(0, 5)
 
   const domains = Array.from(new Set(graph.nodes.map((node) => node.domain))).map((domain) => {
     const nodes = graph.nodes.filter((node) => node.domain === domain)
@@ -49,6 +75,15 @@ export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelec
     const exposure = Math.min(100, Math.round((blocked * 55 + (nodes.length - validated) * 20) / Math.max(1, nodes.length)))
     return { domain, total: nodes.length, blocked, validated, exposure }
   }).sort((left, right) => right.exposure - left.exposure)
+
+  const crossImpact = [...graph.edges]
+    .sort((left, right) => right.strength - left.strength)
+    .slice(0, 8)
+    .map((edge) => ({
+      ...edge,
+      fromCase: cases.find((item) => item.id === edge.from),
+      toCase: cases.find((item) => item.id === edge.to),
+    }))
 
   const positiveImpact = simulations.filter((item) => item.estimatedDirection === 'positive').length
   const highImpact = simulations.filter((item) => item.estimatedMagnitude === 'high').length
@@ -88,38 +123,42 @@ export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelec
         <div className="bg-[#080d0d] p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Priority Queue</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Decision Prioritization Engine</p>
               <h3 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">Casos que requieren atención</h3>
             </div>
             <Sparkles size={18} className="text-[var(--n3-teal-soft)]" />
           </div>
 
           <div className="mt-4 space-y-2">
-            {rankedCases.map((item, index) => {
+            {rankedCases.map(({ item, score, urgency, impact, networkEffect, validationPenalty, questionPenalty }, index) => {
               const active = item.id === selectedCaseId
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onSelectCase(item.id, item.readiness === 'blocked' ? 'timeline' : 'simulator')}
-                  className={`grid w-full gap-3 border p-4 text-left transition sm:grid-cols-[34px_minmax(0,1fr)_auto] sm:items-center ${active ? 'border-[#d7332b] bg-[#101717]' : 'border-[var(--n3-line)] bg-[#0c1111] hover:border-[var(--n3-teal-soft)]'}`}
+                  className={`grid w-full gap-3 border p-4 text-left transition sm:grid-cols-[34px_minmax(0,1fr)_72px] sm:items-center ${active ? 'border-[#d7332b] bg-[#101717]' : 'border-[var(--n3-line)] bg-[#0c1111] hover:border-[var(--n3-teal-soft)]'}`}
                 >
                   <span className="text-lg font-semibold text-[var(--n3-text-muted)]">{String(index + 1).padStart(2, '0')}</span>
                   <span>
                     <span className="block text-sm font-semibold text-[var(--n3-text-light)]">{item.subject}</span>
                     <span className="mt-1 block text-[10px] uppercase tracking-[0.09em] text-[var(--n3-text-muted)]">
-                      {item.priority} · {item.confidence} · {item.openQuestionCount} preguntas
+                      Urgencia {urgency} · Impacto {impact} · Red {networkEffect} · Penalización {validationPenalty + questionPenalty}
+                    </span>
+                    <span className={`mt-2 inline-flex items-center gap-2 text-[10px] font-semibold uppercase ${item.readiness === 'blocked' ? 'text-amber-300' : 'text-emerald-300'}`}>
+                      {item.readiness === 'blocked' ? <AlertTriangle size={13} /> : <ShieldCheck size={13} />}
+                      {item.readiness === 'blocked' ? 'Bloqueado' : 'Validable'}
                     </span>
                   </span>
-                  <span className={`inline-flex items-center gap-2 text-[10px] font-semibold uppercase ${item.readiness === 'blocked' ? 'text-amber-300' : 'text-emerald-300'}`}>
-                    {item.readiness === 'blocked' ? <AlertTriangle size={13} /> : <ShieldCheck size={13} />}
-                    {item.readiness === 'blocked' ? 'Bloqueado' : 'Validable'}
-                    <ArrowRight size={12} />
+                  <span className="text-right">
+                    <span className="block text-2xl font-semibold text-[var(--n3-text-light)]">{score}</span>
+                    <span className="text-[9px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">Priority score</span>
                   </span>
                 </button>
               )
             })}
           </div>
+          <p className="mt-4 text-[10px] leading-4 text-[var(--n3-text-muted)]">Score explicable basado en prioridad, confianza, impacto estimado, conexiones, bloqueos y preguntas abiertas. Sirve para ordenar revisión humana, no para aprobar decisiones.</p>
         </div>
 
         <aside className="bg-[#0c1111] p-5">
@@ -131,6 +170,46 @@ export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelec
             <SignalCard icon={Sparkles} label="Lecciones reutilizables" value={reusableLessons} detail="Memoria con trazabilidad de evidencia" />
           </div>
         </aside>
+      </div>
+
+      <div className="border-t border-[var(--n3-line)] bg-[#080d0d] p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">
+              <Network size={14} /> Cross-Impact Matrix
+            </div>
+            <h3 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">Dependencias y propagación entre decisiones</h3>
+          </div>
+          <p className="text-[10px] text-[var(--n3-text-muted)]">Ordenada por intensidad de relación dentro del Decision Graph.</p>
+        </div>
+
+        <div className="mt-4 overflow-x-auto border border-[var(--n3-line)]">
+          <div className="min-w-[760px]">
+            <div className="grid grid-cols-[minmax(210px,1fr)_150px_90px_minmax(210px,1fr)] bg-[#0c1111] px-4 py-3 text-[9px] font-semibold uppercase tracking-[0.11em] text-[var(--n3-text-muted)]">
+              <span>Decisión origen</span>
+              <span>Relación</span>
+              <span>Intensidad</span>
+              <span>Decisión relacionada</span>
+            </div>
+            {crossImpact.map((edge) => (
+              <div key={edge.id} className="grid grid-cols-[minmax(210px,1fr)_150px_90px_minmax(210px,1fr)] items-center border-t border-[var(--n3-line)] px-4 py-3">
+                <button type="button" onClick={() => onSelectCase(edge.from, 'simulator')} className="text-left text-xs font-semibold text-[var(--n3-text-light)] hover:text-[var(--n3-teal-soft)]">
+                  {edge.fromCase?.subject ?? edge.from}
+                </button>
+                <span className="text-[10px] text-[var(--n3-text-muted)]">{edgeLabels[edge.type]}</span>
+                <span>
+                  <span className={`text-sm font-semibold ${edge.strength >= 70 ? 'text-[#ff766f]' : edge.strength >= 45 ? 'text-amber-300' : 'text-emerald-300'}`}>{edge.strength}%</span>
+                  <span className="mt-1 block h-1 w-16 bg-[#151d1d]"><span className="block h-full bg-[var(--n3-teal-soft)]" style={{ width: `${edge.strength}%` }} /></span>
+                </span>
+                <button type="button" onClick={() => onSelectCase(edge.to, 'simulator')} className="flex items-center justify-between gap-3 text-left text-xs font-semibold text-[var(--n3-text-light)] hover:text-[var(--n3-teal-soft)]">
+                  <span>{edge.toCase?.subject ?? edge.to}</span><ArrowRight size={13} />
+                </button>
+              </div>
+            ))}
+            {crossImpact.length === 0 && <p className="border-t border-[var(--n3-line)] p-5 text-xs text-[var(--n3-text-muted)]">No existen relaciones suficientes para construir la matriz.</p>}
+          </div>
+        </div>
+        <p className="mt-4 text-[10px] leading-4 text-[var(--n3-text-muted)]">Las relaciones muestran evidencia, riesgo, dominio o secuencia de validación compartida. No implican causalidad comprobada y requieren interpretación humana.</p>
       </div>
 
       <div className="border-t border-[var(--n3-line)] bg-[#0c1111] p-5">
