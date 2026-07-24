@@ -12,6 +12,8 @@ export type ExecutiveCaseStatus =
   | 'rejected'
   | 'closed'
 
+export type ExecutiveCaseReadiness = 'blocked' | 'ready_for_validation'
+
 export type ExecutiveCaseHistoryEvent = {
   id: string
   type: 'generated' | 'validation_updated' | 'outcome_recorded' | 'closed'
@@ -37,6 +39,8 @@ export type ExecutiveCase = {
   id: string
   decisionId: string
   status: ExecutiveCaseStatus
+  readiness: ExecutiveCaseReadiness
+  openQuestionCount: number
   priority: ExecutiveDecision['priority']
   confidence: ExecutiveDecision['confidence']
   subject: string
@@ -92,34 +96,41 @@ export function buildExecutiveCases(
   audience: IntelligenceAudience = 'ceo',
   generatedAt = new Date().toISOString(),
 ): ExecutiveCase[] {
-  return buildExecutiveDecisionFeed(audience).map((decision) => ({
-    id: `executive-case.${decision.id}`,
-    decisionId: decision.id,
-    status: mapValidationToCaseStatus(decision.validationStatus),
-    priority: decision.priority,
-    confidence: decision.confidence,
-    subject: decision.subject,
-    recommendation: decision.action,
-    reason: decision.reason,
-    href: decision.href,
-    owner: audience,
-    validationStatus: decision.validationStatus,
-    createdAt: generatedAt,
-    updatedAt: generatedAt,
-    history: [
-      {
-        id: `executive-case.${decision.id}.generated`,
-        type: 'generated',
-        occurredAt: generatedAt,
-        actor: 'n3uralia_engine',
-        note: 'Caso ejecutivo generado desde una recomendación del motor de inteligencia.',
+  return buildExecutiveDecisionFeed(audience).map((decision) => {
+    const openQuestions = buildOpenQuestions(decision)
+    const openQuestionCount = openQuestions.filter((question) => question.status === 'open').length
+
+    return {
+      id: `executive-case.${decision.id}`,
+      decisionId: decision.id,
+      status: mapValidationToCaseStatus(decision.validationStatus),
+      readiness: openQuestionCount > 0 ? 'blocked' : 'ready_for_validation',
+      openQuestionCount,
+      priority: decision.priority,
+      confidence: decision.confidence,
+      subject: decision.subject,
+      recommendation: decision.action,
+      reason: decision.reason,
+      href: decision.href,
+      owner: audience,
+      validationStatus: decision.validationStatus,
+      createdAt: generatedAt,
+      updatedAt: generatedAt,
+      history: [
+        {
+          id: `executive-case.${decision.id}.generated`,
+          type: 'generated',
+          occurredAt: generatedAt,
+          actor: 'n3uralia_engine',
+          note: 'Caso ejecutivo generado desde una recomendación del motor de inteligencia.',
+        },
+      ],
+      openQuestions,
+      outcome: {
+        status: 'pending',
+        summary: null,
+        measuredAt: null,
       },
-    ],
-    openQuestions: buildOpenQuestions(decision),
-    outcome: {
-      status: 'pending',
-      summary: null,
-      measuredAt: null,
-    },
-  }))
+    }
+  })
 }
