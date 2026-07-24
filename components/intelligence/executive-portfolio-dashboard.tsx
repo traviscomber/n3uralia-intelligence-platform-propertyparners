@@ -8,7 +8,10 @@ import {
   CircleGauge,
   Clock3,
   Layers3,
+  Lightbulb,
+  Link2,
   Network,
+  Search,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
@@ -20,6 +23,17 @@ type Props = {
   onSelectCase: (caseId: string, target?: 'timeline' | 'simulator' | 'memory') => void
 }
 
+type Opportunity = {
+  id: string
+  type: 'synergy' | 'unlock' | 'neglected'
+  title: string
+  detail: string
+  rationale: string
+  score: number
+  caseIds: string[]
+  action: string
+}
+
 const priorityWeight = { high: 3, medium: 2, low: 1 } as const
 const confidenceWeight = { high: 3, medium: 2, low: 1 } as const
 const magnitudeWeight = { high: 3, medium: 2, low: 1 } as const
@@ -29,6 +43,12 @@ const edgeLabels = {
   shared_evidence: 'Evidencia compartida',
   shared_risk: 'Riesgo compartido',
   validation_dependency: 'Dependencia de validación',
+} as const
+
+const opportunityLabels = {
+  synergy: 'Sinergia',
+  unlock: 'Desbloqueo',
+  neglected: 'Decisión olvidada',
 } as const
 
 export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelectCase }: Props) {
@@ -84,6 +104,66 @@ export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelec
       fromCase: cases.find((item) => item.id === edge.from),
       toCase: cases.find((item) => item.id === edge.to),
     }))
+
+  const opportunities: Opportunity[] = []
+
+  graph.edges
+    .filter((edge) => edge.strength >= 55 && (edge.type === 'shared_evidence' || edge.type === 'shared_risk'))
+    .forEach((edge) => {
+      const fromCase = cases.find((item) => item.id === edge.from)
+      const toCase = cases.find((item) => item.id === edge.to)
+      if (!fromCase || !toCase) return
+
+      opportunities.push({
+        id: `synergy.${edge.id}`,
+        type: 'synergy',
+        title: `${fromCase.subject} + ${toCase.subject}`,
+        detail: edge.label,
+        rationale: `Relación de ${edge.strength}% detectada por ${edgeLabels[edge.type].toLowerCase()}.`,
+        score: Math.min(100, edge.strength + (fromCase.readiness === 'ready_for_validation' ? 8 : 0) + (toCase.readiness === 'ready_for_validation' ? 8 : 0)),
+        caseIds: [fromCase.id, toCase.id],
+        action: 'Revisar ambos casos en una misma sesión y validar si comparten una intervención, responsable o secuencia de ejecución.',
+      })
+    })
+
+  cases
+    .filter((item) => item.readiness === 'blocked' && item.priority === 'high')
+    .forEach((item) => {
+      const connections = graph.edges.filter((edge) => edge.from === item.id || edge.to === item.id)
+      opportunities.push({
+        id: `unlock.${item.id}`,
+        type: 'unlock',
+        title: `Desbloquear: ${item.subject}`,
+        detail: `${item.openQuestionCount} preguntas abiertas · ${connections.length} decisiones conectadas`,
+        rationale: 'Caso de alta prioridad cuyo bloqueo puede propagar demora a otras decisiones relacionadas.',
+        score: Math.min(100, 62 + connections.length * 5 + item.openQuestionCount * 3),
+        caseIds: [item.id],
+        action: 'Asignar responsable humano, resolver la pregunta bloqueante de mayor impacto y actualizar la evidencia antes de validar.',
+      })
+    })
+
+  cases
+    .filter((item) => {
+      const connections = graph.edges.filter((edge) => edge.from === item.id || edge.to === item.id).length
+      return item.priority === 'high' && item.status === 'generated' && connections <= 1
+    })
+    .forEach((item) => {
+      opportunities.push({
+        id: `neglected.${item.id}`,
+        type: 'neglected',
+        title: `Revisar decisión aislada: ${item.subject}`,
+        detail: 'Alta prioridad con baja conectividad en el portfolio',
+        rationale: 'Una decisión importante con pocas relaciones puede estar subdocumentada, mal conectada o fuera del flujo de revisión.',
+        score: item.confidence === 'low' ? 82 : item.confidence === 'medium' ? 74 : 66,
+        caseIds: [item.id],
+        action: 'Confirmar dominio, evidencia y dependencias. Si la decisión es válida, incorporarla explícitamente al ciclo ejecutivo.',
+      })
+    })
+
+  const opportunityQueue = opportunities
+    .filter((item, index, all) => all.findIndex((candidate) => candidate.id === item.id) === index)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 6)
 
   const positiveImpact = simulations.filter((item) => item.estimatedDirection === 'positive').length
   const highImpact = simulations.filter((item) => item.estimatedMagnitude === 'high').length
@@ -170,6 +250,51 @@ export function ExecutivePortfolioDashboard({ portfolio, selectedCaseId, onSelec
             <SignalCard icon={Sparkles} label="Lecciones reutilizables" value={reusableLessons} detail="Memoria con trazabilidad de evidencia" />
           </div>
         </aside>
+      </div>
+
+      <div className="border-t border-[var(--n3-line)] bg-[#0c1111] p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">
+              <Search size={14} /> Strategic Opportunity Scanner
+            </div>
+            <h3 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">Oportunidades, desbloqueos y decisiones olvidadas</h3>
+          </div>
+          <p className="text-[10px] text-[var(--n3-text-muted)]">Hallazgos derivados del portfolio actual, no de datos externos ni del CRM.</p>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+          {opportunityQueue.map((opportunity) => (
+            <article key={opportunity.id} className="border border-[var(--n3-line)] bg-[#080d0d] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {opportunity.type === 'synergy' ? <Link2 size={15} className="text-[var(--n3-teal-soft)]" /> : opportunity.type === 'unlock' ? <ShieldCheck size={15} className="text-amber-300" /> : <Lightbulb size={15} className="text-[#ff766f]" />}
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.11em] text-[var(--n3-text-muted)]">{opportunityLabels[opportunity.type]}</span>
+                </div>
+                <span className="text-right">
+                  <span className="block text-xl font-semibold text-[var(--n3-text-light)]">{opportunity.score}</span>
+                  <span className="text-[8px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">Potential</span>
+                </span>
+              </div>
+              <h4 className="mt-3 text-sm font-semibold leading-5 text-[var(--n3-text-light)]">{opportunity.title}</h4>
+              <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--n3-teal-soft)]">{opportunity.detail}</p>
+              <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">{opportunity.rationale}</p>
+              <div className="mt-4 border-l-2 border-[var(--n3-teal-soft)] pl-3">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">Acción sugerida</p>
+                <p className="mt-1 text-[11px] leading-5 text-[var(--n3-text-light)]">{opportunity.action}</p>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {opportunity.caseIds.map((caseId) => (
+                  <button key={caseId} type="button" onClick={() => onSelectCase(caseId, 'timeline')} className="inline-flex items-center gap-1 border border-[var(--n3-line)] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--n3-text-muted)] hover:border-[var(--n3-teal-soft)] hover:text-[var(--n3-text-light)]">
+                    Abrir caso <ArrowRight size={10} />
+                  </button>
+                ))}
+              </div>
+            </article>
+          ))}
+          {opportunityQueue.length === 0 && <p className="border border-[var(--n3-line)] bg-[#080d0d] p-5 text-xs text-[var(--n3-text-muted)]">No hay oportunidades estructurales suficientes con los datos actuales.</p>}
+        </div>
+        <p className="mt-4 text-[10px] leading-4 text-[var(--n3-text-muted)]">Cada hallazgo requiere validación humana. El scanner identifica patrones estructurales, pero no confirma causalidad, valor financiero ni viabilidad de ejecución.</p>
       </div>
 
       <div className="border-t border-[var(--n3-line)] bg-[#080d0d] p-5">
