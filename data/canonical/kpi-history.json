@@ -1,0 +1,110 @@
+[
+  {
+    "mes": "Hace 5 meses",
+    "juan_morales": {
+      "ventas": 4,
+      "uf": 18200,
+      "conversion": 8.9
+    },
+    "maria_garcia": {
+      "ventas": 3,
+      "uf": 13500,
+      "conversion": 7.5
+    },
+    "carlos_lopez": {
+      "ventas": 2,
+      "uf": 9200,
+      "conversion": 5.9
+    }
+  },
+  {
+    "mes": "Hace 4 meses",
+    "juan_morales": {
+      "ventas": 5,
+      "uf": 22400,
+      "conversion": 9.6
+    },
+    "maria_garcia": {
+      "ventas": 4,
+      "uf": 18200,
+      "conversion": 8.3
+    },
+    "carlos_lopez": {
+      "ventas": 3,
+      "uf": 13700,
+      "conversion": 7.1
+    }
+  },
+  {
+    "mes": "Hace 3 meses",
+    "juan_morales": {
+      "ventas": 6,
+      "uf": 27600,
+      "conversion": 10.3
+    },
+    "maria_garcia": {
+      "ventas": 4,
+      "uf": 18400,
+      "conversion": 8.9
+    },
+    "carlos_lopez": {
+      "ventas": 3,
+      "uf": 13900,
+      "conversion": 7.9
+    }
+  },
+  {
+    "mes": "Hace 2 meses",
+    "juan_morales": {
+      "ventas": 5,
+      "uf": 23100,
+      "conversion": 10
+    },
+    "maria_garcia": {
+      "ventas": 6,
+      "uf": 27000,
+      "conversion": 9.8
+    },
+    "carlos_lopez": {
+      "ventas": 4,
+      "uf": 18600,
+      "conversion": 9.1
+    }
+  },
+  {
+    "mes": "Hace 1 mes",
+    "juan_morales": {
+      "ventas": 7,
+      "uf": 32200,
+      "conversion": 10.4
+    },
+    "maria_garcia": {
+      "ventas": 5,
+      "uf": 22500,
+      "conversion": 9.3
+    },
+    "carlos_lopez": {
+      "ventas": 4,
+      "uf": 18100,
+      "conversion": 8.5
+    }
+  },
+  {
+    "mes": "Este mes",
+    "juan_morales": {
+      "ventas": 3,
+      "uf": 13800,
+      "conversion": 9.7
+    },
+    "maria_garcia": {
+      "ventas": 4,
+      "uf": 18000,
+      "conversion": 10.5
+    },
+    "carlos_lopez": {
+      "ventas": 2,
+      "uf": 9400,
+      "conversion": 8.3
+    }
+  }
+]

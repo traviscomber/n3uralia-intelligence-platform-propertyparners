@@ -1,41 +1,17 @@
 {
-  "empresa": "Property Partners Group",
-  "mercado": {
-    "zonas_operacion": [
-      "Vitacura",
-      "La Dehesa",
-      "El Bosque",
-      "Las Condes"
-    ],
-    "competencia": [
-      "Colliers",
-      "Cushman & Wakefield",
-      "Jones Lang LaSalle"
-    ],
-    "ventaja_competitiva": "IA + Data Intelligence + Agentes especializados",
-    "tendencias_mercado": [
-      "Aumento demanda por inteligencia de mercado",
-      "Transacciones digitales en aumento",
-      "Valoración por datos, no solo intuición"
-    ]
-  },
-  "zonas": [
+  "zonas_operacion": [
     "Vitacura",
     "La Dehesa",
     "El Bosque",
     "Las Condes"
   ],
-  "competencia": [
-    "Colliers",
-    "Cushman & Wakefield",
-    "Jones Lang LaSalle"
+  "fuentes_datos": [
+    "Portal Inmobiliario",
+    "TOCTOC",
+    "iCasas",
+    "Yapo"
   ],
-  "ventaja_diferenciador": "IA + Data Intelligence + Agentes especializados",
-  "tendencias": [
-    "Aumento demanda por inteligencia de mercado",
-    "Transacciones digitales en aumento",
-    "Valoración por datos, no solo intuición"
-  ],
-  "fecha_generacion": "2026-07-24T22:34:32.465Z",
-  "version": "1.0"
+  "ciclo_promedio_dias": 45,
+  "diferenciador": "Enfoque en IA + Data Intelligence para decisiones comerciales",
+  "ventaja_competitiva": "Agentes especializados + Inteligencia de mercado en tiempo real"
 }

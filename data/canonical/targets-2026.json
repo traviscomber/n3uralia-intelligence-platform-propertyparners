@@ -1,100 +1,31 @@
 {
-  "empresa": "Property Partners Group",
+  "meta_ventas_anual": "180000 UF",
+  "presupuesto": "1500000 USD",
+  "roi_esperado": "3.2x",
+  "ciclo_promedio_dias": 45,
+  "tasa_conversion_target": "8.5%",
+  "comision_promedio": "2.5%",
   "objetivos": [
-    {
-      "nombre": "Inteligencia Artificial",
-      "descripcion": "N3uralia como motor de decisiones de la empresa",
-      "iniciativas": [
-        "Agentes IA por rol",
-        "Análisis predictivo",
-        "Automatización CRM"
-      ]
-    },
-    {
-      "nombre": "Expansión Geográfica",
-      "descripcion": "De Vitacura a 5 regiones de Chile",
-      "iniciativas": [
-        "Nuevas oficinas",
-        "Equipos locales",
-        "Partnerships regionales"
-      ]
-    },
-    {
-      "nombre": "Tecnología",
-      "descripcion": "Plataforma integrada (web + IA + data)",
-      "iniciativas": [
-        "Dashboard real-time",
-        "Predicción de precios",
-        "CRM automático"
-      ]
-    }
+    "Expansión territorial a 4 zonas principales",
+    "Aumentar volumen transaccional 40%",
+    "Implementar IA en procesos comerciales",
+    "Crear inteligencia de mercado en tiempo real"
   ],
-  "kpis": {
-    "ventas": {
-      "meta_mensual_min": 15000,
-      "meta_anual": 180000,
-      "distribucion": {
-        "vitacura": 0.4,
-        "la_dehesa": 0.35,
-        "el_bosque": 0.25
-      }
-    },
-    "conversion": {
-      "leads_a_visita": 0.15,
-      "visita_a_oferta": 0.45,
-      "oferta_a_cierre": 0.3,
-      "target_general": 0.02
-    },
-    "velocidad": {
-      "dias_en_mercado_target": 35,
-      "comision_promedio": 2.5
-    },
-    "equipo": {
-      "agents_target": 9,
-      "retention_rate": 0.95,
-      "productivity_per_agent": 2000
-    }
-  },
-  "presupuesto": 1500000,
-  "roi_esperado": 3.2,
-  "directores": [
+  "directores_responsables": [
     {
-      "id": "d0000000-0000-0000-0000-000000000001",
       "nombre": "Juan Morales",
       "equipo": "Equipo Alpha",
-      "region": "Vitacura",
-      "agentes": [
-        "Sofía Ramos",
-        "Diego Herrera"
-      ],
-      "meta_ventas_anual": 240000,
-      "kpi_conversion": 9.5
+      "rol": "Director"
     },
     {
-      "id": "d0000000-0000-0000-0000-000000000002",
       "nombre": "María García",
       "equipo": "Equipo Beta",
-      "region": "La Dehesa",
-      "agentes": [
-        "Valentina Torres",
-        "Andrés Muñoz"
-      ],
-      "meta_ventas_anual": 210000,
-      "kpi_conversion": 8.8
+      "rol": "Director"
     },
     {
-      "id": "d0000000-0000-0000-0000-000000000003",
       "nombre": "Carlos López",
       "equipo": "Equipo Gamma",
-      "region": "El Bosque",
-      "agentes": [
-        "Camila Pérez",
-        "Matías Silva"
-      ],
-      "meta_ventas_anual": 180000,
-      "kpi_conversion": 7.9
+      "rol": "Director"
     }
-  ],
-  "fecha_generacion": "2026-07-24T22:34:32.465Z",
-  "version": "1.0"
+  ]
 }
