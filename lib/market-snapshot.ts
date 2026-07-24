@@ -17,30 +17,31 @@ export type MarketEvidence = {
 
 export function getMarketSnapshot(): MarketEvidence[] {
   const scope = marketSourceData.scope || {}
-  const summary = marketSourceData.summary || {}
   const workbooks = marketSourceData.workbooks || []
   const inventory = marketSourceData.sourceInventory || {}
+  const kml = marketSourceData.kml || {}
+  const operatingModel = marketSourceData.operatingModel || {}
 
   const evidence: MarketEvidence[] = []
   const now = new Date().toISOString()
 
-  // Extract market overview evidence
-  if (summary.averagePriceM2 || summary.averageInventoryMonths) {
+  // Extract market overview from KML and scope
+  if (kml.counts || kml.hierarchy) {
     evidence.push({
       id: `market-overview-${Date.now()}`,
       type: 'market_trend',
       domain: 'market',
       title: 'Tendencia de mercado inmobiliario 2026',
-      summary: `Precio promedio m² en Vitacura: $${summary.averagePriceM2?.toLocaleString()} UF | Inventario: ${summary.averageInventoryMonths} meses`,
-      detail: `Análisis del mercado residencial en ${scope.region || 'Región Metropolitana'}. Condiciones de demanda y oferta estables con presión de precios en segmento premium.`,
+      summary: `Mercado inmobiliario en ${scope.commune || 'Vitacura'} | Tipos: ${scope.propertyTypes?.join(', ') || 'residencial, comercial'}`,
+      detail: `Análisis del mercado inmobiliario en ${scope.commune || 'Región Metropolitana'}. Condiciones de demanda y oferta estables con presión de precios en segmento premium. Operación excluye: ${scope.excludedOperation || 'arriendo'}`,
       confidence: 'high',
       sourceClass: 'client_evidence',
-      sourceId: 'market-source-intelligence.json',
+      sourceId: 'market-source-intelligence.json#kml',
       timestamp: now,
       metrics: {
-        avgPriceM2: summary.averagePriceM2 || 0,
-        inventoryMonths: summary.averageInventoryMonths || 0,
-        absorptionRate: summary.absorptionRate || 0,
+        commune: scope.commune || '',
+        propertyTypes: scope.propertyTypes?.length || 0,
+        kmlHierarchyLevels: kml.hierarchy?.length || 0,
       },
     })
   }
@@ -94,7 +95,6 @@ export function getMarketSnapshot(): MarketEvidence[] {
   }
 
   // Extract operating model evidence
-  const operatingModel = marketSourceData.operatingModel || {}
   if (Object.keys(operatingModel).length > 0) {
     const keys = Object.keys(operatingModel)
     evidence.push({
