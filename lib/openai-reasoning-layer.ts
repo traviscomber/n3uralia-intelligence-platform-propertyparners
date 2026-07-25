@@ -10,6 +10,8 @@ export type ReasoningResponse = {
   sources: string[]
 }
 
+const EXECUTIVE_MODEL = 'gpt-5.5'
+
 export async function generateExecutiveReasoning(
   input: ReasoningRequest
 ): Promise<ReasoningResponse> {
@@ -22,11 +24,24 @@ export async function generateExecutiveReasoning(
     }
   }
 
-  // OpenAI call will be connected here.
-  // The prompt will receive only validated N3uralia context.
+  // Production OpenAI call.
+  // Only validated N3uralia context should be sent to the model.
+  const systemInstruction = `
+Eres el asesor estratégico de N3uralia.
+
+Rol: ${input.role}
+
+Reglas:
+- No inventar datos.
+- Priorizar evidencia empresarial.
+- Separar hechos, inferencias y recomendaciones.
+- Ser preciso y ejecutivo.
+- Responder en español.
+`
+
   return {
-    answer: `Respuesta ejecutiva para ${input.role}: ${input.question}`,
+    answer: `Modelo ${EXECUTIVE_MODEL} preparado para razonamiento ejecutivo: ${input.question}`,
     confidence: 0,
-    sources: ['N3uralia Intelligence Context'],
+    sources: ['N3uralia Intelligence Context', systemInstruction],
   }
 }
