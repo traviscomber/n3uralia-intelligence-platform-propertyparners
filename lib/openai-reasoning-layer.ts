@@ -1,47 +1,173 @@
+import type { ReasoningMode } from './copilot-reasoning-router'
+
 export type ReasoningRequest = {
   role: 'ceo' | 'directorio' | 'sucursal' | 'partner'
   question: string
   context: unknown
+  reasoningMode?: ReasoningMode
+}
+
+export type ExecutiveEvidence = {
+  domain: string
+  label: string
+  value: string
+  source: string
+}
+
+export type ExecutiveItem = {
+  title: string
+  detail: string
+}
+
+export type ExecutiveAction = ExecutiveItem & {
+  action: string
 }
 
 export type ReasoningResponse = {
-  answer: string
-  confidence: number
+  summary: string
+  signals: ExecutiveItem[]
+  evidence: ExecutiveEvidence[]
+  risks: ExecutiveItem[]
+  opportunities: ExecutiveAction[]
+  confidence: 'alta' | 'media' | 'baja'
   sources: string[]
+  reasoningMode: ReasoningMode
 }
 
-const EXECUTIVE_MODEL = 'gpt-5.5'
+const MODEL = process.env.OPENAI_MODEL || 'gpt-5.2'
 
-export async function generateExecutiveReasoning(
-  input: ReasoningRequest
-): Promise<ReasoningResponse> {
-  if (!process.env.OPENAI_API_KEY) {
-    return {
-      answer:
-        'OpenAI reasoning layer pendiente de configuración. Contexto empresarial preparado.',
-      confidence: 0,
-      sources: [],
+const RESPONSE_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    summary: { type: 'string' },
+    signals: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          title: { type: 'string' },
+          detail: { type: 'string' },
+        },
+        required: ['title', 'detail'],
+      },
+    },
+    evidence: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          domain: { type: 'string' },
+          label: { type: 'string' },
+          value: { type: 'string' },
+          source: { type: 'string' },
+        },
+        required: ['domain', 'label', 'value', 'source'],
+      },
+    },
+    risks: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          title: { type: 'string' },
+          detail: { type: 'string' },
+        },
+        required: ['title', 'detail'],
+      },
+    },
+    opportunities: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          title: { type: 'string' },
+          detail: { type: 'string' },
+          action: { type: 'string' },
+        },
+        required: ['title', 'detail', 'action'],
+      },
+    },
+    confidence: { type: 'string', enum: ['alta', 'media', 'baja'] },
+    sources: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['summary', 'signals', 'evidence', 'risks', 'opportunities', 'confidence', 'sources'],
+} as const
+
+function extractOutputText(payload: any): string {
+  if (typeof payload?.output_text === 'string') return payload.output_text
+
+  for (const item of payload?.output ?? []) {
+    for (const content of item?.content ?? []) {
+      if (content?.type === 'output_text' && typeof content.text === 'string') {
+        return content.text
+      }
     }
   }
 
-  // Production OpenAI call.
-  // Only validated N3uralia context should be sent to the model.
-  const systemInstruction = `
-Eres el asesor estratégico de N3uralia.
+  throw new Error('OpenAI no devolvió contenido utilizable')
+}
 
-Rol: ${input.role}
+export async function generateExecutiveReasoning(
+  input: ReasoningRequest,
+): Promise<ReasoningResponse> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY no está configurada')
+  }
 
-Reglas:
-- No inventar datos.
-- Priorizar evidencia empresarial.
-- Separar hechos, inferencias y recomendaciones.
-- Ser preciso y ejecutivo.
-- Responder en español.
-`
+  const reasoningMode = input.reasoningMode ?? 'standard'
+  const effort = reasoningMode === 'deep' ? 'high' : reasoningMode === 'quick' ? 'low' : 'medium'
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      store: false,
+      reasoning: { effort },
+      instructions: [
+        'Eres el copiloto ejecutivo de N3uralia para Property Partners.',
+        `Respondes para el rol ${input.role}.`,
+        'Usa exclusivamente la evidencia entregada en el contexto.',
+        'No inventes cifras, periodos, personas ni conclusiones.',
+        'Distingue hechos, señales, riesgos y recomendaciones.',
+        'Sé profesional, preciso, ejecutivo y responde en español.',
+        'Limita el resumen a lo esencial y prioriza máximo tres señales principales.',
+        'Cuando la evidencia sea insuficiente, decláralo y reduce la confianza.',
+      ].join('\n'),
+      input: JSON.stringify({
+        question: input.question,
+        context: input.context,
+      }),
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'n3uralia_executive_response',
+          strict: true,
+          schema: RESPONSE_SCHEMA,
+        },
+      },
+    }),
+  })
+
+  const payload = await response.json()
+
+  if (!response.ok) {
+    const message = payload?.error?.message || 'OpenAI rechazó la solicitud'
+    throw new Error(message)
+  }
+
+  const parsed = JSON.parse(extractOutputText(payload)) as Omit<ReasoningResponse, 'reasoningMode'>
 
   return {
-    answer: `Modelo ${EXECUTIVE_MODEL} preparado para razonamiento ejecutivo: ${input.question}`,
-    confidence: 0,
-    sources: ['N3uralia Intelligence Context', systemInstruction],
+    ...parsed,
+    reasoningMode,
   }
 }
