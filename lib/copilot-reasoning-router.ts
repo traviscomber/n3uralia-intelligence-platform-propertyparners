@@ -9,6 +9,13 @@ export type CopilotRequestContext = {
   requiresDecision: boolean
 }
 
+export type CopilotPolicy = {
+  priority: 'quality' | 'speed'
+  allowExtendedReasoning: boolean
+  requireEvidence: boolean
+  requireConfidence: boolean
+}
+
 export function selectReasoningMode(
   context: CopilotRequestContext
 ): ReasoningMode {
@@ -25,3 +32,12 @@ export function selectReasoningMode(
 
 export const COPILOT_PRINCIPLE =
   'Usar la profundidad necesaria para la pregunta, no la máxima profundidad siempre.'
+
+export function getCopilotPolicy(): CopilotPolicy {
+  return {
+    priority: 'quality',
+    allowExtendedReasoning: true,
+    requireEvidence: true,
+    requireConfidence: true,
+  }
+}
