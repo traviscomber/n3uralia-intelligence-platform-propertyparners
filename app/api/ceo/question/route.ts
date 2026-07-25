@@ -2,6 +2,19 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runExecutiveReasoningPipeline } from '@/lib/executive-reasoning-pipeline'
 import { buildN3uraliaIntelligenceContext } from '@/lib/n3uralia-intelligence-engine'
+import { selectReasoningMode } from '@/lib/copilot-reasoning-router'
+
+function classifyQuestion(question: string) {
+  const normalized = question.toLowerCase()
+  const requiresDecision = /(deber[ií]a|decisi[oó]n|recomienda|conviene|priorizar|riesgo|estrategia)/.test(normalized)
+  const highImportance = /(directorio|presupuesto|meta anual|abrir sucursal|cerrar sucursal|inversi[oó]n|contratar|despedir)/.test(normalized)
+  const mediumImportance = /(mercado|ventas|cumplimiento|sucursal|captaci[oó]n|conversi[oó]n|valuaci[oó]n)/.test(normalized)
+
+  return {
+    importance: highImportance ? 'high' as const : mediumImportance ? 'medium' as const : 'low' as const,
+    requiresDecision,
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -29,11 +42,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 })
     }
 
+    const classification = classifyQuestion(question)
+    const reasoningMode = selectReasoningMode({ question, ...classification })
     const intelligenceContext = buildN3uraliaIntelligenceContext('ceo')
 
     const result = await runExecutiveReasoningPipeline({
       role: 'ceo',
       question,
+      reasoningMode,
       context: {
         source: 'N3uralia Intelligence Engine',
         intelligenceContext,
@@ -45,7 +61,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('CEO question route failed', error)
     return NextResponse.json(
-      { error: 'No fue posible procesar la consulta ejecutiva' },
+      { error: error instanceof Error ? error.message : 'No fue posible procesar la consulta ejecutiva' },
       { status: 500 },
     )
   }
