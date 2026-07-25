@@ -2,78 +2,57 @@
 
 import { useState } from 'react'
 
-const questions = [
-  '¿Qué debo saber hoy?',
-  '¿Qué no estoy viendo?',
-  '¿Cuál es el principal riesgo?',
-  '¿Dónde está la oportunidad?',
-]
-
 export function CEOAIAssistantWidget() {
   const [open, setOpen] = useState(false)
   const [question, setQuestion] = useState('')
-  const [loading, setLoading] = useState(false)
   const [answer, setAnswer] = useState('')
-  const [feedback, setFeedback] = useState<'up' | 'down' | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  async function askN3uralia() {
+  async function ask() {
     setLoading(true)
-    setAnswer('')
-
     const response = await fetch('/api/ceo/question', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question }),
     })
-
     const data = await response.json()
-    setAnswer(data.summary ?? data.answer ?? 'Respuesta preparada.')
+    setAnswer(data.summary ?? 'Respuesta ejecutiva preparada.')
     setLoading(false)
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-8 right-8 z-50">
       {open && (
-        <div className="mb-4 w-96 rounded-2xl border bg-white p-5 shadow-2xl">
-          <h3 className="text-lg font-semibold">N3uralia Executive AI</h3>
-          <p className="text-sm text-gray-500">Asistente estratégico CEO</p>
-
-          <div className="my-4 space-y-2">
-            {questions.map((item) => (
-              <button
-                key={item}
-                className="block w-full rounded-lg border p-3 text-left text-sm"
-                onClick={() => setQuestion(item)}
-              >
-                {item}
-              </button>
-            ))}
+        <div className="mb-5 w-96 rounded-3xl border border-orange-900/50 bg-black/95 p-6 text-white shadow-2xl">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="text-orange-400">⌂</span>
+            <div>
+              <h3 className="tracking-[0.2em] text-sm text-orange-400">N3URALIA</h3>
+              <p className="text-lg">Tu copiloto estratégico</p>
+            </div>
           </div>
+
+          <p className="mb-4 text-sm text-gray-400">
+            Inteligencia ejecutiva para Property Partners.
+          </p>
 
           <textarea
             value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            placeholder="Pregunta estratégica..."
-            className="w-full rounded-lg border p-3 text-sm"
-            rows={3}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="¿Qué debo saber hoy?"
+            className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 text-sm"
           />
 
           <button
-            onClick={askN3uralia}
-            disabled={!question || loading}
-            className="mt-3 w-full rounded-lg bg-black px-4 py-3 text-white"
+            onClick={ask}
+            className="mt-3 w-full rounded-xl bg-orange-800 px-4 py-3 text-white"
           >
-            {loading ? 'Analizando contexto empresarial...' : 'Analizar con N3uralia'}
+            {loading ? 'Analizando evidencia...' : 'Consultar N3uralia'}
           </button>
 
           {answer && (
-            <div className="mt-4 rounded-lg border p-3 text-sm">
-              <p>{answer}</p>
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => setFeedback('up')}>👍</button>
-                <button onClick={() => setFeedback('down')}>👎</button>
-              </div>
-              {feedback && <small>Feedback registrado: {feedback}</small>}
+            <div className="mt-4 rounded-xl border border-neutral-800 p-3 text-sm">
+              {answer}
             </div>
           )}
         </div>
@@ -81,9 +60,10 @@ export function CEOAIAssistantWidget() {
 
       <button
         onClick={() => setOpen(!open)}
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-black text-white shadow-xl"
+        aria-label="Abrir N3uralia"
+        className="flex h-20 w-20 items-center justify-center rounded-3xl border border-orange-700 bg-black text-3xl text-orange-400 shadow-2xl"
       >
-        AI
+        ⌂
       </button>
     </div>
   )
