@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/layout/sidebar'
 import Topbar from '@/components/layout/topbar'
+import { RuntimeProvenanceProvider } from '@/components/layout/runtime-provenance-provider'
 import { CEOAIAssistantWidget } from '@/components/ceo/ceo-ai-assistant-widget'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -13,15 +14,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const isCEO = String(profile?.role ?? '').toLowerCase() === 'ceo'
 
   return (
-    <div className="dashboard-shell flex h-screen overflow-hidden bg-[var(--n3-black)] text-[var(--n3-text-light)]">
-      <Sidebar profile={profile} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Topbar user={user} profile={profile} />
-        <main className="dashboard-content flex-1 overflow-y-auto bg-[var(--n3-black)] p-3 sm:p-4 md:p-6">
-          {children}
-        </main>
+    <RuntimeProvenanceProvider>
+      <div className="dashboard-shell flex h-screen overflow-hidden bg-[var(--n3-black)] text-[var(--n3-text-light)]">
+        <Sidebar profile={profile} />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <Topbar user={user} profile={profile} />
+          <main className="dashboard-content flex-1 overflow-y-auto bg-[var(--n3-black)] p-3 sm:p-4 md:p-6">
+            {children}
+          </main>
+        </div>
+        {isCEO && <CEOAIAssistantWidget />}
       </div>
-      {isCEO && <CEOAIAssistantWidget />}
-    </div>
+    </RuntimeProvenanceProvider>
   )
 }
