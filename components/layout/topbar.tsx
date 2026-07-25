@@ -1,24 +1,22 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { getDashboardRoute } from '@/lib/dashboard-route-contract'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 import type { User } from '@supabase/supabase-js'
 
+const provenanceMeta = {
+  audited: { label: 'Fuente auditada', color: '#65d3a5' },
+  'live-separated': { label: 'Fuente viva · separada', color: '#6aa9ff' },
+  pending: { label: 'Procedencia pendiente', color: '#f6c453' },
+} as const
+
 export default function Topbar({ profile }: { user: User; profile: Profile | null }) {
   const router = useRouter()
   const pathname = usePathname()
-
-  const auditedPaths = ['/dashboard', '/dashboard/ceo', '/dashboard/director', '/dashboard/control', '/dashboard/datos-crm', '/dashboard/inteligencia', '/dashboard/market', '/dashboard/metas', '/dashboard/ml-lab', '/dashboard/presentaciones', '/dashboard/properties', '/dashboard/reportes/autonomos', '/dashboard/reportes/directorio', '/dashboard/reportes/audiencias', '/dashboard/valorizador']
-  const livePaths = ['/dashboard/sources', '/dashboard/market/import', '/dashboard/knowledge']
-  const isAudited = auditedPaths.some((path) => pathname === path || (path !== '/dashboard' && pathname.startsWith(`${path}/`)))
-  const isLive = livePaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
-  const provenance = isLive
-      ? { label: 'Fuente viva · separada', color: '#6aa9ff' }
-      : isAudited
-        ? { label: 'Fuente auditada', color: '#65d3a5' }
-        : { label: 'Procedencia pendiente', color: '#f6c453' }
+  const route = getDashboardRoute(pathname)
+  const provenance = provenanceMeta[route?.provenance ?? 'pending']
 
   async function handleLogout() {
     const supabase = createClient()
@@ -28,18 +26,9 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
   }
 
   const consultationDate = new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
-  const cutoffLabel = pathname.startsWith('/dashboard/market') || pathname.startsWith('/dashboard/properties')
-    ? 'Cortes: Portal n/d · CBRS 9 ene 2026'
-    : pathname.startsWith('/dashboard/valorizador')
-      ? 'Plantillas: septiembre 2020'
-      : pathname.startsWith('/dashboard/metas')
-        ? 'Metas 2026 · versión julio 2026'
-        : pathname.startsWith('/dashboard/presentaciones')
-          ? 'Presentaciones: corte junio 2026'
-          : pathname.startsWith('/dashboard/ml-lab')
-            ? 'Cortes declarados por fuente'
-            : 'Corte operativo: junio 2026'
-  const dateLabel = isAudited ? cutoffLabel : `Fecha de consulta: ${consultationDate}`
+  const dateLabel = route?.provenance === 'audited' && route.cutoffLabel
+    ? route.cutoffLabel
+    : `Fecha de consulta: ${consultationDate}`
 
   return (
     <header className="sticky top-0 z-40 flex min-h-14 items-center justify-between gap-2 border-b border-[var(--n3-line)] bg-[var(--n3-black)] py-3 pl-16 pr-3 md:px-6 md:py-4">
