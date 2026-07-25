@@ -1,14 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, ArrowRight, BarChart3, Building2, FileText, ShieldCheck, Target, TrendingUp } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { buildOperationalSeries, getDataQuality, getOperationalSummary, getYtdSummary, CRM_INTELLIGENCE } from '@/lib/crm-snapshot'
 import { getBranchSalesYtdPerformance } from '@/lib/targets-2026'
 import { buildExecutiveCases } from '@/lib/executive-cases'
-import { buildExecutiveDecisionGraph } from '@/lib/executive-decision-graph'
+import { buildExecutiveDecisionGraph, buildExecutivePortfolio } from '@/lib/executive-decision-graph'
 import { buildN3uraliaIntelligenceContext } from '@/lib/n3uralia-intelligence-engine'
 import { ExecutiveDecisionGraphView } from '@/components/intelligence/executive-decision-graph'
+import { ExecutiveCopilot } from '@/components/intelligence/executive-copilot'
 import {
   IntelligenceHeader,
   IntelligencePage,
@@ -31,6 +33,8 @@ function formatCaseDate(value: string) {
 }
 
 export default function CeoDashboard() {
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
+  
   const operational = getOperationalSummary()
   const chartData = buildOperationalSeries(6).map(({ mes, ventas, captaciones, leads }) => ({ mes, ventas, captaciones, leads }))
   const branches = getBranchSalesYtdPerformance('2026-06')
@@ -43,6 +47,7 @@ export default function CeoDashboard() {
   const maxBranchSales = Math.max(...branches.map((branch) => branch.actualSales), 1)
   const executiveCases = buildExecutiveCases('ceo')
   const executiveGraph = buildExecutiveDecisionGraph('ceo')
+  const executivePortfolio = buildExecutivePortfolio('ceo')
   const blockedCases = executiveCases.filter((item) => item.readiness === 'blocked')
   const readyCases = executiveCases.filter((item) => item.readiness === 'ready_for_validation')
   const pendingHumanCases = executiveCases.filter((item) => item.validationStatus === 'pending_human_validation')
@@ -52,6 +57,10 @@ export default function CeoDashboard() {
   const executiveContext = buildN3uraliaIntelligenceContext('ceo')
   const criticalIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'critical')
   const warningIssues = CRM_INTELLIGENCE.quality.issues.filter((issue) => issue.severity === 'warning')
+  
+  const handleSelectCase = (caseId: string) => {
+    setSelectedCaseId(caseId)
+  }
 
   return (
     <IntelligencePage>
@@ -403,6 +412,13 @@ export default function CeoDashboard() {
             </div>
           </IntelligencePanel>
         </div>
+      </section>
+
+      <section>
+        <ExecutiveCopilot 
+          portfolio={executivePortfolio}
+          onSelectCase={handleSelectCase}
+        />
       </section>
 
       <section>
