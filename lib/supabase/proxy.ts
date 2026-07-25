@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { canAccessDashboardPath } from '@/lib/dashboard-access'
+import { canAccessDashboardPath, getDefaultDashboardPath, normalizeDashboardRole } from '@/lib/dashboard-access'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -68,8 +68,23 @@ export async function updateSession(request: NextRequest) {
 
     if (user && pathname.startsWith('/dashboard')) {
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-      // Unknown or missing roles are rejected by canAccessDashboardPath.
-      const role = profile?.role || user.app_metadata?.role || 'unauthorized'
+      const role = normalizeDashboardRole(profile?.role || user.app_metadata?.role)
+
+      if (!role) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/error'
+        return NextResponse.redirect(url)
+      }
+
+      if (pathname === '/dashboard') {
+        const defaultPath = getDefaultDashboardPath(role)
+        if (defaultPath !== pathname) {
+          const url = request.nextUrl.clone()
+          url.pathname = defaultPath
+          return NextResponse.redirect(url)
+        }
+      }
+
       if (!canAccessDashboardPath(role, pathname)) {
         const url = request.nextUrl.clone()
         url.pathname = '/auth/error'
