@@ -5,14 +5,8 @@ export async function runCEOQuestionTest() {
     role: 'ceo',
     question: '¿Qué debo saber hoy?',
     context: {
-      sources: [
-        'CRM',
-        'Targets 2026',
-        'Market Intelligence',
-        'Valuation Intelligence',
-        'Company Knowledge',
-        'Decision History',
-      ],
+      source: 'Test Runner',
+      requestedAt: new Date().toISOString(),
     },
   })
 }

@@ -1,5 +1,6 @@
-import { selectReasoningMode } from './copilot-reasoning-router'
-import { getCopilotPolicy } from './copilot-reasoning-router'
+import { selectReasoningMode, getCopilotPolicy } from './copilot-reasoning-router'
+import { runExecutiveReasoningPipeline } from './executive-reasoning-pipeline'
+import { buildN3uraliaIntelligenceContext } from './n3uralia-intelligence-engine'
 
 export async function runCEOCopilot(input: {
   question: string
@@ -8,12 +9,18 @@ export async function runCEOCopilot(input: {
 }) {
   const mode = selectReasoningMode(input)
   const policy = getCopilotPolicy()
+  const intelligenceContext = buildN3uraliaIntelligenceContext('ceo')
 
-  return {
+  const result = await runExecutiveReasoningPipeline({
+    role: 'ceo',
     question: input.question,
     reasoningMode: mode,
-    policy,
-    status: 'ready',
-    next: 'Enviar contexto validado al motor de razonamiento.',
-  }
+    context: {
+      source: 'CEO Copilot Runtime',
+      requestedAt: new Date().toISOString(),
+      intelligence: intelligenceContext,
+    },
+  })
+
+  return { ...result, policy }
 }
