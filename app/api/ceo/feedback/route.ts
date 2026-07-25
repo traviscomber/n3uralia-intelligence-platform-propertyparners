@@ -10,28 +10,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (String(profile?.role ?? '').toLowerCase() !== 'ceo') {
+      return NextResponse.json({ error: 'Acceso exclusivo para perfil CEO' }, { status: 403 })
+    }
+
     const body = await request.json()
     const rating = body.rating === 'up' || body.rating === 'down' ? body.rating : null
+    const question = typeof body.question === 'string' ? body.question.trim() : ''
 
-    if (!rating) {
-      return NextResponse.json({ error: 'Rating inválido' }, { status: 400 })
+    if (!rating || !question) {
+      return NextResponse.json({ error: 'Feedback incompleto' }, { status: 400 })
     }
 
     const { error } = await supabase.from('copilot_feedback').insert({
       user_id: user.id,
-      question: body.question ?? null,
-      answer_summary: body.answerSummary ?? null,
+      question,
+      answer_summary: typeof body.answerSummary === 'string' ? body.answerSummary : null,
       rating,
-      comment: body.comment ?? null,
-      sources: Array.isArray(body.sources) ? body.sources : [],
+      comment: typeof body.comment === 'string' ? body.comment : null,
+      sources: Array.isArray(body.sources) ? body.sources.filter((item: unknown) => typeof item === 'string') : [],
     })
 
     if (error) {
+      console.error('CEO feedback persistence failed', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })
-  } catch {
+  } catch (error) {
+    console.error('CEO feedback route failed', error)
     return NextResponse.json({ error: 'No fue posible guardar el feedback' }, { status: 500 })
   }
 }
