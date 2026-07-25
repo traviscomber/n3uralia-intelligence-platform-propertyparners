@@ -25,3 +25,7 @@ export function selectReasoningMode(
 
 export const COPILOT_PRINCIPLE =
   'Usar la profundidad necesaria para la pregunta, no la máxima profundidad siempre.'
+
+export function getCopilotPolicy(): string {
+  return COPILOT_PRINCIPLE
+}
