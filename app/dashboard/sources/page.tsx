@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { RuntimeProvenanceReporter } from '@/components/layout/runtime-provenance-provider'
+import type { RuntimeProvenanceEvidence } from '@/lib/runtime-provenance'
 
 type LiveSample = {
   listingId: string
@@ -20,15 +22,31 @@ export default function SourcesPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [records, setRecords] = useState<LiveSample[]>([])
+  const [provenanceEvidence, setProvenanceEvidence] = useState<RuntimeProvenanceEvidence | null>(null)
 
   async function capture() {
     setLoading(true)
     setMessage(null)
+    setProvenanceEvidence(null)
     try {
       const response = await fetch('/api/scrape/portal-inmobiliario', { method: 'POST', headers: { 'x-live-source-confirmed': 'true' } })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || 'No fue posible capturar la fuente.')
-      setRecords(Array.isArray(payload.records) ? payload.records : [])
+
+      const observedAt = typeof payload.observedAt === 'string' && !Number.isNaN(Date.parse(payload.observedAt))
+        ? payload.observedAt
+        : new Date().toISOString()
+      const capturedRecords = Array.isArray(payload.records) ? payload.records : []
+
+      setRecords(capturedRecords)
+      setProvenanceEvidence({
+        kind: 'live-separated',
+        source: 'Portal Inmobiliario · captura manual no conciliada',
+        observedAt,
+        evidenceId: typeof payload.captureId === 'string' ? payload.captureId : undefined,
+        cutoffLabel: `Captura viva: ${new Date(observedAt).toLocaleString('es-CL')}`,
+        details: `${payload.captured ?? capturedRecords.length} registros observados; cero escrituras`,
+      })
       setMessage(`${payload.captured} observados · ${payload.validForReconciliation} válidos para revisión · ${payload.rejected} rechazados · cero escrituras`)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No fue posible capturar la fuente.')
@@ -48,6 +66,7 @@ export default function SourcesPage() {
   }
 
   return <div className="mx-auto max-w-6xl space-y-6 pb-16">
+    {provenanceEvidence && <RuntimeProvenanceReporter evidence={provenanceEvidence} />}
     <header className="border border-[var(--n3-line)] bg-[#0c1111] p-8">
       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#6aa9ff]">Fuente viva · separada</p>
       <h1 className="mt-4 text-4xl font-semibold">Portal Inmobiliario en validación</h1>
