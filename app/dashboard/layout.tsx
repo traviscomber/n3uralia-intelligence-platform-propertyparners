@@ -10,6 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/auth/login')
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+  const isCEO = String(profile?.role ?? '').toLowerCase() === 'ceo'
 
   return (
     <div className="dashboard-shell flex h-screen overflow-hidden bg-[var(--n3-black)] text-[var(--n3-text-light)]">
@@ -20,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
-      <CEOAIAssistantWidget />
+      {isCEO && <CEOAIAssistantWidget />}
     </div>
   )
 }
