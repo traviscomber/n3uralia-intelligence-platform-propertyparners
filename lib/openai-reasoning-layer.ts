@@ -12,6 +12,7 @@ export type ExecutiveEvidence = {
   label: string
   value: string
   source: string
+  period: string
 }
 
 export type ExecutiveItem = {
@@ -21,6 +22,8 @@ export type ExecutiveItem = {
 
 export type ExecutiveAction = ExecutiveItem & {
   action: string
+  domain: 'crm' | 'executive' | 'market' | 'valuation' | 'reports'
+  href: string
 }
 
 export type ReasoningResponse = {
@@ -30,6 +33,7 @@ export type ReasoningResponse = {
   risks: ExecutiveItem[]
   opportunities: ExecutiveAction[]
   confidence: 'alta' | 'media' | 'baja'
+  confidenceReason: string
   sources: string[]
   reasoningMode: ReasoningMode
 }
@@ -63,8 +67,9 @@ const RESPONSE_SCHEMA = {
           label: { type: 'string' },
           value: { type: 'string' },
           source: { type: 'string' },
+          period: { type: 'string' },
         },
-        required: ['domain', 'label', 'value', 'source'],
+        required: ['domain', 'label', 'value', 'source', 'period'],
       },
     },
     risks: {
@@ -88,24 +93,34 @@ const RESPONSE_SCHEMA = {
           title: { type: 'string' },
           detail: { type: 'string' },
           action: { type: 'string' },
+          domain: { type: 'string', enum: ['crm', 'executive', 'market', 'valuation', 'reports'] },
+          href: { type: 'string' },
         },
-        required: ['title', 'detail', 'action'],
+        required: ['title', 'detail', 'action', 'domain', 'href'],
       },
     },
     confidence: { type: 'string', enum: ['alta', 'media', 'baja'] },
+    confidenceReason: { type: 'string' },
     sources: { type: 'array', items: { type: 'string' } },
   },
-  required: ['summary', 'signals', 'evidence', 'risks', 'opportunities', 'confidence', 'sources'],
+  required: ['summary', 'signals', 'evidence', 'risks', 'opportunities', 'confidence', 'confidenceReason', 'sources'],
 } as const
 
-function extractOutputText(payload: any): string {
-  if (typeof payload?.output_text === 'string') return payload.output_text
+function extractOutputText(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') throw new Error('OpenAI devolvió una respuesta inválida')
+  const record = payload as Record<string, unknown>
+  if (typeof record.output_text === 'string') return record.output_text
 
-  for (const item of payload?.output ?? []) {
-    for (const content of item?.content ?? []) {
-      if (content?.type === 'output_text' && typeof content.text === 'string') {
-        return content.text
-      }
+  const output = Array.isArray(record.output) ? record.output : []
+  for (const item of output) {
+    if (!item || typeof item !== 'object') continue
+    const content = Array.isArray((item as Record<string, unknown>).content)
+      ? (item as Record<string, unknown>).content as unknown[]
+      : []
+    for (const block of content) {
+      if (!block || typeof block !== 'object') continue
+      const blockRecord = block as Record<string, unknown>
+      if (blockRecord.type === 'output_text' && typeof blockRecord.text === 'string') return blockRecord.text
     }
   }
 
@@ -115,9 +130,7 @@ function extractOutputText(payload: any): string {
 export async function generateExecutiveReasoning(
   input: ReasoningRequest,
 ): Promise<ReasoningResponse> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY no está configurada')
-  }
+  if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY no está configurada')
 
   const reasoningMode = input.reasoningMode ?? 'standard'
   const effort = reasoningMode === 'deep' ? 'high' : reasoningMode === 'quick' ? 'low' : 'medium'
@@ -141,6 +154,10 @@ export async function generateExecutiveReasoning(
         'Sé profesional, preciso, ejecutivo y responde en español.',
         'Limita el resumen a lo esencial y prioriza máximo tres señales principales.',
         'Cuando la evidencia sea insuficiente, decláralo y reduce la confianza.',
+        'Incluye el periodo o corte de cada evidencia. Si no existe, usa "No informado".',
+        'Cada oportunidad debe indicar el dominio correcto y una ruta válida entre /dashboard/ceo, /dashboard/datos-crm, /dashboard/market, /dashboard/valorizador y /dashboard/reportes/autonomos.',
+        'Explica en confidenceReason por qué la confianza es alta, media o baja.',
+        'Usa el historial conversacional solo para resolver referencias y continuidad; nunca lo trates como evidencia empresarial.',
       ].join('\n'),
       input: JSON.stringify({
         question: input.question,
@@ -158,16 +175,11 @@ export async function generateExecutiveReasoning(
   })
 
   const payload = await response.json()
-
   if (!response.ok) {
     const message = payload?.error?.message || 'OpenAI rechazó la solicitud'
     throw new Error(message)
   }
 
   const parsed = JSON.parse(extractOutputText(payload)) as Omit<ReasoningResponse, 'reasoningMode'>
-
-  return {
-    ...parsed,
-    reasoningMode,
-  }
+  return { ...parsed, reasoningMode }
 }
