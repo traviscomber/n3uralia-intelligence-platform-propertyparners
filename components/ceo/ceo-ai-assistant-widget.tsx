@@ -104,6 +104,16 @@ function confidenceExplanation(response: CopilotResponse) {
     : 'La evidencia interna es consistente, pero faltan fuentes complementarias para elevar la certeza.'
 }
 
+function LoadingDots() {
+  return (
+    <span className="ml-1 inline-flex items-center gap-1" aria-hidden="true">
+      <span className="h-1 w-1 animate-bounce rounded-full bg-[#d37755] [animation-delay:-0.3s]" />
+      <span className="h-1 w-1 animate-bounce rounded-full bg-[#d37755] [animation-delay:-0.15s]" />
+      <span className="h-1 w-1 animate-bounce rounded-full bg-[#d37755]" />
+    </span>
+  )
+}
+
 export function CEOAIAssistantWidget() {
   const [open, setOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -313,15 +323,33 @@ export function CEOAIAssistantWidget() {
               ))}
 
               {loading && (
-                <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+                <div className="relative overflow-hidden rounded-2xl border border-[#8f3f24]/35 bg-[#8f3f24]/6 p-4" role="status" aria-live="polite">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium text-neutral-200">Analizando evidencia</p>
-                      <p className="mt-1 text-xs text-neutral-500">Revisando dominios y trazabilidad de la respuesta.</p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+                        <span className="absolute inset-0 animate-spin rounded-full border border-[#8f3f24]/25 border-t-[#d37755]" />
+                        <N3uraliaMark className="h-5 w-5 animate-pulse text-[#d37755]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="flex items-center text-sm font-medium text-neutral-100">N3uralia está razonando<LoadingDots /></p>
+                        <p className="mt-1 text-xs text-neutral-500">Revisando dominios, evidencia y trazabilidad de la respuesta.</p>
+                      </div>
                     </div>
-                    <button onClick={() => abortRef.current?.abort()} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-neutral-400 transition hover:text-white">Cancelar</button>
+                    <button onClick={() => abortRef.current?.abort()} className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-neutral-400 transition hover:border-[#8f3f24]/45 hover:text-white">Cancelar</button>
                   </div>
-                  <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/5"><div className="h-full w-1/2 animate-pulse rounded-full bg-[#a84b2b]" /></div>
+                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-black/45">
+                    <div className="h-full w-1/3 animate-[n3uralia-progress_1.35s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-[#6f2f1c] via-[#d37755] to-[#6f2f1c]" />
+                  </div>
+                  <style jsx>{`
+                    @keyframes n3uralia-progress {
+                      0% { transform: translateX(-120%); }
+                      55% { transform: translateX(145%); }
+                      100% { transform: translateX(320%); }
+                    }
+                    @media (prefers-reduced-motion: reduce) {
+                      div[role='status'] * { animation-duration: 2.8s !important; }
+                    }
+                  `}</style>
                 </div>
               )}
             </div>
@@ -361,7 +389,7 @@ export function CEOAIAssistantWidget() {
         aria-expanded={open}
         className="group flex h-13 w-13 items-center justify-center rounded-2xl border border-[#8f3f24]/60 bg-[#0b0b0b] text-[#c9633d] shadow-[0_12px_35px_rgba(0,0,0,0.48)] transition hover:-translate-y-0.5 hover:border-[#b65332] hover:bg-[#14100e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84b2b]/70 sm:h-14 sm:w-14"
       >
-        <N3uraliaMark className="h-7 w-7 transition-transform group-hover:scale-105" />
+        <N3uraliaMark className={`h-7 w-7 transition-transform group-hover:scale-105 ${loading ? 'animate-pulse' : ''}`} />
       </button>
     </div>
   )
