@@ -8,6 +8,10 @@ import {
   getManagementEntities,
   getPresentationComparisons,
 } from '@/lib/presentations-2026'
+import {
+  getExecutiveTemporalSnapshot,
+  type TemporalComparison,
+} from '@/lib/temporal-performance'
 
 function buildPresentationEvidence(): IntelligenceEvidence[] {
   const management = getManagementEntities()
@@ -105,19 +109,92 @@ function buildPresentationSignals(evidence: IntelligenceEvidence[]): Intelligenc
   ]
 }
 
+function comparisonValue(comparison: TemporalComparison) {
+  if (comparison.changePct === null) return null
+  const prefix = comparison.changePct > 0 ? '+' : ''
+  return `${prefix}${comparison.changePct}%`
+}
+
+function buildTemporalEvidence() {
+  const temporal = getExecutiveTemporalSnapshot()
+  const comparisons = [...temporal.mom, ...temporal.yoy]
+
+  return comparisons
+    .filter((comparison) => comparison.currentValue !== null && comparison.comparisonValue !== null)
+    .map((comparison): IntelligenceEvidence => ({
+      id: `client.crm.${comparison.comparisonType}.${comparison.metric}`,
+      domain: 'crm',
+      sourceClass: 'client_evidence',
+      label: `${comparison.label} ${comparison.comparisonType.toUpperCase()}`,
+      value: comparisonValue(comparison),
+      period: `${comparison.comparisonPeriod}/${comparison.currentPeriod}`,
+      source: 'CRM del cliente · serie mensual autoritativa',
+      methodology: `${comparison.methodology} Valor actual: ${comparison.currentValue}; valor comparado: ${comparison.comparisonValue}; cambio absoluto: ${comparison.absoluteChange}.`,
+    }))
+}
+
+function buildTemporalSignals(evidence: IntelligenceEvidence[]): IntelligenceSignal[] {
+  const temporalEvidence = evidence.filter((item) => item.id.startsWith('client.crm.mom.') || item.id.startsWith('client.crm.yoy.'))
+  const salesMom = temporalEvidence.find((item) => item.id === 'client.crm.mom.salesCount')
+  const salesYoY = temporalEvidence.find((item) => item.id === 'client.crm.yoy.salesCount')
+  const salesUfMom = temporalEvidence.find((item) => item.id === 'client.crm.mom.salesUf')
+
+  const signals: IntelligenceSignal[] = []
+
+  if (salesMom) {
+    signals.push({
+      id: 'n3uralia.signal.sales-mom',
+      domain: 'executive',
+      sourceClass: 'n3uralia_inference',
+      title: 'Variación mensual de ventas',
+      interpretation: `Las ventas muestran una variación MoM de ${salesMom.value}. Esta señal describe aceleración o desaceleración operativa de corto plazo y no debe interpretarse como tendencia estructural por sí sola.`,
+      evidenceIds: [salesMom.id],
+      confidence: 'high',
+    })
+  }
+
+  if (salesYoY) {
+    signals.push({
+      id: 'n3uralia.signal.sales-yoy',
+      domain: 'executive',
+      sourceClass: 'n3uralia_inference',
+      title: 'Variación interanual de ventas',
+      interpretation: `Las ventas muestran una variación YoY de ${salesYoY.value} frente al mismo mes del año anterior. Esta comparación reduce el sesgo estacional, pero sigue limitada al universo interno del CRM.`,
+      evidenceIds: [salesYoY.id],
+      confidence: 'high',
+    })
+  }
+
+  if (salesUfMom) {
+    signals.push({
+      id: 'n3uralia.signal.sales-uf-mom',
+      domain: 'executive',
+      sourceClass: 'n3uralia_inference',
+      title: 'Variación mensual de UF vendidas',
+      interpretation: `El volumen económico vendido muestra una variación MoM de ${salesUfMom.value}. Debe analizarse junto con el número de cierres para distinguir cambios de volumen de cambios en ticket promedio.`,
+      evidenceIds: [salesUfMom.id, ...(salesMom ? [salesMom.id] : [])],
+      confidence: 'high',
+    })
+  }
+
+  return signals
+}
+
 export function buildCEOIntelligenceContext(): N3uraliaIntelligenceContext {
   const base = buildN3uraliaIntelligenceContext('ceo')
   const presentationEvidence = buildPresentationEvidence()
-  const evidence = [...base.evidence, ...presentationEvidence]
+  const temporalEvidence = buildTemporalEvidence()
+  const evidence = [...base.evidence, ...presentationEvidence, ...temporalEvidence]
   const presentationSignals = buildPresentationSignals(presentationEvidence)
+  const temporalSignals = buildTemporalSignals(temporalEvidence)
 
   return {
     ...base,
     evidence,
-    signals: [...base.signals, ...presentationSignals],
+    signals: [...base.signals, ...presentationSignals, ...temporalSignals],
     governance: {
       ...base.governance,
-      operatingPrinciple: `${base.governance.operatingPrinciple} Presentation metrics are supporting evidence and must remain separate from authoritative CRM and market universes.`,
+      operatingPrinciple: `${base.governance.operatingPrinciple} Presentation metrics are supporting evidence and must remain separate from authoritative CRM and market universes. MoM and YoY comparisons must use matching monthly periods and must never mix monthly values with cumulative totals.`,
     },
   }
 }
