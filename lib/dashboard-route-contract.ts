@@ -37,9 +37,9 @@ export type DashboardRouteDefinition = {
   cutoffLabel?: string
 }
 
-const ALL_ROLES = DASHBOARD_ROLES
-const EXECUTIVE_ROLES = ['admin', 'ceo'] as const satisfies readonly DashboardRole[]
-const LEADERSHIP_ROLES = ['admin', 'ceo', 'director'] as const satisfies readonly DashboardRole[]
+const ALL_ROLES: readonly DashboardRole[] = DASHBOARD_ROLES
+const EXECUTIVE_ROLES: readonly DashboardRole[] = ['admin', 'ceo']
+const LEADERSHIP_ROLES: readonly DashboardRole[] = ['admin', 'ceo', 'director']
 
 export const DASHBOARD_ROUTES = [
   { key: 'home', label: 'Dashboard', href: '/dashboard', exact: true, roles: ALL_ROLES, groupByRole: { seller: 'Workspace' }, provenance: 'audited', cutoffLabel: 'Corte operativo: junio 2026' },
@@ -49,7 +49,7 @@ export const DASHBOARD_ROUTES = [
   { key: 'market', label: 'Inteligencia de mercado', href: '/dashboard/market', roles: ALL_ROLES, groupByRole: { admin: 'Intelligence', ceo: 'Intelligence', director: 'Intelligence', seller: 'Intelligence' }, provenance: 'audited', cutoffLabel: 'Cortes: Portal n/d · CBRS 9 ene 2026' },
   { key: 'valuation', label: 'Inteligencia de valorización', href: '/dashboard/valorizador', roles: ALL_ROLES, groupByRole: { admin: 'Intelligence', ceo: 'Intelligence', director: 'Intelligence', seller: 'Intelligence' }, provenance: 'audited', cutoffLabel: 'Plantillas: septiembre 2020' },
   { key: 'reports', label: 'Reportes ejecutivos', href: '/dashboard/reportes/autonomos', roles: LEADERSHIP_ROLES, groupByRole: { admin: 'Intelligence', ceo: 'Intelligence', director: 'Intelligence' }, provenance: 'audited', cutoffLabel: 'Corte operativo: junio 2026' },
-  { key: 'partnerReports', label: 'Reportes para partners', href: '/dashboard/reportes/audiencias/ejecutivo', roles: ['seller'], groupByRole: { seller: 'Intelligence' }, provenance: 'audited', cutoffLabel: 'Corte operativo: junio 2026' },
+  { key: 'partnerReports', label: 'Reportes para partners', href: '/dashboard/reportes/audiencias/ejecutivo', roles: ['seller'] as const, groupByRole: { seller: 'Intelligence' }, provenance: 'audited', cutoffLabel: 'Corte operativo: junio 2026' },
   { key: 'properties', label: 'Propiedades', href: '/dashboard/properties', roles: ALL_ROLES, groupByRole: { admin: 'Business', ceo: 'Business', director: 'Business', seller: 'Business' }, provenance: 'audited', cutoffLabel: 'Cortes: Portal n/d · CBRS 9 ene 2026' },
   { key: 'control', label: 'Control de gestión', href: '/dashboard/control', roles: LEADERSHIP_ROLES, groupByRole: { admin: 'Business', ceo: 'Business', director: 'Business' }, provenance: 'audited', cutoffLabel: 'Corte operativo: junio 2026' },
   { key: 'crm', label: 'Datos CRM', href: '/dashboard/datos-crm', roles: LEADERSHIP_ROLES, groupByRole: { admin: 'Business', ceo: 'Business', director: 'Business' }, provenance: 'audited', cutoffLabel: 'Corte operativo: junio 2026' },
@@ -85,7 +85,7 @@ export function matchesDashboardRoute(pathname: string, route: Pick<DashboardRou
   return route.exact ? pathname === route.href : pathname === route.href || pathname.startsWith(`${route.href}/`)
 }
 
-export function getDashboardRoute(pathname: string) {
+export function getDashboardRoute(pathname: string): DashboardRouteDefinition | null {
   return [...DASHBOARD_ROUTES]
     .sort((a, b) => b.href.length - a.href.length)
     .find((route) => matchesDashboardRoute(pathname, route)) ?? null
@@ -95,7 +95,7 @@ export function canAccessDashboardPath(roleInput: DashboardRoleInput, pathname: 
   const role = normalizeDashboardRole(roleInput)
   if (!role) return false
   const route = getDashboardRoute(pathname)
-  return Boolean(route?.roles.includes(role))
+  return route ? route.roles.includes(role) : false
 }
 
 export function getDefaultDashboardPath(roleInput: DashboardRoleInput) {
@@ -118,6 +118,6 @@ export function getNavigationSections(roleInput: DashboardRoleInput) {
 
   return order.map((label) => ({
     label,
-    items: DASHBOARD_ROUTES.filter((route) => route.roles.includes(role) && route.groupByRole[role] === label),
+    items: DASHBOARD_ROUTES.filter((route) => (route.roles as readonly DashboardRole[]).includes(role) && route.groupByRole[role] === label),
   })).filter((section) => section.items.length > 0)
 }
