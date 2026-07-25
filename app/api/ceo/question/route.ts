@@ -4,6 +4,11 @@ import { runExecutiveReasoningPipeline } from '@/lib/executive-reasoning-pipelin
 import { buildCEOIntelligenceContext } from '@/lib/ceo-intelligence-context'
 import { selectReasoningMode } from '@/lib/copilot-reasoning-router'
 
+type ConversationTurn = {
+  role: 'user' | 'assistant'
+  text: string
+}
+
 function classifyQuestion(question: string) {
   const normalized = question.toLowerCase()
   const requiresDecision = /(deber[ií]a|decisi[oó]n|recomienda|conviene|priorizar|riesgo|estrategia)/.test(normalized)
@@ -16,14 +21,26 @@ function classifyQuestion(question: string) {
   }
 }
 
+function sanitizeConversation(input: unknown): ConversationTurn[] {
+  if (!Array.isArray(input)) return []
+
+  return input
+    .slice(-8)
+    .flatMap((item): ConversationTurn[] => {
+      if (!item || typeof item !== 'object') return []
+      const record = item as Record<string, unknown>
+      const role = record.role === 'assistant' ? 'assistant' : record.role === 'user' ? 'user' : null
+      const text = typeof record.text === 'string' ? record.text.trim().slice(0, 4000) : ''
+      return role && text ? [{ role, text }] : []
+    })
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -38,17 +55,14 @@ export async function POST(request: Request) {
     const body = await request.json()
     const question = typeof body.question === 'string' ? body.question.trim() : ''
 
-    if (!question) {
-      return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 })
-    }
+    if (!question) return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 })
+    if (question.length > 2000) return NextResponse.json({ error: 'La pregunta supera el límite permitido' }, { status: 400 })
 
-    if (question.length > 2000) {
-      return NextResponse.json({ error: 'La pregunta supera el límite permitido' }, { status: 400 })
-    }
-
+    const conversation = sanitizeConversation(body.conversation)
     const classification = classifyQuestion(question)
     const reasoningMode = selectReasoningMode({ question, ...classification })
     const intelligenceContext = buildCEOIntelligenceContext()
+    const generatedAt = new Date().toISOString()
 
     const result = await runExecutiveReasoningPipeline({
       role: 'ceo',
@@ -58,11 +72,12 @@ export async function POST(request: Request) {
         source: 'N3uralia Intelligence Engine',
         domains: ['crm', 'targets', 'market', 'valuation', 'reports'],
         intelligenceContext,
-        requestedAt: new Date().toISOString(),
+        conversation,
+        requestedAt: generatedAt,
       },
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json({ ...result, generatedAt })
   } catch (error) {
     console.error('CEO question route failed', error)
     return NextResponse.json(
