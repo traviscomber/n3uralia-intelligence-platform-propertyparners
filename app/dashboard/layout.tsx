@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
-      <CEOAIAssistantWidget />
+      {profile?.role === 'ceo' && <CEOAIAssistantWidget />}
     </div>
   )
 }

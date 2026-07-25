@@ -12,7 +12,8 @@ export async function runCEOConversation(input: {
 
   return {
     response,
-    feedback: captureCopilotFeedback,
-    memory: storeDecisionOutcome,
+    // Callers can await these after presenting the response
+    saveFeedback: captureCopilotFeedback,
+    saveDecision: storeDecisionOutcome,
   }
 }

@@ -29,6 +29,23 @@ export function CEOAIAssistantWidget() {
   const [result, setResult] = useState<N3uraliaResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [feedbackSent, setFeedbackSent] = useState<'up' | 'down' | null>(null)
+  const [lastQuestion, setLastQuestion] = useState('')
+
+  async function sendFeedback(rating: 'up' | 'down') {
+    if (feedbackSent) return
+    setFeedbackSent(rating)
+    await fetch('/api/ceo/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: lastQuestion,
+        answerId: crypto.randomUUID(),
+        rating,
+        contextSources: result?.sources ?? [],
+      }),
+    })
+  }
 
   async function ask(q?: string) {
     const finalQuestion = (q ?? question).trim()
@@ -36,6 +53,8 @@ export function CEOAIAssistantWidget() {
     setLoading(true)
     setError(null)
     setResult(null)
+    setFeedbackSent(null)
+    setLastQuestion(finalQuestion)
     try {
       const response = await fetch('/api/ceo/question', {
         method: 'POST',
@@ -235,6 +254,37 @@ export function CEOAIAssistantWidget() {
                   Fuentes: {result.sources.slice(0, 3).join(' · ')}
                 </p>
               )}
+
+              {/* Feedback */}
+              <div className="flex items-center justify-between border-t border-neutral-800 pt-3">
+                <p className="text-[10px] text-neutral-600">
+                  {feedbackSent ? 'Gracias por tu feedback.' : 'Esta respuesta fue util?'}
+                </p>
+                {!feedbackSent && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => sendFeedback('up')}
+                      aria-label="Util"
+                      className="rounded-lg border border-neutral-700 p-1.5 text-neutral-400 transition-colors hover:border-emerald-700 hover:text-emerald-400"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+                        <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => sendFeedback('down')}
+                      aria-label="No util"
+                      className="rounded-lg border border-neutral-700 p-1.5 text-neutral-400 transition-colors hover:border-red-700 hover:text-red-400"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z" />
+                        <path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
