@@ -1,3 +1,5 @@
+import { validateTraceability } from './traceability-validator'
+
 export type ResponseSections = {
   resumenEjecutivo: string
   senalesPrincipales: string[]
@@ -83,42 +85,28 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
   const facts = cleanStrings(input.facts)
   const risks = cleanStrings(input.risks)
   const sources = cleanStrings(input.sources)
-  const validEvidenceIds = new Set(cleanStrings(input.evidenceIds ?? []))
-  const evidenceCount = validEvidenceIds.size > 0 ? validEvidenceIds.size : facts.length
+  const validEvidenceIds = cleanStrings(input.evidenceIds ?? [])
+  const evidenceCount = validEvidenceIds.length > 0 ? validEvidenceIds.length : facts.length
   const sourceCount = sources.length
-  const validationWarnings: string[] = []
-
-  const normalizedClaims = (input.claims ?? input.inferences.map((statement) => ({
-    statement,
-    evidenceIds: [],
-    confidence: input.confidence,
-  })))
-    .map((claim) => ({
-      statement: claim.statement.trim(),
-      evidenceIds: cleanStrings(claim.evidenceIds).filter((id) => validEvidenceIds.size === 0 || validEvidenceIds.has(id)),
-      confidence: normalizeConfidence(claim.confidence),
-    }))
-    .filter((claim) => claim.statement.length > 0)
-
-  const supportedClaims = normalizedClaims.filter((claim) => claim.evidenceIds.length > 0)
-  const unsupportedClaimCount = normalizedClaims.length - supportedClaims.length
-
-  if (evidenceCount === 0) {
-    validationWarnings.push('No hay evidencia verificable disponible para respaldar recomendaciones.')
-  }
-  if (sourceCount === 0) {
-    validationWarnings.push('La evidencia no incluye fuentes trazables.')
-  }
-  if (unsupportedClaimCount > 0) {
-    validationWarnings.push(`${unsupportedClaimCount} afirmación${unsupportedClaimCount === 1 ? '' : 'es'} sin evidencia asociada fue${unsupportedClaimCount === 1 ? '' : 'ron'} excluida${unsupportedClaimCount === 1 ? '' : 's'}.`)
-  }
+  const traceabilityValidation = validateTraceability({
+    claims: input.claims ?? input.inferences.map((statement) => ({
+      statement,
+      evidenceIds: [],
+      confidence: input.confidence,
+    })),
+    validEvidenceIds,
+    hasEvidence: evidenceCount > 0,
+    hasTraceableSources: sourceCount > 0,
+  })
+  const supportedClaims = traceabilityValidation.claims
+  const validationWarnings = [...traceabilityValidation.warnings]
 
   const confidence = clampConfidence(
     input.confidence,
     evidenceCount,
     sourceCount,
-    supportedClaims.length,
-    normalizedClaims.length,
+    traceabilityValidation.supportedClaimCount,
+    traceabilityValidation.claimCount,
   )
   if (input.confidence > confidence) {
     validationWarnings.push('El nivel de confianza fue reducido por cobertura o trazabilidad insuficiente.')
@@ -142,12 +130,6 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
     : evidenceCount > 0
       ? [{ domain: 'General', items: facts }]
       : []
-
-  const traceability = evidenceCount === 0 || supportedClaims.length === 0
-    ? 'unavailable'
-    : supportedClaims.length === normalizedClaims.length && sourceCount > 0
-      ? 'complete'
-      : 'partial'
 
   const justification = evidenceCount === 0
     ? 'Sin evidencia disponible; no se emiten recomendaciones ejecutivas.'
@@ -193,9 +175,9 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
       domainsCovered,
       evidenceCount,
       sourceCount,
-      claimCount: normalizedClaims.length,
-      supportedClaimCount: supportedClaims.length,
-      traceability,
+      claimCount: traceabilityValidation.claimCount,
+      supportedClaimCount: traceabilityValidation.supportedClaimCount,
+      traceability: traceabilityValidation.traceability,
       validationWarnings,
       principlesApplied: [
         'Mantener tono profesional y ejecutivo',
