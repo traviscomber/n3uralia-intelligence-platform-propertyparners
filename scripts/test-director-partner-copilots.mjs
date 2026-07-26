@@ -70,8 +70,8 @@ assert(layoutContent.includes("role === 'director'"), 'Dashboard layout mounts D
 assert(layoutContent.includes("role === 'partner'"), 'Dashboard layout mounts Partner widget when role is partner')
 
 // Test 9: Role Verification in API Routes
-assert(directorRouteContent.includes('401') || directorRouteContent.includes('403'), 'Director de Cuenta route returns error for unauthorized access')
-assert(partnerRouteContent.includes('401') || partnerRouteContent.includes('403'), 'Partner route returns error for unauthorized access')
+assert(directorRouteContent.includes('requireCopilotRole'), 'Director de Cuenta route has authorization check')
+assert(partnerRouteContent.includes('requireCopilotRole'), 'Partner route has authorization check')
 
 // Test 10: Executive Reasoning Pipeline Called
 assert(directorRouteContent.includes('runExecutiveReasoningPipeline'), 'Director de Cuenta route calls reasoning pipeline')
