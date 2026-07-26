@@ -50,6 +50,8 @@ export async function runExecutiveReasoningPipeline(input: {
     risks: response.sections.riesgos,
     confidence: response.confidence,
     sources: response.sources,
+    evidenceIds: response.evidenceIds,
+    claims: response.claims,
     sections: response.sections,
   })
 }
