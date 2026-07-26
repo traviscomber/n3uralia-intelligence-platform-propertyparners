@@ -1,5 +1,5 @@
 import { runCEOCopilot } from './ceo-copilot-runtime-orchestrator'
-import { captureCopilotFeedback } from './ceo-feedback-learning-loop'
+import { captureCopilotFeedback } from './copilot-feedback'
 import { storeDecisionOutcome } from './decision-outcome-memory'
 
 export async function runCEOConversation(input: {
