@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireCopilotRole } from '@/lib/copilot-authorization'
-import { captureCopilotFeedback } from '@/lib/ceo-feedback-learning-loop'
+import { captureCopilotFeedback } from '@/lib/copilot-feedback'
 
 export async function POST(request: Request) {
   try {
