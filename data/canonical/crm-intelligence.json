@@ -1,0 +1,41 @@
+{
+  "organizacion": {
+    "empresa": "Property Partners Group",
+    "ceo": {
+      "nombre": "Pedro Pablo Ferrer",
+      "email": "Pedro.ferrer@ppartnersgroup.com",
+      "rol": "CEO"
+    },
+    "estructura": {
+      "directores": 3,
+      "agentes": 6,
+      "total_personas": 10
+    }
+  },
+  "equipos": [
+    {
+      "nombre": "Equipo Alpha",
+      "director": "Juan Morales",
+      "agentes": [
+        "Sofía Ramos",
+        "Diego Herrera"
+      ]
+    },
+    {
+      "nombre": "Equipo Beta",
+      "director": "María García",
+      "agentes": [
+        "Valentina Torres",
+        "Andrés Muñoz"
+      ]
+    },
+    {
+      "nombre": "Equipo Gamma",
+      "director": "Carlos López",
+      "agentes": [
+        "Camila Pérez",
+        "Matías Silva"
+      ]
+    }
+  ]
+}

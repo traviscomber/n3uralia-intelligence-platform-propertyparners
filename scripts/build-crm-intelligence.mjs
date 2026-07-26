@@ -1,10 +1,22 @@
 #!/usr/bin/env node
+// Pure logic lives in lib/crm-ingestion.ts — this file is the CLI entry point only.
 
 import fs from 'node:fs'
-import crypto from 'node:crypto'
 import path from 'node:path'
 import process from 'node:process'
 import XLSX from 'xlsx'
+import {
+  normalize,
+  display,
+  stableValue,
+  sha256,
+  numeric,
+  classifyWorkbook,
+  periodFromPath,
+  sourceRole,
+  listWorkbooks,
+  auditWorkbooks,
+} from '../lib/crm-ingestion.js'
 
 const MONTHS = [
   { period: '2026-01', folder: 'Datos 202601', label: 'Ene 2026', names: { sales: 'cierres_enero_2026_ventas.xlsx', captures: 'captadas_enero_2026.xlsx', leads: 'leads_enero_2026.xlsx', requirements: 'requerimientos_online_enero_2026.xlsx', visits: 'visitas_enero_2026.xlsx', suspended: 'suspendidas_enero_2026.xlsx', stock: 'total_cartera_20260218.xlsx' } },
@@ -48,71 +60,7 @@ function parseArgs() {
   return { input: path.resolve(input), output: path.resolve(output), manifestOutput: path.resolve(manifestOutput) }
 }
 
-function normalize(value) {
-  return String(value ?? '')
-    .replace(/\u00a0/g, ' ')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
-}
 
-function display(value) {
-  return String(value ?? '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
-}
-
-function stableValue(value) {
-  if (value instanceof Date) return { $date: value.toISOString() }
-  if (Buffer.isBuffer(value)) return { $buffer: value.toString('base64') }
-  if (Array.isArray(value)) return value.map(stableValue)
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, stableValue(item)]))
-  }
-  return value
-}
-
-function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex')
-}
-
-function classifyWorkbook(relativePath) {
-  const name = normalize(path.basename(relativePath)).replace(/[_-]+/g, ' ')
-  if (name.includes('sin gestion 15')) return 'lead_stale_15_90'
-  if (name.includes('sin gestion 90')) return 'lead_stale_over_90'
-  if (name.includes('sin clasificar')) return 'lead_unclassified'
-  if (name.includes('clasificados')) return 'lead_classified'
-  if (name.includes('activos')) return 'lead_active'
-  if (name.includes('leads')) return 'lead_created'
-  if (name.includes('requerimientos')) return 'requirement_created'
-  if (name.includes('visitas')) return 'visit_appointment'
-  if (name.includes('captad') || name.includes('captacion')) return 'property_capture'
-  if (name.includes('suspendid')) return 'property_suspension'
-  if (name.includes('cartera')) return 'property_stock'
-  if (name.includes('venta') || name.includes('cierre') || name.includes('undefined')) return name.includes('resumen') ? 'sales_summary' : 'sale_closed'
-  return 'unclassified'
-}
-
-function periodFromPath(relativePath) {
-  const match = relativePath.replaceAll('\\', '/').match(/Datos (2025|2026\d{2})\//)
-  if (!match) return null
-  return match[1] === '2025' ? '2025' : `${match[1].slice(0, 4)}-${match[1].slice(4)}`
-}
-
-function sourceRole(relativePath) {
-  const normalized = relativePath.replaceAll('\\', '/')
-  if (normalized.includes('/informe_quincenal/')) return 'fortnight_audit'
-  if (/ventas_enero_marzo|misc_undefined|resumen_ventas|ventas_2025_vitacura\.xlsx$/i.test(normalized)) return 'reconciliation'
-  if (/leads_(activos|clasificados|sin_clasificar|sin_gestion)/i.test(normalized)) return 'snapshot'
-  if (/Datos 2025\/raw\/(captaciones|propiedades_suspendidas|total_cartera)/i.test(normalized)) return 'annual_context'
-  return 'authoritative'
-}
-
-function numeric(value) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  const parsed = Number(String(value ?? '').replace(/[^0-9.-]/g, ''))
-  return Number.isFinite(parsed) ? parsed : null
-}
 
 function readWorkbook(file) {
   const workbook = XLSX.readFile(file, { cellDates: true })
@@ -419,88 +367,7 @@ function mergeRankings(months, field, limit = 12) {
   return [...merged.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, limit)
 }
 
-function listWorkbooks(root) {
-  const files = []
-  function visit(folder) {
-    for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
-      const absolute = path.join(folder, entry.name)
-      if (entry.isDirectory()) visit(absolute)
-      else if (entry.name.toLowerCase().endsWith('.xlsx')) files.push(absolute)
-    }
-  }
-  visit(root)
-  return files.sort((a, b) => a.localeCompare(b))
-}
 
-function auditWorkbooks(root) {
-  return listWorkbooks(root).map((file) => {
-    const { sheetName, headers, rows } = readWorkbook(file)
-    const workbook = XLSX.readFile(file, { cellFormula: true, cellStyles: true, cellNF: true, cellDates: true, sheetStubs: true })
-    let formulaCells = 0
-    let formulaErrorCells = 0
-    let storedCells = 0
-    let populatedCells = 0
-    const sheets = []
-    for (const name of workbook.SheetNames) {
-      const sheet = workbook.Sheets[name]
-      const addresses = Object.keys(sheet).filter((address) => !address.startsWith('!')).sort((a, b) => a.localeCompare(b))
-      const digest = crypto.createHash('sha256')
-      let sheetFormulaCells = 0
-      let sheetFormulaErrors = 0
-      let sheetPopulatedCells = 0
-      let commentCells = 0
-      let hyperlinkCells = 0
-      for (const address of addresses) {
-        const value = sheet[address]
-        digest.update(JSON.stringify([address, stableValue(value)]))
-        if (value?.f) formulaCells += 1
-        if (value?.f) sheetFormulaCells += 1
-        if (value?.t === 'e') {
-          formulaErrorCells += 1
-          sheetFormulaErrors += 1
-        }
-        if (value?.v !== undefined || value?.f) {
-          populatedCells += 1
-          sheetPopulatedCells += 1
-        }
-        if (value?.c?.length) commentCells += 1
-        if (value?.l) hyperlinkCells += 1
-      }
-      storedCells += addresses.length
-      sheets.push({
-        name,
-        range: sheet['!ref'] ?? null,
-        storedCells: addresses.length,
-        populatedCells: sheetPopulatedCells,
-        formulaCells: sheetFormulaCells,
-        formulaErrorCells: sheetFormulaErrors,
-        commentCells,
-        hyperlinkCells,
-        cellDigest: digest.digest('hex'),
-      })
-    }
-    const relativeFile = path.relative(root, file).replaceAll('\\', '/')
-    return {
-      file: relativeFile,
-      period: periodFromPath(relativeFile),
-      dataset: classifyWorkbook(relativeFile),
-      sourceRole: sourceRole(relativeFile),
-      byteSize: fs.statSync(file).size,
-      fileSha256: sha256(fs.readFileSync(file)),
-      selectedSheet: sheetName,
-      sheetCount: workbook.SheetNames.length,
-      dataRows: rows.length,
-      columnCount: headers.length,
-      emptyHeaderCount: headers.filter((header) => !normalize(header)).length,
-      duplicateHeaderCount: headers.map(normalize).filter(Boolean).length - new Set(headers.map(normalize).filter(Boolean)).size,
-      storedCells,
-      populatedCells,
-      formulaCells,
-      formulaErrorCells,
-      sheets,
-    }
-  })
-}
 
 function build2025Baseline(root) {
   const base = path.join(root, 'Datos 2025', 'raw')
@@ -630,7 +497,7 @@ function main() {
   const { input, output, manifestOutput } = parseArgs()
   if (!fs.existsSync(input)) throw new Error(`Input folder does not exist: ${input}`)
   const months = MONTHS.map((month) => buildMonth(input, month))
-  const workbookAudit = auditWorkbooks(input)
+  const workbookAudit = auditWorkbooks(input, fs, XLSX)
   const baseline2025 = build2025Baseline(input)
   const leadSnapshotCoverage = buildLeadSnapshots(input)
   const latestLeadSnapshot = leadSnapshotCoverage.snapshots.at(-1)

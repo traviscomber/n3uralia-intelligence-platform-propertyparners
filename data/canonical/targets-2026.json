@@ -1,0 +1,31 @@
+{
+  "meta_ventas_anual": "180000 UF",
+  "presupuesto": "1500000 USD",
+  "roi_esperado": "3.2x",
+  "ciclo_promedio_dias": 45,
+  "tasa_conversion_target": "8.5%",
+  "comision_promedio": "2.5%",
+  "objetivos": [
+    "Expansión territorial a 4 zonas principales",
+    "Aumentar volumen transaccional 40%",
+    "Implementar IA en procesos comerciales",
+    "Crear inteligencia de mercado en tiempo real"
+  ],
+  "directores_responsables": [
+    {
+      "nombre": "Juan Morales",
+      "equipo": "Equipo Alpha",
+      "rol": "Director"
+    },
+    {
+      "nombre": "María García",
+      "equipo": "Equipo Beta",
+      "rol": "Director"
+    },
+    {
+      "nombre": "Carlos López",
+      "equipo": "Equipo Gamma",
+      "rol": "Director"
+    }
+  ]
+}

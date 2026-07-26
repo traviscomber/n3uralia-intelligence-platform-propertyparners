@@ -8,9 +8,12 @@ import {
   getBranchSalesYtdPerformance,
   getCompanySalesCompliance,
 } from '@/lib/targets-2026'
+import { getMarketSnapshot } from '@/lib/market-snapshot'
+import { getValuationSnapshot } from '@/lib/valuation-snapshot'
+import { normalizePresentationDocuments } from '@/lib/presentations-2026'
 
 export type IntelligenceAudience = 'ceo' | 'director' | 'seller' | 'system'
-export type IntelligenceDomain = 'executive' | 'crm' | 'market' | 'valuation' | 'reports'
+export type IntelligenceDomain = 'executive' | 'crm' | 'market' | 'valuation' | 'documents' | 'reports'
 export type IntelligenceSourceClass =
   | 'client_evidence'
   | 'external_market'
@@ -99,6 +102,7 @@ const DOMAIN_LINKS: Record<IntelligenceDomain, string> = {
   crm: '/dashboard/datos-crm',
   market: '/dashboard/market',
   valuation: '/dashboard/valorizador',
+  documents: '/dashboard/documentos',
   reports: '/dashboard/reportes/autonomos',
 }
 
@@ -110,7 +114,8 @@ function buildClientEvidence(): IntelligenceEvidence[] {
   const branches = getBranchSalesYtdPerformance('2026-06')
   const attributedSales = branches.reduce((sum, branch) => sum + branch.actualSales, 0)
 
-  return [
+  // Base CRM evidence
+  const crmEvidence: IntelligenceEvidence[] = [
     {
       id: 'client.crm.sales-ytd',
       domain: 'crm',
@@ -172,6 +177,47 @@ function buildClientEvidence(): IntelligenceEvidence[] {
       methodology: `Parte identificada de ${ytd.salesCount} cierres acumulados.`,
     },
   ]
+
+  // Market evidence from market-snapshot
+  const marketRawEvidence = getMarketSnapshot()
+  const marketEvidence: IntelligenceEvidence[] = marketRawEvidence.map((m) => ({
+    id: m.id,
+    domain: m.domain as IntelligenceDomain,
+    sourceClass: m.sourceClass as IntelligenceSourceClass,
+    label: m.title,
+    value: m.summary,
+    period: null,
+    source: m.sourceId,
+    methodology: m.detail,
+  }))
+
+  // Valuation evidence from valuation-snapshot
+  const valuationRawEvidence = getValuationSnapshot()
+  const valuationEvidence: IntelligenceEvidence[] = valuationRawEvidence.map((v) => ({
+    id: v.id,
+    domain: v.domain as IntelligenceDomain,
+    sourceClass: v.sourceClass as IntelligenceSourceClass,
+    label: v.title,
+    value: v.summary,
+    period: null,
+    source: v.sourceId,
+    methodology: v.detail,
+  }))
+
+  // Document evidence from presentations and other managed documents
+  const documentEvidenceRecords = normalizePresentationDocuments()
+  const documentEvidence: IntelligenceEvidence[] = documentEvidenceRecords.map((doc) => ({
+    id: doc.id,
+    domain: 'documents' as const,
+    sourceClass: 'client_evidence' as const,
+    label: doc.title,
+    value: doc.summary,
+    period: null,
+    source: doc.sourceType,
+    methodology: `Extracted from ${doc.sourceType} with quality: ${doc.extractionQuality}. Citation: ${doc.citation.reference}`,
+  }))
+
+  return [...crmEvidence, ...marketEvidence, ...valuationEvidence, ...documentEvidence]
 }
 
 function buildN3uraliaSignals(evidence: IntelligenceEvidence[]): IntelligenceSignal[] {

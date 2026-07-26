@@ -1,0 +1,17 @@
+{
+  "zonas_operacion": [
+    "Vitacura",
+    "La Dehesa",
+    "El Bosque",
+    "Las Condes"
+  ],
+  "fuentes_datos": [
+    "Portal Inmobiliario",
+    "TOCTOC",
+    "iCasas",
+    "Yapo"
+  ],
+  "ciclo_promedio_dias": 45,
+  "diferenciador": "Enfoque en IA + Data Intelligence para decisiones comerciales",
+  "ventaja_competitiva": "Agentes especializados + Inteligencia de mercado en tiempo real"
+}
