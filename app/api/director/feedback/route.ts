@@ -32,9 +32,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result, { status: result.persisted ? 201 : 503 })
   } catch (error) {
-    console.error('Director feedback route error:', error)
+    console.error('Director de Cuenta feedback route error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error procesando feedback del Director' },
+      { error: error instanceof Error ? error.message : 'Error procesando feedback del Director de Cuenta' },
       { status: 500 },
     )
   }
