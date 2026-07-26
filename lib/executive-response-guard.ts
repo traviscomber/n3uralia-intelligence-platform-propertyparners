@@ -7,6 +7,12 @@ export type ResponseSections = {
   nivelConfianza: { label: 'Alta' | 'Media' | 'Baja'; score: number; justificacion: string }
 }
 
+export type TraceableClaim = {
+  statement: string
+  evidenceIds: string[]
+  confidence: number
+}
+
 export type ExecutiveResponse = {
   summary: string
   facts: string[]
@@ -15,10 +21,13 @@ export type ExecutiveResponse = {
   risks: string[]
   confidence: number
   sources: string[]
+  evidenceIds?: string[]
+  claims?: TraceableClaim[]
   sections?: ResponseSections
 }
 
 export type N3uraliaExecutiveResponse = ExecutiveResponse & {
+  claims: TraceableClaim[]
   sections: ResponseSections
   header: {
     engine: 'N3uralia Intelligence'
@@ -29,6 +38,8 @@ export type N3uraliaExecutiveResponse = ExecutiveResponse & {
     domainsCovered: string[]
     evidenceCount: number
     sourceCount: number
+    claimCount: number
+    supportedClaimCount: number
     traceability: 'complete' | 'partial' | 'unavailable'
     validationWarnings: string[]
     principlesApplied: string[]
@@ -41,11 +52,22 @@ function cleanStrings(values: string[]): string[] {
   )
 }
 
-function clampConfidence(confidence: number, evidenceCount: number, sourceCount: number): number {
-  const normalized = Number.isFinite(confidence) ? Math.min(1, Math.max(0, confidence)) : 0
+function normalizeConfidence(confidence: number): number {
+  return Number.isFinite(confidence) ? Math.min(1, Math.max(0, confidence)) : 0
+}
 
-  if (evidenceCount === 0) return 0
+function clampConfidence(
+  confidence: number,
+  evidenceCount: number,
+  sourceCount: number,
+  supportedClaimCount: number,
+  claimCount: number,
+): number {
+  const normalized = normalizeConfidence(confidence)
+
+  if (evidenceCount === 0 || supportedClaimCount === 0) return 0
   if (sourceCount === 0) return Math.min(normalized, 0.35)
+  if (supportedClaimCount < claimCount) return Math.min(normalized, 0.5)
   if (evidenceCount <= 2) return Math.min(normalized, 0.4)
   if (evidenceCount <= 4) return Math.min(normalized, 0.55)
   if (evidenceCount <= 9 || sourceCount === 1) return Math.min(normalized, 0.7)
@@ -59,14 +81,27 @@ function confidenceLabel(score: number): 'Alta' | 'Media' | 'Baja' {
 
 export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaExecutiveResponse {
   const facts = cleanStrings(input.facts)
-  const inferences = cleanStrings(input.inferences)
   const risks = cleanStrings(input.risks)
   const sources = cleanStrings(input.sources)
-  const evidenceCount = facts.length
+  const validEvidenceIds = new Set(cleanStrings(input.evidenceIds ?? []))
+  const evidenceCount = validEvidenceIds.size > 0 ? validEvidenceIds.size : facts.length
   const sourceCount = sources.length
-  const confidence = clampConfidence(input.confidence, evidenceCount, sourceCount)
-  const recommendations = evidenceCount > 0 ? cleanStrings(input.recommendations) : []
   const validationWarnings: string[] = []
+
+  const normalizedClaims = (input.claims ?? input.inferences.map((statement) => ({
+    statement,
+    evidenceIds: [],
+    confidence: input.confidence,
+  })))
+    .map((claim) => ({
+      statement: claim.statement.trim(),
+      evidenceIds: cleanStrings(claim.evidenceIds).filter((id) => validEvidenceIds.size === 0 || validEvidenceIds.has(id)),
+      confidence: normalizeConfidence(claim.confidence),
+    }))
+    .filter((claim) => claim.statement.length > 0)
+
+  const supportedClaims = normalizedClaims.filter((claim) => claim.evidenceIds.length > 0)
+  const unsupportedClaimCount = normalizedClaims.length - supportedClaims.length
 
   if (evidenceCount === 0) {
     validationWarnings.push('No hay evidencia verificable disponible para respaldar recomendaciones.')
@@ -74,9 +109,25 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
   if (sourceCount === 0) {
     validationWarnings.push('La evidencia no incluye fuentes trazables.')
   }
+  if (unsupportedClaimCount > 0) {
+    validationWarnings.push(`${unsupportedClaimCount} afirmación${unsupportedClaimCount === 1 ? '' : 'es'} sin evidencia asociada fue${unsupportedClaimCount === 1 ? '' : 'ron'} excluida${unsupportedClaimCount === 1 ? '' : 's'}.`)
+  }
+
+  const confidence = clampConfidence(
+    input.confidence,
+    evidenceCount,
+    sourceCount,
+    supportedClaims.length,
+    normalizedClaims.length,
+  )
   if (input.confidence > confidence) {
     validationWarnings.push('El nivel de confianza fue reducido por cobertura o trazabilidad insuficiente.')
   }
+
+  const inferences = supportedClaims.map((claim) => claim.statement)
+  const recommendations = evidenceCount > 0 && supportedClaims.length > 0
+    ? cleanStrings(input.recommendations)
+    : []
 
   const providedSections = input.sections
   const evidenceSections = (providedSections?.evidenciaUtilizada ?? [])
@@ -92,20 +143,26 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
       ? [{ domain: 'General', items: facts }]
       : []
 
+  const traceability = evidenceCount === 0 || supportedClaims.length === 0
+    ? 'unavailable'
+    : supportedClaims.length === normalizedClaims.length && sourceCount > 0
+      ? 'complete'
+      : 'partial'
+
   const justification = evidenceCount === 0
     ? 'Sin evidencia disponible; no se emiten recomendaciones ejecutivas.'
-    : sourceCount === 0
-      ? `Se analizaron ${evidenceCount} registros, pero no existen fuentes trazables suficientes.`
-      : `Basado en ${evidenceCount} registros de evidencia provenientes de ${sourceCount} fuente${sourceCount === 1 ? '' : 's'} trazable${sourceCount === 1 ? '' : 's'}.`
+    : supportedClaims.length === 0
+      ? 'No existen afirmaciones con evidencia asociada; no se emiten recomendaciones ejecutivas.'
+      : sourceCount === 0
+        ? `Se validaron ${supportedClaims.length} afirmaciones, pero no existen fuentes trazables suficientes.`
+        : `Basado en ${evidenceCount} registros y ${supportedClaims.length} afirmación${supportedClaims.length === 1 ? '' : 'es'} con evidencia trazable.`
 
   const sections: ResponseSections = {
     resumenEjecutivo: providedSections?.resumenEjecutivo?.trim() || input.summary.trim(),
-    senalesPrincipales: cleanStrings(providedSections?.senalesPrincipales ?? inferences),
+    senalesPrincipales: inferences,
     evidenciaUtilizada: normalizedEvidenceSections,
     riesgos: cleanStrings(providedSections?.riesgos ?? risks),
-    oportunidades: evidenceCount > 0
-      ? cleanStrings(providedSections?.oportunidades ?? recommendations)
-      : [],
+    oportunidades: recommendations,
     nivelConfianza: {
       label: confidenceLabel(confidence),
       score: confidence,
@@ -125,6 +182,7 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
     risks,
     confidence,
     sources,
+    claims: supportedClaims,
     sections,
     header: {
       engine: 'N3uralia Intelligence',
@@ -135,11 +193,9 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
       domainsCovered,
       evidenceCount,
       sourceCount,
-      traceability: evidenceCount === 0
-        ? 'unavailable'
-        : sourceCount > 0
-          ? 'partial'
-          : 'unavailable',
+      claimCount: normalizedClaims.length,
+      supportedClaimCount: supportedClaims.length,
+      traceability,
       validationWarnings,
       principlesApplied: [
         'Mantener tono profesional y ejecutivo',
@@ -147,6 +203,7 @@ export function applyExecutiveResponseGuard(input: ExecutiveResponse): N3uraliaE
         'Separar hechos de interpretaciones',
         'No presentar hipótesis como certezas',
         'No recomendar acciones sin evidencia disponible',
+        'Excluir afirmaciones sin evidencia asociada',
         'Ajustar confianza según cobertura y trazabilidad',
         'Mostrar evidencia y nivel de confianza',
         'Responder con respeto y precisión',
