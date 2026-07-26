@@ -91,7 +91,7 @@ export function DirectorAIAssistantWidget() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">N3uralia</p>
-                <p className="text-[11px] text-neutral-400">Copiloto estrategico · Director</p>
+                <p className="text-[11px] text-neutral-400">Copiloto estratégico · Director de Cuenta</p>
               </div>
             </div>
             <button
