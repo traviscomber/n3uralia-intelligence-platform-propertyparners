@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/layout/sidebar'
 import Topbar from '@/components/layout/topbar'
 import { CEOAIAssistantWidget } from '@/components/ceo/ceo-ai-assistant-widget'
+import { DirectorAIAssistantWidget } from '@/components/director/director-ai-assistant-widget'
+import { PartnerAIAssistantWidget } from '@/components/partner/partner-ai-assistant-widget'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -10,6 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/auth/login')
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+  const role = String(profile?.role ?? '').toLowerCase()
 
   return (
     <div className="dashboard-shell flex h-screen overflow-hidden bg-[var(--n3-black)] text-[var(--n3-text-light)]">
@@ -20,7 +23,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
-      {profile?.role === 'ceo' && <CEOAIAssistantWidget />}
+
+      {/* Role-scoped AI Assistant Widgets */}
+      {role === 'ceo' && <CEOAIAssistantWidget />}
+      {role === 'director' && <DirectorAIAssistantWidget />}
+      {role === 'partner' && <PartnerAIAssistantWidget />}
     </div>
   )
 }
