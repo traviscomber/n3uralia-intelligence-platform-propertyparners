@@ -1,28 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { requireCopilotRole } from '@/lib/copilot-authorization'
 import { runExecutiveReasoningPipeline } from '@/lib/executive-reasoning-pipeline'
 import { buildN3uraliaIntelligenceContext } from '@/lib/n3uralia-intelligence-engine'
 import { selectReasoningMode } from '@/lib/copilot-reasoning-router'
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    // Verify partner role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (String(profile?.role ?? '').toLowerCase() !== 'partner') {
-      return NextResponse.json({ error: 'Acceso exclusivo para perfil Partner' }, { status: 403 })
-    }
+    const authorization = await requireCopilotRole(['partner'])
+    if (!authorization.ok) return authorization.response
 
     const body = await request.json()
     const question: string = body.question ?? '¿Cuál es mi estado actual de leads y cartera?'
@@ -31,14 +16,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 })
     }
 
-    // Select reasoning depth based on question characteristics
     const reasoningMode = selectReasoningMode({
       question,
       importance: body.importance ?? 'medium',
       requiresDecision: body.requiresDecision ?? false,
     })
 
-    // Build N3uralia intelligence context scoped to partner audience
     const intelligenceContext = buildN3uraliaIntelligenceContext('seller')
 
     const result = await runExecutiveReasoningPipeline({
