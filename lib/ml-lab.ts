@@ -1,7 +1,12 @@
 import market from '@/data/market-source-intelligence.json'
 import valuation from '@/data/valuation-intelligence.json'
+import {
+  buildForecastEngineState,
+  type ForecastCheckStatus,
+  type ForecastExperimentContract,
+} from './forecast-engine'
 
-export type MlLabStatus = 'ready' | 'partial' | 'blocked'
+export type MlLabStatus = ForecastCheckStatus
 
 export type MlLabCheck = {
   label: string
@@ -12,17 +17,7 @@ export type MlLabCheck = {
   blocksTraining: boolean
 }
 
-export type MlExperimentContract = {
-  version: '1.0.0'
-  target: 'registered_sale_price_uf'
-  segments: readonly ['apartment', 'house']
-  splitStrategy: 'temporal'
-  baseline: 'property_partners_excel_rules'
-  sourceHashes: string[]
-  confirmedPairs: number
-  trainingEnabled: boolean
-  activation: 'professional_approval_required'
-}
+export type MlExperimentContract = ForecastExperimentContract
 
 function percentage(part: number, total: number) {
   return total ? (part / total) * 100 : 0
@@ -87,30 +82,23 @@ export function getMlLabSnapshot() {
     },
   ]
 
-  const experimentContract: MlExperimentContract = {
-    version: '1.0.0',
-    target: 'registered_sale_price_uf',
-    segments: ['apartment', 'house'],
-    splitStrategy: 'temporal',
-    baseline: 'property_partners_excel_rules',
+  const forecastState = buildForecastEngineState({
     sourceHashes: [
       ...market.sourceInventory.files.map((file) => file.sha256),
       ...valuation.sourceInventory.map((file) => file.sha256),
     ],
     confirmedPairs: market.operatingModel.matchPolicy.currentConfirmedMatches,
-    trainingEnabled: false,
-    activation: 'professional_approval_required',
-  }
+    checks,
+  })
 
   return {
-    status: 'research_only' as const, canTrainPriceModel: false, modelVersions: 0, approvedVersions: 0,
+    ...forecastState,
     validOffers, eligibleOffers, cbrsRows: cbrs.rows, cbrsEvents, residentialCbrsRows,
     polygonCount: market.kml.geometryAudit.polygonCount, portalRows, portalGeoAssigned,
     apartmentRows, apartmentGeoAssigned: apartmentSource?.coordinateQuality.single_polygon || 0,
     projectRows, houseRows, houseGeoAssigned: houseSource?.coordinateQuality.single_polygon || 0,
     readyChecks: checks.filter((check) => check.status === 'ready').length,
-    blockingChecks: checks.filter((check) => check.blocksTraining && check.status !== 'ready').length,
-    checks, experimentContract, historicalCase: valuation.templateCase,
+    checks, historicalCase: valuation.templateCase,
     prohibitedAdjustments: valuation.methodology.prohibitedAutomaticAdjustments,
   }
 }
