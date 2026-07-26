@@ -25,7 +25,8 @@
     "valuation:build": "node scripts/build-valuation-intelligence.mjs",
     "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
-    "ml:verify": "node --import tsx scripts/verify-ml-readiness.ts"
+    "ml:verify": "node --import tsx scripts/verify-ml-readiness.ts",
+    "test:documents": "node scripts/test-document-evidence.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
