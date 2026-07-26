@@ -1,32 +1,46 @@
 import { NextResponse } from 'next/server'
+import { requireCopilotRole } from '@/lib/copilot-authorization'
 import { runExecutiveReasoningPipeline } from '@/lib/executive-reasoning-pipeline'
 import { buildN3uraliaIntelligenceContext } from '@/lib/n3uralia-intelligence-engine'
 import { selectReasoningMode } from '@/lib/copilot-reasoning-router'
 
 export async function POST(request: Request) {
-  const body = await request.json()
-  const question: string = body.question ?? '¿Qué debo saber hoy?'
+  try {
+    const authorization = await requireCopilotRole(['ceo'])
+    if (!authorization.ok) return authorization.response
 
-  // Select reasoning depth based on question characteristics
-  const reasoningMode = selectReasoningMode({
-    question,
-    importance: body.importance ?? 'high',
-    requiresDecision: body.requiresDecision ?? true,
-  })
+    const body = await request.json()
+    const question: string = body.question ?? '¿Qué debo saber hoy?'
 
-  // Build complete N3uralia intelligence context with all evidence domains
-  const intelligenceContext = buildN3uraliaIntelligenceContext('ceo')
+    if (!question || question.trim().length === 0) {
+      return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 })
+    }
 
-  const result = await runExecutiveReasoningPipeline({
-    role: 'ceo',
-    question,
-    reasoningMode,
-    context: {
-      source: 'CEO Assistant Widget',
-      requestedAt: new Date().toISOString(),
-      intelligence: intelligenceContext,
-    },
-  })
+    const reasoningMode = selectReasoningMode({
+      question,
+      importance: body.importance ?? 'high',
+      requiresDecision: body.requiresDecision ?? true,
+    })
 
-  return NextResponse.json(result)
+    const intelligenceContext = buildN3uraliaIntelligenceContext('ceo')
+
+    const result = await runExecutiveReasoningPipeline({
+      role: 'ceo',
+      question,
+      reasoningMode,
+      context: {
+        source: 'CEO Assistant Widget',
+        requestedAt: new Date().toISOString(),
+        intelligence: intelligenceContext,
+      },
+    })
+
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error('CEO question route error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error procesando pregunta del CEO' },
+      { status: 500 },
+    )
+  }
 }
