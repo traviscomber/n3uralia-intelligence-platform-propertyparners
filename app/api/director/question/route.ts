@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       question,
       reasoningMode,
       context: {
-        source: 'Director Assistant Widget',
+        source: 'Director de Cuenta Assistant Widget',
         requestedAt: new Date().toISOString(),
         intelligence: intelligenceContext,
       },
@@ -37,9 +37,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Director question route error:', error)
+    console.error('Director de Cuenta question route error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error procesando pregunta del director' },
+      { error: error instanceof Error ? error.message : 'Error procesando pregunta del Director de Cuenta' },
       { status: 500 },
     )
   }
