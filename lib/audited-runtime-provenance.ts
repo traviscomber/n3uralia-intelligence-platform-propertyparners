@@ -1,5 +1,6 @@
 import crmIntelligence from '@/data/crm-intelligence.json'
 import targets2026 from '@/data/targets-2026.json'
+import presentationsSummary from '@/data/presentations-2026-summary.json'
 import marketIntelligence from '@/data/market-source-intelligence.json'
 import valuationIntelligence from '@/data/valuation-intelligence.json'
 import type { RuntimeProvenanceEvidence } from '@/lib/runtime-provenance'
@@ -19,6 +20,17 @@ type TargetsManifest = {
   generatedAt: string
   version: string
   cellCoverage: { workbookCount: number; storedCells: number }
+}
+
+type PresentationManifest = {
+  generatedAt: string
+  source: {
+    sha256: string
+    presentationCount: number
+    slideCount: number
+    contentCoverage: { tables: number; charts: number }
+  }
+  scope: { period: string }
 }
 
 type MarketManifest = {
@@ -43,11 +55,16 @@ type ValuationManifest = {
 
 const crm = crmIntelligence as CrmSnapshotManifest
 const targets = targets2026 as TargetsManifest
+const presentations = presentationsSummary as PresentationManifest
 const market = marketIntelligence as MarketManifest
 const valuation = valuationIntelligence as ValuationManifest
 
 function digestPrefix(value: string) {
   return value.slice(0, 12)
+}
+
+function latestTimestamp(values: string[]) {
+  return [...values].sort().at(-1) ?? values[0]
 }
 
 export function getCrmAuditedEvidence(view: string): RuntimeProvenanceEvidence {
@@ -78,9 +95,20 @@ export function getExecutiveAuditedEvidence(view: string): RuntimeProvenanceEvid
   return {
     ...crmEvidence,
     source: `${crmEvidence.source} + metas ${targets.version}`,
-    observedAt: [crm.generatedAt, targets.generatedAt].sort().at(-1) ?? crm.generatedAt,
+    observedAt: latestTimestamp([crm.generatedAt, targets.generatedAt]),
     evidenceId: `${crmEvidence.evidenceId}.targets-${targets.version}`,
     details: `${crmEvidence.details} Metas cargadas desde ${targets.cellCoverage.workbookCount} workbooks y ${targets.cellCoverage.storedCells} celdas.`,
+  }
+}
+
+export function getPresentationsAuditedEvidence(view: string): RuntimeProvenanceEvidence {
+  return {
+    kind: 'audited',
+    source: `${presentations.source.presentationCount} presentaciones · ${presentations.source.slideCount} láminas`,
+    observedAt: presentations.generatedAt,
+    cutoffLabel: `Corte presentaciones: ${presentations.scope.period}`,
+    evidenceId: `presentations-${digestPrefix(presentations.source.sha256)}`,
+    details: `${view} usa el manifiesto auditado con ${presentations.source.contentCoverage.tables} tablas y ${presentations.source.contentCoverage.charts} gráficos.`,
   }
 }
 
@@ -118,9 +146,36 @@ export function getMarketAndValuationAuditedEvidence(view: string): RuntimeProve
   return {
     kind: 'audited',
     source: `${marketEvidence.source} + ${valuationEvidence.source}`,
-    observedAt: [marketEvidence.observedAt, valuationEvidence.observedAt].sort().at(-1) ?? marketEvidence.observedAt,
+    observedAt: latestTimestamp([marketEvidence.observedAt, valuationEvidence.observedAt]),
     cutoffLabel: 'Mercado y valorización · snapshots auditados separados',
     evidenceId: `${marketEvidence.evidenceId}.${valuationEvidence.evidenceId}`,
     details: `${marketEvidence.details} ${valuationEvidence.details}`,
+  }
+}
+
+export function getCorporateIntelligenceEvidence(view: string): RuntimeProvenanceEvidence {
+  const executiveEvidence = getExecutiveAuditedEvidence(view)
+  const presentationEvidence = getPresentationsAuditedEvidence(view)
+  const marketEvidence = getMarketAuditedEvidence(view)
+  const valuationEvidence = getValuationAuditedEvidence(view)
+
+  return {
+    kind: 'audited',
+    source: 'CRM + metas + presentaciones + mercado + valorización',
+    observedAt: latestTimestamp([executiveEvidence.observedAt, presentationEvidence.observedAt, marketEvidence.observedAt, valuationEvidence.observedAt]),
+    cutoffLabel: `Cortes combinados · CRM ${crm.sourceInventory.periodEnd} · presentaciones ${presentations.scope.period}`,
+    evidenceId: `${executiveEvidence.evidenceId}.${presentationEvidence.evidenceId}.${marketEvidence.evidenceId}.${valuationEvidence.evidenceId}`,
+    details: `${view} combina cinco dominios auditados; cada uno conserva su propio manifiesto, corte e identificador.`,
+  }
+}
+
+export function getMlLabAuditedEvidence(view: string): RuntimeProvenanceEvidence {
+  const combined = getMarketAndValuationAuditedEvidence(view)
+  return {
+    ...combined,
+    source: 'Baseline ML · mercado + plantillas de valorización',
+    cutoffLabel: `Preparación ML · ${market.sourceInventory.fileCount} archivos de mercado · ${valuation.sourceInventory.length} plantillas`,
+    evidenceId: `ml-baseline.${combined.evidenceId}`,
+    details: `${view} informa preparación sobre fuentes auditadas; no acredita un modelo entrenado, aprobado ni habilitado para uso comercial.`,
   }
 }
