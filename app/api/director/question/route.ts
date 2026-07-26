@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireCopilotRole } from '@/lib/copilot-authorization'
+import { parseCopilotQuestionRequest } from '@/lib/copilot-question-request'
 import { runExecutiveReasoningPipeline } from '@/lib/executive-reasoning-pipeline'
 import { buildN3uraliaIntelligenceContext } from '@/lib/n3uralia-intelligence-engine'
 import { selectReasoningMode } from '@/lib/copilot-reasoning-router'
@@ -9,17 +10,18 @@ export async function POST(request: Request) {
     const authorization = await requireCopilotRole(['director'])
     if (!authorization.ok) return authorization.response
 
-    const body = await request.json()
-    const question: string = body.question ?? '¿Qué debo saber de mi región hoy?'
+    const parsedRequest = await parseCopilotQuestionRequest(request, {
+      question: '¿Qué debo saber de mi región hoy?',
+      importance: 'high',
+      requiresDecision: true,
+    })
+    if (!parsedRequest.ok) return parsedRequest.response
 
-    if (!question || question.trim().length === 0) {
-      return NextResponse.json({ error: 'La pregunta es obligatoria' }, { status: 400 })
-    }
-
+    const { question, importance, requiresDecision } = parsedRequest.value
     const reasoningMode = selectReasoningMode({
       question,
-      importance: body.importance ?? 'high',
-      requiresDecision: body.requiresDecision ?? true,
+      importance,
+      requiresDecision,
     })
 
     const intelligenceContext = buildN3uraliaIntelligenceContext('director')
@@ -39,7 +41,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Director de Cuenta question route error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error procesando pregunta del Director de Cuenta' },
+      { error: 'No fue posible procesar la pregunta del Director de Cuenta' },
       { status: 500 },
     )
   }
