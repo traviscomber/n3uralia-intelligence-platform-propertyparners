@@ -27,7 +27,8 @@
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
     "ml:verify": "node --import tsx scripts/verify-ml-readiness.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
-    "test:roles": "node scripts/test-director-partner-copilots.mjs"
+    "test:roles": "node scripts/test-director-partner-copilots.mjs",
+    "test:traceability": "node scripts/test-traceability-validator.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
