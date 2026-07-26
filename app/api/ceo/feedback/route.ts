@@ -1,31 +1,21 @@
 import { NextResponse } from 'next/server'
 import { requireCopilotRole } from '@/lib/copilot-authorization'
 import { captureCopilotFeedback } from '@/lib/copilot-feedback'
+import {
+  copilotFeedbackServerError,
+  parseCopilotFeedbackRequest,
+} from '@/lib/copilot-feedback-request'
 
 export async function POST(request: Request) {
   try {
     const authorization = await requireCopilotRole(['ceo'])
     if (!authorization.ok) return authorization.response
 
-    const body = await request.json()
-    const question = String(body.question ?? '').trim()
-    const answerId = String(body.answerId ?? '').trim()
-
-    if (!question || !answerId) {
-      return NextResponse.json(
-        { error: 'La pregunta y el identificador de respuesta son obligatorios' },
-        { status: 400 },
-      )
-    }
+    const parsedRequest = await parseCopilotFeedbackRequest(request)
+    if (!parsedRequest.ok) return parsedRequest.response
 
     const result = await captureCopilotFeedback({
-      question,
-      answerId,
-      rating: body.rating === 'up' ? 'up' : 'down',
-      comment: typeof body.comment === 'string' ? body.comment.trim() || undefined : undefined,
-      contextSources: Array.isArray(body.contextSources)
-        ? body.contextSources.filter((source: unknown): source is string => typeof source === 'string')
-        : [],
+      ...parsedRequest.value,
       role: authorization.value.role,
       userId: authorization.value.userId,
     })
@@ -33,9 +23,6 @@ export async function POST(request: Request) {
     return NextResponse.json(result, { status: result.persisted ? 201 : 503 })
   } catch (error) {
     console.error('CEO feedback route error:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error procesando feedback del CEO' },
-      { status: 500 },
-    )
+    return copilotFeedbackServerError('No fue posible procesar el feedback del CEO.')
   }
 }
