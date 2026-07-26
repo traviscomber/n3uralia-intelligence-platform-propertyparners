@@ -10,9 +10,10 @@ import {
 } from '@/lib/targets-2026'
 import { getMarketSnapshot } from '@/lib/market-snapshot'
 import { getValuationSnapshot } from '@/lib/valuation-snapshot'
+import { normalizePresentationDocuments } from '@/lib/presentations-2026'
 
 export type IntelligenceAudience = 'ceo' | 'director' | 'seller' | 'system'
-export type IntelligenceDomain = 'executive' | 'crm' | 'market' | 'valuation' | 'reports'
+export type IntelligenceDomain = 'executive' | 'crm' | 'market' | 'valuation' | 'documents' | 'reports'
 export type IntelligenceSourceClass =
   | 'client_evidence'
   | 'external_market'
@@ -101,6 +102,7 @@ const DOMAIN_LINKS: Record<IntelligenceDomain, string> = {
   crm: '/dashboard/datos-crm',
   market: '/dashboard/market',
   valuation: '/dashboard/valorizador',
+  documents: '/dashboard/documentos',
   reports: '/dashboard/reportes/autonomos',
 }
 
@@ -202,7 +204,20 @@ function buildClientEvidence(): IntelligenceEvidence[] {
     methodology: v.detail,
   }))
 
-  return [...crmEvidence, ...marketEvidence, ...valuationEvidence]
+  // Document evidence from presentations and other managed documents
+  const documentEvidenceRecords = normalizePresentationDocuments()
+  const documentEvidence: IntelligenceEvidence[] = documentEvidenceRecords.map((doc) => ({
+    id: doc.id,
+    domain: 'documents' as const,
+    sourceClass: 'client_evidence' as const,
+    label: doc.title,
+    value: doc.summary,
+    period: null,
+    source: doc.sourceType,
+    methodology: `Extracted from ${doc.sourceType} with quality: ${doc.extractionQuality}. Citation: ${doc.citation.reference}`,
+  }))
+
+  return [...crmEvidence, ...marketEvidence, ...valuationEvidence, ...documentEvidence]
 }
 
 function buildN3uraliaSignals(evidence: IntelligenceEvidence[]): IntelligenceSignal[] {
