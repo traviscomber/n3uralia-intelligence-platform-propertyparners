@@ -28,13 +28,16 @@ function normalizeConfidence(confidence: number): number {
 export function validateTraceability(input: {
   claims: TraceabilityClaim[]
   validEvidenceIds: string[]
+  hasEvidence: boolean
   hasTraceableSources: boolean
 }): TraceabilityValidationResult {
   const validEvidenceIds = new Set(cleanStrings(input.validEvidenceIds))
   const normalizedClaims = input.claims
     .map((claim) => ({
       statement: claim.statement.trim(),
-      evidenceIds: cleanStrings(claim.evidenceIds).filter((id) => validEvidenceIds.has(id)),
+      evidenceIds: cleanStrings(claim.evidenceIds).filter(
+        (id) => validEvidenceIds.size === 0 || validEvidenceIds.has(id),
+      ),
       confidence: normalizeConfidence(claim.confidence),
     }))
     .filter((claim) => claim.statement.length > 0)
@@ -43,7 +46,7 @@ export function validateTraceability(input: {
   const unsupportedClaimCount = normalizedClaims.length - claims.length
   const warnings: string[] = []
 
-  if (validEvidenceIds.size === 0) {
+  if (!input.hasEvidence) {
     warnings.push('No hay evidencia verificable disponible para respaldar recomendaciones.')
   }
 
@@ -57,7 +60,7 @@ export function validateTraceability(input: {
     )
   }
 
-  const traceability: TraceabilityStatus = validEvidenceIds.size === 0 || claims.length === 0
+  const traceability: TraceabilityStatus = !input.hasEvidence || claims.length === 0
     ? 'unavailable'
     : claims.length === normalizedClaims.length && input.hasTraceableSources
       ? 'complete'
