@@ -1,9 +1,20 @@
 import { generateExecutiveReasoning } from './openai-reasoning-layer'
 import { applyExecutiveResponseGuard } from './executive-response-guard'
+import { applyIntelligenceAccessPolicy } from './intelligence-access-policy'
+import type { CopilotRole } from './copilot-authorization'
 import type { N3uraliaIntelligenceContext } from './n3uralia-intelligence-engine'
 
+type ExecutiveReasoningRole = 'ceo' | 'directorio' | 'sucursal' | 'partner'
+
+const COPILOT_ROLE_BY_REASONING_ROLE: Record<ExecutiveReasoningRole, CopilotRole> = {
+  ceo: 'ceo',
+  directorio: 'director',
+  sucursal: 'director',
+  partner: 'partner',
+}
+
 export async function runExecutiveReasoningPipeline(input: {
-  role: 'ceo' | 'directorio' | 'sucursal' | 'partner'
+  role: ExecutiveReasoningRole
   question: string
   reasoningMode?: 'quick' | 'standard' | 'deep'
   context: {
@@ -12,11 +23,21 @@ export async function runExecutiveReasoningPipeline(input: {
     intelligence?: N3uraliaIntelligenceContext
   }
 }) {
+  const authorizedIntelligence = input.context.intelligence
+    ? applyIntelligenceAccessPolicy(
+        input.context.intelligence,
+        COPILOT_ROLE_BY_REASONING_ROLE[input.role],
+      )
+    : undefined
+
   const response = await generateExecutiveReasoning({
     role: input.role,
     question: input.question,
     reasoningMode: input.reasoningMode,
-    context: input.context,
+    context: {
+      ...input.context,
+      intelligence: authorizedIntelligence,
+    },
   })
 
   return applyExecutiveResponseGuard({
