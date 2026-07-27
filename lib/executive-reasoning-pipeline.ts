@@ -1,6 +1,7 @@
 import { generateExecutiveReasoning } from './openai-reasoning-layer'
 import { applyExecutiveResponseGuard } from './executive-response-guard'
 import { applyIntelligenceAccessPolicy } from './intelligence-access-policy'
+import { rankEvidence } from './evidence-ranking'
 import type { CopilotRole } from './copilot-authorization'
 import type { N3uraliaIntelligenceContext } from './n3uralia-intelligence-engine'
 
@@ -30,13 +31,28 @@ export async function runExecutiveReasoningPipeline(input: {
       )
     : undefined
 
+  // Rank authorized evidence by relevance to the question. The reasoning
+  // layer receives items sorted by score; metadata fields from RankedEvidence
+  // (score, reasons, originalIndex) are stripped so OpenAI only sees the
+  // clean IntelligenceEvidence shape.
+  const rankedIntelligence = authorizedIntelligence
+    ? {
+        ...authorizedIntelligence,
+        evidence: rankEvidence({
+          question: input.question,
+          evidence: authorizedIntelligence.evidence,
+          role: COPILOT_ROLE_BY_REASONING_ROLE[input.role] === 'director' ? 'director' : input.role === 'ceo' ? 'ceo' : 'partner',
+        }).map(({ evidence }) => evidence),
+      }
+    : undefined
+
   const response = await generateExecutiveReasoning({
     role: input.role,
     question: input.question,
     reasoningMode: input.reasoningMode,
     context: {
       ...input.context,
-      intelligence: authorizedIntelligence,
+      intelligence: rankedIntelligence,
     },
   })
 
