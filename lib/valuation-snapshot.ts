@@ -15,6 +15,16 @@ export type ValuationEvidence = {
   metrics?: Record<string, number | string>
 }
 
+function stableSegment(value: unknown): string {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'unknown'
+}
+
 export function getValuationSnapshot(): ValuationEvidence[] {
   const scope = valuationIntelligence.scope || {}
   const methodology = valuationIntelligence.methodology || {}
@@ -30,7 +40,7 @@ export function getValuationSnapshot(): ValuationEvidence[] {
     const methodKeys = Object.keys(methodology)
     const scopeTypes = scope.propertyTypes as string[] | undefined
     evidence.push({
-      id: `valuation-model-${Date.now()}`,
+      id: 'valuation:model',
       type: 'valuation_model',
       domain: 'valuation',
       propertyType: scopeTypes?.[0] || 'residential',
@@ -49,11 +59,11 @@ export function getValuationSnapshot(): ValuationEvidence[] {
 
   // Extract template case evidence
   const templateSubject = (templateCase as any)?.subject
-  if (templateSubject?.propertyType || templateCase) {
+  if (templateSubject?.propertyType || Object.keys(templateCase).length > 0) {
     const caseKeys = Object.keys(templateCase)
     const propType = templateSubject?.propertyType || 'residential'
     evidence.push({
-      id: `valuation-template-${Date.now()}`,
+      id: `valuation:template:${stableSegment(propType)}`,
       type: 'valuation_model',
       domain: 'valuation',
       propertyType: propType,
@@ -76,7 +86,7 @@ export function getValuationSnapshot(): ValuationEvidence[] {
       .map((s) => (typeof s === 'string' ? s : (s as any).name || 'unnamed'))
       .join(', ')
     evidence.push({
-      id: `valuation-sources-${Date.now()}`,
+      id: 'valuation:source-inventory',
       type: 'valuation_benchmark',
       domain: 'valuation',
       title: 'Fuentes de datos de valuación',
@@ -104,7 +114,7 @@ export function getValuationSnapshot(): ValuationEvidence[] {
         .map((q) => (typeof q === 'string' ? q : (q as any).issue || JSON.stringify(q)))
         .join('; ')
       evidence.push({
-        id: `valuation-risks-${Date.now()}`,
+        id: 'valuation:quality-risks',
         type: 'valuation_risk',
         domain: 'valuation',
         title: 'Consideraciones de calidad en valuaciones',
@@ -126,7 +136,7 @@ export function getValuationSnapshot(): ValuationEvidence[] {
   const scopeTypes = scope.propertyTypes as string[] | undefined
   if (scope.commune || scopeZones?.length) {
     evidence.push({
-      id: `valuation-scope-${Date.now()}`,
+      id: 'valuation:scope',
       type: 'valuation_benchmark',
       domain: 'valuation',
       title: `Alcance de valuaciones: ${scope.commune || 'múltiples zonas'}`,
@@ -146,7 +156,7 @@ export function getValuationSnapshot(): ValuationEvidence[] {
   // Fallback: Add basic benchmark evidence if other sources empty
   if (evidence.length === 0) {
     evidence.push({
-      id: `valuation-default-${Date.now()}`,
+      id: 'valuation:default',
       type: 'valuation_benchmark',
       domain: 'valuation',
       title: 'Modelo de valuación disponible',
