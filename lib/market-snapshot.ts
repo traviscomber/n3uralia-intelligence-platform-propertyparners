@@ -15,6 +15,16 @@ export type MarketEvidence = {
   metrics?: Record<string, number | string>
 }
 
+function stableSegment(value: unknown): string {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'unknown'
+}
+
 export function getMarketSnapshot(): MarketEvidence[] {
   const scope = marketSourceData.scope || {}
   const workbooks = marketSourceData.workbooks || []
@@ -28,7 +38,7 @@ export function getMarketSnapshot(): MarketEvidence[] {
   // Extract market overview from KML and scope
   if (kml.counts || kml.hierarchy) {
     evidence.push({
-      id: `market-overview-${Date.now()}`,
+      id: 'market:kml:overview',
       type: 'market_trend',
       domain: 'market',
       title: 'Tendencia de mercado inmobiliario 2026',
@@ -53,7 +63,7 @@ export function getMarketSnapshot(): MarketEvidence[] {
 
     if (sheetCount > 0) {
       evidence.push({
-        id: `market-workbook-${wbFile.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        id: `market:workbook:${stableSegment(wbFile)}`,
         type: 'market_signal',
         domain: 'market',
         title: `Datos de mercado: ${wbFile}`,
@@ -76,7 +86,7 @@ export function getMarketSnapshot(): MarketEvidence[] {
     const fileRoles = [...new Set(files.map((f) => f.role || 'unknown'))]
 
     evidence.push({
-      id: `market-sources-${Date.now()}`,
+      id: 'market:source-inventory',
       type: 'market_trend',
       domain: 'market',
       title: 'Fuentes de datos de mercado disponibles',
@@ -97,7 +107,7 @@ export function getMarketSnapshot(): MarketEvidence[] {
   if (Object.keys(operatingModel).length > 0) {
     const keys = Object.keys(operatingModel)
     evidence.push({
-      id: `market-operating-model-${Date.now()}`,
+      id: 'market:operating-model',
       type: 'market_opportunity',
       domain: 'market',
       title: 'Modelo operacional de mercado',
@@ -118,10 +128,10 @@ export function getMarketSnapshot(): MarketEvidence[] {
   workbooks.forEach((wb: any) => {
     ;(wb.sheetNames || []).forEach((name: string) => uniqueSheetNames.add(name))
   })
-  
+
   if (uniqueSheetNames.size > 0) {
     evidence.push({
-      id: `market-datatypes-${Date.now()}`,
+      id: 'market:workbooks:data-types',
       type: 'market_opportunity',
       domain: 'market',
       title: 'Tipos de datos inmobiliarios disponibles',
