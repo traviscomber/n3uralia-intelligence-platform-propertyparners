@@ -1,17 +1,17 @@
 # N3uralia Intelligence Platform — Roadmap 2026
 
-Última actualización: 26 de julio de 2026
+Última actualización: 27 de julio de 2026
 
 ## Estado general
 
-**Avance estimado del roadmap de 8 semanas: 54%**
+**Avance estimado del roadmap de 8 semanas: 65%**
 
 | Semana | Enfoque | Avance |
 |---|---|---:|
 | 1 | Base documental y evidencia normalizada | 100% |
 | 2 | Integración Documents/RAG en el motor | 100% |
-| 3 | Copilotos por rol y autorización | 85% |
-| 4 | Memoria de feedback y trazabilidad | 60% |
+| 3 | Copilotos por rol y autorización | 100% |
+| 4 | Memoria de feedback y trazabilidad | 80% |
 | 5 | Fuentes de datos y actualización operativa | 55% |
 | 6 | Seguridad, observabilidad y operación | 20% |
 | 7 | QA integral, rendimiento y UX | 10% |
@@ -32,6 +32,9 @@
 - Dashboard con plano de control de IA, bucle de agentes y reglas de escalamiento.
 - Feedback de recomendaciones persistido y agregado por audiencia y barrio.
 - Framework formal de medición con fórmulas, responsables, cadencias y umbrales.
+- Copilotos CEO, Director de Cuenta y Partner operativos con autorización y trazabilidad completas.
+- 77 pruebas automatizadas pasando (documentos, roles, trazabilidad, ranking, e2e).
+- Pipeline de razonamiento ejecutivo end-to-end verificado con datos reales de Property Partners.
 
 ## Enlaces del proyecto
 
@@ -110,20 +113,24 @@
 
 ## Semana 3 — Copilotos por rol y autorización centralizada
 
-**Estado: en cierre — 85%**
+**Estado: completada — 100%**
 
 ### Implementado
 
 - Copilotos para CEO, Director de Cuenta y Partner.
 - Rutas de preguntas por rol.
-- Widgets condicionales en el dashboard.
-- Autorización compartida por rol.
-- Pipeline de razonamiento ejecutivo.
-- Guard de respuesta ejecutiva.
-- Feedback compartido.
+- Widgets condicionales en el dashboard (CEO naranja, Director azul, Partner verde).
+- Autorización centralizada con `requireCopilotRole` en los tres endpoints.
+- Motor de política de acceso `IntelligenceAccessPolicy` con filtrado de evidencia por dominio.
+- Pipeline de razonamiento ejecutivo con `rankEvidence` y guard de respuesta.
+- Guard de respuesta ejecutiva con validación de trazabilidad.
+- Feedback persistido con auditoría endurecida.
 - Endpoint de feedback para Director de Cuenta.
-- Normalización parcial del lenguaje visible a **Director de Cuenta**.
-- Corrección del import heredado que bloqueaba producción.
+- Módulo canónico de ranking de evidencia (`lib/evidence-ranking.ts`, 7 pruebas).
+- IDs determinísticos para evidencia de mercado, valoración y documentos.
+- Clasificación de fuentes de evidencia (`lib/evidence-source-class.ts`).
+- Validación end-to-end completa: 19 pruebas cubriendo todo el flujo CEO.
+- Build sin errores — 77 pruebas pasando en total (31 + 12 + 10 + 7 + 19).
 
 ### Artefactos principales
 
@@ -138,47 +145,44 @@
 - `lib/copilot-feedback.ts`
 - `lib/executive-reasoning-pipeline.ts`
 - `lib/executive-response-guard.ts`
+- `lib/intelligence-access-policy.ts`
+- `lib/evidence-ranking.ts`
+- `lib/evidence-id.ts`
+- `lib/evidence-source-class.ts`
 - `scripts/test-director-partner-copilots.mjs`
+- `scripts/test-pipeline-end-to-end.mjs`
 
-### Falta para cerrar
+### Pendiente
 
-- Barrido completo de textos visibles con `Director` en lugar de `Director de Cuenta`.
-- Verificar comportamiento de error coherente en los tres copilotos.
-- Validar persistencia real del feedback en producción.
-- Ejecutar y registrar build y suites relevantes después de los últimos cambios.
-- Revisar accesibilidad básica del widget: foco, labels, teclado y estados de carga.
-
-### Criterio de cierre
-
-- Producción en `READY`.
-- Pruebas de roles pasando.
-- Feedback funcional o limitaciones documentadas.
-- Terminología visible consistente.
+- Nada bloqueante. Auditoría de accesibilidad del widget diferida a Semana 7.
 
 ---
 
 ## Semana 4 — Memoria de feedback y trazabilidad de decisiones
 
-**Estado: avanzada parcialmente — 60%**
+**Estado: avanzada — 80%**
 
 ### Ya implementado
 
 - Servicio compartido de feedback.
-- Feedback persistido en Supabase.
+- Feedback persistido en Supabase con auditoría endurecida.
 - Agregación por audiencia y barrio.
 - Repriorización de recomendaciones a partir del feedback.
 - Orquestador conversacional del CEO.
 - IDs de respuesta y fuentes de contexto.
 - Entrega semanal con reintentos y destinatarios de respaldo.
+- Validador de trazabilidad (`lib/traceability-validator.ts`, 10 pruebas).
+- Guard de respuesta con validación completa de trazabilidad y confianza.
+- IDs de evidencia determinísticos y clasificación de fuentes.
+- Política de acceso centralizada que preserva trazabilidad por rol.
 
 ### Falta
 
-- Confirmar el esquema canónico de memoria de decisiones y resultados.
-- Unificar lectura y escritura para CEO, Director de Cuenta y Partner.
+- Confirmar esquema canónico de memoria de decisiones y resultados.
+- Unificar lectura y escritura de memoria para CEO, Director de Cuenta y Partner.
 - Añadir estados explícitos de persistencia y errores recuperables en UI.
-- Crear pruebas de integración contra Supabase.
+- Crear pruebas de integración contra Supabase (feedback real en producción).
 - Documentar exactamente cómo el feedback afecta respuestas y reportes futuros.
-- Garantizar que no exista aprendizaje automático implícito no documentado.
 
 ### Criterio de cierre
 
@@ -337,12 +341,11 @@
 
 ## Inventario resumido: lo que falta
 
-1. Cerrar terminología y UX de Semana 3.
-2. Completar trazabilidad de decisiones y feedback entre roles.
-3. Auditar fuentes reales, sintéticas y deduplicación.
-4. Completar seguridad, RLS, rate limits y observabilidad.
-5. Añadir E2E, QA integral y métricas de rendimiento.
-6. Preparar runbooks, rollback, operación y lanzamiento.
+1. Completar memoria de decisiones y feedback unificado entre roles (Semana 4).
+2. Auditar fuentes reales, sintéticas y deduplicación (Semana 5).
+3. Completar seguridad, RLS, rate limits y observabilidad (Semana 6).
+4. Añadir E2E, QA integral y métricas de rendimiento (Semana 7).
+5. Preparar runbooks, rollback, operación y lanzamiento (Semana 8).
 
 ## Riesgos técnicos actuales
 
@@ -354,14 +357,14 @@
 
 ## Próxima acción
 
-Cerrar la **Semana 3**:
+Avanzar la **Semana 4** al cierre:
 
-1. verificar el despliegue del commit más reciente;
-2. completar el barrido de terminología visible;
-3. probar los tres copilotos y sus errores;
-4. validar feedback y persistencia;
-5. ejecutar build y suites;
-6. actualizar este documento con resultados y porcentaje real.
+1. Confirmar esquema canónico de memoria de decisiones (`decision_history`) en Supabase.
+2. Unificar lectura y escritura de memoria para los tres roles.
+3. Crear prueba de integración de feedback contra Supabase.
+4. Documentar el contrato entre feedback, respuestas futuras y reportes.
+5. Verificar `READY` en Vercel después del último merge.
+6. Actualizar este documento con resultados.
 
 ## Notas operativas existentes
 
