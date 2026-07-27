@@ -28,7 +28,8 @@
     "ml:verify": "node --import tsx scripts/verify-ml-readiness.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
     "test:roles": "node scripts/test-director-partner-copilots.mjs",
-    "test:traceability": "node scripts/test-traceability-validator.mjs"
+    "test:traceability": "node scripts/test-traceability-validator.mjs",
+    "test:e2e": "tsx scripts/test-pipeline-end-to-end.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
