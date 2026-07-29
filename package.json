@@ -27,6 +27,7 @@
     "valuation:build": "node scripts/build-valuation-intelligence.mjs",
     "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
+    "valuation:workflow:verify": "node --import tsx scripts/verify-valuation-workflow.ts",
     "ml:verify": "node --import tsx scripts/verify-ml-readiness.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
     "test:roles": "node scripts/test-director-partner-copilots.mjs",
