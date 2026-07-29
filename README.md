@@ -1,33 +1,75 @@
-# n3uralia-intelligence-platform-propertyparners
+# Property Partners Intelligence Platform
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Plataforma tecnológica integrada para PL Real Estate SpA, licenciatario de Property Partners Chile S.A.
 
-## Built with v0
+## Alcance de la versión contractual
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+La versión actual se limita a tres módulos interoperables:
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_647kJUnmbzEKCcKN3MkKCJaqGc8F)
+1. Inteligencia de Mercado.
+2. Valorización de Propiedades.
+3. Control de Gestión Comercial.
 
-## Getting Started
+Las capacidades adicionales de razonamiento, copilotos, grafos de decisión, ML Lab y conocimiento corporativo se conservan separadas como Versión 2 y no forman parte del alcance funcional vigente.
 
-First, run the development server:
+## Stack principal
+
+- Next.js 16
+- React 19
+- Supabase y PostgreSQL
+- TypeScript
+- Tailwind CSS
+- Recharts
+- MapLibre, Leaflet y React Leaflet
+- Generación de PDF, DOCX y XLSX
+
+## Desarrollo local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Validaciones disponibles
 
-## Learn More
+```bash
+npm run lint
+npm run build
+npm run access:verify
+npm run data:provenance
+npm run crm:verify
+npm run targets:verify
+npm run market-sources:verify
+npm run valuation:verify
+npm run valuation:model:verify
+```
 
-To learn more, take a look at the following resources:
+Los scripts que dependen de datasets o variables privadas deben ejecutarse únicamente en ambientes autorizados.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+## Estructura funcional
+
+- `/dashboard`: portada del alcance vigente.
+- `/dashboard/market`: inteligencia de mercado.
+- `/dashboard/valorizador`: valorización de propiedades.
+- `/dashboard/control`: control de gestión comercial.
+- `/dashboard/reportes/autonomos`: reportes.
+- `/dashboard/version-2`: capacidades futuras separadas.
+
+## Roles
+
+- CEO / administrador.
+- Director.
+- Subdirector.
+- Partner o agente.
+
+El acceso a rutas y datos debe validarse tanto en interfaz como en servidor y políticas de Supabase.
+
+## Trazabilidad contractual
+
+La matriz de alcance y cumplimiento se mantiene en `docs/CONTRACTUAL_SCOPE_MATRIX.md`. Todo cambio funcional debe asociarse a un requisito, una fuente, una pantalla y una prueba de aceptación.
+
+## Seguridad y confidencialidad
+
+El proyecto contiene desarrollos y estructuras específicas de Property Partners. No deben incorporarse secretos, credenciales, documentos contractuales, datos personales ni datasets confidenciales al repositorio. Los datos de producción deben mantenerse en servicios privados y con acceso por rol.
