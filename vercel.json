@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/agents",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/management-monthly",
+      "schedule": "0 9 1 * *"
     }
   ]
 }
