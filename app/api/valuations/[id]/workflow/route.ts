@@ -14,7 +14,7 @@ async function access() {
   if (!user) return { response: NextResponse.json({ error:'No autorizado' },{ status:401 }) }
   const { data: profile } = await supabase.from('profiles').select('role').eq('id',user.id).maybeSingle()
   const role = String(profile?.role || '').toLowerCase()
-  if (!['admin','ceo','director','subdirector','broker'].includes(role)) return { response:NextResponse.json({ error:'Sin permisos' },{ status:403 }) }
+  if (!['admin','ceo','director','subdirector','broker','partner'].includes(role)) return { response:NextResponse.json({ error:'Sin permisos' },{ status:403 }) }
   return { supabase,user,role }
 }
 
@@ -29,11 +29,14 @@ export async function POST(request:Request, context:{ params:Promise<{id:string}
   const { data: valuationCase, error } = await auth.supabase.from('valuation_cases').select('*').eq('id',id).maybeSingle()
   if (error) return NextResponse.json({ error:error.message },{ status:500 })
   if (!valuationCase) return NextResponse.json({ error:'Valorización no encontrada' },{ status:404 })
-  if (!(transitions[valuationCase.status] || []).includes(target)) return NextResponse.json({ error:`Transición ${valuationCase.status} → ${target} no permitida` },{ status:400 })
 
   const elevated = ['admin','ceo','director','subdirector'].includes(auth.role)
+  const ownsCase = valuationCase.requested_by === auth.user.id
+  if (!elevated && !ownsCase) return NextResponse.json({ error:'No puede operar valorizaciones de otro usuario' },{ status:403 })
+  if (!(transitions[valuationCase.status] || []).includes(target)) return NextResponse.json({ error:`Transición ${valuationCase.status} → ${target} no permitida` },{ status:400 })
   if (target === 'approved' && !elevated) return NextResponse.json({ error:'Solo dirección puede aprobar' },{ status:403 })
   if (target === 'issued' && !elevated) return NextResponse.json({ error:'Solo dirección puede emitir' },{ status:403 })
+  if (target === 'draft' && valuationCase.status === 'review' && !elevated) return NextResponse.json({ error:'Solo dirección puede devolver un caso a borrador' },{ status:403 })
 
   const { data: comparables, error: compError } = await auth.supabase.from('valuation_comparables').select('*').eq('valuation_case_id',id).order('rank')
   if (compError) return NextResponse.json({ error:compError.message },{ status:500 })
@@ -41,6 +44,9 @@ export async function POST(request:Request, context:{ params:Promise<{id:string}
 
   if (target === 'review' && valuationCase.status === 'draft' && accepted.length < 3) {
     return NextResponse.json({ error:'Se requieren al menos 3 comparables aceptados para enviar a revisión' },{ status:400 })
+  }
+  if (target === 'draft' && valuationCase.status === 'review' && !reason) {
+    return NextResponse.json({ error:'Se requiere un motivo para devolver el caso a borrador' },{ status:400 })
   }
   if (target === 'approved') {
     if (accepted.length < 3) return NextResponse.json({ error:'No se puede aprobar sin al menos 3 comparables aceptados' },{ status:400 })
