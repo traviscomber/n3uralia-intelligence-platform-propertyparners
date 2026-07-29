@@ -2,6 +2,7 @@
   "name": "property-partners-intelligence-platform",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +12,7 @@
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
     "tone:internal": "node scripts/audit-internal-tone.mjs",
     "access:verify": "node --import tsx scripts/verify-dashboard-access.ts",
-    "directory:verify": "node --import tsx scripts/verify-report-directory.ts",
+    "directory:verify": "node scripts/verify-report-directory.ts",
     "data:provenance": "node scripts/audit-runtime-provenance.mjs",
     "crm:build": "node scripts/build-crm-intelligence.mjs",
     "crm:verify": "node scripts/verify-crm-intelligence.mjs",
@@ -31,6 +32,15 @@
     "test:roles": "node scripts/test-director-partner-copilots.mjs",
     "test:traceability": "node scripts/test-traceability-validator.mjs",
     "test:e2e": "tsx scripts/test-pipeline-end-to-end.mjs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js",
+      "esbuild",
+      "puppeteer",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
