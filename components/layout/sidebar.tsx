@@ -30,6 +30,7 @@ const items = {
   valuation: { label: 'Valorización', href: '/dashboard/valuation', icon: icons.valuation },
   properties: { label: 'Propiedades', href: '/dashboard/properties', icon: icons.properties },
   control: { label: 'Control de gestión', href: '/dashboard/control', icon: icons.control },
+  controlAdmin: { label: 'Metas y alertas', href: '/dashboard/control/admin', icon: icons.settings },
   reports: { label: 'Reportes', href: '/dashboard/reportes/autonomos', icon: icons.reports },
   marketSources: { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', icon: icons.sources },
   marketImport: { label: 'Importar mercado', href: '/dashboard/market/import', icon: icons.sources },
@@ -40,12 +41,13 @@ const items = {
 
 const executiveSections: SidebarSection[] = [
   { label: 'Operación', items: [items.home, items.ceo, items.market, items.valuation, items.control, items.properties, items.reports] },
-  { label: 'Administración', items: [items.marketSources, items.marketImport, items.sources, items.settings] },
+  { label: 'Administración', items: [items.controlAdmin, items.marketSources, items.marketImport, items.sources, items.settings] },
   { label: 'Futuro', items: [items.version2] },
 ]
 
 const directorSections: SidebarSection[] = [
   { label: 'Operación', items: [items.home, items.director, items.market, items.valuation, items.control, items.properties, items.reports] },
+  { label: 'Administración', items: [items.controlAdmin] },
   { label: 'Futuro', items: [items.version2] },
 ]
 
