@@ -100,7 +100,8 @@ export function normalizeMarketProperty(input: MarketPropertyInput): NormalizedM
   if (latitude !== null && longitude !== null) evidence.push('coordinates')
   if (unitNumber) evidence.push('unit')
 
-  const addressKey = normalizedAddress ?? [streetName, streetNumber, unitNumber].filter(Boolean).join(' ') || null
+  const composedAddress = [streetName, streetNumber, unitNumber].filter(Boolean).join(' ') || null
+  const addressKey = normalizedAddress ?? composedAddress
   const canonicalParts: Array<string | number | null> = rol
     ? ['rol', rol, unitNumber]
     : latitude !== null && longitude !== null
