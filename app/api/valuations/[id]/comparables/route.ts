@@ -33,10 +33,14 @@ async function getAccess() {
   if (!user) return { response: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
   const role = String(profile?.role || '').toLowerCase()
-  if (!['admin','ceo','director','subdirector','broker'].includes(role)) {
+  if (!['admin','ceo','director','subdirector','broker','partner'].includes(role)) {
     return { response: NextResponse.json({ error: 'Sin permisos para valorizaciones' }, { status: 403 }) }
   }
   return { supabase, user, role }
+}
+
+function canOperateCase(role: string, userId: string, valuationCase: { requested_by?: string | null }) {
+  return ['admin','ceo','director','subdirector'].includes(role) || valuationCase.requested_by === userId
 }
 
 function median(values: number[]) {
@@ -109,6 +113,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   ])
   if (caseError || compError || logError) return NextResponse.json({ error: caseError?.message || compError?.message || logError?.message }, { status: 500 })
   if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
+  if (!canOperateCase(access.role, access.user.id, valuationCase)) return NextResponse.json({ error: 'No puede acceder a valorizaciones de otro usuario' }, { status: 403 })
   return NextResponse.json({ valuationCase, comparables: comparables || [], decisions: decisions || [] })
 }
 
@@ -118,6 +123,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params
   const body = await request.json().catch(() => null)
   const action = String(body?.action || '')
+
+  const { data: valuationCase, error: caseError } = await access.supabase.from('valuation_cases').select('id,status,requested_by').eq('id', id).maybeSingle()
+  if (caseError) return NextResponse.json({ error: caseError.message }, { status: 500 })
+  if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
+  const elevated = ['admin','ceo','director','subdirector'].includes(access.role)
+  if (!canOperateCase(access.role, access.user.id, valuationCase)) return NextResponse.json({ error: 'No puede operar valorizaciones de otro usuario' }, { status: 403 })
+  if (!elevated && valuationCase.status !== 'draft') return NextResponse.json({ error: 'Sólo dirección puede modificar comparables fuera de borrador' }, { status: 403 })
 
   if (action === 'generate') {
     const limit = Math.max(1, Math.min(Number(body?.limit) || 30, 100))
