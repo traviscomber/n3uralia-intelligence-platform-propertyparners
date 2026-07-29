@@ -44,7 +44,8 @@ function buildNeighborhoodRows(): NeighborhoodMarketRow[] {
     }
   }
 
-  for (const [neighborhood, count] of market.cross.cbrs.categories.BARRIO) {
+  for (const [rawNeighborhood, count] of market.cross.cbrs.categories.BARRIO) {
+    const neighborhood = String(rawNeighborhood)
     if (neighborhood === '<NULL>') continue
     const current = rows.get(neighborhood) ?? { neighborhood, publishedListings: 0, registeredSales: 0 }
     current.registeredSales += Number(count)
@@ -63,7 +64,7 @@ export function buildMarketContractSnapshot() {
   const noOperationSignal = sumOperationIndicator('no_explicit_indicator')
   const uniqueCbrsEvents = market.cross.cbrs.candidateKeyCardinality.event_comuna_tomo_foja_numero_fecha.unique
   const residentialCbrsRows = market.cross.cbrs.categories.DESCRIPCION
-    .filter(([name]) => name === 'DEPARTAMENTO' || name === 'CASA-HABITACION')
+    .filter(([name]) => String(name) === 'DEPARTAMENTO' || String(name) === 'CASA-HABITACION')
     .reduce((sum, [, count]) => sum + Number(count), 0)
 
   const metrics: ContractMetric[] = [
