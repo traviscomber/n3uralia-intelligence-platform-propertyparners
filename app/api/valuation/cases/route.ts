@@ -13,7 +13,6 @@ type CreateCasePayload = {
   comparables: ValuationComparable[]
   qualitativeFactors: QualitativeFactors
   justification?: string
-  status?: 'draft' | 'review'
 }
 
 export async function GET() {
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
   try {
     const result = calculateContractualValuation(payload.subject, payload.comparables, payload.qualitativeFactors)
     const reportPayload = buildValuationReportPayload(payload.subject, payload.comparables, payload.qualitativeFactors, result)
-    const status = payload.status ?? 'draft'
+    const status = 'draft' as const
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
@@ -76,11 +75,11 @@ export async function POST(request: Request) {
         estimated_value_uf: result.adjustedValueUf,
         low_value_uf: result.lowValueUf,
         high_value_uf: result.highValueUf,
-        confidence: payload.comparables.length >= 4 ? 'high' : 'medium',
+        confidence: result.comparableCount >= 4 ? 'high' : 'medium',
         methodology_version: 'valuation-contract-v1',
         evidence: { comparableCount: result.comparableCount },
         assumptions: { selectedComparablesOnly: true },
-        warnings: [],
+        warnings: result.comparableCount < 3 ? ['Se requieren al menos tres comparables aceptados para solicitar revisión.'] : [],
         justification: payload.justification || result.justification,
         report_payload: reportPayload,
       })
@@ -117,7 +116,11 @@ export async function POST(request: Request) {
       adjustments: { pct: item.adjustmentPct },
       evidence: { sourceReference: item.sourceReference },
       contradictions: [],
-      match_status: item.selected ? 'selected' : 'excluded',
+      match_status: item.selected ? 'accepted' : 'excluded',
+      selection_reason: item.selected ? 'Seleccionado durante la creación del borrador' : null,
+      exclusion_reason: item.selected ? null : 'Excluido durante la creación del borrador',
+      selected_at: item.selected ? new Date().toISOString() : null,
+      selected_by: item.selected ? user.id : null,
     }))
 
     const { error: comparableError } = await supabase.from('valuation_comparables').insert(comparableRows)
@@ -129,6 +132,16 @@ export async function POST(request: Request) {
       status,
       snapshot: reportPayload,
       created_by: user.id,
+    })
+
+    await supabase.from('valuation_decision_log').insert({
+      valuation_case_id: valuationCase.id,
+      action: 'case_created',
+      from_status: null,
+      to_status: status,
+      reason: 'Caso creado como borrador. La revisión debe solicitarse desde el expediente canónico.',
+      actor_id: user.id,
+      metadata: { comparableCount: result.comparableCount },
     })
 
     return NextResponse.json({ caseId: valuationCase.id, result, status }, { status: 201 })
