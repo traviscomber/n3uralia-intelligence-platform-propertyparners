@@ -25,6 +25,8 @@ type Candidate = {
   evidence: unknown[]
 }
 
+type CandidateKeyFields = Pick<Candidate, 'source_transaction_id' | 'source_listing_id' | 'source_type' | 'source_reference'>
+
 async function getAccess() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -44,7 +46,7 @@ function median(values: number[]) {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
 }
 
-function candidateKey(candidate: Pick<Candidate, 'source_transaction_id' | 'source_listing_id' | 'source_type' | 'source_reference'>) {
+function candidateKey(candidate: CandidateKeyFields) {
   if (candidate.source_transaction_id) return `transaction:${candidate.source_transaction_id}`
   if (candidate.source_listing_id) return `listing:${candidate.source_listing_id}`
   return `reference:${candidate.source_type || ''}:${candidate.source_reference || ''}`
@@ -125,9 +127,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     ])
     if (error || existingError) return NextResponse.json({ error: error?.message || existingError?.message }, { status: 500 })
 
-    const existingKeys = new Set((existingRows || []).map((row) => candidateKey(row as Candidate)))
+    const existingKeys = new Set((existingRows || []).map((row) => candidateKey(row)))
     const seenKeys = new Set(existingKeys)
-    const rows = ((candidates as Candidate[] | null) || []).filter((candidate) => {
+    const candidateRows = (candidates as Candidate[] | null) || []
+    const rows = candidateRows.filter((candidate) => {
       const key = candidateKey(candidate)
       if (seenKeys.has(key)) return false
       seenKeys.add(key)
@@ -171,14 +174,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       const { error: insertError } = await access.supabase.from('valuation_comparables').insert(inserts)
       if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })
     }
+    const duplicatesSkipped = candidateRows.length - inserts.length
     await access.supabase.from('valuation_decision_log').insert({
       valuation_case_id: id,
       action: 'candidate_generated',
       actor_id: access.user.id,
-      new_state: { candidateCount: inserts.length, duplicatesSkipped: ((candidates as Candidate[] | null) || []).length - inserts.length, methodology: 'valuation_candidate_pool_v1' },
+      new_state: { candidateCount: inserts.length, duplicatesSkipped, methodology: 'valuation_candidate_pool_v1' },
       reason: String(body?.reason || 'Generación automática desde evidencia del Módulo I'),
     })
-    return NextResponse.json({ generated: inserts.length, duplicatesSkipped: ((candidates as Candidate[] | null) || []).length - inserts.length, candidates: inserts })
+    return NextResponse.json({ generated: inserts.length, duplicatesSkipped, candidates: inserts })
   }
 
   const comparableId = String(body?.comparableId || '')
