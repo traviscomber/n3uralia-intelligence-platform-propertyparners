@@ -44,6 +44,12 @@ function median(values: number[]) {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
 }
 
+function candidateKey(candidate: Pick<Candidate, 'source_transaction_id' | 'source_listing_id' | 'source_type' | 'source_reference'>) {
+  if (candidate.source_transaction_id) return `transaction:${candidate.source_transaction_id}`
+  if (candidate.source_listing_id) return `listing:${candidate.source_listing_id}`
+  return `reference:${candidate.source_type || ''}:${candidate.source_reference || ''}`
+}
+
 async function recalculateCase(supabase: Awaited<ReturnType<typeof createClient>>, caseId: string) {
   const { data: selected, error } = await supabase
     .from('valuation_comparables')
@@ -56,7 +62,20 @@ async function recalculateCase(supabase: Awaited<ReturnType<typeof createClient>
   const values = (selected || [])
     .map((row) => Number(row.adjusted_value_uf ?? row.price_uf))
     .filter((value) => Number.isFinite(value) && value > 0)
-  if (!values.length) return null
+
+  if (!values.length) {
+    const { error: clearError } = await supabase.from('valuation_cases').update({
+      base_value_uf: null,
+      estimated_value_uf: null,
+      low_value_uf: null,
+      high_value_uf: null,
+      confidence: 'low',
+      warnings: ['No existen comparables aceptados con valores utilizables.'],
+      updated_at: new Date().toISOString(),
+    }).eq('id', caseId)
+    if (clearError) throw clearError
+    return { estimate: null, low: null, high: null, confidence: 'low', selectedCount: 0 }
+  }
 
   const estimate = median(values)!
   const low = Math.min(...values)
@@ -69,6 +88,7 @@ async function recalculateCase(supabase: Awaited<ReturnType<typeof createClient>
     high_value_uf: high,
     confidence,
     methodology_version: 'market_comparables_v1',
+    warnings: values.length < 3 ? ['Se requieren al menos tres comparables aceptados para solicitar revisión.'] : [],
     updated_at: new Date().toISOString(),
   }).eq('id', caseId)
   if (updateError) throw updateError
@@ -99,12 +119,21 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   if (action === 'generate') {
     const limit = Math.max(1, Math.min(Number(body?.limit) || 30, 100))
-    const { data: candidates, error } = await access.supabase.rpc('valuation_candidate_pool', { p_case_id: id, p_limit: limit })
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    const [{ data: candidates, error }, { data: existingRows, error: existingError }] = await Promise.all([
+      access.supabase.rpc('valuation_candidate_pool', { p_case_id: id, p_limit: limit }),
+      access.supabase.from('valuation_comparables').select('rank,source_transaction_id,source_listing_id,source_type,source_reference').eq('valuation_case_id', id).order('rank', { ascending: false }),
+    ])
+    if (error || existingError) return NextResponse.json({ error: error?.message || existingError?.message }, { status: 500 })
 
-    const rows = (candidates as Candidate[] | null) || []
-    const existing = await access.supabase.from('valuation_comparables').select('rank').eq('valuation_case_id', id).order('rank', { ascending: false }).limit(1)
-    let rank = Number(existing.data?.[0]?.rank || 0)
+    const existingKeys = new Set((existingRows || []).map((row) => candidateKey(row as Candidate)))
+    const seenKeys = new Set(existingKeys)
+    const rows = ((candidates as Candidate[] | null) || []).filter((candidate) => {
+      const key = candidateKey(candidate)
+      if (seenKeys.has(key)) return false
+      seenKeys.add(key)
+      return true
+    })
+    let rank = Number(existingRows?.[0]?.rank || 0)
     const inserts = rows.map((candidate) => ({
       valuation_case_id: id,
       comparable_property_id: candidate.comparable_property_id,
@@ -146,10 +175,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       valuation_case_id: id,
       action: 'candidate_generated',
       actor_id: access.user.id,
-      new_state: { candidateCount: inserts.length, methodology: 'valuation_candidate_pool_v1' },
+      new_state: { candidateCount: inserts.length, duplicatesSkipped: ((candidates as Candidate[] | null) || []).length - inserts.length, methodology: 'valuation_candidate_pool_v1' },
       reason: String(body?.reason || 'Generación automática desde evidencia del Módulo I'),
     })
-    return NextResponse.json({ generated: inserts.length, candidates: inserts })
+    return NextResponse.json({ generated: inserts.length, duplicatesSkipped: ((candidates as Candidate[] | null) || []).length - inserts.length, candidates: inserts })
   }
 
   const comparableId = String(body?.comparableId || '')
