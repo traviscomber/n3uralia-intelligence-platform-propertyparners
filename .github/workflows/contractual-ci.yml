@@ -1,0 +1,50 @@
+name: Contractual modules CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - agent/contractual-scope-sanitization
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contractual-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, models and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Verify market identity
+        run: npm run market:identity:verify
+
+      - name: Verify valuation model
+        run: npm run valuation:model:verify
+
+      - name: Verify dashboard access
+        run: npm run access:verify
+
+      - name: Build application
+        run: npm run build
