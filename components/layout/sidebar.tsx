@@ -27,7 +27,7 @@ const items = {
   director: { label: 'Vista director', href: '/dashboard/director', icon: icons.dashboard },
   partner: { label: 'Mi desempeño', href: '/dashboard/partner', icon: icons.control },
   market: { label: 'Inteligencia de mercado', href: '/dashboard/market', icon: icons.market },
-  valuation: { label: 'Valorización', href: '/dashboard/valuation', icon: icons.valuation },
+  valuation: { label: 'Valorizaciones', href: '/dashboard/valuations', icon: icons.valuation },
   properties: { label: 'Propiedades', href: '/dashboard/properties', icon: icons.properties },
   control: { label: 'Control de gestión', href: '/dashboard/control', icon: icons.control },
   controlAdmin: { label: 'Metas y alertas', href: '/dashboard/control/admin', icon: icons.settings },
