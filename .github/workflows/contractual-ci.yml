@@ -25,26 +25,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: pnpm lint
 
       - name: Verify market identity
-        run: npm run market:identity:verify
+        run: pnpm market:identity:verify
 
       - name: Verify valuation model
-        run: npm run valuation:model:verify
+        run: pnpm valuation:model:verify
 
       - name: Verify dashboard access
-        run: npm run access:verify
+        run: pnpm access:verify
 
       - name: Build application
-        run: npm run build
+        run: pnpm build
