@@ -77,7 +77,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     valuation_case_id: id,
     action: 'comparable_selected',
     actor_id: access.user.id,
-    new_state: { count: rows.length, selected: rows.filter((row) => row.selected).length },
+    new_state: { count: rows.length, selected: rows.filter((row: { selected: boolean }) => row.selected).length },
     reason: typeof body.reason === 'string' ? body.reason : null,
   })
 
