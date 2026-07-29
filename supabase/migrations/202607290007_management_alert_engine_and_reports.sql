@@ -30,6 +30,7 @@ as $$
 declare
   v_created integer := 0;
   v_resolved integer := 0;
+  v_rows integer := 0;
   rec record;
   v_triggered boolean;
 begin
@@ -68,7 +69,8 @@ begin
       set status='resolved',resolved_at=now(),resolution_notes='Resuelta automáticamente: la condición dejó de cumplirse.'
       where rule_id=rec.rule_id and entity_id=rec.entity_id and metric_code=rec.metric_code
         and period_start=p_period_start and period_end=p_period_end and status in ('open','acknowledged');
-      get diagnostics v_resolved = v_resolved + row_count;
+      get diagnostics v_rows = row_count;
+      v_resolved := v_resolved + v_rows;
     end if;
   end loop;
   return query select v_created,v_resolved;
