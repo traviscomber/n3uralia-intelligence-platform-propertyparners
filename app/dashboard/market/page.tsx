@@ -1,5 +1,4 @@
-import market from '@/data/market-source-intelligence.json'
-import valuation from '@/data/valuation-intelligence.json'
+import Link from 'next/link'
 import {
   IntelligenceHeader,
   IntelligencePage,
@@ -10,122 +9,96 @@ import {
   RankedRow,
   SectionHeading,
 } from '@/components/intelligence/design-system'
+import { buildMarketContractSnapshot } from '@/lib/market-contract'
 
 function n(value: number) {
   return value.toLocaleString('es-CL')
 }
 
+function pct(value: number) {
+  return `${(value * 100).toFixed(1)}%`
+}
+
+function statusLabel(status: 'available' | 'partial' | 'pending_source') {
+  if (status === 'available') return 'Disponible'
+  if (status === 'partial') return 'Parcial'
+  return 'Pendiente de fuente'
+}
+
 export default function MarketPage() {
-  const portalFiles = market.cross.portal
-  const cbrs = market.cross.cbrs
-  const reconciliation = valuation.sourceReconciliation
-  const portalRows = portalFiles.reduce((sum, file) => sum + file.rows, 0)
-  const noOperationSignal = portalFiles.reduce((sum, file) => sum + (file.operationIndicators.no_explicit_indicator || 0), 0)
-  const missingCoordinates = portalFiles.reduce((sum, file) => sum + (file.coordinateQuality.both_missing || 0), 0)
-  const cbrsEvents = cbrs.candidateKeyCardinality.event_comuna_tomo_foja_numero_fecha.unique
-  const residentialCbrsRows = cbrs.categories.DESCRIPCION
-    .filter(([name]) => name === 'DEPARTAMENTO' || name === 'CASA-HABITACION')
-    .reduce((sum, [, count]) => sum + Number(count), 0)
-
-  const portalAssignments = new Map<string, number>()
-  for (const file of portalFiles) {
-    for (const [barrio, count] of Object.entries(file.kmlPolygonAssignments)) {
-      portalAssignments.set(barrio, (portalAssignments.get(barrio) || 0) + count)
-    }
-  }
-
-  const topPortalBarrios = [...portalAssignments.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
-  const cbrsBarrios = cbrs.categories.BARRIO.filter(([name]) => name !== '<NULL>').slice(0, 10)
+  const snapshot = buildMarketContractSnapshot()
+  const availableMetrics = snapshot.metrics.filter((metric) => metric.status !== 'pending_source')
+  const pendingMetrics = snapshot.metrics.filter((metric) => metric.status === 'pending_source')
+  const topNeighborhoods = snapshot.neighborhoods.slice(0, 12)
 
   return (
     <IntelligencePage>
       <IntelligenceHeader
-        eyebrow="Market Intelligence · Fuente auditada"
+        eyebrow="Módulo I · Alcance contractual"
         title="Inteligencia de Mercado Vitacura"
-        description="Oferta publicada, ventas registrales y territorio se mantienen como universos separados. La vista prioriza señales respaldadas y conserva explícitamente sus límites metodológicos."
+        description="Oferta publicada, ventas registrales y territorio se presentan con trazabilidad explícita. La plataforma diferencia publicaciones, propiedades y transacciones, y no reemplaza datos faltantes con estimaciones."
         actions={[
-          { label: 'Fuentes y trazabilidad', href: '/dashboard/market/fuentes', primary: true },
-          { label: 'Abrir valorizador', href: '/dashboard/valorizador' },
+          { label: 'Exportar resumen CSV', href: '/api/market/export', primary: true },
+          { label: 'Fuentes y trazabilidad', href: '/dashboard/market/fuentes' },
+          { label: 'Importar nueva fuente', href: '/dashboard/market/import' },
         ]}
         meta={
-          <div className="grid min-w-[290px] grid-cols-2 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
+          <div className="grid min-w-[320px] grid-cols-3 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
             <div className="bg-[#0c1111] p-4">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Archivos</p>
-              <p className="mt-2 text-sm font-semibold">{market.sourceInventory.fileCount}</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Fuentes</p>
+              <p className="mt-2 text-sm font-semibold">{snapshot.sourceCount}</p>
             </div>
             <div className="bg-[#0c1111] p-4">
               <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Celdas</p>
-              <p className="mt-2 text-sm font-semibold">{n(market.sourceInventory.cellManifest.cellCount)}</p>
+              <p className="mt-2 text-sm font-semibold">{n(snapshot.cellCount)}</p>
+            </div>
+            <div className="bg-[#0c1111] p-4">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Polígonos</p>
+              <p className="mt-2 text-sm font-semibold">{n(snapshot.polygonCount)}</p>
             </div>
           </div>
         }
       />
 
       <section>
-        <SectionHeading eyebrow="Market Pulse" title="Universos principales" />
+        <SectionHeading eyebrow="01 · Universo disponible" title="Indicadores respaldados por fuente" description="Cada indicador declara fuente, período, metodología y limitación." />
         <MetricGrid>
-          <MetricCard
-            label="Publicaciones con ID único"
-            value={n(reconciliation.currentPortalValidListings)}
-            detail="No equivale a inmuebles canónicos ni inventario activo."
-          />
-          <MetricCard
-            label="Sin señal de arriendo"
-            value={n(reconciliation.currentPortalSaleEligibleListings)}
-            detail="Contexto de venta por archivo; operación no confirmada fila a fila."
-          />
-          <MetricCard
-            label="Excluidas por arriendo"
-            value={n(reconciliation.portalListingsQuarantinedByRentIndicator)}
-            detail="La señal explícita se conserva y queda fuera del universo elegible."
-          />
-          <MetricCard
-            label="Activos registrales CBRS"
-            value={n(reconciliation.currentCbrsRows)}
-            detail={`${n(cbrsEvents)} eventos registrales únicos.`}
-          />
+          {availableMetrics.slice(0, 4).map((metric) => (
+            <MetricCard
+              key={metric.key}
+              label={metric.label}
+              value={metric.value === null ? 'Sin información' : `${n(metric.value)}${metric.unit ? ` ${metric.unit}` : ''}`}
+              detail={`${statusLabel(metric.status)} · ${metric.source}`}
+            />
+          ))}
         </MetricGrid>
       </section>
 
       <section>
-        <SectionHeading eyebrow="Data Quality" title="Cobertura y restricciones" />
+        <SectionHeading eyebrow="02 · Calidad de datos" title="Cobertura y restricciones visibles" />
         <MetricGrid>
-          <MetricCard
-            label="Sin indicador de operación"
-            value={`${n(noOperationSignal)} · ${((noOperationSignal / portalRows) * 100).toFixed(1)}%`}
-          />
-          <MetricCard
-            label="Sin coordenadas Portal"
-            value={`${n(missingCoordinates)} · ${((missingCoordinates / portalRows) * 100).toFixed(1)}%`}
-          />
-          <MetricCard label="Filas CBRS residenciales" value={n(residentialCbrsRows)} />
-          <MetricCard label="Corte registral" value="2014 · 09 ene 2026" />
+          <MetricCard label="Filas Portal analizadas" value={n(snapshot.portalRows)} detail="Incluye los archivos suministrados para casas, departamentos y proyectos." />
+          <MetricCard label="Sin coordenadas Portal" value={`${n(snapshot.missingCoordinates)} · ${pct(snapshot.missingCoordinatesRate)}`} detail="No pueden recibir asignación territorial automática." />
+          <MetricCard label="Sin indicador explícito de operación" value={`${n(snapshot.noOperationSignal)} · ${pct(snapshot.noOperationSignalRate)}`} detail="Se conservan como universo parcial y no se clasifican artificialmente." />
+          <MetricCard label="Filas CBRS residenciales" value={n(snapshot.residentialCbrsRows)} detail="Casas-habitación y departamentos identificados en la base registral." />
         </MetricGrid>
       </section>
 
       <section>
-        <SectionHeading eyebrow="Evidence" title="Distribución territorial" />
+        <SectionHeading eyebrow="03 · Territorio" title="Oferta y registros por barrio" description="Los conteos no equivalen todavía a propiedades canónicas ni a inventario activo." />
         <div className="grid gap-5 xl:grid-cols-2">
-          <IntelligencePanel
-            eyebrow="Oferta publicada"
-            title="Asignación territorial reproducible"
-            description="Conteo de publicaciones con coordenadas asignadas a un único polígono KML. No representa inventario total por barrio."
-          >
+          <IntelligencePanel eyebrow="Oferta publicada" title="Publicaciones asignadas por KML" description="Publicaciones con coordenadas dentro de un polígono territorial reproducible.">
             <div>
-              {topPortalBarrios.map(([name, count], index) => (
-                <RankedRow key={name} index={index} label={name} value={n(count)} />
+              {topNeighborhoods.map((row, index) => (
+                <RankedRow key={`portal-${row.neighborhood}`} index={index} label={row.neighborhood} value={n(row.publishedListings)} />
               ))}
             </div>
           </IntelligencePanel>
 
-          <IntelligencePanel
-            eyebrow="Registro CBRS"
-            title="Inscripciones por barrio asignado"
-            description="Conteo histórico del archivo registral. No equivale a oferta vigente ni a publicaciones Portal."
-          >
+          <IntelligencePanel eyebrow="Ventas registrales" title="Registros CBRS por barrio" description="Conteo histórico de filas registrales con barrio asignado.">
             <div>
-              {cbrsBarrios.map(([name, count], index) => (
-                <RankedRow key={name} index={index} label={name} value={n(Number(count))} />
+              {topNeighborhoods.map((row, index) => (
+                <RankedRow key={`cbrs-${row.neighborhood}`} index={index} label={row.neighborhood} value={n(row.registeredSales)} />
               ))}
             </div>
           </IntelligencePanel>
@@ -133,42 +106,66 @@ export default function MarketPage() {
       </section>
 
       <section>
-        <SectionHeading eyebrow="Methodology" title="Territorio y control de publicación" />
-        <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
-          <IntelligencePanel
-            eyebrow="Territorio"
-            title={`${market.kml.geometryAudit.polygonCount} polígonos auditados`}
-            description={`El KML contiene ${market.kml.geometryAudit.areaOverlapCandidates.length} pares candidatos a superposición o contención y ${market.kml.geometryAudit.boundaryContacts.length} contactos de borde. Estas condiciones permanecen visibles y no se resuelven artificialmente.`}
-          >
-            <div className="flex flex-wrap gap-2 p-5">
-              {Object.keys(market.kml.geometryAudit.ringCounts).map((name) => (
-                <span key={name} className="border border-[var(--n3-line)] px-2.5 py-1 text-[11px] text-[var(--n3-text-muted)]">
-                  {name}
-                </span>
-              ))}
+        <SectionHeading eyebrow="04 · Propiedad canónica" title="Política de deduplicación y vinculación" />
+        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <IntelligencePanel eyebrow="Identidad determinística" title="Claves de origen" description="Cada fuente mantiene su identidad original antes de cualquier reconciliación.">
+            <div className="space-y-4 p-5 text-sm">
+              <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Portal</p><p className="mt-1 font-semibold">{snapshot.deduplicationPolicy.portalKey}</p></div>
+              <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Evento CBRS</p><p className="mt-1 font-semibold">{snapshot.deduplicationPolicy.cbrsEventKey}</p></div>
+              <div><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Activo CBRS</p><p className="mt-1 font-semibold">{snapshot.deduplicationPolicy.cbrsAssetKey}</p></div>
             </div>
           </IntelligencePanel>
 
-          <IntelligencePanel
-            eyebrow="Control metodológico"
-            title="Sólo métricas respaldadas"
-            description="No se publican promedios, velocidad, absorción, inventario ni rankings provenientes de tablas operativas heredadas. Tampoco se sustituyen con estimaciones."
-            critical
-          >
+          <IntelligencePanel eyebrow="Confirmación" title="No se confirma por score solamente" description={snapshot.deduplicationPolicy.rule} critical>
             <div className="p-5">
-              <MethodologyNote>
-                Esta vista utiliza únicamente oferta Portal, inscripciones CBRS y polígonos presentes en el paquete auditado.
-              </MethodologyNote>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Requisitos mínimos</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {snapshot.deduplicationPolicy.confirmedRequires.map((item) => (
+                  <span key={item} className="border border-[var(--n3-line)] px-2.5 py-1 text-[11px] text-[var(--n3-text-light)]">{item}</span>
+                ))}
+              </div>
+              <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Evidencia candidata</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {snapshot.deduplicationPolicy.candidateEvidence.map((item) => (
+                  <span key={item} className="border border-[var(--n3-line)] px-2.5 py-1 text-[11px] text-[var(--n3-text-muted)]">{item}</span>
+                ))}
+              </div>
             </div>
           </IntelligencePanel>
         </div>
+      </section>
+
+      <section>
+        <SectionHeading eyebrow="05 · Brechas contractuales" title="Indicadores todavía no calculables" description="Se mantienen visibles para evitar confundir ausencia de datos con cero." />
+        <div className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] lg:grid-cols-3">
+          {pendingMetrics.map((metric) => (
+            <article key={metric.key} className="bg-[#0c1111] p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#ff766f]">Pendiente de fuente</p>
+                <span className="text-[10px] text-[var(--n3-text-muted)]">{metric.period}</span>
+              </div>
+              <h3 className="mt-4 text-lg font-semibold">{metric.label}</h3>
+              <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{metric.methodology}</p>
+              <p className="mt-4 border-t border-[var(--n3-line)] pt-3 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Fuente requerida: {metric.source}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading eyebrow="06 · Metodología" title="Principio de publicación" />
+        <IntelligencePanel eyebrow="Control contractual" title="Sólo información sustentada" description="La plataforma no muestra velocidad, absorción, inventario activo ni propiedades canónicas hasta que existan historial y reglas verificables.">
+          <div className="p-5">
+            <MethodologyNote>
+              Las nuevas fuentes deben incorporarse mediante el flujo de importación, conservar su procedencia y superar validaciones de esquema antes de modificar indicadores visibles.
+            </MethodologyNote>
+          </div>
+        </IntelligencePanel>
       </section>
 
       <footer className="flex flex-col justify-between gap-4 border-t border-[var(--n3-line)] pt-5 text-xs leading-5 text-[var(--n3-text-muted)] sm:flex-row">
-        <span>
-          Fuente: {market.sourceInventory.fileCount} archivos de mercado · manifiesto de {n(market.sourceInventory.cellManifest.cellCount)} celdas.
-        </span>
-        <span>Generado {new Date(market.generatedAt).toLocaleString('es-CL')}</span>
+        <span>Fuente: {snapshot.sourceCount} archivos · {n(snapshot.cellCount)} celdas auditadas.</span>
+        <span>Generado {new Date(snapshot.generatedAt).toLocaleString('es-CL')}</span>
       </footer>
     </IntelligencePage>
   )
