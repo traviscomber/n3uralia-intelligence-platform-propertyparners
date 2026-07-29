@@ -12,11 +12,11 @@ select
     when lower(coalesce(ds.source_type,'')) like '%client%' or lower(coalesce(ds.source_type,'')) like '%cliente%' then 'client'
     else 'other'
   end,
-  null,
-  null,
+  null::text,
+  null::text,
   ds.last_sync,
-  null,
-  null,
+  null::date,
+  null::date,
   coalesce(ds.records_count,0),
   case when lower(coalesce(ds.status,'')) in ('active','connected','online','ok') then 'active' else 'quarantined' end,
   jsonb_build_object('legacy_data_source_id',ds.id,'legacy_status',ds.status,'pipeline_order',ds.pipeline_order,'note','Registro heredado; requiere validación documental y de procedencia antes de aceptación contractual.')
@@ -72,7 +72,7 @@ insert into market_metric_snapshots (
   period_start,period_end,neighborhood_id,property_type,active_inventory,new_listings,removed_listings,confirmed_sales,median_days_on_market,absorption_rate,offer_to_sales_ratio,source_ids,methodology_version
 )
 select
-  r.period_start,r.period_end,mn.id,'all',coalesce(r.active_inventory,0),0,0,0,r.median_days_on_market,r.absorption_rate,null,'{}'::uuid[],'legacy-bridge-v1'
+  r.period_start,r.period_end,mn.id,'all',coalesce(r.active_inventory,0),0,0,0,r.median_days_on_market,r.absorption_rate,null::numeric,'{}'::uuid[],'legacy-bridge-v1'
 from rolled r
 join market_neighborhoods mn on mn.name=r.neighborhood
 on conflict (period_start,period_end,neighborhood_id,property_type,methodology_version)
