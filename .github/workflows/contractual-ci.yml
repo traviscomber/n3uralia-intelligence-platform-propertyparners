@@ -49,6 +49,9 @@ jobs:
       - name: Verify valuation model
         run: pnpm valuation:model:verify
 
+      - name: Verify valuation workflow
+        run: pnpm valuation:workflow:verify
+
       - name: Verify dashboard access
         run: pnpm access:verify
 
