@@ -2,6 +2,7 @@ import Link from 'next/link'
 import valuation from '@/data/valuation-intelligence.json'
 import market from '@/data/market-source-intelligence.json'
 import { createClient } from '@/lib/supabase/server'
+import { OperationalState } from '@/components/ui/operational-state'
 
 type AssignedProperty = {
   id: string
@@ -77,7 +78,7 @@ export default async function PropertiesPage() {
 
     <section>
       <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Cartera individual</p><h2 className="mt-2 text-2xl font-semibold">Mis propiedades asignadas</h2></div>
-      {assignmentError ? <div className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible consultar la cartera asignada: {assignmentError}</div> : assignments.length ? <div className="grid gap-4 lg:grid-cols-2">
+      {assignmentError ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="La plataforma no pudo recuperar las asignaciones activas de este perfil. No se muestran datos parciales como si fueran completos." detail={assignmentError} /> : assignments.length ? <div className="grid gap-4 lg:grid-cols-2">
         {assignments.map((assignment) => {
           const property = assignment.market_properties[0] ?? null
           return <article key={assignment.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:p-6">
@@ -99,19 +100,18 @@ export default async function PropertiesPage() {
             {assignment.notes ? <p className="mt-3 border-l-2 border-[var(--n3-teal)] pl-3 text-xs leading-5 text-[var(--n3-text-muted)]">{assignment.notes}</p> : null}
           </article>
         })}
-      </div> : <div className="border border-dashed border-[var(--n3-line)] bg-[#0c1111] p-6 sm:p-8">
-        <p className="text-lg font-semibold">Sin propiedades asignadas</p>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">El modelo de cartera ya está habilitado y auditado, pero este perfil no tiene asignaciones activas. La plataforma no infiere cartera desde nombres, sucursales, publicaciones o actividad histórica.</p>
-        {isSeller ? <p className="mt-4 text-xs text-[var(--n3-text-muted)]">Perfil activo: {profile?.full_name || 'Ejecutiva'}.</p> : null}
-      </div>}
+      </div> : <OperationalState kind="empty" title="Sin propiedades asignadas" description="El modelo de cartera está habilitado y auditado, pero este perfil no tiene asignaciones activas. La plataforma no infiere cartera desde nombres, sucursales, publicaciones o actividad histórica." action={isSeller ? undefined : { label: 'Administrar asignaciones', href: '/dashboard/properties/admin' }}>
+        {isSeller ? <p className="text-xs text-[var(--n3-text-muted)]">Perfil activo: {profile?.full_name || 'Ejecutiva'}.</p> : null}
+      </OperationalState>}
     </section>
 
     <section>
       <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">02 · Operación observada</p><h2 className="mt-2 text-2xl font-semibold">Publicaciones en Supabase</h2></div>
-      {operationalError ? <div className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible consultar toda la base operativa: {operationalError}</div> : <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+      {operationalError ? <OperationalState kind="error" title="Base operativa incompleta" description="No fue posible consultar toda la evidencia operativa. El snapshot documental permanece separado y no se usa para simular datos actuales." detail={operationalError} /> : <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
         <article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Publicaciones marcadas activas</p><p className="mt-3 text-4xl font-semibold">{n(activeListings ?? 0)}</p><p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">Estado del último corte persistido; no equivale a disponibilidad confirmada hoy.</p></article>
         <article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Última observación</p><p className="mt-3 text-xl font-semibold sm:text-2xl">{formatDate(latestObservation?.observed_at ?? null)}</p><p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">La fecha de observación determina la vigencia; una ingestión posterior no actualiza por sí sola la publicación.</p></article>
       </div>}
+      {!operationalError && latestObservation?.observed_at ? <OperationalState compact kind="stale" title="La disponibilidad requiere verificación" description="Las publicaciones reflejan el último corte observado. Antes de contactar a un cliente o usar una propiedad como comparable debe confirmarse su vigencia." /> : null}
       <div className="mt-4"><Link href="/dashboard/market" className="inline-flex border border-[var(--n3-line)] px-4 py-2 text-xs font-semibold text-[var(--n3-text-light)] hover:border-[var(--n3-teal)]">Abrir inteligencia de mercado</Link></div>
     </section>
 
