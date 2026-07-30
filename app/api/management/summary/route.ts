@@ -109,25 +109,35 @@ function toPayloadEntity(rawEntity: ManagementEntity, entityType: 'company' | 'b
 
 type PayloadEntity = ReturnType<typeof toPayloadEntity>
 
+type DirectorAlert = {
+  id: string
+  severity: 'critical' | 'warning'
+  status: 'open'
+  title: string
+  detail: string
+  entityName: string
+  createdAt: string
+}
+
 function getMetricValue(entity: PayloadEntity, code: string) {
   return entity.metrics.find((item) => item.code === code)?.value ?? null
 }
 
-function buildDirectorAlerts(entities: PayloadEntity[]) {
+function buildDirectorAlerts(entities: PayloadEntity[]): DirectorAlert[] {
   return entities
     .filter((entity) => entity.entityType === 'partner')
-    .flatMap((entity) => {
-      const scoreAlerts = [
+    .flatMap((entity): DirectorAlert[] => {
+      const scoreAlerts: DirectorAlert[] = [
         { code: 'management_score', label: 'Gestión' },
         { code: 'portfolio_score', label: 'Cartera' },
         { code: 'follow_up_score', label: 'Seguimiento' },
         { code: 'conversion', label: 'Conversión' },
-      ].flatMap(({ code, label }) => {
+      ].flatMap(({ code, label }): DirectorAlert[] => {
         const value = getMetricValue(entity, code)
         if (value === null || value >= 70) return []
         return [{
           id: `${entity.id}:${code}`,
-          severity: value < 50 ? 'critical' as const : 'warning' as const,
+          severity: value < 50 ? 'critical' : 'warning',
           status: 'open',
           title: `${label} bajo umbral`,
           detail: `Score ${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })}. Objetivo operativo: 70 puntos. Brecha: ${(70 - value).toFixed(1)} puntos.`,
@@ -138,17 +148,27 @@ function buildDirectorAlerts(entities: PayloadEntity[]) {
 
       const sales = entity.metrics.find((item) => item.code === 'sales')
       const stock = entity.metrics.find((item) => item.code === 'stock')
-      const commercialAlerts = []
-      if (sales?.compliance !== null && sales.compliance < 90) {
+      const commercialAlerts: DirectorAlert[] = []
+      if (sales && sales.compliance !== null && sales.compliance < 90) {
         commercialAlerts.push({
-          id: `${entity.id}:sales-goal`, severity: sales.compliance < 60 ? 'critical' as const : 'warning' as const, status: 'open',
-          title: 'Meta de cierres en riesgo', detail: `Cumplimiento junio: ${sales.compliance.toFixed(1)}%. Meta: ${sales.target?.toLocaleString('es-CL') ?? 'n/d'} cierres.`, entityName: entity.name, createdAt: '2026-06-30T23:59:59.000Z',
+          id: `${entity.id}:sales-goal`,
+          severity: sales.compliance < 60 ? 'critical' : 'warning',
+          status: 'open',
+          title: 'Meta de cierres en riesgo',
+          detail: `Cumplimiento junio: ${sales.compliance.toFixed(1)}%. Meta: ${sales.target?.toLocaleString('es-CL') ?? 'n/d'} cierres.`,
+          entityName: entity.name,
+          createdAt: '2026-06-30T23:59:59.000Z',
         })
       }
-      if (stock?.compliance !== null && stock.compliance < 90) {
+      if (stock && stock.compliance !== null && stock.compliance < 90) {
         commercialAlerts.push({
-          id: `${entity.id}:stock-goal`, severity: stock.compliance < 60 ? 'critical' as const : 'warning' as const, status: 'open',
-          title: 'Cartera bajo meta', detail: `Stock actual: ${stock.value?.toLocaleString('es-CL') ?? 'n/d'} de ${stock.target?.toLocaleString('es-CL') ?? 'n/d'}. Cumplimiento: ${stock.compliance.toFixed(1)}%.`, entityName: entity.name, createdAt: '2026-06-30T23:59:59.000Z',
+          id: `${entity.id}:stock-goal`,
+          severity: stock.compliance < 60 ? 'critical' : 'warning',
+          status: 'open',
+          title: 'Cartera bajo meta',
+          detail: `Stock actual: ${stock.value?.toLocaleString('es-CL') ?? 'n/d'} de ${stock.target?.toLocaleString('es-CL') ?? 'n/d'}. Cumplimiento: ${stock.compliance.toFixed(1)}%.`,
+          entityName: entity.name,
+          createdAt: '2026-06-30T23:59:59.000Z',
         })
       }
       return [...scoreAlerts, ...commercialAlerts]
@@ -203,7 +223,7 @@ export async function GET() {
       activePropertyAssignments: countStatus(assignmentRows, 'active'),
       pausedPropertyAssignments: countStatus(assignmentRows, 'paused'),
       teamMembers: entities.filter((entity) => entity.entityType === 'partner').length,
-      errors: [valuationResult.error?.message, assignmentResult.error?.message].filter(Boolean),
+      errors: [valuationResult.error?.message, assignmentResult.error?.message].filter((message): message is string => Boolean(message)),
     }
   }
 
