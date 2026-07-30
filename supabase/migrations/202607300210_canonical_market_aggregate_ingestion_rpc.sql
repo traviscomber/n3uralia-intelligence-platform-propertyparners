@@ -48,9 +48,20 @@ begin
   v_source_code := left(regexp_replace(lower(coalesce(nullif(p_source_label,''),'market-import')), '[^a-z0-9]+', '-', 'g'), 120);
 
   insert into public.market_sources (code,name,source_type,file_name,period_start,period_end,row_count,status,metadata)
-  values (v_source_code, coalesce(nullif(p_source_label,''),'Market import'), 'aggregate_import', p_source_file, p_snapshot_date, p_snapshot_date, v_received, 'active', jsonb_build_object('pipeline','canonical_market_aggregate_v1'))
+  values (
+    v_source_code,
+    coalesce(nullif(p_source_label,''),'Market import'),
+    case p_source_system when 'portal_inmobiliario' then 'portal' when 'cbrs' then 'cbrs' when 'client' then 'client' when 'kml' then 'kml' else 'other' end,
+    p_source_file,
+    p_snapshot_date,
+    p_snapshot_date,
+    v_received,
+    'active',
+    jsonb_build_object('pipeline','canonical_market_aggregate_v1')
+  )
   on conflict (code) do update set
     name = excluded.name,
+    source_type = excluded.source_type,
     file_name = excluded.file_name,
     period_start = excluded.period_start,
     period_end = excluded.period_end,
