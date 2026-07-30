@@ -129,7 +129,6 @@ export async function POST(request: Request) {
       evidence: { sourceReference: item.sourceReference },
       contradictions: [],
       match_status: item.selected ? 'accepted' : 'rejected',
-      selection_reason: item.selected ? 'Seleccionado durante la creación del borrador' : null,
       exclusion_reason: item.selected ? null : 'Excluido durante la creación del borrador',
       selected_at: item.selected ? new Date().toISOString() : null,
       selected_by: item.selected ? user.id : null,
