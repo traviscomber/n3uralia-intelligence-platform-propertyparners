@@ -67,7 +67,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).eq('identity_status', 'confirmed'),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).is('neighborhood_id', null),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).in('identity_status', ['candidate', 'needs_review']),
-      supabase.from('market_listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      supabase.from('market_current_listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('market_transactions').select('id', { count: 'exact', head: true }),
       supabase.from('market_property_matches').select('id', { count: 'exact', head: true }).in('status', ['candidate_high', 'candidate_medium']),
       supabase
@@ -86,7 +86,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .maybeSingle(),
       supabase.from('market_ingestion_runs').select('id', { count: 'exact', head: true }),
       supabase
-        .from('market_listings')
+        .from('market_current_listings')
         .select('observed_at')
         .order('observed_at', { ascending: false })
         .limit(1)

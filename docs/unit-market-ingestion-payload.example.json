@@ -1,0 +1,18 @@
+{
+  "mode": "preview",
+  "source": "Portal Inmobiliario",
+  "source_file": "portal-2026-07-30.json",
+  "dataset_kind": "portal_apartments",
+  "observed_at": "2026-07-30T12:00:00Z",
+  "full_snapshot": true,
+  "rows": [
+    {
+      "source_listing_id": "MLC-123",
+      "address": "Av. Vitacura 1234",
+      "operation": "venta",
+      "status": "active",
+      "price_uf": 10500,
+      "useful_area_m2": 100
+    }
+  ]
+}
