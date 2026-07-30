@@ -9,7 +9,7 @@ type AssignedProperty = {
   status: string
   assigned_at: string
   notes: string | null
-  market_properties: {
+  market_properties: Array<{
     id: string
     normalized_address: string | null
     property_type: string | null
@@ -20,7 +20,7 @@ type AssignedProperty = {
     parking_spaces: number | null
     identity_status: string | null
     last_seen_at: string | null
-  } | null
+  }>
 }
 
 function n(value: number) { return value.toLocaleString('es-CL') }
@@ -79,7 +79,7 @@ export default async function PropertiesPage() {
       <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Cartera individual</p><h2 className="mt-2 text-2xl font-semibold">Mis propiedades asignadas</h2></div>
       {assignmentError ? <div className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible consultar la cartera asignada: {assignmentError}</div> : assignments.length ? <div className="grid gap-4 lg:grid-cols-2">
         {assignments.map((assignment) => {
-          const property = assignment.market_properties
+          const property = assignment.market_properties[0] ?? null
           return <article key={assignment.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
