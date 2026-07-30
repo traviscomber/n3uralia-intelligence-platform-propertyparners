@@ -1,0 +1,1 @@
+Review canonical ingestion, validation, snapshots and dashboard freshness together.
