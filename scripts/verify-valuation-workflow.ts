@@ -38,7 +38,9 @@ async function main() {
   assert.match(workflowRoute, /valuation_decision_log/)
 
   assert.match(comparableRoute, /Motivo de exclusión requerido/)
-  assert.match(comparableRoute, /duplicateKeys/)
+  assert.match(comparableRoute, /existingKeys/)
+  assert.match(comparableRoute, /seenKeys/)
+  assert.match(comparableRoute, /duplicatesSkipped/)
   assert.match(comparableRoute, /estimated_value_uf:\s*null/)
   assert.match(comparableRoute, /match_status:\s*['"]accepted['"]/)
 
