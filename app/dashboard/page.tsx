@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
 
 const modules = [
   {
@@ -28,7 +29,31 @@ const principles = [
   'Los accesos y la información visible dependen del perfil del usuario.',
 ]
 
-export default function DashboardHome() {
+function n(value: number | null) {
+  return value === null ? 'Sin datos' : value.toLocaleString('es-CL')
+}
+
+function formatDate(value: string | null) {
+  if (!value) return 'Sin fecha observada'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 'Fecha no válida' : date.toLocaleString('es-CL')
+}
+
+function freshnessLabel(status: MarketFreshnessStatus, ageDays: number | null) {
+  if (status === 'recent') return ageDays === 0 ? 'observado hoy' : `observado hace ${ageDays} días`
+  if (status === 'aging') return `observación envejeciendo · ${ageDays ?? '—'} días`
+  if (status === 'stale') return `observación desactualizada · ${ageDays ?? '—'} días`
+  return 'sin fecha observada'
+}
+
+export default async function DashboardHome() {
+  const market = await getOperationalMarketSnapshot()
+  const marketStatus = market.error
+    ? 'Consulta operativa incompleta'
+    : market.connected
+      ? `${n(market.canonicalProperties)} registros candidatos · ${n(market.activeInventory)} publicaciones activas`
+      : 'Base operativa no disponible'
+
   return (
     <div className="mx-auto max-w-[1500px] space-y-8 pb-16">
       <header className="border-b border-[var(--n3-line)] pb-8 pt-2">
@@ -79,11 +104,21 @@ export default function DashboardHome() {
         <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p>
           <div className="mt-5 space-y-3 text-sm">
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Mercado</span><strong className="text-[#ff766f]">Registros candidatos cargados</strong></div>
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Valorización</span><strong>Flujo disponible · sin casos cargados</strong></div>
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Control de gestión</span><strong>Definiciones disponibles · sin métricas</strong></div>
-            <div className="flex justify-between"><span>Reportes</span><strong>Estructura disponible · sin ejecuciones</strong></div>
+            <div className="border-b border-[var(--n3-line)] pb-3">
+              <div className="flex items-start justify-between gap-4">
+                <span>Mercado</span>
+                <strong className={market.error || !market.connected ? 'text-[#ff766f]' : ''}>{marketStatus}</strong>
+              </div>
+              <p className="mt-2 text-right text-xs leading-5 text-[var(--n3-text-muted)]">
+                {n(market.confirmedSales)} ventas confirmadas · {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}
+              </p>
+              <p className="mt-1 text-right text-[10px] leading-4 text-[var(--n3-text-muted)]">Última observación: {formatDate(market.latestObservedAt)}</p>
+            </div>
+            <div className="flex justify-between gap-4 border-b border-[var(--n3-line)] pb-3"><span>Valorización</span><strong className="text-right">Flujo disponible · sin casos operativos confirmados en esta vista</strong></div>
+            <div className="flex justify-between gap-4 border-b border-[var(--n3-line)] pb-3"><span>Control de gestión</span><strong className="text-right">Definiciones disponibles · sin métricas operativas confirmadas en esta vista</strong></div>
+            <div className="flex justify-between gap-4"><span>Reportes</span><strong className="text-right">Estructura disponible · sin ejecuciones confirmadas en esta vista</strong></div>
           </div>
+          {market.error ? <p className="mt-4 border-t border-[var(--n3-line)] pt-4 text-xs leading-5 text-[#ff766f]">No fue posible consultar todo el estado operativo de Mercado: {market.error}</p> : null}
         </div>
       </section>
     </div>
