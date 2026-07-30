@@ -18,6 +18,10 @@ const EXECUTIVE_ONLY = [
   '/dashboard/version-2',
 ]
 
+const SELLER_FORBIDDEN = [
+  '/dashboard/properties/admin',
+]
+
 const SELLER_ALLOWED = [
   '/dashboard',
   '/dashboard/partner',
@@ -39,5 +43,6 @@ export function canAccessDashboardPath(role: DashboardRole, pathname: string) {
   if (EXECUTIVE_ONLY.some((route) => matches(pathname, route))) return false
   if (role === 'director' || role === 'subdirector') return true
   if (role !== 'seller') return false
+  if (SELLER_FORBIDDEN.some((route) => matches(pathname, route))) return false
   return SELLER_ALLOWED.some((route) => matches(pathname, route))
 }
