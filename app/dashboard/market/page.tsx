@@ -65,9 +65,9 @@ export default async function MarketPage() {
         ]}
         meta={
           <div className="grid min-w-[420px] grid-cols-4 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
-            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Fuentes</p><p className="mt-2 text-sm font-semibold">{snapshot.sourceCount}</p></div>
-            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Celdas</p><p className="mt-2 text-sm font-semibold">{n(snapshot.cellCount)}</p></div>
-            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Base</p><p className="mt-2 text-sm font-semibold">{operational.connected ? 'Conectada' : 'Pendiente'}</p></div>
+            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Fuentes históricas</p><p className="mt-2 text-sm font-semibold">{snapshot.sourceCount}</p></div>
+            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Celdas auditadas</p><p className="mt-2 text-sm font-semibold">{n(snapshot.cellCount)}</p></div>
+            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Base operativa</p><p className="mt-2 text-sm font-semibold">{operational.connected ? 'Conectada' : 'Pendiente'}</p></div>
             <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Frescura del dato</p><p className={`mt-2 text-sm font-semibold ${staleObservation || agingObservation ? 'text-[#ff766f]' : ''}`}>{freshnessLabel(operational.freshnessStatus, operational.observationAgeDays)}</p></div>
           </div>
         }
@@ -76,7 +76,7 @@ export default async function MarketPage() {
       <section>
         <SectionHeading eyebrow="01 · Operación" title="Registros operativos y métricas validadas" description="Los conteos distinguen publicaciones importadas de propiedades cuya identidad ya fue confirmada. Velocidad y absorción sólo se publican cuando existen ventas confirmadas y un período calculado." />
         <MetricGrid>
-          <MetricCard label="Registros de propiedad" value={operationalValue(operational.canonicalProperties)} detail={`${operational.confirmedProperties ?? 0} identidades confirmadas; el resto permanece en revisión`} />
+          <MetricCard label="Registros canónicos candidatos" value={operationalValue(operational.canonicalProperties)} detail={`${operational.confirmedProperties ?? 0} identidades confirmadas; el resto permanece en revisión`} />
           <MetricCard label="Publicaciones observadas como activas" value={operationalValue(operational.activeInventory)} detail={operational.latestPeriod ? `Inventario calculado para ${operational.latestPeriod}` : `Última observación disponible: ${formatDate(operational.latestObservedAt)}. No equivale a actividad verificada hoy.`} />
           <MetricCard label="Velocidad de venta" value={operationalValue(operational.medianDaysOnMarket, ' días')} detail="Sólo se calcula con venta confirmada vinculada a la primera publicación" />
           <MetricCard label="Absorción" value={operational.absorptionRate === null ? 'Sin datos operativos' : pct(operational.absorptionRate)} detail="Ventas confirmadas / inventario deduplicado del mismo período" />
@@ -96,10 +96,10 @@ export default async function MarketPage() {
       </section>
 
       <section>
-        <SectionHeading eyebrow="03 · Universo disponible" title="Indicadores respaldados por fuente" description="Cada indicador declara fuente, período, metodología y limitación." />
+        <SectionHeading eyebrow="03 · Archivo histórico auditado" title="Indicadores respaldados por archivos entregados" description="Estos valores provienen del inventario documental Portal, CBRS y KML auditado. No representan automáticamente el estado operativo actual." />
         <MetricGrid>
           {availableMetrics.slice(0, 4).map((metric) => (
-            <MetricCard key={metric.key} label={metric.label} value={metric.value === null ? 'Sin información' : `${n(metric.value)}${metric.unit ? ` ${metric.unit}` : ''}`} detail={`${statusLabel(metric.status)} · ${metric.source}`} />
+            <MetricCard key={metric.key} label={metric.label} value={metric.value === null ? 'Sin información' : `${n(metric.value)}${metric.unit ? ` ${metric.unit}` : ''}`} detail={`${statusLabel(metric.status)} · ${metric.source} · ${metric.period}`} />
           ))}
         </MetricGrid>
       </section>
@@ -107,20 +107,20 @@ export default async function MarketPage() {
       <section>
         <SectionHeading eyebrow="04 · Calidad de datos" title="Cobertura y restricciones visibles" />
         <MetricGrid>
-          <MetricCard label="Filas Portal analizadas" value={n(snapshot.portalRows)} detail="Casas, departamentos y proyectos suministrados." />
-          <MetricCard label="Sin coordenadas Portal" value={`${n(snapshot.missingCoordinates)} · ${pct(snapshot.missingCoordinatesRate)}`} detail="No pueden recibir asignación territorial automática." />
-          <MetricCard label="Sin indicador explícito" value={`${n(snapshot.noOperationSignal)} · ${pct(snapshot.noOperationSignalRate)}`} detail="No se clasifican artificialmente." />
+          <MetricCard label="Filas Portal históricas analizadas" value={n(snapshot.portalRows)} detail="Casas, departamentos y proyectos del archivo suministrado." />
+          <MetricCard label="Sin coordenadas en archivo Portal" value={`${n(snapshot.missingCoordinates)} · ${pct(snapshot.missingCoordinatesRate)}`} detail="No pueden recibir asignación territorial automática." />
+          <MetricCard label="Registros operativos sin barrio" value={operationalValue(operational.missingNeighborhoods)} detail={`De ${operational.canonicalProperties ?? 0} registros canónicos candidatos en Supabase.`} />
           <MetricCard label="Identidades por revisar" value={operationalValue(operational.pendingMatches)} detail="Registros candidatos o vínculos Portal–CBRS pendientes de validación humana." />
         </MetricGrid>
       </section>
 
       <section>
-        <SectionHeading eyebrow="05 · Territorio" title="Oferta y registros por barrio" description="Los agregados históricos permanecen separados del inventario operativo." />
+        <SectionHeading eyebrow="05 · Territorio histórico" title="Oferta y registros por barrio" description="Los siguientes agregados provienen del archivo histórico auditado y permanecen separados del inventario operativo actual." />
         <div className="grid gap-5 xl:grid-cols-2">
-          <IntelligencePanel eyebrow="Oferta publicada" title="Publicaciones asignadas por KML" description="Publicaciones con coordenadas dentro de un polígono reproducible.">
+          <IntelligencePanel eyebrow="Archivo Portal + KML" title="Publicaciones históricas asignadas por polígono" description="Publicaciones con coordenadas dentro de un polígono reproducible del archivo suministrado.">
             <div>{topNeighborhoods.map((row, index) => <RankedRow key={`portal-${row.neighborhood}`} index={index} label={row.neighborhood} value={n(row.publishedListings)} />)}</div>
           </IntelligencePanel>
-          <IntelligencePanel eyebrow="Ventas registrales" title="Registros CBRS por barrio" description="Conteo histórico de filas registrales con barrio asignado.">
+          <IntelligencePanel eyebrow="Archivo CBRS" title="Registros históricos por barrio" description="Conteo de filas registrales con barrio asignado en el archivo auditado.">
             <div>{topNeighborhoods.map((row, index) => <RankedRow key={`cbrs-${row.neighborhood}`} index={index} label={row.neighborhood} value={n(row.registeredSales)} />)}</div>
           </IntelligencePanel>
         </div>
@@ -158,8 +158,8 @@ export default async function MarketPage() {
       </section>
 
       <footer className="flex flex-col justify-between gap-4 border-t border-[var(--n3-line)] pt-5 text-xs text-[var(--n3-text-muted)] sm:flex-row">
-        <span>Fuente: {snapshot.sourceCount} archivos · {n(snapshot.cellCount)} celdas auditadas.</span>
-        <span>Generado {new Date(snapshot.generatedAt).toLocaleString('es-CL')}</span>
+        <span>Archivo histórico: {snapshot.sourceCount} fuentes · {n(snapshot.cellCount)} celdas auditadas.</span>
+        <span>Manifiesto generado {new Date(snapshot.generatedAt).toLocaleString('es-CL')}</span>
       </footer>
     </IntelligencePage>
   )
