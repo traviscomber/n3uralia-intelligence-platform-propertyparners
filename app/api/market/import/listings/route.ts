@@ -8,17 +8,17 @@ type DatasetKind = 'portal_apartments' | 'portal_houses' | 'portal_projects'
 
 type UnitListingRow = {
   source_listing_id?: string
-  property_type?: 'Casa' | 'Departamento' | 'Proyecto' | 'Otro'
-  operation?: 'Venta' | 'Arriendo' | 'Sin confirmar'
-  status?: 'observed' | 'active' | 'inactive' | 'sold' | 'removed' | 'quarantined'
+  mlc_id?: string
+  id?: string
+  property_type?: string
+  operation?: string
+  operacion?: string
+  status?: string
   url?: string
   title?: string
-  raw_address?: string
+  address?: string
+  direccion?: string
   normalized_address?: string
-  street_name?: string
-  street_number?: string
-  unit_number?: string
-  rol?: string
   neighborhood?: string
   latitude?: number | string | null
   longitude?: number | string | null
@@ -41,6 +41,7 @@ type Body = {
   source_file?: string
   dataset_kind?: string
   observed_at?: string
+  full_snapshot?: boolean
   mode?: 'preview' | 'import'
   rows?: UnitListingRow[]
 }
@@ -57,42 +58,43 @@ function parseDatasetKind(value: string | undefined): DatasetKind | null {
   return null
 }
 
-function expectedPropertyType(kind: DatasetKind) {
-  if (kind === 'portal_apartments') return 'Departamento'
-  if (kind === 'portal_houses') return 'Casa'
-  return 'Proyecto'
+function sourceListingId(row: UnitListingRow) {
+  return String(row.source_listing_id ?? row.mlc_id ?? row.id ?? '').trim()
 }
 
-function previewRows(rows: UnitListingRow[], kind: DatasetKind) {
-  const expectedType = expectedPropertyType(kind)
+function previewRows(rows: UnitListingRow[]) {
+  const seen = new Set<string>()
   let accepted = 0
   let rejected = 0
+
   const validation = rows.map((row, index) => {
     const errors: string[] = []
-    const sourceListingId = String(row.source_listing_id ?? '').trim()
-    const propertyType = String(row.property_type ?? expectedType).trim()
-    const operation = String(row.operation ?? 'Sin confirmar').trim()
-    const status = String(row.status ?? 'active').trim()
-    const hasAddress = Boolean(String(row.normalized_address ?? row.raw_address ?? '').trim())
-    const hasCoordinates = row.latitude !== null && row.latitude !== undefined && row.longitude !== null && row.longitude !== undefined
+    const id = sourceListingId(row)
 
-    if (!sourceListingId) errors.push('missing_source_listing_id')
-    if (!['Casa', 'Departamento', 'Proyecto', 'Otro'].includes(propertyType)) errors.push('invalid_property_type')
-    if (!['Venta', 'Arriendo', 'Sin confirmar'].includes(operation)) errors.push('invalid_operation')
-    if (!['observed', 'active', 'inactive', 'sold', 'removed', 'quarantined'].includes(status)) errors.push('invalid_status')
-    if (!hasAddress && !hasCoordinates) errors.push('missing_identity_evidence')
+    if (!id) errors.push('missing_source_listing_id')
+    else if (seen.has(id)) errors.push('duplicate_source_listing_id_in_run')
+    else seen.add(id)
+
+    const latitude = row.latitude == null || row.latitude === '' ? null : Number(row.latitude)
+    const longitude = row.longitude == null || row.longitude === '' ? null : Number(row.longitude)
+    const priceUf = row.price_uf == null || row.price_uf === '' ? null : Number(row.price_uf)
+
+    if (latitude !== null && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)) errors.push('invalid_latitude')
+    if (longitude !== null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)) errors.push('invalid_longitude')
+    if (priceUf !== null && (!Number.isFinite(priceUf) || priceUf < 0)) errors.push('invalid_price')
 
     if (errors.length) rejected += 1
     else accepted += 1
 
     return {
       row: index + 1,
-      source_listing_id: sourceListingId || null,
-      property_type: propertyType,
-      operation,
-      status,
+      source_listing_id: id || null,
+      property_type: row.property_type ?? null,
+      operation: row.operation ?? row.operacion ?? null,
+      status: row.status ?? 'active',
       neighborhood: row.neighborhood ?? null,
-      address: row.normalized_address ?? row.raw_address ?? null,
+      address: row.normalized_address ?? row.address ?? row.direccion ?? null,
+      price_uf: row.price_uf ?? null,
       errors,
     }
   })
@@ -104,7 +106,7 @@ export async function POST(request: NextRequest) {
   try {
     const access = await requireExecutiveAccess()
     if (!access.allowed) {
-      return NextResponse.json({ error: 'Acceso restringido a CEO y administradores.' }, { status: access.status })
+      return NextResponse.json({ error: 'Acceso restringido a roles ejecutivos autorizados.' }, { status: access.status })
     }
 
     const body = (await request.json().catch(() => null)) as Body | null
@@ -124,7 +126,7 @@ export async function POST(request: NextRequest) {
     const observedAt = body.observed_at ? new Date(body.observed_at) : new Date()
     if (Number.isNaN(observedAt.getTime())) return NextResponse.json({ error: 'observed_at no es una fecha válida.' }, { status: 400 })
 
-    const preview = previewRows(rows, datasetKind)
+    const preview = previewRows(rows)
     if (body.mode !== 'import') {
       return NextResponse.json({
         mode: 'preview',
@@ -132,6 +134,7 @@ export async function POST(request: NextRequest) {
         source,
         sourceFile,
         observedAt: observedAt.toISOString(),
+        fullSnapshot: Boolean(body.full_snapshot),
         summary: { received: rows.length, accepted: preview.accepted, rejected: preview.rejected },
         preview: preview.validation.slice(0, 50),
         message: 'Vista previa lista. No se escribieron datos.',
@@ -139,12 +142,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getServiceClient()
-    const { data, error } = await supabase.rpc('ingest_market_listings_unit', {
+    const { data, error } = await supabase.rpc('ingest_portal_listing_snapshot', {
       p_source_label: source,
       p_source_file: sourceFile,
       p_dataset_kind: datasetKind,
       p_observed_at: observedAt.toISOString(),
       p_rows: rows,
+      p_full_snapshot: Boolean(body.full_snapshot),
     })
     if (error) throw error
 
@@ -154,17 +158,19 @@ export async function POST(request: NextRequest) {
       source,
       sourceFile,
       observedAt: observedAt.toISOString(),
+      fullSnapshot: Boolean(body.full_snapshot),
       summary: {
         received: Number(data?.received ?? rows.length),
         accepted: Number(data?.accepted ?? 0),
         rejected: Number(data?.rejected ?? 0),
-        newListings: Number(data?.new_listings ?? 0),
-        changedListings: Number(data?.changed_listings ?? 0),
-        unchangedListings: Number(data?.unchanged_listings ?? 0),
+        newListings: Number(data?.new ?? 0),
+        changedListings: Number(data?.updated ?? 0),
+        unchangedListings: Number(data?.unchanged ?? 0),
+        removedListings: Number(data?.removed ?? 0),
         runId: data?.run_id ?? null,
         sourceId: data?.source_id ?? null,
       },
-      message: `Importación unitaria completada: ${Number(data?.accepted ?? 0)} aceptadas y ${Number(data?.rejected ?? 0)} rechazadas.`,
+      message: `Importación unitaria completada: ${Number(data?.accepted ?? 0)} aceptadas, ${Number(data?.rejected ?? 0)} rechazadas y ${Number(data?.removed ?? 0)} retiradas.`,
     })
   } catch (error) {
     return NextResponse.json(
