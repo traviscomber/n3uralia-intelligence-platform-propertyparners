@@ -1,5 +1,5 @@
-import { ManagementRoleDashboard } from '@/components/management/role-dashboard'
+import { CeoDashboardV2 } from '@/components/management/ceo-dashboard-v2'
 
 export default function CeoDashboard() {
-  return <ManagementRoleDashboard view="ceo" />
+  return <CeoDashboardV2 />
 }
