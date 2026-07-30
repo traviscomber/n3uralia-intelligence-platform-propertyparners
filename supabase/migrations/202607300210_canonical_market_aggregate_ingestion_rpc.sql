@@ -1,3 +1,18 @@
+alter table public.market_ingestion_runs
+  drop constraint if exists market_ingestion_runs_dataset_kind_check;
+
+alter table public.market_ingestion_runs
+  add constraint market_ingestion_runs_dataset_kind_check
+  check (dataset_kind = any (array[
+    'portal_apartments'::text,
+    'portal_houses'::text,
+    'portal_projects'::text,
+    'registered_sales'::text,
+    'client_sales'::text,
+    'kml_neighborhoods'::text,
+    'market_aggregate'::text
+  ]));
+
 create or replace function public.ingest_market_aggregate(
   p_source_system text,
   p_source_label text,
@@ -47,7 +62,7 @@ begin
   insert into public.market_ingestion_runs (
     source_system,dataset_kind,source_file,expected_rows,received_rows,status,metadata
   ) values (
-    p_source_system,'portal_projects',p_source_file,v_received,v_received,'running',
+    p_source_system,'market_aggregate',p_source_file,v_received,v_received,'running',
     jsonb_build_object('pipeline','canonical_market_aggregate_v1','source_id',v_source_id,'snapshot_date',p_snapshot_date)
   ) returning id into v_run_id;
 
@@ -70,7 +85,7 @@ begin
       ingestion_run_id,source_system,dataset_kind,source_record_id,source_file,source_row_number,
       record_hash,payload,observed_at,validation_status,validation_errors
     ) values (
-      v_run_id,p_source_system,'portal_projects',coalesce(v_row->>'source_record_id',v_index::text),p_source_file,v_index,
+      v_run_id,p_source_system,'market_aggregate',coalesce(v_row->>'source_record_id',v_index::text),p_source_file,v_index,
       v_hash,v_row,coalesce(nullif(v_row->>'recorded_at','')::timestamptz,p_snapshot_date::timestamptz),
       case when cardinality(v_errors)=0 then 'accepted' else 'rejected' end,v_errors
     ) on conflict (dataset_kind,record_hash) do nothing;
