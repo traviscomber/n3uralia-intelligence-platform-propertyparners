@@ -1,1 +1,0 @@
-Run `pnpm market:ingestion:verify` to validate canonical market ingestion wiring.
