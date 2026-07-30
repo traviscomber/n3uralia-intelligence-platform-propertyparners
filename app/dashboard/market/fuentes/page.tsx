@@ -1,69 +1,109 @@
-import data from '@/data/market-source-intelligence.json'
 import { getMarketSourceTrace } from '@/lib/market-source-trace'
 
-function number(value: number) { return value.toLocaleString('es-CL') }
-function category(source: Record<string, unknown>, key: string) { return (source[key] || []) as Array<[string, number]> }
-function populated(typeCounts: Record<string, number | undefined>) { return Object.entries(typeCounts).reduce((sum, [type, count]) => type === 'null' ? sum : sum + (count || 0), 0) }
-function date(value: string | null) { return value ? new Date(value).toLocaleString('es-CL') : 'Sin cierre' }
+function number(value: number) {
+  return value.toLocaleString('es-CL')
+}
+
+function date(value: string | null) {
+  return value ? new Date(value).toLocaleString('es-CL') : 'Sin cierre'
+}
 
 export default async function MarketSourcesPage() {
   const trace = await getMarketSourceTrace()
-  const portalRows = data.cross.portal.reduce((sum, item) => sum + item.listingIds.present, 0)
-  const categories = data.cross.cbrs.categories as unknown as Record<string, unknown>
-  const cbrsTypes = category(categories, 'DESCRIPCION')
-  const cbrsOperations = category(categories, 'TIPO DE INSCRIPCION')
-  const cbrsGeo = category(categories, 'GEO_STATUS')
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-6 pb-16 text-[var(--n3-text-light)]">
       <header className="overflow-hidden border border-white/10 bg-black text-white">
         <div className="grid gap-8 p-7 lg:grid-cols-[1fr_430px] lg:p-10">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--n3-teal)]">Fuentes de mercado · alcance auditado</p><h1 className="mt-3 text-3xl font-semibold lg:text-4xl">Oferta, territorio y registros CBRS</h1><p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">La trazabilidad operativa se consulta desde Supabase. El manifiesto histórico conserva perfiles, hashes y reglas de los archivos auditados.</p></div>
-          <div className="grid grid-cols-2 gap-px bg-[var(--n3-line)]">{[['Fuentes operativas', trace.sourceCount], ['Ejecuciones', trace.runCount], ['Filas raw', trace.rawCount], ['Celdas históricas', data.sourceInventory.cellManifest.cellCount]].map(([label, value]) => <div key={label} className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{number(Number(value))}</p></div>)}</div>
-        </div><div className="h-1 bg-[#d7332b]" />
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--n3-teal)]">Fuentes operativas</p>
+            <h1 className="mt-3 text-3xl font-semibold lg:text-4xl">Trazabilidad de datos de mercado</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Esta vista muestra únicamente fuentes, ejecuciones y registros raw almacenados en Supabase. No incluye cifras de archivos históricos ni benchmarks externos.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-px bg-[var(--n3-line)]">
+            {[
+              ['Fuentes', trace.sourceCount],
+              ['Ejecuciones', trace.runCount],
+              ['Filas raw', trace.rawCount],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-[var(--n3-deep)] p-4">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p>
+                <p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{number(Number(value))}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="h-1 bg-[#d7332b]" />
       </header>
 
       <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
-        <div className="border-b border-[var(--n3-line)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-teal)]">Trazabilidad operativa viva</p><h2 className="mt-2 text-xl font-semibold">Fuentes, ejecuciones y registros raw</h2><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Las fuentes heredadas sin ejecución vinculada se muestran como brecha; no se interpretan como cargas procesadas por el pipeline canónico.</p></div>
+        <div className="border-b border-[var(--n3-line)] p-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-teal)]">Integridad operativa</p>
+          <h2 className="mt-2 text-xl font-semibold">Estado de la trazabilidad</h2>
+          <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Los indicadores se calculan directamente sobre ejecuciones y registros raw. Una fuente sin ejecución vinculada se reporta como brecha, no como carga procesada.</p>
+        </div>
         <div className="grid gap-px bg-[var(--n3-line)] md:grid-cols-3 lg:grid-cols-6">
-          {[['Fuentes', trace.sourceCount], ['Ejecuciones', trace.runCount], ['Raw', trace.rawCount], ['Fuentes sin ejecución', trace.sourcesWithoutRuns], ['Ejecuciones sin raw', trace.runsWithoutRaw], ['Conteos inconsistentes', trace.inconsistentRuns]].map(([label, value]) => <div key={label} className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p><p className={`mt-2 text-2xl font-semibold ${String(label).includes('sin') || String(label).includes('inconsistentes') ? Number(value) > 0 ? 'text-[#ff766f]' : '' : ''}`}>{number(Number(value))}</p></div>)}
+          {[
+            ['Fuentes', trace.sourceCount],
+            ['Ejecuciones', trace.runCount],
+            ['Raw', trace.rawCount],
+            ['Fuentes sin ejecución', trace.sourcesWithoutRuns],
+            ['Ejecuciones sin raw', trace.runsWithoutRaw],
+            ['Conteos inconsistentes', trace.inconsistentRuns],
+          ].map(([label, value]) => (
+            <div key={label} className="bg-[var(--n3-deep)] p-4">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p>
+              <p className={`mt-2 text-2xl font-semibold ${String(label).includes('sin') || String(label).includes('inconsistentes') ? Number(value) > 0 ? 'text-[#ff766f]' : '' : ''}`}>{number(Number(value))}</p>
+            </div>
+          ))}
         </div>
         {trace.error ? <p className="border-t border-[#d7332b] p-4 text-xs text-[#ff766f]">{trace.error}</p> : null}
+      </section>
+
+      <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+        <div className="border-b border-[var(--n3-line)] p-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-teal)]">Ejecuciones recientes</p>
+          <h2 className="mt-2 text-xl font-semibold">Historial operativo</h2>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs">
-            <thead className="text-[var(--n3-text-muted)]"><tr><th className="px-5 py-3 text-left">Dataset</th><th className="text-left">Fuente vinculada</th><th className="text-left">Archivo</th><th className="text-left">Estado</th><th className="text-right">Recibidas</th><th className="text-right">Aceptadas</th><th className="text-right">Rechazadas</th><th className="px-5 text-right">Cierre</th></tr></thead>
-            <tbody>{trace.latestRuns.map((run) => <tr key={run.id} className="border-t border-[var(--n3-line)]"><td className="px-5 py-3 font-mono">{run.datasetKind}</td><td>{run.sourceName ?? 'Sin fuente vinculada'}</td><td>{run.sourceFile ?? 'Sin archivo'}</td><td>{run.status}</td><td className="text-right">{number(run.received)}</td><td className="text-right">{number(run.accepted)}</td><td className="text-right">{number(run.rejected)}</td><td className="px-5 text-right">{date(run.completedAt)}</td></tr>)}</tbody>
+            <thead className="text-[var(--n3-text-muted)]">
+              <tr>
+                <th className="px-5 py-3 text-left">Dataset</th>
+                <th className="text-left">Fuente vinculada</th>
+                <th className="text-left">Archivo</th>
+                <th className="text-left">Estado</th>
+                <th className="text-right">Recibidas</th>
+                <th className="text-right">Aceptadas</th>
+                <th className="text-right">Rechazadas</th>
+                <th className="px-5 text-right">Cierre</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trace.latestRuns.length ? trace.latestRuns.map((run) => (
+                <tr key={run.id} className="border-t border-[var(--n3-line)]">
+                  <td className="px-5 py-3 font-mono">{run.datasetKind}</td>
+                  <td>{run.sourceName ?? 'Sin fuente vinculada'}</td>
+                  <td>{run.sourceFile ?? 'Sin archivo'}</td>
+                  <td>{run.status}</td>
+                  <td className="text-right">{number(run.received)}</td>
+                  <td className="text-right">{number(run.accepted)}</td>
+                  <td className="text-right">{number(run.rejected)}</td>
+                  <td className="px-5 text-right">{date(run.completedAt)}</td>
+                </tr>
+              )) : (
+                <tr className="border-t border-[var(--n3-line)]"><td colSpan={8} className="px-5 py-8 text-center text-[var(--n3-text-muted)]">No existen ejecuciones operativas.</td></tr>
+              )}
+            </tbody>
           </table>
         </div>
       </section>
 
-      <section className="grid gap-px bg-[var(--n3-line)] lg:grid-cols-3">
-        {data.operatingModel.sourceRoles.map((source, index) => <article key={source.source} className="bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">0{index + 1} · {source.role}</p><h2 className="mt-2 text-lg font-semibold">{source.source}</h2><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{source.use}</p></article>)}
+      <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">Criterio de reunión</p>
+        <h2 className="mt-2 text-xl font-semibold">Sin datos históricos mezclados</h2>
+        <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">Los perfiles de archivos, celdas auditadas, hashes y cifras históricas se mantienen como evidencia interna, pero no se muestran en esta vista para evitar confundirlos con el estado operativo actual.</p>
       </section>
-
-      <section className="grid gap-4 xl:grid-cols-3">
-        {data.cross.portal.map((source) => <article key={source.file} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Portal Inmobiliario</p><h2 className="mt-2 break-words text-base font-semibold">{source.file}</h2><p className="mt-4 text-3xl font-semibold">{number(source.listingIds.present)}</p><p className="text-xs text-[var(--n3-text-muted)]">IDs MLC únicos · {source.listingIds.duplicateExtraOccurrences} duplicados extra</p><div className="mt-4 grid grid-cols-2 gap-px bg-[var(--n3-line)] text-xs"><div className="bg-[var(--n3-deep)] p-3"><strong>{number(source.photoQuality.rows_with_photo_urls || 0)}</strong><span className="block text-[var(--n3-text-muted)]">filas con fotos</span></div><div className="bg-[var(--n3-deep)] p-3"><strong>{number(source.photoQuality.photo_url_count || 0)}</strong><span className="block text-[var(--n3-text-muted)]">URLs de fotos</span></div><div className="bg-[var(--n3-deep)] p-3"><strong>{number(source.coordinateQuality.single_polygon || 0)}</strong><span className="block text-[var(--n3-text-muted)]">barrio único</span></div><div className="bg-[var(--n3-deep)] p-3"><strong>{number(source.coordinateQuality.multiple_polygons || 0)}</strong><span className="block text-[var(--n3-text-muted)]">barrio ambiguo</span></div></div><p className="mt-4 border-l-2 border-[#f39c12] pl-3 text-xs leading-5 text-[var(--n3-text-muted)]">Indicadores de arriendo: {source.operationIndicators.rent_indicator || 0}. Se marcan para revisión; no se mezclan con ventas.</p></article>)}
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[1.1fr_1.9fr]">
-        <article className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">Geografía</p><h2 className="mt-2 text-xl font-semibold">19 barrios KML</h2><div className="mt-4 flex flex-wrap gap-2">{data.kml.placemarks.map((item) => <span key={item.name} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] px-2 py-1 text-xs">{item.name}</span>)}</div><p className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">{data.kml.geometryAudit.areaOverlapCandidates.length} pares candidatos a solapamiento. Los puntos contenidos por más de un polígono reciben `AMBIGUOUS_POLYGON`; nunca se asigna el primer resultado.</p></article>
-        <article className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Incidencias territoriales</p><h2 className="mt-2 text-xl font-semibold">Solapamientos que requieren regla explícita</h2><div className="mt-4 grid gap-px bg-[var(--n3-line)] md:grid-cols-2">{data.kml.geometryAudit.areaOverlapCandidates.map((item) => <div key={item.pair.join('-')} className="bg-[#f7f7f7] p-3 text-sm"><strong>{item.pair[0]}</strong><span className="mx-2 text-[var(--n3-teal-soft)]">×</span><strong>{item.pair[1]}</strong></div>)}</div></article>
-      </section>
-
-      <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
-        <div className="border-b border-[var(--n3-line)] bg-black p-5 text-white"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-teal)]">CBRS Vitacura</p><h2 className="mt-2 text-xl font-semibold">40.843 activos · 34.755 eventos · 2014 a 9 enero 2026</h2></div>
-        <div className="grid gap-px bg-[var(--n3-line)] lg:grid-cols-3">
-          <div className="bg-[var(--n3-deep)] p-5"><h3 className="font-semibold">Tipos registrales</h3><div className="mt-3 space-y-2 text-xs">{cbrsTypes.map(([label, value]) => <p key={label}>{label}<strong className="float-right">{number(value)}</strong></p>)}</div></div>
-          <div className="bg-[var(--n3-deep)] p-5"><h3 className="font-semibold">Operaciones</h3><div className="mt-3 space-y-2 text-xs">{cbrsOperations.map(([label, value]) => <p key={label}>{label}<strong className="float-right">{number(value)}</strong></p>)}</div></div>
-          <div className="bg-[var(--n3-deep)] p-5"><h3 className="font-semibold">Estado geográfico</h3><div className="mt-3 space-y-2 text-xs">{cbrsGeo.map(([label, value]) => <p key={label}>{label}<strong className="float-right">{number(value)}</strong></p>)}</div><p className="mt-4 border-l-2 border-[#d7332b] pl-3 text-xs leading-5">La cobertura 2026 contiene solo 53 filas. No representa el año completo.</p></div>
-        </div>
-      </section>
-
-      <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">Cruce Portal ↔ CBRS</p><div className="mt-2 flex flex-wrap items-end justify-between gap-4"><h2 className="text-xl font-semibold">Estado de coincidencias</h2><span className="bg-black px-3 py-1 text-xs font-semibold text-white">{data.operatingModel.matchPolicy.currentConfirmedMatches} coincidencias confirmadas</span></div><div className="mt-5 grid gap-px bg-[var(--n3-line)] lg:grid-cols-4">{[['Llave Portal', data.operatingModel.deterministicKeys.portal], ['Evento CBRS', data.operatingModel.deterministicKeys.cbrsEvent], ['Activo CBRS', data.operatingModel.deterministicKeys.cbrsAsset], ['Cruce directo', 'No disponible']].map(([label, value]) => <div key={label} className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 break-words font-mono text-xs">{value}</p></div>)}</div><ol className="mt-5 grid gap-3 text-sm md:grid-cols-2 lg:grid-cols-4">{data.operatingModel.matchPolicy.candidateEvidence.map((item, index) => <li key={item} className="border-l-2 border-[#d7332b] bg-[var(--n3-deep)] p-3"><span className="text-xs text-[var(--n3-text-muted)]">{String(index + 1).padStart(2, '0')}</span><strong className="ml-2 capitalize">{item}</strong></li>)}</ol><p className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">{data.operatingModel.matchPolicy.rule}</p></section>
-
-      <section className="space-y-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">Manifiesto histórico</p><h2 className="mt-2 text-xl font-semibold text-white">Estructura completa de archivos auditados</h2></div>{data.workbooks.map((workbook) => <details key={workbook.file} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-light)]"><summary className="cursor-pointer px-5 py-4 text-sm font-semibold">{workbook.sourceFolder} / {workbook.file} · SHA-256 {workbook.sha256.slice(0, 12)}…</summary><div className="border-t border-[var(--n3-line)] p-5">{workbook.sheets.map((sheet) => <div key={sheet.title} className="mb-5"><h3 className="text-sm font-semibold">{sheet.title} · {sheet.dimension} · {number(sheet.populatedCells)} celdas pobladas</h3><div className="mt-3 overflow-x-auto"><table className="min-w-full text-xs"><thead className="text-[var(--n3-text-muted)]"><tr><th className="py-2 text-left">Columna</th><th className="text-left">Tipo</th><th className="text-left">Pobladas</th><th className="text-left">Nulas</th><th className="text-left">Únicos</th></tr></thead><tbody>{sheet.columns.map((column) => <tr key={column.column} className="border-t border-[var(--n3-line)]"><td className="py-2">{column.column} · {column.header || 'sin encabezado'}</td><td>{Object.entries(column.typeCounts || {}).map(([type, count]) => `${type}:${count}`).join(' · ')}</td><td>{number(populated(column.typeCounts))}</td><td>{number(column.nullCount)}</td><td>{number(column.uniqueNonNull)}</td></tr>)}</tbody></table></div></div>)}</div></details>)}</section>
-
-      <footer className="border-l-2 border-[#d7332b] bg-[var(--n3-deep)] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">Manifiesto celda a celda: {number(data.sourceInventory.cellManifest.cellCount)} celdas · SHA-256 <span className="font-mono">{data.sourceInventory.cellManifest.sha256}</span>. Los archivos fuente permanecen fuera del repositorio público; la app contiene perfiles, hashes y reglas sin publicar registros personales.</footer>
     </div>
   )
 }
