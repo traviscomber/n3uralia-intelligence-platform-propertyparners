@@ -1,0 +1,1 @@
+Canonical market ingestion implemented on branch agent/canonical-market-ingestion. See market-ingestion-pipeline-2026-07-29.md for validation evidence.
