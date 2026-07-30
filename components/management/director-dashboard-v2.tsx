@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, ArrowRight, BarChart3, ClipboardCheck, RefreshCw, ShieldCheck, TrendingDown, TrendingUp } from 'lucide-react'
+import { AlertTriangle, ArrowRight, BarChart3, ClipboardCheck, RefreshCw, ShieldCheck } from 'lucide-react'
 import { IntelligenceHeader, IntelligencePage, MethodologyNote, MetricCard, MetricGrid, SectionHeading } from '@/components/intelligence/design-system'
 
 type Metric = {
@@ -167,10 +167,7 @@ export function DirectorDashboardV2() {
         <section>
           <SectionHeading eyebrow="01 · Pulso de la oficina" title="Resultado contra meta" description="Junio y acumulado enero–junio. Cada indicador muestra objetivo, cumplimiento y variación mensual cuando existe base comparable." />
           <MetricGrid columns={4}>
-            {headline.map((item) => {
-              const trend = item.mom === null ? null : item.mom >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />
-              return <MetricCard key={item.code} label={item.label} value={format(item)} detail={`${item.target === null ? 'Meta n/d' : `Meta ${item.target.toLocaleString('es-CL')}`} · ${item.compliance === null ? 'Cumpl. n/d' : `${item.compliance.toFixed(1)}%`} ${item.mom === null ? '' : `· MoM ${item.mom > 0 ? '+' : ''}${item.mom.toFixed(1)}%`}`} icon={trend} />
-            })}
+            {headline.map((item) => <MetricCard key={item.code} label={item.label} value={format(item)} detail={`${item.target === null ? 'Meta n/d' : `Meta ${item.target.toLocaleString('es-CL')}`} · ${item.compliance === null ? 'Cumpl. n/d' : `${item.compliance.toFixed(1)}%`} ${item.mom === null ? '' : `· MoM ${item.mom > 0 ? '+' : ''}${item.mom.toFixed(1)}%`}`} />)}
           </MetricGrid>
         </section>
 
