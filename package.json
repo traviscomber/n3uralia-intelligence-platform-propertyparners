@@ -24,6 +24,7 @@
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
     "market:identity:verify": "node --import tsx scripts/verify-market-identity.ts",
+    "market:ingestion:verify": "node --import tsx scripts/verify-market-ingestion.ts",
     "valuation:build": "node scripts/build-valuation-intelligence.mjs",
     "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { Buffer } from 'node:buffer'
-import { persistNeighborhoodMarketSnapshot } from '@/lib/market-history'
 import { requireExecutiveAccess } from '@/lib/api-access'
 import {
   normalizeBenchmarkImportRows,
@@ -16,15 +15,12 @@ export const dynamic = 'force-dynamic'
 
 type ImportMode = 'preview' | 'import'
 type ImportKind = 'market_data' | 'benchmark_data'
+type SourceSystem = 'portal_inmobiliario' | 'cbrs' | 'client' | 'kml' | 'manual_import'
 
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
-  }
-
+  if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase credentials')
   return createSupabaseClient(supabaseUrl, supabaseKey)
 }
 
@@ -36,20 +32,31 @@ function parseKind(value: string | null): ImportKind {
   return value === 'benchmark_data' ? 'benchmark_data' : 'market_data'
 }
 
+function parseSourceSystem(value: string | null): SourceSystem {
+  if (value === 'portal_inmobiliario' || value === 'cbrs' || value === 'client' || value === 'kml') return value
+  return 'manual_import'
+}
+
 function summarizeRows(rows: NormalizedMarketImportRow[]) {
-  const neighborhoods = new Set(rows.map((row) => row.neighborhood))
-  const sources = new Set(rows.map((row) => row.source))
   return {
     rows: rows.length,
-    neighborhoods: neighborhoods.size,
-    sources: sources.size,
+    neighborhoods: new Set(rows.map((row) => row.neighborhood)).size,
+    sources: new Set(rows.map((row) => row.source)).size,
   }
 }
 
 async function readJsonBody(req: NextRequest) {
   const body = await req.json().catch(() => null)
   if (!body || typeof body !== 'object') return null
-  return body as { rows?: MarketImportInputRow[]; records?: MarketImportInputRow[]; source?: string; snapshot_date?: string; mode?: string; kind?: string }
+  return body as {
+    rows?: MarketImportInputRow[]
+    records?: MarketImportInputRow[]
+    source?: string
+    source_system?: string
+    snapshot_date?: string
+    mode?: string
+    kind?: string
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -58,12 +65,12 @@ export async function POST(req: NextRequest) {
     if (!access.allowed) {
       return NextResponse.json({ error: 'Acceso restringido a CEO y administradores.' }, { status: access.status })
     }
+
     const contentType = req.headers.get('content-type') || ''
     const url = new URL(req.url)
-    const queryMode = parseMode(url.searchParams.get('mode'))
-    const queryKind = parseKind(url.searchParams.get('kind'))
-    let mode = queryMode
-    let kind = queryKind
+    let mode = parseMode(url.searchParams.get('mode'))
+    let kind = parseKind(url.searchParams.get('kind'))
+    let sourceSystem = parseSourceSystem(url.searchParams.get('source_system'))
     let sourceLabel = 'market_intelligence_import'
     let snapshotDate = new Date().toISOString().slice(0, 10)
     let inputRows: MarketImportInputRow[] = []
@@ -75,14 +82,12 @@ export async function POST(req: NextRequest) {
       const rawMode = String(formData.get('mode') || '')
       const rawKind = String(formData.get('kind') || '')
       const rawSource = String(formData.get('source') || '')
+      const rawSourceSystem = String(formData.get('source_system') || '')
       const rawSnapshotDate = String(formData.get('snapshot_date') || '')
 
-      if (rawMode) {
-        mode = parseMode(rawMode)
-      }
-      if (rawKind) {
-        kind = parseKind(rawKind)
-      }
+      if (rawMode) mode = parseMode(rawMode)
+      if (rawKind) kind = parseKind(rawKind)
+      if (rawSourceSystem) sourceSystem = parseSourceSystem(rawSourceSystem)
       sourceLabel = rawSource || sourceLabel
       snapshotDate = rawSnapshotDate || snapshotDate
 
@@ -91,25 +96,21 @@ export async function POST(req: NextRequest) {
       }
 
       fileName = file.name || fileName
-      const buffer = Buffer.from(await file.arrayBuffer())
-      inputRows = parseMarketImportBuffer(buffer, file.name)
+      inputRows = parseMarketImportBuffer(Buffer.from(await file.arrayBuffer()), file.name)
     } else {
       const body = await readJsonBody(req)
-      if (!body) {
-        return NextResponse.json({ error: 'Formato de solicitud no soportado.' }, { status: 400 })
-      }
+      if (!body) return NextResponse.json({ error: 'Formato de solicitud no soportado.' }, { status: 400 })
 
       mode = parseMode(body.mode || null)
       kind = parseKind(body.kind || null)
+      sourceSystem = parseSourceSystem(body.source_system || null)
       sourceLabel = body.source || sourceLabel
       snapshotDate = body.snapshot_date || snapshotDate
       inputRows = Array.isArray(body.rows) ? body.rows : Array.isArray(body.records) ? body.records : []
       fileName = 'payload.json'
     }
 
-    if (!inputRows.length) {
-      return NextResponse.json({ error: 'No encontramos filas para importar.' }, { status: 400 })
-    }
+    if (!inputRows.length) return NextResponse.json({ error: 'No encontramos filas para importar.' }, { status: 400 })
 
     if (kind === 'benchmark_data') {
       const normalized = normalizeBenchmarkImportRows(inputRows, sourceLabel)
@@ -128,6 +129,7 @@ export async function POST(req: NextRequest) {
           mode,
           fileName,
           source: sourceLabel,
+          sourceSystem,
           snapshotDate,
           summary: benchmarkSummary,
           preview,
@@ -149,7 +151,6 @@ export async function POST(req: NextRequest) {
           recorded_at: row.recorded_at,
         })),
       )
-
       if (insertError) throw insertError
 
       await supabase.from('data_sources').upsert(
@@ -169,11 +170,9 @@ export async function POST(req: NextRequest) {
         mode,
         fileName,
         source: sourceLabel,
+        sourceSystem,
         snapshotDate,
-        summary: {
-          ...benchmarkSummary,
-          imported: normalized.length,
-        },
+        summary: { ...benchmarkSummary, imported: normalized.length },
         preview,
         message: `Importamos ${normalized.length} filas en external_market_benchmarks.`,
       })
@@ -190,65 +189,45 @@ export async function POST(req: NextRequest) {
         mode,
         fileName,
         source: sourceLabel,
+        sourceSystem,
         snapshotDate,
-        summary: {
-          ...summary,
-          skipped,
-        },
+        summary: { ...summary, skipped },
         preview,
-        message: 'Vista previa lista. Confirma para importar a market_data y neighborhood_market_data.',
+        message: 'Vista previa lista. La confirmación creará ejecución, raw records, validaciones y snapshots canónicos.',
       })
     }
 
+    if (!normalized.length) {
+      return NextResponse.json({ error: 'Todas las filas fueron rechazadas durante la normalización.' }, { status: 422 })
+    }
+
     const supabase = getServiceClient()
-    const marketRows = normalized.map((row) => ({
-      neighborhood: row.neighborhood,
-      avg_price_uf: row.avg_price_uf,
-      avg_price_m2_uf: row.avg_price_m2_uf,
-      absorption_rate: row.absorption_rate,
-      inventory_count: row.inventory_count,
-      avg_days_on_market: row.avg_days_on_market,
-      source: row.source,
-      source_url: row.source_url,
-      recorded_at: row.recorded_at,
-    }))
-
-    const { error: marketError } = await supabase
-      .from('market_data')
-      .upsert(marketRows, { onConflict: 'neighborhood' })
-
-    if (marketError) throw marketError
-
-    const snapshotRows = await persistNeighborhoodMarketSnapshot(
-      supabase,
-      normalized.map((row) => ({
-        neighborhood: row.neighborhood,
-        avg_price_uf: row.avg_price_uf,
-        avg_price_m2_uf: row.avg_price_m2_uf,
-        absorption_rate: row.absorption_rate,
-        inventory_count: row.inventory_count,
-        avg_days_on_market: row.avg_days_on_market,
-        source: row.source,
-        source_url: row.source_url,
-        recorded_at: row.recorded_at,
-        snapshot_date: row.snapshot_date,
-      })),
-    )
+    const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_market_aggregate', {
+      p_source_system: sourceSystem,
+      p_source_label: sourceLabel,
+      p_source_file: fileName,
+      p_snapshot_date: snapshotDate,
+      p_rows: normalized,
+    })
+    if (pipelineError) throw pipelineError
 
     return NextResponse.json({
       kind,
       mode,
       fileName,
       source: sourceLabel,
+      sourceSystem,
       snapshotDate,
       summary: {
         ...summary,
         skipped,
-        imported: normalized.length,
-        snapshotRows: snapshotRows.length,
+        imported: Number(pipelineResult?.accepted ?? 0),
+        rejected: Number(pipelineResult?.rejected ?? 0),
+        runId: pipelineResult?.run_id ?? null,
+        sourceId: pipelineResult?.source_id ?? null,
       },
       preview,
-      message: `Importamos ${normalized.length} filas y actualizamos la capa de Market Intelligence.`,
+      message: `Pipeline completado: ${Number(pipelineResult?.accepted ?? 0)} filas aceptadas y ${Number(pipelineResult?.rejected ?? 0)} rechazadas.`,
     })
   } catch (err) {
     return NextResponse.json(
