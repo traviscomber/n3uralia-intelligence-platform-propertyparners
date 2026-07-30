@@ -1,7 +1,8 @@
 {
-  "name": "my-project",
-  "version": "0.1.0",
+  "name": "property-partners-intelligence-platform",
+  "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +12,7 @@
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
     "tone:internal": "node scripts/audit-internal-tone.mjs",
     "access:verify": "node --import tsx scripts/verify-dashboard-access.ts",
-    "directory:verify": "node --import tsx scripts/verify-report-directory.ts",
+    "directory:verify": "node scripts/verify-report-directory.ts",
     "data:provenance": "node scripts/audit-runtime-provenance.mjs",
     "crm:build": "node scripts/build-crm-intelligence.mjs",
     "crm:verify": "node scripts/verify-crm-intelligence.mjs",
@@ -22,14 +23,25 @@
     "presentations:verify": "node scripts/verify-presentations-2026.mjs",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
+    "market:identity:verify": "node --import tsx scripts/verify-market-identity.ts",
     "valuation:build": "node scripts/build-valuation-intelligence.mjs",
     "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
+    "valuation:workflow:verify": "node --import tsx scripts/verify-valuation-workflow.ts",
     "ml:verify": "node --import tsx scripts/verify-ml-readiness.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
     "test:roles": "node scripts/test-director-partner-copilots.mjs",
     "test:traceability": "node scripts/test-traceability-validator.mjs",
     "test:e2e": "tsx scripts/test-pipeline-end-to-end.mjs"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js",
+      "esbuild",
+      "puppeteer",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

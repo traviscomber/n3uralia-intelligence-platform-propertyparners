@@ -1,5 +1,4 @@
-import market from '@/data/market-source-intelligence.json'
-import valuation from '@/data/valuation-intelligence.json'
+import Link from 'next/link'
 import {
   IntelligenceHeader,
   IntelligencePage,
@@ -10,165 +9,134 @@ import {
   RankedRow,
   SectionHeading,
 } from '@/components/intelligence/design-system'
+import { buildMarketContractSnapshot } from '@/lib/market-contract'
+import { getOperationalMarketSnapshot } from '@/lib/market-operational'
 
 function n(value: number) {
   return value.toLocaleString('es-CL')
 }
 
-export default function MarketPage() {
-  const portalFiles = market.cross.portal
-  const cbrs = market.cross.cbrs
-  const reconciliation = valuation.sourceReconciliation
-  const portalRows = portalFiles.reduce((sum, file) => sum + file.rows, 0)
-  const noOperationSignal = portalFiles.reduce((sum, file) => sum + (file.operationIndicators.no_explicit_indicator || 0), 0)
-  const missingCoordinates = portalFiles.reduce((sum, file) => sum + (file.coordinateQuality.both_missing || 0), 0)
-  const cbrsEvents = cbrs.candidateKeyCardinality.event_comuna_tomo_foja_numero_fecha.unique
-  const residentialCbrsRows = cbrs.categories.DESCRIPCION
-    .filter(([name]) => name === 'DEPARTAMENTO' || name === 'CASA-HABITACION')
-    .reduce((sum, [, count]) => sum + Number(count), 0)
+function pct(value: number) {
+  return `${(value * 100).toFixed(1)}%`
+}
 
-  const portalAssignments = new Map<string, number>()
-  for (const file of portalFiles) {
-    for (const [barrio, count] of Object.entries(file.kmlPolygonAssignments)) {
-      portalAssignments.set(barrio, (portalAssignments.get(barrio) || 0) + count)
-    }
-  }
+function statusLabel(status: 'available' | 'partial' | 'pending_source') {
+  if (status === 'available') return 'Disponible'
+  if (status === 'partial') return 'Parcial'
+  return 'Pendiente de fuente'
+}
 
-  const topPortalBarrios = [...portalAssignments.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
-  const cbrsBarrios = cbrs.categories.BARRIO.filter(([name]) => name !== '<NULL>').slice(0, 10)
+function operationalValue(value: number | null, suffix = '') {
+  return value === null ? 'Sin datos operativos' : `${n(value)}${suffix}`
+}
+
+export default async function MarketPage() {
+  const snapshot = buildMarketContractSnapshot()
+  const operational = await getOperationalMarketSnapshot()
+  const availableMetrics = snapshot.metrics.filter((metric) => metric.status !== 'pending_source')
+  const pendingMetrics = snapshot.metrics.filter((metric) => metric.status === 'pending_source')
+  const topNeighborhoods = snapshot.neighborhoods.slice(0, 12)
 
   return (
     <IntelligencePage>
       <IntelligenceHeader
-        eyebrow="Market Intelligence · Fuente auditada"
+        eyebrow="Módulo I · Alcance contractual"
         title="Inteligencia de Mercado Vitacura"
-        description="Oferta publicada, ventas registrales y territorio se mantienen como universos separados. La vista prioriza señales respaldadas y conserva explícitamente sus límites metodológicos."
+        description="Oferta publicada, ventas registrales, propiedades canónicas e indicadores se presentan con trazabilidad explícita. La plataforma no reemplaza datos faltantes con estimaciones."
         actions={[
-          { label: 'Fuentes y trazabilidad', href: '/dashboard/market/fuentes', primary: true },
-          { label: 'Abrir valorizador', href: '/dashboard/valorizador' },
+          { label: 'Exportar resumen CSV', href: '/api/market/export', primary: true },
+          { label: 'Fuentes y trazabilidad', href: '/dashboard/market/fuentes' },
+          { label: 'Importar nueva fuente', href: '/dashboard/market/import' },
         ]}
         meta={
-          <div className="grid min-w-[290px] grid-cols-2 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
-            <div className="bg-[#0c1111] p-4">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Archivos</p>
-              <p className="mt-2 text-sm font-semibold">{market.sourceInventory.fileCount}</p>
-            </div>
-            <div className="bg-[#0c1111] p-4">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Celdas</p>
-              <p className="mt-2 text-sm font-semibold">{n(market.sourceInventory.cellManifest.cellCount)}</p>
-            </div>
+          <div className="grid min-w-[320px] grid-cols-3 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
+            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Fuentes</p><p className="mt-2 text-sm font-semibold">{snapshot.sourceCount}</p></div>
+            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Celdas</p><p className="mt-2 text-sm font-semibold">{n(snapshot.cellCount)}</p></div>
+            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Base operativa</p><p className="mt-2 text-sm font-semibold">{operational.connected ? 'Conectada' : 'Pendiente'}</p></div>
           </div>
         }
       />
 
       <section>
-        <SectionHeading eyebrow="Market Pulse" title="Universos principales" />
+        <SectionHeading eyebrow="01 · Operación" title="Propiedad canónica e indicadores calculados" description="Estas métricas se activan desde PostgreSQL cuando existen importaciones fila a fila y vínculos confirmados." />
         <MetricGrid>
-          <MetricCard
-            label="Publicaciones con ID único"
-            value={n(reconciliation.currentPortalValidListings)}
-            detail="No equivale a inmuebles canónicos ni inventario activo."
-          />
-          <MetricCard
-            label="Sin señal de arriendo"
-            value={n(reconciliation.currentPortalSaleEligibleListings)}
-            detail="Contexto de venta por archivo; operación no confirmada fila a fila."
-          />
-          <MetricCard
-            label="Excluidas por arriendo"
-            value={n(reconciliation.portalListingsQuarantinedByRentIndicator)}
-            detail="La señal explícita se conserva y queda fuera del universo elegible."
-          />
-          <MetricCard
-            label="Activos registrales CBRS"
-            value={n(reconciliation.currentCbrsRows)}
-            detail={`${n(cbrsEvents)} eventos registrales únicos.`}
-          />
+          <MetricCard label="Propiedades canónicas" value={operationalValue(operational.canonicalProperties)} detail={`${operational.confirmedProperties ?? 0} identidades confirmadas`} />
+          <MetricCard label="Inventario activo" value={operationalValue(operational.activeInventory)} detail={operational.latestPeriod ? `Período ${operational.latestPeriod}` : 'Sin snapshot mensual generado'} />
+          <MetricCard label="Velocidad de venta" value={operationalValue(operational.medianDaysOnMarket, ' días')} detail="Mediana entre primera publicación y venta confirmada" />
+          <MetricCard label="Absorción" value={operational.absorptionRate === null ? 'Sin datos operativos' : pct(operational.absorptionRate)} detail="Ventas confirmadas / inventario activo del período" />
+        </MetricGrid>
+        {!operational.connected ? (
+          <div className="mt-4 border border-[#d7332b] bg-[#0c1111] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">
+            El esquema operativo está preparado, pero las migraciones y cargas fila a fila todavía deben ejecutarse en Supabase. Hasta entonces se conservan los agregados auditados existentes.
+          </div>
+        ) : null}
+      </section>
+
+      <section>
+        <SectionHeading eyebrow="02 · Universo disponible" title="Indicadores respaldados por fuente" description="Cada indicador declara fuente, período, metodología y limitación." />
+        <MetricGrid>
+          {availableMetrics.slice(0, 4).map((metric) => (
+            <MetricCard key={metric.key} label={metric.label} value={metric.value === null ? 'Sin información' : `${n(metric.value)}${metric.unit ? ` ${metric.unit}` : ''}`} detail={`${statusLabel(metric.status)} · ${metric.source}`} />
+          ))}
         </MetricGrid>
       </section>
 
       <section>
-        <SectionHeading eyebrow="Data Quality" title="Cobertura y restricciones" />
+        <SectionHeading eyebrow="03 · Calidad de datos" title="Cobertura y restricciones visibles" />
         <MetricGrid>
-          <MetricCard
-            label="Sin indicador de operación"
-            value={`${n(noOperationSignal)} · ${((noOperationSignal / portalRows) * 100).toFixed(1)}%`}
-          />
-          <MetricCard
-            label="Sin coordenadas Portal"
-            value={`${n(missingCoordinates)} · ${((missingCoordinates / portalRows) * 100).toFixed(1)}%`}
-          />
-          <MetricCard label="Filas CBRS residenciales" value={n(residentialCbrsRows)} />
-          <MetricCard label="Corte registral" value="2014 · 09 ene 2026" />
+          <MetricCard label="Filas Portal analizadas" value={n(snapshot.portalRows)} detail="Casas, departamentos y proyectos suministrados." />
+          <MetricCard label="Sin coordenadas Portal" value={`${n(snapshot.missingCoordinates)} · ${pct(snapshot.missingCoordinatesRate)}`} detail="No pueden recibir asignación territorial automática." />
+          <MetricCard label="Sin indicador explícito" value={`${n(snapshot.noOperationSignal)} · ${pct(snapshot.noOperationSignalRate)}`} detail="No se clasifican artificialmente." />
+          <MetricCard label="Candidatos por revisar" value={operationalValue(operational.pendingMatches)} detail="Vínculos Portal–CBRS o duplicados pendientes de validación humana." />
         </MetricGrid>
       </section>
 
       <section>
-        <SectionHeading eyebrow="Evidence" title="Distribución territorial" />
+        <SectionHeading eyebrow="04 · Territorio" title="Oferta y registros por barrio" description="Los agregados históricos permanecen separados del inventario operativo." />
         <div className="grid gap-5 xl:grid-cols-2">
-          <IntelligencePanel
-            eyebrow="Oferta publicada"
-            title="Asignación territorial reproducible"
-            description="Conteo de publicaciones con coordenadas asignadas a un único polígono KML. No representa inventario total por barrio."
-          >
-            <div>
-              {topPortalBarrios.map(([name, count], index) => (
-                <RankedRow key={name} index={index} label={name} value={n(count)} />
-              ))}
-            </div>
+          <IntelligencePanel eyebrow="Oferta publicada" title="Publicaciones asignadas por KML" description="Publicaciones con coordenadas dentro de un polígono reproducible.">
+            <div>{topNeighborhoods.map((row, index) => <RankedRow key={`portal-${row.neighborhood}`} index={index} label={row.neighborhood} value={n(row.publishedListings)} />)}</div>
           </IntelligencePanel>
-
-          <IntelligencePanel
-            eyebrow="Registro CBRS"
-            title="Inscripciones por barrio asignado"
-            description="Conteo histórico del archivo registral. No equivale a oferta vigente ni a publicaciones Portal."
-          >
-            <div>
-              {cbrsBarrios.map(([name, count], index) => (
-                <RankedRow key={name} index={index} label={name} value={n(Number(count))} />
-              ))}
-            </div>
+          <IntelligencePanel eyebrow="Ventas registrales" title="Registros CBRS por barrio" description="Conteo histórico de filas registrales con barrio asignado.">
+            <div>{topNeighborhoods.map((row, index) => <RankedRow key={`cbrs-${row.neighborhood}`} index={index} label={row.neighborhood} value={n(row.registeredSales)} />)}</div>
           </IntelligencePanel>
         </div>
       </section>
 
       <section>
-        <SectionHeading eyebrow="Methodology" title="Territorio y control de publicación" />
-        <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
-          <IntelligencePanel
-            eyebrow="Territorio"
-            title={`${market.kml.geometryAudit.polygonCount} polígonos auditados`}
-            description={`El KML contiene ${market.kml.geometryAudit.areaOverlapCandidates.length} pares candidatos a superposición o contención y ${market.kml.geometryAudit.boundaryContacts.length} contactos de borde. Estas condiciones permanecen visibles y no se resuelven artificialmente.`}
-          >
-            <div className="flex flex-wrap gap-2 p-5">
-              {Object.keys(market.kml.geometryAudit.ringCounts).map((name) => (
-                <span key={name} className="border border-[var(--n3-line)] px-2.5 py-1 text-[11px] text-[var(--n3-text-muted)]">
-                  {name}
-                </span>
-              ))}
+        <SectionHeading eyebrow="05 · Identidad" title="Deduplicación y vinculación Portal–CBRS" />
+        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <IntelligencePanel eyebrow="Claves determinísticas" title="Identidad de origen" description="Cada registro mantiene su clave original antes de la reconciliación.">
+            <div className="space-y-4 p-5 text-sm">
+              <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Portal</p><p className="mt-1 font-semibold">{snapshot.deduplicationPolicy.portalKey}</p></div>
+              <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Evento CBRS</p><p className="mt-1 font-semibold">{snapshot.deduplicationPolicy.cbrsEventKey}</p></div>
+              <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Activo CBRS</p><p className="mt-1 font-semibold">{snapshot.deduplicationPolicy.cbrsAssetKey}</p></div>
             </div>
           </IntelligencePanel>
-
-          <IntelligencePanel
-            eyebrow="Control metodológico"
-            title="Sólo métricas respaldadas"
-            description="No se publican promedios, velocidad, absorción, inventario ni rankings provenientes de tablas operativas heredadas. Tampoco se sustituyen con estimaciones."
-            critical
-          >
-            <div className="p-5">
-              <MethodologyNote>
-                Esta vista utiliza únicamente oferta Portal, inscripciones CBRS y polígonos presentes en el paquete auditado.
-              </MethodologyNote>
-            </div>
+          <IntelligencePanel eyebrow="Confirmación humana" title="No se confirma por score solamente" description={snapshot.deduplicationPolicy.rule} critical>
+            <div className="p-5"><div className="flex flex-wrap gap-2">{snapshot.deduplicationPolicy.confirmedRequires.map((item) => <span key={item} className="border border-[var(--n3-line)] px-2.5 py-1 text-[11px]">{item}</span>)}</div></div>
           </IntelligencePanel>
         </div>
       </section>
 
-      <footer className="flex flex-col justify-between gap-4 border-t border-[var(--n3-line)] pt-5 text-xs leading-5 text-[var(--n3-text-muted)] sm:flex-row">
-        <span>
-          Fuente: {market.sourceInventory.fileCount} archivos de mercado · manifiesto de {n(market.sourceInventory.cellManifest.cellCount)} celdas.
-        </span>
-        <span>Generado {new Date(market.generatedAt).toLocaleString('es-CL')}</span>
+      <section>
+        <SectionHeading eyebrow="06 · Brechas de datos" title="Métricas aún sin observaciones suficientes" />
+        <div className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] lg:grid-cols-3">
+          {pendingMetrics.map((metric) => (
+            <article key={metric.key} className="bg-[#0c1111] p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#ff766f]">Pendiente de carga</p><h3 className="mt-4 text-lg font-semibold">{metric.label}</h3><p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{metric.methodology}</p></article>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <IntelligencePanel eyebrow="Metodología" title="Cálculo contractual reproducible" description="El esquema incluye historial, ciclo de vida, ventas confirmadas y snapshots mensuales.">
+          <div className="p-5"><MethodologyNote>La velocidad usa la mediana de días desde la primera observación hasta una venta vinculada. La absorción usa ventas confirmadas divididas por inventario activo del mismo período. El retiro de una publicación no se interpreta automáticamente como venta.</MethodologyNote></div>
+        </IntelligencePanel>
+      </section>
+
+      <footer className="flex flex-col justify-between gap-4 border-t border-[var(--n3-line)] pt-5 text-xs text-[var(--n3-text-muted)] sm:flex-row">
+        <span>Fuente: {snapshot.sourceCount} archivos · {n(snapshot.cellCount)} celdas auditadas.</span>
+        <span>Generado {new Date(snapshot.generatedAt).toLocaleString('es-CL')}</span>
       </footer>
     </IntelligencePage>
   )
