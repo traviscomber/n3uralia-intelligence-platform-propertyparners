@@ -14,7 +14,7 @@ async function access() {
   if (!user) return { response: NextResponse.json({ error:'No autorizado' },{ status:401 }) }
   const { data: profile } = await supabase.from('profiles').select('role').eq('id',user.id).maybeSingle()
   const role = String(profile?.role || '').toLowerCase()
-  if (!['admin','ceo','director','subdirector','broker','partner'].includes(role)) return { response:NextResponse.json({ error:'Sin permisos' },{ status:403 }) }
+  if (!['admin','ceo','director','subdirector','broker','partner','seller'].includes(role)) return { response:NextResponse.json({ error:'Sin permisos' },{ status:403 }) }
   return { supabase,user,role }
 }
 
@@ -82,6 +82,19 @@ export async function POST(request:Request, context:{ params:Promise<{id:string}
 
   const { error:updateError } = await auth.supabase.from('valuation_cases').update(patch).eq('id',id)
   if (updateError) return NextResponse.json({ error:updateError.message },{ status:500 })
+
+  const rollbackPatch = {
+    status: valuationCase.status,
+    version_number: valuationCase.version_number,
+    reviewed_by: valuationCase.reviewed_by,
+    reviewed_at: valuationCase.reviewed_at,
+    approved_by: valuationCase.approved_by,
+    approved_at: valuationCase.approved_at,
+    issued_at: valuationCase.issued_at,
+    justification: valuationCase.justification,
+    updated_at: valuationCase.updated_at,
+  }
+
   const { error:versionError } = await auth.supabase.from('valuation_case_versions').insert({
     valuation_case_id:id,
     version_number:nextVersion,
@@ -89,8 +102,12 @@ export async function POST(request:Request, context:{ params:Promise<{id:string}
     snapshot,
     created_by:auth.user.id,
   })
-  if (versionError) return NextResponse.json({ error:versionError.message },{ status:500 })
-  await auth.supabase.from('valuation_decision_log').insert({
+  if (versionError) {
+    await auth.supabase.from('valuation_cases').update(rollbackPatch).eq('id',id)
+    return NextResponse.json({ error:versionError.message },{ status:500 })
+  }
+
+  const { error:logError } = await auth.supabase.from('valuation_decision_log').insert({
     valuation_case_id:id,
     action,
     actor_id:auth.user.id,
@@ -98,6 +115,11 @@ export async function POST(request:Request, context:{ params:Promise<{id:string}
     new_state:{ status:target,versionNumber:nextVersion,acceptedComparableCount:accepted.length },
     reason,
   })
+  if (logError) {
+    await auth.supabase.from('valuation_case_versions').delete().eq('valuation_case_id',id).eq('version_number',nextVersion)
+    await auth.supabase.from('valuation_cases').update(rollbackPatch).eq('id',id)
+    return NextResponse.json({ error:logError.message },{ status:500 })
+  }
 
   return NextResponse.json({ updated:true,status:target,versionNumber:nextVersion,acceptedComparableCount:accepted.length })
 }
