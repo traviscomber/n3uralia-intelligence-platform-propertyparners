@@ -22,6 +22,17 @@ export type MarketSourceTrace = {
   error?: string
 }
 
+type RawTraceSummary = {
+  raw_count: number | string | null
+  runs_without_raw: number | string | null
+  inconsistent_runs: number | string | null
+}
+
+function count(value: number | string | null | undefined) {
+  const parsed = Number(value ?? 0)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
 export async function getMarketSourceTrace(): Promise<MarketSourceTrace> {
   const empty: MarketSourceTrace = {
     connected: false,
@@ -36,21 +47,19 @@ export async function getMarketSourceTrace(): Promise<MarketSourceTrace> {
 
   try {
     const supabase = await createClient()
-    const [sources, runs, raw, latestRuns] = await Promise.all([
+    const [sources, runs, rawSummary, latestRuns] = await Promise.all([
       supabase.from('market_sources').select('id,name'),
       supabase.from('market_ingestion_runs').select('id,dataset_kind,source_file,status,received_rows,accepted_rows,rejected_rows,completed_at,metadata').order('started_at', { ascending: false }),
-      supabase.from('market_raw_records').select('id,ingestion_run_id'),
+      supabase.rpc('get_market_raw_trace_summary'),
       supabase.from('market_ingestion_runs').select('id,dataset_kind,source_file,status,received_rows,accepted_rows,rejected_rows,completed_at,metadata').order('started_at', { ascending: false }).limit(8),
     ])
 
-    const errors = [sources.error, runs.error, raw.error, latestRuns.error].filter(Boolean)
+    const errors = [sources.error, runs.error, rawSummary.error, latestRuns.error].filter(Boolean)
     if (errors.length) return { ...empty, error: errors.map((error) => error?.message).join(' · ') }
 
     const sourceRows = sources.data ?? []
     const runRows = runs.data ?? []
-    const rawRows = raw.data ?? []
-    const rawByRun = new Map<string, number>()
-    for (const row of rawRows) rawByRun.set(row.ingestion_run_id, (rawByRun.get(row.ingestion_run_id) ?? 0) + 1)
+    const summary = ((rawSummary.data ?? [])[0] ?? {}) as RawTraceSummary
 
     const linkedSourceIds = new Set(
       runRows
@@ -59,19 +68,14 @@ export async function getMarketSourceTrace(): Promise<MarketSourceTrace> {
     )
     const sourceNames = new Map(sourceRows.map((source) => [source.id, source.name]))
 
-    const inconsistentRuns = runRows.filter((run) => {
-      const rawCount = rawByRun.get(run.id) ?? 0
-      return rawCount !== (run.received_rows ?? 0) || (run.accepted_rows ?? 0) + (run.rejected_rows ?? 0) !== (run.received_rows ?? 0)
-    }).length
-
     return {
       connected: true,
       sourceCount: sourceRows.length,
       runCount: runRows.length,
-      rawCount: rawRows.length,
+      rawCount: count(summary.raw_count),
       sourcesWithoutRuns: sourceRows.filter((source) => !linkedSourceIds.has(source.id)).length,
-      runsWithoutRaw: runRows.filter((run) => !rawByRun.has(run.id)).length,
-      inconsistentRuns,
+      runsWithoutRaw: count(summary.runs_without_raw),
+      inconsistentRuns: count(summary.inconsistent_runs),
       latestRuns: (latestRuns.data ?? []).map((run) => {
         const sourceId = (run.metadata as Record<string, unknown> | null)?.source_id
         return {
