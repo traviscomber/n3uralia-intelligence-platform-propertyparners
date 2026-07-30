@@ -4,19 +4,19 @@ const modules = [
   {
     number: '01',
     title: 'Inteligencia de Mercado',
-    description: 'Oferta, transacciones, propiedades, barrios, microbarrios, comparables e indicadores del mercado inmobiliario de Vitacura.',
+    description: 'Registros de oferta, fuentes, barrios, calidad de datos e indicadores disponibles. Las ventas y métricas derivadas permanecen pendientes hasta cargar transacciones confirmadas.',
     href: '/dashboard/market',
   },
   {
     number: '02',
     title: 'Valorización de Propiedades',
-    description: 'Herramienta de valorización con variables objetivas y cualitativas, comparables, ajustes, justificación e informe exportable.',
-    href: '/dashboard/valorizador',
+    description: 'Creación de casos en borrador, comparables trazables, ajustes, revisión, aprobación, expediente y registro de decisiones.',
+    href: '/dashboard/valuation',
   },
   {
     number: '03',
     title: 'Control de Gestión Comercial',
-    description: 'Resultados, captaciones, ventas, seguimiento, conversión, productividad, metas, variaciones, rankings y alertas por rol.',
+    description: 'Métricas, metas, variaciones, rankings y alertas por rol. Los resultados aparecen únicamente cuando existen entidades y datos operativos cargados.',
     href: '/dashboard/control',
   },
 ]
@@ -77,12 +77,12 @@ export default function DashboardHome() {
         </div>
 
         <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado del saneamiento</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p>
           <div className="mt-5 space-y-3 text-sm">
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Navegación contractual</span><strong className="text-[#ff766f]">Aplicada</strong></div>
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Funciones experimentales</span><strong>Separadas</strong></div>
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Asistentes globales</span><strong>Retirados</strong></div>
-            <div className="flex justify-between"><span>Siguiente etapa</span><strong>Completar módulos</strong></div>
+            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Mercado</span><strong className="text-[#ff766f]">Datos candidatos cargados</strong></div>
+            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Valorización</span><strong>Flujo canónico activo</strong></div>
+            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Control de gestión</span><strong>Pendiente de datos</strong></div>
+            <div className="flex justify-between"><span>Reportes</span><strong>Estructura disponible</strong></div>
           </div>
         </div>
       </section>
