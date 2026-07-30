@@ -1,5 +1,5 @@
-import { ManagementRoleDashboard } from '@/components/management/role-dashboard'
+import { DirectorDashboardV2 } from '@/components/management/director-dashboard-v2'
 
 export default function DirectorDashboard() {
-  return <ManagementRoleDashboard view="director" />
+  return <DirectorDashboardV2 />
 }
