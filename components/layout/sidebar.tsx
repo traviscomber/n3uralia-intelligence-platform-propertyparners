@@ -32,6 +32,7 @@ const items = {
   control: { label: 'Control de gestión', href: '/dashboard/control', icon: icons.control },
   controlAdmin: { label: 'Metas y alertas', href: '/dashboard/control/admin', icon: icons.settings },
   reports: { label: 'Reportes', href: '/dashboard/reportes/autonomos', icon: icons.reports },
+  partnerReports: { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', icon: icons.reports },
   marketSources: { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', icon: icons.sources },
   marketImport: { label: 'Importar mercado', href: '/dashboard/market/import', icon: icons.sources },
   sources: { label: 'Fuentes de propiedades', href: '/dashboard/sources', icon: icons.sources },
@@ -52,8 +53,7 @@ const directorSections: SidebarSection[] = [
 ]
 
 const sellerSections: SidebarSection[] = [
-  { label: 'Operación', items: [items.home, items.partner, items.market, items.valuation, items.properties, items.reports] },
-  { label: 'Futuro', items: [items.version2] },
+  { label: 'Operación personal', items: [items.home, items.partner, items.market, items.valuation, items.properties, items.partnerReports] },
 ]
 
 function NavigationLinks({ items: sectionItems, pathname }: { items: SidebarItem[]; pathname: string }) {
