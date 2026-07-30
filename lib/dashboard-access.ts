@@ -6,6 +6,8 @@ const EXECUTIVE_ONLY = [
   '/dashboard/sources',
   '/dashboard/market/fuentes',
   '/dashboard/market/import',
+  '/dashboard/market/roadmap',
+  '/dashboard/market/reconciliacion',
   '/dashboard/knowledge',
   '/dashboard/ml-lab',
   '/dashboard/control',
