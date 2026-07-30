@@ -3,60 +3,72 @@ import { createClient } from '@/lib/supabase/server'
 
 const transitions: Record<string, string[]> = {
   draft: ['review'],
-  review: ['draft','approved'],
-  approved: ['review','issued'],
+  review: ['draft', 'approved'],
+  approved: ['review', 'issued'],
   issued: [],
 }
 
 async function access() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { response: NextResponse.json({ error:'No autorizado' },{ status:401 }) }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id',user.id).maybeSingle()
+  if (!user) return { response: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
   const role = String(profile?.role || '').toLowerCase()
-  if (!['admin','ceo','director','subdirector','broker','partner','seller'].includes(role)) return { response:NextResponse.json({ error:'Sin permisos' },{ status:403 }) }
-  return { supabase,user,role }
+  if (!['admin', 'ceo', 'director', 'subdirector', 'broker', 'partner', 'seller'].includes(role)) {
+    return { response: NextResponse.json({ error: 'Sin permisos' }, { status: 403 }) }
+  }
+  return { supabase, user, role }
 }
 
-export async function POST(request:Request, context:{ params:Promise<{id:string}> }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const auth = await access()
   if ('response' in auth) return auth.response
+
   const { id } = await context.params
   const body = await request.json().catch(() => null)
   const target = String(body?.status || '')
   const reason = String(body?.reason || '').trim() || null
 
-  const { data: valuationCase, error } = await auth.supabase.from('valuation_cases').select('*').eq('id',id).maybeSingle()
-  if (error) return NextResponse.json({ error:error.message },{ status:500 })
-  if (!valuationCase) return NextResponse.json({ error:'Valorización no encontrada' },{ status:404 })
+  const { data: valuationCase, error } = await auth.supabase.from('valuation_cases').select('*').eq('id', id).maybeSingle()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
 
-  const elevated = ['admin','ceo','director','subdirector'].includes(auth.role)
+  const elevated = ['admin', 'ceo', 'director', 'subdirector'].includes(auth.role)
   const ownsCase = valuationCase.requested_by === auth.user.id
-  if (!elevated && !ownsCase) return NextResponse.json({ error:'No puede operar valorizaciones de otro usuario' },{ status:403 })
-  if (!(transitions[valuationCase.status] || []).includes(target)) return NextResponse.json({ error:`Transición ${valuationCase.status} → ${target} no permitida` },{ status:400 })
-  if (target === 'approved' && !elevated) return NextResponse.json({ error:'Solo dirección puede aprobar' },{ status:403 })
-  if (target === 'issued' && !elevated) return NextResponse.json({ error:'Solo dirección puede emitir' },{ status:403 })
-  if (target === 'draft' && valuationCase.status === 'review' && !elevated) return NextResponse.json({ error:'Solo dirección puede devolver un caso a borrador' },{ status:403 })
+  if (!elevated && !ownsCase) return NextResponse.json({ error: 'No puede operar valorizaciones de otro usuario' }, { status: 403 })
+  if (!(transitions[valuationCase.status] || []).includes(target)) {
+    return NextResponse.json({ error: `Transición ${valuationCase.status} → ${target} no permitida` }, { status: 400 })
+  }
 
-  const { data: comparables, error: compError } = await auth.supabase.from('valuation_comparables').select('*').eq('valuation_case_id',id).order('rank')
-  if (compError) return NextResponse.json({ error:compError.message },{ status:500 })
+  if (valuationCase.status === 'draft' && target === 'review') {
+    const { data, error: rpcError } = await auth.supabase.rpc('submit_valuation_for_review', {
+      target_case_id: id,
+      reason,
+    })
+    if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 400 })
+    return NextResponse.json({ updated: true, status: data?.status ?? 'review', versionNumber: data?.version_number ?? null })
+  }
+
+  if (!elevated) return NextResponse.json({ error: 'Sólo dirección puede ejecutar esta transición' }, { status: 403 })
+  if (target === 'draft' && !reason) return NextResponse.json({ error: 'Se requiere un motivo para devolver el caso a borrador' }, { status: 400 })
+
+  const { data: comparables, error: compError } = await auth.supabase.from('valuation_comparables').select('*').eq('valuation_case_id', id).order('rank')
+  if (compError) return NextResponse.json({ error: compError.message }, { status: 500 })
   const accepted = (comparables || []).filter((item) => item.selected && item.match_status === 'accepted')
 
-  if (target === 'review' && valuationCase.status === 'draft' && accepted.length < 3) {
-    return NextResponse.json({ error:'Se requieren al menos 3 comparables aceptados para enviar a revisión' },{ status:400 })
-  }
-  if (target === 'draft' && valuationCase.status === 'review' && !reason) {
-    return NextResponse.json({ error:'Se requiere un motivo para devolver el caso a borrador' },{ status:400 })
-  }
   if (target === 'approved') {
-    if (accepted.length < 3) return NextResponse.json({ error:'No se puede aprobar sin al menos 3 comparables aceptados' },{ status:400 })
-    if (!valuationCase.estimated_value_uf || !valuationCase.low_value_uf || !valuationCase.high_value_uf) return NextResponse.json({ error:'La valorización no tiene rango calculado' },{ status:400 })
-    if (!String(valuationCase.justification || '').trim() && !reason) return NextResponse.json({ error:'Se requiere justificación de aprobación' },{ status:400 })
+    if (accepted.length < 2) return NextResponse.json({ error: 'No se puede aprobar sin al menos 2 comparables aceptados' }, { status: 400 })
+    if (!valuationCase.estimated_value_uf || !valuationCase.low_value_uf || !valuationCase.high_value_uf) {
+      return NextResponse.json({ error: 'La valorización no tiene rango calculado' }, { status: 400 })
+    }
+    if (!String(valuationCase.justification || '').trim() && !reason) {
+      return NextResponse.json({ error: 'Se requiere justificación de aprobación' }, { status: 400 })
+    }
   }
 
   const now = new Date().toISOString()
-  const patch: Record<string,unknown> = { status:target, updated_at:now }
-  let action = 'submitted_for_review'
+  const patch: Record<string, unknown> = { status: target, updated_at: now }
+  let action = 'status_changed'
   if (target === 'draft') action = 'rejected'
   if (target === 'approved') {
     action = 'approved'
@@ -74,52 +86,33 @@ export async function POST(request:Request, context:{ params:Promise<{id:string}
   const nextVersion = Number(valuationCase.version_number || 1) + 1
   patch.version_number = nextVersion
   const snapshot = {
-    valuationCase:{ ...valuationCase,...patch },
+    valuationCase: { ...valuationCase, ...patch },
     comparables,
-    acceptedComparableCount:accepted.length,
-    workflow:{ from:valuationCase.status,to:target,actorId:auth.user.id,reason,at:now },
+    acceptedComparableCount: accepted.length,
+    workflow: { from: valuationCase.status, to: target, actorId: auth.user.id, reason, at: now },
   }
 
-  const { error:updateError } = await auth.supabase.from('valuation_cases').update(patch).eq('id',id)
-  if (updateError) return NextResponse.json({ error:updateError.message },{ status:500 })
+  const { error: updateError } = await auth.supabase.from('valuation_cases').update(patch).eq('id', id)
+  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
 
-  const rollbackPatch = {
-    status: valuationCase.status,
-    version_number: valuationCase.version_number,
-    reviewed_by: valuationCase.reviewed_by,
-    reviewed_at: valuationCase.reviewed_at,
-    approved_by: valuationCase.approved_by,
-    approved_at: valuationCase.approved_at,
-    issued_at: valuationCase.issued_at,
-    justification: valuationCase.justification,
-    updated_at: valuationCase.updated_at,
-  }
-
-  const { error:versionError } = await auth.supabase.from('valuation_case_versions').insert({
-    valuation_case_id:id,
-    version_number:nextVersion,
-    status:target,
+  const { error: versionError } = await auth.supabase.from('valuation_case_versions').insert({
+    valuation_case_id: id,
+    version_number: nextVersion,
+    status: target,
     snapshot,
-    created_by:auth.user.id,
+    created_by: auth.user.id,
   })
-  if (versionError) {
-    await auth.supabase.from('valuation_cases').update(rollbackPatch).eq('id',id)
-    return NextResponse.json({ error:versionError.message },{ status:500 })
-  }
+  if (versionError) return NextResponse.json({ error: versionError.message }, { status: 500 })
 
-  const { error:logError } = await auth.supabase.from('valuation_decision_log').insert({
-    valuation_case_id:id,
+  const { error: logError } = await auth.supabase.from('valuation_decision_log').insert({
+    valuation_case_id: id,
     action,
-    actor_id:auth.user.id,
-    previous_state:{ status:valuationCase.status,versionNumber:valuationCase.version_number },
-    new_state:{ status:target,versionNumber:nextVersion,acceptedComparableCount:accepted.length },
+    actor_id: auth.user.id,
+    previous_state: { status: valuationCase.status, versionNumber: valuationCase.version_number },
+    new_state: { status: target, versionNumber: nextVersion, acceptedComparableCount: accepted.length },
     reason,
   })
-  if (logError) {
-    await auth.supabase.from('valuation_case_versions').delete().eq('valuation_case_id',id).eq('version_number',nextVersion)
-    await auth.supabase.from('valuation_cases').update(rollbackPatch).eq('id',id)
-    return NextResponse.json({ error:logError.message },{ status:500 })
-  }
+  if (logError) return NextResponse.json({ error: logError.message }, { status: 500 })
 
-  return NextResponse.json({ updated:true,status:target,versionNumber:nextVersion,acceptedComparableCount:accepted.length })
+  return NextResponse.json({ updated: true, status: target, versionNumber: nextVersion, acceptedComparableCount: accepted.length })
 }
