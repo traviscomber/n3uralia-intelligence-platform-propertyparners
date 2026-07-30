@@ -30,9 +30,10 @@ const emptySnapshot: OperationalMarketSnapshot = {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [properties, confirmed, activeListings, transactions, pendingMatches, latestMetric] = await Promise.all([
+    const [properties, confirmed, identityCandidates, activeListings, transactions, matchCandidates, latestMetric] = await Promise.all([
       supabase.from('market_properties').select('id', { count: 'exact', head: true }),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).eq('identity_status', 'confirmed'),
+      supabase.from('market_properties').select('id', { count: 'exact', head: true }).in('identity_status', ['candidate', 'needs_review']),
       supabase.from('market_listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('market_transactions').select('id', { count: 'exact', head: true }),
       supabase.from('market_property_matches').select('id', { count: 'exact', head: true }).in('status', ['candidate_high', 'candidate_medium']),
@@ -46,7 +47,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .maybeSingle(),
     ])
 
-    const errors = [properties.error, confirmed.error, activeListings.error, transactions.error, pendingMatches.error, latestMetric.error].filter(Boolean)
+    const errors = [properties.error, confirmed.error, identityCandidates.error, activeListings.error, transactions.error, matchCandidates.error, latestMetric.error].filter(Boolean)
     if (errors.length > 0) {
       return { ...emptySnapshot, error: errors.map((error) => error?.message).join(' · ') }
     }
@@ -62,7 +63,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       absorptionRate: metric?.absorption_rate ?? null,
       offerToSalesRatio: metric?.offer_to_sales_ratio ?? null,
       latestPeriod: metric ? `${metric.period_start} / ${metric.period_end}` : null,
-      pendingMatches: pendingMatches.count ?? 0,
+      pendingMatches: (identityCandidates.count ?? 0) + (matchCandidates.count ?? 0),
     }
   } catch (error) {
     return { ...emptySnapshot, error: error instanceof Error ? error.message : 'No fue posible consultar la base operativa.' }
