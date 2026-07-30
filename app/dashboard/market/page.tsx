@@ -42,7 +42,7 @@ export default async function MarketPage() {
       <IntelligenceHeader
         eyebrow="Módulo I · Alcance contractual"
         title="Inteligencia de Mercado Vitacura"
-        description="Oferta publicada, ventas registrales, propiedades canónicas e indicadores se presentan con trazabilidad explícita. La plataforma no reemplaza datos faltantes con estimaciones."
+        description="Oferta publicada, ventas registrales, registros de propiedades e indicadores se presentan con trazabilidad explícita. La plataforma distingue entre registros importados, identidades candidatas e identidades confirmadas."
         actions={[
           { label: 'Exportar resumen CSV', href: '/api/market/export', primary: true },
           { label: 'Fuentes y trazabilidad', href: '/dashboard/market/fuentes' },
@@ -58,12 +58,12 @@ export default async function MarketPage() {
       />
 
       <section>
-        <SectionHeading eyebrow="01 · Operación" title="Propiedad canónica e indicadores calculados" description="Estas métricas se activan desde PostgreSQL cuando existen importaciones fila a fila y vínculos confirmados." />
+        <SectionHeading eyebrow="01 · Operación" title="Registros operativos y métricas validadas" description="Los conteos distinguen publicaciones importadas de propiedades cuya identidad ya fue confirmada. Velocidad y absorción sólo se publican cuando existen ventas confirmadas y un período calculado." />
         <MetricGrid>
-          <MetricCard label="Propiedades canónicas" value={operationalValue(operational.canonicalProperties)} detail={`${operational.confirmedProperties ?? 0} identidades confirmadas`} />
-          <MetricCard label="Inventario activo" value={operationalValue(operational.activeInventory)} detail={operational.latestPeriod ? `Período ${operational.latestPeriod}` : 'Sin snapshot mensual generado'} />
-          <MetricCard label="Velocidad de venta" value={operationalValue(operational.medianDaysOnMarket, ' días')} detail="Mediana entre primera publicación y venta confirmada" />
-          <MetricCard label="Absorción" value={operational.absorptionRate === null ? 'Sin datos operativos' : pct(operational.absorptionRate)} detail="Ventas confirmadas / inventario activo del período" />
+          <MetricCard label="Registros de propiedad" value={operationalValue(operational.canonicalProperties)} detail={`${operational.confirmedProperties ?? 0} identidades confirmadas; el resto permanece en revisión`} />
+          <MetricCard label="Publicaciones activas importadas" value={operationalValue(operational.activeInventory)} detail={operational.latestPeriod ? `Inventario calculado para ${operational.latestPeriod}` : 'Conteo de publicaciones activas; aún no es un snapshot mensual deduplicado'} />
+          <MetricCard label="Velocidad de venta" value={operationalValue(operational.medianDaysOnMarket, ' días')} detail="Sólo se calcula con venta confirmada vinculada a la primera publicación" />
+          <MetricCard label="Absorción" value={operational.absorptionRate === null ? 'Sin datos operativos' : pct(operational.absorptionRate)} detail="Ventas confirmadas / inventario deduplicado del mismo período" />
         </MetricGrid>
         {!operational.connected ? (
           <div className="mt-4 border border-[#d7332b] bg-[#0c1111] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">
@@ -87,7 +87,7 @@ export default async function MarketPage() {
           <MetricCard label="Filas Portal analizadas" value={n(snapshot.portalRows)} detail="Casas, departamentos y proyectos suministrados." />
           <MetricCard label="Sin coordenadas Portal" value={`${n(snapshot.missingCoordinates)} · ${pct(snapshot.missingCoordinatesRate)}`} detail="No pueden recibir asignación territorial automática." />
           <MetricCard label="Sin indicador explícito" value={`${n(snapshot.noOperationSignal)} · ${pct(snapshot.noOperationSignalRate)}`} detail="No se clasifican artificialmente." />
-          <MetricCard label="Candidatos por revisar" value={operationalValue(operational.pendingMatches)} detail="Vínculos Portal–CBRS o duplicados pendientes de validación humana." />
+          <MetricCard label="Identidades por revisar" value={operationalValue(operational.pendingMatches)} detail="Registros candidatos o vínculos Portal–CBRS pendientes de validación humana." />
         </MetricGrid>
       </section>
 
