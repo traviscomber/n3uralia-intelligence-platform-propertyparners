@@ -8,6 +8,33 @@ Dejar el módulo de inteligencia de mercado listo para operar y presentar única
 
 No inventar, completar ni inferir datos que no estén respaldados por una fuente canónica o por evidencia operativa almacenada en Supabase.
 
+## Colaboración y responsabilidades
+
+### Mi Toro
+
+- Auditar el alcance antes de recomendar o aprobar cambios.
+- Verificar brandbook, UI, UX, funcionalidad, datos y confianza.
+- Clasificar hallazgos por severidad y exigir evidencia observable.
+- No aprobar una fase con errores críticos o altos pendientes.
+
+### Cíclope
+
+- Mantener coherencia entre el dashboard, el sistema visual y la arquitectura de información.
+- Revisar jerarquía, navegación, densidad, componentes, estados y accesibilidad.
+- Priorizar cambios sistémicos antes de correcciones aisladas.
+- Verificar visualmente escritorio y móvil antes de declarar una pantalla terminada.
+
+### Chacuco
+
+- Aplicar disciplina operativa al desarrollo incremental.
+- Revisar código y esquema real antes de modificar interfaces respaldadas por datos.
+- Preservar trazabilidad, estados vacíos honestos, manejo de errores y datos productivos.
+- Exigir commits pequeños, CI aprobado y despliegue verificado después de cada bloque.
+
+### Regla de colaboración
+
+Las tres revisiones deben usar las mismas fuentes canónicas. Ninguna recomendación visual, funcional u operativa puede reemplazar evidencia faltante ni crear datos nuevos.
+
 ## Estado actual verificado
 
 - Fuentes canónicas auditadas: Portal Inmobiliario, CBRS Vitacura y KML de barrios.
