@@ -10,7 +10,7 @@ import {
   SectionHeading,
 } from '@/components/intelligence/design-system'
 import { buildMarketContractSnapshot } from '@/lib/market-contract'
-import { getOperationalMarketSnapshot } from '@/lib/market-operational'
+import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
 
 function n(value: number) {
   return value.toLocaleString('es-CL')
@@ -30,15 +30,17 @@ function operationalValue(value: number | null, suffix = '') {
   return value === null ? 'Sin datos operativos' : `${n(value)}${suffix}`
 }
 
-function ingestionFreshness(value: string | null) {
-  if (!value) return { label: 'Sin ejecución', detail: 'No existe una ingestión registrada.', stale: true }
-  const completedAt = new Date(value)
-  const ageDays = Math.max(0, Math.floor((Date.now() - completedAt.getTime()) / 86_400_000))
-  return {
-    label: ageDays === 0 ? 'Actualizada hoy' : `${ageDays} días`,
-    detail: `Última ejecución ${completedAt.toLocaleString('es-CL')}`,
-    stale: ageDays > 7,
-  }
+function formatDate(value: string | null) {
+  if (!value) return 'Sin fecha'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 'Fecha inválida' : date.toLocaleString('es-CL')
+}
+
+function freshnessLabel(status: MarketFreshnessStatus, ageDays: number | null) {
+  if (status === 'recent') return ageDays === 0 ? 'Observado hoy' : `${ageDays} días · reciente`
+  if (status === 'aging') return `${ageDays ?? '—'} días · envejeciendo`
+  if (status === 'stale') return `${ageDays ?? '—'} días · desactualizado`
+  return 'Sin observación'
 }
 
 export default async function MarketPage() {
@@ -47,14 +49,15 @@ export default async function MarketPage() {
   const availableMetrics = snapshot.metrics.filter((metric) => metric.status !== 'pending_source')
   const pendingMetrics = snapshot.metrics.filter((metric) => metric.status === 'pending_source')
   const topNeighborhoods = snapshot.neighborhoods.slice(0, 12)
-  const freshness = ingestionFreshness(operational.latestIngestionAt)
+  const staleObservation = operational.freshnessStatus === 'stale'
+  const agingObservation = operational.freshnessStatus === 'aging'
 
   return (
     <IntelligencePage>
       <IntelligenceHeader
         eyebrow="Módulo I · Alcance contractual"
         title="Inteligencia de Mercado Vitacura"
-        description="Oferta publicada, ventas registrales, registros de propiedades e indicadores se presentan con trazabilidad explícita. La plataforma distingue entre registros importados, identidades candidatas e identidades confirmadas."
+        description="Oferta publicada, ventas registrales, registros de propiedades e indicadores se presentan con trazabilidad explícita. La plataforma distingue procesamiento, fecha observada, identidades candidatas e identidades confirmadas."
         actions={[
           { label: 'Exportar resumen CSV', href: '/api/market/export', primary: true },
           { label: 'Fuentes y trazabilidad', href: '/dashboard/market/fuentes' },
@@ -65,7 +68,7 @@ export default async function MarketPage() {
             <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Fuentes</p><p className="mt-2 text-sm font-semibold">{snapshot.sourceCount}</p></div>
             <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Celdas</p><p className="mt-2 text-sm font-semibold">{n(snapshot.cellCount)}</p></div>
             <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Base</p><p className="mt-2 text-sm font-semibold">{operational.connected ? 'Conectada' : 'Pendiente'}</p></div>
-            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Frescura</p><p className={`mt-2 text-sm font-semibold ${freshness.stale ? 'text-[#ff766f]' : ''}`}>{freshness.label}</p></div>
+            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Frescura del dato</p><p className={`mt-2 text-sm font-semibold ${staleObservation || agingObservation ? 'text-[#ff766f]' : ''}`}>{freshnessLabel(operational.freshnessStatus, operational.observationAgeDays)}</p></div>
           </div>
         }
       />
@@ -74,21 +77,22 @@ export default async function MarketPage() {
         <SectionHeading eyebrow="01 · Operación" title="Registros operativos y métricas validadas" description="Los conteos distinguen publicaciones importadas de propiedades cuya identidad ya fue confirmada. Velocidad y absorción sólo se publican cuando existen ventas confirmadas y un período calculado." />
         <MetricGrid>
           <MetricCard label="Registros de propiedad" value={operationalValue(operational.canonicalProperties)} detail={`${operational.confirmedProperties ?? 0} identidades confirmadas; el resto permanece en revisión`} />
-          <MetricCard label="Publicaciones activas importadas" value={operationalValue(operational.activeInventory)} detail={operational.latestPeriod ? `Inventario calculado para ${operational.latestPeriod}` : 'Conteo de publicaciones activas; aún no es un snapshot mensual deduplicado'} />
+          <MetricCard label="Publicaciones observadas como activas" value={operationalValue(operational.activeInventory)} detail={operational.latestPeriod ? `Inventario calculado para ${operational.latestPeriod}` : `Última observación disponible: ${formatDate(operational.latestObservedAt)}. No equivale a actividad verificada hoy.`} />
           <MetricCard label="Velocidad de venta" value={operationalValue(operational.medianDaysOnMarket, ' días')} detail="Sólo se calcula con venta confirmada vinculada a la primera publicación" />
           <MetricCard label="Absorción" value={operational.absorptionRate === null ? 'Sin datos operativos' : pct(operational.absorptionRate)} detail="Ventas confirmadas / inventario deduplicado del mismo período" />
         </MetricGrid>
       </section>
 
       <section>
-        <SectionHeading eyebrow="02 · Pipeline" title="Estado de ingestión y calidad" description="Cada importación crea una ejecución, conserva las filas raw, valida cada registro y materializa únicamente los agregados aceptados." />
+        <SectionHeading eyebrow="02 · Pipeline" title="Procesamiento, observación y calidad" description="La fecha de procesamiento indica cuándo se ejecutó el pipeline. La fecha observada indica hasta cuándo la fuente respalda el estado de las publicaciones." />
         <MetricGrid>
           <MetricCard label="Ejecuciones registradas" value={operationalValue(operational.ingestionRuns)} detail="Incluye backfill histórico e importaciones canónicas." />
-          <MetricCard label="Último estado" value={operational.latestIngestionStatus ?? 'Sin ejecución'} detail={freshness.detail} />
-          <MetricCard label="Filas aceptadas" value={operationalValue(operational.latestIngestionAccepted)} detail="Aceptadas en la ejecución más reciente." />
-          <MetricCard label="Filas rechazadas" value={operationalValue(operational.latestIngestionRejected)} detail="Rechazadas con errores explícitos de validación." />
+          <MetricCard label="Procesado el" value={formatDate(operational.latestIngestionAt)} detail={`Estado de la última ejecución: ${operational.latestIngestionStatus ?? 'sin ejecución'}.`} />
+          <MetricCard label="Datos observados hasta" value={formatDate(operational.latestObservedAt)} detail={freshnessLabel(operational.freshnessStatus, operational.observationAgeDays)} />
+          <MetricCard label="Calidad de última ejecución" value={`${operational.latestIngestionAccepted ?? 0} / ${operational.latestIngestionRejected ?? 0}`} detail="Aceptadas / rechazadas con errores explícitos." />
         </MetricGrid>
-        {freshness.stale ? <div className="mt-4 border border-[#d7332b] bg-[#0c1111] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">La fuente operativa supera siete días sin una ejecución reciente. Los datos deben tratarse como históricos hasta completar una nueva importación.</div> : null}
+        {staleObservation ? <div className="mt-4 border border-[#d7332b] bg-[#0c1111] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">La última observación de la fuente supera siete días. Las publicaciones deben tratarse como históricas y no como inventario activo actual hasta completar una nueva observación.</div> : null}
+        {agingObservation ? <div className="mt-4 border border-[#8a6b2e] bg-[#0c1111] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">La última observación tiene entre cuatro y siete días. El inventario puede haber cambiado desde el último corte.</div> : null}
       </section>
 
       <section>
@@ -149,7 +153,7 @@ export default async function MarketPage() {
 
       <section>
         <IntelligencePanel eyebrow="Metodología" title="Cálculo contractual reproducible" description="El esquema incluye historial, ciclo de vida, ventas confirmadas y snapshots mensuales.">
-          <div className="p-5"><MethodologyNote>La velocidad usa la mediana de días desde la primera observación hasta una venta vinculada. La absorción usa ventas confirmadas divididas por inventario activo del mismo período. El retiro de una publicación no se interpreta automáticamente como venta.</MethodologyNote></div>
+          <div className="p-5"><MethodologyNote>La velocidad usa la mediana de días desde la primera observación hasta una venta vinculada. La absorción usa ventas confirmadas divididas por inventario activo del mismo período. El retiro de una publicación no se interpreta automáticamente como venta. La fecha de proceso nunca sustituye la fecha observada de la fuente.</MethodologyNote></div>
         </IntelligencePanel>
       </section>
 
