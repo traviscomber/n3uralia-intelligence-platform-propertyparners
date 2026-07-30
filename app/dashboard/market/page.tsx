@@ -51,7 +51,6 @@ export default async function MarketPage() {
         actions={[
           { label: 'Roadmap canónico', href: '/dashboard/market/roadmap', primary: true },
           { label: 'Reconciliación canónica', href: '/dashboard/market/reconciliacion' },
-          { label: 'Fuentes operativas', href: '/dashboard/market/fuentes' },
         ]}
         meta={
           <div className="grid min-w-[360px] grid-cols-2 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
@@ -69,7 +68,7 @@ export default async function MarketPage() {
           <MetricCard label="Registros canónicos candidatos" value={operationalValue(operational.canonicalProperties)} detail={`${operational.confirmedProperties ?? 0} identidades confirmadas`} />
           <MetricCard label="Publicaciones observadas activas" value={operationalValue(operational.activeInventory)} detail={`Última observación: ${formatDate(operational.latestObservedAt)}`} />
           <MetricCard label="Ventas confirmadas" value={operationalValue(operational.confirmedSales)} detail="Sólo transacciones persistidas y vinculadas en la base operativa" />
-          <MetricCard label="Identidades por revisar" value={operationalValue(operational.pendingMatches)} detail="Candidatos y coincidencias pendientes de validación humana" />
+          <MetricCard label="Señales pendientes de revisión" value={operationalValue(operational.pendingMatches)} detail="Suma de identidades candidatas y coincidencias pendientes; no equivale necesariamente a propiedades únicas" />
         </MetricGrid>
       </section>
 
