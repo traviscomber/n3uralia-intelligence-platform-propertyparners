@@ -49,9 +49,9 @@ export default async function MarketPage() {
         title="Inteligencia de Mercado Vitacura"
         description="Esta vista muestra exclusivamente información almacenada y trazable en Supabase. No incluye cifras de archivos históricos, benchmarks externos, datos demostrativos ni estimaciones no materializadas."
         actions={[
-          { label: 'Reconciliación canónica', href: '/dashboard/market/reconciliacion', primary: true },
+          { label: 'Roadmap canónico', href: '/dashboard/market/roadmap', primary: true },
+          { label: 'Reconciliación canónica', href: '/dashboard/market/reconciliacion' },
           { label: 'Fuentes operativas', href: '/dashboard/market/fuentes' },
-          { label: 'Importar nueva fuente', href: '/dashboard/market/import' },
         ]}
         meta={
           <div className="grid min-w-[360px] grid-cols-2 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
