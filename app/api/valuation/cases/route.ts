@@ -20,12 +20,24 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const { data, error } = await supabase
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  const role = String(profile?.role ?? '').toLowerCase()
+  const canReadAll = ['admin', 'ceo', 'director', 'subdirector'].includes(role)
+
+  let query = supabase
     .from('valuation_cases')
     .select('id,status,valuation_date,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,version_number,created_at,updated_at')
     .order('updated_at', { ascending: false })
     .limit(50)
 
+  if (!canReadAll) query = query.eq('requested_by', user.id)
+
+  const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ cases: data ?? [] })
 }
