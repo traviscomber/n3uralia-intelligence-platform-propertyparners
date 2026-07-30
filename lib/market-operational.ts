@@ -6,6 +6,7 @@ export type OperationalMarketSnapshot = {
   connected: boolean
   canonicalProperties: number | null
   confirmedProperties: number | null
+  missingNeighborhoods: number | null
   activeInventory: number | null
   confirmedSales: number | null
   medianDaysOnMarket: number | null
@@ -28,6 +29,7 @@ const emptySnapshot: OperationalMarketSnapshot = {
   connected: false,
   canonicalProperties: null,
   confirmedProperties: null,
+  missingNeighborhoods: null,
   activeInventory: null,
   confirmedSales: null,
   medianDaysOnMarket: null,
@@ -60,9 +62,10 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [properties, confirmed, identityCandidates, activeListings, transactions, matchCandidates, latestMetric, latestIngestion, ingestionRuns, latestObservedListing] = await Promise.all([
+    const [properties, confirmed, missingNeighborhoods, identityCandidates, activeListings, transactions, matchCandidates, latestMetric, latestIngestion, ingestionRuns, latestObservedListing] = await Promise.all([
       supabase.from('market_properties').select('id', { count: 'exact', head: true }),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).eq('identity_status', 'confirmed'),
+      supabase.from('market_properties').select('id', { count: 'exact', head: true }).is('neighborhood_id', null),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).in('identity_status', ['candidate', 'needs_review']),
       supabase.from('market_listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('market_transactions').select('id', { count: 'exact', head: true }),
@@ -93,6 +96,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const errors = [
       properties.error,
       confirmed.error,
+      missingNeighborhoods.error,
       identityCandidates.error,
       activeListings.error,
       transactions.error,
@@ -116,6 +120,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       connected: true,
       canonicalProperties: properties.count ?? 0,
       confirmedProperties: confirmed.count ?? 0,
+      missingNeighborhoods: missingNeighborhoods.count ?? 0,
       activeInventory: metric?.active_inventory ?? activeListings.count ?? 0,
       confirmedSales: metric?.confirmed_sales ?? transactions.count ?? 0,
       medianDaysOnMarket: metric?.median_days_on_market ?? null,

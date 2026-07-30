@@ -10,7 +10,7 @@ const modules = [
   {
     number: '02',
     title: 'Valorización de Propiedades',
-    description: 'Creación de casos en borrador, comparables trazables, ajustes, revisión, aprobación, expediente y registro de decisiones.',
+    description: 'Creación de casos en borrador, comparables documentados, ajustes, revisión, aprobación, expediente y registro de decisiones.',
     href: '/dashboard/valuation',
   },
   {
@@ -79,10 +79,10 @@ export default function DashboardHome() {
         <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p>
           <div className="mt-5 space-y-3 text-sm">
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Mercado</span><strong className="text-[#ff766f]">Datos candidatos cargados</strong></div>
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Valorización</span><strong>Flujo canónico activo</strong></div>
-            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Control de gestión</span><strong>Pendiente de datos</strong></div>
-            <div className="flex justify-between"><span>Reportes</span><strong>Estructura disponible</strong></div>
+            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Mercado</span><strong className="text-[#ff766f]">Registros candidatos cargados</strong></div>
+            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Valorización</span><strong>Flujo disponible · sin casos cargados</strong></div>
+            <div className="flex justify-between border-b border-[var(--n3-line)] pb-3"><span>Control de gestión</span><strong>Definiciones disponibles · sin métricas</strong></div>
+            <div className="flex justify-between"><span>Reportes</span><strong>Estructura disponible · sin ejecuciones</strong></div>
           </div>
         </div>
       </section>
