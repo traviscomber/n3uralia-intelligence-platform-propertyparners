@@ -1,16 +1,40 @@
 # Registro de ejecución QA visual autenticado
 
-Estado: preparado, no ejecutado.
+Estado: preparado, ejecución bloqueada por secretos no configurables desde el conector disponible.
 
 Este archivo registra evidencia visual real. No debe marcarse un caso como aprobado sin sesión autenticada, viewport indicado y evidencia adjunta.
 
 ## Datos de ejecución
 
-- Fecha:
-- Ejecutor:
-- Deployment:
-- Navegador y versión:
-- Sistema operativo:
+- Fecha de preparación: 30 de julio de 2026
+- Ejecutor técnico: automatización GitHub Actions `Authenticated visual QA`
+- Deployment objetivo: `https://n3uralia-intelligence-platform.vercel.app`
+- Navegador previsto: Chromium provisto por Puppeteer
+- Sistema operativo previsto: Ubuntu GitHub-hosted runner
+- Estado de secretos: pendiente de configuración manual en GitHub Actions
+- Evidencia preflight: `artifacts/visual-qa/preflight.json`, generada incluso cuando faltan secretos
+
+## Bloqueo actual
+
+El conector GitHub disponible permite leer y modificar archivos, revisar runs y descargar artefactos, pero no expone funciones para crear Actions Secrets ni despachar manualmente un workflow. Por esta razón:
+
+- no se almacenaron credenciales en el repositorio;
+- no se intentó simular una corrida autenticada;
+- no se marcaron capturas, PDF o recorridos como aprobados;
+- el workflow ahora produce un artefacto de preflight sin valores secretos y falla de forma explícita cuando falta alguna variable.
+
+## Secretos requeridos
+
+- `QA_CEO_EMAIL`
+- `QA_CEO_PASSWORD`
+- `QA_DIRECTOR_EMAIL`
+- `QA_DIRECTOR_PASSWORD`
+- `QA_LO_BELTRAN_EMAIL`
+- `QA_LO_BELTRAN_PASSWORD`
+- `QA_NUEVA_COSTANERA_EMAIL`
+- `QA_NUEVA_COSTANERA_PASSWORD`
+- `QA_SANTA_MARIA_EMAIL`
+- `QA_SANTA_MARIA_PASSWORD`
 
 ## Matriz por perfil
 
@@ -24,7 +48,7 @@ Este archivo registra evidencia visual real. No debe marcarse un caso como aprob
 
 ## Viewports
 
-| Superficie | 390×844 | 768×1024 | 1440×900 | Resultado | Evidencia |
+| Superficie | 390×844 | 820×1180 | 1440×1000 | Resultado | Evidencia |
 |---|---:|---:|---:|---|---|
 | Dashboard personal | Pendiente | Pendiente | Pendiente | No ejecutado | — |
 | Dashboard dirección | Pendiente | Pendiente | Pendiente | No ejecutado | — |
@@ -67,7 +91,7 @@ Cada ciclo permanece `No ejecutado` hasta completar el recorrido en navegador au
 
 | ID | Severidad | Perfil | Ruta | Descripción | Evidencia | Estado |
 |---|---|---|---|---|---|---|
-| — | — | — | — | Sin incidencias registradas porque la ejecución visual aún no comienza | — | — |
+| QA-BLOCK-001 | Externa | Todos | GitHub Actions | Faltan configurar Secrets y disparar manualmente el workflow; el conector actual no expone esas operaciones | `preflight.json` cuando se ejecute | Abierta |
 
 ## Criterio de cierre
 
