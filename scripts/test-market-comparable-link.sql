@@ -15,10 +15,17 @@ insert into valuation_comparables (
   source_methodology_version
 )
 select
-  vc.id, ml.property_id,
+  vc.id, null,
   coalesce((select max(rank) from valuation_comparables where valuation_case_id=vc.id),0)+1,
   0, ml.price_uf, ml.price_uf, '[]'::jsonb,
-  jsonb_build_array(jsonb_build_object('module','market','listingId',ml.id,'propertyId',ml.property_id,'observedAt',ml.observed_at,'url',ml.url)),
+  jsonb_build_array(jsonb_build_object(
+    'module','market',
+    'listingId',ml.id,
+    'operationalPropertyId',ml.property_id,
+    'observedAt',ml.observed_at,
+    'url',ml.url,
+    'identityStatus','unconfirmed'
+  )),
   array[]::text[], 'candidate', 'market_listing', coalesce(ml.url,ml.source_listing_id,ml.id::text),
   ml.normalized_address, ml.price_uf, ml.price_uf_m2, false, 0, ml.id, ml.observed_at,
   'market_manual_link_v1'
@@ -30,7 +37,7 @@ where vc.id=:'valuation_case_id'::uuid
 
 select
   count(*) filter (where source_methodology_version='market_manual_link_v1') as linked_candidates,
-  count(*) filter (where evidence @> '[{"module":"market"}]'::jsonb) as candidates_with_market_evidence
+  count(*) filter (where evidence @> '[{"module":"market","identityStatus":"unconfirmed"}]'::jsonb) as candidates_with_market_evidence
 from valuation_comparables
 where valuation_case_id=:'valuation_case_id'::uuid;
 
