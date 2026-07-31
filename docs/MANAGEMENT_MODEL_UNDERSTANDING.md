@@ -1,141 +1,177 @@
 # Modelo de gestión — entendimiento consolidado
 
 **Fuentes:** cinco presentaciones de control de gestión 2026, con 304 láminas estructuradas.  
-**Período principal:** cierre de junio de 2026 y acumulado enero-junio de 2026.  
-**Estado:** entendimiento consolidado en desarrollo. Los datos explícitos son canónicos; las inferencias se mantienen identificadas hasta confirmación formal.
+**Estado:** modelo consolidado con validación de consistencia. Los datos explícitos son canónicos; las inferencias permanecen identificadas hasta confirmación formal.
 
-## 1. Estructura operativa
+## 1. Jerarquía y estructura operativa
 
-El modelo se organiza alrededor de dos roles:
+La jerarquía de negocio es:
 
-- **Partner:** origina su cartera de propiedades, gestiona sus leads, visitas y operaciones, y recibe las metas y scores individuales.
-- **Director de Cuenta:** guía, acompaña y prioriza el desarrollo de los partners asignados. No es el productor principal ni el dueño de la cartera.
+`CEO → Director/Subdirector de Cuenta → Partner`
 
-La relación operativa es:
+- **CEO:** máxima autoridad de negocio y acceso global. No existe una cuenta comercial superior.
+- **Director de Cuenta:** guía, acompaña y prioriza el desarrollo de los partners asignados.
+- **Partner:** origina su cartera de propiedades y gestiona sus leads, visitas y operaciones.
+- **Administrador técnico:** rol operativo fuera de la jerarquía comercial; no debe interpretarse como superior al CEO.
 
-`Director de Cuenta → Partners asignados → cartera, leads, visitas, cierres, metas y plan de mejora`
-
-El control de gestión opera en cuatro capas:
-
-1. **Resultado comercial:** cierres atribuidos y UF atribuidas.
-2. **Cumplimiento:** resultado mensual y acumulado contra metas variables por partner y mes.
-3. **Evolución:** comparación mensual, acumulada y año contra año.
-4. **Calidad de gestión:** score compuesto de cartera, seguimiento y conversión.
-
-## 2. Fórmula principal confirmada
+## 2. Fórmula principal
 
 `Calidad Gestión = 0.4 × Calidad Cartera + 0.3 × Calidad Seguimiento + 0.3 × Calidad Conversión`
 
-Cada dimensión se obtiene mediante el promedio simple de tres subscores.
-
-Todos los scores y subscores deben interpretarse en una escala de 0 a 100. El cumplimiento comercial puede superar 100%, pero el score utilizado para calidad queda limitado a 100.
+Cada dimensión promedia tres subscores. Los scores se expresan de 0 a 100. El cumplimiento comercial puede superar 100%, pero los scores deben limitarse a 100.
 
 ## 3. Calidad de cartera
 
-### 3.1 Cumplimiento de meta de cartera
+### 3.1 Meta de cartera
 
 `min(Cartera actual / Meta de cartera, 1) × 100`
 
-Mide si el inventario del partner alcanza la meta asignada. Una persona puede tener una sola propiedad y obtener 100 puntos si su meta era una propiedad. El score mide cumplimiento individual, no volumen absoluto.
+La meta es individual y variable por partner. El score mide cumplimiento relativo, no volumen absoluto.
 
 ### 3.2 Requerimientos por tipo de propiedad
 
 `min(Requerimientos observados / Benchmark esperado, 1) × 100`
 
-El benchmark se construye sobre las propiedades del partner. En los casos individuales revisados, el esperado equivale a dos requerimientos por propiedad:
+El benchmark no es una constante de dos requerimientos por propiedad. Casos revisados muestran distintos promedios, por lo que el esperado se construye sumando benchmarks por tipología o característica de cada propiedad.
 
-- 10 propiedades → esperado 20;
-- 15 propiedades → esperado 30.
+`Benchmark total = Σ benchmark esperado de cada propiedad`
 
-Sigue pendiente confirmar si dos requerimientos es una regla general o el resultado de la mezcla de tipologías observada.
+La tabla exacta por tipología sigue pendiente.
 
 ### 3.3 Calidad de precio
 
 Cada propiedad elegible recibe:
 
-- ratio precio/valorización ≤ 1.05: 100 puntos;
-- ratio > 1.05 y ≤ 1.10: 50 puntos;
-- ratio > 1.10: 0 puntos.
+- precio/valorización ≤1.05: 100;
+- >1.05 y ≤1.10: 50;
+- >1.10: 0.
 
-El score es el promedio de puntos sobre las propiedades elegibles. Las propiedades sin información suficiente no reciben cero: quedan fuera del denominador.
-
-Caso validado:
-
-`(5×100 + 1×50 + 2×0) / 8 = 68.75`
-
-La cartera total era de 10 propiedades, pero sólo 8 entraron al cálculo de pricing.
+El score es el promedio sobre propiedades elegibles. Las propiedades sin información suficiente quedan fuera del denominador y no reciben cero.
 
 ## 4. Calidad de seguimiento
 
-### 4.1 Leads clasificados
+- Leads clasificados: `Clasificados / Activos × 100`.
+- Leads sin abandono de 90 días: `(1 − sin gestión 90d / Activos) × 100`.
+- Leads A atendidos en 15 días: `(1 − A sin gestión 15d / Total A) × 100`.
 
-`Leads clasificados / Leads activos × 100`
-
-### 4.2 Leads sin abandono mayor a 90 días
-
-`(1 − Leads sin gestión durante 90 días / Leads activos) × 100`
-
-### 4.3 Leads A atendidos dentro de 15 días
-
-`(1 − Leads A sin gestión durante 15 días / Total de leads A) × 100`
-
-El mismo universo de leads se reutiliza como denominador en seguimiento y en la tasa de conversión a seis meses. Sigue pendiente documentar los estados exactos del CRM que forman el conjunto de leads activos.
+Los leads A son un subconjunto de los leads clasificados. Los estados exactos del CRM que forman “Activos” aún no están documentados.
 
 ## 5. Calidad de conversión
 
-### 5.1 Visitas realizadas contra meta
+- Visitas realizadas contra meta: `min(Visitas / Meta, 1) × 100`.
+- Visitas realizadas sobre agendadas: `Realizadas / Agendadas × 100`.
+- Tasa de cierre seis meses: `min(Tasa / 2.86%, 1) × 100`.
 
-`min(Visitas realizadas / Meta de visitas, 1) × 100`
+La última expresión reemplaza la fórmula operativa `min(TC%,2.86)×35`, que puede producir 100.1 por redondeo.
 
-### 5.2 Visitas realizadas sobre agendadas
+## 6. Estados evaluables y no evaluables
 
-`Visitas realizadas / Visitas agendadas × 100`
+Los decks convierten algunos casos `0/0` en cero puntos, causando clasificaciones de Riesgo sin base operativa. La plataforma debe separar:
 
-### 5.3 Tasa de cierre a seis meses
+- **Evaluable:** existe denominador o meta mayor que cero.
+- **No evaluable:** meta o denominador igual a cero y no hay universo operativo.
+- **Fuente inconsistente:** numerador, denominador o período no son reconciliables.
 
-`min(Tasa de cierre 6 meses, 2.86%) × 35`
+Reglas:
 
-La tasa utiliza cierres atribuidos durante seis meses sobre el mismo universo de leads. El resultado debe limitarse visual y lógicamente a 100, aunque la fórmula original pueda producir 100.1 por redondeo.
+```text
+meta = 0 o denominador = 0 → score = null, estado = no evaluable
+meta > 0 y resultado = 0 → score = 0
+```
 
-## 6. Metas y ausencia de meta
+Riesgo sólo debe calcularse con dimensiones evaluables. Una persona sin cartera, leads, visitas ni metas no debe clasificarse automáticamente como Riesgo.
 
-Las metas son individuales y variables por partner y por mes. No corresponden a una división uniforme de la meta de oficina.
+## 7. Clasificaciones
 
-Reglas observadas:
+- Estrella: tres dimensiones ≥70.
+- Potencial: una dimensión ≥70 y las otras dos ≥50.
+- Captador: Cartera ≥70.
+- Vendedor: Conversión ≥70.
+- Perseverante: Seguimiento ≥70.
+- Riesgo: al menos dos dimensiones evaluables <30.
+- Desarrollo: categoría residual.
 
-- resultado/meta puede superar 100% como cumplimiento comercial;
-- el score derivado queda limitado a 100;
-- una meta mensual igual a cero aparece como `—` en las tablas comerciales;
-- el deck actual asigna 0 puntos dentro de algunos subscores cuando la meta es cero.
+Prioridad confirmada:
 
-La última conducta es una inconsistencia que debe validarse antes de implementarla como política. La opción recomendada para el producto es tratar una meta no asignada como **no evaluable** y redistribuir el peso entre indicadores evaluables, salvo instrucción formal distinta.
+`Estrella > Potencial > Captador > Perseverante`
 
-## 7. Operaciones compartidas y atribución
+También está confirmado que Potencial prevalece sobre Vendedor y Perseverante. Falta un caso directo para resolver Vendedor frente a Perseverante y la prioridad completa de Riesgo cuando coexiste con una fortaleza simple.
 
-La evidencia cruzada entre partners y oficinas confirma el siguiente patrón para operaciones compartidas por dos partners:
+La clasificación usa precisión interna; no debe redondearse antes de evaluar umbrales.
 
-- cada partner recibe `0.5` cierre;
-- cada partner recibe el 100% de la UF de la operación como UF atribuida;
-- la operación puede vincular partners de la misma oficina o de oficinas diferentes.
+## 8. Operaciones compartidas y atribución
 
-Pares verificados:
+En operaciones compartidas por dos partners:
 
-- Francisca Rossetti y Mary Carmen Canale: `0.5` cierre y `10.700 UF` cada una;
-- Jorge Zurob y Francisca Santos: `0.5` cierre y `9.125 UF` cada uno;
-- Sebastián Zlatar y Felipe Elizalde: `0.5` cierre y `3.975 UF` cada uno.
+- cada partner recibe 0.5 cierre;
+- cada partner recibe el 100% de la UF como UF atribuida;
+- los partners pueden pertenecer a oficinas distintas.
 
-La explicación operativa más consistente es que un partner aporta la propiedad y otro participa por el lado comprador o vendedor. Los nombres formales de esos roles todavía deben confirmarse.
+Pares identificados:
 
-El modelo de datos debe separar:
+- Francisca Rossetti / Mary Carmen Canale — 10.700 UF;
+- Jorge Zurob / Francisca Santos — 9.125 UF;
+- Sebastián Zlatar / Felipe Elizalde — 3.975 UF;
+- Rossana Lampasona / Paula Villarroel — 8.850 UF.
 
-- **UF únicas transaccionadas:** valor real de cada operación sin duplicación;
-- **UF atribuidas:** volumen reconocido a cada participante;
-- **cierres únicos:** cantidad de operaciones;
-- **cierres atribuidos:** suma del crédito fraccionado entregado a participantes.
+El sistema debe separar:
 
-Nunca se deben sumar UF entre oficinas como si fueran volumen único sin desduplicar por operación.
+- cierres únicos;
+- cierres atribuidos;
+- UF únicas transaccionadas;
+- UF atribuidas por partner y oficina.
 
-## 8. Semáforos confirmados
+Nunca se deben sumar UF atribuidas entre oficinas como si fueran volumen único sin desduplicar por operación.
+
+## 9. Métodos de agregación
+
+El modelo usa una consolidación híbrida. Cada indicador debe declarar su método.
+
+| Indicador | Método |
+|---|---|
+| Cartera/meta | ratio de totales |
+| Requerimientos | promedio de scores inferiores |
+| Pricing | promedio ponderado de propiedades elegibles |
+| Leads clasificados | ratio de totales |
+| Sin gestión 90 días | ratio de totales |
+| Leads A dentro de 15 días | ratio de totales |
+| Visitas/meta | promedio de scores individuales, pendiente de confirmación final |
+| Realizadas/agendadas | ratio de totales |
+| Tasa de cierre | ratio de totales |
+| UF atribuidas | suma de atribuciones |
+| UF únicas | suma de operaciones desduplicadas |
+
+No debe existir una única función genérica de agregación para todos los indicadores.
+
+## 10. Períodos y consistencia de fuente
+
+Los componentes mezclan ventanas distintas:
+
+- cartera y leads activos: snapshot actual;
+- visitas: ventana mensual, trimestral o acumulada;
+- tasa de cierre: seis meses;
+- ventas: mensual, trimestral y acumulada.
+
+Cada cifra debe almacenar:
+
+- `period_start_date`;
+- `period_end_date`;
+- `period_type`;
+- `source_label`;
+- `aggregation_method`;
+- `evaluation_state`.
+
+### Mayo omitido
+
+En las láminas individuales la secuencia visible es `Ene · Feb · Mar · Abr · Jun`. Mayo no debe interpretarse como cero. Los deltas deben mostrarse como “Variación abril–junio”.
+
+### Reporte Q2 con rótulos mayo
+
+El archivo `Q2_Directorio_1.pptx` declara cierre Q2/H1, pero varias páginas dicen “Venta May”, “Scores May” e “Indicadores Ene-May”. Los valores trimestrales suman correctamente Q1 + Q2 = H1, por lo que es probable que algunos rótulos estén desactualizados; sin embargo, la plataforma debe marcar la inconsistencia hasta reconciliarla.
+
+Título, portada, tabla y gráfico no deben asumirse consistentes por defecto.
+
+## 11. Semáforos
 
 ### Cumplimiento de meta
 
@@ -149,78 +185,34 @@ Nunca se deben sumar UF entre oficinas como si fueran volumen único sin desdupl
 - amarillo: 0% a <20%;
 - verde: ≥20%.
 
-### Scores de calidad
+### Scores
 
 - rojo: <50;
 - amarillo: 50 a <70;
 - verde: ≥70.
 
-## 9. Clasificaciones y prioridad
+## 12. Principios de producto
 
-Reglas confirmadas:
+1. Separar resultado comercial de salud operativa.
+2. Permitir abrir cada score hasta sus numeradores, denominadores y período.
+3. Mostrar valor, meta, cumplimiento bruto y score por separado.
+4. No clasificar datos no evaluables como mal desempeño.
+5. Conservar precisión interna y redondear sólo en interfaz.
+6. Mostrar advertencias de período o fuente cuando existan discrepancias.
+7. Diferenciar UF únicas de UF atribuidas.
+8. Identificar el método de agregación de cada indicador.
+9. No presentar inferencias como políticas oficiales.
+10. Dar al CEO vista global; al Director, consolidado de sus partners; al Partner, sólo su gestión.
 
-- Estrella: tres dimensiones ≥70.
-- Potencial: una dimensión ≥70 y las otras dos ≥50.
-- Captador: cartera ≥70.
-- Vendedor: conversión ≥70.
-- Perseverante: seguimiento ≥70.
-- Riesgo: dos dimensiones <30.
-- Desarrollo: categoría residual.
+## 13. Preguntas abiertas
 
-Prioridad confirmada por casos individuales:
-
-`Estrella > Potencial > Captador / Vendedor / Perseverante`
-
-Potencial prevalece cuando también se cumplen una o más clasificaciones simples. Sigue pendiente confirmar la prioridad completa de Riesgo y Desarrollo, además del desempate cuando se cumplen varias clasificaciones simples.
-
-## 10. Períodos y deltas
-
-Mayo no está incluido en las tablas ni en las categorías de los gráficos originales de partners. Las columnas muestran:
-
-`Ene · Feb · Mar · Abr · Jun`
-
-Por ello, los deltas laterales de esas láminas representan junio menos abril. Los acumulados sí incorporan la actividad y metas de mayo aunque no se muestren como columna independiente.
-
-El sitio debe indicar explícitamente el período comparado, por ejemplo:
-
-`Variación abril–junio: +10.8`
-
-No debe mostrarse un delta sin período porque induce a interpretar junio contra mayo.
-
-## 11. Principios de producto
-
-1. Resultado comercial y salud operativa deben mostrarse por separado.
-2. Un score agregado debe permitir abrir sus componentes y bases numéricas.
-3. Los datos mensuales, acumulados y año contra año no deben mezclarse.
-4. Los deltas deben indicar el período comparado.
-5. Los valores canónicos deben conservar precisión interna y redondear sólo en interfaz.
-6. `n/d` o `—` deben mantenerse cuando falta una fuente o no existe meta evaluable.
-7. Las reglas inferidas no deben presentarse como políticas oficiales.
-8. La interfaz debe mostrar valor, meta, cumplimiento bruto y score por separado.
-9. Los totales atribuidos nunca deben presentarse como volumen único sin aclaración.
-10. El Director de Cuenta necesita una vista consolidada de sus partners, alertas y acciones de acompañamiento; el Partner necesita su cartera, leads, visitas, cierres, metas y recomendaciones.
-
-## 12. Preguntas abiertas priorizadas
-
-### Alta prioridad
-
-1. ¿Qué evento contractual u operacional define un cierre: promesa, escritura u otro hito?
-2. ¿Cuál es el nombre formal de los dos roles de una operación compartida?
-3. ¿Existen repartos distintos de `0.5 + 0.5` cuando participan más de dos personas?
-4. ¿Qué estados exactos del CRM forman el universo de leads activos?
-5. ¿Qué campos o estados hacen elegible una propiedad para pricing?
-6. ¿Qué fuente oficial entrega la valorización usada en el ratio de precio?
-
-### Prioridad media
-
-7. ¿Cómo se calculan las metas individuales de cierres, UF, cartera y visitas?
-8. ¿El benchmark de requerimientos es siempre dos por propiedad o depende de la tipología?
-9. ¿Cuál es la prioridad completa entre Riesgo, Desarrollo y las clasificaciones simples?
-10. ¿Cómo deben tratarse formalmente los subscores con meta cero?
-
-## 13. Estado de procesamiento
-
-- Presentación CEO de junio: 38 páginas procesadas.
-- Presentaciones de partners de Lo Beltrán, Nueva Costanera y Santa María: bloques comerciales y de scoring revisados.
-- Presentación de cierre Q2: modelo general revisado.
-- Corpus fuente completo: 5 presentaciones, 304 láminas.
+1. Evento contractual u operacional que define un cierre.
+2. Nombre formal de los roles en una operación compartida.
+3. Reparto cuando participan tres o más personas.
+4. Estados exactos del CRM que forman leads activos.
+5. Campos que hacen elegible una propiedad para pricing.
+6. Fuente oficial de valorización.
+7. Tabla de benchmark por tipología de propiedad.
+8. Fórmula o fuente de metas individuales.
+9. Prioridad Vendedor frente a Perseverante.
+10. Confirmación final del método de agregación de visitas/meta.
