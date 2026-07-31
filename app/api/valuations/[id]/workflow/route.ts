@@ -56,6 +56,28 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         reason,
       })
       if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 400 })
+
+      await supabase
+        .from('management_tasks')
+        .update({
+          status: 'done',
+          completed_at: new Date().toISOString(),
+          resolution_note: reason || 'Corrección realizada y valorización reenviada a revisión.',
+          updated_by: scope.profileId,
+        })
+        .eq('source_key', `valuation-return:${id}`)
+        .eq('assigned_to', scope.profileId)
+        .in('status', ['open', 'in_progress'])
+
+      await supabase.from('valuation_decision_log').insert({
+        valuation_case_id: id,
+        action: 'resubmitted_after_correction',
+        actor_id: scope.profileId,
+        previous_state: { status: 'draft', versionNumber: valuationCase.version_number },
+        new_state: { status: 'review', versionNumber: data?.version_number ?? valuationCase.version_number },
+        reason: reason || 'Caso corregido y reenviado a dirección.',
+      })
+
       return NextResponse.json({ updated: true, status: data?.status ?? 'review', versionNumber: data?.version_number ?? null })
     }
 
@@ -127,6 +149,41 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       reason,
     })
     if (logError) return NextResponse.json({ error: logError.message }, { status: 500 })
+
+    if (target === 'draft') {
+      const due = new Date()
+      due.setDate(due.getDate() + 3)
+      const { data: requester } = await supabase
+        .from('profiles')
+        .select('team,full_name')
+        .eq('id', valuationCase.requested_by)
+        .maybeSingle()
+
+      await supabase.from('management_tasks').upsert({
+        source_key: `valuation-return:${id}`,
+        title: `Corregir valorización · ${valuationCase.address || id.slice(0, 8)}`,
+        detail: reason,
+        severity: 'warning',
+        priority: 'high',
+        status: 'open',
+        office: requester?.team || scope.team,
+        subject_profile_id: valuationCase.requested_by,
+        assigned_to: valuationCase.requested_by,
+        created_by: scope.profileId,
+        updated_by: scope.profileId,
+        due_date: due.toISOString().slice(0, 10),
+        completed_at: null,
+        resolution_note: null,
+      }, { onConflict: 'source_key' })
+    }
+
+    if (target === 'approved') {
+      await supabase
+        .from('management_tasks')
+        .update({ status: 'done', completed_at: now, resolution_note: 'Valorización aprobada por dirección.', updated_by: scope.profileId })
+        .eq('source_key', `valuation-return:${id}`)
+        .in('status', ['open', 'in_progress'])
+    }
 
     return NextResponse.json({ updated: true, status: target, versionNumber: nextVersion, acceptedComparableCount: accepted.length })
   } catch (error) {
