@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:31 CLT
+Última actualización: 30 de julio de 2026, 22:35 CLT
 
 ## Objetivo
 
@@ -124,37 +124,40 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Validación HTTPS para webhooks y avatares.
 - [x] Endpoint personal bloquea cambios de `team` y `role` con respuesta `403`.
 - [x] Regresión estática para impedir reapertura de edición personal del alcance.
+- [x] Suite Puppeteer preparada para capturas autenticadas en escritorio, tableta y móvil.
+- [x] Automatización preparada para señales de accesibilidad, navegación por teclado, PDF y manifiesto JSON.
+- [x] Credenciales excluidas del repositorio y requeridas únicamente como secretos de entorno.
 
 ## Evidencias nuevas
 
-- `app/api/profile/route.ts`
-- `components/settings/ProfileEditor.tsx`
-- `scripts/test-profile-scope-regression.mjs`
-- Commit bloqueo de alcance personal: `df97737155356989423238a003518fcb3e4e4c4c`
-- Commit interfaz de perfil: `f124bf19fd7c787d39c01e2efc3844122b65c182`
-- Commit regresión: `e0cc5c8fcf2753e98b2c1de45055c73e63386081`
+- `scripts/run-authenticated-visual-qa.mjs`
+- `docs/AUTOMATED_VISUAL_QA_RUNBOOK.md`
+- comando `pnpm qa:visual`
+- Commit suite visual: `56f7a3a56ec73722c6f26b674a4252d22245ebcc`
+- Commit comando de ejecución: `ba6037fc9d8654342711a3ab89287aff71b470da`
+- Commit preservación de dependencias: `fcf1020979b0b1a9eaefff45a3ca1ae6cc2152da`
+- Commit runbook: `7131d53e04dd10ff603763179d01d38a430207ae`
 
 ## Pendiente
 
-- [ ] Login y recorrido real para todos los perfiles QA.
-- [ ] Responsive móvil/tableta validado en navegador.
-- [ ] Navegación completa por teclado y lector de pantalla.
-- [ ] Contraste medido.
-- [ ] PDF revisado con sesión autenticada.
+- [ ] Ejecutar la suite con secretos QA fuera del repositorio.
+- [ ] Revisar manualmente las capturas y los PDF generados.
+- [ ] Navegación completa con lector de pantalla real.
+- [ ] Contraste contextual medido.
 - [ ] Ciclo integral visual dirección–ejecutiva.
 
 # Pendientes separados por naturaleza
 
 ## Técnicos
 
-- Confirmar build, `READY`, alias productivo y runtime del último commit acumulado.
-- Ejecutar regresiones estáticas en CI o entorno local cuando esté disponible.
+- Confirmar build, `READY`, alias productivo y runtime del commit acumulado de la suite visual.
+- Ejecutar `pnpm qa:visual` en un entorno con Chromium y secretos QA.
 
 ## Visuales
 
-- Ejecutar `docs/AUTHENTICATED_VISUAL_QA_GUIDE.md`.
-- Registrar resultados en `docs/VISUAL_QA_EXECUTION_LOG.md`.
-- Validar móvil, tableta, escritorio, teclado, lector de pantalla y PDF.
+- Revisar `artifacts/visual-qa/manifest.json`, capturas y PDF.
+- Completar `docs/VISUAL_QA_EXECUTION_LOG.md` únicamente con evidencia observada.
+- Ejecutar lector de pantalla y medición contextual de contraste.
 
 ## Negocio
 
@@ -170,12 +173,13 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - No confundir propiedad operativa con identidad canónica confirmada.
 - No inventar diferencias de permisos no documentadas.
 - No usar `service_role` como evidencia de RLS.
-- No afirmar QA visual cuando sólo se validaron código, rutas o datos.
+- No afirmar QA visual antes de revisar evidencia generada.
+- No versionar contraseñas, cookies, sesiones, capturas sensibles ni artefactos QA.
 
 # Bloque activo
 
-## QA visual autenticado y decisiones externas — Próximo trabajo 1 · 2 · 3
+## Ejecución y revisión visual — Próximo trabajo 1 · 2 · 3
 
-1. Confirmar `READY`, alias productivo y runtime del commit acumulado de endurecimiento de perfil.
-2. Ejecutar el recorrido visual autenticado por CEO, dirección y ejecutivas usando la guía preparada.
-3. Registrar incidencias, corregirlas y dejar abiertos únicamente ranking, umbrales, captaciones y cuenta QA subdirector.
+1. Confirmar build, `READY`, alias y runtime de la suite automatizada.
+2. Ejecutar la suite con secretos QA en un entorno compatible y revisar capturas, overflow, foco y PDF.
+3. Corregir incidencias observadas y completar el registro final, manteniendo separados los pendientes de negocio.
