@@ -1,0 +1,36 @@
+name: Split canonical presentations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - data/presentations-2026.json
+      - scripts/split-canonical-presentations.mjs
+      - .github/workflows/split-canonical-presentations.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  split:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Split corpus into private page blocks
+        run: node scripts/split-canonical-presentations.mjs
+      - name: Commit generated blocks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/presentations-2026-split
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+          else
+            git commit -m "Generate canonical presentation page blocks"
+            git push
+          fi
