@@ -1,5 +1,5 @@
--- Reconcile the connected Property Partners database with the hardened management and valuation contract.
--- This migration is intentionally idempotent and contains only production follow-up changes not guaranteed by earlier files.
+-- Reconcile a clean install and the connected Property Partners database.
+-- Every operation is safe to run again.
 
 begin;
 
@@ -7,7 +7,7 @@ alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check
   check (role in ('ceo','director','subdirector','seller','admin'));
 
--- Security-definer functions must never inherit unauthenticated execution from PUBLIC.
+-- Privileged RPCs require an authenticated session; trigger helpers are never public endpoints.
 revoke execute on function public.apply_valuation_comparable_decision(uuid,uuid,text,numeric,text,text) from public, anon;
 grant execute on function public.apply_valuation_comparable_decision(uuid,uuid,text,numeric,text,text) to authenticated;
 revoke execute on function public.has_management_profile_scope(uuid,uuid) from public, anon;
@@ -25,7 +25,6 @@ alter function public.normalize_management_text(text) set search_path = public;
 alter function public.set_management_task_updated_at() set search_path = public;
 alter function public.touch_property_assignment_updated_at() set search_path = public;
 
--- Trigger-only functions are not exposed as RPC endpoints.
 revoke all on function public.enforce_valuation_minimum_comparables() from public, anon, authenticated;
 revoke all on function public.log_management_task_change() from public, anon, authenticated;
 revoke all on function public.log_management_task_comment() from public, anon, authenticated;
@@ -33,12 +32,26 @@ revoke all on function public.log_property_assignment_change() from public, anon
 revoke all on function public.protect_valuation_case_update() from public, anon, authenticated;
 revoke all on function public.protect_valuation_comparable_mutation() from public, anon, authenticated;
 
--- Remove permissive ALL policies from the new management tables; reads remain in dedicated scoped policies.
+-- Remove both legacy ALL policies and any prior copy of the replacement policies.
 drop policy if exists "executive manage management entities" on public.management_entities;
+drop policy if exists "executive insert management entities" on public.management_entities;
+drop policy if exists "executive update management entities" on public.management_entities;
+drop policy if exists "executive delete management entities" on public.management_entities;
 drop policy if exists "executives manage management assignments" on public.management_entity_assignments;
+drop policy if exists "executives insert management assignments" on public.management_entity_assignments;
+drop policy if exists "executives update management assignments" on public.management_entity_assignments;
+drop policy if exists "executives delete management assignments" on public.management_entity_assignments;
 drop policy if exists "management leaders write metrics" on public.management_metric_values;
+drop policy if exists "management leaders insert metrics" on public.management_metric_values;
+drop policy if exists "management leaders update metrics" on public.management_metric_values;
+drop policy if exists "management leaders delete metrics" on public.management_metric_values;
 drop policy if exists "management leaders write goals" on public.management_goals;
+drop policy if exists "management leaders insert goals" on public.management_goals;
+drop policy if exists "management leaders update goals" on public.management_goals;
+drop policy if exists "management leaders delete goals" on public.management_goals;
 drop policy if exists "management leaders update alerts" on public.management_alerts;
+drop policy if exists "management leaders insert alerts" on public.management_alerts;
+drop policy if exists "management leaders delete alerts" on public.management_alerts;
 
 create policy "executive insert management entities" on public.management_entities for insert to authenticated
 with check (public.is_global_management_leader((select auth.uid())));
@@ -59,100 +72,76 @@ using (public.is_global_management_leader((select auth.uid())));
 create policy "management leaders insert metrics" on public.management_metric_values for insert to authenticated
 with check (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 create policy "management leaders update metrics" on public.management_metric_values for update to authenticated
 using (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 )
 with check (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 create policy "management leaders delete metrics" on public.management_metric_values for delete to authenticated
 using (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 
 create policy "management leaders insert goals" on public.management_goals for insert to authenticated
 with check (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 create policy "management leaders update goals" on public.management_goals for update to authenticated
 using (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 )
 with check (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 create policy "management leaders delete goals" on public.management_goals for delete to authenticated
 using (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 
 create policy "management leaders insert alerts" on public.management_alerts for insert to authenticated
 with check (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 create policy "management leaders update alerts" on public.management_alerts for update to authenticated
 using (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 )
 with check (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 create policy "management leaders delete alerts" on public.management_alerts for delete to authenticated
 using (
   public.is_global_management_leader((select auth.uid()))
-  or (
-    lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
-    and public.can_access_management_entity(entity_id)
-  )
+  or (lower(coalesce((select role from public.profiles where id=(select auth.uid())),'')) in ('director','subdirector')
+      and public.can_access_management_entity(entity_id))
 );
 
--- Cover operational foreign keys used by the new management and valuation workflows.
+-- Cover foreign keys used by management and valuation workflows.
 create index if not exists management_alert_rules_metric_code_idx on public.management_alert_rules(metric_code);
 create index if not exists management_alerts_rule_id_idx on public.management_alerts(rule_id);
 create index if not exists management_alerts_metric_code_idx on public.management_alerts(metric_code);
