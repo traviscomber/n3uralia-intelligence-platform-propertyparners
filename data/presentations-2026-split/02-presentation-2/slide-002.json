@@ -1,0 +1,254 @@
+{
+  "presentation": {
+    "index": 2,
+    "name": "presentation-2",
+    "slug": "02-presentation-2",
+    "metadata": {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            2740
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            984
+          ],
+          [
+            "8",
+            948
+          ],
+          [
+            "6",
+            320
+          ],
+          [
+            "9",
+            153
+          ],
+          [
+            "13",
+            73
+          ],
+          [
+            "14",
+            66
+          ],
+          [
+            "10",
+            64
+          ],
+          [
+            "11",
+            39
+          ],
+          [
+            "22",
+            32
+          ],
+          [
+            "18",
+            24
+          ],
+          [
+            "20",
+            16
+          ],
+          [
+            "26",
+            16
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            575
+          ],
+          [
+            "#FFFFFF",
+            546
+          ],
+          [
+            "#7F8C8D",
+            499
+          ],
+          [
+            "#E74C3C",
+            421
+          ],
+          [
+            "#27AE60",
+            389
+          ],
+          [
+            "#F39C12",
+            181
+          ],
+          [
+            "#1565C0",
+            88
+          ],
+          [
+            "#C0392B",
+            41
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            144
+          ],
+          [
+            "#000000",
+            73
+          ],
+          [
+            "#27AE60",
+            43
+          ],
+          [
+            "#E74C3C",
+            31
+          ],
+          [
+            "#F39C12",
+            30
+          ],
+          [
+            "#1565C0",
+            24
+          ],
+          [
+            "#2E7D32",
+            16
+          ],
+          [
+            "#E65100",
+            16
+          ],
+          [
+            "#C0392B",
+            8
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            65
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 2,
+  "slide": {
+    "canonicalPage": 2,
+    "index": 2,
+    "title": "Modelo de Scoring — Definiciones",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Modelo de Scoring — Definiciones",
+      "Calidad Gestión = 0.4×Calidad Cartera + 0.3×Calidad Seguim + 0.3×Calidad Conversión | Subscores: 33.3% cada uno",
+      "Score Subscore Fórmula Mide Calidad Cartera (40%) Meta cartera min(Cart/Meta,1)×100 Cumple meta props Reqs x Tipo Prop min(Ratio Req,1)×100 Reqs vs benchmark Calidad Precio ≤1.05→100, ≤1.10→50, >1.10→0 Pricing vs valorización Calidad Seguim (30%) % Leads Clasif (Clasif/Activos)×100 Clasifica leads % Leads c-g90 (1−L90d/Act)×100 Leads no abandonados %LeadsA c-g15 (1−LA15d/CliA)×100 Leads A contactados Calidad Conversión (30%) Vis Realiz/Meta min(Vis/Meta,1)×100 Cumple meta visitas %Vis realizad/agend (VisReal/Agend)×100 Cumple agenda TC 6m/leads tot min(TC%6m,2.86)×35 Cierra negocios",
+      "Semáforos — Cumpl. meta: 🔴<90% 🟡90-100% 🟢≥100% | Crec. AA: 🔴<0% 🟡0-20% 🟢≥20% | Scores: 🔴<50 🟡50-70 🟢≥70",
+      "⭐Estrella (3≥70) | 📈Potencial (1≥70+2≥50) | 🧲Captador (Cart≥70) | 🏆Vendedor (Conv≥70) | 🔄Perseverante (Seg≥70) | ⚠️Riesgo (2<30) | 🔧Desarrollo"
+    ],
+    "tables": [
+      {
+        "id": 3,
+        "name": "Table 0",
+        "value": [
+          [
+            "Score",
+            "Subscore",
+            "Fórmula",
+            "Mide"
+          ],
+          [
+            "Calidad Cartera (40%)",
+            "Meta cartera",
+            "min(Cart/Meta,1)×100",
+            "Cumple meta props"
+          ],
+          [
+            "",
+            "Reqs x Tipo Prop",
+            "min(Ratio Req,1)×100",
+            "Reqs vs benchmark"
+          ],
+          [
+            "",
+            "Calidad Precio",
+            "≤1.05→100, ≤1.10→50, >1.10→0",
+            "Pricing vs valorización"
+          ],
+          [
+            "Calidad Seguim (30%)",
+            "% Leads Clasif",
+            "(Clasif/Activos)×100",
+            "Clasifica leads"
+          ],
+          [
+            "",
+            "% Leads c-g90",
+            "(1−L90d/Act)×100",
+            "Leads no abandonados"
+          ],
+          [
+            "",
+            "%LeadsA c-g15",
+            "(1−LA15d/CliA)×100",
+            "Leads A contactados"
+          ],
+          [
+            "Calidad Conversión (30%)",
+            "Vis Realiz/Meta",
+            "min(Vis/Meta,1)×100",
+            "Cumple meta visitas"
+          ],
+          [
+            "",
+            "%Vis realizad/agend",
+            "(VisReal/Agend)×100",
+            "Cumple agenda"
+          ],
+          [
+            "",
+            "TC 6m/leads tot",
+            "min(TC%6m,2.86)×35",
+            "Cierra negocios"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "2"
+    ]
+  }
+}

@@ -1,0 +1,363 @@
+{
+  "presentation": {
+    "index": 2,
+    "name": "presentation-2",
+    "slug": "02-presentation-2",
+    "metadata": {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            2740
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            984
+          ],
+          [
+            "8",
+            948
+          ],
+          [
+            "6",
+            320
+          ],
+          [
+            "9",
+            153
+          ],
+          [
+            "13",
+            73
+          ],
+          [
+            "14",
+            66
+          ],
+          [
+            "10",
+            64
+          ],
+          [
+            "11",
+            39
+          ],
+          [
+            "22",
+            32
+          ],
+          [
+            "18",
+            24
+          ],
+          [
+            "20",
+            16
+          ],
+          [
+            "26",
+            16
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            575
+          ],
+          [
+            "#FFFFFF",
+            546
+          ],
+          [
+            "#7F8C8D",
+            499
+          ],
+          [
+            "#E74C3C",
+            421
+          ],
+          [
+            "#27AE60",
+            389
+          ],
+          [
+            "#F39C12",
+            181
+          ],
+          [
+            "#1565C0",
+            88
+          ],
+          [
+            "#C0392B",
+            41
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            144
+          ],
+          [
+            "#000000",
+            73
+          ],
+          [
+            "#27AE60",
+            43
+          ],
+          [
+            "#E74C3C",
+            31
+          ],
+          [
+            "#F39C12",
+            30
+          ],
+          [
+            "#1565C0",
+            24
+          ],
+          [
+            "#2E7D32",
+            16
+          ],
+          [
+            "#E65100",
+            16
+          ],
+          [
+            "#C0392B",
+            8
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            65
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 5,
+  "slide": {
+    "canonicalPage": 5,
+    "index": 5,
+    "title": "Lo Beltrán — Evolución Venta",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Lo Beltrán — Evolución Venta",
+      "Ene Feb Mar Abr Jun Cierres mes 0.5 0.0 3.0 2.5 1.5 UF mes 9.075 0 53.800 29.150 30.525 Meta ci mes 1.73 1.34 2.07 2.16 2.7 Meta UF mes 21.866 16.927 26.238 25.868 34.044 Cierres acum. 0.5 0.5 3.5 6.0 10.0 UF acum. 9.075 9.075 62.875 92.025 150.175 Meta ci acum. 1.73 3.07 5.14 7.30 12.5 Meta UF acum. 21.866 38.793 65.031 90.899 153.488 % Cumpl ci 29% 16% 68% 82% 80% % Cumpl UF 42% 23% 97% 101% 98%"
+    ],
+    "tables": [
+      {
+        "id": 6,
+        "name": "Table 0",
+        "value": [
+          [
+            "",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "Jun"
+          ],
+          [
+            "Cierres mes",
+            "0.5",
+            "0.0",
+            "3.0",
+            "2.5",
+            "1.5"
+          ],
+          [
+            "UF mes",
+            "9.075",
+            "0",
+            "53.800",
+            "29.150",
+            "30.525"
+          ],
+          [
+            "Meta ci mes",
+            "1.73",
+            "1.34",
+            "2.07",
+            "2.16",
+            "2.7"
+          ],
+          [
+            "Meta UF mes",
+            "21.866",
+            "16.927",
+            "26.238",
+            "25.868",
+            "34.044"
+          ],
+          [
+            "Cierres acum.",
+            "0.5",
+            "0.5",
+            "3.5",
+            "6.0",
+            "10.0"
+          ],
+          [
+            "UF acum.",
+            "9.075",
+            "9.075",
+            "62.875",
+            "92.025",
+            "150.175"
+          ],
+          [
+            "Meta ci acum.",
+            "1.73",
+            "3.07",
+            "5.14",
+            "7.30",
+            "12.5"
+          ],
+          [
+            "Meta UF acum.",
+            "21.866",
+            "38.793",
+            "65.031",
+            "90.899",
+            "153.488"
+          ],
+          [
+            "% Cumpl ci",
+            "29%",
+            "16%",
+            "68%",
+            "82%",
+            "80%"
+          ],
+          [
+            "% Cumpl UF",
+            "42%",
+            "23%",
+            "97%",
+            "101%",
+            "98%"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart25.xml",
+          "title": "",
+          "chartKinds": [
+            "barChart"
+          ],
+          "series": [
+            {
+              "name": "Cierres del mes",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$B$2:$B$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "0.5",
+                "0.0",
+                "3.0",
+                "2.5",
+                "1.5"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "name": "Chart 1",
+        "value": {
+          "entry": "ppt/charts/chart26.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "UF Acumulado",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$B$2:$B$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "9075.0",
+                "9075.0",
+                "62875.0",
+                "92025.0",
+                "122550.0"
+              ]
+            },
+            {
+              "name": "Meta UF Acum.",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$C$2:$C$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "21865.63067150635",
+                "38792.640955837865",
+                "65030.811554748936",
+                "90898.77888687234",
+                "124942.77888687234"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "5"
+    ]
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 4,
+  "slide": {
+    "canonicalPage": 4,
+    "index": 4,
+    "title": "Santa María — Venta Jun",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Santa María — Venta Jun",
+      "Venta Jun 2026",
+      "2.5",
+      "44.750 UF",
+      "Cumpl: 89% ci | 82% UF",
+      "AA: +400% ci | +729% UF",
+      "Acumulado Ene-Jun 2026",
+      "7.5",
+      "166.725 UF",
+      "Cumpl: 53% ci | 59% UF",
+      "AA: +67% ci | +219% UF",
+      "Detalle de Venta",
+      "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 2.5 2.8 89% 0.5 +400% 7.5 14.1 53% 4.5 +67% UF 44.750 54.246 82% 5.400 +729% 166.725 280.922 59% 52.245 +219%"
+    ],
+    "tables": [
+      {
+        "id": 5,
+        "name": "Table 0",
+        "value": [
+          [
+            "",
+            "Jun 2026",
+            "Meta Jun",
+            "% Cumpl",
+            "Jun 2025",
+            "Δ% AA",
+            "Acum 2026",
+            "Meta Acum",
+            "% Cumpl",
+            "Acum 2025",
+            "Δ% AA"
+          ],
+          [
+            "Cierres",
+            "2.5",
+            "2.8",
+            "89%",
+            "0.5",
+            "+400%",
+            "7.5",
+            "14.1",
+            "53%",
+            "4.5",
+            "+67%"
+          ],
+          [
+            "UF",
+            "44.750",
+            "54.246",
+            "82%",
+            "5.400",
+            "+729%",
+            "166.725",
+            "280.922",
+            "59%",
+            "52.245",
+            "+219%"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "4"
+    ]
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "presentation": {
+    "index": 3,
+    "name": "presentation-3",
+    "slug": "03-presentation-3",
+    "metadata": {
+      "file": "Jun_Partners_Nueva_Costanera.pptx",
+      "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+      "byteSize": 2764734,
+      "slideCount": 84,
+      "mediaCount": 84,
+      "embeddingCount": 60,
+      "stats": {
+        "objects": 1454,
+        "textObjects": 829,
+        "tables": 91,
+        "charts": 60,
+        "pictures": 84,
+        "notes": 84
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3414
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1222
+          ],
+          [
+            "8",
+            1184
+          ],
+          [
+            "6",
+            400
+          ],
+          [
+            "9",
+            191
+          ],
+          [
+            "13",
+            91
+          ],
+          [
+            "14",
+            82
+          ],
+          [
+            "10",
+            80
+          ],
+          [
+            "11",
+            49
+          ],
+          [
+            "22",
+            40
+          ],
+          [
+            "18",
+            30
+          ],
+          [
+            "20",
+            20
+          ],
+          [
+            "26",
+            20
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            711
+          ],
+          [
+            "#FFFFFF",
+            680
+          ],
+          [
+            "#7F8C8D",
+            624
+          ],
+          [
+            "#E74C3C",
+            521
+          ],
+          [
+            "#27AE60",
+            512
+          ],
+          [
+            "#F39C12",
+            205
+          ],
+          [
+            "#1565C0",
+            110
+          ],
+          [
+            "#C0392B",
+            51
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            180
+          ],
+          [
+            "#000000",
+            91
+          ],
+          [
+            "#E74C3C",
+            54
+          ],
+          [
+            "#27AE60",
+            40
+          ],
+          [
+            "#F39C12",
+            36
+          ],
+          [
+            "#1565C0",
+            30
+          ],
+          [
+            "#2E7D32",
+            20
+          ],
+          [
+            "#E65100",
+            20
+          ],
+          [
+            "#C0392B",
+            10
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            81
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 71,
+  "slide": {
+    "canonicalPage": 71,
+    "index": 71,
+    "title": "Soledad Fernandez — Scores Jun",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Soledad Fernandez — Scores Jun",
+      "Nueva Costanera",
+      "Calidad Gestión",
+      "68.2",
+      "📈 Potencial",
+      "Calidad Cartera (40%)",
+      "67.6",
+      "Calidad Seguim (30%)",
+      "65.1",
+      "Calidad Conversión (30%)",
+      "71.9",
+      "Calidad Cartera: 67.6",
+      "Meta cartera (33%)",
+      "66.7",
+      "Cartera/Meta",
+      "Reqs x Tipo Prop (33%)",
+      "76.7",
+      "min(Ratio,1)×100",
+      "Calidad Precio (33%)",
+      "59.4",
+      "Pricing prom",
+      "Calidad Seguim: 65.1",
+      "% Leads Clasif (33%)",
+      "52.3",
+      "Clasif/Activos",
+      "% Leads c-g90 (33%)",
+      "83.1",
+      "1-L90d/Act",
+      "%LeadsA c-g15 (33%)",
+      "60.0",
+      "1-L15dA/CliA",
+      "Calidad Conversión: 71.9",
+      "Vis Realiz/Meta (33%)",
+      "15.7",
+      "Vis/Meta",
+      "%Vis realizad/agend (33%)",
+      "100.0",
+      "Vis/Agend",
+      "TC 6m/leads tot (33%)",
+      "100.1",
+      "min(TC%,2.86)×35",
+      "Calidad Gestión: 68.2 | 📈 Potencial |"
+    ],
+    "tables": [],
+    "charts": [],
+    "notes": [
+      "",
+      "71"
+    ]
+  }
+}

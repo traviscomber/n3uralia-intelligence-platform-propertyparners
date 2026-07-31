@@ -1,0 +1,241 @@
+{
+  "presentation": {
+    "index": 2,
+    "name": "presentation-2",
+    "slug": "02-presentation-2",
+    "metadata": {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            2740
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            984
+          ],
+          [
+            "8",
+            948
+          ],
+          [
+            "6",
+            320
+          ],
+          [
+            "9",
+            153
+          ],
+          [
+            "13",
+            73
+          ],
+          [
+            "14",
+            66
+          ],
+          [
+            "10",
+            64
+          ],
+          [
+            "11",
+            39
+          ],
+          [
+            "22",
+            32
+          ],
+          [
+            "18",
+            24
+          ],
+          [
+            "20",
+            16
+          ],
+          [
+            "26",
+            16
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            575
+          ],
+          [
+            "#FFFFFF",
+            546
+          ],
+          [
+            "#7F8C8D",
+            499
+          ],
+          [
+            "#E74C3C",
+            421
+          ],
+          [
+            "#27AE60",
+            389
+          ],
+          [
+            "#F39C12",
+            181
+          ],
+          [
+            "#1565C0",
+            88
+          ],
+          [
+            "#C0392B",
+            41
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            144
+          ],
+          [
+            "#000000",
+            73
+          ],
+          [
+            "#27AE60",
+            43
+          ],
+          [
+            "#E74C3C",
+            31
+          ],
+          [
+            "#F39C12",
+            30
+          ],
+          [
+            "#1565C0",
+            24
+          ],
+          [
+            "#2E7D32",
+            16
+          ],
+          [
+            "#E65100",
+            16
+          ],
+          [
+            "#C0392B",
+            8
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            65
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 21,
+  "slide": {
+    "canonicalPage": 21,
+    "index": 21,
+    "title": "Isabel Steverlynck — Lo Beltrán — Venta Jun",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Isabel Steverlynck — Lo Beltrán — Venta Jun",
+      "Venta Jun 2026",
+      "0.0",
+      "0 UF",
+      "Cumpl: — ci | — UF",
+      "AA: -100% ci | -100% UF",
+      "Acumulado Ene-Jun 2026",
+      "0.5",
+      "6.250 UF",
+      "Cumpl: — ci | — UF",
+      "AA: -67% ci | -74% UF",
+      "Detalle de Venta",
+      "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.0 0.0 — 0.5 -100% 0.5 0.0 — 1.5 -67% UF 0 0 — 5.125 -100% 6.250 0 — 23.625 -74%"
+    ],
+    "tables": [
+      {
+        "id": 22,
+        "name": "Table 0",
+        "value": [
+          [
+            "",
+            "Jun 2026",
+            "Meta Jun",
+            "% Cumpl",
+            "Jun 2025",
+            "Δ% AA",
+            "Acum 2026",
+            "Meta Acum",
+            "% Cumpl",
+            "Acum 2025",
+            "Δ% AA"
+          ],
+          [
+            "Cierres",
+            "0.0",
+            "0.0",
+            "—",
+            "0.5",
+            "-100%",
+            "0.5",
+            "0.0",
+            "—",
+            "1.5",
+            "-67%"
+          ],
+          [
+            "UF",
+            "0",
+            "0",
+            "—",
+            "5.125",
+            "-100%",
+            "6.250",
+            "0",
+            "—",
+            "23.625",
+            "-74%"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "21"
+    ]
+  }
+}

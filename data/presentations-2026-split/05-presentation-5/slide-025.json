@@ -1,0 +1,280 @@
+{
+  "presentation": {
+    "index": 5,
+    "name": "presentation-5",
+    "slug": "05-presentation-5",
+    "metadata": {
+      "file": "Q2_Directorio_1.pptx",
+      "sha256": "dd2f364521aa74027bc9495ec829d21db2e704b79dc8479c3318f15cd1f22f2d",
+      "byteSize": 1241665,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1386
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            508
+          ],
+          [
+            "8",
+            476
+          ],
+          [
+            "6",
+            160
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            303
+          ],
+          [
+            "#FFFFFF",
+            279
+          ],
+          [
+            "#7F8C8D",
+            231
+          ],
+          [
+            "#E74C3C",
+            182
+          ],
+          [
+            "#27AE60",
+            180
+          ],
+          [
+            "#F39C12",
+            146
+          ],
+          [
+            "#1565C0",
+            44
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            33
+          ],
+          [
+            "#27AE60",
+            13
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            6
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 25,
+  "slide": {
+    "canonicalPage": 25,
+    "index": 25,
+    "title": "Nueva Costanera — Indicadores Ene-May",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Nueva Costanera — Indicadores Ene-May",
+      "Calidad de Cartera",
+      "Indicador Valor Meta Jun (stock) % Cumpl Cartera actual 92 164 56% Requerimientos 164 Esp:185 80.6 Pricing ≤1.05:31 | ≤1.10:20 | >1.10:24 Score 54.7",
+      "Calidad de Seguimiento",
+      "Indicador Dato Detalle Score Leads clasif/activos 155/373 A: 45 41.6 Leads sg 90d / activos 34/373 9% sin gest 90.9 Leads A sg 15d / A 18/45 40% sin gest 60.0",
+      "Calidad de Conversión",
+      "Indicador Valor Meta Q2 % / Score Visitas realizadas 54 Meta Q2: 423 43.7 Vis realizadas / agendadas 54 / 102 Ratio cumplimiento 56.7 TC 6 meses 13.5 ci / 373 ld Tasa conversión 3.6%"
+    ],
+    "tables": [
+      {
+        "id": 26,
+        "name": "Table 0",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Meta Jun (stock)",
+            "% Cumpl"
+          ],
+          [
+            "Cartera actual",
+            "92",
+            "164",
+            "56%"
+          ],
+          [
+            "Requerimientos",
+            "164",
+            "Esp:185",
+            "80.6"
+          ],
+          [
+            "Pricing",
+            "≤1.05:31 | ≤1.10:20 | >1.10:24",
+            "Score",
+            "54.7"
+          ]
+        ]
+      },
+      {
+        "id": 51,
+        "name": "Table 1",
+        "value": [
+          [
+            "Indicador",
+            "Dato",
+            "Detalle",
+            "Score"
+          ],
+          [
+            "Leads clasif/activos",
+            "155/373",
+            "A: 45",
+            "41.6"
+          ],
+          [
+            "Leads sg 90d / activos",
+            "34/373",
+            "9% sin gest",
+            "90.9"
+          ],
+          [
+            "Leads A sg 15d / A",
+            "18/45",
+            "40% sin gest",
+            "60.0"
+          ]
+        ]
+      },
+      {
+        "id": 76,
+        "name": "Table 2",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Meta Q2",
+            "% / Score"
+          ],
+          [
+            "Visitas realizadas",
+            "54",
+            "Meta Q2: 423",
+            "43.7"
+          ],
+          [
+            "Vis realizadas / agendadas",
+            "54 / 102",
+            "Ratio cumplimiento",
+            "56.7"
+          ],
+          [
+            "TC 6 meses",
+            "13.5 ci / 373 ld",
+            "Tasa conversión",
+            "3.6%"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "25"
+    ]
+  }
+}

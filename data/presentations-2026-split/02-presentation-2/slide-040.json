@@ -1,0 +1,281 @@
+{
+  "presentation": {
+    "index": 2,
+    "name": "presentation-2",
+    "slug": "02-presentation-2",
+    "metadata": {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            2740
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            984
+          ],
+          [
+            "8",
+            948
+          ],
+          [
+            "6",
+            320
+          ],
+          [
+            "9",
+            153
+          ],
+          [
+            "13",
+            73
+          ],
+          [
+            "14",
+            66
+          ],
+          [
+            "10",
+            64
+          ],
+          [
+            "11",
+            39
+          ],
+          [
+            "22",
+            32
+          ],
+          [
+            "18",
+            24
+          ],
+          [
+            "20",
+            16
+          ],
+          [
+            "26",
+            16
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            575
+          ],
+          [
+            "#FFFFFF",
+            546
+          ],
+          [
+            "#7F8C8D",
+            499
+          ],
+          [
+            "#E74C3C",
+            421
+          ],
+          [
+            "#27AE60",
+            389
+          ],
+          [
+            "#F39C12",
+            181
+          ],
+          [
+            "#1565C0",
+            88
+          ],
+          [
+            "#C0392B",
+            41
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            144
+          ],
+          [
+            "#000000",
+            73
+          ],
+          [
+            "#27AE60",
+            43
+          ],
+          [
+            "#E74C3C",
+            31
+          ],
+          [
+            "#F39C12",
+            30
+          ],
+          [
+            "#1565C0",
+            24
+          ],
+          [
+            "#2E7D32",
+            16
+          ],
+          [
+            "#E65100",
+            16
+          ],
+          [
+            "#C0392B",
+            8
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            65
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 40,
+  "slide": {
+    "canonicalPage": 40,
+    "index": 40,
+    "title": "Ángeles Carcavilla — Indicadores Ene-Jun",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Ángeles Carcavilla — Indicadores Ene-Jun",
+      "Lo Beltrán",
+      "Calidad de Cartera",
+      "Indicador Valor Meta Jun % Cumpl Cartera actual 19 24 79% Requerimientos 29 Esp:38 77% Pricing ≤1.05:5 | ≤1.10:3 | >1.10:6 Score 46.4",
+      "Calidad de Seguimiento",
+      "Indicador Dato Detalle Score Leads clasif/activos 14/46 A: 8 30.4 Leads sg 90d / activos 6/46 13% sin gest 87.0 Leads A sg 15d / A 4/8 50% sin gest 50.0",
+      "Calidad de Conversión",
+      "Indicador Valor Referencia % / Score Visitas realizadas 3 Meta: 21 14.3 Vis realizadas / agendadas 3 / 9 Ratio cumplimiento 33.3 TC 6 meses 2.5 ci / 46 ld Tasa conversión 5.4%"
+    ],
+    "tables": [
+      {
+        "id": 41,
+        "name": "Table 0",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Meta Jun",
+            "% Cumpl"
+          ],
+          [
+            "Cartera actual",
+            "19",
+            "24",
+            "79%"
+          ],
+          [
+            "Requerimientos",
+            "29",
+            "Esp:38",
+            "77%"
+          ],
+          [
+            "Pricing",
+            "≤1.05:5 | ≤1.10:3 | >1.10:6",
+            "Score",
+            "46.4"
+          ]
+        ]
+      },
+      {
+        "id": 81,
+        "name": "Table 1",
+        "value": [
+          [
+            "Indicador",
+            "Dato",
+            "Detalle",
+            "Score"
+          ],
+          [
+            "Leads clasif/activos",
+            "14/46",
+            "A: 8",
+            "30.4"
+          ],
+          [
+            "Leads sg 90d / activos",
+            "6/46",
+            "13% sin gest",
+            "87.0"
+          ],
+          [
+            "Leads A sg 15d / A",
+            "4/8",
+            "50% sin gest",
+            "50.0"
+          ]
+        ]
+      },
+      {
+        "id": 121,
+        "name": "Table 2",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Referencia",
+            "% / Score"
+          ],
+          [
+            "Visitas realizadas",
+            "3",
+            "Meta: 21",
+            "14.3"
+          ],
+          [
+            "Vis realizadas / agendadas",
+            "3 / 9",
+            "Ratio cumplimiento",
+            "33.3"
+          ],
+          [
+            "TC 6 meses",
+            "2.5 ci / 46 ld",
+            "Tasa conversión",
+            "5.4%"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "40"
+    ]
+  }
+}

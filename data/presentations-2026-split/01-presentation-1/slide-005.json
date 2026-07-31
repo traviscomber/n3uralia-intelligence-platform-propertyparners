@@ -1,0 +1,380 @@
+{
+  "presentation": {
+    "index": 1,
+    "name": "presentation-1",
+    "slug": "01-presentation-1",
+    "metadata": {
+      "file": "Jun_Directorio_5.pptx",
+      "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+      "byteSize": 1252175,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1498
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            552
+          ],
+          [
+            "8",
+            528
+          ],
+          [
+            "6",
+            176
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            311
+          ],
+          [
+            "#FFFFFF",
+            299
+          ],
+          [
+            "#7F8C8D",
+            247
+          ],
+          [
+            "#E74C3C",
+            212
+          ],
+          [
+            "#27AE60",
+            211
+          ],
+          [
+            "#F39C12",
+            145
+          ],
+          [
+            "#1565C0",
+            52
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            31
+          ],
+          [
+            "#27AE60",
+            14
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            7
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 5,
+  "slide": {
+    "canonicalPage": 5,
+    "index": 5,
+    "title": "PL Real Estate — Evolución Venta",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "PL Real Estate — Evolución Venta",
+      "Ene Feb Mar Abr May Jun Cierres mes 4.0 3.0 7.0 8.0 4.0 7.0 UF mes 103.150 48.800 155.970 107.500 69.850 135.600 Meta ci mes 5.86 4.63 7.80 7.33 8.6 8.8 Meta UF mes 99.306 77.955 131.874 118.087 129.023 130.830 Cierres acum. 4.0 7.0 14.0 22.0 26.0 33.0 UF acum. 103.150 151.950 307.920 415.420 485.270 620.870 Meta ci acum. 5.86 10.49 18.29 25.61 34.2 43.0 Meta UF acum. 99.306 177.261 309.135 427.222 556.245 687.075 % Cumpl ci 68% 67% 77% 86% 76% 77% % Cumpl UF 104% 86% 100% 97% 87% 90%"
+    ],
+    "tables": [
+      {
+        "id": 6,
+        "name": "Table 0",
+        "value": [
+          [
+            "",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "May",
+            "Jun"
+          ],
+          [
+            "Cierres mes",
+            "4.0",
+            "3.0",
+            "7.0",
+            "8.0",
+            "4.0",
+            "7.0"
+          ],
+          [
+            "UF mes",
+            "103.150",
+            "48.800",
+            "155.970",
+            "107.500",
+            "69.850",
+            "135.600"
+          ],
+          [
+            "Meta ci mes",
+            "5.86",
+            "4.63",
+            "7.80",
+            "7.33",
+            "8.6",
+            "8.8"
+          ],
+          [
+            "Meta UF mes",
+            "99.306",
+            "77.955",
+            "131.874",
+            "118.087",
+            "129.023",
+            "130.830"
+          ],
+          [
+            "Cierres acum.",
+            "4.0",
+            "7.0",
+            "14.0",
+            "22.0",
+            "26.0",
+            "33.0"
+          ],
+          [
+            "UF acum.",
+            "103.150",
+            "151.950",
+            "307.920",
+            "415.420",
+            "485.270",
+            "620.870"
+          ],
+          [
+            "Meta ci acum.",
+            "5.86",
+            "10.49",
+            "18.29",
+            "25.61",
+            "34.2",
+            "43.0"
+          ],
+          [
+            "Meta UF acum.",
+            "99.306",
+            "177.261",
+            "309.135",
+            "427.222",
+            "556.245",
+            "687.075"
+          ],
+          [
+            "% Cumpl ci",
+            "68%",
+            "67%",
+            "77%",
+            "86%",
+            "76%",
+            "77%"
+          ],
+          [
+            "% Cumpl UF",
+            "104%",
+            "86%",
+            "100%",
+            "97%",
+            "87%",
+            "90%"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart1.xml",
+          "title": "",
+          "chartKinds": [
+            "barChart"
+          ],
+          "series": [
+            {
+              "name": "Cierres del mes",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$B$2:$B$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "4.0",
+                "3.0",
+                "7.0",
+                "8.0",
+                "4.0",
+                "7.0"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "name": "Chart 1",
+        "value": {
+          "entry": "ppt/charts/chart2.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "UF Acumulado",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$B$2:$B$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "103150.0",
+                "151950.0",
+                "307920.0",
+                "415420.0",
+                "485270.0",
+                "620870.0"
+              ]
+            },
+            {
+              "name": "Meta UF Acum.",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$C$2:$C$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "99305.72257793171",
+                "177261.21970968042",
+                "309134.88310841634",
+                "427221.5514109987",
+                "556244.5514109987",
+                "687074.5514109987"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "5"
+    ]
+  }
+}
