@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 import {
   buildValuationReportPayload,
   calculateContractualValuation,
@@ -13,56 +14,76 @@ type CreateCasePayload = {
   comparables: ValuationComparable[]
   qualitativeFactors: QualitativeFactors
   justification?: string
+  propertyAssignmentId?: string | null
+  sourcePropertyId?: string | null
 }
 
 export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  try {
+    const scope = await requireAnyCapability(['valuations.global.read', 'valuations.office.read', 'valuations.self.read'])
+    const supabase = await createClient()
+    let query = supabase
+      .from('valuation_cases')
+      .select('id,status,valuation_date,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,version_number,created_at,updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(50)
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
+    if (scope.scope === 'self') query = query.eq('requested_by', scope.profileId)
+    else if (scope.scope === 'office') query = query.in('requested_by', scope.visibleProfileIds)
 
-  const role = String(profile?.role ?? '').toLowerCase()
-  const canReadAll = ['admin', 'ceo', 'director', 'subdirector'].includes(role)
-
-  let query = supabase
-    .from('valuation_cases')
-    .select('id,status,valuation_date,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,version_number,created_at,updated_at')
-    .order('updated_at', { ascending: false })
-    .limit(50)
-
-  if (!canReadAll) query = query.eq('requested_by', user.id)
-
-  const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ cases: data ?? [] })
+    const { data, error } = await query
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ cases: data ?? [] })
+  } catch (error) {
+    return accessErrorResponse(error)
+  }
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-
-  let payload: CreateCasePayload
   try {
-    payload = await request.json() as CreateCasePayload
-  } catch {
-    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
-  }
+    const scope = await requireAnyCapability(['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'])
+    const supabase = await createClient()
 
-  try {
+    let payload: CreateCasePayload
+    try {
+      payload = await request.json() as CreateCasePayload
+    } catch {
+      return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+    }
+
+    let assignmentEvidence: Record<string, unknown> | null = null
+    if (payload.propertyAssignmentId) {
+      const { data: assignment, error: assignmentError } = await supabase
+        .from('property_assignments')
+        .select('id,assigned_to,property_id,status,assignment_role,assigned_at')
+        .eq('id', payload.propertyAssignmentId)
+        .maybeSingle()
+
+      if (assignmentError) return NextResponse.json({ error: assignmentError.message }, { status: 422 })
+      if (!assignment || assignment.assigned_to !== scope.profileId || assignment.status !== 'active') {
+        return NextResponse.json({ error: 'La asignación no pertenece al perfil autenticado o ya no está activa.' }, { status: 403 })
+      }
+      if (payload.sourcePropertyId && assignment.property_id !== payload.sourcePropertyId) {
+        return NextResponse.json({ error: 'La propiedad no corresponde a la asignación indicada.' }, { status: 400 })
+      }
+      assignmentEvidence = {
+        propertyAssignmentId: assignment.id,
+        sourcePropertyId: assignment.property_id,
+        assignmentRole: assignment.assignment_role,
+        assignedAt: assignment.assigned_at,
+      }
+    }
+
     const result = calculateContractualValuation(payload.subject, payload.comparables, payload.qualitativeFactors)
     const reportPayload = buildValuationReportPayload(payload.subject, payload.comparables, payload.qualitativeFactors, result)
     const status = 'draft' as const
+    const evidence = { comparableCount: result.comparableCount, assignment: assignmentEvidence }
+    const assumptions = { selectedComparablesOnly: true, sourceAssignmentVerified: Boolean(assignmentEvidence) }
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
       .insert({
-        requested_by: user.id,
+        requested_by: scope.profileId,
         status,
         valuation_date: new Date().toISOString().slice(0, 10),
         property_type: payload.subject.propertyType,
@@ -89,11 +110,11 @@ export async function POST(request: Request) {
         high_value_uf: result.highValueUf,
         confidence: result.comparableCount >= 4 ? 'high' : 'medium',
         methodology_version: 'valuation-contract-v1',
-        evidence: { comparableCount: result.comparableCount },
-        assumptions: { selectedComparablesOnly: true },
+        evidence,
+        assumptions,
         warnings: result.comparableCount < 3 ? ['Se requieren al menos tres comparables aceptados para solicitar revisión.'] : [],
         justification: payload.justification || result.justification,
-        report_payload: reportPayload,
+        report_payload: { ...reportPayload, evidence, assumptions },
       })
       .select('id,version_number')
       .single()
@@ -132,7 +153,7 @@ export async function POST(request: Request) {
       selection_reason: item.selected ? 'Seleccionado durante la creación del borrador' : null,
       exclusion_reason: item.selected ? null : 'Excluido durante la creación del borrador',
       selected_at: item.selected ? new Date().toISOString() : null,
-      selected_by: item.selected ? user.id : null,
+      selected_by: item.selected ? scope.profileId : null,
     }))
 
     const { error: comparableError } = await supabase.from('valuation_comparables').insert(comparableRows)
@@ -142,8 +163,8 @@ export async function POST(request: Request) {
       valuation_case_id: valuationCase.id,
       version_number: valuationCase.version_number,
       status,
-      snapshot: reportPayload,
-      created_by: user.id,
+      snapshot: { ...reportPayload, evidence, assumptions },
+      created_by: scope.profileId,
     })
 
     await supabase.from('valuation_decision_log').insert({
@@ -151,13 +172,15 @@ export async function POST(request: Request) {
       action: 'case_created',
       from_status: null,
       to_status: status,
-      reason: 'Caso creado como borrador. La revisión debe solicitarse desde el expediente canónico.',
-      actor_id: user.id,
-      metadata: { comparableCount: result.comparableCount },
+      reason: assignmentEvidence
+        ? 'Caso creado desde una propiedad asignada y verificada. La revisión debe solicitarse desde el expediente canónico.'
+        : 'Caso creado como borrador. La revisión debe solicitarse desde el expediente canónico.',
+      actor_id: scope.profileId,
+      metadata: { comparableCount: result.comparableCount, assignment: assignmentEvidence },
     })
 
-    return NextResponse.json({ caseId: valuationCase.id, result, status }, { status: 201 })
+    return NextResponse.json({ caseId: valuationCase.id, result, status, assignmentVerified: Boolean(assignmentEvidence) }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No fue posible calcular la valorización' }, { status: 400 })
+    return accessErrorResponse(error)
   }
 }
