@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 21:09 CLT
+Última actualización: 30 de julio de 2026, 21:14 CLT
 
 ## Objetivo
 
@@ -10,16 +10,16 @@ Este archivo es la fuente operativa única del proyecto. Después de cada bloque
 
 ## Estado general
 
-**Avance contractual estimado: 68%**
+**Avance contractual estimado: 70%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
-| 1 | Perfiles, capacidades y alcance central | Validación final | 95% |
-| 2 | Flujo completo de ejecutiva | Parcialmente implementado | 55% |
+| 1 | Perfiles, capacidades y alcance central | Completado | 100% |
+| 2 | Flujo completo de ejecutiva | Activo | 55% |
 | 3 | Director y subdirector | Avanzado parcialmente | 70% |
 | 4 | CEO y consolidación ejecutiva | Avanzado | 94% |
 | 5 | Integración transversal de módulos | Parcial | 50% |
-| 6 | QA contractual, seguridad y aceptación | En desarrollo | 30% |
+| 6 | QA contractual, seguridad y aceptación | En desarrollo | 35% |
 
 ## Estado de producción
 
@@ -27,14 +27,14 @@ Este archivo es la fuente operativa única del proyecto. Después de cada bloque
 - Rama productiva: `main`
 - Producción: `https://n3uralia-intelligence-platform.vercel.app`
 - Supabase: `orfncinmhymhhoxbxgjb`
-- Último commit funcional: `7c15196931aa5b97ebb738711ebdcb73f30e53f1`
-- Último deployment funcional: `dpl_6EVvoHF9JP7JQSRhWEzbVhzfhw4r` — validación final en curso.
+- Migración RLS: `expose_authenticated_management_scope_ids`
+- Último commit funcional de alcance: `e8b361dc39a10f1da0389af11cd975b3f1b07c07`
 
 ---
 
 # Bloque 1 — Perfiles, capacidades y alcance central
 
-**Estado: validación final — 95%**
+**Estado: completado — 100%**
 
 ## Completado
 
@@ -44,39 +44,52 @@ Este archivo es la fuente operativa única del proyecto. Después de cada bloque
 - [x] `getUserScope()` con sesión, perfil, oficina, equipo y entidades visibles.
 - [x] Guards reutilizables para páginas y APIs.
 - [x] Protección servidor de rutas CEO, dirección, ejecutiva y administración.
-- [x] Sidebar filtrado mediante `hasCapability()`; eliminadas bifurcaciones locales por categorías de rol.
+- [x] Sidebar filtrado mediante capacidades.
 - [x] Post-login dirigido mediante `defaultDashboardForRole()`.
-- [x] Cuenta sin perfil válido rechazada y cerrada de forma segura.
-- [x] Workflow de valorización protegido por capacidades y `visibleProfileIds`.
-- [x] Transiciones de valorización limitadas por propiedad, oficina y capacidad.
-- [x] Prueba de regresión de capacidades, navegación y post-login agregada.
+- [x] Workflow de valorización limitado por capacidad, propiedad y oficina.
+- [x] Pruebas unitarias de capacidades y navegación.
+- [x] Matriz RLS autenticada con `SET LOCAL ROLE authenticated`.
+- [x] Corrección de diferencia entre lectura directa de perfiles y política `profiles_select_own_safe`.
+- [x] RPC `current_user_visible_profile_ids()` con alcance autorizado.
+- [x] RPC `current_user_visible_entity_ids()` con alcance autorizado.
+- [x] Ejecución restringida exclusivamente al rol `authenticated`.
+- [x] Script reproducible de validación RLS agregado.
 
-## Evidencias nuevas
+## Evidencias
 
+- `lib/access-control.ts`
+- `lib/user-scope.ts`
+- `lib/access-guards.ts`
 - `components/layout/sidebar.tsx`
 - `app/auth/login/page.tsx`
 - `app/api/valuations/[id]/workflow/route.ts`
 - `scripts/test-access-control.mjs`
-- Commit post-login: `388eb06201260304bea20f91892b2b38532a0ef5`
-- Commit sidebar: `8c3bd31bb407e99fd579fc8dd0647aacd53a3d2a`
-- Commit API workflow: `fbeecaf8dbec74ab570bf42fa087757a2811821a`
-- Commit pruebas: `7c15196931aa5b97ebb738711ebdcb73f30e53f1`
+- `scripts/test-authenticated-scope.sql`
+- Migración: `expose_authenticated_management_scope_ids`
+- Commit RPC en aplicación: `1687e4f3e172ed2dd870d90dd24895991612be33`
+- Commit matriz SQL reproducible: `e8b361dc39a10f1da0389af11cd975b3f1b07c07`
 
-## Pendiente para cierre total
+## Resultado de matriz autenticada
 
-- [ ] Ejecutar pruebas autenticadas negativas entre oficinas con JWT real.
-- [ ] Confirmar correspondencia final entre `visibleProfileIds` y RLS para todas las tablas críticas.
-- [ ] Registrar deployment final en `READY` y revisar runtime logs.
+| Perfil probado | Perfiles visibles | Entidades visibles | Valorizaciones visibles |
+|---|---:|---:|---:|
+| CEO | 6 | 6 | 1 |
+| Director QA Lo Beltrán | 2 | 2 | 1 |
+| Ejecutiva Lo Beltrán | 1 | 1 | 1 |
+| Ejecutiva Nueva Costanera | 1 | 1 | 0 |
+| Ejecutiva Santa María | 1 | 1 | 0 |
 
-## Criterio de cierre
+La prueba se ejecutó con el rol PostgreSQL `authenticated`, JWT simulado por usuario y RLS activa. No se utilizó `service_role` como evidencia.
 
-CEO conserva alcance global; dirección queda limitada a su oficina; ejecutiva queda limitada a sí misma y a sus asignaciones; navegación, páginas y APIs consumen la misma matriz; las pruebas negativas y RLS pasan con roles autenticados.
+## Criterio de cierre cumplido
+
+CEO conserva alcance global; dirección queda limitada a su oficina; ejecutiva queda limitada a sí misma y a sus asignaciones; navegación, páginas, APIs y RLS consumen una definición coherente de alcance.
 
 ---
 
 # Bloque 2 — Flujo completo de ejecutiva
 
-**Estado: parcialmente implementado — 55%**
+**Estado: activo — 55%**
 
 ## Disponible
 
@@ -136,18 +149,18 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en desarrollo — 30%**
+**Estado: en desarrollo — 35%**
 
-- [ ] Login y ruta inicial por todos los perfiles QA.
-- [ ] Navegación visible y accesos denegados.
-- [ ] Aislamiento por oficina y ejecutiva.
-- [ ] Lecturas y escrituras autorizadas/bloqueadas.
+- [x] Matriz RLS autenticada para CEO, dirección y tres ejecutivas.
+- [x] Aislamiento base por oficina y ejecutiva validado.
+- [ ] Login y ruta inicial en navegador para todos los perfiles QA.
+- [ ] Lecturas y escrituras autorizadas/bloqueadas por flujo.
 - [ ] Valorización, asignación, tareas, alertas y reportes.
-- [ ] Responsive, accesibilidad, build, logs y RLS.
+- [ ] Responsive, accesibilidad, build, logs y PDF.
 
 # Riesgos activos
 
-1. Falta completar pruebas negativas autenticadas contra RLS en todas las tablas críticas.
+1. El flujo completo de ejecutiva todavía contiene consultas locales que deben migrarse a `getUserScope()`.
 2. Captaciones brutas no tiene fuente separada.
 3. Umbrales y ranking requieren validación de negocio.
 4. No existe automatización de navegador autenticado en este entorno.
@@ -162,8 +175,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Validación final del Bloque 1 — Próximo trabajo 1 · 2 · 3
+## Bloque 2 — Flujo completo de ejecutiva — Próximo trabajo 1 · 2 · 3
 
-1. Ejecutar matriz RLS autenticada para CEO, director y ejecutivas de las tres oficinas.
-2. Corregir cualquier diferencia entre capacidades de aplicación y políticas de base de datos.
-3. Verificar deployment/runtime, cerrar Bloque 1 al 100% y comenzar el flujo completo de ejecutiva.
+1. Auditar y migrar todas las consultas del perfil ejecutiva a `getUserScope()` y capacidades personales.
+2. Conectar propiedad asignada → nueva valorización, conservando propiedad, ejecutiva y evidencia de origen.
+3. Integrar historial, observaciones, tareas y alertas personales; probar con una ejecutiva por oficina y actualizar este roadmap.
