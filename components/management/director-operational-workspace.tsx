@@ -35,15 +35,21 @@ export async function DirectorOperationalWorkspace(){
       <h2 className="mt-2 text-2xl font-semibold">Valorizaciones, responsables y tareas</h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">La cola se limita a {scope.team||'la oficina autorizada'} y a los perfiles visibles resueltos por el alcance central.</p>
     </div>
-    {errors.length?<div className="border border-[#d7332b] p-4 text-sm text-[#ff766f]">No fue posible cargar parte del flujo: {errors.join(' · ')}</div>:null}
+    {errors.length?<div role="alert" className="border border-[#d7332b] p-4 text-sm text-[#ff766f]">No fue posible cargar parte del flujo: {errors.join(' · ')}</div>:null}
     <div className="grid gap-5 xl:grid-cols-2">
       <div className="border border-[var(--n3-line)] bg-[#0c1111]">
         <div className="border-b border-[var(--n3-line)] p-4"><h3 className="font-semibold">Cola de valorizaciones</h3><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Borradores y casos en revisión de la oficina.</p></div>
         <div className="divide-y divide-[var(--n3-line)]">{valuations.map((item)=>{
           const owner=profileMap[item.requested_by]
-          return <Link key={item.id} href={`/dashboard/valuations/${item.id}`} className="block p-4 hover:bg-white/[0.03]">
-            <div className="flex items-start justify-between gap-3"><div><strong>{item.address||'Propiedad sin dirección'}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Responsable: {owner?.full_name||'Perfil sin nombre'} · v{item.version_number||1} · {date(item.updated_at)}</p></div><span className="border border-[var(--n3-line)] px-2 py-1 text-[10px] uppercase">{item.status}</span></div>
-          </Link>
+          return <article key={item.id} className="p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div><strong>{item.address||'Propiedad sin dirección'}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Responsable: {owner?.full_name||'Perfil sin nombre'} · v{item.version_number||1} · {date(item.updated_at)}</p><span className="mt-2 inline-block border border-[var(--n3-line)] px-2 py-1 text-[10px] uppercase">{item.status}</span></div>
+              <div className="flex flex-wrap gap-2">
+                <Link href={`/dashboard/valuations/${item.id}`} className="inline-flex min-h-11 items-center border border-[var(--n3-line)] px-3 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--n3-teal)]">Abrir expediente</Link>
+                <Link href={`/dashboard/valuations/${item.id}/report`} className="inline-flex min-h-11 items-center border border-[var(--n3-teal)] px-3 py-2 text-xs text-[var(--n3-teal)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--n3-teal)]">Ver reporte</Link>
+              </div>
+            </div>
+          </article>
         })}{!valuations.length?<p className="p-5 text-sm text-[var(--n3-text-muted)]">No hay valorizaciones pendientes dentro del alcance de oficina.</p>:null}</div>
       </div>
       <div className="border border-[var(--n3-line)] bg-[#0c1111]">
