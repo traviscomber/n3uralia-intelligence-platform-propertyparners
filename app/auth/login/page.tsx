@@ -3,7 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { defaultDashboardForRole } from '@/lib/access-control'
+import type { UserRole } from '@/lib/types'
 import { PPLogo } from '@/components/brand/pp-logo'
+
+const VALID_ROLES = new Set<UserRole>(['ceo', 'admin', 'director', 'subdirector', 'seller'])
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -17,14 +21,29 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInError || !data.user) {
+      setError(signInError?.message || 'No fue posible iniciar sesión')
       setLoading(false)
-    } else {
-      router.push('/dashboard')
-      router.refresh()
+      return
     }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .maybeSingle()
+
+    const role = String(profile?.role || '').toLowerCase() as UserRole
+    if (profileError || !VALID_ROLES.has(role)) {
+      await supabase.auth.signOut()
+      setError('La cuenta no tiene un perfil válido asignado')
+      setLoading(false)
+      return
+    }
+
+    router.replace(defaultDashboardForRole(role))
+    router.refresh()
   }
 
   return (
@@ -38,8 +57,8 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
-          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesion</h1>
-          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Accede al control de gestion e inteligencia comercial</p>
+          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesión</h1>
+          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Accede al control de gestión e inteligencia comercial</p>
 
           {error && (
             <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(215,51,43,0.1)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>
@@ -64,7 +83,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
-                Contrasena
+                Contraseña
               </label>
               <input
                 type="password"
