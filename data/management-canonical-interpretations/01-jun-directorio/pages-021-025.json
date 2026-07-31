@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical_interpretation",
+  "source": {
+    "deck": "Jun_Directorio_5.pptx",
+    "pages": [21, 22, 23, 24, 25],
+    "sourceFiles": [
+      "data/presentations-2026-split/01-presentation-1/slide-021.json",
+      "data/presentations-2026-split/01-presentation-1/slide-022.json",
+      "data/presentations-2026-split/01-presentation-1/slide-023.json",
+      "data/presentations-2026-split/01-presentation-1/slide-024.json",
+      "data/presentations-2026-split/01-presentation-1/slide-025.json"
+    ],
+    "period": "2026-01/2026-06"
+  },
+  "entity": "Nueva Costanera",
+  "pages": [
+    {
+      "page": 21,
+      "type": "section-cover",
+      "title": "Nueva Costanera",
+      "backgroundColor": "#000000"
+    },
+    {
+      "page": 22,
+      "type": "sales-summary",
+      "monthly": {
+        "closings": { "actual": 3.0, "goal": 3.3, "compliancePercent": 91, "priorYear": 5.0, "yoyPercent": -40 },
+        "salesUf": { "actual": 60325, "goal": 42540, "compliancePercent": 142, "priorYear": 63825, "yoyPercent": -5 }
+      },
+      "cumulative": {
+        "closings": { "actual": 15.5, "goal": 16.4, "compliancePercent": 95, "priorYear": 16.0, "yoyPercent": -3 },
+        "salesUf": { "actual": 303970, "goal": 252665, "compliancePercent": 120, "priorYear": 220905, "yoyPercent": 38 }
+      }
+    },
+    {
+      "page": 23,
+      "type": "sales-evolution",
+      "monthlyClosings": [3.0, 2.0, 2.5, 3.5, 1.5, 3.0],
+      "monthlySalesUf": [81075, 15800, 58145, 46400, 42225, 60325],
+      "monthlyClosingGoals": [2.20, 1.76, 3.06, 2.78, 3.3, 3.3],
+      "monthlySalesUfGoals": [37844, 30033, 52089, 44781, 45378, 42540],
+      "cumulativeClosings": [3.0, 5.0, 7.5, 11.0, 12.5, 15.5],
+      "cumulativeSalesUf": [81075, 96875, 155020, 201420, 243645, 303970]
+    },
+    {
+      "page": 24,
+      "type": "management-scores",
+      "managementQuality": 64.7,
+      "classification": "development",
+      "portfolioQuality": 66.4,
+      "followUpQuality": 64.1,
+      "conversionQuality": 63.0,
+      "portfolioSubscores": { "portfolioGoal": 56.1, "requirementsByPropertyType": 88.6, "priceQuality": 54.7 },
+      "followUpSubscores": { "classifiedLeads": 41.6, "leadsManagedWithin90Days": 90.9, "priorityLeadsManagedWithin15Days": 60.0 },
+      "conversionSubscores": { "completedVisitsGoal": 36.0, "completedScheduledVisits": 52.9, "sixMonthCloseRate": 100.1 }
+    },
+    {
+      "page": 25,
+      "type": "indicator-bases",
+      "portfolio": { "actual": 92, "goalDisplayed": 164 },
+      "requirements": { "actual": 164, "expectedDisplayed": 185 },
+      "pricing": { "eligible": 75, "ratioAtMost1_05": 31, "ratioAtMost1_10Additional": 20, "ratioAbove1_10": 24, "score": 54.7 },
+      "followUp": { "activeLeads": 373, "classifiedLeads": 155, "unmanaged90Days": 34, "priorityLeads": 45, "priorityUnmanaged15Days": 18 },
+      "conversion": { "completedVisits": 54, "visitGoal": 150, "scheduledVisits": 102, "sixMonthClosings": 13.5, "totalLeads": 373, "rawCloseRatePercent": 3.6193, "cappedCloseRatePercent": 2.86, "score": 100.1 }
+    }
+  ],
+  "verifiedCalculations": [
+    { "metric": "monthlyClosingCompliance", "formula": "3.0 / 3.3 * 100", "resultApprox": 90.9, "displayedResult": 91 },
+    { "metric": "monthlyUfCompliance", "formula": "60325 / 42540 * 100", "resultApprox": 141.8, "displayedResult": 142 },
+    { "metric": "pricingScore", "formula": "(31 * 100 + 20 * 50 + 24 * 0) / 75", "resultApprox": 54.6667, "displayedResult": 54.7 },
+    { "metric": "classifiedLeads", "formula": "155 / 373 * 100", "resultApprox": 41.55, "displayedResult": 41.6 },
+    { "metric": "managedWithin90Days", "formula": "(1 - 34 / 373) * 100", "resultApprox": 90.88, "displayedResult": 90.9 },
+    { "metric": "priorityManagedWithin15Days", "formula": "(1 - 18 / 45) * 100", "result": 60.0 },
+    { "metric": "completedVisitsGoal", "formula": "54 / 150 * 100", "result": 36.0 },
+    { "metric": "completedScheduledVisits", "formula": "54 / 102 * 100", "resultApprox": 52.94, "displayedResult": 52.9 },
+    { "metric": "rawSixMonthCloseRate", "formula": "13.5 / 373 * 100", "resultApprox": 3.6193 },
+    { "metric": "cappedSixMonthCloseScore", "formula": "min(3.6193, 2.86) * 35", "result": 100.1 }
+  ],
+  "managementInterpretation": [
+    "Nueva Costanera supera ampliamente la meta acumulada de UF y queda cerca de la meta acumulada de cierres.",
+    "El volumen económico es fuerte aunque la cantidad de cierres cae frente a 2025.",
+    "La tasa de cierre bruta supera el benchmark de 2.86%, por lo que el subscore queda capado.",
+    "La principal debilidad de conversión no es la capacidad de cerrar, sino el bajo cumplimiento de visitas y agenda.",
+    "El uso repetido de valores terminados en 0.5 confirma una unidad de cierre fraccionable, pero no define todavía la regla contractual de atribución.",
+    "El pricing se calcula sólo sobre 75 de 92 propiedades, confirmando un universo elegible menor que la cartera total."
+  ],
+  "questionStatus": {
+    "fractionalClosings": {
+      "status": "confirmed_as_systematic_not_defined",
+      "evidence": "Nueva Costanera presenta 2.5, 3.5, 1.5, 15.5 y 13.5 cierres en distintas métricas.",
+      "remainingQuestion": "Definir qué evento o participación produce una fracción de 0.5 cierre."
+    },
+    "requirementsBenchmark": {
+      "status": "dynamic_office_specific_not_defined",
+      "evidence": "Nueva Costanera usa 185 esperados para 164 requerimientos; Santa María usa 176 y el consolidado 579.",
+      "remainingQuestion": "Definir la fórmula por tipo de propiedad que genera el total esperado."
+    },
+    "pricingEligibility": {
+      "status": "subset_confirmed_eligibility_rule_not_defined",
+      "evidence": "Nueva Costanera evalúa 75 de 92 propiedades; Santa María 104 de 128; consolidado 264 de 316.",
+      "remainingQuestion": "Definir los campos o estados cuya ausencia excluye una propiedad del cálculo."
+    }
+  }
+}
