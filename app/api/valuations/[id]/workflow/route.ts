@@ -49,6 +49,21 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ error: `Transición ${valuationCase.status} → ${target} no permitida` }, { status: 400 })
     }
 
+    const { data: comparables, error: compError } = await supabase
+      .from('valuation_comparables')
+      .select('*')
+      .eq('valuation_case_id', id)
+      .order('rank')
+    if (compError) return NextResponse.json({ error: compError.message }, { status: 500 })
+    const accepted = (comparables || []).filter((item) => item.selected && item.match_status === 'accepted')
+
+    if (target === 'review' && accepted.length < 3) {
+      return NextResponse.json({
+        error: 'La valorización requiere al menos 3 comparables aceptados antes de revisión',
+        acceptedComparableCount: accepted.length,
+      }, { status: 400 })
+    }
+
     if (valuationCase.status === 'draft' && target === 'review') {
       if (!ownsCase && !canReview) return NextResponse.json({ error: 'Sin permiso para solicitar revisión' }, { status: 403 })
       const { data, error: rpcError } = await supabase.rpc('submit_valuation_for_review', {
@@ -84,16 +99,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (!canApprove) return NextResponse.json({ error: 'Sólo dirección puede ejecutar esta transición' }, { status: 403 })
     if (target === 'draft' && !reason) return NextResponse.json({ error: 'Se requiere un motivo para devolver el caso a borrador' }, { status: 400 })
 
-    const { data: comparables, error: compError } = await supabase
-      .from('valuation_comparables')
-      .select('*')
-      .eq('valuation_case_id', id)
-      .order('rank')
-    if (compError) return NextResponse.json({ error: compError.message }, { status: 500 })
-    const accepted = (comparables || []).filter((item) => item.selected && item.match_status === 'accepted')
-
     if (target === 'approved') {
-      if (accepted.length < 2) return NextResponse.json({ error: 'No se puede aprobar sin al menos 2 comparables aceptados' }, { status: 400 })
+      if (accepted.length < 3) return NextResponse.json({ error: 'No se puede aprobar sin al menos 3 comparables aceptados' }, { status: 400 })
       if (!valuationCase.estimated_value_uf || !valuationCase.low_value_uf || !valuationCase.high_value_uf) {
         return NextResponse.json({ error: 'La valorización no tiene rango calculado' }, { status: 400 })
       }
@@ -129,7 +136,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
 
     const { error: updateError } = await supabase.from('valuation_cases').update(patch).eq('id', id)
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 400 })
 
     const { error: versionError } = await supabase.from('valuation_case_versions').insert({
       valuation_case_id: id,
