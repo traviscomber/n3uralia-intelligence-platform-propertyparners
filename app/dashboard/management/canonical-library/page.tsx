@@ -4,6 +4,15 @@ import { getCanonicalDeck, getCanonicalDecks, getCanonicalLibrarySummary } from 
 
 const number = new Intl.NumberFormat('es-CL')
 
+const confirmedRules = [
+  ['Estructura operativa', 'El Partner origina y gestiona su cartera. El Director de Cuenta guía, prioriza y acompaña su desarrollo.'],
+  ['Cumplimiento y score', 'El cumplimiento comercial puede superar 100%, pero los scores y subscores se limitan a 100.'],
+  ['Operaciones compartidas', 'Dos partners pueden recibir 0,5 cierre cada uno y el 100% de la UF como volumen atribuido.'],
+  ['Volumen único', 'Las UF atribuidas no deben confundirse con UF únicas transaccionadas ni sumarse entre oficinas sin desduplicar.'],
+  ['Meta cero', 'En tablas comerciales se muestra como no evaluable. Su tratamiento dentro del score sigue pendiente de validación formal.'],
+  ['Comparación temporal', 'Cuando mayo no aparece en el deck, el delta visible corresponde a abril–junio y debe etiquetarse explícitamente.'],
+] as const
+
 export default async function CanonicalLibraryPage({ searchParams }: { searchParams: Promise<{ deck?: string; page?: string }> }) {
   await requirePageCapability('management.global.read')
   const params = await searchParams
@@ -32,6 +41,34 @@ export default async function CanonicalLibraryPage({ searchParams }: { searchPar
           ))}
         </div>
       </header>
+
+      <section className="rounded-2xl border bg-background p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Modelo operativo confirmado</p>
+            <h2 className="mt-2 text-2xl font-semibold">Partner y Director de Cuenta</h2>
+          </div>
+          <p className="max-w-xl text-sm text-muted-foreground">Estas reglas están separadas de las inferencias pendientes y deben gobernar la interpretación del producto.</p>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {confirmedRules.map(([title, description]) => (
+            <article key={title} className="rounded-xl border bg-muted/20 p-4">
+              <h3 className="font-medium">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+            </article>
+          ))}
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <article className="rounded-xl border p-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Vista Partner</p>
+            <p className="mt-2 text-sm leading-6">Cartera propia, leads, visitas, cierres atribuidos, metas, scores y recomendaciones accionables.</p>
+          </article>
+          <article className="rounded-xl border p-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Vista Director de Cuenta</p>
+            <p className="mt-2 text-sm leading-6">Partners asignados, alertas, prioridades de acompañamiento, evolución y planes de mejora.</p>
+          </article>
+        </div>
+      </section>
 
       <section className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <aside className="space-y-3 rounded-2xl border bg-background p-4 lg:sticky lg:top-4 lg:self-start">
