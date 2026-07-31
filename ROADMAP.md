@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:19 CLT
+Última actualización: 30 de julio de 2026, 22:22 CLT
 
 ## Objetivo
 
@@ -10,16 +10,16 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 ## Estado general
 
-**Avance contractual estimado: 95%**
+**Avance contractual estimado: 96%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
 | 1 | Perfiles, capacidades y alcance central | Completado | 100% |
 | 2 | Flujo completo de ejecutiva | Cierre funcional | 97% |
-| 3 | Director y subdirector | Cierre funcional | 97% |
+| 3 | Director y subdirector | Cierre funcional | 98% |
 | 4 | CEO y consolidación ejecutiva | Cierre funcional | 99% |
 | 5 | Integración transversal de módulos | Cierre funcional | 99% |
-| 6 | QA contractual, seguridad y aceptación | En cierre | 90% |
+| 6 | QA contractual, seguridad y aceptación | En cierre | 93% |
 
 ## Producción
 
@@ -39,7 +39,7 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 - [x] `getUserScope()` y guards reutilizables.
 - [x] Sidebar, post-login, rutas y APIs críticas protegidas.
 - [x] Matriz RLS autenticada.
-- [x] Dashboard de mercado migrado desde lógica local de roles a capacidades centrales.
+- [x] Mercado, configuración y administración de propiedades conectados a capacidades centrales.
 
 ---
 
@@ -51,21 +51,21 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 - [x] Propiedad asignada → valorización trazable.
 - [x] Tareas personales, historial, observaciones y correcciones.
 - [x] Mercado → comparable → expediente.
-- [x] Navegación directa expediente ↔ reporte imprimible.
-- [x] Estados vacíos y errores recuperables incorporados.
+- [x] Navegación expediente ↔ reporte imprimible.
+- [x] Estados vacíos y errores recuperables.
 - [ ] QA visual autenticado y revisión responsive real.
 
 ---
 
 # Bloque 3 — Director y subdirector
 
-**Estado: cierre funcional — 97%**
+**Estado: cierre funcional — 98%**
 
-- [x] Dashboard, YoY, equipo, fichas, tareas e historial.
+- [x] Dashboard, equipo, fichas, tareas e historial.
 - [x] Alcance de oficina y aislamiento autenticado.
 - [x] Devolución → tarea → corrección → reenvío.
-- [x] Acceso directo desde la cola de oficina al expediente y al reporte.
-- [x] Objetivos táctiles, foco visible y error semántico en la cola operativa.
+- [x] Administración de asignaciones limitada a perfiles visibles por oficina.
+- [x] Cada escritura de asignación vuelve a validar el perfil afectado.
 - [ ] Recorrido visual autenticado.
 - [ ] Cuenta QA subdirector sólo con autorización explícita.
 
@@ -78,8 +78,6 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 - [x] Consolidado, oficinas, metas, MoM, YoY, rankings y evolución.
 - [x] Centro de decisiones conectado con oficina, ejecutiva, caso, tarea e historial.
 - [x] Navegación CEO → oficina → expediente → reporte.
-- [x] Acceso directo al reporte imprimible desde cada caso.
-- [x] Estados de carga/error accesibles y acciones con foco visible.
 - [ ] Confirmar reglas oficiales de ranking y umbrales derivados.
 - [ ] QA visual autenticado y validación de PDF.
 
@@ -91,21 +89,20 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 **Estado: cierre funcional — 99%**
 
-- [x] Mercado → publicación persistida → comparable candidato.
+- [x] Mercado → publicación → comparable candidato.
 - [x] Evidencia de origen, fecha, precio, identidad y metodología.
 - [x] Propiedad → asignación → valorización.
 - [x] Alerta → tarea → seguimiento.
 - [x] Revisión → devolución → corrección → reenvío.
 - [x] Decisión CEO → oficina → responsable → caso → reporte.
 - [x] Propiedad operativa no confirmada separada de identidad canónica.
-- [x] Evidencia, ajustes y decisiones incorporados al reporte imprimible.
 - [ ] QA visual del selector, expediente y reporte.
 
 ---
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en cierre — 90%**
+**Estado: en cierre — 93%**
 
 ## Completado
 
@@ -115,20 +112,25 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Pruebas negativas de acceso cruzado.
 - [x] Matriz de aceptación y checklist contractual.
 - [x] Reporte imprimible con evidencia y decisiones.
-- [x] Accesos directos desde expediente, dirección y CEO.
-- [x] Guía ejecutable por perfil, viewport, teclado, lector de pantalla y PDF.
-- [x] Regresión estática para guards, enlaces, foco, estados y semántica.
-- [x] Regresión central adicional sobre mercado, tareas, comparables y reporte.
+- [x] Guía ejecutable de QA visual autenticado.
+- [x] Regresiones estáticas de acceso central y reporte.
 - [x] Paquete consolidado de entrega contractual.
+- [x] Administración de propiedades migrada desde roles locales a capacidades `properties.*.assign`.
+- [x] Creación y actualización de asignaciones limitadas mediante `visibleProfileIds` y `assertProfileVisible()`.
+- [x] Configuración alineada con la capacidad específica `settings.manage`.
+- [x] Estados administrativos de error y vacío con semántica accesible.
+- [x] Registro final de ejecución visual preparado sin declarar pruebas no ejecutadas.
 
 ## Evidencias nuevas
 
-- `app/dashboard/market/page.tsx`
-- `scripts/test-central-access-regression.mjs`
-- `docs/CONTRACTUAL_DELIVERY_PACKAGE.md`
-- Commit mercado con capacidades centrales: `60a63c515e3ef9186ea4c4a414617cba1048f9e2`
-- Commit regresión central: `78821057e030b2f92f8d3479f9b89b12eadc7830`
-- Commit paquete de entrega: `3169b94dc9aa1be8d2eccab2c7097862cfb02c70`
+- `app/dashboard/properties/admin/page.tsx`
+- `app/dashboard/settings/layout.tsx`
+- `scripts/test-administrative-access-regression.mjs`
+- `docs/VISUAL_QA_EXECUTION_LOG.md`
+- Commit administración de propiedades: `2b48c283c877c776476b6852b937e1bed4bd8f76`
+- Commit configuración: `c25c357c2b99c9f826590c61daf630b031f8695b`
+- Commit regresión administrativa: `363ee145ae0b28108b2d44b29dabe5b012bcdf9d`
+- Commit registro QA visual: `eaf2463f73d78689d3c1afbeb2567d72e3aab5d6`
 
 ## Pendiente
 
@@ -143,14 +145,15 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 ## Técnicos
 
-- Confirmar `READY`, alias productivo y runtime del commit acumulado de este bloque.
-- Ejecutar las regresiones estáticas en CI o entorno local cuando esté disponible.
+- Confirmar build, `READY`, alias productivo y runtime del último commit acumulado.
+- Ejecutar regresiones estáticas en CI o entorno local cuando esté disponible.
+- Auditar ingestión sólo cuando exista una superficie de escritura identificada en el repositorio; no se encontró una ruta administrativa activa durante esta revisión.
 
 ## Visuales
 
 - Ejecutar `docs/AUTHENTICATED_VISUAL_QA_GUIDE.md`.
+- Registrar resultados en `docs/VISUAL_QA_EXECUTION_LOG.md`.
 - Validar móvil, tableta, escritorio, teclado, lector de pantalla y PDF.
-- Registrar evidencias e incidencias por caso.
 
 ## Negocio
 
@@ -170,8 +173,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Cierre de aceptación — Próximo trabajo 1 · 2 · 3
+## Cierre técnico y ejecución visual — Próximo trabajo 1 · 2 · 3
 
-1. Confirmar build, `READY`, alias y runtime del último commit acumulado.
-2. Revisar los endpoints y páginas administrativas restantes que requieran una prueba específica de escritura o error recuperable.
-3. Dejar preparado el protocolo de ejecución y registro del QA visual final, sin declarar aceptación visual antes de ejecutarlo.
+1. Confirmar build, `READY`, alias productivo y runtime del último commit acumulado.
+2. Ejecutar una última matriz negativa autenticada sobre asignaciones de propiedades entre oficinas.
+3. Iniciar el registro visual por perfil usando la guía y el log preparados, manteniendo separados los pendientes de negocio.
