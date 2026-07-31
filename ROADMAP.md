@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:35 CLT
+Última actualización: 30 de julio de 2026, 22:40 CLT
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 | 3 | Director y subdirector | Cierre funcional | 99% |
 | 4 | CEO y consolidación ejecutiva | Cierre funcional | 99% |
 | 5 | Integración transversal de módulos | Cierre funcional | 99% |
-| 6 | QA contractual, seguridad y aceptación | En cierre | 97% |
+| 6 | QA contractual, seguridad y aceptación | En cierre | 98% |
 
 ## Producción
 
@@ -27,6 +27,8 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 - Rama: `main`
 - Producción: `https://n3uralia-intelligence-platform.vercel.app`
 - Supabase: `orfncinmhymhhoxbxgjb`
+- Deployment estable de la suite: `dpl_EsYaJ3ifcDySa3hF6csWw7ZbjxPC`, `READY`, alias principal activo y `aliasError: null`.
+- Runtime revisado sin eventos `error` o `fatal` durante la ventana consultada.
 
 ---
 
@@ -105,7 +107,7 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en cierre — 97%**
+**Estado: en cierre — 98%**
 
 ## Completado
 
@@ -123,24 +125,28 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] API de destinatarios protegida por `settings.manage`.
 - [x] Validación HTTPS para webhooks y avatares.
 - [x] Endpoint personal bloquea cambios de `team` y `role` con respuesta `403`.
-- [x] Regresión estática para impedir reapertura de edición personal del alcance.
-- [x] Suite Puppeteer preparada para capturas autenticadas en escritorio, tableta y móvil.
-- [x] Automatización preparada para señales de accesibilidad, navegación por teclado, PDF y manifiesto JSON.
-- [x] Credenciales excluidas del repositorio y requeridas únicamente como secretos de entorno.
+- [x] Suite Puppeteer para capturas autenticadas en escritorio, tableta y móvil.
+- [x] Credenciales y contraseñas independientes por perfil, exclusivamente mediante secretos.
+- [x] Login robustecido para navegación cliente o servidor y errores visibles.
+- [x] Registro de overflow, estructura semántica, controles sin nombre, foco, PDF y errores del navegador.
+- [x] Workflow manual de GitHub Actions con validación de secretos y artefactos de 14 días.
+- [x] Regresión estática específica para runner, workflow, secretos, lockfile y artefactos.
 
 ## Evidencias nuevas
 
 - `scripts/run-authenticated-visual-qa.mjs`
+- `.github/workflows/authenticated-visual-qa.yml`
+- `scripts/test-visual-qa-automation.mjs`
 - `docs/AUTOMATED_VISUAL_QA_RUNBOOK.md`
-- comando `pnpm qa:visual`
-- Commit suite visual: `56f7a3a56ec73722c6f26b674a4252d22245ebcc`
-- Commit comando de ejecución: `ba6037fc9d8654342711a3ab89287aff71b470da`
-- Commit preservación de dependencias: `fcf1020979b0b1a9eaefff45a3ca1ae6cc2152da`
-- Commit runbook: `7131d53e04dd10ff603763179d01d38a430207ae`
+- Commit runner robustecido: `2bce1d1663e32d8d9017e8ec6ed3bc5fbfe37555`
+- Commit workflow: `9d09029b6c8d03f21d92290a288919bff7a4266c`
+- Commit runbook: `50bb44ebc917417690d261a7528adb28b4271803`
+- Commit regresión de automatización: `ba4c44dfb52f7c5ce1299ba8f5a57e4f12681cda`
 
 ## Pendiente
 
-- [ ] Ejecutar la suite con secretos QA fuera del repositorio.
+- [ ] Configurar los diez secretos QA en GitHub Actions.
+- [ ] Ejecutar el workflow manual y descargar el artefacto.
 - [ ] Revisar manualmente las capturas y los PDF generados.
 - [ ] Navegación completa con lector de pantalla real.
 - [ ] Contraste contextual medido.
@@ -150,8 +156,9 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 ## Técnicos
 
-- Confirmar build, `READY`, alias productivo y runtime del commit acumulado de la suite visual.
-- Ejecutar `pnpm qa:visual` en un entorno con Chromium y secretos QA.
+- Confirmar `READY`, alias y runtime del último commit acumulado de runner, workflow y regresión.
+- Ejecutar `node scripts/test-visual-qa-automation.mjs` en CI o entorno local.
+- Ejecutar el workflow cuando los secretos estén configurados.
 
 ## Visuales
 
@@ -178,8 +185,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Ejecución y revisión visual — Próximo trabajo 1 · 2 · 3
+## Ejecución controlada de QA visual — Próximo trabajo 1 · 2 · 3
 
-1. Confirmar build, `READY`, alias y runtime de la suite automatizada.
-2. Ejecutar la suite con secretos QA en un entorno compatible y revisar capturas, overflow, foco y PDF.
-3. Corregir incidencias observadas y completar el registro final, manteniendo separados los pendientes de negocio.
+1. Confirmar build, `READY`, alias y runtime del commit acumulado de workflow y runner.
+2. Configurar secretos QA y ejecutar el workflow manual para generar evidencia real.
+3. Revisar artefactos, corregir incidencias y completar el registro; después sólo deben quedar pendientes visuales manuales y definiciones de negocio.
