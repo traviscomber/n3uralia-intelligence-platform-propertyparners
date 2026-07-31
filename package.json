@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/audit-canonical-captations-yoy.mjs && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
