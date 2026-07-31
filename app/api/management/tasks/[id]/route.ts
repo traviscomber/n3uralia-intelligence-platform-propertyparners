@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
 
-const allowedStatuses = new Set(['pending', 'in_progress', 'completed'])
+const allowedStatuses = new Set(['open', 'in_progress', 'done'])
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -15,7 +15,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (!allowedStatuses.has(status)) {
       return NextResponse.json({ error: 'Estado de tarea no permitido' }, { status: 400 })
     }
-    if (status === 'completed' && !resolutionNote) {
+    if (status === 'done' && !resolutionNote) {
       return NextResponse.json({ error: 'Se requiere una nota de resolución para completar la tarea' }, { status: 400 })
     }
 
@@ -33,13 +33,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     const now = new Date().toISOString()
-    const patch: Record<string, unknown> = {
-      status,
-      updated_by: scope.profileId,
-      updated_at: now,
-    }
+    const patch: Record<string, unknown> = { status, updated_by: scope.profileId, updated_at: now }
     if (status === 'in_progress') patch.started_at = now
-    if (status === 'completed') {
+    if (status === 'done') {
       patch.completed_at = now
       patch.resolution_note = resolutionNote
     }
