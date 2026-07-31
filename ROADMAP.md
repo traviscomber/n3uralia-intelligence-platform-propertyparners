@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 21:52 CLT
+Última actualización: 30 de julio de 2026, 22:02 CLT
 
 ## Objetivo
 
@@ -10,7 +10,7 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 ## Estado general
 
-**Avance contractual estimado: 85%**
+**Avance contractual estimado: 87%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
@@ -18,8 +18,8 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 | 2 | Flujo completo de ejecutiva | Cierre funcional | 94% |
 | 3 | Director y subdirector | Cierre funcional | 96% |
 | 4 | CEO y consolidación ejecutiva | Cierre funcional | 98% |
-| 5 | Integración transversal de módulos | En ejecución | 84% |
-| 6 | QA contractual, seguridad y aceptación | En desarrollo | 56% |
+| 5 | Integración transversal de módulos | Cierre funcional | 92% |
+| 6 | QA contractual, seguridad y aceptación | En desarrollo | 60% |
 
 ## Producción
 
@@ -77,30 +77,14 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 **Estado: cierre funcional — 98%**
 
-## Completado
-
 - [x] Consolidado, oficinas, metas, MoM, YoY, rankings y evolución.
 - [x] Cartera, presentación, reporte y metodología.
 - [x] Centro de decisiones conectado con valorizaciones abiertas.
-- [x] Cada caso identifica oficina, ejecutiva responsable, versión y estado.
-- [x] Cada caso muestra la última decisión y su observación.
-- [x] Las tareas derivadas se vinculan mediante `source_key` al expediente.
-- [x] Responsable, prioridad, vencimiento y estado quedan visibles.
-- [x] Navegación CEO → oficina → expediente disponible desde la misma cola.
-- [x] API global protegida por capacidades para construir la cola ejecutiva.
-
-## Evidencias nuevas
-
-- `app/api/management/ceo-decisions/route.ts`
-- `components/management/ceo-decisions.tsx`
-- Commit API de cola conectada: `966476755108c9135a2216b643974b23110269e0`
-- Commit centro de decisiones: `4d5b8e59644a0c45d10e4cb9cf06e9667b5d496a`
-
-## Pendiente para cierre total
-
+- [x] Oficina, ejecutiva, versión, estado, última decisión y tareas derivadas visibles.
+- [x] Responsable, prioridad, vencimiento e historial conectados.
+- [x] Navegación CEO → oficina → expediente.
 - [ ] Confirmar reglas oficiales de ranking y umbrales derivados.
-- [ ] QA visual autenticado de navegación global → oficina → caso.
-- [ ] Validación final de presentación y PDF en navegador real.
+- [ ] QA visual autenticado y validación de PDF.
 
 Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita separada.
 
@@ -108,34 +92,62 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque 5 — Integración transversal
 
-**Estado: en ejecución — 84%**
+**Estado: cierre funcional — 92%**
 
-- [ ] Mercado → comparable.
+## Completado
+
+- [x] Mercado → publicación persistida → comparable candidato.
+- [x] Selector de valorizaciones en borrador limitado por alcance autenticado.
+- [x] Evidencia mínima persistida: publicación, propiedad, URL y fecha observada.
+- [x] Precio UF y UF/m² conservados desde el Módulo I.
+- [x] Duplicados bloqueados por expediente y publicación.
+- [x] Registro `market_comparable_linked` en historial de decisiones.
+- [x] La publicación se mantiene como candidata hasta decisión explícita.
+- [x] Navegación del Módulo I incluye acceso a conexión de comparables.
 - [x] Propiedad → asignación → valorización.
 - [x] Valorización → historial y expediente.
 - [x] Alerta → tarea asignada → seguimiento de oficina.
 - [x] Revisión → devolución → tarea → corrección → reenvío.
 - [x] Decisión CEO → oficina → responsable → caso → historial.
-- [x] Resultados personales y ejecutivos con fuente y metodología.
+
+## Evidencias nuevas
+
+- `app/api/market/comparables/route.ts`
+- `app/dashboard/market/layout.tsx`
+- `app/dashboard/market/comparables/page.tsx`
+- `components/market/market-comparable-connector.tsx`
+- `scripts/test-market-comparable-link.sql`
+- Commit API: `8509f5140910a5d56a9a5e457cfdb7464cc3a3ae`
+- Commit navegación: `14192e9c0bbac76759ee31117514c6c28941f6f5`
+- Commit interfaz: `4b7599a0688d1134cf7cfce7c73eb06a077e32a4`
+- Commit workspace: `dfb5b644474cbff507378eddbd14eb2555478259`
+- Commit QA reversible: `0e6ec3fc3fd5562c6689c75f25a4624b0f18a99d`
+
+## Pendiente para cierre total
+
+- [ ] Ejecutar el script con IDs QA conocidos y confirmar `ROLLBACK`.
+- [ ] Incorporar la evidencia de origen en el reporte imprimible de valorización.
+- [ ] QA visual autenticado del selector y del expediente resultante.
 
 ---
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en desarrollo — 56%**
+**Estado: en desarrollo — 60%**
 
 - [x] Matriz RLS autenticada para CEO, dirección y tres ejecutivas.
 - [x] Aislamiento por oficina y ejecutiva.
 - [x] Escrituras QA reversibles para tareas y valorizaciones propias.
 - [x] Prueba negativa de dirección entre oficinas.
 - [x] Rutas operativas conectadas desde CEO hasta expediente.
-- [ ] Ciclo integral dirección–ejecutiva con fixtures QA reversibles.
+- [x] Guion reversible mercado → comparable → valorización.
+- [ ] Ejecutar ciclos integrales con fixtures QA conocidos.
 - [ ] Login y recorrido real para todos los perfiles QA.
 - [ ] Responsive, accesibilidad, logs, reportes y PDF.
 
 # Riesgos activos
 
-1. Falta una valorización QA reversible preparada para recorrer visualmente el ciclo completo.
+1. Faltan IDs QA controlados para ejecutar algunos ciclos reversibles completos.
 2. No existe una cuenta QA de subdirector para prueba independiente.
 3. Falta navegador autenticado para validar recorridos visuales y PDF.
 4. Captaciones brutas no tiene fuente separada.
@@ -144,6 +156,7 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 # Salvaguardas
 
 - No modificar cuentas reales ni persistir datos QA ficticios.
+- No presentar publicaciones como ventas confirmadas.
 - No inventar diferencias de permisos no documentadas.
 - No usar `service_role` como evidencia de RLS.
 - No afirmar QA visual cuando sólo se validaron rutas, build o datos.
@@ -151,8 +164,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Bloque 5 — Integración transversal — Próximo trabajo 1 · 2 · 3
+## Bloque 6 — QA contractual y aceptación — Próximo trabajo 1 · 2 · 3
 
-1. Conectar una propiedad de mercado seleccionada como comparable trazable dentro de una valorización.
-2. Unificar evidencia de mercado, selección, ajustes y decisión en el expediente y reporte.
-3. Ejecutar QA reversible del flujo mercado → comparable → valorización y actualizar este roadmap.
+1. Preparar fixtures QA reversibles controlados para los ciclos dirección–ejecutiva y mercado–valorización.
+2. Ejecutar escrituras autorizadas y bloqueadas por perfil, documentando resultados y limpieza.
+3. Auditar responsive, accesibilidad, reportes, PDF, runtime y checklist final contra contrato.
