@@ -48,8 +48,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate required secrets
+        id: preflight
         shell: bash
         run: |
+          mkdir -p artifacts/visual-qa
           required=(
             QA_CEO_EMAIL QA_CEO_PASSWORD
             QA_DIRECTOR_EMAIL QA_DIRECTOR_PASSWORD
@@ -57,16 +59,31 @@ jobs:
             QA_NUEVA_COSTANERA_EMAIL QA_NUEVA_COSTANERA_PASSWORD
             QA_SANTA_MARIA_EMAIL QA_SANTA_MARIA_PASSWORD
           )
-          missing=0
+          missing=()
           for name in "${required[@]}"; do
             if [ -z "${!name}" ]; then
-              echo "Missing GitHub Actions secret: $name"
-              missing=1
+              missing+=("$name")
             fi
           done
-          exit "$missing"
+          if [ "${#missing[@]}" -eq 0 ]; then
+            complete=true
+          else
+            complete=false
+          fi
+          printf '{\n  "generatedAt": "%s",\n  "baseUrl": "%s",\n  "complete": %s,\n  "missing": [' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$QA_BASE_URL" "$complete" > artifacts/visual-qa/preflight.json
+          for i in "${!missing[@]}"; do
+            [ "$i" -gt 0 ] && printf ', ' >> artifacts/visual-qa/preflight.json
+            printf '"%s"' "${missing[$i]}" >> artifacts/visual-qa/preflight.json
+          done
+          printf ']\n}\n' >> artifacts/visual-qa/preflight.json
+          echo "complete=$complete" >> "$GITHUB_OUTPUT"
+          if [ "$complete" != true ]; then
+            printf 'Missing GitHub Actions secrets:\n'
+            printf ' - %s\n' "${missing[@]}"
+          fi
 
       - name: Run authenticated visual QA
+        if: steps.preflight.outputs.complete == 'true'
         run: pnpm qa:visual
 
       - name: Upload visual QA evidence
@@ -75,5 +92,12 @@ jobs:
         with:
           name: authenticated-visual-qa-${{ github.run_id }}
           path: artifacts/visual-qa
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
+
+      - name: Fail when secrets are incomplete
+        if: steps.preflight.outputs.complete != 'true'
+        shell: bash
+        run: |
+          echo "Authenticated visual QA was not executed because required secrets are incomplete."
+          exit 1
