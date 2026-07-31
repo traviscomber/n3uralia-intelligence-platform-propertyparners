@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical-interpretation",
+  "source": {
+    "file": "Jun_Directorio_5.pptx",
+    "deckIndex": 1,
+    "pages": [6, 7, 8, 9, 10],
+    "period": "2026-01-01/2026-06-30"
+  },
+  "pages": [
+    {
+      "page": 6,
+      "title": "PL Real Estate — Scores Jun",
+      "managementMeaning": "Resume la calidad de gestión consolidada de PL Real Estate en junio. El score general es 63.3 y clasifica a la organización como Desarrollo porque no alcanza simultáneamente los umbrales de las categorías superiores.",
+      "verifiedCalculations": [
+        { "expression": "0.4*68.0 + 0.3*59.4 + 0.3*61.0", "result": 63.32, "displayed": 63.3 },
+        { "expression": "(60.0 + 86.4 + 57.6) / 3", "result": 68.0, "displayed": 68.0 },
+        { "expression": "(30.2 + 85.1 + 62.9) / 3", "result": 59.4, "displayed": 59.4 },
+        { "expression": "(46.0 + 60.6 + 76.6) / 3", "result": 61.0667, "displayed": 61.0 }
+      ],
+      "trafficLights": {
+        "managementScore": "yellow",
+        "portfolioQuality": "yellow",
+        "followUpQuality": "yellow",
+        "conversionQuality": "yellow",
+        "classifiedLeads": "red",
+        "leadsManagedWithin90Days": "green",
+        "priorityLeadsManagedWithin15Days": "yellow",
+        "completedVisitsGoal": "red",
+        "completedScheduledVisits": "yellow",
+        "sixMonthCloseRate": "green"
+      },
+      "managementConclusion": "La principal debilidad no es una sola dimensión, sino la combinación de baja cobertura de cartera, clasificación insuficiente de leads y visitas bajo meta. El seguimiento de leads antiguos y la tasa de cierre son los componentes más sólidos.",
+      "pendingDefinitions": [
+        "Confirmar la prioridad exacta de la clasificación Desarrollo frente a categorías parciales.",
+        "Confirmar si los subscores se redondean antes o después de calcular el score general."
+      ]
+    },
+    {
+      "page": 7,
+      "title": "PL Real Estate — Indicadores Ene-Jun",
+      "managementMeaning": "Expone los numeradores, denominadores y referencias que explican los scores de junio.",
+      "verifiedCalculations": [
+        { "expression": "316 / 527 * 100", "result": 59.962, "displayed": 60.0 },
+        { "expression": "500 / 579 * 100", "result": 86.356, "displayed": 86.4 },
+        { "expression": "434 / 1439 * 100", "result": 30.16, "displayed": 30.2 },
+        { "expression": "(1 - 215 / 1439) * 100", "result": 85.059, "displayed": 85.1 },
+        { "expression": "(1 - 46 / 124) * 100", "result": 62.903, "displayed": 62.9 },
+        { "expression": "198 / 431 * 100", "result": 45.94, "displayed": 46.0 },
+        { "expression": "198 / 327 * 100", "result": 60.55, "displayed": 60.6 },
+        { "expression": "31.5 / 1439 * 100", "result": 2.189, "displayed": 2.2 },
+        { "expression": "min(2.189, 2.86) * 35", "result": 76.615, "displayed": 76.6 }
+      ],
+      "managementConclusion": "La empresa tiene 316 propiedades frente a una meta de 527, sólo 30.2% de los leads activos clasificados y 198 visitas realizadas frente a 431 esperadas. La disciplina sobre leads sin gestión por 90 días es alta, pero la atención de leads A y el cumplimiento de visitas siguen incompletos.",
+      "pendingDefinitions": [
+        "Definir qué representa exactamente la meta de 527 propiedades y cómo se distribuye por oficina.",
+        "Definir cómo se calcula la referencia esperada de 579 requerimientos.",
+        "Confirmar por qué los cierres de seis meses pueden expresarse como 31.5 y qué regla de atribución fracciona cierres.",
+        "Documentar cómo se obtiene el score de calidad de precio 57.6 a partir de los grupos 122, 60 y 82."
+      ]
+    },
+    {
+      "page": 8,
+      "title": "PL Real Estate — Evolución Scores",
+      "managementMeaning": "Muestra la evolución mensual del score general y de sus tres dimensiones, junto con la variación de mayo a junio.",
+      "verifiedCalculations": [
+        { "expression": "63.3 - 66.1", "result": -2.8, "displayed": -2.8 },
+        { "expression": "68.0 - 68.9", "result": -0.9, "displayed": -0.9 },
+        { "expression": "59.4 - 64.4", "result": -5.0, "displayed": -5.0 },
+        { "expression": "61.0 - 64.1", "result": -3.1, "displayed": -3.1 }
+      ],
+      "managementConclusion": "Mayo fue el mejor mes del semestre para el score general. Junio retrocede en las tres dimensiones. La cartera viene cayendo desde marzo, mientras seguimiento y conversión mejoraron fuertemente en mayo pero no sostuvieron ese nivel en junio.",
+      "pendingDefinitions": [
+        "Confirmar si la columna Delta siempre representa variación contra el mes inmediatamente anterior.",
+        "Definir si deben existir alertas automáticas por caída mensual aunque el score permanezca en amarillo o verde."
+      ]
+    },
+    {
+      "page": 9,
+      "title": "PL Real Estate — Evolución Subscores Cartera",
+      "managementMeaning": "Descompone el deterioro de calidad de cartera entre cumplimiento de cantidad, alineación con requerimientos y calidad de precio.",
+      "verifiedCalculations": [
+        { "expression": "60.0 - 65.5", "result": -5.5, "displayed": -5.5 },
+        { "expression": "86.4 - 83.3", "result": 3.1, "displayed": 3.1 },
+        { "expression": "57.6 - 57.9", "result": -0.3, "displayed": -0.3 },
+        { "expression": "68.0 - 75.8", "result": -7.8, "displayed": -7.8 }
+      ],
+      "managementConclusion": "La caída de cartera no proviene principalmente del mix de requerimientos, que mejora en junio, sino de la reducción sostenida del cumplimiento de la meta de propiedades. La calidad de precio permanece estable pero insuficiente, cerca de 58 puntos.",
+      "pendingDefinitions": [
+        "Confirmar que el valor destacado -7.8 compara junio contra abril y no contra mayo.",
+        "Definir la ponderación exacta utilizada cuando los tres subscores aparecen como 33%."
+      ]
+    },
+    {
+      "page": 10,
+      "title": "PL Real Estate — Evolución Subscores Seguimiento",
+      "managementMeaning": "Explica la evolución de clasificación de leads, abandono de 90 días y atención de leads A en 15 días.",
+      "verifiedCalculations": [
+        { "expression": "30.2 - 50.7", "result": -20.5, "displayed": -20.5 },
+        { "expression": "85.1 - 69.4", "result": 15.7, "displayed": 15.7 },
+        { "expression": "62.9 - 73.1", "result": -10.2, "displayed": -10.2 },
+        { "expression": "59.4 - 41.2", "result": 18.2, "displayed": 18.2 }
+      ],
+      "managementConclusion": "Junio mejora con fuerza el control de leads abandonados por 90 días, pero pierde clasificación de leads y atención oportuna de leads A. La mejora acumulada del score de seguimiento frente a enero no significa una mejora uniforme de sus tres componentes.",
+      "pendingDefinitions": [
+        "Confirmar que el valor destacado +18.2 compara junio contra enero; enero visible es 42.2, lo que produciría +17.2 y no +18.2.",
+        "Revisar posible inconsistencia entre el valor destacado +18.2 y la serie mensual registrada.",
+        "Definir si la clasificación de leads puede disminuir por incorporación masiva de nuevos leads no clasificados."
+      ]
+    }
+  ]
+}
