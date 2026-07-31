@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical_interpretation",
+  "source": {
+    "deck": "Jun_Directorio_5.pptx",
+    "pages": [26, 27, 28, 29, 30],
+    "period": "2026-06"
+  },
+  "entity": "Nueva Costanera",
+  "pages": [
+    {
+      "page": 26,
+      "title": "Nueva Costanera — Evolución Scores",
+      "explicitValues": {
+        "managementQuality": {"jan": 55.7, "feb": 55.3, "mar": 64.9, "apr": 61.3, "may": 61.5, "jun": 64.7, "monthlyDelta": 3.2},
+        "portfolioQuality": {"jan": 75.5, "feb": 72.9, "mar": 82.5, "apr": 75.5, "may": 66.0, "jun": 66.4, "monthlyDelta": 0.4},
+        "followUpQuality": {"jan": 41.8, "feb": 41.8, "mar": 44.1, "apr": 48.3, "may": 62.6, "jun": 64.1, "monthlyDelta": 1.5},
+        "conversionQuality": {"jan": 43.2, "feb": 45.4, "mar": 62.3, "apr": 55.2, "may": 54.5, "jun": 63.0, "monthlyDelta": 8.5}
+      },
+      "managementInterpretation": [
+        "La mejora de junio se explica principalmente por conversión y, en menor medida, seguimiento.",
+        "Cartera permanece estable en amarillo y no explica el avance general.",
+        "La oficina logra una mejora de gestión aun con inventario bajo, debido a una mayor eficiencia de cierre."
+      ]
+    },
+    {
+      "page": 27,
+      "title": "Nueva Costanera — Evolución Subscores Cartera",
+      "explicitValues": {
+        "portfolioGoal": {"jan": 100.0, "feb": 100.0, "mar": 83.6, "apr": 74.1, "may": 64.0, "jun": 56.1, "monthlyDelta": -7.9},
+        "requirementsByPropertyType": {"jan": 71.7, "feb": 62.7, "mar": 100.0, "apr": 91.5, "may": 81.2, "jun": 88.6, "monthlyDelta": 7.4},
+        "priceQuality": {"jan": 54.9, "feb": 56.1, "mar": 63.9, "apr": 61.0, "may": 52.8, "jun": 54.7, "monthlyDelta": 1.9}
+      },
+      "managementInterpretation": [
+        "La cobertura de inventario cae desde cumplimiento total en enero-febrero a 56.1 en junio.",
+        "La correspondencia con requerimientos mejora en junio y compensa parcialmente la falta de inventario.",
+        "La calidad de precio permanece en nivel medio y no presenta una tendencia estructural de mejora."
+      ]
+    },
+    {
+      "page": 28,
+      "title": "Nueva Costanera — Evolución Subscores Seguimiento",
+      "explicitValues": {
+        "classifiedLeads": {"jan": 21.6, "feb": 21.6, "mar": 25.8, "apr": 24.3, "may": 61.0, "jun": 41.6, "monthlyDelta": -19.4},
+        "leadsManagedWithin90Days": {"jan": 36.4, "feb": 36.4, "mar": 37.1, "apr": 31.9, "may": 52.9, "jun": 90.9, "monthlyDelta": 38.0},
+        "priorityLeadsManagedWithin15Days": {"jan": 67.3, "feb": 67.3, "mar": 69.6, "apr": 88.8, "may": 74.0, "jun": 60.0, "monthlyDelta": -14.0}
+      },
+      "managementInterpretation": [
+        "La mejora del seguimiento se sostiene casi completamente en la reducción de leads abandonados por más de 90 días.",
+        "La clasificación y la atención reciente de leads A se deterioran en junio.",
+        "El score agregado puede mejorar aunque dos de sus tres componentes empeoren, debido a la magnitud del avance del tercer componente."
+      ]
+    },
+    {
+      "page": 29,
+      "title": "Nueva Costanera — Evolución Subscores Conversión",
+      "explicitValues": {
+        "completedVisitsGoal": {"jan": 41.1, "feb": 51.2, "mar": 73.0, "apr": 54.4, "may": 43.2, "jun": 36.0, "monthlyDelta": -7.2},
+        "completedScheduledVisits": {"jan": 58.8, "feb": 55.6, "mar": 69.9, "apr": 63.2, "may": 54.2, "jun": 52.9, "monthlyDelta": -1.3},
+        "sixMonthCloseRateScore": {"jan": 29.6, "feb": 29.6, "mar": 43.9, "apr": 48.0, "may": 66.1, "jun": 100.1, "monthlyDelta": 34.0}
+      },
+      "managementInterpretation": [
+        "La conversión mejora por el aumento de la tasa de cierre acumulada a seis meses.",
+        "La actividad de visitas y la ejecución de agenda siguen deteriorándose.",
+        "Un score de conversión alto no implica un embudo saludable si el volumen de actividad previa continúa cayendo.",
+        "El valor 100.1 surge de aplicar 2.86 por 35 y debe normalizarse visualmente a máximo 100 sin alterar la fórmula fuente."
+      ]
+    },
+    {
+      "page": 30,
+      "title": "Lo Beltrán",
+      "type": "section_cover",
+      "managementInterpretation": ["Inicia el bloque de análisis de la oficina Lo Beltrán."]
+    }
+  ],
+  "openQuestions": [
+    "Definir formalmente la regla de atribución de cierres fraccionados.",
+    "Definir la fórmula de construcción del benchmark esperado de requerimientos por tipo de propiedad.",
+    "Definir los criterios exactos de elegibilidad y exclusión del universo de propiedades evaluadas en pricing.",
+    "Definir el significado de los valores laterales de variación cuando no coinciden con junio menos mayo ni junio menos enero.",
+    "Confirmar si el score de tasa de cierre debe mostrarse con límite visual 100 aunque la fórmula produzca 100.1."
+  ]
+}
