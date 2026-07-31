@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical_interpretation",
+  "source": {
+    "deck": "Jun_Directorio_5.pptx",
+    "pages": [12, 13, 14, 15, 16],
+    "period": "2026-01/2026-06"
+  },
+  "entity": "Santa María",
+  "pages": [
+    {
+      "page": 12,
+      "type": "section_cover",
+      "title": "Santa María",
+      "backgroundColor": "#000000"
+    },
+    {
+      "page": 13,
+      "type": "sales_summary",
+      "title": "Santa María — Venta Jun",
+      "monthly": {
+        "closings": 2.5,
+        "closingGoal": 2.8,
+        "closingCompliancePercent": 89,
+        "priorYearClosings": 0.5,
+        "closingYoyPercent": 400,
+        "salesUf": 44750,
+        "salesUfGoal": 54246,
+        "salesUfCompliancePercent": 82,
+        "priorYearSalesUf": 5400,
+        "salesUfYoyPercent": 729
+      },
+      "cumulative": {
+        "closings": 7.5,
+        "closingGoal": 14.1,
+        "closingCompliancePercent": 53,
+        "priorYearClosings": 4.5,
+        "closingYoyPercent": 67,
+        "salesUf": 166725,
+        "salesUfGoal": 280922,
+        "salesUfCompliancePercent": 59,
+        "priorYearSalesUf": 52245,
+        "salesUfYoyPercent": 219
+      },
+      "verifiedCalculations": [
+        "2.5 / 2.8 = 89.3%",
+        "44750 / 54246 = 82.5%",
+        "(2.5 / 0.5 - 1) * 100 = 400%",
+        "(44750 / 5400 - 1) * 100 = 728.7%",
+        "7.5 / 14.1 = 53.2%",
+        "166725 / 280922 = 59.3%",
+        "(7.5 / 4.5 - 1) * 100 = 66.7%",
+        "(166725 / 52245 - 1) * 100 = 219.1%"
+      ]
+    },
+    {
+      "page": 14,
+      "type": "sales_evolution",
+      "title": "Santa María — Evolución Venta",
+      "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+      "monthlyClosings": [0.5, 1.0, 1.5, 2.0, 0.0, 2.5],
+      "monthlySalesUf": [13000, 33000, 44025, 31950, 0, 44750],
+      "cumulativeClosings": [0.5, 1.5, 3.0, 5.0, 5.0, 7.5],
+      "cumulativeSalesUf": [13000, 46000, 90025, 121975, 121975, 166725],
+      "interpretation": [
+        "Los cierres fraccionados son sistemáticos y aparecen en múltiples meses.",
+        "Mayo no registra cierres ni UF, provocando una caída fuerte en cumplimiento acumulado.",
+        "Junio recupera actividad, pero no compensa la brecha acumulada contra meta."
+      ]
+    },
+    {
+      "page": 15,
+      "type": "score_summary",
+      "title": "Santa María — Scores Jun",
+      "managementQuality": 56.0,
+      "classification": "development",
+      "portfolioQuality": 60.3,
+      "followUpQuality": 51.1,
+      "conversionQuality": 55.1,
+      "subscores": {
+        "portfolio": [60.7, 66.3, 53.8],
+        "followUp": [23.4, 75.4, 54.5],
+        "conversion": [50.6, 70.2, 44.6]
+      }
+    },
+    {
+      "page": 16,
+      "type": "score_inputs",
+      "title": "Santa María — Indicadores Ene-Jun",
+      "portfolio": {
+        "current": 128,
+        "goal": 211,
+        "requirements": 117,
+        "expectedRequirements": 176,
+        "pricingEvaluated": 104,
+        "pricingBuckets": { "lte1_05": 47, "lte1_10": 18, "gt1_10": 39 }
+      },
+      "followUp": {
+        "classifiedLeads": 156,
+        "activeLeads": 667,
+        "priorityLeads": 44,
+        "unmanaged90Days": 164,
+        "priorityUnmanaged15Days": 20
+      },
+      "conversion": {
+        "completedVisits": 66,
+        "visitGoal": 130,
+        "scheduledVisits": 94,
+        "sixMonthClosings": 8.5,
+        "totalLeads": 667
+      },
+      "verifiedCalculations": [
+        "128 / 211 = 60.7%",
+        "117 / 176 = 66.5% (displayed 66.3, indicating unrounded source or different hidden precision)",
+        "(47*100 + 18*50 + 39*0) / 104 = 53.85",
+        "156 / 667 = 23.39%",
+        "(1 - 164/667) * 100 = 75.41%",
+        "(1 - 20/44) * 100 = 54.55%",
+        "66 / 130 = 50.77% (displayed 50.6, indicating hidden precision in goal)",
+        "66 / 94 = 70.21%",
+        "8.5 / 667 * 100 = 1.27%; score approximately 44.6"
+      ]
+    }
+  ],
+  "resolvedQuestions": [
+    "Los cierres fraccionados son una regla recurrente del modelo y no un error aislado.",
+    "El pricing excluye parte de la cartera: Santa María tiene 128 propiedades y sólo 104 evaluadas, confirmando que existe un subconjunto elegible para valorización de precio."
+  ],
+  "pendingDefinitions": [
+    "Definir la regla exacta que genera cierres de 0.5 y otros valores fraccionados.",
+    "Definir la fórmula exacta del benchmark esperado de requerimientos por oficina.",
+    "Definir los criterios de elegibilidad que excluyen propiedades del cálculo de pricing.",
+    "Confirmar las cifras internas no redondeadas usadas en requerimientos y meta de visitas, porque algunos resultados visibles no reproducen exactamente el porcentaje mostrado."
+  ]
+}
