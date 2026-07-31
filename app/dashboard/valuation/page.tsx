@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle2, FileDown, Plus, Save, Trash2 } from 'lucide-react'
 import {
   calculateContractualValuation,
@@ -48,8 +48,16 @@ function TextField({ label, value, onChange }: { label: string; value?: string; 
   return <label className="block"><span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</span><input value={value ?? ''} onChange={(event) => onChange(event.target.value)} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm outline-none focus:border-[#d7332b]" /></label>
 }
 
+function numberParam(value: string | null) {
+  const parsed = Number(value ?? 0)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
 export default function ValuationPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const assignmentId = searchParams.get('assignmentId')
+  const sourcePropertyId = searchParams.get('propertyId')
   const [subject, setSubject] = useState<ValuationSubject>(emptySubject)
   const [comparables, setComparables] = useState<ValuationComparable[]>([
     blankComparable(1, 'Departamento'), blankComparable(2, 'Departamento'), blankComparable(3, 'Departamento'),
@@ -58,6 +66,24 @@ export default function ValuationPage() {
   const [justification, setJustification] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!assignmentId) return
+    const rawType = searchParams.get('propertyType') || 'Departamento'
+    const propertyType: ValuationSubject['propertyType'] = rawType.toLowerCase().includes('casa') ? 'Casa' : 'Departamento'
+    setSubject((current) => ({
+      ...current,
+      propertyType,
+      address: searchParams.get('address') || current.address,
+      neighborhood: searchParams.get('neighborhood') || current.neighborhood,
+      usefulAreaM2: numberParam(searchParams.get('usefulAreaM2')),
+      builtAreaM2: numberParam(searchParams.get('builtAreaM2')),
+      bedrooms: numberParam(searchParams.get('bedrooms')),
+      bathrooms: numberParam(searchParams.get('bathrooms')),
+      parkingSpaces: numberParam(searchParams.get('parkingSpaces')),
+    }))
+    setComparables((current) => current.map((item) => ({ ...item, propertyType })))
+  }, [assignmentId, searchParams])
 
   const result = useMemo(() => { try { return calculateContractualValuation(subject, comparables, factors) } catch { return null } }, [subject, comparables, factors])
   const selectedCount = comparables.filter((item) => item.selected && item.priceUfM2 > 0).length
@@ -70,7 +96,18 @@ export default function ValuationPage() {
     if (!result) { setMessage('Completa la propiedad y al menos dos comparables con UF/m² válido.'); return }
     setSaving(true); setMessage(null)
     try {
-      const response = await fetch('/api/valuation/cases', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject, comparables, qualitativeFactors: factors, justification }) })
+      const response = await fetch('/api/valuation/cases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          comparables,
+          qualitativeFactors: factors,
+          justification,
+          propertyAssignmentId: assignmentId,
+          sourcePropertyId,
+        }),
+      })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || 'No fue posible guardar la valorización.')
       if (!payload.caseId) throw new Error('La API no devolvió el identificador del caso.')
@@ -81,6 +118,8 @@ export default function ValuationPage() {
 
   return <IntelligencePage>
     <IntelligenceHeader eyebrow="Módulo II · Valorización" title="Valorización contractual trazable" description="Ficha completa, comparables documentados por el usuario, ajustes cualitativos, rango sugerido, aprobación humana y registro versionado." actions={[{ label: 'Registro de valorizaciones', href: '/dashboard/valuations' }, { label: 'Inteligencia de mercado', href: '/dashboard/market' }]} meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Metodología valuation-contract-v1</div>} />
+
+    {assignmentId ? <MethodologyNote>Esta valorización se inició desde una propiedad asignada. La API verificará la asignación activa, la ejecutiva autenticada y el ID de propiedad antes de persistir la evidencia de origen.</MethodologyNote> : null}
 
     <section><SectionHeading eyebrow="Estado" title="Cobertura del caso" /><MetricGrid>
       <MetricCard label="Propiedad" value={subject.address && subject.neighborhood ? 'Completa' : 'Pendiente'} detail="Dirección, barrio, tipología y superficies." />
