@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:16 CLT
+Última actualización: 30 de julio de 2026, 22:19 CLT
 
 ## Objetivo
 
@@ -10,7 +10,7 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 ## Estado general
 
-**Avance contractual estimado: 94%**
+**Avance contractual estimado: 95%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
@@ -19,7 +19,7 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 | 3 | Director y subdirector | Cierre funcional | 97% |
 | 4 | CEO y consolidación ejecutiva | Cierre funcional | 99% |
 | 5 | Integración transversal de módulos | Cierre funcional | 99% |
-| 6 | QA contractual, seguridad y aceptación | En cierre | 86% |
+| 6 | QA contractual, seguridad y aceptación | En cierre | 90% |
 
 ## Producción
 
@@ -39,6 +39,7 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 - [x] `getUserScope()` y guards reutilizables.
 - [x] Sidebar, post-login, rutas y APIs críticas protegidas.
 - [x] Matriz RLS autenticada.
+- [x] Dashboard de mercado migrado desde lógica local de roles a capacidades centrales.
 
 ---
 
@@ -100,24 +101,11 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Evidencia, ajustes y decisiones incorporados al reporte imprimible.
 - [ ] QA visual del selector, expediente y reporte.
 
-## Evidencias recientes
-
-- `app/dashboard/valuations/[id]/layout.tsx`
-- `components/management/director-operational-workspace.tsx`
-- `components/management/ceo-decisions.tsx`
-- `docs/AUTHENTICATED_VISUAL_QA_GUIDE.md`
-- `scripts/test-valuation-report-access.mjs`
-- Commit navegación del expediente: `9a33573de69f368239eb1eaac0ad6125326623dd`
-- Commit acceso desde dirección: `c99c052f2f08f2c8cf466804aa990e13d9f7ff26`
-- Commit acceso desde CEO: `9e4c4c100c3174450c73bd463db416437ab698fc`
-- Commit guía visual: `1383160eae6dc167f9f1c1b64572036e51e8ddc3`
-- Commit regresión estática: `35b847a61ea4a02a8fec71d6004a9c43f82ab5a2`
-
 ---
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en cierre — 86%**
+**Estado: en cierre — 90%**
 
 ## Completado
 
@@ -130,7 +118,17 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Accesos directos desde expediente, dirección y CEO.
 - [x] Guía ejecutable por perfil, viewport, teclado, lector de pantalla y PDF.
 - [x] Regresión estática para guards, enlaces, foco, estados y semántica.
-- [x] Build del último commit completado sin errores.
+- [x] Regresión central adicional sobre mercado, tareas, comparables y reporte.
+- [x] Paquete consolidado de entrega contractual.
+
+## Evidencias nuevas
+
+- `app/dashboard/market/page.tsx`
+- `scripts/test-central-access-regression.mjs`
+- `docs/CONTRACTUAL_DELIVERY_PACKAGE.md`
+- Commit mercado con capacidades centrales: `60a63c515e3ef9186ea4c4a414617cba1048f9e2`
+- Commit regresión central: `78821057e030b2f92f8d3479f9b89b12eadc7830`
+- Commit paquete de entrega: `3169b94dc9aa1be8d2eccab2c7097862cfb02c70`
 
 ## Pendiente
 
@@ -145,8 +143,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 ## Técnicos
 
-- Confirmar estado `READY` y runtime del último deployment acumulado.
-- Ejecutar el script de regresión en el entorno local o CI cuando esté disponible.
+- Confirmar `READY`, alias productivo y runtime del commit acumulado de este bloque.
+- Ejecutar las regresiones estáticas en CI o entorno local cuando esté disponible.
 
 ## Visuales
 
@@ -172,8 +170,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Cierre técnico final — Próximo trabajo 1 · 2 · 3
+## Cierre de aceptación — Próximo trabajo 1 · 2 · 3
 
-1. Confirmar `READY`, alias productivo y runtime del último commit acumulado.
-2. Auditar rutas y APIs restantes para encontrar errores técnicos o accesos todavía no conectados a capacidades.
-3. Consolidar un paquete de entrega con checklist, evidencias, pendientes de negocio y plan de ejecución del QA visual autenticado.
+1. Confirmar build, `READY`, alias y runtime del último commit acumulado.
+2. Revisar los endpoints y páginas administrativas restantes que requieran una prueba específica de escritura o error recuperable.
+3. Dejar preparado el protocolo de ejecución y registro del QA visual final, sin declarar aceptación visual antes de ejecutarlo.
