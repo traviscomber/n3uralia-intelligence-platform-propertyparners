@@ -8,11 +8,11 @@ export function PartnerTaskAction({ taskId, status }: { taskId: string; status: 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function update(nextStatus: 'in_progress' | 'completed') {
-    const resolutionNote = nextStatus === 'completed'
+  async function update(nextStatus: 'in_progress' | 'done') {
+    const resolutionNote = nextStatus === 'done'
       ? window.prompt('Nota de resolución obligatoria')?.trim()
       : null
-    if (nextStatus === 'completed' && !resolutionNote) return
+    if (nextStatus === 'done' && !resolutionNote) return
 
     setLoading(true)
     setError(null)
@@ -33,8 +33,8 @@ export function PartnerTaskAction({ taskId, status }: { taskId: string; status: 
   }
 
   return <div className="mt-3 flex flex-wrap items-center gap-2">
-    {status === 'pending' ? <button disabled={loading} onClick={() => void update('in_progress')} className="border border-[var(--n3-line)] px-3 py-1.5 text-xs font-semibold disabled:opacity-50">Iniciar</button> : null}
-    {status !== 'completed' ? <button disabled={loading} onClick={() => void update('completed')} className="border border-[#d7332b] px-3 py-1.5 text-xs font-semibold text-[#ff766f] disabled:opacity-50">Completar</button> : null}
+    {status === 'open' ? <button disabled={loading} onClick={() => void update('in_progress')} className="border border-[var(--n3-line)] px-3 py-1.5 text-xs font-semibold disabled:opacity-50">Iniciar</button> : null}
+    {status !== 'done' && status !== 'dismissed' ? <button disabled={loading} onClick={() => void update('done')} className="border border-[#d7332b] px-3 py-1.5 text-xs font-semibold text-[#ff766f] disabled:opacity-50">Completar</button> : null}
     {error ? <span className="text-xs text-[#ff766f]">{error}</span> : null}
   </div>
 }
