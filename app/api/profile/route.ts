@@ -5,14 +5,25 @@ export const dynamic = 'force-dynamic'
 
 type ProfileUpdate = {
   full_name?: string | null
-  team?: string | null
   avatar_url?: string | null
+  team?: unknown
+  role?: unknown
 }
 
-function cleanText(value: unknown) {
+function cleanText(value: unknown, maxLength: number) {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
-  return trimmed || null
+  return trimmed ? trimmed.slice(0, maxLength) : null
+}
+
+function validAvatarUrl(value: string | null) {
+  if (!value) return true
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -25,14 +36,25 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = (await req.json().catch(() => ({}))) as ProfileUpdate
-    const updates: Record<string, string | null> = {}
 
-    if ('full_name' in body) updates.full_name = cleanText(body.full_name)
-    if ('team' in body) updates.team = cleanText(body.team)
-    if ('avatar_url' in body) updates.avatar_url = cleanText(body.avatar_url)
+    // Team and role determine authorization scope. They must never be changed
+    // through the self-service profile endpoint.
+    if ('team' in body || 'role' in body) {
+      return NextResponse.json(
+        { error: 'Equipo y rol sólo pueden modificarse desde administración autorizada.' },
+        { status: 403 },
+      )
+    }
+
+    const updates: Record<string, string | null> = {}
+    if ('full_name' in body) updates.full_name = cleanText(body.full_name, 160)
+    if ('avatar_url' in body) updates.avatar_url = cleanText(body.avatar_url, 500)
 
     if (!Object.keys(updates).length) {
-      return NextResponse.json({ error: 'No hay campos para actualizar.' }, { status: 400 })
+      return NextResponse.json({ error: 'No hay campos permitidos para actualizar.' }, { status: 400 })
+    }
+    if (!validAvatarUrl(updates.avatar_url ?? null)) {
+      return NextResponse.json({ error: 'La URL del avatar debe usar HTTPS.' }, { status: 400 })
     }
 
     const { data: existing, error: existingError } = await supabase
@@ -42,7 +64,6 @@ export async function PATCH(req: NextRequest) {
       .maybeSingle()
 
     if (existingError) throw existingError
-
     if (!existing) {
       return NextResponse.json(
         { error: 'El acceso interno requiere una invitación administrada.' },
@@ -58,7 +79,6 @@ export async function PATCH(req: NextRequest) {
       .single()
 
     if (error) throw error
-
     return NextResponse.json({ profile: data })
   } catch (err) {
     return NextResponse.json(
