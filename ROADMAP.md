@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:05 CLT
+Última actualización: 30 de julio de 2026, 22:12 CLT
 
 ## Objetivo
 
@@ -10,16 +10,16 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 ## Estado general
 
-**Avance contractual estimado: 90%**
+**Avance contractual estimado: 92%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
 | 1 | Perfiles, capacidades y alcance central | Completado | 100% |
-| 2 | Flujo completo de ejecutiva | Cierre funcional | 94% |
+| 2 | Flujo completo de ejecutiva | Cierre funcional | 96% |
 | 3 | Director y subdirector | Cierre funcional | 96% |
 | 4 | CEO y consolidación ejecutiva | Cierre funcional | 98% |
-| 5 | Integración transversal de módulos | Cierre funcional | 96% |
-| 6 | QA contractual, seguridad y aceptación | En cierre | 72% |
+| 5 | Integración transversal de módulos | Cierre funcional | 98% |
+| 6 | QA contractual, seguridad y aceptación | En cierre | 80% |
 
 ## Producción
 
@@ -44,15 +44,15 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 # Bloque 2 — Flujo completo de ejecutiva
 
-**Estado: cierre funcional — 94%**
+**Estado: cierre funcional — 96%**
 
-- [x] Métricas personales con metas, YoY, fuente y período.
+- [x] Métricas personales con metas, MoM, YoY, fuente y período.
 - [x] Propiedad asignada → valorización trazable.
 - [x] Tareas personales, historial y observaciones.
 - [x] Corrección de ficha restringida al propietario en borrador.
-- [x] Registro `draft_corrected` en historial.
-- [x] QA reversible en las tres oficinas.
-- [ ] QA visual autenticado, estados vacíos y responsive.
+- [x] Reporte imprimible de valorización con comparables y decisiones.
+- [x] Estados vacíos y errores recuperables incorporados en el reporte.
+- [ ] QA visual autenticado y revisión responsive real.
 
 ---
 
@@ -87,7 +87,7 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque 5 — Integración transversal
 
-**Estado: cierre funcional — 96%**
+**Estado: cierre funcional — 98%**
 
 - [x] Mercado → publicación persistida → comparable candidato.
 - [x] Selector de valorizaciones en borrador limitado por alcance.
@@ -98,49 +98,72 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Alerta → tarea → seguimiento.
 - [x] Revisión → devolución → corrección → reenvío.
 - [x] Decisión CEO → oficina → responsable → caso.
-- [x] Corrección de identidad: una propiedad operativa no confirmada no se escribe como propiedad canónica.
-- [ ] Incorporar evidencia de origen en el reporte imprimible de valorización.
-- [ ] QA visual del selector y expediente.
+- [x] Propiedad operativa no confirmada separada de identidad canónica.
+- [x] Evidencia de origen, ajustes y decisiones incorporados al reporte imprimible.
+- [ ] QA visual del selector, expediente y reporte.
 
 ## Evidencias recientes
 
-- Commit corrección de identidad canónica: `595eb8728618bc6c5369d62ed3bbc2296ba8ccb5`
-- Commit script QA corregido: `a8c1a272194cd4701c8090f41c1a4240963fb2ef`
-- QA reversible ejecutado: `inserted_count = 1`, seguido de `ROLLBACK`.
+- `app/dashboard/valuations/[id]/report/page.tsx`
+- `components/valuation/valuation-evidence-report.tsx`
+- Commit ruta protegida: `65c1e12f7e7b53c83a1df9591edf449b617144b7`
+- Commit reporte: `5da73a11e0d8890445804ef2d55a222a6d22a49d`
+- Commit guard corregido: `66bc0cf0cad5d8e53b89aa4de8f8ba909b5edbaf`
 
 ---
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en cierre — 72%**
+**Estado: en cierre — 80%**
 
 ## Completado
 
 - [x] Matriz RLS autenticada para CEO, dirección y tres ejecutivas.
 - [x] Aislamiento por oficina y ejecutiva.
-- [x] Escrituras QA reversibles para tareas y valorizaciones propias.
+- [x] Escrituras QA reversibles para tareas, valorizaciones y comparables.
 - [x] Prueba negativa de dirección entre oficinas.
 - [x] Rutas operativas conectadas desde CEO hasta expediente.
-- [x] Fixture conocido para mercado → comparable → valorización.
-- [x] Ejecución real del vínculo como ejecutiva autenticada dentro de transacción reversible.
-- [x] Detección y corrección de incompatibilidad entre propiedad operativa y propiedad canónica.
-- [x] Matriz documental de aceptación en `docs/QA_ACCEPTANCE_MATRIX.md`.
-- [x] Deployment funcional `READY` y revisión de runtime sin errores ni eventos fatales.
+- [x] QA reversible mercado → comparable → valorización con `ROLLBACK`.
+- [x] Matriz de aceptación por rol y flujo.
+- [x] Checklist final por requisito contractual.
+- [x] Reporte con estructura semántica, tablas accesibles, foco visible y estados recuperables.
+- [x] Diseño responsive por código: grids adaptativos y tablas desplazables.
+
+## Evidencias
+
+- `docs/QA_ACCEPTANCE_MATRIX.md`
+- `docs/FINAL_ACCEPTANCE_CHECKLIST.md`
+- `components/valuation/valuation-evidence-report.tsx`
+- Commit checklist final: `09d04a6da04c14dc3a3df3471a36463a059a1234`
 
 ## Pendiente
 
 - [ ] Login y recorrido real para todos los perfiles QA.
-- [ ] Responsive móvil/tableta y estados vacíos.
-- [ ] Navegación por teclado, foco y lector de pantalla.
-- [ ] Reportes y PDF en navegador autenticado.
+- [ ] Responsive móvil/tableta validado en navegador.
+- [ ] Navegación completa por teclado y lector de pantalla.
+- [ ] Contraste medido.
+- [ ] Reportes y PDF revisados con sesión autenticada.
 - [ ] Ciclo integral visual dirección–ejecutiva.
 
-# Riesgos activos
+# Pendientes separados por naturaleza
 
-1. No existe navegador autenticado disponible para cerrar QA visual y PDF.
-2. No existe cuenta QA de subdirector para prueba independiente.
-3. Captaciones brutas no tiene fuente separada.
-4. Umbrales y ranking requieren validación de negocio.
+## Técnicos
+
+- Validar el último deployment funcional y runtime.
+- Completar cualquier corrección revelada por build o TypeScript.
+
+## Visuales
+
+- QA autenticado en móvil, tableta y escritorio.
+- Impresión/PDF de valorización, dirección y CEO.
+- Teclado, foco, lector de pantalla y contraste.
+
+## Negocio
+
+- Definición oficial de ranking.
+- Confirmación de umbrales de alertas.
+- Designación de cuenta QA subdirector si se requiere prueba separada.
+- Fuente explícita para captaciones brutas.
 
 # Salvaguardas
 
@@ -153,8 +176,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Cierre de QA contractual — Próximo trabajo 1 · 2 · 3
+## Cierre técnico y preparación de QA visual — Próximo trabajo 1 · 2 · 3
 
-1. Incorporar evidencia de comparables y decisiones en el reporte imprimible de valorización.
-2. Auditar y corregir estados vacíos, errores recuperables, responsive y accesibilidad mediante revisión de código y build.
-3. Preparar checklist de aceptación final por requisito contractual y separar claramente pendientes que requieren navegador autenticado o definición de negocio.
+1. Verificar build, TypeScript, deployment y runtime del reporte imprimible y corregir cualquier fallo.
+2. Añadir acceso directo al reporte desde expediente, dirección y centro de decisiones, manteniendo permisos.
+3. Preparar una guía de ejecución de QA visual autenticado por perfil y dispositivo para cerrar los pendientes restantes.
