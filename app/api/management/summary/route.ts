@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getManagementEntities, type ManagementEntity } from '@/lib/presentations-2026'
+import { getCanonicalPortfolioComparison, parseCanonicalSalesComparison } from '@/lib/canonical-commercial-comparisons'
 
 const normalize = (value: string | null | undefined) =>
   String(value ?? '')
@@ -9,12 +10,15 @@ const normalize = (value: string | null | undefined) =>
     .trim()
     .toLowerCase()
 
+type RawTable = Array<Array<string | number | null>>
+
 type ExtendedManagementEntity = ManagementEntity & {
   salesSummary: ManagementEntity['salesSummary'] & {
     currentTargetSalesCount?: number | null
     currentTargetSalesUf?: number | null
     cumulativeTargetSalesCount?: number | null
     cumulativeTargetSalesUf?: number | null
+    rawTable?: RawTable
   }
   sales?: {
     salesCount?: Record<string, number | null>
@@ -38,6 +42,19 @@ const percent = (value: number | null, target: number | null) =>
 const change = (current: number | null, previous: number | null) =>
   current !== null && previous !== null && previous !== 0 ? ((current - previous) / previous) * 100 : null
 
+type MetricOptions = {
+  target?: number | null
+  mom?: number | null
+  yoy?: number | null
+  previousYearValue?: number | null
+  comparisonPeriod?: string | null
+  reportedYoy?: number | null
+  qualityNotes?: string[]
+  periodStart?: string
+  periodEnd?: string
+  qualityStatus?: 'missing' | 'canonical_presentation' | 'canonical_derived'
+}
+
 const metric = (
   code: string,
   label: string,
@@ -46,7 +63,7 @@ const metric = (
   methodology: string,
   sourceName: string,
   sourceReference: string,
-  options?: { target?: number | null; mom?: number | null; yoy?: number | null },
+  options?: MetricOptions,
 ) => ({
   code,
   label,
@@ -57,10 +74,14 @@ const metric = (
   compliance: percent(value, options?.target ?? null),
   mom: options?.mom ?? null,
   yoy: options?.yoy ?? null,
+  previousYearValue: options?.previousYearValue ?? null,
+  comparisonPeriod: options?.comparisonPeriod ?? null,
+  reportedYoy: options?.reportedYoy ?? null,
+  qualityNotes: options?.qualityNotes ?? [],
   sourceName,
-  periodStart: '2026-01-01',
-  periodEnd: '2026-06-30',
-  qualityStatus: value === null ? 'missing' : 'canonical_presentation',
+  periodStart: options?.periodStart ?? '2026-01-01',
+  periodEnd: options?.periodEnd ?? '2026-06-30',
+  qualityStatus: value === null ? 'missing' : options?.qualityStatus ?? 'canonical_presentation',
   sourceReference,
 })
 
@@ -71,6 +92,9 @@ function toPayloadEntity(rawEntity: ManagementEntity, entityType: 'company' | 'b
   const sourceReference = `Lámina ${source.slide} · ${source.title}`
   const maySales = entity.sales?.salesCount?.['2026-05'] ?? null
   const maySalesUf = entity.sales?.salesUf?.['2026-05'] ?? null
+  const annual = parseCanonicalSalesComparison(entity)
+  const portfolio = getCanonicalPortfolioComparison(entity)
+  const annualQuality = annual?.qualityNotes ?? []
 
   return {
     id: `${entityType}:${normalize(entity.branch)}:${normalize(entity.name)}`,
@@ -78,16 +102,75 @@ function toPayloadEntity(rawEntity: ManagementEntity, entityType: 'company' | 'b
     entityType,
     parentId: entity.branch ? `branch:${normalize(entity.branch)}` : null,
     classification: entity.scores.classification,
+    commercialCoverage: {
+      captations: {
+        available: false,
+        reason: 'La fuente canónica no separa captaciones brutas de altas, bajas, ventas, retiros y cambios de estado.',
+      },
+      portfolioNetChange: {
+        available: portfolio.netChange !== null,
+        currentStock: portfolio.currentStock,
+        previousStock: portfolio.previousStock,
+        netChange: portfolio.netChange,
+        netChangePercent: portfolio.netChangePercent,
+        currentPeriod: portfolio.currentPeriod,
+        previousPeriod: portfolio.previousPeriod,
+        methodology: portfolio.methodology,
+      },
+      yoy: {
+        available: annual !== null,
+        comparisonPeriod: annual?.comparisonPeriod ?? null,
+        cumulativeComparisonPeriod: annual?.cumulativeComparisonPeriod ?? null,
+        qualityNotes: annualQuality,
+      },
+    },
     metrics: [
-      metric('sales', 'Cierres junio', 'count', entity.salesSummary.currentSalesCount, 'Cantidad de cierres informados para junio de 2026.', sourceName, sourceReference, { target: entity.salesSummary.currentTargetSalesCount ?? null, mom: change(entity.salesSummary.currentSalesCount, maySales) }),
-      metric('sales_uf', 'Venta junio', 'uf', entity.salesSummary.currentSalesUf, 'Valor UF de cierres informado para junio de 2026.', sourceName, sourceReference, { target: entity.salesSummary.currentTargetSalesUf ?? null, mom: change(entity.salesSummary.currentSalesUf, maySalesUf) }),
-      metric('cumulative_sales', 'Cierres acumulados', 'count', entity.salesSummary.cumulativeSalesCount, 'Cierres acumulados entre enero y junio de 2026.', sourceName, sourceReference, { target: entity.salesSummary.cumulativeTargetSalesCount ?? null }),
-      metric('cumulative_sales_uf', 'Venta acumulada', 'uf', entity.salesSummary.cumulativeSalesUf, 'UF acumuladas entre enero y junio de 2026.', sourceName, sourceReference, { target: entity.salesSummary.cumulativeTargetSalesUf ?? null }),
+      metric('sales', 'Cierres junio', 'count', entity.salesSummary.currentSalesCount, 'Cantidad de cierres informados para junio de 2026. El YoY se recalcula desde los valores base Jun 2026 y Jun 2025 de la misma tabla canónica.', sourceName, sourceReference, {
+        target: entity.salesSummary.currentTargetSalesCount ?? null,
+        mom: change(entity.salesSummary.currentSalesCount, maySales),
+        yoy: annual?.salesCountYoy ?? null,
+        previousYearValue: annual?.previousYearSalesCount ?? null,
+        comparisonPeriod: annual?.comparisonPeriod ?? null,
+        reportedYoy: annual?.reportedSalesCountYoy ?? null,
+        qualityNotes: annualQuality,
+      }),
+      metric('sales_uf', 'Venta junio', 'uf', entity.salesSummary.currentSalesUf, 'Valor UF de cierres informado para junio de 2026. El YoY se recalcula desde los valores base Jun 2026 y Jun 2025 de la misma tabla canónica.', sourceName, sourceReference, {
+        target: entity.salesSummary.currentTargetSalesUf ?? null,
+        mom: change(entity.salesSummary.currentSalesUf, maySalesUf),
+        yoy: annual?.salesUfYoy ?? null,
+        previousYearValue: annual?.previousYearSalesUf ?? null,
+        comparisonPeriod: annual?.comparisonPeriod ?? null,
+        reportedYoy: annual?.reportedSalesUfYoy ?? null,
+        qualityNotes: annualQuality,
+      }),
+      metric('cumulative_sales', 'Cierres acumulados', 'count', entity.salesSummary.cumulativeSalesCount, 'Cierres acumulados entre enero y junio de 2026. El YoY se recalcula contra el acumulado enero–junio de 2025.', sourceName, sourceReference, {
+        target: entity.salesSummary.cumulativeTargetSalesCount ?? null,
+        yoy: annual?.cumulativeSalesCountYoy ?? null,
+        previousYearValue: annual?.previousYearCumulativeSalesCount ?? null,
+        comparisonPeriod: annual?.cumulativeComparisonPeriod ?? null,
+        reportedYoy: annual?.reportedCumulativeSalesCountYoy ?? null,
+        qualityNotes: annualQuality,
+      }),
+      metric('cumulative_sales_uf', 'Venta acumulada', 'uf', entity.salesSummary.cumulativeSalesUf, 'UF acumuladas entre enero y junio de 2026. El YoY se recalcula contra el acumulado enero–junio de 2025.', sourceName, sourceReference, {
+        target: entity.salesSummary.cumulativeTargetSalesUf ?? null,
+        yoy: annual?.cumulativeSalesUfYoy ?? null,
+        previousYearValue: annual?.previousYearCumulativeSalesUf ?? null,
+        comparisonPeriod: annual?.cumulativeComparisonPeriod ?? null,
+        reportedYoy: annual?.reportedCumulativeSalesUfYoy ?? null,
+        qualityNotes: annualQuality,
+      }),
       metric('management_score', 'Calidad de gestión', 'score', entity.scores.management, 'Score reproducido desde la presentación canónica.', sourceName, sourceReference, { target: 70 }),
       metric('portfolio_score', 'Calidad de cartera', 'score', entity.scores.portfolio, 'Componente de cartera reproducido desde la presentación canónica.', sourceName, sourceReference, { target: 70 }),
       metric('follow_up_score', 'Seguimiento', 'score', entity.scores.followUp, 'Componente de seguimiento reproducido desde la presentación canónica.', sourceName, sourceReference, { target: 70 }),
       metric('conversion', 'Conversión', 'score', entity.scores.conversion, 'Componente de conversión reproducido desde la presentación canónica.', sourceName, sourceReference, { target: 70 }),
       metric('stock', 'Stock', 'count', entity.indicators.stock, 'Stock informado en la presentación canónica.', sourceName, sourceReference, { target: entity.indicators.stockTarget ?? null }),
+      metric('portfolio_net_change', 'Variación neta de cartera', 'count', portfolio.netChange, portfolio.methodology, sourceName, portfolio.sourceReference ?? sourceReference, {
+        mom: portfolio.netChangePercent,
+        comparisonPeriod: `${portfolio.currentPeriod} vs ${portfolio.previousPeriod}`,
+        qualityStatus: 'canonical_derived',
+        periodStart: '2026-05-01',
+        periodEnd: '2026-06-30',
+      }),
       metric('requirements', 'Requerimientos', 'count', entity.indicators.requirements, 'Requerimientos informados en la presentación canónica.', sourceName, sourceReference, { target: entity.indicators.requirementsReference ?? null }),
       metric('active_leads', 'Leads activos', 'count', entity.indicators.activeLeads, 'Leads activos informados en la presentación canónica.', sourceName, sourceReference),
       metric('classified_leads', 'Leads clasificados', 'count', entity.indicators.classifiedLeads, 'Leads clasificados informados en la presentación canónica.', sourceName, sourceReference),
@@ -236,6 +319,8 @@ export async function GET() {
     { label: 'Reportes', href: '/dashboard/reportes/autonomos', permission: 'read', detail: 'Consultar reportes autorizados para dirección.' },
   ] : []
 
+  const qualityNotes = [...new Set(entities.flatMap((entity) => entity.commercialCoverage.yoy.qualityNotes))]
+
   return NextResponse.json({
     role,
     scopeLabel,
@@ -243,8 +328,14 @@ export async function GET() {
     alerts: isDirector ? buildDirectorAlerts(entities) : [],
     operational,
     accesses,
-    periodLabel: 'Enero–junio 2026 · cierre junio',
+    periodLabel: 'Enero–junio 2026 · cierre junio · comparación 2025',
     generatedAt: new Date().toISOString(),
-    dataProvenance: 'Presentaciones canónicas 2026 y registros operativos visibles mediante RLS.',
+    dataProvenance: 'Presentaciones canónicas 2026, bases comparables 2025 contenidas en las mismas tablas y registros operativos visibles mediante RLS.',
+    commercialMethodology: {
+      yoy: 'Variación interanual recalculada desde valores base 2026 y 2025. El Δ% AA impreso se conserva como control de calidad, no como única fuente del cálculo.',
+      captations: 'No disponible como métrica separada en la fuente canónica. No se sustituye por stock ni por variación neta de cartera.',
+      portfolioNetChange: 'Diferencia entre cartera actual de junio y cartera actual de mayo. Es un flujo neto y no equivale a captaciones brutas.',
+      qualityNotes,
+    },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
