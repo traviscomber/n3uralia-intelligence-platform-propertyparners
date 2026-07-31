@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:22 CLT
+Última actualización: 30 de julio de 2026, 22:27 CLT
 
 ## Objetivo
 
@@ -10,16 +10,16 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 ## Estado general
 
-**Avance contractual estimado: 96%**
+**Avance contractual estimado: 97%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
 | 1 | Perfiles, capacidades y alcance central | Completado | 100% |
 | 2 | Flujo completo de ejecutiva | Cierre funcional | 97% |
-| 3 | Director y subdirector | Cierre funcional | 98% |
+| 3 | Director y subdirector | Cierre funcional | 99% |
 | 4 | CEO y consolidación ejecutiva | Cierre funcional | 99% |
 | 5 | Integración transversal de módulos | Cierre funcional | 99% |
-| 6 | QA contractual, seguridad y aceptación | En cierre | 93% |
+| 6 | QA contractual, seguridad y aceptación | En cierre | 95% |
 
 ## Producción
 
@@ -59,13 +59,14 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 # Bloque 3 — Director y subdirector
 
-**Estado: cierre funcional — 98%**
+**Estado: cierre funcional — 99%**
 
 - [x] Dashboard, equipo, fichas, tareas e historial.
 - [x] Alcance de oficina y aislamiento autenticado.
 - [x] Devolución → tarea → corrección → reenvío.
 - [x] Administración de asignaciones limitada a perfiles visibles por oficina.
 - [x] Cada escritura de asignación vuelve a validar el perfil afectado.
+- [x] Matriz autenticada de asignaciones: dirección Lo Beltrán puede asignar a su oficina y RLS bloquea Nueva Costanera.
 - [ ] Recorrido visual autenticado.
 - [ ] Cuenta QA subdirector sólo con autorización explícita.
 
@@ -102,7 +103,7 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en cierre — 93%**
+**Estado: en cierre — 95%**
 
 ## Completado
 
@@ -113,24 +114,21 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Matriz de aceptación y checklist contractual.
 - [x] Reporte imprimible con evidencia y decisiones.
 - [x] Guía ejecutable de QA visual autenticado.
-- [x] Regresiones estáticas de acceso central y reporte.
+- [x] Regresiones estáticas de acceso central, reporte y administración.
 - [x] Paquete consolidado de entrega contractual.
-- [x] Administración de propiedades migrada desde roles locales a capacidades `properties.*.assign`.
-- [x] Creación y actualización de asignaciones limitadas mediante `visibleProfileIds` y `assertProfileVisible()`.
-- [x] Configuración alineada con la capacidad específica `settings.manage`.
-- [x] Estados administrativos de error y vacío con semántica accesible.
-- [x] Registro final de ejecución visual preparado sin declarar pruebas no ejecutadas.
+- [x] Asignación propia de oficina ejecutada bajo rol `authenticated` y revertida con `ROLLBACK`.
+- [x] Asignación cruzada Lo Beltrán → Nueva Costanera bloqueada por RLS con error `42501`.
+- [x] API de destinatarios migrada de `requireExecutiveAccess()` a `settings.manage`.
+- [x] Validación HTTPS para webhooks, payloads válidos y respuestas `404` para registros inexistentes.
 
 ## Evidencias nuevas
 
-- `app/dashboard/properties/admin/page.tsx`
-- `app/dashboard/settings/layout.tsx`
-- `scripts/test-administrative-access-regression.mjs`
-- `docs/VISUAL_QA_EXECUTION_LOG.md`
-- Commit administración de propiedades: `2b48c283c877c776476b6852b937e1bed4bd8f76`
-- Commit configuración: `c25c357c2b99c9f826590c61daf630b031f8695b`
-- Commit regresión administrativa: `363ee145ae0b28108b2d44b29dabe5b012bcdf9d`
-- Commit registro QA visual: `eaf2463f73d78689d3c1afbeb2567d72e3aab5d6`
+- `scripts/test-property-assignment-office-matrix.sql`
+- `scripts/test-settings-access-regression.mjs`
+- `app/api/report-delivery-targets/route.ts`
+- Commit API de destinatarios: `4f949a3d2326a685ab67e69f118f32a0a2c20027`
+- Commit matriz de asignaciones: `af480a428ebf955ab4bbd11efd4e3fee4b4eec33`
+- Commit regresión de configuración: `22747342d391f728dcb8eb0db31f847878702c15`
 
 ## Pendiente
 
@@ -147,7 +145,7 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 - Confirmar build, `READY`, alias productivo y runtime del último commit acumulado.
 - Ejecutar regresiones estáticas en CI o entorno local cuando esté disponible.
-- Auditar ingestión sólo cuando exista una superficie de escritura identificada en el repositorio; no se encontró una ruta administrativa activa durante esta revisión.
+- Revisar superficies nuevas de configuración o ingestión sólo cuando sean incorporadas al repositorio.
 
 ## Visuales
 
@@ -173,8 +171,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Cierre técnico y ejecución visual — Próximo trabajo 1 · 2 · 3
+## Cierre final no visual — Próximo trabajo 1 · 2 · 3
 
-1. Confirmar build, `READY`, alias productivo y runtime del último commit acumulado.
-2. Ejecutar una última matriz negativa autenticada sobre asignaciones de propiedades entre oficinas.
-3. Iniciar el registro visual por perfil usando la guía y el log preparados, manteniendo separados los pendientes de negocio.
+1. Confirmar build, `READY`, alias y runtime del commit acumulado.
+2. Ejecutar una revisión final de errores de producción y regresiones documentales.
+3. Iniciar QA visual autenticado; cualquier pendiente posterior deberá ser exclusivamente visual o de definición de negocio.
