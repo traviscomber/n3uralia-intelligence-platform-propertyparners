@@ -1,4 +1,5 @@
 import corpus from '@/data/presentations-2026.json'
+import semanticPages from '@/data/management-canonical-interpretation-pages-006-010.json'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -19,6 +20,20 @@ export type CanonicalChart = {
   series: CanonicalChartSeries[]
 }
 
+export type VerifiedCalculation = {
+  expression: string
+  result: number
+  displayed: number
+}
+
+export type CanonicalInterpretation = {
+  managementMeaning: string
+  verifiedCalculations: VerifiedCalculation[]
+  trafficLights?: Record<string, string>
+  managementConclusion: string
+  pendingDefinitions: string[]
+}
+
 export type CanonicalSlide = {
   deckIndex: number
   deckFile: string
@@ -30,6 +45,7 @@ export type CanonicalSlide = {
   charts: CanonicalChart[]
   notes: string[]
   sourceReference: string
+  interpretation: CanonicalInterpretation | null
 }
 
 export type CanonicalDeck = {
@@ -101,23 +117,37 @@ function parseColors(metadata: UnknownRecord): Array<{ hex: string; uses: number
   })
 }
 
+const semanticIndex = new Map<number, CanonicalInterpretation>(
+  semanticPages.pages.map((page) => [page.page, {
+    managementMeaning: page.managementMeaning,
+    verifiedCalculations: page.verifiedCalculations,
+    trafficLights: 'trafficLights' in page ? page.trafficLights : undefined,
+    managementConclusion: page.managementConclusion,
+    pendingDefinitions: page.pendingDefinitions,
+  }]),
+)
+
 function parseDeck(deck: UnknownRecord, deckIndex: number): CanonicalDeck {
   const metadata = isRecord(deck.metadata) ? deck.metadata : deck
   const stats = isRecord(metadata.stats) ? metadata.stats : {}
   const file = stringValue(metadata.file, stringValue(deck.file, `Presentación ${deckIndex + 1}`))
   const slideRecords = records(findArray(deck, ['slides', 'pages', 'items']))
-  const slides = slideRecords.map((slide, slideIndex): CanonicalSlide => ({
-    deckIndex: deckIndex + 1,
-    deckFile: file,
-    page: numeric(slide.index) ?? numeric(slide.page) ?? slideIndex + 1,
-    title: stringValue(slide.title, `Página ${slideIndex + 1}`),
-    backgroundColor: typeof slide.backgroundColor === 'string' ? slide.backgroundColor : null,
-    texts: strings(slide.texts),
-    tables: records(slide.tables).map(parseTable),
-    charts: records(slide.charts).map(parseChart),
-    notes: strings(slide.notes),
-    sourceReference: `${file} · página ${numeric(slide.index) ?? slideIndex + 1}`,
-  }))
+  const slides = slideRecords.map((slide, slideIndex): CanonicalSlide => {
+    const page = numeric(slide.index) ?? numeric(slide.page) ?? slideIndex + 1
+    return {
+      deckIndex: deckIndex + 1,
+      deckFile: file,
+      page,
+      title: stringValue(slide.title, `Página ${slideIndex + 1}`),
+      backgroundColor: typeof slide.backgroundColor === 'string' ? slide.backgroundColor : null,
+      texts: strings(slide.texts),
+      tables: records(slide.tables).map(parseTable),
+      charts: records(slide.charts).map(parseChart),
+      notes: strings(slide.notes),
+      sourceReference: `${file} · página ${page}`,
+      interpretation: deckIndex === 0 ? semanticIndex.get(page) ?? null : null,
+    }
+  })
 
   return {
     index: deckIndex + 1,
@@ -157,10 +187,14 @@ export function searchCanonicalSlides(query: string, limit = 50): CanonicalSlide
   if (!normalized) return []
   return canonicalDecks
     .flatMap((deck) => deck.slides)
-    .filter((slide) => [slide.title, ...slide.texts, ...slide.notes]
-      .join(' ')
-      .toLocaleLowerCase('es')
-      .includes(normalized))
+    .filter((slide) => [
+      slide.title,
+      ...slide.texts,
+      ...slide.notes,
+      slide.interpretation?.managementMeaning ?? '',
+      slide.interpretation?.managementConclusion ?? '',
+      ...(slide.interpretation?.pendingDefinitions ?? []),
+    ].join(' ').toLocaleLowerCase('es').includes(normalized))
     .slice(0, Math.max(1, Math.min(limit, 200)))
 }
 
@@ -171,6 +205,7 @@ export function getCanonicalLibrarySummary() {
     source: 'data/presentations-2026.json' as const,
     deckCount: canonicalDecks.length,
     slideCount: slides.length,
+    interpretedSlideCount: slides.filter((slide) => slide.interpretation).length,
     tableCount: slides.reduce((total, slide) => total + slide.tables.length, 0),
     chartCount: slides.reduce((total, slide) => total + slide.charts.length, 0),
     decks: canonicalDecks.map(({ slides: _slides, ...deck }) => deck),
