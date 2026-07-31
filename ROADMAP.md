@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:40 CLT
+Última actualización: 30 de julio de 2026, 22:44 CLT
 
 ## Objetivo
 
@@ -130,24 +130,22 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Login robustecido para navegación cliente o servidor y errores visibles.
 - [x] Registro de overflow, estructura semántica, controles sin nombre, foco, PDF y errores del navegador.
 - [x] Workflow manual de GitHub Actions con validación de secretos y artefactos de 14 días.
-- [x] Regresión estática específica para runner, workflow, secretos, lockfile y artefactos.
+- [x] Preflight seguro que genera `preflight.json` sin exponer valores secretos y falla explícitamente cuando faltan variables.
+- [x] Registro de ejecución actualizado con el bloqueo externo real, sin declarar QA no ejecutado.
 
 ## Evidencias nuevas
 
-- `scripts/run-authenticated-visual-qa.mjs`
 - `.github/workflows/authenticated-visual-qa.yml`
-- `scripts/test-visual-qa-automation.mjs`
-- `docs/AUTOMATED_VISUAL_QA_RUNBOOK.md`
-- Commit runner robustecido: `2bce1d1663e32d8d9017e8ec6ed3bc5fbfe37555`
-- Commit workflow: `9d09029b6c8d03f21d92290a288919bff7a4266c`
-- Commit runbook: `50bb44ebc917417690d261a7528adb28b4271803`
-- Commit regresión de automatización: `ba4c44dfb52f7c5ce1299ba8f5a57e4f12681cda`
+- `docs/VISUAL_QA_EXECUTION_LOG.md`
+- Commit preflight seguro: `444834e3c4ec3068b1790ca943f8898d1face273`
+- Commit registro de bloqueo: `8085ec8dc81ada8aece41e2384bf3c830913e822`
 
 ## Pendiente
 
-- [ ] Configurar los diez secretos QA en GitHub Actions.
-- [ ] Ejecutar el workflow manual y descargar el artefacto.
-- [ ] Revisar manualmente las capturas y los PDF generados.
+- [ ] Configurar los diez secretos QA desde la interfaz de GitHub Actions.
+- [ ] Ejecutar manualmente `Authenticated visual QA`.
+- [ ] Descargar y revisar el artefacto `authenticated-visual-qa-<run_id>`.
+- [ ] Revisar manualmente capturas y PDF.
 - [ ] Navegación completa con lector de pantalla real.
 - [ ] Contraste contextual medido.
 - [ ] Ciclo integral visual dirección–ejecutiva.
@@ -156,15 +154,21 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 ## Técnicos
 
-- Confirmar `READY`, alias y runtime del último commit acumulado de runner, workflow y regresión.
-- Ejecutar `node scripts/test-visual-qa-automation.mjs` en CI o entorno local.
-- Ejecutar el workflow cuando los secretos estén configurados.
+- Confirmar `READY`, alias y runtime del commit acumulado con preflight y registro.
+- Ejecutar el workflow cuando los Secrets estén configurados.
+- Analizar `manifest.json` o `preflight.json` y los logs del run.
 
 ## Visuales
 
 - Revisar `artifacts/visual-qa/manifest.json`, capturas y PDF.
 - Completar `docs/VISUAL_QA_EXECUTION_LOG.md` únicamente con evidencia observada.
 - Ejecutar lector de pantalla y medición contextual de contraste.
+
+## Externos del entorno actual
+
+- El conector GitHub disponible no expone creación de Actions Secrets.
+- El conector GitHub disponible no expone despacho manual de workflows.
+- Estas limitaciones no se sustituyen con credenciales versionadas ni ejecuciones simuladas.
 
 ## Negocio
 
@@ -185,8 +189,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Ejecución controlada de QA visual — Próximo trabajo 1 · 2 · 3
+## Ejecución externa y revisión de evidencia — Próximo trabajo 1 · 2 · 3
 
-1. Confirmar build, `READY`, alias y runtime del commit acumulado de workflow y runner.
-2. Configurar secretos QA y ejecutar el workflow manual para generar evidencia real.
-3. Revisar artefactos, corregir incidencias y completar el registro; después sólo deben quedar pendientes visuales manuales y definiciones de negocio.
+1. Confirmar deployment `READY`, alias y runtime de los commits de preflight y registro.
+2. Configurar Secrets y ejecutar el workflow desde GitHub Actions; esta acción requiere interfaz o API no expuesta por el conector actual.
+3. Descargar el artefacto, analizar evidencia y corregir incidencias reales; mantener abiertos sólo QA manual y definiciones de negocio.
