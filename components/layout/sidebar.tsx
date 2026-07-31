@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { PPLogo } from '@/components/brand/pp-logo'
-import { hasCapability, type Capability } from '@/lib/access-control'
+import { getRoleLabel, hasCapability, type Capability } from '@/lib/access-control'
 import type { Profile } from '@/lib/types'
 
 type SidebarItem = {
@@ -111,7 +111,8 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
             </div>
             <div className="min-w-0">
               <div className="truncate text-xs font-medium text-[var(--n3-text-light)]">{profile.full_name || 'Usuario'}</div>
-              <div className="text-[10px] capitalize text-[var(--n3-text-muted)]">{profile.role}</div>
+              <div className="text-[10px] text-[var(--n3-text-muted)]">{getRoleLabel(profile.role)}</div>
+              {profile.role === 'ceo' ? <div className="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-[#ff766f]">Máxima autoridad de negocio</div> : null}
             </div>
           </div>
         ) : null}
