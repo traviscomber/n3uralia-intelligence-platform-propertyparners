@@ -1,15 +1,64 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, RefreshCw } from 'lucide-react'
 import { IntelligenceHeader, IntelligencePage, MetricCard, MetricGrid, SectionHeading } from '@/components/intelligence/design-system'
 
-type Operations={valuations:{review:number;draft:number};assignments:{paused:number;active:number};market:{pendingIdentity:number;confirmed:number};tasks:{open:number;overdue:number;urgent:number};errors:string[]}
-type Task={id:string;title:string;status:string;priority:string;due_date:string|null;office:string|null;assignedProfile?:{full_name:string|null}|null}
+type Operations={valuations:{review:number;draft:number};assignments:{paused:number;active:number};market:{pendingIdentity:number;confirmed:number};tasks:{open:number;overdue:number;urgent:number}}
+type Profile={id:string;full_name:string|null;team:string|null;role:string|null}
+type Task={id:string;title:string;detail:string|null;status:string;priority:string;due_date:string|null;office:string|null;assignedProfile?:Profile|null}
+type Decision={id:string;action:string;reason:string|null;created_at:string}
+type QueueItem={id:string;address:string|null;status:string;versionNumber:number|null;updatedAt:string;office:string|null;owner:Profile|null;latestDecision:Decision|null;tasks:Task[]}
+
 export function CeoDecisions(){
- const [operations,setOperations]=useState<Operations|null>(null);const [tasks,setTasks]=useState<Task[]>([]);const [error,setError]=useState<string|null>(null)
- useEffect(()=>{void(async()=>{try{const [o,t]=await Promise.all([fetch('/api/management/ceo-operations',{cache:'no-store'}),fetch('/api/management/tasks',{cache:'no-store'})]);const [od,td]=await Promise.all([o.json(),t.json()]);if(!o.ok||!t.ok)throw new Error(od.error||td.error||'No fue posible cargar las decisiones.');setOperations(od);setTasks(td.tasks??[])}catch(cause){setError(cause instanceof Error?cause.message:'Error de carga')}})()},[])
- const today=new Date().toISOString().slice(0,10);const pending=tasks.filter((task)=>['open','in_progress'].includes(task.status)).sort((a,b)=>{const av=a.due_date??'9999-12-31',bv=b.due_date??'9999-12-31';return av.localeCompare(bv)})
- return <IntelligencePage><Link href="/dashboard/ceo" className="inline-flex items-center gap-2 text-xs text-[var(--n3-text-muted)]"><ArrowLeft size={14}/>Volver al CEO</Link><IntelligenceHeader eyebrow="CEO · Centro de decisiones" title="Pendientes que requieren acción" description="Valorizaciones, tareas, asignaciones e identidad de mercado priorizadas para resolución." actions={[{label:'Valorizaciones',href:'/dashboard/valuations',primary:true},{label:'Tareas',href:'/dashboard/director/tareas'}]}/>{error?<div role="alert" className="border border-[#d7332b] p-5 text-[#ff766f]"><RefreshCw className="mb-2"/>{error}</div>:null}{!operations&&!error?<div role="status" className="border border-[var(--n3-line)] p-8 text-[var(--n3-text-muted)]">Cargando decisiones…</div>:null}{operations?<><section><SectionHeading eyebrow="01 · Carga crítica" title="Decisiones abiertas"/><MetricGrid columns={4}><MetricCard label="Valorizaciones en revisión" value={operations.valuations.review} detail={`${operations.valuations.draft} borradores`}/><MetricCard label="Tareas vencidas" value={operations.tasks.overdue} detail={`${operations.tasks.urgent} urgentes`}/><MetricCard label="Asignaciones pausadas" value={operations.assignments.paused} detail={`${operations.assignments.active} activas`}/><MetricCard label="Identidades pendientes" value={operations.market.pendingIdentity} detail={`${operations.market.confirmed} confirmadas`}/></MetricGrid></section><section><SectionHeading eyebrow="02 · Cola de seguimiento" title="Responsables y vencimientos"/><div className="space-y-3">{pending.length?pending.map((task)=><article key={task.id} className={`border bg-[#0c1111] p-4 ${task.due_date&&task.due_date<today?'border-[#d7332b]':task.priority==='urgent'?'border-[#a77a22]':'border-[var(--n3-line)]'}`}><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><p className="font-semibold">{task.title}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{task.office??'Sin oficina'} · {task.assignedProfile?.full_name??'Sin responsable'} · {task.status} · vence {task.due_date??'sin fecha'}</p></div><Link href="/dashboard/director/tareas" className="inline-flex items-center gap-2 text-xs text-[#ff766f]">Gestionar<ArrowRight size={13}/></Link></div></article>):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen tareas abiertas.</div>}</div></section></>:null}</IntelligencePage>
+  const [operations,setOperations]=useState<Operations|null>(null)
+  const [queue,setQueue]=useState<QueueItem[]>([])
+  const [tasks,setTasks]=useState<Task[]>([])
+  const [error,setError]=useState<string|null>(null)
+  const [loading,setLoading]=useState(true)
+
+  async function load(){
+    setLoading(true);setError(null)
+    try{
+      const [operationsResponse,queueResponse,tasksResponse]=await Promise.all([
+        fetch('/api/management/ceo-operations',{cache:'no-store'}),
+        fetch('/api/management/ceo-decisions',{cache:'no-store'}),
+        fetch('/api/management/tasks',{cache:'no-store'}),
+      ])
+      const [operationsData,queueData,tasksData]=await Promise.all([operationsResponse.json(),queueResponse.json(),tasksResponse.json()])
+      if(!operationsResponse.ok||!queueResponse.ok||!tasksResponse.ok) throw new Error(operationsData.error||queueData.error||tasksData.error||'No fue posible cargar las decisiones.')
+      setOperations(operationsData);setQueue(queueData.queue??[]);setTasks(tasksData.tasks??[])
+    }catch(cause){setError(cause instanceof Error?cause.message:'Error de carga')}finally{setLoading(false)}
+  }
+  useEffect(()=>{void load()},[])
+
+  const today=new Date().toISOString().slice(0,10)
+  const pending=useMemo(()=>tasks.filter((task)=>['open','in_progress'].includes(task.status)).sort((a,b)=>(a.due_date??'9999-12-31').localeCompare(b.due_date??'9999-12-31')),[tasks])
+  const offices=useMemo(()=>Array.from(new Set(queue.map((item)=>item.office).filter(Boolean))) as string[],[queue])
+
+  return <IntelligencePage>
+    <Link href="/dashboard/ceo" className="inline-flex items-center gap-2 text-xs text-[var(--n3-text-muted)]"><ArrowLeft size={14}/>Volver al CEO</Link>
+    <IntelligenceHeader eyebrow="CEO · Centro de decisiones" title="Pendientes conectados con su evidencia" description="Cada decisión identifica oficina, ejecutiva, valorización, tarea, responsable, vencimiento e historial disponible." actions={[{label:'Valorizaciones',href:'/dashboard/valuations',primary:true},{label:'Propiedades',href:'/dashboard/properties/admin'}]}/>
+    {error?<div role="alert" className="border border-[#d7332b] p-5 text-[#ff766f]"><p>{error}</p><button onClick={()=>void load()} className="mt-3 inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2"><RefreshCw size={14}/>Reintentar</button></div>:null}
+    {loading?<div role="status" className="border border-[var(--n3-line)] p-8 text-[var(--n3-text-muted)]">Cargando decisiones…</div>:null}
+    {operations&&!loading?<>
+      <section><SectionHeading eyebrow="01 · Carga crítica" title="Decisiones abiertas"/><MetricGrid columns={4}><MetricCard label="Valorizaciones en revisión" value={operations.valuations.review} detail={`${operations.valuations.draft} borradores`}/><MetricCard label="Tareas vencidas" value={operations.tasks.overdue} detail={`${operations.tasks.urgent} urgentes`}/><MetricCard label="Asignaciones pausadas" value={operations.assignments.paused} detail={`${operations.assignments.active} activas`}/><MetricCard label="Oficinas con casos" value={offices.length} detail="Con pendientes trazables"/></MetricGrid></section>
+
+      <section><SectionHeading eyebrow="02 · Valorizaciones y decisiones" title="De la oficina al expediente" description="La cola conecta cada caso con su responsable, última decisión y tareas derivadas."/>
+        <div className="space-y-3">{queue.length?queue.map((item)=>{
+          const task=item.tasks[0]??null
+          return <article key={item.id} className={`border bg-[#0c1111] p-4 ${item.status==='review'?'border-[#a77a22]':'border-[var(--n3-line)]'}`}>
+            <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr_auto] lg:items-center">
+              <div><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{item.office??'Sin oficina'} · v{item.versionNumber??1} · {item.status}</p><p className="mt-1 font-semibold">{item.address??'Propiedad sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Ejecutiva: {item.owner?.full_name??'Sin responsable identificado'}</p></div>
+              <div className="text-xs leading-5 text-[var(--n3-text-muted)]"><p>Última decisión: {item.latestDecision?.action?.replaceAll('_',' ')??'Sin decisión registrada'}</p><p>{item.latestDecision?.reason??'Sin observación adicional'}</p>{task?<p className="mt-1">Tarea: {task.status} · {task.assignedProfile?.full_name??'sin responsable'} · vence {task.due_date??'sin fecha'}</p>:<p className="mt-1">Sin tarea abierta vinculada</p>}</div>
+              <div className="flex flex-wrap gap-2"><Link href={`/dashboard/ceo/oficina/${encodeURIComponent((item.office??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))}`} className="border border-[var(--n3-line)] px-3 py-2 text-xs">Ver oficina</Link><Link href={`/dashboard/valuations/${item.id}`} className="inline-flex items-center gap-2 border border-[#d7332b] px-3 py-2 text-xs text-[#ff766f]">Abrir caso<ArrowRight size={13}/></Link></div>
+            </div>
+          </article>
+        }):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen valorizaciones abiertas.</div>}</div>
+      </section>
+
+      <section><SectionHeading eyebrow="03 · Seguimiento ejecutivo" title="Responsables y vencimientos" description="Tareas abiertas de todas las oficinas, ordenadas por fecha."/><div className="space-y-3">{pending.length?pending.map((task)=><article key={task.id} className={`border bg-[#0c1111] p-4 ${task.due_date&&task.due_date<today?'border-[#d7332b]':task.priority==='urgent'?'border-[#a77a22]':'border-[var(--n3-line)]'}`}><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><p className="font-semibold">{task.title}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{task.office??'Sin oficina'} · {task.assignedProfile?.full_name??'Sin responsable'} · {task.status} · vence {task.due_date??'sin fecha'}</p>{task.detail?<p className="mt-2 text-sm text-[var(--n3-text-muted)]">{task.detail}</p>:null}</div><Link href="/dashboard/director/tareas" className="inline-flex items-center gap-2 text-xs text-[#ff766f]">Gestionar<ArrowRight size={13}/></Link></div></article>):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen tareas abiertas.</div>}</div></section>
+    </>:null}
+  </IntelligencePage>
 }
