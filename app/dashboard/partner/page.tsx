@@ -1,10 +1,10 @@
-import { ManagementRoleDashboard } from '@/components/management/role-dashboard'
 import { PartnerOperationalWorkspace } from '@/components/management/partner-operational-workspace'
 import { PartnerPerformanceSummary } from '@/components/management/partner-performance-summary'
+import { DataLayerLegend } from '@/components/management/data-layer-legend'
 
 export default function PartnerDashboard() {
   return <>
-    <ManagementRoleDashboard view="partner" />
+    <DataLayerLegend />
     <PartnerPerformanceSummary />
     <PartnerOperationalWorkspace />
   </>
