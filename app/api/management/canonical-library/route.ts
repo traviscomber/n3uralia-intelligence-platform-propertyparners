@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireCapability, accessErrorResponse } from '@/lib/api-access'
+import { requireExecutiveAccess } from '@/lib/api-access'
 import {
   getCanonicalDeck,
   getCanonicalLibrarySummary,
@@ -8,8 +8,13 @@ import {
 } from '@/lib/canonical-presentation-library'
 
 export async function GET(request: NextRequest) {
-  const access = await requireCapability('management.global.read')
-  if (!access.allowed) return accessErrorResponse(access)
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) {
+    return NextResponse.json(
+      { error: access.status === 401 ? 'No autorizado' : 'Acceso denegado' },
+      { status: access.status },
+    )
+  }
 
   const deck = Number(request.nextUrl.searchParams.get('deck') ?? '')
   const page = Number(request.nextUrl.searchParams.get('page') ?? '')
