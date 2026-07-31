@@ -12,13 +12,15 @@ function StatusBadge({ value, type }: { value: number; type: 'goal' | 'yoy' }) {
 }
 
 export function CanonicalManagementReport() {
-  const sales = canonical.pages.find((page) => page.page === 4 && page.type === 'sales-summary')
-  const evolution = canonical.pages.find((page) => page.page === 5 && page.type === 'sales-evolution')
+  const sales = canonical.pages.find((page) => page.page === 4)
+  const evolution = canonical.pages.find((page) => page.page === 5)
 
-  if (!sales || sales.type !== 'sales-summary' || !evolution || evolution.type !== 'sales-evolution') return null
+  if (!sales?.monthly || !sales.cumulative || !evolution?.months || !evolution.series) return null
 
   const monthly = sales.monthly
   const cumulative = sales.cumulative
+  const months = evolution.months
+  const series = evolution.series
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -92,19 +94,19 @@ export function CanonicalManagementReport() {
             <thead>
               <tr className="border-b text-left">
                 <th className="py-3 pr-4">Indicador</th>
-                {evolution.months.map((month) => <th key={month} className="px-3 py-3 text-right">{month}</th>)}
+                {months.map((month) => <th key={month} className="px-3 py-3 text-right">{month}</th>)}
               </tr>
             </thead>
             <tbody>
               {[
-                ['Cierres mes', evolution.series.monthlyClosings],
-                ['UF mes', evolution.series.monthlySalesUf],
-                ['Meta cierres mes', evolution.series.monthlyClosingGoals],
-                ['Meta UF mes', evolution.series.monthlySalesUfGoals],
-                ['Cierres acumulados', evolution.series.cumulativeClosings],
-                ['UF acumuladas', evolution.series.cumulativeSalesUf],
-                ['Cumplimiento cierres', evolution.series.cumulativeClosingCompliancePercent.map((v) => `${v}%`)],
-                ['Cumplimiento UF', evolution.series.cumulativeSalesUfCompliancePercent.map((v) => `${v}%`)],
+                ['Cierres mes', series.monthlyClosings],
+                ['UF mes', series.monthlySalesUf],
+                ['Meta cierres mes', series.monthlyClosingGoals],
+                ['Meta UF mes', series.monthlySalesUfGoals],
+                ['Cierres acumulados', series.cumulativeClosings],
+                ['UF acumuladas', series.cumulativeSalesUf],
+                ['Cumplimiento cierres', series.cumulativeClosingCompliancePercent.map((v) => `${v}%`)],
+                ['Cumplimiento UF', series.cumulativeSalesUfCompliancePercent.map((v) => `${v}%`)],
               ].map(([label, values]) => (
                 <tr key={String(label)} className="border-b last:border-0">
                   <td className="py-3 pr-4 font-medium">{String(label)}</td>
