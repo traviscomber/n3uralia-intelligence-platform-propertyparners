@@ -1,6 +1,6 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 22:27 CLT
+Última actualización: 30 de julio de 2026, 22:31 CLT
 
 ## Objetivo
 
@@ -10,16 +10,16 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 
 ## Estado general
 
-**Avance contractual estimado: 97%**
+**Avance contractual estimado: 98%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
 | 1 | Perfiles, capacidades y alcance central | Completado | 100% |
-| 2 | Flujo completo de ejecutiva | Cierre funcional | 97% |
+| 2 | Flujo completo de ejecutiva | Cierre funcional | 98% |
 | 3 | Director y subdirector | Cierre funcional | 99% |
 | 4 | CEO y consolidación ejecutiva | Cierre funcional | 99% |
 | 5 | Integración transversal de módulos | Cierre funcional | 99% |
-| 6 | QA contractual, seguridad y aceptación | En cierre | 95% |
+| 6 | QA contractual, seguridad y aceptación | En cierre | 97% |
 
 ## Producción
 
@@ -40,12 +40,13 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 - [x] Sidebar, post-login, rutas y APIs críticas protegidas.
 - [x] Matriz RLS autenticada.
 - [x] Mercado, configuración y administración de propiedades conectados a capacidades centrales.
+- [x] `team` y `role` excluidos del endpoint de edición personal para impedir alteraciones del alcance.
 
 ---
 
 # Bloque 2 — Flujo completo de ejecutiva
 
-**Estado: cierre funcional — 97%**
+**Estado: cierre funcional — 98%**
 
 - [x] Métricas personales con metas, MoM, YoY, fuente y período.
 - [x] Propiedad asignada → valorización trazable.
@@ -53,6 +54,7 @@ Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, 
 - [x] Mercado → comparable → expediente.
 - [x] Navegación expediente ↔ reporte imprimible.
 - [x] Estados vacíos y errores recuperables.
+- [x] Perfil personal limitado a nombre y avatar HTTPS; equipo y rol permanecen administrativos.
 - [ ] QA visual autenticado y revisión responsive real.
 
 ---
@@ -103,7 +105,7 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en cierre — 95%**
+**Estado: en cierre — 97%**
 
 ## Completado
 
@@ -118,17 +120,19 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 - [x] Paquete consolidado de entrega contractual.
 - [x] Asignación propia de oficina ejecutada bajo rol `authenticated` y revertida con `ROLLBACK`.
 - [x] Asignación cruzada Lo Beltrán → Nueva Costanera bloqueada por RLS con error `42501`.
-- [x] API de destinatarios migrada de `requireExecutiveAccess()` a `settings.manage`.
-- [x] Validación HTTPS para webhooks, payloads válidos y respuestas `404` para registros inexistentes.
+- [x] API de destinatarios protegida por `settings.manage`.
+- [x] Validación HTTPS para webhooks y avatares.
+- [x] Endpoint personal bloquea cambios de `team` y `role` con respuesta `403`.
+- [x] Regresión estática para impedir reapertura de edición personal del alcance.
 
 ## Evidencias nuevas
 
-- `scripts/test-property-assignment-office-matrix.sql`
-- `scripts/test-settings-access-regression.mjs`
-- `app/api/report-delivery-targets/route.ts`
-- Commit API de destinatarios: `4f949a3d2326a685ab67e69f118f32a0a2c20027`
-- Commit matriz de asignaciones: `af480a428ebf955ab4bbd11efd4e3fee4b4eec33`
-- Commit regresión de configuración: `22747342d391f728dcb8eb0db31f847878702c15`
+- `app/api/profile/route.ts`
+- `components/settings/ProfileEditor.tsx`
+- `scripts/test-profile-scope-regression.mjs`
+- Commit bloqueo de alcance personal: `df97737155356989423238a003518fcb3e4e4c4c`
+- Commit interfaz de perfil: `f124bf19fd7c787d39c01e2efc3844122b65c182`
+- Commit regresión: `e0cc5c8fcf2753e98b2c1de45055c73e63386081`
 
 ## Pendiente
 
@@ -145,7 +149,6 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 - Confirmar build, `READY`, alias productivo y runtime del último commit acumulado.
 - Ejecutar regresiones estáticas en CI o entorno local cuando esté disponible.
-- Revisar superficies nuevas de configuración o ingestión sólo cuando sean incorporadas al repositorio.
 
 ## Visuales
 
@@ -171,8 +174,8 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 # Bloque activo
 
-## Cierre final no visual — Próximo trabajo 1 · 2 · 3
+## QA visual autenticado y decisiones externas — Próximo trabajo 1 · 2 · 3
 
-1. Confirmar build, `READY`, alias y runtime del commit acumulado.
-2. Ejecutar una revisión final de errores de producción y regresiones documentales.
-3. Iniciar QA visual autenticado; cualquier pendiente posterior deberá ser exclusivamente visual o de definición de negocio.
+1. Confirmar `READY`, alias productivo y runtime del commit acumulado de endurecimiento de perfil.
+2. Ejecutar el recorrido visual autenticado por CEO, dirección y ejecutivas usando la guía preparada.
+3. Registrar incidencias, corregirlas y dejar abiertos únicamente ranking, umbrales, captaciones y cuenta QA subdirector.
