@@ -43,13 +43,13 @@ export async function POST(request: Request) {
 
     const { data: comparable, error: insertError } = await supabase.from('valuation_comparables').insert({
       valuation_case_id: valuationCaseId,
-      comparable_property_id: listing.property_id,
+      comparable_property_id: null,
       rank: Number(last?.rank ?? 0) + 1,
       similarity_score: 0,
       base_value_uf: listing.price_uf,
       adjusted_value_uf: listing.price_uf,
       adjustments: [],
-      evidence: [{ module: 'market', listingId: listing.id, propertyId: listing.property_id, observedAt: listing.observed_at, url: listing.url }],
+      evidence: [{ module: 'market', listingId: listing.id, operationalPropertyId: listing.property_id, observedAt: listing.observed_at, url: listing.url, identityStatus: 'unconfirmed' }],
       contradictions: [],
       match_status: 'candidate',
       source_type: 'market_listing',
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       valuation_case_id: valuationCaseId,
       action: 'market_comparable_linked',
       actor_id: scope.profileId,
-      new_state: { comparableId: comparable.id, listingId: listing.id, propertyId: listing.property_id },
+      new_state: { comparableId: comparable.id, listingId: listing.id, operationalPropertyId: listing.property_id, identityStatus: 'unconfirmed' },
       reason: 'Comparable vinculado desde el Módulo I',
     })
     return NextResponse.json({ comparable }, { status: 201 })
