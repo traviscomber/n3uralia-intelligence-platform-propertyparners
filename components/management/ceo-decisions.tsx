@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, RefreshCw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, FileText, RefreshCw } from 'lucide-react'
 import { IntelligenceHeader, IntelligencePage, MetricCard, MetricGrid, SectionHeading } from '@/components/intelligence/design-system'
 
 type Operations={valuations:{review:number;draft:number};assignments:{paused:number;active:number};market:{pendingIdentity:number;confirmed:number};tasks:{open:number;overdue:number;urgent:number}}
@@ -38,27 +38,31 @@ export function CeoDecisions(){
   const offices=useMemo(()=>Array.from(new Set(queue.map((item)=>item.office).filter(Boolean))) as string[],[queue])
 
   return <IntelligencePage>
-    <Link href="/dashboard/ceo" className="inline-flex items-center gap-2 text-xs text-[var(--n3-text-muted)]"><ArrowLeft size={14}/>Volver al CEO</Link>
+    <Link href="/dashboard/ceo" className="inline-flex min-h-11 items-center gap-2 text-xs text-[var(--n3-text-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"><ArrowLeft size={14}/>Volver al CEO</Link>
     <IntelligenceHeader eyebrow="CEO · Centro de decisiones" title="Pendientes conectados con su evidencia" description="Cada decisión identifica oficina, ejecutiva, valorización, tarea, responsable, vencimiento e historial disponible." actions={[{label:'Valorizaciones',href:'/dashboard/valuations',primary:true},{label:'Propiedades',href:'/dashboard/properties/admin'}]}/>
-    {error?<div role="alert" className="border border-[#d7332b] p-5 text-[#ff766f]"><p>{error}</p><button onClick={()=>void load()} className="mt-3 inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2"><RefreshCw size={14}/>Reintentar</button></div>:null}
-    {loading?<div role="status" className="border border-[var(--n3-line)] p-8 text-[var(--n3-text-muted)]">Cargando decisiones…</div>:null}
+    {error?<div role="alert" className="border border-[#d7332b] p-5 text-[#ff766f]"><p>{error}</p><button onClick={()=>void load()} className="mt-3 inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"><RefreshCw size={14}/>Reintentar</button></div>:null}
+    {loading?<div role="status" aria-live="polite" className="border border-[var(--n3-line)] p-8 text-[var(--n3-text-muted)]">Cargando decisiones…</div>:null}
     {operations&&!loading?<>
       <section><SectionHeading eyebrow="01 · Carga crítica" title="Decisiones abiertas"/><MetricGrid columns={4}><MetricCard label="Valorizaciones en revisión" value={operations.valuations.review} detail={`${operations.valuations.draft} borradores`}/><MetricCard label="Tareas vencidas" value={operations.tasks.overdue} detail={`${operations.tasks.urgent} urgentes`}/><MetricCard label="Asignaciones pausadas" value={operations.assignments.paused} detail={`${operations.assignments.active} activas`}/><MetricCard label="Oficinas con casos" value={offices.length} detail="Con pendientes trazables"/></MetricGrid></section>
 
-      <section><SectionHeading eyebrow="02 · Valorizaciones y decisiones" title="De la oficina al expediente" description="La cola conecta cada caso con su responsable, última decisión y tareas derivadas."/>
+      <section><SectionHeading eyebrow="02 · Valorizaciones y decisiones" title="De la oficina al expediente" description="La cola conecta cada caso con su responsable, última decisión, tareas derivadas y reporte imprimible."/>
         <div className="space-y-3">{queue.length?queue.map((item)=>{
           const task=item.tasks[0]??null
           return <article key={item.id} className={`border bg-[#0c1111] p-4 ${item.status==='review'?'border-[#a77a22]':'border-[var(--n3-line)]'}`}>
             <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr_auto] lg:items-center">
               <div><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{item.office??'Sin oficina'} · v{item.versionNumber??1} · {item.status}</p><p className="mt-1 font-semibold">{item.address??'Propiedad sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Ejecutiva: {item.owner?.full_name??'Sin responsable identificado'}</p></div>
               <div className="text-xs leading-5 text-[var(--n3-text-muted)]"><p>Última decisión: {item.latestDecision?.action?.replaceAll('_',' ')??'Sin decisión registrada'}</p><p>{item.latestDecision?.reason??'Sin observación adicional'}</p>{task?<p className="mt-1">Tarea: {task.status} · {task.assignedProfile?.full_name??'sin responsable'} · vence {task.due_date??'sin fecha'}</p>:<p className="mt-1">Sin tarea abierta vinculada</p>}</div>
-              <div className="flex flex-wrap gap-2"><Link href={`/dashboard/ceo/oficina/${encodeURIComponent((item.office??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))}`} className="border border-[var(--n3-line)] px-3 py-2 text-xs">Ver oficina</Link><Link href={`/dashboard/valuations/${item.id}`} className="inline-flex items-center gap-2 border border-[#d7332b] px-3 py-2 text-xs text-[#ff766f]">Abrir caso<ArrowRight size={13}/></Link></div>
+              <div className="flex flex-wrap gap-2">
+                <Link href={`/dashboard/ceo/oficina/${encodeURIComponent((item.office??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))}`} className="inline-flex min-h-11 items-center border border-[var(--n3-line)] px-3 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Ver oficina</Link>
+                <Link href={`/dashboard/valuations/${item.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[#d7332b] px-3 py-2 text-xs text-[#ff766f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Abrir caso<ArrowRight size={13}/></Link>
+                <Link href={`/dashboard/valuations/${item.id}/report`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-teal)] px-3 py-2 text-xs text-[var(--n3-teal)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"><FileText size={13}/>Reporte</Link>
+              </div>
             </div>
           </article>
         }):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen valorizaciones abiertas.</div>}</div>
       </section>
 
-      <section><SectionHeading eyebrow="03 · Seguimiento ejecutivo" title="Responsables y vencimientos" description="Tareas abiertas de todas las oficinas, ordenadas por fecha."/><div className="space-y-3">{pending.length?pending.map((task)=><article key={task.id} className={`border bg-[#0c1111] p-4 ${task.due_date&&task.due_date<today?'border-[#d7332b]':task.priority==='urgent'?'border-[#a77a22]':'border-[var(--n3-line)]'}`}><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><p className="font-semibold">{task.title}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{task.office??'Sin oficina'} · {task.assignedProfile?.full_name??'Sin responsable'} · {task.status} · vence {task.due_date??'sin fecha'}</p>{task.detail?<p className="mt-2 text-sm text-[var(--n3-text-muted)]">{task.detail}</p>:null}</div><Link href="/dashboard/director/tareas" className="inline-flex items-center gap-2 text-xs text-[#ff766f]">Gestionar<ArrowRight size={13}/></Link></div></article>):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen tareas abiertas.</div>}</div></section>
+      <section><SectionHeading eyebrow="03 · Seguimiento ejecutivo" title="Responsables y vencimientos" description="Tareas abiertas de todas las oficinas, ordenadas por fecha."/><div className="space-y-3">{pending.length?pending.map((task)=><article key={task.id} className={`border bg-[#0c1111] p-4 ${task.due_date&&task.due_date<today?'border-[#d7332b]':task.priority==='urgent'?'border-[#a77a22]':'border-[var(--n3-line)]'}`}><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><div className="min-w-0 flex-1"><p className="font-semibold">{task.title}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{task.office??'Sin oficina'} · {task.assignedProfile?.full_name??'Sin responsable'} · {task.status} · vence {task.due_date??'sin fecha'}</p>{task.detail?<p className="mt-2 text-sm text-[var(--n3-text-muted)]">{task.detail}</p>:null}</div><Link href="/dashboard/director/tareas" className="inline-flex min-h-11 items-center gap-2 text-xs text-[#ff766f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Gestionar<ArrowRight size={13}/></Link></div></article>):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen tareas abiertas.</div>}</div></section>
     </>:null}
   </IntelligencePage>
 }
