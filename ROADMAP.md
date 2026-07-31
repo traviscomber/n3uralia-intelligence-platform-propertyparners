@@ -1,34 +1,35 @@
 # Property Partners Intelligence Platform — Roadmap contractual
 
-Última actualización: 30 de julio de 2026, 21:14 CLT
+Última actualización: 30 de julio de 2026, 21:19 CLT
 
 ## Objetivo
 
-Completar estrictamente el alcance contratado para Property Partners mediante una plataforma integrada de inteligencia de mercado, valorización y control de gestión, con experiencias diferenciadas para CEO, administración, directores, subdirectores y ejecutivas.
+Completar estrictamente el alcance contratado mediante una plataforma integrada de inteligencia de mercado, valorización y control de gestión, con experiencias diferenciadas para CEO, administración, directores, subdirectores y ejecutivas.
 
-Este archivo es la fuente operativa única del proyecto. Después de cada bloque se deben actualizar avance, evidencias, riesgos y siguiente trabajo; realizar commit en `main`; verificar build, TypeScript, deployment `READY` y errores críticos de runtime.
+Este archivo es la fuente operativa única. Cada bloque exige commit en `main`, build y TypeScript aprobados, deployment `READY`, revisión de runtime y actualización de evidencias.
 
 ## Estado general
 
-**Avance contractual estimado: 70%**
+**Avance contractual estimado: 73%**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
 | 1 | Perfiles, capacidades y alcance central | Completado | 100% |
-| 2 | Flujo completo de ejecutiva | Activo | 55% |
+| 2 | Flujo completo de ejecutiva | En ejecución | 78% |
 | 3 | Director y subdirector | Avanzado parcialmente | 70% |
 | 4 | CEO y consolidación ejecutiva | Avanzado | 94% |
-| 5 | Integración transversal de módulos | Parcial | 50% |
-| 6 | QA contractual, seguridad y aceptación | En desarrollo | 35% |
+| 5 | Integración transversal de módulos | En ejecución | 62% |
+| 6 | QA contractual, seguridad y aceptación | En desarrollo | 38% |
 
-## Estado de producción
+## Producción
 
 - Repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`
-- Rama productiva: `main`
+- Rama: `main`
 - Producción: `https://n3uralia-intelligence-platform.vercel.app`
 - Supabase: `orfncinmhymhhoxbxgjb`
-- Migración RLS: `expose_authenticated_management_scope_ids`
-- Último commit funcional de alcance: `e8b361dc39a10f1da0389af11cd975b3f1b07c07`
+- Migraciones recientes:
+  - `expose_authenticated_management_scope_ids`
+  - `align_valuation_decision_log_creation_fields`
 
 ---
 
@@ -36,76 +37,58 @@ Este archivo es la fuente operativa única del proyecto. Después de cada bloque
 
 **Estado: completado — 100%**
 
-## Completado
-
-- [x] Roles canónicos: `ceo`, `admin`, `director`, `subdirector`, `seller`.
-- [x] Matriz contractual de capacidades en `lib/access-control.ts`.
+- [x] Matriz única de capacidades.
 - [x] Alcances `global`, `office` y `self`.
-- [x] `getUserScope()` con sesión, perfil, oficina, equipo y entidades visibles.
-- [x] Guards reutilizables para páginas y APIs.
-- [x] Protección servidor de rutas CEO, dirección, ejecutiva y administración.
-- [x] Sidebar filtrado mediante capacidades.
-- [x] Post-login dirigido mediante `defaultDashboardForRole()`.
-- [x] Workflow de valorización limitado por capacidad, propiedad y oficina.
-- [x] Pruebas unitarias de capacidades y navegación.
-- [x] Matriz RLS autenticada con `SET LOCAL ROLE authenticated`.
-- [x] Corrección de diferencia entre lectura directa de perfiles y política `profiles_select_own_safe`.
-- [x] RPC `current_user_visible_profile_ids()` con alcance autorizado.
-- [x] RPC `current_user_visible_entity_ids()` con alcance autorizado.
-- [x] Ejecución restringida exclusivamente al rol `authenticated`.
-- [x] Script reproducible de validación RLS agregado.
+- [x] `getUserScope()` y guards reutilizables.
+- [x] Sidebar y post-login controlados por capacidades.
+- [x] Rutas y workflow de valorización protegidos en servidor.
+- [x] RPC de perfiles y entidades visibles limitada a `authenticated`.
+- [x] Matriz RLS autenticada para CEO, dirección y tres ejecutivas.
 
-## Evidencias
-
-- `lib/access-control.ts`
-- `lib/user-scope.ts`
-- `lib/access-guards.ts`
-- `components/layout/sidebar.tsx`
-- `app/auth/login/page.tsx`
-- `app/api/valuations/[id]/workflow/route.ts`
-- `scripts/test-access-control.mjs`
-- `scripts/test-authenticated-scope.sql`
-- Migración: `expose_authenticated_management_scope_ids`
-- Commit RPC en aplicación: `1687e4f3e172ed2dd870d90dd24895991612be33`
-- Commit matriz SQL reproducible: `e8b361dc39a10f1da0389af11cd975b3f1b07c07`
-
-## Resultado de matriz autenticada
-
-| Perfil probado | Perfiles visibles | Entidades visibles | Valorizaciones visibles |
-|---|---:|---:|---:|
-| CEO | 6 | 6 | 1 |
-| Director QA Lo Beltrán | 2 | 2 | 1 |
-| Ejecutiva Lo Beltrán | 1 | 1 | 1 |
-| Ejecutiva Nueva Costanera | 1 | 1 | 0 |
-| Ejecutiva Santa María | 1 | 1 | 0 |
-
-La prueba se ejecutó con el rol PostgreSQL `authenticated`, JWT simulado por usuario y RLS activa. No se utilizó `service_role` como evidencia.
-
-## Criterio de cierre cumplido
-
-CEO conserva alcance global; dirección queda limitada a su oficina; ejecutiva queda limitada a sí misma y a sus asignaciones; navegación, páginas, APIs y RLS consumen una definición coherente de alcance.
+Evidencias principales: `lib/access-control.ts`, `lib/user-scope.ts`, `lib/access-guards.ts`, `scripts/test-access-control.mjs`, `scripts/test-authenticated-scope.sql`.
 
 ---
 
 # Bloque 2 — Flujo completo de ejecutiva
 
-**Estado: activo — 55%**
+**Estado: en ejecución — 78%**
 
-## Disponible
+## Completado
 
 - [x] Resumen y métricas personales.
-- [x] Cartera asignada.
-- [x] Creación de valorizaciones.
-- [x] Comparables, revisión y reporte personal.
+- [x] Cartera asignada bajo RLS.
+- [x] Creación, registro y expediente de valorizaciones.
+- [x] Espacio operativo personal integrado en el dashboard de ejecutiva.
+- [x] Consultas personales resueltas desde `requirePageCapability()` y el perfil autenticado.
+- [x] Propiedades asignadas visibles en el dashboard personal.
+- [x] Inicio de valorización desde una propiedad asignada.
+- [x] Prellenado de dirección, tipología, superficies, dormitorios, baños y estacionamientos.
+- [x] Verificación API de asignación activa y pertenencia al perfil autenticado.
+- [x] Persistencia de `propertyAssignmentId`, `sourcePropertyId`, rol y fecha de asignación como evidencia.
+- [x] Valorizaciones personales con estado y versión.
+- [x] Tareas y alertas personales.
+- [x] Observaciones e historial de revisión desde `valuation_decision_log`.
+- [x] Alineación del esquema de creación del log de decisiones.
 
-## Pendiente principal
+## Evidencias nuevas
 
-- [ ] Aplicar `getUserScope()` en todas las consultas personales.
-- [ ] Conectar propiedad asignada con nueva valorización.
-- [ ] Mostrar historial y observaciones de revisión.
-- [ ] Conectar tareas y alertas personales.
-- [ ] Consolidar metas, MoM, YoY, seguimiento y conversión.
-- [ ] QA con una ejecutiva por oficina.
+- `components/management/partner-operational-workspace.tsx`
+- `app/dashboard/partner/page.tsx`
+- `app/dashboard/valuation/page.tsx`
+- `app/api/valuation/cases/route.ts`
+- Commit espacio personal: `d1a745447313c5894b5be0d761ad8405d603977b`
+- Commit conexión dashboard: `8bbd378a707915d2617efc2538235f144e0898a7`
+- Commit trazabilidad API: `c04ee8d2fcbde814dd0dceddfe5377e0f7a50e21`
+- Commit prellenado: `3ab61eecd5749854acf90ab22790dd55740b505f`
+- Commit corrección de esquema de propiedades: `446b84bba3832a13fc58d83d6b5800bd38707f86`
+
+## Pendiente para cierre
+
+- [ ] Consolidar metas, MoM, YoY, seguimiento y conversión en una lectura personal única.
+- [ ] Permitir actualización de estado de tareas personales cuando corresponda.
+- [ ] Probar escritura completa propiedad → valorización → revisión con una cuenta QA que tenga asignación activa.
+- [ ] Ejecutar QA autenticado con una ejecutiva por oficina.
+- [ ] Validar estados vacíos y mensajes de recuperación en navegador real.
 
 ---
 
@@ -115,8 +98,8 @@ CEO conserva alcance global; dirección queda limitada a su oficina; ejecutiva q
 
 - [x] Dashboard, YoY, equipo, fichas, tareas e historial.
 - [x] Asignación por oficina, reporte y comparación con promedio.
-- [ ] Aplicar alcance central en todas las consultas y APIs.
-- [ ] Conectar valorizaciones, alertas, tareas y metas con responsables.
+- [ ] Aplicar alcance central a todas las consultas y APIs restantes.
+- [ ] Conectar revisión de valorizaciones, alertas, tareas y metas con responsables.
 - [ ] Pruebas negativas entre oficinas y QA autenticado.
 
 ---
@@ -127,7 +110,7 @@ CEO conserva alcance global; dirección queda limitada a su oficina; ejecutiva q
 
 - [x] Consolidado, oficinas, metas, MoM, YoY, rankings y evolución.
 - [x] Cartera, alertas, decisiones, presentación, reporte y metodología.
-- [ ] Alertas y decisiones conectadas a caso, responsable e historial.
+- [ ] Conectar alertas y decisiones con caso, responsable e historial.
 - [ ] Confirmar reglas oficiales de ranking y umbrales.
 - [ ] QA visual autenticado y PDF en navegador real.
 
@@ -135,48 +118,50 @@ Captaciones brutas permanece como `n/d` mientras no exista una fuente explícita
 
 ---
 
-# Bloque 5 — Integración transversal de módulos
+# Bloque 5 — Integración transversal
 
-**Estado: parcial — 50%**
+**Estado: en ejecución — 62%**
 
 - [ ] Mercado → comparable.
-- [ ] Propiedad → asignación → valorización.
-- [ ] Valorización → revisión → expediente.
-- [ ] Alerta → tarea → seguimiento.
+- [x] Propiedad → asignación → valorización.
+- [x] Valorización → historial y expediente.
+- [ ] Revisión → decisión completa.
+- [x] Tareas y alertas visibles por audiencia.
+- [ ] Alerta → tarea → seguimiento completo.
 - [ ] Resultados → reporte con fuente, período y metodología.
 
 ---
 
 # Bloque 6 — QA contractual, seguridad y aceptación
 
-**Estado: en desarrollo — 35%**
+**Estado: en desarrollo — 38%**
 
 - [x] Matriz RLS autenticada para CEO, dirección y tres ejecutivas.
-- [x] Aislamiento base por oficina y ejecutiva validado.
-- [ ] Login y ruta inicial en navegador para todos los perfiles QA.
-- [ ] Lecturas y escrituras autorizadas/bloqueadas por flujo.
-- [ ] Valorización, asignación, tareas, alertas y reportes.
-- [ ] Responsive, accesibilidad, build, logs y PDF.
+- [x] Aislamiento base por oficina y ejecutiva.
+- [x] Builds intermedios aprobados para el nuevo flujo personal.
+- [ ] Login y recorrido real para todos los perfiles QA.
+- [ ] Escrituras autorizadas y bloqueadas por flujo.
+- [ ] Valorización completa desde asignación activa.
+- [ ] Responsive, accesibilidad, logs, reportes y PDF.
 
 # Riesgos activos
 
-1. El flujo completo de ejecutiva todavía contiene consultas locales que deben migrarse a `getUserScope()`.
+1. Las cuentas QA actuales no tienen asignaciones activas suficientes para probar el nuevo flujo de escritura de extremo a extremo sin crear datos controlados.
 2. Captaciones brutas no tiene fuente separada.
 3. Umbrales y ranking requieren validación de negocio.
 4. No existe automatización de navegador autenticado en este entorno.
 
 # Salvaguardas
 
-- No modificar cuentas reales sin instrucción explícita.
-- No inventar datos, roles, oficinas o métricas.
-- No presentar proxies como datos canónicos.
+- No modificar cuentas reales ni crear datos operativos falsos sin necesidad documentada.
+- No inventar métricas ni presentar proxies como datos canónicos.
 - No usar `service_role` como evidencia de RLS.
 - No cerrar un bloque sin build y deployment verificados.
 
 # Bloque activo
 
-## Bloque 2 — Flujo completo de ejecutiva — Próximo trabajo 1 · 2 · 3
+## Cierre del Bloque 2 — Próximo trabajo 1 · 2 · 3
 
-1. Auditar y migrar todas las consultas del perfil ejecutiva a `getUserScope()` y capacidades personales.
-2. Conectar propiedad asignada → nueva valorización, conservando propiedad, ejecutiva y evidencia de origen.
-3. Integrar historial, observaciones, tareas y alertas personales; probar con una ejecutiva por oficina y actualizar este roadmap.
+1. Consolidar metas, MoM, YoY, seguimiento y conversión en el dashboard personal con procedencia y períodos visibles.
+2. Completar acciones personales de tareas y el ciclo revisión → corrección → reenvío de valorización.
+3. Crear datos QA controlados y reversibles para una ejecutiva por oficina, ejecutar el flujo completo y actualizar este roadmap.
