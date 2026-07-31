@@ -1,10 +1,10 @@
-# Property Partners Intelligence Platform — Roadmap contractual
+# Property Partners Intelligence Platform — Cierre contractual técnico
 
-Última actualización: 30 de julio de 2026, 22:54 CLT
+Última actualización: 30 de julio de 2026, 22:57 CLT
 
-## Estado general
+## Estado final
 
-**Avance contractual estimado: 98%**
+**Proyecto cerrado técnicamente en modalidad no visual. Avance contractual estimado: 98%.**
 
 | Bloque | Enfoque | Estado | Avance |
 |---|---|---|---:|
@@ -18,35 +18,40 @@
 ## Producción
 
 - Repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`
-- Rama: `main`
+- Rama formal de cierre: `main`
 - Producción: `https://n3uralia-intelligence-platform.vercel.app`
 - Supabase: `orfncinmhymhhoxbxgjb`
 
-## Cierre técnico no visual
+## Cierre emitido
 
 - [x] Matriz central de capacidades y alcance.
 - [x] RLS autenticada para CEO, dirección y ejecutivas QA.
 - [x] Aislamiento por oficina y perfil.
 - [x] Flujos de propiedad, valorización, comparables, tareas, correcciones y decisiones.
-- [x] Reporte imprimible con evidencia y cronología.
+- [x] Reporte imprimible con evidencia, metodología y cronología.
 - [x] Configuración y destinatarios protegidos por capacidades específicas.
 - [x] Edición personal de `team` y `role` bloqueada.
 - [x] Regresiones críticas versionadas.
 - [x] Matriz de aceptación, checklist contractual y paquete de entrega.
-- [x] Registro formal de cierre técnico creado.
-- [x] Regresión de integridad del paquete de cierre creada.
+- [x] Registro formal de cierre técnico.
+- [x] Regresión de integridad del paquete de cierre.
+- [x] Acta ejecutiva de cierre emitida.
 
-## Evidencias de cierre
+## Evidencias finales
 
+- `docs/EXECUTIVE_PROJECT_CLOSURE.md`
 - `docs/TECHNICAL_CLOSURE_RECORD.md`
 - `docs/CONTRACTUAL_DELIVERY_PACKAGE.md`
 - `docs/FINAL_ACCEPTANCE_CHECKLIST.md`
 - `docs/QA_ACCEPTANCE_MATRIX.md`
+- `docs/VISUAL_QA_EXECUTION_LOG.md`
 - `scripts/test-technical-closure.mjs`
-- Commit registro de cierre: `ad2cdffcf185c418ad00b97a431976b6575c2b1c`
-- Commit regresión de cierre: `fbe7111a69c4dd3c7f95291be9bf0ac143e33206`
 
-## Pendientes diferidos
+Commit del acta ejecutiva:
+
+`1b7e88aee2f26d4e6c5760352cad32e685b0592f`
+
+## Pendientes formalmente diferidos
 
 ### QA visual autenticado
 
@@ -54,11 +59,11 @@ Diferido temporalmente por decisión operativa:
 
 - login y recorrido visual por perfil;
 - revisión responsive real;
-- teclado, lector de pantalla y contraste contextual;
+- teclado, lector de pantalla, contraste y zoom;
 - inspección visual de PDF autenticado;
 - ciclo integral visual dirección–ejecutiva.
 
-La suite y el workflow permanecen preparados para retomarse sin cambios estructurales.
+La suite y el workflow permanecen preparados para retomarse sin cambios estructurales. No se declara este QA como ejecutado ni aprobado.
 
 ### Definiciones de negocio
 
@@ -69,12 +74,23 @@ La suite y el workflow permanecen preparados para retomarse sin cambios estructu
 
 ## Criterio de reapertura
 
-El cierre técnico deberá reabrirse si aparece una regresión de autorización o RLS, falla un deployment productivo, se incorpora una nueva superficie administrativa o de ingestión, se definen reglas de negocio que requieren cambios, o el QA visual detecta incidencias críticas o altas.
+Este cierre deberá reabrirse únicamente cuando ocurra alguno de los siguientes eventos:
 
-# Bloque activo
+1. Regresión de autorización, RLS o aislamiento entre oficinas.
+2. Falla de build, deployment o runtime productivo.
+3. Incorporación de una nueva superficie administrativa o de ingestión.
+4. Entrega de definiciones de negocio que requieran cambios funcionales.
+5. Hallazgo crítico o alto durante el QA visual diferido.
 
-## Preparación de cierre final — Próximo trabajo 1 · 2 · 3
+## Estado operativo
 
-1. Confirmar build, deployment `READY`, alias productivo y runtime del paquete de cierre.
-2. Verificar que no existan fallos técnicos nuevos y consolidar la evidencia final.
-3. Emitir el resumen de cierre, dejando QA visual y definiciones de negocio como anexos diferidos.
+No quedan defectos técnicos no visuales conocidos abiertos. Los trabajos posteriores deberán clasificarse como:
+
+- aceptación visual diferida;
+- definición de negocio;
+- mantenimiento correctivo;
+- o reapertura formal del alcance.
+
+# Proyecto cerrado
+
+La rama `main` y la producción vigente constituyen la versión formal de cierre técnico no visual del proyecto.
