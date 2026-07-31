@@ -31,6 +31,9 @@ export type Capability =
   | 'users.manage'
   | 'settings.manage'
 
+export type BusinessRole = 'ceo' | 'director' | 'subdirector' | 'seller'
+export type BusinessHierarchyLevel = 1 | 2 | 3
+
 const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
   ceo: [
     'dashboard.global.read',
@@ -116,6 +119,24 @@ export function hasCapability(
   if (!profileOrRole) return false
   const role = typeof profileOrRole === 'string' ? profileOrRole : profileOrRole.role
   return ROLE_CAPABILITIES[role].includes(capability)
+}
+
+export function isBusinessRole(role: UserRole): role is BusinessRole {
+  return role !== 'admin'
+}
+
+export function getBusinessHierarchyLevel(role: BusinessRole): BusinessHierarchyLevel {
+  if (role === 'ceo') return 1
+  if (role === 'director' || role === 'subdirector') return 2
+  return 3
+}
+
+export function getRoleLabel(role: UserRole): string {
+  if (role === 'ceo') return 'CEO'
+  if (role === 'director') return 'Director de Cuenta'
+  if (role === 'subdirector') return 'Subdirector de Cuenta'
+  if (role === 'seller') return 'Partner'
+  return 'Administrador técnico'
 }
 
 export function getAccessScope(role: UserRole): AccessScope {
