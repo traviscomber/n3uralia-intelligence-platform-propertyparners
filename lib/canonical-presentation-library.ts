@@ -3,6 +3,16 @@ import semanticPages from '@/data/management-canonical-interpretation-pages-006-
 
 type UnknownRecord = Record<string, unknown>
 
+export type AggregationMethod =
+  | 'ratio_of_totals'
+  | 'average_partner_scores'
+  | 'average_eligible_items'
+  | 'sum_attributed_values'
+  | 'sum_unique_operations'
+  | 'not_defined'
+
+export type EvaluationState = 'evaluable' | 'not_evaluable' | 'inconsistent_source'
+
 export type CanonicalTable = {
   name: string
   rows: string[][]
@@ -34,6 +44,11 @@ export type CanonicalInterpretation = {
   pendingDefinitions: string[]
 }
 
+export type SourceValidationWarning = {
+  code: 'period_mismatch' | 'missing_month' | 'stale_label' | 'source_inconsistency'
+  message: string
+}
+
 export type CanonicalSlide = {
   deckIndex: number
   deckFile: string
@@ -45,6 +60,8 @@ export type CanonicalSlide = {
   charts: CanonicalChart[]
   notes: string[]
   sourceReference: string
+  periodLabels: string[]
+  validationWarnings: SourceValidationWarning[]
   interpretation: CanonicalInterpretation | null
 }
 
@@ -57,6 +74,31 @@ export type CanonicalDeck = {
   chartCount: number | null
   colors: Array<{ hex: string; uses: number }>
   slides: CanonicalSlide[]
+}
+
+export const MANAGEMENT_AGGREGATION_METHODS = {
+  portfolioTarget: 'ratio_of_totals',
+  requirementsBenchmark: 'average_partner_scores',
+  pricingQuality: 'average_eligible_items',
+  classifiedLeads: 'ratio_of_totals',
+  leadsWithout90DayAbandonment: 'ratio_of_totals',
+  priorityLeadsWithin15Days: 'ratio_of_totals',
+  visitsAgainstTarget: 'average_partner_scores',
+  completedVisitsAgainstScheduled: 'ratio_of_totals',
+  sixMonthCloseRate: 'ratio_of_totals',
+  attributedUf: 'sum_attributed_values',
+  uniqueTransactionUf: 'sum_unique_operations',
+} as const satisfies Record<string, AggregationMethod>
+
+export function safeRatioScore(numerator: number, denominator: number, cap = 100): number | null {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return null
+  return Math.min((numerator / denominator) * 100, cap)
+}
+
+export function evaluationState(numerator: number, denominator: number): EvaluationState {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator)) return 'inconsistent_source'
+  if (denominator <= 0) return 'not_evaluable'
+  return 'evaluable'
 }
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -117,6 +159,56 @@ function parseColors(metadata: UnknownRecord): Array<{ hex: string; uses: number
   })
 }
 
+function unique(values: string[]): string[] {
+  return [...new Set(values)]
+}
+
+function detectPeriodLabels(content: string): string[] {
+  const matches = content.match(/(?:Ene-(?:May|Jun)|H1|Q[1-4]|May|Jun|Mar)\s*2026|(?:Ene-(?:May|Jun)|H1|Q[1-4]|May|Jun)/gi) ?? []
+  return unique(matches.map((value) => value.replace(/\s+/g, ' ').trim()))
+}
+
+function validateSlidePeriod(deckFile: string, title: string, texts: string[], charts: CanonicalChart[]): SourceValidationWarning[] {
+  const content = [title, ...texts].join(' ')
+  const normalized = content.toLocaleLowerCase('es')
+  const warnings: SourceValidationWarning[] = []
+
+  const deckDeclaresQ2 = /q2/i.test(deckFile)
+  const slideDeclaresMay = /\bmay\b|ene-may/i.test(content)
+  const slideDeclaresJuneOrH1 = /\bjun\b|ene-jun|\bh1\b|\bq2\b/i.test(content)
+
+  if (deckDeclaresQ2 && slideDeclaresMay && !slideDeclaresJuneOrH1) {
+    warnings.push({
+      code: 'period_mismatch',
+      message: 'El archivo declara cierre Q2/H1, pero esta lámina está rotulada como mayo o Ene-May. El período debe validarse antes de usar la cifra como cierre de junio.',
+    })
+  }
+
+  if (/ene\s*[·|,]\s*feb\s*[·|,]\s*mar\s*[·|,]\s*abr\s*[·|,]\s*jun/i.test(content)) {
+    warnings.push({
+      code: 'missing_month',
+      message: 'La secuencia mensual omite mayo. Los deltas visibles deben etiquetarse como abril–junio y mayo no debe inferirse como cero.',
+    })
+  }
+
+  if (deckDeclaresQ2 && /scores may|venta may|indicadores ene-may/i.test(normalized)) {
+    warnings.push({
+      code: 'stale_label',
+      message: 'Posible rótulo desactualizado dentro de un reporte Q2. Mantener el dato, pero mostrar advertencia de período hasta reconciliar la fuente.',
+    })
+  }
+
+  const chartPeriods = unique(charts.flatMap((chart) => chart.series.flatMap((series) => series.categories)))
+  if (chartPeriods.some((period) => /q2 2026/i.test(period)) && slideDeclaresMay) {
+    warnings.push({
+      code: 'source_inconsistency',
+      message: 'El gráfico embebido declara Q2 2026 mientras el título de la lámina declara mayo. Tabla, título y gráfico no son temporalmente consistentes.',
+    })
+  }
+
+  return warnings
+}
+
 const semanticIndex = new Map<number, CanonicalInterpretation>(
   semanticPages.pages.map((page) => [page.page, {
     managementMeaning: page.managementMeaning,
@@ -134,17 +226,24 @@ function parseDeck(deck: UnknownRecord, deckIndex: number): CanonicalDeck {
   const slideRecords = records(findArray(deck, ['slides', 'pages', 'items']))
   const slides = slideRecords.map((slide, slideIndex): CanonicalSlide => {
     const page = numeric(slide.index) ?? numeric(slide.page) ?? slideIndex + 1
+    const title = stringValue(slide.title, `Página ${slideIndex + 1}`)
+    const texts = strings(slide.texts)
+    const charts = records(slide.charts).map(parseChart)
+    const periodLabels = detectPeriodLabels([title, ...texts].join(' '))
+
     return {
       deckIndex: deckIndex + 1,
       deckFile: file,
       page,
-      title: stringValue(slide.title, `Página ${slideIndex + 1}`),
+      title,
       backgroundColor: typeof slide.backgroundColor === 'string' ? slide.backgroundColor : null,
-      texts: strings(slide.texts),
+      texts,
       tables: records(slide.tables).map(parseTable),
-      charts: records(slide.charts).map(parseChart),
+      charts,
       notes: strings(slide.notes),
       sourceReference: `${file} · página ${page}`,
+      periodLabels,
+      validationWarnings: validateSlidePeriod(file, title, texts, charts),
       interpretation: deckIndex === 0 ? semanticIndex.get(page) ?? null : null,
     }
   })
@@ -191,6 +290,8 @@ export function searchCanonicalSlides(query: string, limit = 50): CanonicalSlide
       slide.title,
       ...slide.texts,
       ...slide.notes,
+      ...slide.periodLabels,
+      ...slide.validationWarnings.map((warning) => warning.message),
       slide.interpretation?.managementMeaning ?? '',
       slide.interpretation?.managementConclusion ?? '',
       ...(slide.interpretation?.pendingDefinitions ?? []),
@@ -201,13 +302,16 @@ export function searchCanonicalSlides(query: string, limit = 50): CanonicalSlide
 export function getCanonicalLibrarySummary() {
   const slides = canonicalDecks.flatMap((deck) => deck.slides)
   return {
-    status: 'canonical' as const,
+    status: 'canonical-with-validation' as const,
     source: 'data/presentations-2026.json' as const,
     deckCount: canonicalDecks.length,
     slideCount: slides.length,
     interpretedSlideCount: slides.filter((slide) => slide.interpretation).length,
+    warningCount: slides.reduce((total, slide) => total + slide.validationWarnings.length, 0),
+    slidesWithWarnings: slides.filter((slide) => slide.validationWarnings.length > 0).length,
     tableCount: slides.reduce((total, slide) => total + slide.tables.length, 0),
     chartCount: slides.reduce((total, slide) => total + slide.charts.length, 0),
+    aggregationMethods: MANAGEMENT_AGGREGATION_METHODS,
     decks: canonicalDecks.map(({ slides: _slides, ...deck }) => deck),
   }
 }
