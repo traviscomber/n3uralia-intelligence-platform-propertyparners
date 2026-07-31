@@ -5,10 +5,6 @@ const inputPath = path.resolve('data/presentations-2026.json')
 const outputRoot = path.resolve('data/presentations-2026-split')
 const raw = JSON.parse(fs.readFileSync(inputPath, 'utf8'))
 
-function asArray(value) {
-  return Array.isArray(value) ? value : []
-}
-
 function resolveDecks(value) {
   if (Array.isArray(value)) return value
   for (const key of ['presentations', 'decks', 'documents', 'items']) {
@@ -67,22 +63,19 @@ for (const [deckIndex, deck] of decks.entries()) {
     slug,
     slideCount: slides.length,
     metadata,
-    chunks: [],
+    slides: [],
   }
 
-  for (let start = 0; start < slides.length; start += 10) {
-    const end = Math.min(start + 10, slides.length)
-    const fileName = `slides-${String(start + 1).padStart(3, '0')}-${String(end).padStart(3, '0')}.json`
+  for (const [slideIndex, slide] of slides.entries()) {
+    const page = slideIndex + 1
+    const fileName = `slide-${String(page).padStart(3, '0')}.json`
     const payload = {
       presentation: { index: deckIndex + 1, name, slug, metadata },
-      range: { start: start + 1, end },
-      slides: slides.slice(start, end).map((slide, localIndex) => ({
-        canonicalPage: start + localIndex + 1,
-        ...slide,
-      })),
+      canonicalPage: page,
+      slide: { canonicalPage: page, ...slide },
     }
     fs.writeFileSync(path.join(directory, fileName), `${JSON.stringify(payload, null, 2)}\n`)
-    deckManifest.chunks.push(`${slug}/${fileName}`)
+    deckManifest.slides.push(`${slug}/${fileName}`)
   }
 
   fs.writeFileSync(path.join(directory, 'manifest.json'), `${JSON.stringify(deckManifest, null, 2)}\n`)
