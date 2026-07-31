@@ -7,8 +7,9 @@ import {
   MetricGrid,
   SectionHeading,
 } from '@/components/intelligence/design-system'
+import { hasCapability } from '@/lib/access-control'
+import { requireUserScope } from '@/lib/access-guards'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
-import { createClient } from '@/lib/supabase/server'
 
 function n(value: number) {
   return value.toLocaleString('es-CL')
@@ -36,16 +37,13 @@ function freshnessLabel(status: MarketFreshnessStatus, ageDays: number | null) {
 }
 
 export default async function MarketPage() {
-  const [operational, supabase] = await Promise.all([
+  const [operational, scope] = await Promise.all([
     getOperationalMarketSnapshot(),
-    createClient(),
+    requireUserScope(),
   ])
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = user
-    ? await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-    : { data: null }
-  const role = String(profile?.role ?? '').toLowerCase()
-  const canSeeAdministration = ['admin', 'ceo', 'director', 'subdirector'].includes(role)
+  const canSeeAdministration =
+    hasCapability(scope.role, 'management.global.read') ||
+    hasCapability(scope.role, 'management.office.read')
   const staleObservation = operational.freshnessStatus === 'stale'
   const agingObservation = operational.freshnessStatus === 'aging'
   const territorialCoverage = operational.canonicalProperties && operational.missingNeighborhoods !== null
