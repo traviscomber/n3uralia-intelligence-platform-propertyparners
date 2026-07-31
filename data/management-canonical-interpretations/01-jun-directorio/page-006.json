@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical_interpretation",
+  "source": {
+    "deck": "Jun_Directorio_5.pptx",
+    "page": 6,
+    "sourceFile": "data/presentations-2026-split/01-presentation-1/slide-006.json",
+    "period": "2026-06"
+  },
+  "title": "PL Real Estate — Scores Jun",
+  "entity": "PL Real Estate SpA",
+  "backgroundColor": "#F0F0F0",
+  "explicitValues": {
+    "managementQuality": 63.3,
+    "classification": "development",
+    "portfolioQuality": 68.0,
+    "followUpQuality": 59.4,
+    "conversionQuality": 61.0,
+    "portfolioSubscores": {
+      "portfolioGoal": 60.0,
+      "requirementsByPropertyType": 86.4,
+      "priceQuality": 57.6
+    },
+    "followUpSubscores": {
+      "classifiedLeads": 30.2,
+      "leadsManagedWithin90Days": 85.1,
+      "priorityLeadsManagedWithin15Days": 62.9
+    },
+    "conversionSubscores": {
+      "completedVisitsGoal": 46.0,
+      "completedScheduledVisits": 60.6,
+      "sixMonthCloseRate": 76.6
+    }
+  },
+  "verifiedCalculations": [
+    {
+      "metric": "portfolioQuality",
+      "formula": "(60.0 + 86.4 + 57.6) / 3",
+      "result": 68.0,
+      "status": "verified"
+    },
+    {
+      "metric": "followUpQuality",
+      "formula": "(30.2 + 85.1 + 62.9) / 3",
+      "result": 59.4,
+      "status": "verified"
+    },
+    {
+      "metric": "conversionQuality",
+      "formula": "(46.0 + 60.6 + 76.6) / 3",
+      "result": 61.0666666667,
+      "displayedResult": 61.0,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "managementQuality",
+      "formula": "0.4 * 68.0 + 0.3 * 59.4 + 0.3 * 61.0",
+      "result": 63.32,
+      "displayedResult": 63.3,
+      "status": "verified_with_display_rounding"
+    }
+  ],
+  "derivedValues": {
+    "portfolioGoalCompliancePercent": 60.0,
+    "requirementsBenchmarkCoveragePercent": 86.4,
+    "classifiedActiveLeadsPercent": 30.2,
+    "unmanagedActiveLeadsOver90DaysPercent": 14.9,
+    "priorityLeadsUnmanagedOver15DaysPercent": 37.1,
+    "visitGoalCompliancePercent": 46.0,
+    "scheduledVisitCompletionPercent": 60.6,
+    "estimatedSixMonthCloseRatePercent": 2.1885714286
+  },
+  "trafficLights": {
+    "managementQuality": "yellow",
+    "portfolioQuality": "yellow",
+    "followUpQuality": "yellow",
+    "conversionQuality": "yellow",
+    "portfolioGoal": "yellow",
+    "requirementsByPropertyType": "green",
+    "priceQuality": "yellow",
+    "classifiedLeads": "red",
+    "leadsManagedWithin90Days": "green",
+    "priorityLeadsManagedWithin15Days": "yellow",
+    "completedVisitsGoal": "red",
+    "completedScheduledVisits": "yellow",
+    "sixMonthCloseRate": "green"
+  },
+  "managementInterpretation": [
+    "La gestión consolidada se encuentra en nivel amarillo y se clasifica como Desarrollo.",
+    "Ninguno de los tres scores principales alcanza el umbral verde de 70 puntos.",
+    "La principal fortaleza de cartera es la correspondencia con requerimientos por tipo de propiedad.",
+    "La principal debilidad de seguimiento es la baja clasificación de leads activos.",
+    "La principal debilidad de conversión es el cumplimiento de la meta de visitas.",
+    "La tasa de cierre a seis meses es una fortaleza relativa, pero no compensa las brechas de actividad previa.",
+    "La clasificación Desarrollo es consistente con la regla residual: no cumple Estrella, Potencial, Captador, Vendedor, Perseverante ni Riesgo."
+  ],
+  "pendingDefinitions": [
+    "Confirmar si los tres subscores dentro de cada dimensión tienen exactamente un tercio de ponderación o si 33% es sólo redondeo visual.",
+    "Definir la base numérica de cartera y la meta que producen el score 60.0.",
+    "Definir el benchmark y las cantidades base del ratio de requerimientos por tipo de propiedad.",
+    "Definir cómo se agrega el ratio de precio promedio para producir 57.6 puntos.",
+    "Confirmar las cantidades base de leads activos, clasificados, sin gestión por 90 días y leads A sin gestión por 15 días.",
+    "Confirmar la meta de visitas y las cantidades de visitas realizadas y agendadas.",
+    "Confirmar que el score 76.6 implica una tasa de cierre de aproximadamente 2.19% antes del límite de 2.86%."
+  ]
+}
