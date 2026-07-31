@@ -1,0 +1,1151 @@
+{
+  "presentation": {
+    "index": 3,
+    "name": "presentation-3",
+    "slug": "03-presentation-3",
+    "metadata": {
+      "file": "Jun_Partners_Nueva_Costanera.pptx",
+      "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+      "byteSize": 2764734,
+      "slideCount": 84,
+      "mediaCount": 84,
+      "embeddingCount": 60,
+      "stats": {
+        "objects": 1454,
+        "textObjects": 829,
+        "tables": 91,
+        "charts": 60,
+        "pictures": 84,
+        "notes": 84
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3414
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1222
+          ],
+          [
+            "8",
+            1184
+          ],
+          [
+            "6",
+            400
+          ],
+          [
+            "9",
+            191
+          ],
+          [
+            "13",
+            91
+          ],
+          [
+            "14",
+            82
+          ],
+          [
+            "10",
+            80
+          ],
+          [
+            "11",
+            49
+          ],
+          [
+            "22",
+            40
+          ],
+          [
+            "18",
+            30
+          ],
+          [
+            "20",
+            20
+          ],
+          [
+            "26",
+            20
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            711
+          ],
+          [
+            "#FFFFFF",
+            680
+          ],
+          [
+            "#7F8C8D",
+            624
+          ],
+          [
+            "#E74C3C",
+            521
+          ],
+          [
+            "#27AE60",
+            512
+          ],
+          [
+            "#F39C12",
+            205
+          ],
+          [
+            "#1565C0",
+            110
+          ],
+          [
+            "#C0392B",
+            51
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            180
+          ],
+          [
+            "#000000",
+            91
+          ],
+          [
+            "#E74C3C",
+            54
+          ],
+          [
+            "#27AE60",
+            40
+          ],
+          [
+            "#F39C12",
+            36
+          ],
+          [
+            "#1565C0",
+            30
+          ],
+          [
+            "#2E7D32",
+            20
+          ],
+          [
+            "#E65100",
+            20
+          ],
+          [
+            "#C0392B",
+            10
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            81
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 1,
+    "end": 10
+  },
+  "slides": [
+    {
+      "canonicalPage": 1,
+      "index": 1,
+      "title": "Control de Gestión Cierre Junio",
+      "backgroundColor": "#000000",
+      "texts": [
+        "Control de Gestión Cierre Junio",
+        "Detalle por Partner — Ene-Jun 2026",
+        "Julio 2026 | Cierre Junio — Acumulado Ene-Jun"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "1"
+      ]
+    },
+    {
+      "canonicalPage": 2,
+      "index": 2,
+      "title": "Modelo de Scoring — Definiciones",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Modelo de Scoring — Definiciones",
+        "Calidad Gestión = 0.4×Calidad Cartera + 0.3×Calidad Seguim + 0.3×Calidad Conversión | Subscores: 33.3% cada uno",
+        "Score Subscore Fórmula Mide Calidad Cartera (40%) Meta cartera min(Cart/Meta,1)×100 Cumple meta props Reqs x Tipo Prop min(Ratio Req,1)×100 Reqs vs benchmark Calidad Precio ≤1.05→100, ≤1.10→50, >1.10→0 Pricing vs valorización Calidad Seguim (30%) % Leads Clasif (Clasif/Activos)×100 Clasifica leads % Leads c-g90 (1−L90d/Act)×100 Leads no abandonados %LeadsA c-g15 (1−LA15d/CliA)×100 Leads A contactados Calidad Conversión (30%) Vis Realiz/Meta min(Vis/Meta,1)×100 Cumple meta visitas %Vis realizad/agend (VisReal/Agend)×100 Cumple agenda TC 6m/leads tot min(TC%6m,2.86)×35 Cierra negocios",
+        "Semáforos — Cumpl. meta: 🔴<90% 🟡90-100% 🟢≥100% | Crec. AA: 🔴<0% 🟡0-20% 🟢≥20% | Scores: 🔴<50 🟡50-70 🟢≥70",
+        "⭐Estrella (3≥70) | 📈Potencial (1≥70+2≥50) | 🧲Captador (Cart≥70) | 🏆Vendedor (Conv≥70) | 🔄Perseverante (Seg≥70) | ⚠️Riesgo (2<30) | 🔧Desarrollo"
+      ],
+      "tables": [
+        {
+          "id": 3,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Subscore",
+              "Fórmula",
+              "Mide"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "Meta cartera",
+              "min(Cart/Meta,1)×100",
+              "Cumple meta props"
+            ],
+            [
+              "",
+              "Reqs x Tipo Prop",
+              "min(Ratio Req,1)×100",
+              "Reqs vs benchmark"
+            ],
+            [
+              "",
+              "Calidad Precio",
+              "≤1.05→100, ≤1.10→50, >1.10→0",
+              "Pricing vs valorización"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "% Leads Clasif",
+              "(Clasif/Activos)×100",
+              "Clasifica leads"
+            ],
+            [
+              "",
+              "% Leads c-g90",
+              "(1−L90d/Act)×100",
+              "Leads no abandonados"
+            ],
+            [
+              "",
+              "%LeadsA c-g15",
+              "(1−LA15d/CliA)×100",
+              "Leads A contactados"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "Vis Realiz/Meta",
+              "min(Vis/Meta,1)×100",
+              "Cumple meta visitas"
+            ],
+            [
+              "",
+              "%Vis realizad/agend",
+              "(VisReal/Agend)×100",
+              "Cumple agenda"
+            ],
+            [
+              "",
+              "TC 6m/leads tot",
+              "min(TC%6m,2.86)×35",
+              "Cierra negocios"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "2"
+      ]
+    },
+    {
+      "canonicalPage": 3,
+      "index": 3,
+      "title": "Nueva Costanera",
+      "backgroundColor": "#000000",
+      "texts": [
+        "Nueva Costanera",
+        "Resultados de la oficina"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "3"
+      ]
+    },
+    {
+      "canonicalPage": 4,
+      "index": 4,
+      "title": "Nueva Costanera — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Nueva Costanera — Venta Jun",
+        "Venta Jun 2026",
+        "3.0",
+        "60.325 UF",
+        "Cumpl: 91% ci | 142% UF",
+        "AA: -40% ci | -5% UF",
+        "Acumulado Ene-Jun 2026",
+        "15.5",
+        "303.970 UF",
+        "Cumpl: 95% ci | 120% UF",
+        "AA: -3% ci | +38% UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 3.0 3.3 91% 5.0 -40% 15.5 16.4 95% 16.0 -3% UF 60.325 42.540 142% 63.825 -5% 303.970 252.665 120% 220.905 +38%"
+      ],
+      "tables": [
+        {
+          "id": 5,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "3.0",
+              "3.3",
+              "91%",
+              "5.0",
+              "-40%",
+              "15.5",
+              "16.4",
+              "95%",
+              "16.0",
+              "-3%"
+            ],
+            [
+              "UF",
+              "60.325",
+              "42.540",
+              "142%",
+              "63.825",
+              "-5%",
+              "303.970",
+              "252.665",
+              "120%",
+              "220.905",
+              "+38%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "4"
+      ]
+    },
+    {
+      "canonicalPage": 5,
+      "index": 5,
+      "title": "Nueva Costanera — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Nueva Costanera — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 3.0 2.0 2.5 3.5 3.0 UF mes 81.075 15.800 58.145 46.400 60.325 Meta ci mes 2.20 1.76 3.06 2.78 3.3 Meta UF mes 37.844 30.033 52.089 44.781 42.540 Cierres acum. 3.0 5.0 7.5 11.0 15.5 UF acum. 81.075 96.875 155.020 201.420 303.970 Meta ci acum. 2.20 3.96 7.02 9.80 16.4 Meta UF acum. 37.844 67.876 119.965 164.747 252.665 % Cumpl ci 136% 126% 107% 112% 95% % Cumpl UF 214% 143% 129% 122% 120%"
+      ],
+      "tables": [
+        {
+          "id": 6,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "3.0",
+              "2.0",
+              "2.5",
+              "3.5",
+              "3.0"
+            ],
+            [
+              "UF mes",
+              "81.075",
+              "15.800",
+              "58.145",
+              "46.400",
+              "60.325"
+            ],
+            [
+              "Meta ci mes",
+              "2.20",
+              "1.76",
+              "3.06",
+              "2.78",
+              "3.3"
+            ],
+            [
+              "Meta UF mes",
+              "37.844",
+              "30.033",
+              "52.089",
+              "44.781",
+              "42.540"
+            ],
+            [
+              "Cierres acum.",
+              "3.0",
+              "5.0",
+              "7.5",
+              "11.0",
+              "15.5"
+            ],
+            [
+              "UF acum.",
+              "81.075",
+              "96.875",
+              "155.020",
+              "201.420",
+              "303.970"
+            ],
+            [
+              "Meta ci acum.",
+              "2.20",
+              "3.96",
+              "7.02",
+              "9.80",
+              "16.4"
+            ],
+            [
+              "Meta UF acum.",
+              "37.844",
+              "67.876",
+              "119.965",
+              "164.747",
+              "252.665"
+            ],
+            [
+              "% Cumpl ci",
+              "136%",
+              "126%",
+              "107%",
+              "112%",
+              "95%"
+            ],
+            [
+              "% Cumpl UF",
+              "214%",
+              "143%",
+              "129%",
+              "122%",
+              "120%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart79.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "3.0",
+                  "2.0",
+                  "2.5",
+                  "3.5",
+                  "3.0"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart80.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "81075.0",
+                  "96875.0",
+                  "155020.0",
+                  "201420.0",
+                  "261745.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "37843.5592001631",
+                  "67876.43327135302",
+                  "119965.44807940457",
+                  "164746.54286441777",
+                  "207286.54286441777"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "5"
+      ]
+    },
+    {
+      "canonicalPage": 6,
+      "index": 6,
+      "title": "Nueva Costanera — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Nueva Costanera — Scores Jun",
+        "Calidad Gestión",
+        "64.7",
+        "🔧 Desarrollo",
+        "Calidad Cartera (40%)",
+        "66.4",
+        "Calidad Seguim (30%)",
+        "64.1",
+        "Calidad Conversión (30%)",
+        "63.0",
+        "Calidad Cartera: 66.4",
+        "Meta cartera (33%)",
+        "56.1",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "88.6",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "54.7",
+        "Pricing prom",
+        "Calidad Seguim: 64.1",
+        "% Leads Clasif (33%)",
+        "41.6",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "90.9",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "60.0",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 63.0",
+        "Vis Realiz/Meta (33%)",
+        "36.0",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "52.9",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "100.1",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 64.7 | 🔧 Desarrollo |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "6"
+      ]
+    },
+    {
+      "canonicalPage": 7,
+      "index": 7,
+      "title": "Nueva Costanera — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Nueva Costanera — Indicadores Ene-Jun",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 92 164 56% Requerimientos 164 Esp:185 89% Pricing ≤1.05:31 | ≤1.10:20 | >1.10:24 Score 54.7",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 155/373 A: 45 41.6 Leads sg 90d / activos 34/373 9% sin gest 90.9 Leads A sg 15d / A 18/45 40% sin gest 60.0",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 54 Meta: 150 36.0 Vis realizadas / agendadas 54 / 102 Ratio cumplimiento 52.9 TC 6 meses 13.5 ci / 373 ld Tasa conversión 3.6%"
+      ],
+      "tables": [
+        {
+          "id": 8,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "92",
+              "164",
+              "56%"
+            ],
+            [
+              "Requerimientos",
+              "164",
+              "Esp:185",
+              "89%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:31 | ≤1.10:20 | >1.10:24",
+              "Score",
+              "54.7"
+            ]
+          ]
+        },
+        {
+          "id": 15,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "155/373",
+              "A: 45",
+              "41.6"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "34/373",
+              "9% sin gest",
+              "90.9"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "18/45",
+              "40% sin gest",
+              "60.0"
+            ]
+          ]
+        },
+        {
+          "id": 22,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "54",
+              "Meta: 150",
+              "36.0"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "54 / 102",
+              "Ratio cumplimiento",
+              "52.9"
+            ],
+            [
+              "TC 6 meses",
+              "13.5 ci / 373 ld",
+              "Tasa conversión",
+              "3.6%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "7"
+      ]
+    },
+    {
+      "canonicalPage": 8,
+      "index": 8,
+      "title": "Nueva Costanera — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Nueva Costanera — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 56.4 56.2 64.9 61.4 64.7 +3.3 Calidad Cartera (40%) 77.4 75.0 82.5 75.9 66.4 -9.5 Calidad Seguim (30%) 41.8 41.8 44.1 48.3 64.1 +15.8 Calidad Conversión (30%) 43.2 45.4 62.3 55.2 63.0 +7.8"
+      ],
+      "tables": [
+        {
+          "id": 9,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "56.4",
+              "56.2",
+              "64.9",
+              "61.4",
+              "64.7",
+              "+3.3"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "77.4",
+              "75.0",
+              "82.5",
+              "75.9",
+              "66.4",
+              "-9.5"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "41.8",
+              "41.8",
+              "44.1",
+              "48.3",
+              "64.1",
+              "+15.8"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "43.2",
+              "45.4",
+              "62.3",
+              "55.2",
+              "63.0",
+              "+7.8"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart81.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "56.43373075985756",
+                  "56.177555456537206",
+                  "64.92454041789001",
+                  "61.43274784718496",
+                  "64.7"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "77.39564701908539",
+                  "75.0432832639496",
+                  "82.49032614704257",
+                  "75.93913342816516",
+                  "66.4"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "41.7599238870363",
+                  "41.7599238870363",
+                  "44.1343517430474",
+                  "48.330410774913254",
+                  "64.1"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "43.158315953708374",
+                  "45.44088328282157",
+                  "62.293681453862575",
+                  "55.19323747814973",
+                  "63.0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "8"
+      ]
+    },
+    {
+      "canonicalPage": 9,
+      "index": 9,
+      "title": "Nueva Costanera — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Nueva Costanera — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 100.0 100.0 83.6 74.1 56.1 -18.0 Reqs x Tipo Prop 77.3 69.0 100.0 92.7 88.6 -4.1 Calidad Precio 54.9 56.1 63.9 61.0 54.7 -6.3",
+        "Cartera:",
+        "66.4",
+        "-1.5"
+      ],
+      "tables": [
+        {
+          "id": 10,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "100.0",
+              "100.0",
+              "83.6",
+              "74.1",
+              "56.1",
+              "-18.0"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "77.3",
+              "69.0",
+              "100.0",
+              "92.7",
+              "88.6",
+              "-4.1"
+            ],
+            [
+              "Calidad Precio",
+              "54.9",
+              "56.1",
+              "63.9",
+              "61.0",
+              "54.7",
+              "-6.3"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart82.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "100.0",
+                  "83.5820895522388",
+                  "74.14965986394559",
+                  "56.1"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "77.25736359246741",
+                  "69.04876871076775",
+                  "100.0",
+                  "92.70883631096089",
+                  "88.6"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "54.929577464788736",
+                  "56.08108108108108",
+                  "63.888888888888886",
+                  "60.95890410958904",
+                  "54.7"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "9"
+      ]
+    },
+    {
+      "canonicalPage": 10,
+      "index": 10,
+      "title": "Nueva Costanera — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Nueva Costanera — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 21.6 21.6 25.8 24.3 41.6 +17.3 % Leads c-g90 36.4 36.4 37.1 31.9 90.9 +59.0 %LeadsA c-g15 67.3 67.3 69.6 88.8 60.0 -28.8",
+        "Seguimiento:",
+        "64.1",
+        "+6.6"
+      ],
+      "tables": [
+        {
+          "id": 11,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "21.6",
+              "21.6",
+              "25.8",
+              "24.3",
+              "41.6",
+              "+17.3"
+            ],
+            [
+              "% Leads c-g90",
+              "36.4",
+              "36.4",
+              "37.1",
+              "31.9",
+              "90.9",
+              "+59.0"
+            ],
+            [
+              "%LeadsA c-g15",
+              "67.3",
+              "67.3",
+              "69.6",
+              "88.8",
+              "60.0",
+              "-28.8"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart83.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "21.6017634092579",
+                  "21.6017634092579",
+                  "25.77220077220077",
+                  "24.314442413162705",
+                  "41.6"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "36.370315944158705",
+                  "36.370315944158705",
+                  "37.06563706563707",
+                  "31.901279707495434",
+                  "90.9"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "67.3076923076923",
+                  "67.3076923076923",
+                  "69.56521739130434",
+                  "88.77551020408163",
+                  "60.0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "10"
+      ]
+    }
+  ]
+}

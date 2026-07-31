@@ -1,0 +1,1315 @@
+{
+  "presentation": {
+    "index": 2,
+    "name": "presentation-2",
+    "slug": "02-presentation-2",
+    "metadata": {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            2740
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            984
+          ],
+          [
+            "8",
+            948
+          ],
+          [
+            "6",
+            320
+          ],
+          [
+            "9",
+            153
+          ],
+          [
+            "13",
+            73
+          ],
+          [
+            "14",
+            66
+          ],
+          [
+            "10",
+            64
+          ],
+          [
+            "11",
+            39
+          ],
+          [
+            "22",
+            32
+          ],
+          [
+            "18",
+            24
+          ],
+          [
+            "20",
+            16
+          ],
+          [
+            "26",
+            16
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            575
+          ],
+          [
+            "#FFFFFF",
+            546
+          ],
+          [
+            "#7F8C8D",
+            499
+          ],
+          [
+            "#E74C3C",
+            421
+          ],
+          [
+            "#27AE60",
+            389
+          ],
+          [
+            "#F39C12",
+            181
+          ],
+          [
+            "#1565C0",
+            88
+          ],
+          [
+            "#C0392B",
+            41
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            144
+          ],
+          [
+            "#000000",
+            73
+          ],
+          [
+            "#27AE60",
+            43
+          ],
+          [
+            "#E74C3C",
+            31
+          ],
+          [
+            "#F39C12",
+            30
+          ],
+          [
+            "#1565C0",
+            24
+          ],
+          [
+            "#2E7D32",
+            16
+          ],
+          [
+            "#E65100",
+            16
+          ],
+          [
+            "#C0392B",
+            8
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            65
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 11,
+    "end": 20
+  },
+  "slides": [
+    {
+      "canonicalPage": 11,
+      "index": 11,
+      "title": "Lo Beltrán — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Lo Beltrán — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 60.9 61.4 59.7 52.7 52.0 -0.7 %Vis realizad/agend 59.8 59.7 63.1 55.0 59.5 +4.5 TC 6m/leads tot 58.9 53.3 76.5 64.1 83.3 +19.2",
+        "Conversión:",
+        "65.0",
+        "-2.6"
+      ],
+      "tables": [
+        {
+          "id": 12,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "60.9",
+              "61.4",
+              "59.7",
+              "52.7",
+              "52.0",
+              "-0.7"
+            ],
+            [
+              "%Vis realizad/agend",
+              "59.8",
+              "59.7",
+              "63.1",
+              "55.0",
+              "59.5",
+              "+4.5"
+            ],
+            [
+              "TC 6m/leads tot",
+              "58.9",
+              "53.3",
+              "76.5",
+              "64.1",
+              "83.3",
+              "+19.2"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart30.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "60.9156068074729",
+                  "61.35887578378893",
+                  "59.737162166494116",
+                  "52.6565085135154",
+                  "52.0"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "59.78260869565217",
+                  "59.72222222222222",
+                  "63.10679611650486",
+                  "54.95495495495496",
+                  "59.5"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "58.89423076923077",
+                  "53.28525641025641",
+                  "76.52091254752851",
+                  "64.1025641025641",
+                  "83.3"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "11"
+      ]
+    },
+    {
+      "canonicalPage": 12,
+      "index": 12,
+      "title": "Lo Beltrán Detalle por Partner",
+      "backgroundColor": "#000000",
+      "texts": [
+        "Lo Beltrán Detalle por Partner"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "12"
+      ]
+    },
+    {
+      "canonicalPage": 13,
+      "index": 13,
+      "title": "Francisca Rossetti — Lo Beltrán — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Lo Beltrán — Venta Jun",
+        "Venta Jun 2026",
+        "0.5",
+        "10.700 UF",
+        "Cumpl: 250% ci | 394% UF",
+        "AA: — ci | — UF",
+        "Acumulado Ene-Jun 2026",
+        "2.5",
+        "43.750 UF",
+        "Cumpl: 250% ci | 381% UF",
+        "AA: — ci | — UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.5 0.2 250% 0.0 — 2.5 1.0 250% 0.0 — UF 10.700 2.718 394% 0 — 43.750 11.486 381% 0 —"
+      ],
+      "tables": [
+        {
+          "id": 14,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "0.5",
+              "0.2",
+              "250%",
+              "0.0",
+              "—",
+              "2.5",
+              "1.0",
+              "250%",
+              "0.0",
+              "—"
+            ],
+            [
+              "UF",
+              "10.700",
+              "2.718",
+              "394%",
+              "0",
+              "—",
+              "43.750",
+              "11.486",
+              "381%",
+              "0",
+              "—"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "13"
+      ]
+    },
+    {
+      "canonicalPage": 14,
+      "index": 14,
+      "title": "Francisca Rossetti — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.0 0.0 2.0 0.0 0.5 UF mes 0 0 33.050 0 10.700 Meta ci mes 0.11 0.10 0.16 0.16 0.2 Meta UF mes 1.372 1.150 1.882 1.960 2.718 Cierres acum. 0.0 0.0 2.0 2.0 2.5 UF acum. 0 0 33.050 33.050 43.750 Meta ci acum. 0.11 0.21 0.37 0.53 1.0 Meta UF acum. 1.372 2.522 4.404 6.364 11.486 % Cumpl ci 0% 0% 545% 377% 250% % Cumpl UF 0% 0% 751% 519% 381%"
+      ],
+      "tables": [
+        {
+          "id": 15,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.0",
+              "0.0",
+              "2.0",
+              "0.0",
+              "0.5"
+            ],
+            [
+              "UF mes",
+              "0",
+              "0",
+              "33.050",
+              "0",
+              "10.700"
+            ],
+            [
+              "Meta ci mes",
+              "0.11",
+              "0.10",
+              "0.16",
+              "0.16",
+              "0.2"
+            ],
+            [
+              "Meta UF mes",
+              "1.372",
+              "1.150",
+              "1.882",
+              "1.960",
+              "2.718"
+            ],
+            [
+              "Cierres acum.",
+              "0.0",
+              "0.0",
+              "2.0",
+              "2.0",
+              "2.5"
+            ],
+            [
+              "UF acum.",
+              "0",
+              "0",
+              "33.050",
+              "33.050",
+              "43.750"
+            ],
+            [
+              "Meta ci acum.",
+              "0.11",
+              "0.21",
+              "0.37",
+              "0.53",
+              "1.0"
+            ],
+            [
+              "Meta UF acum.",
+              "1.372",
+              "2.522",
+              "4.404",
+              "6.364",
+              "11.486"
+            ],
+            [
+              "% Cumpl ci",
+              "0%",
+              "0%",
+              "545%",
+              "377%",
+              "250%"
+            ],
+            [
+              "% Cumpl UF",
+              "0%",
+              "0%",
+              "751%",
+              "519%",
+              "381%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart31.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "2.0",
+                  "0.0",
+                  "0.5"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart32.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "33050.0",
+                  "33050.0",
+                  "43750.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "1372.0508166969146",
+                  "2521.9600725952814",
+                  "4403.629764065336",
+                  "6363.702359346642",
+                  "9081.702359346642"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "14"
+      ]
+    },
+    {
+      "canonicalPage": 15,
+      "index": 15,
+      "title": "Francisca Rossetti — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Scores Jun",
+        "Lo Beltrán",
+        "Calidad Gestión",
+        "74.8",
+        "📈 Potencial",
+        "Calidad Cartera (40%)",
+        "69.1",
+        "Calidad Seguim (30%)",
+        "75.5",
+        "Calidad Conversión (30%)",
+        "81.6",
+        "Calidad Cartera: 69.1",
+        "Meta cartera (33%)",
+        "38.5",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "100.0",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "68.8",
+        "Pricing prom",
+        "Calidad Seguim: 75.5",
+        "% Leads Clasif (33%)",
+        "26.5",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "100.0",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "100.0",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 81.6",
+        "Vis Realiz/Meta (33%)",
+        "100.0",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "55.6",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "89.3",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 74.8 | 📈 Potencial |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "15"
+      ]
+    },
+    {
+      "canonicalPage": 16,
+      "index": 16,
+      "title": "Francisca Rossetti — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Indicadores Ene-Jun",
+        "Lo Beltrán",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 10 26 38% Requerimientos 72 Esp:20 351% Pricing ≤1.05:5 | ≤1.10:1 | >1.10:2 Score 68.8",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 26/98 A: 10 26.5 Leads sg 90d / activos 0/98 0% sin gest 100.0 Leads A sg 15d / A 0/10 0% sin gest 100.0",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 30 Meta: 14 100.0 Vis realizadas / agendadas 30 / 54 Ratio cumplimiento 55.6 TC 6 meses 2.5 ci / 98 ld Tasa conversión 2.6%"
+      ],
+      "tables": [
+        {
+          "id": 17,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "10",
+              "26",
+              "38%"
+            ],
+            [
+              "Requerimientos",
+              "72",
+              "Esp:20",
+              "351%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:5 | ≤1.10:1 | >1.10:2",
+              "Score",
+              "68.8"
+            ]
+          ]
+        },
+        {
+          "id": 33,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "26/98",
+              "A: 10",
+              "26.5"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "0/98",
+              "0% sin gest",
+              "100.0"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "0/10",
+              "0% sin gest",
+              "100.0"
+            ]
+          ]
+        },
+        {
+          "id": 49,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "30",
+              "Meta: 14",
+              "100.0"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "30 / 54",
+              "Ratio cumplimiento",
+              "55.6"
+            ],
+            [
+              "TC 6 meses",
+              "2.5 ci / 98 ld",
+              "Tasa conversión",
+              "2.6%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "16"
+      ]
+    },
+    {
+      "canonicalPage": 17,
+      "index": 17,
+      "title": "Francisca Rossetti — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 74.3 71.4 76.4 78.3 74.8 -3.5 Calidad Cartera (40%) 91.7 77.9 76.7 79.6 69.1 -10.5 Calidad Seguim (30%) 67.5 67.5 65.8 70.7 75.5 +4.8 Calidad Conversión (30%) 58.0 66.8 86.7 84.3 81.6 -2.7"
+      ],
+      "tables": [
+        {
+          "id": 18,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "74.3",
+              "71.4",
+              "76.4",
+              "78.3",
+              "74.8",
+              "-3.5"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "91.7",
+              "77.9",
+              "76.7",
+              "79.6",
+              "69.1",
+              "-10.5"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "67.5",
+              "67.5",
+              "65.8",
+              "70.7",
+              "75.5",
+              "+4.8"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "58.0",
+              "66.8",
+              "86.7",
+              "84.3",
+              "81.6",
+              "-2.7"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart33.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "74.31907308377897",
+                  "71.44653325247626",
+                  "76.42312480547776",
+                  "78.34269434269434",
+                  "74.8"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "91.66666666666667",
+                  "77.856529209622",
+                  "76.71957671957672",
+                  "79.62962962962963",
+                  "69.1"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "67.51633986928105",
+                  "67.51633986928105",
+                  "65.78431372549021",
+                  "70.6959706959707",
+                  "75.5"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "57.991681521093284",
+                  "66.83006535947713",
+                  "86.66666666666667",
+                  "84.27350427350427",
+                  "81.6"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "17"
+      ]
+    },
+    {
+      "canonicalPage": 18,
+      "index": 18,
+      "title": "Francisca Rossetti — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 100.0 81.3 44.4 50.0 38.5 -11.5 Reqs x Tipo Prop 100.0 77.3 100.0 100.0 100.0 +0.0 Calidad Precio 75.0 75.0 85.7 88.9 68.8 -20.1",
+        "Cartera:",
+        "69.1",
+        "-12.0"
+      ],
+      "tables": [
+        {
+          "id": 19,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "100.0",
+              "81.3",
+              "44.4",
+              "50.0",
+              "38.5",
+              "-11.5"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "100.0",
+              "77.3",
+              "100.0",
+              "100.0",
+              "100.0",
+              "+0.0"
+            ],
+            [
+              "Calidad Precio",
+              "75.0",
+              "75.0",
+              "85.7",
+              "88.9",
+              "68.8",
+              "-20.1"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart34.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "81.25",
+                  "44.44444444444444",
+                  "50.0",
+                  "38.5"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "77.31958762886599",
+                  "100.0",
+                  "100.0",
+                  "100"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "75.0",
+                  "75.0",
+                  "85.71428571428571",
+                  "88.88888888888889",
+                  "68.8"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "18"
+      ]
+    },
+    {
+      "canonicalPage": 19,
+      "index": 19,
+      "title": "Francisca Rossetti — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 32.4 32.4 32.9 24.2 26.5 +2.3 % Leads c-g90 90.2 90.2 89.4 87.9 100.0 +12.1 %LeadsA c-g15 80.0 80.0 75.0 100.0 100.0 +0.0",
+        "Seguimiento:",
+        "75.5",
+        "+3.2"
+      ],
+      "tables": [
+        {
+          "id": 20,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "32.4",
+              "32.4",
+              "32.9",
+              "24.2",
+              "26.5",
+              "+2.3"
+            ],
+            [
+              "% Leads c-g90",
+              "90.2",
+              "90.2",
+              "89.4",
+              "87.9",
+              "100.0",
+              "+12.1"
+            ],
+            [
+              "%LeadsA c-g15",
+              "80.0",
+              "80.0",
+              "75.0",
+              "100.0",
+              "100.0",
+              "+0.0"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart35.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "32.35294117647059",
+                  "32.35294117647059",
+                  "32.94117647058823",
+                  "24.175824175824175",
+                  "26.5"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "90.19607843137256",
+                  "90.19607843137256",
+                  "89.41176470588236",
+                  "87.91208791208791",
+                  "100"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "80.0",
+                  "80.0",
+                  "75.0",
+                  "100.0",
+                  "100"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "19"
+      ]
+    },
+    {
+      "canonicalPage": 20,
+      "index": 20,
+      "title": "Francisca Rossetti — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Rossetti — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 100.0 100.0 100.0 100.0 100.0 +0.0 %Vis realizad/agend 56.8 83.3 60.0 56.7 55.6 -1.1 TC 6m/leads tot 17.2 17.2 100.0 96.2 89.3 -6.9",
+        "Conversión:",
+        "81.6",
+        "+26.3"
+      ],
+      "tables": [
+        {
+          "id": 21,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "100.0",
+              "100.0",
+              "100.0",
+              "100.0",
+              "100.0",
+              "+0.0"
+            ],
+            [
+              "%Vis realizad/agend",
+              "56.8",
+              "83.3",
+              "60.0",
+              "56.7",
+              "55.6",
+              "-1.1"
+            ],
+            [
+              "TC 6m/leads tot",
+              "17.2",
+              "17.2",
+              "100.0",
+              "96.2",
+              "89.3",
+              "-6.9"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart36.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "100.0",
+                  "100.0",
+                  "100.0",
+                  "100"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "56.81818181818182",
+                  "83.33333333333334",
+                  "60.0",
+                  "56.666666666666664",
+                  "55.6"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "17.15686274509804",
+                  "17.15686274509804",
+                  "100.0",
+                  "96.15384615384616",
+                  "89.3"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "20"
+      ]
+    }
+  ]
+}

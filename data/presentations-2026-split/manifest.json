@@ -1,0 +1,891 @@
+{
+  "generatedAt": "2026-07-31T15:02:59.310Z",
+  "source": "data/presentations-2026.json",
+  "rootKeys": [
+    "schemaVersion",
+    "generatedAt",
+    "source",
+    "scope",
+    "brandbook",
+    "scoringDefinition",
+    "management",
+    "reconciliation",
+    "decks"
+  ],
+  "presentationCount": 5,
+  "slideCount": 304,
+  "presentations": [
+    {
+      "index": 1,
+      "name": "presentation-1",
+      "slug": "01-presentation-1",
+      "slideCount": 38,
+      "metadata": {
+        "file": "Jun_Directorio_5.pptx",
+        "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+        "byteSize": 1252175,
+        "slideCount": 38,
+        "mediaCount": 38,
+        "embeddingCount": 24,
+        "stats": {
+          "objects": 587,
+          "textObjects": 332,
+          "tables": 37,
+          "charts": 24,
+          "pictures": 38,
+          "notes": 38
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              1498
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              552
+            ],
+            [
+              "8",
+              528
+            ],
+            [
+              "6",
+              176
+            ],
+            [
+              "9",
+              77
+            ],
+            [
+              "13",
+              36
+            ],
+            [
+              "14",
+              34
+            ],
+            [
+              "10",
+              32
+            ],
+            [
+              "22",
+              16
+            ],
+            [
+              "11",
+              13
+            ],
+            [
+              "18",
+              12
+            ],
+            [
+              "20",
+              8
+            ],
+            [
+              "26",
+              8
+            ],
+            [
+              "28",
+              6
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              311
+            ],
+            [
+              "#FFFFFF",
+              299
+            ],
+            [
+              "#7F8C8D",
+              247
+            ],
+            [
+              "#E74C3C",
+              212
+            ],
+            [
+              "#27AE60",
+              211
+            ],
+            [
+              "#F39C12",
+              145
+            ],
+            [
+              "#1565C0",
+              52
+            ],
+            [
+              "#C0392B",
+              21
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              72
+            ],
+            [
+              "#000000",
+              37
+            ],
+            [
+              "#F39C12",
+              31
+            ],
+            [
+              "#27AE60",
+              14
+            ],
+            [
+              "#1565C0",
+              12
+            ],
+            [
+              "#2E7D32",
+              8
+            ],
+            [
+              "#E65100",
+              8
+            ],
+            [
+              "#E74C3C",
+              7
+            ],
+            [
+              "#C0392B",
+              4
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              33
+            ],
+            [
+              "#000000",
+              5
+            ]
+          ]
+        }
+      },
+      "chunks": [
+        "01-presentation-1/slides-001-010.json",
+        "01-presentation-1/slides-011-020.json",
+        "01-presentation-1/slides-021-030.json",
+        "01-presentation-1/slides-031-038.json"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "presentation-2",
+      "slug": "02-presentation-2",
+      "slideCount": 68,
+      "metadata": {
+        "file": "Jun_Partners_Lo_Beltran.pptx",
+        "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+        "byteSize": 2237308,
+        "slideCount": 68,
+        "mediaCount": 68,
+        "embeddingCount": 48,
+        "stats": {
+          "objects": 1166,
+          "textObjects": 665,
+          "tables": 73,
+          "charts": 48,
+          "pictures": 68,
+          "notes": 68
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              2740
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              984
+            ],
+            [
+              "8",
+              948
+            ],
+            [
+              "6",
+              320
+            ],
+            [
+              "9",
+              153
+            ],
+            [
+              "13",
+              73
+            ],
+            [
+              "14",
+              66
+            ],
+            [
+              "10",
+              64
+            ],
+            [
+              "11",
+              39
+            ],
+            [
+              "22",
+              32
+            ],
+            [
+              "18",
+              24
+            ],
+            [
+              "20",
+              16
+            ],
+            [
+              "26",
+              16
+            ],
+            [
+              "28",
+              5
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              575
+            ],
+            [
+              "#FFFFFF",
+              546
+            ],
+            [
+              "#7F8C8D",
+              499
+            ],
+            [
+              "#E74C3C",
+              421
+            ],
+            [
+              "#27AE60",
+              389
+            ],
+            [
+              "#F39C12",
+              181
+            ],
+            [
+              "#1565C0",
+              88
+            ],
+            [
+              "#C0392B",
+              41
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              144
+            ],
+            [
+              "#000000",
+              73
+            ],
+            [
+              "#27AE60",
+              43
+            ],
+            [
+              "#E74C3C",
+              31
+            ],
+            [
+              "#F39C12",
+              30
+            ],
+            [
+              "#1565C0",
+              24
+            ],
+            [
+              "#2E7D32",
+              16
+            ],
+            [
+              "#E65100",
+              16
+            ],
+            [
+              "#C0392B",
+              8
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              65
+            ],
+            [
+              "#000000",
+              3
+            ]
+          ]
+        }
+      },
+      "chunks": [
+        "02-presentation-2/slides-001-010.json",
+        "02-presentation-2/slides-011-020.json",
+        "02-presentation-2/slides-021-030.json",
+        "02-presentation-2/slides-031-040.json",
+        "02-presentation-2/slides-041-050.json",
+        "02-presentation-2/slides-051-060.json",
+        "02-presentation-2/slides-061-068.json"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "presentation-3",
+      "slug": "03-presentation-3",
+      "slideCount": 84,
+      "metadata": {
+        "file": "Jun_Partners_Nueva_Costanera.pptx",
+        "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+        "byteSize": 2764734,
+        "slideCount": 84,
+        "mediaCount": 84,
+        "embeddingCount": 60,
+        "stats": {
+          "objects": 1454,
+          "textObjects": 829,
+          "tables": 91,
+          "charts": 60,
+          "pictures": 84,
+          "notes": 84
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              3414
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              1222
+            ],
+            [
+              "8",
+              1184
+            ],
+            [
+              "6",
+              400
+            ],
+            [
+              "9",
+              191
+            ],
+            [
+              "13",
+              91
+            ],
+            [
+              "14",
+              82
+            ],
+            [
+              "10",
+              80
+            ],
+            [
+              "11",
+              49
+            ],
+            [
+              "22",
+              40
+            ],
+            [
+              "18",
+              30
+            ],
+            [
+              "20",
+              20
+            ],
+            [
+              "26",
+              20
+            ],
+            [
+              "28",
+              5
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              711
+            ],
+            [
+              "#FFFFFF",
+              680
+            ],
+            [
+              "#7F8C8D",
+              624
+            ],
+            [
+              "#E74C3C",
+              521
+            ],
+            [
+              "#27AE60",
+              512
+            ],
+            [
+              "#F39C12",
+              205
+            ],
+            [
+              "#1565C0",
+              110
+            ],
+            [
+              "#C0392B",
+              51
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              180
+            ],
+            [
+              "#000000",
+              91
+            ],
+            [
+              "#E74C3C",
+              54
+            ],
+            [
+              "#27AE60",
+              40
+            ],
+            [
+              "#F39C12",
+              36
+            ],
+            [
+              "#1565C0",
+              30
+            ],
+            [
+              "#2E7D32",
+              20
+            ],
+            [
+              "#E65100",
+              20
+            ],
+            [
+              "#C0392B",
+              10
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              81
+            ],
+            [
+              "#000000",
+              3
+            ]
+          ]
+        }
+      },
+      "chunks": [
+        "03-presentation-3/slides-001-010.json",
+        "03-presentation-3/slides-011-020.json",
+        "03-presentation-3/slides-021-030.json",
+        "03-presentation-3/slides-031-040.json",
+        "03-presentation-3/slides-041-050.json",
+        "03-presentation-3/slides-051-060.json",
+        "03-presentation-3/slides-061-070.json",
+        "03-presentation-3/slides-071-080.json",
+        "03-presentation-3/slides-081-084.json"
+      ]
+    },
+    {
+      "index": 4,
+      "name": "presentation-4",
+      "slug": "04-presentation-4",
+      "slideCount": 76,
+      "metadata": {
+        "file": "Jun_Partners_Santa_Maria.pptx",
+        "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+        "byteSize": 2502992,
+        "slideCount": 76,
+        "mediaCount": 76,
+        "embeddingCount": 54,
+        "stats": {
+          "objects": 1310,
+          "textObjects": 747,
+          "tables": 82,
+          "charts": 54,
+          "pictures": 76,
+          "notes": 76
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              3077
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              1103
+            ],
+            [
+              "8",
+              1066
+            ],
+            [
+              "6",
+              360
+            ],
+            [
+              "9",
+              172
+            ],
+            [
+              "13",
+              82
+            ],
+            [
+              "14",
+              74
+            ],
+            [
+              "10",
+              72
+            ],
+            [
+              "11",
+              44
+            ],
+            [
+              "22",
+              36
+            ],
+            [
+              "18",
+              27
+            ],
+            [
+              "20",
+              18
+            ],
+            [
+              "26",
+              18
+            ],
+            [
+              "28",
+              5
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              643
+            ],
+            [
+              "#FFFFFF",
+              613
+            ],
+            [
+              "#E74C3C",
+              556
+            ],
+            [
+              "#7F8C8D",
+              545
+            ],
+            [
+              "#27AE60",
+              388
+            ],
+            [
+              "#F39C12",
+              187
+            ],
+            [
+              "#1565C0",
+              99
+            ],
+            [
+              "#C0392B",
+              46
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              162
+            ],
+            [
+              "#000000",
+              82
+            ],
+            [
+              "#E74C3C",
+              49
+            ],
+            [
+              "#F39C12",
+              37
+            ],
+            [
+              "#27AE60",
+              31
+            ],
+            [
+              "#1565C0",
+              27
+            ],
+            [
+              "#2E7D32",
+              18
+            ],
+            [
+              "#E65100",
+              18
+            ],
+            [
+              "#C0392B",
+              9
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              73
+            ],
+            [
+              "#000000",
+              3
+            ]
+          ]
+        }
+      },
+      "chunks": [
+        "04-presentation-4/slides-001-010.json",
+        "04-presentation-4/slides-011-020.json",
+        "04-presentation-4/slides-021-030.json",
+        "04-presentation-4/slides-031-040.json",
+        "04-presentation-4/slides-041-050.json",
+        "04-presentation-4/slides-051-060.json",
+        "04-presentation-4/slides-061-070.json",
+        "04-presentation-4/slides-071-076.json"
+      ]
+    },
+    {
+      "index": 5,
+      "name": "presentation-5",
+      "slug": "05-presentation-5",
+      "slideCount": 38,
+      "metadata": {
+        "file": "Q2_Directorio_1.pptx",
+        "sha256": "dd2f364521aa74027bc9495ec829d21db2e704b79dc8479c3318f15cd1f22f2d",
+        "byteSize": 1241665,
+        "slideCount": 38,
+        "mediaCount": 38,
+        "embeddingCount": 24,
+        "stats": {
+          "objects": 587,
+          "textObjects": 332,
+          "tables": 37,
+          "charts": 24,
+          "pictures": 38,
+          "notes": 38
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              1386
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              508
+            ],
+            [
+              "8",
+              476
+            ],
+            [
+              "6",
+              160
+            ],
+            [
+              "9",
+              77
+            ],
+            [
+              "13",
+              36
+            ],
+            [
+              "14",
+              34
+            ],
+            [
+              "10",
+              32
+            ],
+            [
+              "22",
+              16
+            ],
+            [
+              "11",
+              13
+            ],
+            [
+              "18",
+              12
+            ],
+            [
+              "20",
+              8
+            ],
+            [
+              "26",
+              8
+            ],
+            [
+              "28",
+              6
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              303
+            ],
+            [
+              "#FFFFFF",
+              279
+            ],
+            [
+              "#7F8C8D",
+              231
+            ],
+            [
+              "#E74C3C",
+              182
+            ],
+            [
+              "#27AE60",
+              180
+            ],
+            [
+              "#F39C12",
+              146
+            ],
+            [
+              "#1565C0",
+              44
+            ],
+            [
+              "#C0392B",
+              21
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              72
+            ],
+            [
+              "#000000",
+              37
+            ],
+            [
+              "#F39C12",
+              33
+            ],
+            [
+              "#27AE60",
+              13
+            ],
+            [
+              "#1565C0",
+              12
+            ],
+            [
+              "#2E7D32",
+              8
+            ],
+            [
+              "#E65100",
+              8
+            ],
+            [
+              "#E74C3C",
+              6
+            ],
+            [
+              "#C0392B",
+              4
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              33
+            ],
+            [
+              "#000000",
+              5
+            ]
+          ]
+        }
+      },
+      "chunks": [
+        "05-presentation-5/slides-001-010.json",
+        "05-presentation-5/slides-011-020.json",
+        "05-presentation-5/slides-021-030.json",
+        "05-presentation-5/slides-031-038.json"
+      ]
+    }
+  ]
+}

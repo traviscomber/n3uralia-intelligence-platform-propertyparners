@@ -1,0 +1,1435 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 61,
+    "end": 70
+  },
+  "slides": [
+    {
+      "canonicalPage": 61,
+      "index": 61,
+      "title": "Paula Villarroel — Santa María — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Santa María — Venta Jun",
+        "Venta Jun 2026",
+        "0.5",
+        "8.850 UF",
+        "Cumpl: 167% ci | 130% UF",
+        "AA: — ci | — UF",
+        "Acumulado Ene-Jun 2026",
+        "1.5",
+        "31.600 UF",
+        "Cumpl: 100% ci | 85% UF",
+        "AA: — ci | — UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.5 0.3 167% 0.0 — 1.5 1.5 100% 0.0 — UF 8.850 6.808 130% 0 — 31.600 37.363 85% 0 —"
+      ],
+      "tables": [
+        {
+          "id": 62,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "0.5",
+              "0.3",
+              "167%",
+              "0.0",
+              "—",
+              "1.5",
+              "1.5",
+              "100%",
+              "0.0",
+              "—"
+            ],
+            [
+              "UF",
+              "8.850",
+              "6.808",
+              "130%",
+              "0",
+              "—",
+              "31.600",
+              "37.363",
+              "85%",
+              "0",
+              "—"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "61"
+      ]
+    },
+    {
+      "canonicalPage": 62,
+      "index": 62,
+      "title": "Paula Villarroel — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.5 0.0 0.0 0.5 0.5 UF mes 13.000 0 0 9.750 8.850 Meta ci mes 0.22 0.18 0.29 0.25 0.3 Meta UF mes 5.623 4.382 7.250 6.248 6.808 Cierres acum. 0.5 0.5 0.5 1.0 1.5 UF acum. 13.000 13.000 13.000 22.750 31.600 Meta ci acum. 0.22 0.40 0.69 0.94 1.5 Meta UF acum. 5.623 10.005 17.255 23.502 37.363 % Cumpl ci 222% 125% 72% 106% 100% % Cumpl UF 231% 130% 75% 97% 85%"
+      ],
+      "tables": [
+        {
+          "id": 63,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.5",
+              "0.0",
+              "0.0",
+              "0.5",
+              "0.5"
+            ],
+            [
+              "UF mes",
+              "13.000",
+              "0",
+              "0",
+              "9.750",
+              "8.850"
+            ],
+            [
+              "Meta ci mes",
+              "0.22",
+              "0.18",
+              "0.29",
+              "0.25",
+              "0.3"
+            ],
+            [
+              "Meta UF mes",
+              "5.623",
+              "4.382",
+              "7.250",
+              "6.248",
+              "6.808"
+            ],
+            [
+              "Cierres acum.",
+              "0.5",
+              "0.5",
+              "0.5",
+              "1.0",
+              "1.5"
+            ],
+            [
+              "UF acum.",
+              "13.000",
+              "13.000",
+              "13.000",
+              "22.750",
+              "31.600"
+            ],
+            [
+              "Meta ci acum.",
+              "0.22",
+              "0.40",
+              "0.69",
+              "0.94",
+              "1.5"
+            ],
+            [
+              "Meta UF acum.",
+              "5.623",
+              "10.005",
+              "17.255",
+              "23.502",
+              "37.363"
+            ],
+            [
+              "% Cumpl ci",
+              "222%",
+              "125%",
+              "72%",
+              "106%",
+              "100%"
+            ],
+            [
+              "% Cumpl UF",
+              "231%",
+              "130%",
+              "75%",
+              "97%",
+              "85%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart67.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.5",
+                  "0.0",
+                  "0.0",
+                  "0.5",
+                  "0.5"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart68.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "13000.0",
+                  "13000.0",
+                  "13000.0",
+                  "22750.0",
+                  "31600.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "5622.75",
+                  "10004.75",
+                  "17254.75",
+                  "23502.25",
+                  "30310.25"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "62"
+      ]
+    },
+    {
+      "canonicalPage": 63,
+      "index": 63,
+      "title": "Paula Villarroel — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Scores Jun",
+        "Santa María",
+        "Calidad Gestión",
+        "62.5",
+        "📈 Potencial",
+        "Calidad Cartera (40%)",
+        "55.4",
+        "Calidad Seguim (30%)",
+        "51.0",
+        "Calidad Conversión (30%)",
+        "83.5",
+        "Calidad Cartera: 55.4",
+        "Meta cartera (33%)",
+        "75.0",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "26.1",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "65.0",
+        "Pricing prom",
+        "Calidad Seguim: 51.0",
+        "% Leads Clasif (33%)",
+        "40.6",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "62.5",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "50.0",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 83.5",
+        "Vis Realiz/Meta (33%)",
+        "73.4",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "76.9",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "100.1",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 62.5 | 📈 Potencial |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "63"
+      ]
+    },
+    {
+      "canonicalPage": 64,
+      "index": 64,
+      "title": "Paula Villarroel — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Indicadores Ene-Jun",
+        "Santa María",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 24 32 75% Requerimientos 7 Esp:27 26% Pricing ≤1.05:6 | ≤1.10:1 | >1.10:3 Score 65.0",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 13/32 A: 4 40.6 Leads sg 90d / activos 12/32 38% sin gest 62.5 Leads A sg 15d / A 2/4 50% sin gest 50.0",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 10 Meta: 14 73.4 Vis realizadas / agendadas 10 / 13 Ratio cumplimiento 76.9 TC 6 meses 1.5 ci / 32 ld Tasa conversión 4.7%"
+      ],
+      "tables": [
+        {
+          "id": 65,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "24",
+              "32",
+              "75%"
+            ],
+            [
+              "Requerimientos",
+              "7",
+              "Esp:27",
+              "26%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:6 | ≤1.10:1 | >1.10:3",
+              "Score",
+              "65.0"
+            ]
+          ]
+        },
+        {
+          "id": 129,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "13/32",
+              "A: 4",
+              "40.6"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "12/32",
+              "38% sin gest",
+              "62.5"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "2/4",
+              "50% sin gest",
+              "50.0"
+            ]
+          ]
+        },
+        {
+          "id": 193,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "10",
+              "Meta: 14",
+              "73.4"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "10 / 13",
+              "Ratio cumplimiento",
+              "76.9"
+            ],
+            [
+              "TC 6 meses",
+              "1.5 ci / 32 ld",
+              "Tasa conversión",
+              "4.7%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "64"
+      ]
+    },
+    {
+      "canonicalPage": 65,
+      "index": 65,
+      "title": "Paula Villarroel — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 55.6 52.8 59.5 62.7 62.5 -0.2 Calidad Cartera (40%) 55.3 56.8 56.0 62.6 55.4 -7.2 Calidad Seguim (30%) 33.3 33.3 51.0 35.2 51.0 +15.8 Calidad Conversión (30%) 78.1 67.1 72.6 90.3 83.5 -6.8"
+      ],
+      "tables": [
+        {
+          "id": 66,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "55.6",
+              "52.8",
+              "59.5",
+              "62.7",
+              "62.5",
+              "-0.2"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "55.3",
+              "56.8",
+              "56.0",
+              "62.6",
+              "55.4",
+              "-7.2"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "33.3",
+              "33.3",
+              "51.0",
+              "35.2",
+              "51.0",
+              "+15.8"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "78.1",
+              "67.1",
+              "72.6",
+              "90.3",
+              "83.5",
+              "-6.8"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart69.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "55.555623274403345",
+                  "52.84176204027741",
+                  "59.48555011661206",
+                  "62.691155199871076",
+                  "62.5"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "55.33760341606618",
+                  "56.81592893362309",
+                  "56.02455818537734",
+                  "62.603723182235576",
+                  "55.4"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "33.333333333333336",
+                  "33.333333333333336",
+                  "50.98039215686274",
+                  "35.18518518518518",
+                  "51.0"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "78.0686063599229",
+                  "67.05130155609389",
+                  "72.60536398467433",
+                  "90.31370123807098",
+                  "83.5"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "65"
+      ]
+    },
+    {
+      "canonicalPage": 66,
+      "index": 66,
+      "title": "Paula Villarroel — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 100.0 96.4 93.1 93.3 75.0 -18.3 Reqs x Tipo Prop 16.0 24.0 15.9 26.3 26.1 -0.2 Calidad Precio 50.0 50.0 59.1 68.2 65.0 -3.2",
+        "Cartera:",
+        "55.4",
+        "+7.3"
+      ],
+      "tables": [
+        {
+          "id": 67,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "100.0",
+              "96.4",
+              "93.1",
+              "93.3",
+              "75.0",
+              "-18.3"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "16.0",
+              "24.0",
+              "15.9",
+              "26.3",
+              "26.1",
+              "-0.2"
+            ],
+            [
+              "Calidad Precio",
+              "50.0",
+              "50.0",
+              "59.1",
+              "68.2",
+              "65.0",
+              "-3.2"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart70.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "96.42857142857143",
+                  "93.10344827586206",
+                  "93.33333333333333",
+                  "75.0"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "16.01281024819856",
+                  "24.01921537229784",
+                  "15.879317189360858",
+                  "26.296018031555224",
+                  "26.1"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "50.0",
+                  "50.0",
+                  "59.09090909090909",
+                  "68.18181818181819",
+                  "65.0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "66"
+      ]
+    },
+    {
+      "canonicalPage": 67,
+      "index": 67,
+      "title": "Paula Villarroel — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 20.5 20.5 20.6 19.4 40.6 +21.2 % Leads c-g90 46.2 46.2 32.4 36.1 62.5 +26.4 %LeadsA c-g15 33.3 33.3 100.0 50.0 50.0 +0.0",
+        "Seguimiento:",
+        "51.0",
+        "+1.9"
+      ],
+      "tables": [
+        {
+          "id": 68,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "20.5",
+              "20.5",
+              "20.6",
+              "19.4",
+              "40.6",
+              "+21.2"
+            ],
+            [
+              "% Leads c-g90",
+              "46.2",
+              "46.2",
+              "32.4",
+              "36.1",
+              "62.5",
+              "+26.4"
+            ],
+            [
+              "%LeadsA c-g15",
+              "33.3",
+              "33.3",
+              "100.0",
+              "50.0",
+              "50.0",
+              "+0.0"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart71.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "20.51282051282051",
+                  "20.51282051282051",
+                  "20.588235294117645",
+                  "19.444444444444446",
+                  "40.6"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "46.15384615384615",
+                  "46.15384615384615",
+                  "32.35294117647059",
+                  "36.111111111111114",
+                  "62.5"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "33.333333333333336",
+                  "33.333333333333336",
+                  "100.0",
+                  "50.0",
+                  "50.0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "67"
+      ]
+    },
+    {
+      "canonicalPage": 68,
+      "index": 68,
+      "title": "Paula Villarroel — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Paula Villarroel — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 44.5 11.4 34.5 80.0 73.4 -6.6 %Vis realizad/agend 100.0 100.0 83.3 90.9 76.9 -14.0 TC 6m/leads tot 89.7 89.7 100.0 100.0 100.1 +0.1",
+        "Conversión:",
+        "83.5",
+        "+12.2"
+      ],
+      "tables": [
+        {
+          "id": 69,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "44.5",
+              "11.4",
+              "34.5",
+              "80.0",
+              "73.4",
+              "-6.6"
+            ],
+            [
+              "%Vis realizad/agend",
+              "100.0",
+              "100.0",
+              "83.3",
+              "90.9",
+              "76.9",
+              "-14.0"
+            ],
+            [
+              "TC 6m/leads tot",
+              "89.7",
+              "89.7",
+              "100.0",
+              "100.0",
+              "100.1",
+              "+0.1"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart72.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "44.462229336178915",
+                  "11.410314924691923",
+                  "34.48275862068966",
+                  "80.03201280512205",
+                  "73.4"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "100.0",
+                  "83.33333333333334",
+                  "90.9090909090909",
+                  "76.9"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "89.74358974358974",
+                  "89.74358974358974",
+                  "100.0",
+                  "100.0",
+                  "100.1"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "68"
+      ]
+    },
+    {
+      "canonicalPage": 69,
+      "index": 69,
+      "title": "Verónica Lagos — Santa María — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Santa María — Venta Jun",
+        "Venta Jun 2026",
+        "0.0",
+        "0 UF",
+        "Cumpl: 0% ci | 0% UF",
+        "AA: — ci | — UF",
+        "Acumulado Ene-Jun 2026",
+        "1.5",
+        "22.200 UF",
+        "Cumpl: 43% ci | 35% UF",
+        "AA: -25% ci | +1% UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.0 0.6 0% 0.0 — 1.5 3.5 43% 2.0 -25% UF 0 10.723 0% 0 — 22.200 63.668 35% 21.950 +1%"
+      ],
+      "tables": [
+        {
+          "id": 70,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "0.0",
+              "0.6",
+              "0%",
+              "0.0",
+              "—",
+              "1.5",
+              "3.5",
+              "43%",
+              "2.0",
+              "-25%"
+            ],
+            [
+              "UF",
+              "0",
+              "10.723",
+              "0%",
+              "0",
+              "—",
+              "22.200",
+              "63.668",
+              "35%",
+              "21.950",
+              "+1%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "69"
+      ]
+    },
+    {
+      "canonicalPage": 70,
+      "index": 70,
+      "title": "Verónica Lagos — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.0 0.0 0.0 1.5 0.0 UF mes 0 0 0 22.200 0 Meta ci mes 0.58 0.44 0.70 0.58 0.6 Meta UF mes 10.496 7.888 12.600 10.496 10.723 Cierres acum. 0.0 0.0 0.0 1.5 1.5 UF acum. 0 0 0 22.200 22.200 Meta ci acum. 0.58 1.02 1.72 2.30 3.5 Meta UF acum. 10.496 18.383 30.983 41.479 63.668 % Cumpl ci 0% 0% 0% 65% 43% % Cumpl UF 0% 0% 0% 54% 35%"
+      ],
+      "tables": [
+        {
+          "id": 71,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.0",
+              "0.0",
+              "0.0",
+              "1.5",
+              "0.0"
+            ],
+            [
+              "UF mes",
+              "0",
+              "0",
+              "0",
+              "22.200",
+              "0"
+            ],
+            [
+              "Meta ci mes",
+              "0.58",
+              "0.44",
+              "0.70",
+              "0.58",
+              "0.6"
+            ],
+            [
+              "Meta UF mes",
+              "10.496",
+              "7.888",
+              "12.600",
+              "10.496",
+              "10.723"
+            ],
+            [
+              "Cierres acum.",
+              "0.0",
+              "0.0",
+              "0.0",
+              "1.5",
+              "1.5"
+            ],
+            [
+              "UF acum.",
+              "0",
+              "0",
+              "0",
+              "22.200",
+              "22.200"
+            ],
+            [
+              "Meta ci acum.",
+              "0.58",
+              "1.02",
+              "1.72",
+              "2.30",
+              "3.5"
+            ],
+            [
+              "Meta UF acum.",
+              "10.496",
+              "18.383",
+              "30.983",
+              "41.479",
+              "63.668"
+            ],
+            [
+              "% Cumpl ci",
+              "0%",
+              "0%",
+              "0%",
+              "65%",
+              "43%"
+            ],
+            [
+              "% Cumpl UF",
+              "0%",
+              "0%",
+              "0%",
+              "54%",
+              "35%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart73.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "0.0",
+                  "1.5",
+                  "0"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart74.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "0.0",
+                  "22200.0",
+                  "22200.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "10495.8",
+                  "18383.4",
+                  "30983.4",
+                  "41479.2",
+                  "52202.2"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "70"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,899 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 71,
+    "end": 76
+  },
+  "slides": [
+    {
+      "canonicalPage": 71,
+      "index": 71,
+      "title": "Verónica Lagos — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Scores Jun",
+        "Santa María",
+        "Calidad Gestión",
+        "57.6",
+        "🔧 Desarrollo",
+        "Calidad Cartera (40%)",
+        "65.4",
+        "Calidad Seguim (30%)",
+        "35.3",
+        "Calidad Conversión (30%)",
+        "69.5",
+        "Calidad Cartera: 65.4",
+        "Meta cartera (33%)",
+        "93.9",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "60.7",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "41.4",
+        "Pricing prom",
+        "Calidad Seguim: 35.3",
+        "% Leads Clasif (33%)",
+        "11.9",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "94.0",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "0.0",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 69.5",
+        "Vis Realiz/Meta (33%)",
+        "74.6",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "71.4",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "62.5",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 57.6 | 🔧 Desarrollo |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "71"
+      ]
+    },
+    {
+      "canonicalPage": 72,
+      "index": 72,
+      "title": "Verónica Lagos — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Indicadores Ene-Jun",
+        "Santa María",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 31 33 94% Requerimientos 33 Esp:54 61% Pricing ≤1.05:9 | ≤1.10:6 | >1.10:14 Score 41.4",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 10/84 A: 1 11.9 Leads sg 90d / activos 5/84 6% sin gest 94.0 Leads A sg 15d / A 1/1 100% sin gest 0.0",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 20 Meta: 27 74.6 Vis realizadas / agendadas 20 / 28 Ratio cumplimiento 71.4 TC 6 meses 1.5 ci / 84 ld Tasa conversión 1.8%"
+      ],
+      "tables": [
+        {
+          "id": 73,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "31",
+              "33",
+              "94%"
+            ],
+            [
+              "Requerimientos",
+              "33",
+              "Esp:54",
+              "61%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:9 | ≤1.10:6 | >1.10:14",
+              "Score",
+              "41.4"
+            ]
+          ]
+        },
+        {
+          "id": 145,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "10/84",
+              "A: 1",
+              "11.9"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "5/84",
+              "6% sin gest",
+              "94.0"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "1/1",
+              "100% sin gest",
+              "0.0"
+            ]
+          ]
+        },
+        {
+          "id": 217,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "20",
+              "Meta: 27",
+              "74.6"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "20 / 28",
+              "Ratio cumplimiento",
+              "71.4"
+            ],
+            [
+              "TC 6 meses",
+              "1.5 ci / 84 ld",
+              "Tasa conversión",
+              "1.8%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "72"
+      ]
+    },
+    {
+      "canonicalPage": 73,
+      "index": 73,
+      "title": "Verónica Lagos — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 50.3 43.3 59.8 66.3 57.6 -8.7 Calidad Cartera (40%) 62.9 57.9 70.6 80.7 65.4 -15.3 Calidad Seguim (30%) 20.9 20.9 43.9 45.9 35.3 -10.6 Calidad Conversión (30%) 63.0 46.0 61.4 67.3 69.5 +2.2"
+      ],
+      "tables": [
+        {
+          "id": 74,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "50.3",
+              "43.3",
+              "59.8",
+              "66.3",
+              "57.6",
+              "-8.7"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "62.9",
+              "57.9",
+              "70.6",
+              "80.7",
+              "65.4",
+              "-15.3"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "20.9",
+              "20.9",
+              "43.9",
+              "45.9",
+              "35.3",
+              "-10.6"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "63.0",
+              "46.0",
+              "61.4",
+              "67.3",
+              "69.5",
+              "+2.2"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart75.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "50.311940200159185",
+                  "43.251602030787474",
+                  "59.81669721661562",
+                  "66.270051504311",
+                  "57.6"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "62.850921164688515",
+                  "57.91084481661506",
+                  "70.5605861616092",
+                  "80.72916666666667",
+                  "65.4"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "20.945479641131815",
+                  "20.945479641131815",
+                  "43.86503067484662",
+                  "45.923632610939116",
+                  "35.3"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "62.959759473147436",
+                  "46.012067372673016",
+                  "61.44317849839322",
+                  "67.33765018120866",
+                  "69.5"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "73"
+      ]
+    },
+    {
+      "canonicalPage": 74,
+      "index": 74,
+      "title": "Verónica Lagos — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 97.0 97.0 100.0 100.0 93.9 -6.1 Reqs x Tipo Prop 51.6 31.8 70.5 100.0 60.7 -39.3 Calidad Precio 40.0 45.0 41.2 42.2 41.4 -0.8",
+        "Cartera:",
+        "65.4",
+        "+17.9"
+      ],
+      "tables": [
+        {
+          "id": 75,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "97.0",
+              "97.0",
+              "100.0",
+              "100.0",
+              "93.9",
+              "-6.1"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "51.6",
+              "31.8",
+              "70.5",
+              "100.0",
+              "60.7",
+              "-39.3"
+            ],
+            [
+              "Calidad Precio",
+              "40.0",
+              "45.0",
+              "41.2",
+              "42.2",
+              "41.4",
+              "-0.8"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart76.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "96.96969696969697",
+                  "96.96969696969697",
+                  "100.0",
+                  "100.0",
+                  "93.9"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "51.58306652436857",
+                  "31.76283748014823",
+                  "70.50528789659226",
+                  "100.0",
+                  "60.7"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "40.0",
+                  "45.0",
+                  "41.1764705882353",
+                  "42.1875",
+                  "41.4"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "74"
+      ]
+    },
+    {
+      "canonicalPage": 75,
+      "index": 75,
+      "title": "Verónica Lagos — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 5.6 5.6 6.4 6.2 11.9 +5.7 % Leads c-g90 23.9 23.9 25.2 31.6 94.0 +62.4 %LeadsA c-g15 33.3 33.3 100.0 100.0 0.0 -100.0",
+        "Seguimiento:",
+        "35.3",
+        "+25.0"
+      ],
+      "tables": [
+        {
+          "id": 76,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "5.6",
+              "5.6",
+              "6.4",
+              "6.2",
+              "11.9",
+              "+5.7"
+            ],
+            [
+              "% Leads c-g90",
+              "23.9",
+              "23.9",
+              "25.2",
+              "31.6",
+              "94.0",
+              "+62.4"
+            ],
+            [
+              "%LeadsA c-g15",
+              "33.3",
+              "33.3",
+              "100.0",
+              "100.0",
+              "0.0",
+              "-100.0"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart77.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "5.590062111801243",
+                  "5.590062111801243",
+                  "6.441717791411043",
+                  "6.191950464396285",
+                  "11.9"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "23.913043478260864",
+                  "23.913043478260864",
+                  "25.153374233128833",
+                  "31.57894736842105",
+                  "94.0"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "33.333333333333336",
+                  "33.333333333333336",
+                  "100.0",
+                  "100.0",
+                  "0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "75"
+      ]
+    },
+    {
+      "canonicalPage": 76,
+      "index": 76,
+      "title": "Verónica Lagos — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Verónica Lagos — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 57.2 30.4 85.7 99.1 74.6 -24.5 %Vis realizad/agend 88.2 75.0 77.1 65.0 71.4 +6.4 TC 6m/leads tot 43.5 32.6 21.5 37.9 62.5 +24.6",
+        "Conversión:",
+        "69.5",
+        "+4.4"
+      ],
+      "tables": [
+        {
+          "id": 77,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "57.2",
+              "30.4",
+              "85.7",
+              "99.1",
+              "74.6",
+              "-24.5"
+            ],
+            [
+              "%Vis realizad/agend",
+              "88.2",
+              "75.0",
+              "77.1",
+              "65.0",
+              "71.4",
+              "+6.4"
+            ],
+            [
+              "TC 6m/leads tot",
+              "43.5",
+              "32.6",
+              "21.5",
+              "37.9",
+              "62.5",
+              "+24.6"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart78.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "57.16572343223003",
+                  "30.427506465845127",
+                  "85.71428571428571",
+                  "99.08725394919873",
+                  "74.6"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "88.23529411764706",
+                  "75.0",
+                  "77.14285714285715",
+                  "65.0",
+                  "71.4"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "43.47826086956521",
+                  "32.608695652173914",
+                  "21.47239263803681",
+                  "37.92569659442725",
+                  "62.5"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "76"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1458 @@
+{
+  "presentation": {
+    "index": 2,
+    "name": "presentation-2",
+    "slug": "02-presentation-2",
+    "metadata": {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            2740
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            984
+          ],
+          [
+            "8",
+            948
+          ],
+          [
+            "6",
+            320
+          ],
+          [
+            "9",
+            153
+          ],
+          [
+            "13",
+            73
+          ],
+          [
+            "14",
+            66
+          ],
+          [
+            "10",
+            64
+          ],
+          [
+            "11",
+            39
+          ],
+          [
+            "22",
+            32
+          ],
+          [
+            "18",
+            24
+          ],
+          [
+            "20",
+            16
+          ],
+          [
+            "26",
+            16
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            575
+          ],
+          [
+            "#FFFFFF",
+            546
+          ],
+          [
+            "#7F8C8D",
+            499
+          ],
+          [
+            "#E74C3C",
+            421
+          ],
+          [
+            "#27AE60",
+            389
+          ],
+          [
+            "#F39C12",
+            181
+          ],
+          [
+            "#1565C0",
+            88
+          ],
+          [
+            "#C0392B",
+            41
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            144
+          ],
+          [
+            "#000000",
+            73
+          ],
+          [
+            "#27AE60",
+            43
+          ],
+          [
+            "#E74C3C",
+            31
+          ],
+          [
+            "#F39C12",
+            30
+          ],
+          [
+            "#1565C0",
+            24
+          ],
+          [
+            "#2E7D32",
+            16
+          ],
+          [
+            "#E65100",
+            16
+          ],
+          [
+            "#C0392B",
+            8
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            65
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 41,
+    "end": 50
+  },
+  "slides": [
+    {
+      "canonicalPage": 41,
+      "index": 41,
+      "title": "Ángeles Carcavilla — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Ángeles Carcavilla — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 54.4 60.0 52.0 55.5 58.5 +3.0 Calidad Cartera (40%) 59.2 72.0 57.2 76.0 67.4 -8.6 Calidad Seguim (30%) 47.1 47.1 40.9 34.3 55.8 +21.5 Calidad Conversión (30%) 55.2 56.8 56.3 49.4 49.2 -0.2"
+      ],
+      "tables": [
+        {
+          "id": 42,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "54.4",
+              "60.0",
+              "52.0",
+              "55.5",
+              "58.5",
+              "+3.0"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "59.2",
+              "72.0",
+              "57.2",
+              "76.0",
+              "67.4",
+              "-8.6"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "47.1",
+              "47.1",
+              "40.9",
+              "34.3",
+              "55.8",
+              "+21.5"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "55.2",
+              "56.8",
+              "56.3",
+              "49.4",
+              "49.2",
+              "-0.2"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart51.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "54.383831512770485",
+                  "59.95326729711695",
+                  "52.02391372486332",
+                  "55.522993197278915",
+                  "58.5"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "59.22950885185629",
+                  "71.99680460642874",
+                  "57.18917027707059",
+                  "76.04166666666667",
+                  "67.4"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "47.07070707070707",
+                  "47.07070707070707",
+                  "40.87719298245614",
+                  "34.2687074829932",
+                  "55.8"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "55.236052836052835",
+                  "56.77777777777777",
+                  "56.283625730994146",
+                  "49.41904761904761",
+                  "49.2"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "41"
+      ]
+    },
+    {
+      "canonicalPage": 42,
+      "index": 42,
+      "title": "Ángeles Carcavilla — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Ángeles Carcavilla — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 100.0 91.7 91.7 87.5 79.2 -8.3 Reqs x Tipo Prop 25.1 77.4 38.7 100.0 76.5 -23.5 Calidad Precio 52.6 46.9 41.2 40.6 46.4 +5.8",
+        "Cartera:",
+        "67.4",
+        "+16.8"
+      ],
+      "tables": [
+        {
+          "id": 43,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "100.0",
+              "91.7",
+              "91.7",
+              "87.5",
+              "79.2",
+              "-8.3"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "25.1",
+              "77.4",
+              "38.7",
+              "100.0",
+              "76.5",
+              "-23.5"
+            ],
+            [
+              "Calidad Precio",
+              "52.6",
+              "46.9",
+              "41.2",
+              "40.6",
+              "46.4",
+              "+5.8"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart52.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "91.66666666666666",
+                  "91.66666666666666",
+                  "87.5",
+                  "79.2"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "25.05694760820046",
+                  "77.44874715261959",
+                  "38.724373576309794",
+                  "100.0",
+                  "76.5"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "52.63157894736842",
+                  "46.875",
+                  "41.1764705882353",
+                  "40.625",
+                  "46.4"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "42"
+      ]
+    },
+    {
+      "canonicalPage": 43,
+      "index": 43,
+      "title": "Ángeles Carcavilla — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Ángeles Carcavilla — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 8.2 8.2 10.5 15.3 30.4 +15.1 % Leads c-g90 66.4 66.4 62.1 50.0 87.0 +37.0 %LeadsA c-g15 66.7 66.7 50.0 37.5 50.0 +12.5",
+        "Seguimiento:",
+        "55.8",
+        "-12.8"
+      ],
+      "tables": [
+        {
+          "id": 44,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "8.2",
+              "8.2",
+              "10.5",
+              "15.3",
+              "30.4",
+              "+15.1"
+            ],
+            [
+              "% Leads c-g90",
+              "66.4",
+              "66.4",
+              "62.1",
+              "50.0",
+              "87.0",
+              "+37.0"
+            ],
+            [
+              "%LeadsA c-g15",
+              "66.7",
+              "66.7",
+              "50.0",
+              "37.5",
+              "50.0",
+              "+12.5"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart53.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "8.181818181818182",
+                  "8.181818181818182",
+                  "10.526315789473683",
+                  "15.306122448979592",
+                  "30.4"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "66.36363636363636",
+                  "66.36363636363636",
+                  "62.10526315789473",
+                  "50.0",
+                  "87.0"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "66.66666666666667",
+                  "66.66666666666667",
+                  "50.0",
+                  "37.5",
+                  "50.0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "43"
+      ]
+    },
+    {
+      "canonicalPage": 44,
+      "index": 44,
+      "title": "Ángeles Carcavilla — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Ángeles Carcavilla — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 40.5 48.4 28.5 30.4 14.3 -16.1 %Vis realizad/agend 61.5 58.3 66.7 28.6 33.3 +4.7 TC 6m/leads tot 63.6 63.6 73.7 89.3 100.1 +10.8",
+        "Conversión:",
+        "49.2",
+        "-5.8"
+      ],
+      "tables": [
+        {
+          "id": 45,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "40.5",
+              "48.4",
+              "28.5",
+              "30.4",
+              "14.3",
+              "-16.1"
+            ],
+            [
+              "%Vis realizad/agend",
+              "61.5",
+              "58.3",
+              "66.7",
+              "28.6",
+              "33.3",
+              "+4.7"
+            ],
+            [
+              "TC 6m/leads tot",
+              "63.6",
+              "63.6",
+              "73.7",
+              "89.3",
+              "100.1",
+              "+10.8"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart54.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "40.53333333333333",
+                  "48.36363636363636",
+                  "28.500000000000004",
+                  "30.4",
+                  "14.3"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "61.53846153846154",
+                  "58.333333333333336",
+                  "66.66666666666666",
+                  "28.57142857142857",
+                  "33.3"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "63.63636363636363",
+                  "63.63636363636363",
+                  "73.68421052631578",
+                  "89.28571428571428",
+                  "100.1"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "44"
+      ]
+    },
+    {
+      "canonicalPage": 45,
+      "index": 45,
+      "title": "Mary Carmen Canale — Lo Beltrán — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Mary Carmen Canale — Lo Beltrán — Venta Jun",
+        "Venta Jun 2026",
+        "0.5",
+        "10.700 UF",
+        "Cumpl: 100% ci | 163% UF",
+        "AA: — ci | — UF",
+        "Acumulado Ene-Jun 2026",
+        "1.5",
+        "25.425 UF",
+        "Cumpl: 56% ci | 74% UF",
+        "AA: +50% ci | +103% UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.5 0.5 100% 0.0 — 1.5 2.7 56% 1.0 +50% UF 10.700 6.568 163% 0 — 25.425 34.501 74% 12.495 +103%"
+      ],
+      "tables": [
+        {
+          "id": 46,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "0.5",
+              "0.5",
+              "100%",
+              "0.0",
+              "—",
+              "1.5",
+              "2.7",
+              "56%",
+              "1.0",
+              "+50%"
+            ],
+            [
+              "UF",
+              "10.700",
+              "6.568",
+              "163%",
+              "0",
+              "—",
+              "25.425",
+              "34.501",
+              "74%",
+              "12.495",
+              "+103%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "45"
+      ]
+    },
+    {
+      "canonicalPage": 46,
+      "index": 46,
+      "title": "Mary Carmen Canale — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Mary Carmen Canale — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.5 0.0 0.0 0.0 0.5 UF mes 9.075 0 0 0 10.700 Meta ci mes 0.38 0.31 0.49 0.47 0.5 Meta UF mes 4.926 3.974 6.306 6.158 6.568 Cierres acum. 0.5 0.5 0.5 0.5 1.5 UF acum. 9.075 9.075 9.075 9.075 25.425 Meta ci acum. 0.38 0.68 1.17 1.64 2.7 Meta UF acum. 4.926 8.900 15.206 21.364 34.501 % Cumpl ci 132% 73% 43% 30% 56% % Cumpl UF 184% 102% 60% 42% 74%"
+      ],
+      "tables": [
+        {
+          "id": 47,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.5",
+              "0.0",
+              "0.0",
+              "0.0",
+              "0.5"
+            ],
+            [
+              "UF mes",
+              "9.075",
+              "0",
+              "0",
+              "0",
+              "10.700"
+            ],
+            [
+              "Meta ci mes",
+              "0.38",
+              "0.31",
+              "0.49",
+              "0.47",
+              "0.5"
+            ],
+            [
+              "Meta UF mes",
+              "4.926",
+              "3.974",
+              "6.306",
+              "6.158",
+              "6.568"
+            ],
+            [
+              "Cierres acum.",
+              "0.5",
+              "0.5",
+              "0.5",
+              "0.5",
+              "1.5"
+            ],
+            [
+              "UF acum.",
+              "9.075",
+              "9.075",
+              "9.075",
+              "9.075",
+              "25.425"
+            ],
+            [
+              "Meta ci acum.",
+              "0.38",
+              "0.68",
+              "1.17",
+              "1.64",
+              "2.7"
+            ],
+            [
+              "Meta UF acum.",
+              "4.926",
+              "8.900",
+              "15.206",
+              "21.364",
+              "34.501"
+            ],
+            [
+              "% Cumpl ci",
+              "132%",
+              "73%",
+              "43%",
+              "30%",
+              "56%"
+            ],
+            [
+              "% Cumpl UF",
+              "184%",
+              "102%",
+              "60%",
+              "42%",
+              "74%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart55.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.5",
+                  "0.0",
+                  "0.0",
+                  "0.0",
+                  "0.5"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart56.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "9075.0",
+                  "9075.0",
+                  "9075.0",
+                  "9075.0",
+                  "19775.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "4926.315789473683",
+                  "8900.210526315788",
+                  "15205.894736842103",
+                  "21363.789473684206",
+                  "27931.789473684206"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "46"
+      ]
+    },
+    {
+      "canonicalPage": 47,
+      "index": 47,
+      "title": "Mary Carmen Canale — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Mary Carmen Canale — Scores Jun",
+        "Lo Beltrán",
+        "Calidad Gestión",
+        "68.5",
+        "📈 Potencial",
+        "Calidad Cartera (40%)",
+        "72.9",
+        "Calidad Seguim (30%)",
+        "73.8",
+        "Calidad Conversión (30%)",
+        "57.1",
+        "Calidad Cartera: 72.9",
+        "Meta cartera (33%)",
+        "60.0",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "93.4",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "65.4",
+        "Pricing prom",
+        "Calidad Seguim: 73.8",
+        "% Leads Clasif (33%)",
+        "24.6",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "96.9",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "100.0",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 57.1",
+        "Vis Realiz/Meta (33%)",
+        "26.9",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "63.6",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "80.8",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 68.5 | 📈 Potencial |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "47"
+      ]
+    },
+    {
+      "canonicalPage": 48,
+      "index": 48,
+      "title": "Mary Carmen Canale — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Mary Carmen Canale — Indicadores Ene-Jun",
+        "Lo Beltrán",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 15 25 60% Requerimientos 34 Esp:36 93% Pricing ≤1.05:6 | ≤1.10:5 | >1.10:2 Score 65.4",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 16/65 A: 4 24.6 Leads sg 90d / activos 2/65 3% sin gest 96.9 Leads A sg 15d / A 0/4 0% sin gest 100.0",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 7 Meta: 26 26.9 Vis realizadas / agendadas 7 / 11 Ratio cumplimiento 63.6 TC 6 meses 1.5 ci / 65 ld Tasa conversión 2.3%"
+      ],
+      "tables": [
+        {
+          "id": 49,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "15",
+              "25",
+              "60%"
+            ],
+            [
+              "Requerimientos",
+              "34",
+              "Esp:36",
+              "93%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:6 | ≤1.10:5 | >1.10:2",
+              "Score",
+              "65.4"
+            ]
+          ]
+        },
+        {
+          "id": 97,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "16/65",
+              "A: 4",
+              "24.6"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "2/65",
+              "3% sin gest",
+              "96.9"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "0/4",
+              "0% sin gest",
+              "100.0"
+            ]
+          ]
+        },
+        {
+          "id": 145,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "7",
+              "Meta: 26",
+              "26.9"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "7 / 11",
+              "Ratio cumplimiento",
+              "63.6"
+            ],
+            [
+              "TC 6 meses",
+              "1.5 ci / 65 ld",
+              "Tasa conversión",
+              "2.3%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "48"
+      ]
+    },
+    {
+      "canonicalPage": 49,
+      "index": 49,
+      "title": "Mary Carmen Canale — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Mary Carmen Canale — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 57.3 55.5 71.8 61.8 68.5 +6.7 Calidad Cartera (40%) 51.3 67.6 75.0 70.4 72.9 +2.5 Calidad Seguim (30%) 44.7 44.7 64.7 60.3 73.8 +13.5 Calidad Conversión (30%) 77.9 50.1 74.5 51.9 57.1 +5.2"
+      ],
+      "tables": [
+        {
+          "id": 50,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "57.3",
+              "55.5",
+              "71.8",
+              "61.8",
+              "68.5",
+              "+6.7"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "51.3",
+              "67.6",
+              "75.0",
+              "70.4",
+              "72.9",
+              "+2.5"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "44.7",
+              "44.7",
+              "64.7",
+              "60.3",
+              "73.8",
+              "+13.5"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "77.9",
+              "50.1",
+              "74.5",
+              "51.9",
+              "57.1",
+              "+5.2"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart57.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "57.30233870951889",
+                  "55.46183782865038",
+                  "71.75904670865197",
+                  "61.84426760233919",
+                  "68.5"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "51.31944444444445",
+                  "67.6052807486631",
+                  "75.0",
+                  "70.40277777777779",
+                  "72.9"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "44.67787114845938",
+                  "44.67787114845938",
+                  "64.74358974358974",
+                  "60.333333333333336",
+                  "73.8"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "77.90399862401098",
+                  "50.05454728215775",
+                  "74.45323261858347",
+                  "51.94385497076022",
+                  "57.1"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "49"
+      ]
+    },
+    {
+      "canonicalPage": 50,
+      "index": 50,
+      "title": "Mary Carmen Canale — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Mary Carmen Canale — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 5.0 86.4 58.3 56.0 60.0 +4.0 Reqs x Tipo Prop 99.0 54.7 100.0 88.5 93.4 +4.9 Calidad Precio 50.0 61.8 66.7 66.7 65.4 -1.3",
+        "Cartera:",
+        "72.9",
+        "+19.1"
+      ],
+      "tables": [
+        {
+          "id": 51,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "5.0",
+              "86.4",
+              "58.3",
+              "56.0",
+              "60.0",
+              "+4.0"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "99.0",
+              "54.7",
+              "100.0",
+              "88.5",
+              "93.4",
+              "+4.9"
+            ],
+            [
+              "Calidad Precio",
+              "50.0",
+              "61.8",
+              "66.7",
+              "66.7",
+              "65.4",
+              "-1.3"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart58.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "5.0",
+                  "86.36363636363636",
+                  "58.333333333333336",
+                  "56.00000000000001",
+                  "60.0"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "98.95833333333334",
+                  "54.6875",
+                  "100.0",
+                  "88.54166666666667",
+                  "93.4"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "50.0",
+                  "61.76470588235294",
+                  "66.66666666666667",
+                  "66.66666666666667",
+                  "65.4"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "50"
+      ]
+    }
+  ]
+}

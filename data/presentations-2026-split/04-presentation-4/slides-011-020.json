@@ -1,0 +1,1315 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 11,
+    "end": 20
+  },
+  "slides": [
+    {
+      "canonicalPage": 11,
+      "index": 11,
+      "title": "Santa María — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 87.9 59.4 76.3 70.9 50.6 -20.3 %Vis realizad/agend 74.1 68.3 72.7 62.0 70.2 +8.2 TC 6m/leads tot 27.3 25.9 29.4 31.0 44.6 +13.6",
+        "Conversión:",
+        "55.1",
+        "-8.4"
+      ],
+      "tables": [
+        {
+          "id": 12,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "87.9",
+              "59.4",
+              "76.3",
+              "70.9",
+              "50.6",
+              "-20.3"
+            ],
+            [
+              "%Vis realizad/agend",
+              "74.1",
+              "68.3",
+              "72.7",
+              "62.0",
+              "70.2",
+              "+8.2"
+            ],
+            [
+              "TC 6m/leads tot",
+              "27.3",
+              "25.9",
+              "29.4",
+              "31.0",
+              "44.6",
+              "+13.6"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart30.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "87.860683382051",
+                  "59.355722440276196",
+                  "76.26451402957825",
+                  "70.88957342412546",
+                  "50.6"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "74.07407407407408",
+                  "68.25396825396825",
+                  "72.72727272727273",
+                  "62.01550387596899",
+                  "70.2"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "27.279812938425565",
+                  "25.915822291504288",
+                  "29.398762157382844",
+                  "30.96040438079191",
+                  "44.6"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "11"
+      ]
+    },
+    {
+      "canonicalPage": 12,
+      "index": 12,
+      "title": "Santa María Detalle por Partner",
+      "backgroundColor": "#000000",
+      "texts": [
+        "Santa María Detalle por Partner"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "12"
+      ]
+    },
+    {
+      "canonicalPage": 13,
+      "index": 13,
+      "title": "Alejandra Cambiaso — Santa María — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Santa María — Venta Jun",
+        "Venta Jun 2026",
+        "0.0",
+        "0 UF",
+        "Cumpl: 0% ci | 0% UF",
+        "AA: — ci | — UF",
+        "Acumulado Ene-Jun 2026",
+        "1.0",
+        "46.250 UF",
+        "Cumpl: 67% ci | 91% UF",
+        "AA: — ci | — UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.0 0.3 0% 0.0 — 1.0 1.5 67% 0.0 — UF 0 9.531 0% 0 — 46.250 51.049 91% 0 —"
+      ],
+      "tables": [
+        {
+          "id": 14,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "0.0",
+              "0.3",
+              "0%",
+              "0.0",
+              "—",
+              "1.0",
+              "1.5",
+              "67%",
+              "0.0",
+              "—"
+            ],
+            [
+              "UF",
+              "0",
+              "9.531",
+              "0%",
+              "0",
+              "—",
+              "46.250",
+              "51.049",
+              "91%",
+              "0",
+              "—"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "13"
+      ]
+    },
+    {
+      "canonicalPage": 14,
+      "index": 14,
+      "title": "Alejandra Cambiaso — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.0 0.5 0.5 0.0 0.0 UF mes 0 16.500 29.750 0 0 Meta ci mes 0.22 0.16 0.28 0.25 0.3 Meta UF mes 7.535 5.663 9.908 8.612 9.531 Cierres acum. 0.0 0.5 1.0 1.0 1.0 UF acum. 0 16.500 46.250 46.250 46.250 Meta ci acum. 0.22 0.38 0.66 0.91 1.5 Meta UF acum. 7.535 13.198 23.106 31.718 51.049 % Cumpl ci 0% 133% 151% 110% 67% % Cumpl UF 0% 125% 200% 146% 91%"
+      ],
+      "tables": [
+        {
+          "id": 15,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.0",
+              "0.5",
+              "0.5",
+              "0.0",
+              "0.0"
+            ],
+            [
+              "UF mes",
+              "0",
+              "16.500",
+              "29.750",
+              "0",
+              "0"
+            ],
+            [
+              "Meta ci mes",
+              "0.22",
+              "0.16",
+              "0.28",
+              "0.25",
+              "0.3"
+            ],
+            [
+              "Meta UF mes",
+              "7.535",
+              "5.663",
+              "9.908",
+              "8.612",
+              "9.531"
+            ],
+            [
+              "Cierres acum.",
+              "0.0",
+              "0.5",
+              "1.0",
+              "1.0",
+              "1.0"
+            ],
+            [
+              "UF acum.",
+              "0",
+              "16.500",
+              "46.250",
+              "46.250",
+              "46.250"
+            ],
+            [
+              "Meta ci acum.",
+              "0.22",
+              "0.38",
+              "0.66",
+              "0.91",
+              "1.5"
+            ],
+            [
+              "Meta UF acum.",
+              "7.535",
+              "13.198",
+              "23.106",
+              "31.718",
+              "51.049"
+            ],
+            [
+              "% Cumpl ci",
+              "0%",
+              "133%",
+              "151%",
+              "110%",
+              "67%"
+            ],
+            [
+              "% Cumpl UF",
+              "0%",
+              "125%",
+              "200%",
+              "146%",
+              "91%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart31.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.5",
+                  "0.5",
+                  "0.0",
+                  "0"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart32.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "16500.0",
+                  "46250.0",
+                  "46250.0",
+                  "46250.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "7535.446153846155",
+                  "13198.338461538462",
+                  "23106.03076923077",
+                  "31717.96923076923",
+                  "41248.96923076923"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "14"
+      ]
+    },
+    {
+      "canonicalPage": 15,
+      "index": 15,
+      "title": "Alejandra Cambiaso — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Scores Jun",
+        "Santa María",
+        "Calidad Gestión",
+        "55.5",
+        "🏆 Vendedor",
+        "Calidad Cartera (40%)",
+        "49.7",
+        "Calidad Seguim (30%)",
+        "46.7",
+        "Calidad Conversión (30%)",
+        "72.1",
+        "Calidad Cartera: 49.7",
+        "Meta cartera (33%)",
+        "57.7",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "48.7",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "42.9",
+        "Pricing prom",
+        "Calidad Seguim: 46.7",
+        "% Leads Clasif (33%)",
+        "45.0",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "95.0",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "0.0",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 72.1",
+        "Vis Realiz/Meta (33%)",
+        "16.3",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "100.0",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "100.1",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 55.5 | 🏆 Vendedor |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "15"
+      ]
+    },
+    {
+      "canonicalPage": 16,
+      "index": 16,
+      "title": "Alejandra Cambiaso — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Indicadores Ene-Jun",
+        "Santa María",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 15 26 58% Requerimientos 6 Esp:12 49% Pricing ≤1.05:4 | ≤1.10:4 | >1.10:6 Score 42.9",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 9/20 A: 1 45.0 Leads sg 90d / activos 1/20 5% sin gest 95.0 Leads A sg 15d / A 1/1 100% sin gest 0.0",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 2 Meta: 12 16.3 Vis realizadas / agendadas 2 / 2 Ratio cumplimiento 100.0 TC 6 meses 1.0 ci / 20 ld Tasa conversión 5.0%"
+      ],
+      "tables": [
+        {
+          "id": 17,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "15",
+              "26",
+              "58%"
+            ],
+            [
+              "Requerimientos",
+              "6",
+              "Esp:12",
+              "49%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:4 | ≤1.10:4 | >1.10:6",
+              "Score",
+              "42.9"
+            ]
+          ]
+        },
+        {
+          "id": 33,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "9/20",
+              "A: 1",
+              "45.0"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "1/20",
+              "5% sin gest",
+              "95.0"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "1/1",
+              "100% sin gest",
+              "0.0"
+            ]
+          ]
+        },
+        {
+          "id": 49,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "2",
+              "Meta: 12",
+              "16.3"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "2 / 2",
+              "Ratio cumplimiento",
+              "100.0"
+            ],
+            [
+              "TC 6 meses",
+              "1.0 ci / 20 ld",
+              "Tasa conversión",
+              "5.0%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "16"
+      ]
+    },
+    {
+      "canonicalPage": 17,
+      "index": 17,
+      "title": "Alejandra Cambiaso — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 39.1 38.0 51.5 42.0 55.5 +13.5 Calidad Cartera (40%) 59.5 53.8 63.2 58.1 49.7 -8.4 Calidad Seguim (30%) 43.3 43.3 44.5 44.9 46.7 +1.8 Calidad Conversión (30%) 7.7 11.6 42.9 17.9 72.1 +54.2"
+      ],
+      "tables": [
+        {
+          "id": 18,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "39.1",
+              "38.0",
+              "51.5",
+              "42.0",
+              "55.5",
+              "+13.5"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "59.5",
+              "53.8",
+              "63.2",
+              "58.1",
+              "49.7",
+              "-8.4"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "43.3",
+              "43.3",
+              "44.5",
+              "44.9",
+              "46.7",
+              "+1.8"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "7.7",
+              "11.6",
+              "42.9",
+              "17.9",
+              "72.1",
+              "+54.2"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart33.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "39.09685796130902",
+                  "37.96222037700864",
+                  "51.529972614448816",
+                  "42.0478092156891",
+                  "55.5"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "59.49711179068978",
+                  "53.76316683656133",
+                  "63.21102020270322",
+                  "58.05319650861051",
+                  "49.7"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "43.267108167770424",
+                  "43.267108167770424",
+                  "44.54277286135693",
+                  "44.89795918367347",
+                  "46.7"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "7.72626931567329",
+                  "11.589403973509933",
+                  "42.94244224986818",
+                  "17.857142857142858",
+                  "72.1"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "17"
+      ]
+    },
+    {
+      "canonicalPage": 18,
+      "index": 18,
+      "title": "Alejandra Cambiaso — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 100.0 100.0 82.6 79.2 57.7 -21.5 Reqs x Tipo Prop 22.9 5.7 57.0 47.8 48.7 +0.9 Calidad Precio 55.6 55.6 50.0 47.2 42.9 -4.3",
+        "Cartera:",
+        "49.7",
+        "-1.4"
+      ],
+      "tables": [
+        {
+          "id": 19,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "100.0",
+              "100.0",
+              "82.6",
+              "79.2",
+              "57.7",
+              "-21.5"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "22.9",
+              "5.7",
+              "57.0",
+              "47.8",
+              "48.7",
+              "+0.9"
+            ],
+            [
+              "Calidad Precio",
+              "55.6",
+              "55.6",
+              "50.0",
+              "47.2",
+              "42.9",
+              "-4.3"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart34.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "100.0",
+                  "82.6086956521739",
+                  "79.16666666666666",
+                  "57.7"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "22.93577981651376",
+                  "5.73394495412844",
+                  "57.024364955935724",
+                  "47.770700636942664",
+                  "48.7"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "55.55555555555556",
+                  "55.55555555555556",
+                  "50.0",
+                  "47.22222222222222",
+                  "42.9"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "18"
+      ]
+    },
+    {
+      "canonicalPage": 19,
+      "index": 19,
+      "title": "Alejandra Cambiaso — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 15.2 15.2 20.4 19.4 45.0 +25.6 % Leads c-g90 14.6 14.6 13.3 15.3 95.0 +79.7 %LeadsA c-g15 100.0 100.0 100.0 100.0 0.0 -100.0",
+        "Seguimiento:",
+        "46.7",
+        "+1.6"
+      ],
+      "tables": [
+        {
+          "id": 20,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "15.2",
+              "15.2",
+              "20.4",
+              "19.4",
+              "45.0",
+              "+25.6"
+            ],
+            [
+              "% Leads c-g90",
+              "14.6",
+              "14.6",
+              "13.3",
+              "15.3",
+              "95.0",
+              "+79.7"
+            ],
+            [
+              "%LeadsA c-g15",
+              "100.0",
+              "100.0",
+              "100.0",
+              "100.0",
+              "0.0",
+              "-100.0"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart35.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "15.2317880794702",
+                  "15.2317880794702",
+                  "20.353982300884958",
+                  "19.387755102040817",
+                  "45.0"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "14.569536423841056",
+                  "14.569536423841056",
+                  "13.27433628318584",
+                  "15.306122448979586",
+                  "95.0"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "100.0",
+                  "100.0",
+                  "100.0",
+                  "0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "19"
+      ]
+    },
+    {
+      "canonicalPage": 20,
+      "index": 20,
+      "title": "Alejandra Cambiaso — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Alejandra Cambiaso — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 0.0 0.0 15.7 0.0 16.3 +16.3 %Vis realizad/agend 0.0 0.0 66.7 0.0 100.0 +100.0 TC 6m/leads tot 23.2 34.8 46.5 53.6 100.1 +46.5",
+        "Conversión:",
+        "72.1",
+        "+10.1"
+      ],
+      "tables": [
+        {
+          "id": 21,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "0.0",
+              "0.0",
+              "15.7",
+              "0.0",
+              "16.3",
+              "+16.3"
+            ],
+            [
+              "%Vis realizad/agend",
+              "0.0",
+              "0.0",
+              "66.7",
+              "0.0",
+              "100.0",
+              "+100.0"
+            ],
+            [
+              "TC 6m/leads tot",
+              "23.2",
+              "34.8",
+              "46.5",
+              "53.6",
+              "100.1",
+              "+46.5"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart36.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "15.70048309178744",
+                  "0.0",
+                  "16.3"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "66.66666666666666",
+                  "0.0",
+                  "100.0"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "23.17880794701987",
+                  "34.7682119205298",
+                  "46.46017699115045",
+                  "53.57142857142857",
+                  "100.1"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "20"
+      ]
+    }
+  ]
+}

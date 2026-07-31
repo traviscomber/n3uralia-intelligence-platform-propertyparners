@@ -1,0 +1,1435 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 21,
+    "end": 30
+  },
+  "slides": [
+    {
+      "canonicalPage": 21,
+      "index": 21,
+      "title": "Felipe Elizalde — Santa María — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Santa María — Venta Jun",
+        "Venta Jun 2026",
+        "0.5",
+        "3.975 UF",
+        "Cumpl: 167% ci | 72% UF",
+        "AA: — ci | — UF",
+        "Acumulado Ene-Jun 2026",
+        "1.0",
+        "7.175 UF",
+        "Cumpl: 83% ci | 31% UF",
+        "AA: — ci | — UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.5 0.3 167% 0.0 — 1.0 1.2 83% 0.0 — UF 3.975 5.534 72% 0 — 7.175 23.181 31% 0 —"
+      ],
+      "tables": [
+        {
+          "id": 22,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "0.5",
+              "0.3",
+              "167%",
+              "0.0",
+              "—",
+              "1.0",
+              "1.2",
+              "83%",
+              "0.0",
+              "—"
+            ],
+            [
+              "UF",
+              "3.975",
+              "5.534",
+              "72%",
+              "0",
+              "—",
+              "7.175",
+              "23.181",
+              "31%",
+              "0",
+              "—"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "21"
+      ]
+    },
+    {
+      "canonicalPage": 22,
+      "index": 22,
+      "title": "Felipe Elizalde — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.0 0.0 0.5 0.0 0.5 UF mes 0 0 3.200 0 3.975 Meta ci mes 0.13 0.10 0.20 0.20 0.3 Meta UF mes 2.591 1.947 3.959 4.004 5.534 Cierres acum. 0.0 0.0 0.5 0.5 1.0 UF acum. 0 0 3.200 3.200 7.175 Meta ci acum. 0.13 0.23 0.42 0.63 1.2 Meta UF acum. 2.591 4.538 8.497 12.501 23.181 % Cumpl ci 0% 0% 118% 80% 83% % Cumpl UF 0% 0% 38% 26% 31%"
+      ],
+      "tables": [
+        {
+          "id": 23,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.0",
+              "0.0",
+              "0.5",
+              "0.0",
+              "0.5"
+            ],
+            [
+              "UF mes",
+              "0",
+              "0",
+              "3.200",
+              "0",
+              "3.975"
+            ],
+            [
+              "Meta ci mes",
+              "0.13",
+              "0.10",
+              "0.20",
+              "0.20",
+              "0.3"
+            ],
+            [
+              "Meta UF mes",
+              "2.591",
+              "1.947",
+              "3.959",
+              "4.004",
+              "5.534"
+            ],
+            [
+              "Cierres acum.",
+              "0.0",
+              "0.0",
+              "0.5",
+              "0.5",
+              "1.0"
+            ],
+            [
+              "UF acum.",
+              "0",
+              "0",
+              "3.200",
+              "3.200",
+              "7.175"
+            ],
+            [
+              "Meta ci acum.",
+              "0.13",
+              "0.23",
+              "0.42",
+              "0.63",
+              "1.2"
+            ],
+            [
+              "Meta UF acum.",
+              "2.591",
+              "4.538",
+              "8.497",
+              "12.501",
+              "23.181"
+            ],
+            [
+              "% Cumpl ci",
+              "0%",
+              "0%",
+              "118%",
+              "80%",
+              "83%"
+            ],
+            [
+              "% Cumpl UF",
+              "0%",
+              "0%",
+              "38%",
+              "26%",
+              "31%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart37.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "0.5",
+                  "0.0",
+                  "0.5"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart38.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "3200.0",
+                  "3200.0",
+                  "7175.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "2590.9172413793103",
+                  "4537.993103448276",
+                  "8496.613793103448",
+                  "12500.758620689656",
+                  "18034.758620689656"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "22"
+      ]
+    },
+    {
+      "canonicalPage": 23,
+      "index": 23,
+      "title": "Felipe Elizalde — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Scores Jun",
+        "Santa María",
+        "Calidad Gestión",
+        "50.9",
+        "🏆 Vendedor",
+        "Calidad Cartera (40%)",
+        "42.3",
+        "Calidad Seguim (30%)",
+        "33.3",
+        "Calidad Conversión (30%)",
+        "80.0",
+        "Calidad Cartera: 42.3",
+        "Meta cartera (33%)",
+        "39.1",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "49.0",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "38.9",
+        "Pricing prom",
+        "Calidad Seguim: 33.3",
+        "% Leads Clasif (33%)",
+        "23.6",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "76.4",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "0.0",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 80.0",
+        "Vis Realiz/Meta (33%)",
+        "96.4",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "80.0",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "63.6",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 50.9 | 🏆 Vendedor |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "23"
+      ]
+    },
+    {
+      "canonicalPage": 24,
+      "index": 24,
+      "title": "Felipe Elizalde — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Indicadores Ene-Jun",
+        "Santa María",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 9 23 39% Requerimientos 4 Esp:8 49% Pricing ≤1.05:3 | ≤1.10:1 | >1.10:5 Score 38.9",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 13/55 A: 2 23.6 Leads sg 90d / activos 13/55 24% sin gest 76.4 Leads A sg 15d / A 2/2 100% sin gest 0.0",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 12 Meta: 12 96.4 Vis realizadas / agendadas 12 / 15 Ratio cumplimiento 80.0 TC 6 meses 1.0 ci / 55 ld Tasa conversión 1.8%"
+      ],
+      "tables": [
+        {
+          "id": 25,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "9",
+              "23",
+              "39%"
+            ],
+            [
+              "Requerimientos",
+              "4",
+              "Esp:8",
+              "49%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:3 | ≤1.10:1 | >1.10:5",
+              "Score",
+              "38.9"
+            ]
+          ]
+        },
+        {
+          "id": 49,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "13/55",
+              "A: 2",
+              "23.6"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "13/55",
+              "24% sin gest",
+              "76.4"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "2/2",
+              "100% sin gest",
+              "0.0"
+            ]
+          ]
+        },
+        {
+          "id": 73,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "12",
+              "Meta: 12",
+              "96.4"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "12 / 15",
+              "Ratio cumplimiento",
+              "80.0"
+            ],
+            [
+              "TC 6 meses",
+              "1.0 ci / 55 ld",
+              "Tasa conversión",
+              "1.8%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "24"
+      ]
+    },
+    {
+      "canonicalPage": 25,
+      "index": 25,
+      "title": "Felipe Elizalde — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 68.2 56.0 54.6 51.7 50.9 -0.8 Calidad Cartera (40%) 79.7 79.7 67.7 59.4 42.3 -17.1 Calidad Seguim (30%) 64.4 64.4 28.6 26.2 33.3 +7.1 Calidad Conversión (30%) 56.7 15.9 63.1 66.9 80.0 +13.1"
+      ],
+      "tables": [
+        {
+          "id": 26,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "68.2",
+              "56.0",
+              "54.6",
+              "51.7",
+              "50.9",
+              "-0.8"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "79.7",
+              "79.7",
+              "67.7",
+              "59.4",
+              "42.3",
+              "-17.1"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "64.4",
+              "64.4",
+              "28.6",
+              "26.2",
+              "33.3",
+              "+7.1"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "56.7",
+              "15.9",
+              "63.1",
+              "66.9",
+              "80.0",
+              "+13.1"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart39.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "68.19480519480518",
+                  "55.97743040270119",
+                  "54.61687335341022",
+                  "51.694943800304934",
+                  "50.9"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "79.65367965367965",
+                  "79.65367965367965",
+                  "67.72486772486772",
+                  "59.43627450980392",
+                  "42.3"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "64.44444444444444",
+                  "64.44444444444444",
+                  "28.638497652582164",
+                  "26.160337552742615",
+                  "33.3"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "56.666666666666664",
+                  "15.94208402631998",
+                  "63.11792322562828",
+                  "66.90777576853526",
+                  "80.0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "25"
+      ]
+    },
+    {
+      "canonicalPage": 26,
+      "index": 26,
+      "title": "Felipe Elizalde — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 81.8 81.8 64.3 47.1 39.1 -8.0 Reqs x Tipo Prop 100.0 100.0 100.0 100.0 49.0 -51.0 Calidad Precio 57.1 57.1 38.9 31.3 38.9 +7.6",
+        "Cartera:",
+        "42.3",
+        "-20.2"
+      ],
+      "tables": [
+        {
+          "id": 27,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "81.8",
+              "81.8",
+              "64.3",
+              "47.1",
+              "39.1",
+              "-8.0"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "100.0",
+              "100.0",
+              "100.0",
+              "100.0",
+              "49.0",
+              "-51.0"
+            ],
+            [
+              "Calidad Precio",
+              "57.1",
+              "57.1",
+              "38.9",
+              "31.3",
+              "38.9",
+              "+7.6"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart40.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "81.81818181818183",
+                  "81.81818181818183",
+                  "64.28571428571429",
+                  "47.05882352941176",
+                  "39.1"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "100.0",
+                  "100.0",
+                  "100.0",
+                  "49.0"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "57.142857142857146",
+                  "57.142857142857146",
+                  "38.888888888888886",
+                  "31.25",
+                  "38.9"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "26"
+      ]
+    },
+    {
+      "canonicalPage": 27,
+      "index": 27,
+      "title": "Felipe Elizalde — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 3.3 3.3 4.2 7.6 23.6 +16.0 % Leads c-g90 90.0 90.0 81.7 70.9 76.4 +5.5 %LeadsA c-g15 100.0 100.0 0.0 0.0 0.0 +0.0",
+        "Seguimiento:",
+        "33.3",
+        "-38.3"
+      ],
+      "tables": [
+        {
+          "id": 28,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "3.3",
+              "3.3",
+              "4.2",
+              "7.6",
+              "23.6",
+              "+16.0"
+            ],
+            [
+              "% Leads c-g90",
+              "90.0",
+              "90.0",
+              "81.7",
+              "70.9",
+              "76.4",
+              "+5.5"
+            ],
+            [
+              "%LeadsA c-g15",
+              "100.0",
+              "100.0",
+              "0.0",
+              "0.0",
+              "0.0",
+              "+0.0"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart41.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "3.3333333333333335",
+                  "3.3333333333333335",
+                  "4.225352112676056",
+                  "7.59493670886076",
+                  "23.6"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "90.0",
+                  "90.0",
+                  "81.69014084507043",
+                  "70.88607594936708",
+                  "76.4"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "100.0",
+                  "0.0",
+                  "0.0",
+                  "0"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "27"
+      ]
+    },
+    {
+      "canonicalPage": 28,
+      "index": 28,
+      "title": "Felipe Elizalde — Evolución Subscores Conversión",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Felipe Elizalde — Evolución Subscores Conversión",
+        "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 100.0 22.8 100.0 100.0 96.4 -3.6 %Vis realizad/agend 70.0 25.0 64.7 78.6 80.0 +1.4 TC 6m/leads tot 0.0 0.0 24.6 22.2 63.6 +41.4",
+        "Conversión:",
+        "80.0",
+        "+10.2"
+      ],
+      "tables": [
+        {
+          "id": 29,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Vis Realiz/Meta",
+              "100.0",
+              "22.8",
+              "100.0",
+              "100.0",
+              "96.4",
+              "-3.6"
+            ],
+            [
+              "%Vis realizad/agend",
+              "70.0",
+              "25.0",
+              "64.7",
+              "78.6",
+              "80.0",
+              "+1.4"
+            ],
+            [
+              "TC 6m/leads tot",
+              "0.0",
+              "0.0",
+              "24.6",
+              "22.2",
+              "63.6",
+              "+41.4"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart42.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Vis Realiz/Meta",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "100.0",
+                  "22.826252078959943",
+                  "100.0",
+                  "100.0",
+                  "96.4"
+                ]
+              },
+              {
+                "name": "%Vis realizad/agend",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "70.0",
+                  "25.0",
+                  "64.70588235294117",
+                  "78.57142857142857",
+                  "80.0"
+                ]
+              },
+              {
+                "name": "TC 6m/leads tot",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.0",
+                  "24.647887323943664",
+                  "22.151898734177216",
+                  "63.6"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "28"
+      ]
+    },
+    {
+      "canonicalPage": 29,
+      "index": 29,
+      "title": "Francisca Santos — Santa María — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Santos — Santa María — Venta Jun",
+        "Venta Jun 2026",
+        "0.5",
+        "9.125 UF",
+        "Cumpl: 125% ci | 194% UF",
+        "AA: — ci | — UF",
+        "Acumulado Ene-Jun 2026",
+        "2.0",
+        "25.651 UF",
+        "Cumpl: 111% ci | 118% UF",
+        "AA: — ci | — UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 0.5 0.4 125% 0.0 — 2.0 1.8 111% 0.0 — UF 9.125 4.698 194% 0 — 25.651 21.671 118% 0 —"
+      ],
+      "tables": [
+        {
+          "id": 30,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "0.5",
+              "0.4",
+              "125%",
+              "0.0",
+              "—",
+              "2.0",
+              "1.8",
+              "111%",
+              "0.0",
+              "—"
+            ],
+            [
+              "UF",
+              "9.125",
+              "4.698",
+              "194%",
+              "0",
+              "—",
+              "25.651",
+              "21.671",
+              "118%",
+              "0",
+              "—"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "29"
+      ]
+    },
+    {
+      "canonicalPage": 30,
+      "index": 30,
+      "title": "Francisca Santos — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Francisca Santos — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.0 0.5 0.0 0.0 0.5 UF mes 0 16.500 0 0 9.125 Meta ci mes 0.19 0.18 0.33 0.32 0.4 Meta UF mes 2.299 2.112 3.987 3.832 4.698 Cierres acum. 0.0 0.5 0.5 0.5 2.0 UF acum. 0 16.500 16.500 16.500 25.651 Meta ci acum. 0.19 0.37 0.70 1.02 1.8 Meta UF acum. 2.299 4.411 8.397 12.229 21.671 % Cumpl ci 0% 136% 71% 49% 111% % Cumpl UF 0% 374% 196% 135% 118%"
+      ],
+      "tables": [
+        {
+          "id": 31,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.0",
+              "0.5",
+              "0.0",
+              "0.0",
+              "0.5"
+            ],
+            [
+              "UF mes",
+              "0",
+              "16.500",
+              "0",
+              "0",
+              "9.125"
+            ],
+            [
+              "Meta ci mes",
+              "0.19",
+              "0.18",
+              "0.33",
+              "0.32",
+              "0.4"
+            ],
+            [
+              "Meta UF mes",
+              "2.299",
+              "2.112",
+              "3.987",
+              "3.832",
+              "4.698"
+            ],
+            [
+              "Cierres acum.",
+              "0.0",
+              "0.5",
+              "0.5",
+              "0.5",
+              "2.0"
+            ],
+            [
+              "UF acum.",
+              "0",
+              "16.500",
+              "16.500",
+              "16.500",
+              "25.651"
+            ],
+            [
+              "Meta ci acum.",
+              "0.19",
+              "0.37",
+              "0.70",
+              "1.02",
+              "1.8"
+            ],
+            [
+              "Meta UF acum.",
+              "2.299",
+              "4.411",
+              "8.397",
+              "12.229",
+              "21.671"
+            ],
+            [
+              "% Cumpl ci",
+              "0%",
+              "136%",
+              "71%",
+              "49%",
+              "111%"
+            ],
+            [
+              "% Cumpl UF",
+              "0%",
+              "374%",
+              "196%",
+              "135%",
+              "118%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart43.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "0.5",
+                  "0.0",
+                  "0.0",
+                  "0.5"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart44.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.0",
+                  "16500.0",
+                  "16500.0",
+                  "16500.0",
+                  "25625.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "2299.08",
+                  "4410.786666666667",
+                  "8397.453333333333",
+                  "12229.253333333334",
+                  "16927.253333333334"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "30"
+      ]
+    }
+  ]
+}

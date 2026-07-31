@@ -1,0 +1,1151 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "range": {
+    "start": 1,
+    "end": 10
+  },
+  "slides": [
+    {
+      "canonicalPage": 1,
+      "index": 1,
+      "title": "Control de Gestión Cierre Junio",
+      "backgroundColor": "#000000",
+      "texts": [
+        "Control de Gestión Cierre Junio",
+        "Detalle por Partner — Ene-Jun 2026",
+        "Julio 2026 | Cierre Junio — Acumulado Ene-Jun"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "1"
+      ]
+    },
+    {
+      "canonicalPage": 2,
+      "index": 2,
+      "title": "Modelo de Scoring — Definiciones",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Modelo de Scoring — Definiciones",
+        "Calidad Gestión = 0.4×Calidad Cartera + 0.3×Calidad Seguim + 0.3×Calidad Conversión | Subscores: 33.3% cada uno",
+        "Score Subscore Fórmula Mide Calidad Cartera (40%) Meta cartera min(Cart/Meta,1)×100 Cumple meta props Reqs x Tipo Prop min(Ratio Req,1)×100 Reqs vs benchmark Calidad Precio ≤1.05→100, ≤1.10→50, >1.10→0 Pricing vs valorización Calidad Seguim (30%) % Leads Clasif (Clasif/Activos)×100 Clasifica leads % Leads c-g90 (1−L90d/Act)×100 Leads no abandonados %LeadsA c-g15 (1−LA15d/CliA)×100 Leads A contactados Calidad Conversión (30%) Vis Realiz/Meta min(Vis/Meta,1)×100 Cumple meta visitas %Vis realizad/agend (VisReal/Agend)×100 Cumple agenda TC 6m/leads tot min(TC%6m,2.86)×35 Cierra negocios",
+        "Semáforos — Cumpl. meta: 🔴<90% 🟡90-100% 🟢≥100% | Crec. AA: 🔴<0% 🟡0-20% 🟢≥20% | Scores: 🔴<50 🟡50-70 🟢≥70",
+        "⭐Estrella (3≥70) | 📈Potencial (1≥70+2≥50) | 🧲Captador (Cart≥70) | 🏆Vendedor (Conv≥70) | 🔄Perseverante (Seg≥70) | ⚠️Riesgo (2<30) | 🔧Desarrollo"
+      ],
+      "tables": [
+        {
+          "id": 3,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Subscore",
+              "Fórmula",
+              "Mide"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "Meta cartera",
+              "min(Cart/Meta,1)×100",
+              "Cumple meta props"
+            ],
+            [
+              "",
+              "Reqs x Tipo Prop",
+              "min(Ratio Req,1)×100",
+              "Reqs vs benchmark"
+            ],
+            [
+              "",
+              "Calidad Precio",
+              "≤1.05→100, ≤1.10→50, >1.10→0",
+              "Pricing vs valorización"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "% Leads Clasif",
+              "(Clasif/Activos)×100",
+              "Clasifica leads"
+            ],
+            [
+              "",
+              "% Leads c-g90",
+              "(1−L90d/Act)×100",
+              "Leads no abandonados"
+            ],
+            [
+              "",
+              "%LeadsA c-g15",
+              "(1−LA15d/CliA)×100",
+              "Leads A contactados"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "Vis Realiz/Meta",
+              "min(Vis/Meta,1)×100",
+              "Cumple meta visitas"
+            ],
+            [
+              "",
+              "%Vis realizad/agend",
+              "(VisReal/Agend)×100",
+              "Cumple agenda"
+            ],
+            [
+              "",
+              "TC 6m/leads tot",
+              "min(TC%6m,2.86)×35",
+              "Cierra negocios"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "2"
+      ]
+    },
+    {
+      "canonicalPage": 3,
+      "index": 3,
+      "title": "Santa María",
+      "backgroundColor": "#000000",
+      "texts": [
+        "Santa María",
+        "Resultados de la oficina"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "3"
+      ]
+    },
+    {
+      "canonicalPage": 4,
+      "index": 4,
+      "title": "Santa María — Venta Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Venta Jun",
+        "Venta Jun 2026",
+        "2.5",
+        "44.750 UF",
+        "Cumpl: 89% ci | 82% UF",
+        "AA: +400% ci | +729% UF",
+        "Acumulado Ene-Jun 2026",
+        "7.5",
+        "166.725 UF",
+        "Cumpl: 53% ci | 59% UF",
+        "AA: +67% ci | +219% UF",
+        "Detalle de Venta",
+        "Jun 2026 Meta Jun % Cumpl Jun 2025 Δ% AA Acum 2026 Meta Acum % Cumpl Acum 2025 Δ% AA Cierres 2.5 2.8 89% 0.5 +400% 7.5 14.1 53% 4.5 +67% UF 44.750 54.246 82% 5.400 +729% 166.725 280.922 59% 52.245 +219%"
+      ],
+      "tables": [
+        {
+          "id": 5,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Jun 2026",
+              "Meta Jun",
+              "% Cumpl",
+              "Jun 2025",
+              "Δ% AA",
+              "Acum 2026",
+              "Meta Acum",
+              "% Cumpl",
+              "Acum 2025",
+              "Δ% AA"
+            ],
+            [
+              "Cierres",
+              "2.5",
+              "2.8",
+              "89%",
+              "0.5",
+              "+400%",
+              "7.5",
+              "14.1",
+              "53%",
+              "4.5",
+              "+67%"
+            ],
+            [
+              "UF",
+              "44.750",
+              "54.246",
+              "82%",
+              "5.400",
+              "+729%",
+              "166.725",
+              "280.922",
+              "59%",
+              "52.245",
+              "+219%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "4"
+      ]
+    },
+    {
+      "canonicalPage": 5,
+      "index": 5,
+      "title": "Santa María — Evolución Venta",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Evolución Venta",
+        "Ene Feb Mar Abr Jun Cierres mes 0.5 1.0 1.5 2.0 2.5 UF mes 13.000 33.000 44.025 31.950 44.750 Meta ci mes 1.93 1.53 2.66 2.38 2.8 Meta UF mes 39.597 30.996 53.546 47.438 54.246 Cierres acum. 0.5 1.5 3.0 5.0 7.5 UF acum. 13.000 46.000 90.025 121.975 166.725 Meta ci acum. 1.93 3.46 6.12 8.51 14.1 Meta UF acum. 39.597 70.592 124.139 171.576 280.922 % Cumpl ci 26% 43% 49% 59% 53% % Cumpl UF 33% 65% 73% 71% 59%"
+      ],
+      "tables": [
+        {
+          "id": 6,
+          "name": "Table 0",
+          "value": [
+            [
+              "",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun"
+            ],
+            [
+              "Cierres mes",
+              "0.5",
+              "1.0",
+              "1.5",
+              "2.0",
+              "2.5"
+            ],
+            [
+              "UF mes",
+              "13.000",
+              "33.000",
+              "44.025",
+              "31.950",
+              "44.750"
+            ],
+            [
+              "Meta ci mes",
+              "1.93",
+              "1.53",
+              "2.66",
+              "2.38",
+              "2.8"
+            ],
+            [
+              "Meta UF mes",
+              "39.597",
+              "30.996",
+              "53.546",
+              "47.438",
+              "54.246"
+            ],
+            [
+              "Cierres acum.",
+              "0.5",
+              "1.5",
+              "3.0",
+              "5.0",
+              "7.5"
+            ],
+            [
+              "UF acum.",
+              "13.000",
+              "46.000",
+              "90.025",
+              "121.975",
+              "166.725"
+            ],
+            [
+              "Meta ci acum.",
+              "1.93",
+              "3.46",
+              "6.12",
+              "8.51",
+              "14.1"
+            ],
+            [
+              "Meta UF acum.",
+              "39.597",
+              "70.592",
+              "124.139",
+              "171.576",
+              "280.922"
+            ],
+            [
+              "% Cumpl ci",
+              "26%",
+              "43%",
+              "49%",
+              "59%",
+              "53%"
+            ],
+            [
+              "% Cumpl UF",
+              "33%",
+              "65%",
+              "73%",
+              "71%",
+              "59%"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart25.xml",
+            "title": "",
+            "chartKinds": [
+              "barChart"
+            ],
+            "series": [
+              {
+                "name": "Cierres del mes",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "0.5",
+                  "1.0",
+                  "1.5",
+                  "2.0",
+                  "2.5"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "name": "Chart 1",
+          "value": {
+            "entry": "ppt/charts/chart26.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "UF Acumulado",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "13000.0",
+                  "46000.0",
+                  "90025.0",
+                  "121975.0",
+                  "166725.0"
+                ]
+              },
+              {
+                "name": "Meta UF Acum.",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "39596.53270626225",
+                  "70592.14548248952",
+                  "124138.62347426286",
+                  "171576.2296597086",
+                  "225822.2296597086"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "5"
+      ]
+    },
+    {
+      "canonicalPage": 6,
+      "index": 6,
+      "title": "Santa María — Scores Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Scores Jun",
+        "Calidad Gestión",
+        "56.0",
+        "🔧 Desarrollo",
+        "Calidad Cartera (40%)",
+        "60.3",
+        "Calidad Seguim (30%)",
+        "51.1",
+        "Calidad Conversión (30%)",
+        "55.1",
+        "Calidad Cartera: 60.3",
+        "Meta cartera (33%)",
+        "60.7",
+        "Cartera/Meta",
+        "Reqs x Tipo Prop (33%)",
+        "66.3",
+        "min(Ratio,1)×100",
+        "Calidad Precio (33%)",
+        "53.8",
+        "Pricing prom",
+        "Calidad Seguim: 51.1",
+        "% Leads Clasif (33%)",
+        "23.4",
+        "Clasif/Activos",
+        "% Leads c-g90 (33%)",
+        "75.4",
+        "1-L90d/Act",
+        "%LeadsA c-g15 (33%)",
+        "54.5",
+        "1-L15dA/CliA",
+        "Calidad Conversión: 55.1",
+        "Vis Realiz/Meta (33%)",
+        "50.6",
+        "Vis/Meta",
+        "%Vis realizad/agend (33%)",
+        "70.2",
+        "Vis/Agend",
+        "TC 6m/leads tot (33%)",
+        "44.6",
+        "min(TC%,2.86)×35",
+        "Calidad Gestión: 56.0 | 🔧 Desarrollo |"
+      ],
+      "tables": [],
+      "charts": [],
+      "notes": [
+        "",
+        "6"
+      ]
+    },
+    {
+      "canonicalPage": 7,
+      "index": 7,
+      "title": "Santa María — Indicadores Ene-Jun",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Indicadores Ene-Jun",
+        "Calidad de Cartera",
+        "Indicador Valor Meta Jun % Cumpl Cartera actual 128 211 61% Requerimientos 117 Esp:176 66% Pricing ≤1.05:47 | ≤1.10:18 | >1.10:39 Score 53.8",
+        "Calidad de Seguimiento",
+        "Indicador Dato Detalle Score Leads clasif/activos 156/667 A: 44 23.4 Leads sg 90d / activos 164/667 25% sin gest 75.4 Leads A sg 15d / A 20/44 45% sin gest 54.5",
+        "Calidad de Conversión",
+        "Indicador Valor Referencia % / Score Visitas realizadas 66 Meta: 130 50.6 Vis realizadas / agendadas 66 / 94 Ratio cumplimiento 70.2 TC 6 meses 8.5 ci / 667 ld Tasa conversión 1.3%"
+      ],
+      "tables": [
+        {
+          "id": 8,
+          "name": "Table 0",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Meta Jun",
+              "% Cumpl"
+            ],
+            [
+              "Cartera actual",
+              "128",
+              "211",
+              "61%"
+            ],
+            [
+              "Requerimientos",
+              "117",
+              "Esp:176",
+              "66%"
+            ],
+            [
+              "Pricing",
+              "≤1.05:47 | ≤1.10:18 | >1.10:39",
+              "Score",
+              "53.8"
+            ]
+          ]
+        },
+        {
+          "id": 15,
+          "name": "Table 1",
+          "value": [
+            [
+              "Indicador",
+              "Dato",
+              "Detalle",
+              "Score"
+            ],
+            [
+              "Leads clasif/activos",
+              "156/667",
+              "A: 44",
+              "23.4"
+            ],
+            [
+              "Leads sg 90d / activos",
+              "164/667",
+              "25% sin gest",
+              "75.4"
+            ],
+            [
+              "Leads A sg 15d / A",
+              "20/44",
+              "45% sin gest",
+              "54.5"
+            ]
+          ]
+        },
+        {
+          "id": 22,
+          "name": "Table 2",
+          "value": [
+            [
+              "Indicador",
+              "Valor",
+              "Referencia",
+              "% / Score"
+            ],
+            [
+              "Visitas realizadas",
+              "66",
+              "Meta: 130",
+              "50.6"
+            ],
+            [
+              "Vis realizadas / agendadas",
+              "66 / 94",
+              "Ratio cumplimiento",
+              "70.2"
+            ],
+            [
+              "TC 6 meses",
+              "8.5 ci / 667 ld",
+              "Tasa conversión",
+              "1.3%"
+            ]
+          ]
+        }
+      ],
+      "charts": [],
+      "notes": [
+        "",
+        "7"
+      ]
+    },
+    {
+      "canonicalPage": 8,
+      "index": 8,
+      "title": "Santa María — Evolución Scores",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Evolución Scores",
+        "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 61.8 55.4 62.2 59.1 56.0 -3.1 Calidad Cartera (40%) 78.0 70.9 79.4 77.3 60.3 -17.0 Calidad Seguim (30%) 38.8 38.8 42.0 39.3 51.1 +11.8 Calidad Conversión (30%) 63.1 51.2 59.5 54.6 55.1 +0.5"
+      ],
+      "tables": [
+        {
+          "id": 9,
+          "name": "Table 0",
+          "value": [
+            [
+              "Score",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Calidad Gestión",
+              "61.8",
+              "55.4",
+              "62.2",
+              "59.1",
+              "56.0",
+              "-3.1"
+            ],
+            [
+              "Calidad Cartera (40%)",
+              "78.0",
+              "70.9",
+              "79.4",
+              "77.3",
+              "60.3",
+              "-17.0"
+            ],
+            [
+              "Calidad Seguim (30%)",
+              "38.8",
+              "38.8",
+              "42.0",
+              "39.3",
+              "51.1",
+              "+11.8"
+            ],
+            [
+              "Calidad Conversión (30%)",
+              "63.1",
+              "51.2",
+              "59.5",
+              "54.6",
+              "55.1",
+              "+0.5"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart27.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Calidad Gestión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "61.76538359227497",
+                  "55.37030496405598",
+                  "62.1846032865436",
+                  "59.11195936842283",
+                  "56.0"
+                ]
+              },
+              {
+                "name": "Calidad Cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "77.97722195954954",
+                  "70.91178974120254",
+                  "79.37046018404492",
+                  "77.31584476578915",
+                  "60.3"
+                ]
+              },
+              {
+                "name": "Calidad Seguim",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "38.84345923000031",
+                  "38.84345923000031",
+                  "41.99121440500751",
+                  "39.33024431339511",
+                  "51.1"
+                ]
+              },
+              {
+                "name": "Calidad Conversión",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$E$2:$E$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "63.0715234648502",
+                  "51.17517099524958",
+                  "59.46351630474461",
+                  "54.62182722696212",
+                  "55.1"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "8"
+      ]
+    },
+    {
+      "canonicalPage": 9,
+      "index": 9,
+      "title": "Santa María — Evolución Subscores Cartera",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Evolución Subscores Cartera",
+        "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 95.4 90.6 85.5 76.3 60.7 -15.6 Reqs x Tipo Prop 82.0 64.7 97.6 100.0 66.3 -33.7 Calidad Precio 56.6 57.5 54.9 55.6 53.8 -1.8",
+        "Cartera:",
+        "60.3",
+        "-0.7"
+      ],
+      "tables": [
+        {
+          "id": 10,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "Meta cartera",
+              "95.4",
+              "90.6",
+              "85.5",
+              "76.3",
+              "60.7",
+              "-15.6"
+            ],
+            [
+              "Reqs x Tipo Prop",
+              "82.0",
+              "64.7",
+              "97.6",
+              "100.0",
+              "66.3",
+              "-33.7"
+            ],
+            [
+              "Calidad Precio",
+              "56.6",
+              "57.5",
+              "54.9",
+              "55.6",
+              "53.8",
+              "-1.8"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart28.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "Meta cartera",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "95.36423841059603",
+                  "90.56603773584906",
+                  "85.54913294797689",
+                  "76.34408602150538",
+                  "60.7"
+                ]
+              },
+              {
+                "name": "Reqs x Tipo Prop",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "81.98848009963157",
+                  "64.71319113688135",
+                  "97.64421481727261",
+                  "100.0",
+                  "66.3"
+                ]
+              },
+              {
+                "name": "Calidad Precio",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "56.578947368421055",
+                  "57.45614035087719",
+                  "54.91803278688525",
+                  "55.60344827586207",
+                  "53.8"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "9"
+      ]
+    },
+    {
+      "canonicalPage": 10,
+      "index": 10,
+      "title": "Santa María — Evolución Subscores Seguimiento",
+      "backgroundColor": "#F0F0F0",
+      "texts": [
+        "Santa María — Evolución Subscores Seguimiento",
+        "Subscore Ene Feb Mar Abr Jun Δ % Leads Clasif 14.1 14.1 17.2 16.0 23.4 +7.4 % Leads c-g90 36.3 36.3 34.1 37.0 75.4 +38.4 %LeadsA c-g15 66.1 66.1 74.6 65.0 54.5 -10.5",
+        "Seguimiento:",
+        "51.1",
+        "+0.5"
+      ],
+      "tables": [
+        {
+          "id": 11,
+          "name": "Table 0",
+          "value": [
+            [
+              "Subscore",
+              "Ene",
+              "Feb",
+              "Mar",
+              "Abr",
+              "Jun",
+              "Δ"
+            ],
+            [
+              "% Leads Clasif",
+              "14.1",
+              "14.1",
+              "17.2",
+              "16.0",
+              "23.4",
+              "+7.4"
+            ],
+            [
+              "% Leads c-g90",
+              "36.3",
+              "36.3",
+              "34.1",
+              "37.0",
+              "75.4",
+              "+38.4"
+            ],
+            [
+              "%LeadsA c-g15",
+              "66.1",
+              "66.1",
+              "74.6",
+              "65.0",
+              "54.5",
+              "-10.5"
+            ]
+          ]
+        }
+      ],
+      "charts": [
+        {
+          "id": 5,
+          "name": "Chart 0",
+          "value": {
+            "entry": "ppt/charts/chart29.xml",
+            "title": "",
+            "chartKinds": [
+              "lineChart"
+            ],
+            "series": [
+              {
+                "name": "% Leads Clasif",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$B$2:$B$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "14.10756040530008",
+                  "14.10756040530008",
+                  "17.24137931034483",
+                  "16.006739679865206",
+                  "23.4"
+                ]
+              },
+              {
+                "name": "% Leads c-g90",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$C$2:$C$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "36.32112236944661",
+                  "36.32112236944661",
+                  "34.12908930150309",
+                  "36.98399326032013",
+                  "75.4"
+                ]
+              },
+              {
+                "name": "%LeadsA c-g15",
+                "categoryFormula": "Sheet1!$A$2:$A$6",
+                "valueFormula": "Sheet1!$D$2:$D$6",
+                "categories": [
+                  "Ene",
+                  "Feb",
+                  "Mar",
+                  "Abr",
+                  "Jun"
+                ],
+                "values": [
+                  "66.10169491525424",
+                  "66.10169491525424",
+                  "74.60317460317461",
+                  "65.0",
+                  "54.5"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "",
+        "10"
+      ]
+    }
+  ]
+}
