@@ -8,8 +8,6 @@ const EXECUTIVE_ONLY = [
   '/dashboard/market/import',
   '/dashboard/market/roadmap',
   '/dashboard/market/reconciliacion',
-  '/dashboard/knowledge',
-  '/dashboard/ml-lab',
   '/dashboard/reportes/autonomos',
   '/dashboard/reportes/directorio',
   '/dashboard/reportes/audiencias/ceo',
