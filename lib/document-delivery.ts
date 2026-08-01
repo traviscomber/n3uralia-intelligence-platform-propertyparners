@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery-core'
+import { generateCeoReportPDFAttachment } from '@/lib/ceo-report-pdf-generator'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -152,12 +153,30 @@ export async function sendDocumentEmail(
   
   const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
   
+  // Generate and attach CEO report if it's a CEO report document
+  let attachments: any[] = []
+  if (documentTitle.includes('Reporte Integral')) {
+    try {
+      const reportAttachment = await generateCeoReportPDFAttachment()
+      attachments = [
+        {
+          filename: reportAttachment.filename,
+          content: reportAttachment.content,
+          content_type: reportAttachment.contentType,
+        },
+      ]
+    } catch (attachmentError) {
+      console.error('[Document Delivery] Failed to generate report attachment:', attachmentError)
+    }
+  }
+  
   const resendResponse = await resend.emails.send({
     from: senderEmail,
     to: recipientEmail,
     subject,
     html,
     text,
+    attachments: attachments.length > 0 ? attachments : undefined,
     tags: [
       { name: 'category', value: 'document_delivery' },
       { name: 'schedule_id', value: scheduleId },
