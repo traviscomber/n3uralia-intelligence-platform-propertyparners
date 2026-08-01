@@ -121,7 +121,9 @@ export async function sendDocumentEmail(
     body { font-family: Calibri, 'Trebuchet MS', sans-serif; background-color: #f0f0f0; line-height: 1.6; color: #333333; }
     table { width: 100%; border-collapse: collapse; }
     .wrapper { max-width: 680px; margin: 0 auto; }
-    .header { background-color: #000000; color: white; padding: 60px 40px; text-align: center; }
+    .logo-container { background-color: #000000; padding: 20px 40px 10px 40px; text-align: center; }
+    .logo-container img { max-width: 300px; height: auto; display: block; margin: 0 auto; }
+    .header { background-color: #000000; color: white; padding: 40px 40px 60px 40px; text-align: center; }
     .header h1 { font-size: 26px; font-weight: bold; margin: 0 0 12px 0; line-height: 1.3; }
     .header .subtitle { font-size: 13px; opacity: 0.85; margin: 0; }
     .container { background: white; }
@@ -146,6 +148,11 @@ export async function sendDocumentEmail(
 <body>
   <div class="wrapper">
     <table cellpadding="0" cellspacing="0" class="container">
+      <tr>
+        <td class="logo-container">
+          <img src="https://www.ppartnersgroup.app/images/property-partners-logo.png" alt="Property Partners" style="max-width: 300px; height: auto;">
+        </td>
+      </tr>
       <tr>
         <td class="header">
           <h1>${documentTitle}</h1>
