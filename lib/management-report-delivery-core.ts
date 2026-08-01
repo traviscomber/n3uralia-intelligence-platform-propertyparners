@@ -2,85 +2,137 @@ import type { ManagementReportRecord } from '@/lib/management-report-artifact'
 
 export const DEFAULT_REPORT_FROM_EMAIL = 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
 export const DEFAULT_REPORT_ALLOWED_FROM_DOMAINS = ['ppartnersgroup.app'] as const
-export const managementReportRetryDelayMs = 5000
 
 export type ManagementReportDeliveryConfiguration = {
-  from: string
-  appBaseUrl?: string
-  replyTo?: string
-  apiKey: string
   provider: 'resend'
+  apiKey: string
+  from: string
+  fromEmail: string
+  fromDomain: string
+  replyTo: string | null
+  appBaseUrl: string | null
 }
 
-export function getManagementReportDeliveryConfiguration(): ManagementReportDeliveryConfiguration {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    throw new Error('RESEND_API_KEY environment variable is required')
-  }
+const EMAIL_PATTERN = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/
+
+function cleanBaseUrl(value: string | undefined) {
+  const normalized = String(value ?? '').trim().replace(/\/$/, '')
+  return normalized || null
+}
+
+export function extractReportEmailAddress(value: string | undefined) {
+  const normalized = String(value ?? '').trim()
+  if (!normalized || /[\r\n]/.test(normalized)) return null
+
+  const formatted = normalized.match(/^[^<>]*<([^<>]+)>$/)
+  const email = String(formatted?.[1] ?? normalized).trim().toLowerCase()
+  return EMAIL_PATTERN.test(email) ? email : null
+}
+
+export function getAllowedReportSenderDomains(environment: NodeJS.ProcessEnv = process.env) {
+  const configured = String(environment.REPORT_ALLOWED_FROM_DOMAINS ?? '')
+    .split(',')
+    .map((item) => item.trim().toLowerCase().replace(/^@/, ''))
+    .filter(Boolean)
+
+  return configured.length
+    ? [...new Set(configured)]
+    : [...DEFAULT_REPORT_ALLOWED_FROM_DOMAINS]
+}
+
+export function isAllowedReportSender(
+  value: string | undefined,
+  environment: NodeJS.ProcessEnv = process.env,
+) {
+  const email = extractReportEmailAddress(value)
+  if (!email) return false
+  const domain = email.split('@')[1]
+  return getAllowedReportSenderDomains(environment).includes(domain)
+}
+
+export function getManagementReportDeliveryConfiguration(
+  environment: NodeJS.ProcessEnv = process.env,
+): ManagementReportDeliveryConfiguration | null {
+  const apiKey = String(environment.RESEND_API_KEY ?? '').trim()
+  if (!apiKey) return null
+
+  const configuredFrom = String(environment.REPORT_FROM_EMAIL ?? '').trim()
+  const from = configuredFrom && isAllowedReportSender(configuredFrom, environment)
+    ? configuredFrom
+    : DEFAULT_REPORT_FROM_EMAIL
+  const fromEmail = extractReportEmailAddress(from)
+  if (!fromEmail || !isAllowedReportSender(from, environment)) return null
+
+  const replyToValue = String(environment.REPORT_REPLY_TO ?? environment.REPORT_REPLY_TO_EMAIL ?? '').trim()
+  const replyTo = replyToValue && extractReportEmailAddress(replyToValue)
+    ? replyToValue
+    : null
 
   return {
-    from: DEFAULT_REPORT_FROM_EMAIL,
-    appBaseUrl: process.env.NEXT_PUBLIC_APP_URL,
-    replyTo: process.env.REPORT_REPLY_TO_EMAIL,
-    apiKey,
     provider: 'resend',
+    apiKey,
+    from,
+    fromEmail,
+    fromDomain: fromEmail.split('@')[1],
+    replyTo,
+    appBaseUrl: cleanBaseUrl(
+      environment.APP_BASE_URL ?? environment.NEXT_PUBLIC_APP_URL,
+    ),
   }
+}
+
+export function managementReportRetryDelayMs(attemptCount: number) {
+  const safeAttempt = Math.max(1, Math.floor(attemptCount || 1))
+  const minutes = Math.min(24 * 60, 5 * (2 ** (safeAttempt - 1)))
+  return minutes * 60 * 1000
+}
+
+function reportLabel(reportType: string) {
+  const labels: Record<string, string> = {
+    executive: 'Reporte ejecutivo',
+    office: 'Reporte de oficina',
+    partner: 'Reporte individual',
+    monthly: 'Reporte mensual',
+    cumulative: 'Reporte acumulado',
+  }
+  return labels[reportType] ?? 'Reporte de gestión'
+}
+
+function htmlEscape(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
 }
 
 export function buildManagementReportEmailContent(
   report: ManagementReportRecord,
-  artifactUrl?: string | null,
+  artifactUrl: string | null,
 ) {
-  const reportTypeLabel = report.report_type
-    .replace(/_/g, ' ')
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-
-  const generatedDate = report.generated_at ? new Date(report.generated_at).toLocaleDateString('es-CL') : new Date().toLocaleDateString('es-CL')
-  const periodEndDate = new Date(report.period_end).toLocaleDateString('es-CL')
-
-  const subject = `Property Partners Intelligence Report: ${reportTypeLabel} - ${periodEndDate}`
-
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; border-radius: 8px; margin-top: 20px; }
-    .footer { text-align: center; color: #999; font-size: 12px; margin-top: 20px; }
-    .button { display: inline-block; background: #667eea; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>${reportTypeLabel}</h1>
-      <p>Report Period: ${new Date(report.period_start).toLocaleDateString('es-CL')} - ${periodEndDate}</p>
-    </div>
-    <div class="content">
-      <p>Hello,</p>
-      <p>Your scheduled Property Partners Intelligence report is ready.</p>
-      <ul>
-        <li><strong>Report Type:</strong> ${reportTypeLabel}</li>
-        <li><strong>Period:</strong> ${new Date(report.period_start).toLocaleDateString('es-CL')} to ${periodEndDate}</li>
-        <li><strong>Generated:</strong> ${generatedDate}</li>
-      </ul>
-      ${artifactUrl ? `<p><a href="${artifactUrl}" class="button">Download Report</a></p>` : ''}
-      <p>If you have any questions, please contact Property Partners Intelligence Support.</p>
-    </div>
-    <div class="footer">
-      <p>© ${new Date().getFullYear()} Property Partners. All rights reserved.</p>
-      <p>Business Intelligence Property Partners | info@ppartnersgroup.app</p>
-    </div>
-  </div>
-</body>
-</html>`
-
-  const text = `${reportTypeLabel} Report\n\nPeriod: ${new Date(report.period_start).toLocaleDateString('es-CL')} - ${periodEndDate}\nGenerated: ${generatedDate}\n\nYour scheduled Property Partners Intelligence report is ready.\n\nReport Type: ${reportTypeLabel}\nPeriod: ${new Date(report.period_start).toLocaleDateString('es-CL')} to ${periodEndDate}\n${artifactUrl ? `\nDownload: ${artifactUrl}` : ''}`
+  const title = reportLabel(report.report_type)
+  const period = `${report.period_start} – ${report.period_end}`
+  const subject = `${title} · ${period}`
+  const linkHtml = artifactUrl
+    ? `<p><a href="${htmlEscape(artifactUrl)}">Abrir una copia autenticada del reporte</a></p>`
+    : ''
+  const html = [
+    '<div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">',
+    `<h1 style="font-size:20px">${htmlEscape(title)}</h1>`,
+    `<p>Período: <strong>${htmlEscape(period)}</strong></p>`,
+    '<p>Se adjunta el documento generado desde el snapshot persistido y autorizado del sistema.</p>',
+    linkHtml,
+    '<p style="font-size:12px;color:#666">Property Partners · N3uralia Intelligence</p>',
+    '</div>',
+  ].join('')
+  const text = [
+    title,
+    `Período: ${period}`,
+    'Se adjunta el documento generado desde el snapshot persistido y autorizado del sistema.',
+    artifactUrl ? `Copia autenticada: ${artifactUrl}` : null,
+    'Property Partners · N3uralia Intelligence',
+  ].filter(Boolean).join('\n\n')
 
   return { subject, html, text }
 }
