@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Audit legacy code
+        run: pnpm audit:legacy
+
       - name: Lint
         run: pnpm lint
 
