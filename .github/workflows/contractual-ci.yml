@@ -76,6 +76,9 @@ jobs:
       - name: Verify management report scheduling
         run: pnpm management:reports:verify
 
+      - name: Verify approved management metric overlay
+        run: pnpm management:persisted:verify
+
       - name: Verify dashboard access
         run: pnpm access:verify
 
