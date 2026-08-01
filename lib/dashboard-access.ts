@@ -14,7 +14,6 @@ const EXECUTIVE_ONLY = [
   '/dashboard/reportes/directorio',
   '/dashboard/reportes/audiencias/ceo',
   '/dashboard/reportes/audiencias/director-cuenta',
-  '/dashboard/version-2',
 ]
 
 const SELLER_FORBIDDEN = [
