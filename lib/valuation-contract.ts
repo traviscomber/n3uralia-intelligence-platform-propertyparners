@@ -26,6 +26,7 @@ export type ValuationComparable = {
   parkingSpaces?: number
   priceUf: number
   priceUfM2: number
+  /** Similarity on the canonical 0-1 scale. */
   similarityScore: number
   selected: boolean
   adjustmentPct: number
@@ -65,6 +66,13 @@ export type ValuationResult = {
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const round = (value: number, digits = 2) => Number(value.toFixed(digits))
 
+export function similarityScoreToWeight(similarityScore: number) {
+  if (!Number.isFinite(similarityScore) || similarityScore < 0 || similarityScore > 1) {
+    throw new Error('La similitud debe estar expresada en una escala de 0 a 1.')
+  }
+  return round(clamp(similarityScore, 0.1, 1), 4)
+}
+
 export function calculateQualitativeAdjustment(factors: QualitativeFactors) {
   return round(clamp(
     factors.condition +
@@ -101,7 +109,7 @@ export function calculateContractualValuation(
 
   const adjustedComparableValues = selected.map((item) => ({
     value: item.priceUfM2 * (1 + item.adjustmentPct / 100),
-    weight: clamp(item.similarityScore, 0.1, 1),
+    weight: similarityScoreToWeight(item.similarityScore),
   }))
   const baseUfM2 = round(weightedMedian(adjustedComparableValues))
 
@@ -139,6 +147,7 @@ export function calculateContractualValuation(
 export function buildValuationReportPayload(subject: ValuationSubject, comparables: ValuationComparable[], factors: QualitativeFactors, result: ValuationResult) {
   return {
     methodologyVersion: 'valuation-contract-v1',
+    similarityScale: '0-1',
     generatedAt: new Date().toISOString(),
     subject,
     comparables: comparables.filter((item) => item.selected),

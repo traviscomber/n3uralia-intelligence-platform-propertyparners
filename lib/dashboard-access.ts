@@ -10,7 +10,6 @@ const EXECUTIVE_ONLY = [
   '/dashboard/market/reconciliacion',
   '/dashboard/knowledge',
   '/dashboard/ml-lab',
-  '/dashboard/control',
   '/dashboard/reportes/autonomos',
   '/dashboard/reportes/directorio',
   '/dashboard/reportes/audiencias/ceo',

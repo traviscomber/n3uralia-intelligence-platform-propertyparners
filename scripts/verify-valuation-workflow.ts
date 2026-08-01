@@ -19,6 +19,7 @@ async function main() {
   const createRoute = await read('app/api/valuation/cases/route.ts')
   const comparableRoute = await read('app/api/valuations/[id]/comparables/route.ts')
   const workflowRoute = await read('app/api/valuations/[id]/workflow/route.ts')
+  const accessControl = await read('lib/access-control.ts')
   const creatorPage = await read('app/dashboard/valuation/page.tsx')
   const workspacePage = await read('app/dashboard/valuations/[id]/page.tsx')
 
@@ -32,17 +33,35 @@ async function main() {
   assert.doesNotMatch(creatorPage, /Enviar a revisión/)
 
   assert.match(workflowRoute, /accepted\.length < 3/)
-  assert.match(workflowRoute, /Solo dirección puede aprobar/)
-  assert.match(workflowRoute, /Solo dirección puede emitir/)
+  assert.match(workflowRoute, /const canApprove = scope\.capabilities\.includes\(['"]valuations\.global\.approve['"]\)/)
+  assert.doesNotMatch(workflowRoute, /const canApprove =[^\n]*\|\| canReview/)
+  assert.match(workflowRoute, /Solo Dirección puede aprobar/)
+  assert.match(workflowRoute, /Solo Dirección puede emitir/)
+  assert.match(workflowRoute, /Solo dirección de oficina puede devolver el caso a borrador/)
   assert.match(workflowRoute, /valuation_case_versions/)
   assert.match(workflowRoute, /valuation_decision_log/)
+
+  const ceoBlock = accessControl.match(/ceo:\s*\[([\s\S]*?)\n\s*\],/)?.[1] ?? ''
+  const adminBlock = accessControl.match(/admin:\s*\[([\s\S]*?)\n\s*\],/)?.[1] ?? ''
+  const directorBlock = accessControl.match(/director:\s*\[([\s\S]*?)\n\s*\],/)?.[1] ?? ''
+  const subdirectorBlock = accessControl.match(/subdirector:\s*\[([\s\S]*?)\n\s*\],/)?.[1] ?? ''
+  assert.match(ceoBlock, /valuations\.global\.approve/)
+  assert.doesNotMatch(adminBlock, /valuations\.global\.approve/)
+  assert.doesNotMatch(directorBlock, /valuations\.global\.approve/)
+  assert.doesNotMatch(subdirectorBlock, /valuations\.global\.approve/)
+  assert.match(directorBlock, /valuations\.office\.review/)
+  assert.match(subdirectorBlock, /valuations\.office\.review/)
 
   assert.match(comparableRoute, /Motivo de exclusión requerido/)
   assert.match(comparableRoute, /existingKeys/)
   assert.match(comparableRoute, /seenKeys/)
   assert.match(comparableRoute, /duplicatesSkipped/)
-  assert.match(comparableRoute, /estimated_value_uf:\s*null/)
-  assert.match(comparableRoute, /match_status:\s*['"]accepted['"]/)
+  assert.match(comparableRoute, /apply_valuation_comparable_decision/)
+  assert.match(comparableRoute, /assertProfileVisible\(scope, valuationCase\.requested_by\)/)
+  assert.match(comparableRoute, /scope\.capabilities\.includes\(['"]valuations\.office\.review['"]\)/)
+  assert.match(comparableRoute, /scope\.capabilities\.includes\(['"]valuations\.global\.approve['"]\)/)
+  assert.doesNotMatch(comparableRoute, /ELEVATED_ROLES/)
+  assert.doesNotMatch(comparableRoute, /canOperateCase/)
 
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/comparables/)
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/workflow/)
@@ -58,7 +77,7 @@ async function main() {
     assert.equal(await exists(route), false, `Obsolete valuation route still exists: ${route}`)
   }
 
-  console.log('Valuation workflow verified: draft-only creation, canonical APIs, evidence rules, permissions and audit trail.')
+  console.log('Valuation workflow verified: CEO-only approval, office-scoped review, evidence rules and audit trail.')
 }
 
 main().catch((error) => {
