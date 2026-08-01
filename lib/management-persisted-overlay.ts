@@ -15,7 +15,7 @@ export type DashboardMetric = {
   reportedYoy?: number | null
   qualityNotes?: string[]
   sourceName?: string
-  sourceReference?: string
+  sourceReference?: string | null
   periodStart?: string
   periodEnd?: string
   qualityStatus?: string
@@ -272,7 +272,7 @@ function mergeEvolution(
   for (const row of rows) {
     if (!['sales', 'sales_uf'].includes(row.metric_code)) continue
     const period = row.period_start.slice(0, 7)
-    const current = byPeriod.get(period) ?? { period, sales: null, salesTarget: null }
+    const current: DashboardEvolution = byPeriod.get(period) ?? { period, sales: null, salesTarget: null }
     const goal = goalMap.get(metricKey(row.entity_id, row.metric_code, row.period_start, row.period_end))
     if (row.metric_code === 'sales') {
       current.sales = numeric(row.value)
@@ -336,7 +336,7 @@ export function overlayApprovedManagementMetrics(input: OverlayInput): { entitie
     if (!persisted) {
       return {
         ...entity,
-        metrics: entity.metrics.map((item) => ({ ...item, dataLayer: item.dataLayer ?? 'documentary' })),
+        metrics: entity.metrics.map((item) => ({ ...item, dataLayer: item.dataLayer ?? 'documentary' as const })),
       }
     }
 
@@ -345,7 +345,7 @@ export function overlayApprovedManagementMetrics(input: OverlayInput): { entitie
     if (!entityRows.length) {
       return {
         ...entity,
-        metrics: entity.metrics.map((item) => ({ ...item, dataLayer: item.dataLayer ?? 'documentary' })),
+        metrics: entity.metrics.map((item) => ({ ...item, dataLayer: item.dataLayer ?? 'documentary' as const })),
       }
     }
 
@@ -353,14 +353,14 @@ export function overlayApprovedManagementMetrics(input: OverlayInput): { entitie
     const replacements = latestRows
       .filter((row) => row.entity_id === persisted.id)
       .map((row) => createPersistedMetric(row, entityRows, definitionMap, sourceMap, goalMap))
-    const replacementMap = new Map(replacements.map((metric) => [metric.code, metric]))
-    const existingCodes = new Set(entity.metrics.map((metric) => metric.code))
+    const replacementMap = new Map(replacements.map((persistedMetric) => [persistedMetric.code, persistedMetric]))
+    const existingCodes = new Set(entity.metrics.map((existingMetric) => existingMetric.code))
 
     return {
       ...entity,
       metrics: [
-        ...entity.metrics.map((metric) => replacementMap.get(metric.code) ?? { ...metric, dataLayer: metric.dataLayer ?? 'documentary' as const }),
-        ...replacements.filter((metric) => !existingCodes.has(metric.code)),
+        ...entity.metrics.map((existingMetric) => replacementMap.get(existingMetric.code) ?? { ...existingMetric, dataLayer: existingMetric.dataLayer ?? 'documentary' as const }),
+        ...replacements.filter((persistedMetric) => !existingCodes.has(persistedMetric.code)),
       ],
       evolution: mergeEvolution(entity.evolution, entityRows, goalMap),
     }
