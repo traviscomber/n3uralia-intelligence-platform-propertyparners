@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Database, RefreshCw, Save, Target } from 'lucide-react'
+import { AlertTriangle, Database, Save, Target } from 'lucide-react'
 import { IntelligenceHeader, IntelligencePage, IntelligencePanel, SectionHeading } from '@/components/intelligence/design-system'
 
 type Entity = { id: string; name: string; entity_type: string }
@@ -26,7 +26,7 @@ export default function ManagementAdminPage() {
   const [message, setMessage] = useState<string | null>(null)
   const currentMonth = new Date().toISOString().slice(0, 7)
   const [goal, setGoal] = useState({ entityId: '', metricCode: 'sales', month: currentMonth, targetValue: '', sourceName: 'Meta aprobada' })
-  const [metric, setMetric] = useState({ entityId: '', metricCode: 'sales', month: currentMonth, value: '', sourceName: 'Carga administrativa', sourceReference: '', qualityStatus: 'verified' })
+  const [metric, setMetric] = useState({ entityId: '', metricCode: 'sales', month: currentMonth, value: '', sourceName: 'Carga administrativa', sourceReference: '', qualityStatus: 'provisional' })
   const [rule, setRule] = useState({ code: '', label: '', metricCode: 'sales', comparison: 'lt', threshold: '', severity: 'warning', scopeType: 'all', responsibleRole: 'director' })
 
   async function load() {
@@ -66,7 +66,7 @@ export default function ManagementAdminPage() {
 
   return (
     <IntelligencePage>
-      <IntelligenceHeader eyebrow="Módulo III · Administración" title="Metas, métricas y alertas" description="Configuración contractual, carga controlada y trazabilidad de cambios del control de gestión." actions={[{ label: 'Volver a control', href: '/dashboard/control', primary: true }]} />
+      <IntelligenceHeader eyebrow="Módulo III · Administración" title="Metas, métricas y alertas" description="Configuración contractual, carga controlada y trazabilidad de cambios del control de gestión." actions={[{ label: 'Conciliación', href: '/dashboard/control/reconciliacion' }, { label: 'Volver a control', href: '/dashboard/control', primary: true }]} />
 
       {message ? <div className="border border-[var(--n3-line)] bg-[#0c1111] p-4 text-sm text-[var(--n3-text-light)]">{message}</div> : null}
       {loading ? <div className="border border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">Cargando…</div> : null}
@@ -87,8 +87,8 @@ export default function ManagementAdminPage() {
         </section>
 
         <section>
-          <SectionHeading eyebrow="02 · Carga conciliada" title="Registrar métrica con fuente y calidad" />
-          <IntelligencePanel eyebrow="Dato operativo" title="Carga manual controlada" description="Se utiliza para conciliación y transición hasta que cada fuente tenga un conector automático.">
+          <SectionHeading eyebrow="02 · Evidencia de fuente" title="Registrar métrica para conciliación" />
+          <IntelligencePanel eyebrow="Dato operativo" title="Carga manual no publicada" description="La carga queda como evidencia independiente. No alimenta dashboards hasta ser comparada con el cálculo canónico y aprobada por CEO.">
             <div className="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-4">
               <select value={metric.entityId} onChange={(e) => setMetric({ ...metric, entityId: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3">{data.entities.map((entity) => <option key={entity.id} value={entity.id}>{entity.name}</option>)}</select>
               <select value={metric.metricCode} onChange={(e) => setMetric({ ...metric, metricCode: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3">{data.definitions.map((definition) => <option key={definition.code} value={definition.code}>{definition.label}</option>)}</select>
@@ -96,8 +96,8 @@ export default function ManagementAdminPage() {
               <input type="number" value={metric.value} onChange={(e) => setMetric({ ...metric, value: e.target.value })} placeholder="Valor" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
               <input value={metric.sourceName} onChange={(e) => setMetric({ ...metric, sourceName: e.target.value })} placeholder="Fuente" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
               <input value={metric.sourceReference} onChange={(e) => setMetric({ ...metric, sourceReference: e.target.value })} placeholder="Referencia de archivo/corte" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <select value={metric.qualityStatus} onChange={(e) => setMetric({ ...metric, qualityStatus: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3"><option value="verified">Verificado</option><option value="provisional">Provisional</option><option value="missing">Faltante</option><option value="rejected">Rechazado</option></select>
-              <button onClick={() => { const bounds = monthBounds(metric.month); void post({ type: 'metric', ...metric, periodStart: bounds.start, periodEnd: bounds.end }) }} className="flex items-center justify-center gap-2 border border-[#d7332b] p-3"><Database size={15} />Registrar métrica</button>
+              <select value={metric.qualityStatus} onChange={(e) => setMetric({ ...metric, qualityStatus: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3"><option value="provisional">Provisional</option><option value="verified">Fuente verificada</option></select>
+              <button onClick={() => { const bounds = monthBounds(metric.month); void post({ type: 'metric', ...metric, periodStart: bounds.start, periodEnd: bounds.end }) }} className="flex items-center justify-center gap-2 border border-[#d7332b] p-3"><Database size={15} />Registrar evidencia</button>
             </div>
           </IntelligencePanel>
         </section>

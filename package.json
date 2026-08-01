@@ -25,6 +25,7 @@
     "management:scoring:verify": "node --import tsx scripts/verify-canonical-management-scoring.ts",
     "management:reports:verify": "node --import tsx scripts/verify-management-report-schedule.ts",
     "management:persisted:verify": "node --import tsx scripts/verify-management-persisted-overlay.ts",
+    "management:reconciliation:verify": "node --import tsx scripts/verify-management-metric-reconciliation.ts",
     "management:delivery:verify": "node --import tsx scripts/verify-management-report-delivery.ts",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
