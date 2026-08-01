@@ -18,6 +18,7 @@ export type ReconciliationResult = {
 const EXACT_EPSILON = 1e-9
 
 function finiteNumber(value: unknown) {
+  if (value === null || value === undefined || value === '') return null
   const numeric = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(numeric) ? numeric : null
 }
