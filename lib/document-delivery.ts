@@ -150,7 +150,7 @@ export async function sendDocumentEmail(
     <table cellpadding="0" cellspacing="0" class="container">
       <tr>
         <td class="logo-container">
-          <img src="https://www.ppartnersgroup.app/images/property-partners-logo.png" alt="Property Partners" style="max-width: 300px; height: auto;">
+          <img src="https://www.ppartnersgroup.app/images/property-partners-logo.svg" alt="Property Partners" style="max-width: 450px; height: auto; display: block; margin: 0 auto;">
         </td>
       </tr>
       <tr>
