@@ -199,8 +199,9 @@ function targetScore(
 function pricingScore(inputs: CanonicalManagementInputs, mode: CanonicalScoringMode): ScoreComponent {
   const counts = [inputs.pricingAtOrBelow105, inputs.pricingBetween105And110, inputs.pricingAbove110]
   if (counts.some((value) => value === null)) return missingSource()
-  const [best, middle, high] = counts as number[]
-  if (counts.some((value) => value < 0)) return invalidSource('negative_band_count')
+  const numericCounts = counts as number[]
+  const [best, middle, high] = numericCounts
+  if (numericCounts.some((value) => value < 0)) return invalidSource('negative_band_count')
   const total = best + middle + high
   if (total === 0) return notEvaluable('zero_eligible_properties', 0, total)
   return evaluated(finalizeScore((best * 100 + middle * 50) / total, mode, true), best * 100 + middle * 50, total)
