@@ -7,10 +7,15 @@ for (const role of ['ceo', 'admin']) {
   assert.equal(canAccessDashboardPath(role, '/dashboard/datos-crm'), true)
 }
 
-assert.equal(canAccessDashboardPath('director', '/dashboard/control'), true)
-assert.equal(canAccessDashboardPath('director', '/dashboard/datos-crm'), true)
-assert.equal(canAccessDashboardPath('director', '/dashboard/settings'), false)
-assert.equal(canAccessDashboardPath('director', '/dashboard/ml-lab'), false)
+for (const role of ['director', 'subdirector']) {
+  assert.equal(canAccessDashboardPath(role, '/dashboard/control'), true)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/director'), true)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/datos-crm'), true)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/settings'), false)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/market/import'), false)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/reportes/autonomos'), false)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/ml-lab'), false)
+}
 
 assert.equal(canAccessDashboardPath('seller', '/dashboard'), true)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/properties'), true)
@@ -25,4 +30,4 @@ assert.equal(canAccessDashboardPath('seller', '/dashboard/metas'), false)
 assert.equal(canAccessDashboardPath('unauthorized', '/dashboard'), false)
 assert.equal(canAccessDashboardPath('', '/dashboard/properties'), false)
 
-console.log('Dashboard access verified for CEO, admin, director and seller route boundaries.')
+console.log('Dashboard access verified for CEO, admin, director, subdirector and seller route boundaries.')
