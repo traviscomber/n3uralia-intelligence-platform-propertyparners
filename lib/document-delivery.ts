@@ -115,41 +115,47 @@ export async function sendDocumentEmail(
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; border-radius: 8px; margin-top: 20px; }
-    .footer { text-align: center; color: #999; font-size: 12px; margin-top: 20px; }
-    .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; margin-top: 15px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Calibri, Trebuchet MS, sans-serif; background-color: #f0f0f0; }
+    table { width: 100%; border-collapse: collapse; }
+    .header { background-color: #000000; color: white; padding: 40px; text-align: center; }
+    .header h1 { font-size: 24px; font-weight: bold; margin: 0; }
+    .header p { font-size: 14px; margin: 10px 0 0 0; opacity: 0.9; }
+    .container { max-width: 600px; margin: 0 auto; background: white; }
+    .content { padding: 30px; text-align: center; color: #333333; }
+    .content p { font-size: 13px; line-height: 1.6; margin: 15px 0; }
+    .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 11px; color: #666666; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>${documentTitle}</h1>
-      <p>Scheduled Document Delivery</p>
-    </div>
-    <div class="content">
-      <p>Hello,</p>
-      <p>Your scheduled presentation document is ready for review.</p>
-      <ul>
-        <li><strong>Document:</strong> ${documentTitle}</li>
-        <li><strong>Sent:</strong> ${new Date().toLocaleDateString('es-CL')} at ${new Date().toLocaleTimeString('es-CL')}</li>
-        <li><strong>Type:</strong> Presentation (PDF/PPTX)</li>
-      </ul>
-      <p><a href="${documentUrl}" class="button">Download Document</a></p>
-      <p>If you have any questions, please contact Property Partners Intelligence Support.</p>
-    </div>
-    <div class="footer">
-      <p>© ${new Date().getFullYear()} Property Partners. All rights reserved.</p>
-      <p>Business Intelligence Property Partners | info@ppartnersgroup.app</p>
-    </div>
-  </div>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="header">
+        <h1>${documentTitle}</h1>
+        <p>Documento adjunto</p>
+      </td>
+    </tr>
+    <tr>
+      <td class="content">
+        <p>El reporte está adjunto en este email.</p>
+        <p style="font-size: 12px; color: #999999; margin-top: 25px;">
+          Property Partners Intelligence<br>
+          info@ppartnersgroup.app
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td class="footer">
+        <p>© ${new Date().getFullYear()} Property Partners. Todos los derechos reservados.</p>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`
   
-  const text = `${documentTitle}\n\nYour scheduled presentation document is ready.\n\nDocument: ${documentTitle}\nSent: ${new Date().toLocaleDateString('es-CL')}\nType: Presentation\n\nDownload: ${documentUrl}`
+  const text = `${documentTitle}\n\nEl reporte está adjunto en este email.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app`
   
   const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
   
