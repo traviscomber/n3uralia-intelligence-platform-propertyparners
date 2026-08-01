@@ -11,9 +11,9 @@ import { buildManagementReportPdf } from '../lib/management-report-artifact'
 
 async function main() {
   assert.equal(getManagementReportDeliveryConfiguration({} as NodeJS.ProcessEnv), null)
-  assert.equal(extractReportEmailAddress('Property Partners <reportes@ppartnersgroup.app>'), 'reportes@ppartnersgroup.app')
+  assert.equal(extractReportEmailAddress('Business Intelligence Property Partners <info@ppartnersgroup.app>'), 'info@ppartnersgroup.app')
   assert.equal(extractReportEmailAddress('invalid-address'), null)
-  assert.equal(isAllowedReportSender('reportes@ppartnersgroup.app', {} as NodeJS.ProcessEnv), true)
+  assert.equal(isAllowedReportSender('info@ppartnersgroup.app', {} as NodeJS.ProcessEnv), true)
   assert.equal(isAllowedReportSender('reportes@ppartnersgroup.com', {} as NodeJS.ProcessEnv), false)
 
   const configuration = getManagementReportDeliveryConfiguration({
@@ -24,7 +24,7 @@ async function main() {
   assert.ok(configuration)
   assert.equal(configuration.provider, 'resend')
   assert.equal(configuration.from, DEFAULT_REPORT_FROM_EMAIL)
-  assert.equal(configuration.fromEmail, 'reportes@ppartnersgroup.app')
+  assert.equal(configuration.fromEmail, 'info@ppartnersgroup.app')
   assert.equal(configuration.fromDomain, 'ppartnersgroup.app')
   assert.equal(configuration.appBaseUrl, 'https://n3uralia-intelligence-platform.vercel.app')
   assert.equal(configuration.replyTo, 'operaciones@ppartnersgroup.com')
