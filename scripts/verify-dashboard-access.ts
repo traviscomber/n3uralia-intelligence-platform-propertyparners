@@ -5,12 +5,14 @@ for (const role of ['ceo', 'admin']) {
   assert.equal(canAccessDashboardPath(role, '/dashboard/ceo'), true)
   assert.equal(canAccessDashboardPath(role, '/dashboard/settings'), true)
   assert.equal(canAccessDashboardPath(role, '/dashboard/datos-crm'), true)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/control/reconciliacion'), true)
 }
 
 for (const role of ['director', 'subdirector']) {
   assert.equal(canAccessDashboardPath(role, '/dashboard/control'), true)
   assert.equal(canAccessDashboardPath(role, '/dashboard/director'), true)
   assert.equal(canAccessDashboardPath(role, '/dashboard/datos-crm'), true)
+  assert.equal(canAccessDashboardPath(role, '/dashboard/control/reconciliacion'), true)
   assert.equal(canAccessDashboardPath(role, '/dashboard/settings'), false)
   assert.equal(canAccessDashboardPath(role, '/dashboard/market/import'), false)
   assert.equal(canAccessDashboardPath(role, '/dashboard/reportes/autonomos'), false)
@@ -24,6 +26,7 @@ assert.equal(canAccessDashboardPath('seller', '/dashboard/market/fuentes'), fals
 assert.equal(canAccessDashboardPath('seller', '/dashboard/market/import'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/valorizador'), true)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/reportes/audiencias/ejecutivo'), true)
+assert.equal(canAccessDashboardPath('seller', '/dashboard/control/reconciliacion'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/inteligencia'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/datos-crm'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/metas'), false)
