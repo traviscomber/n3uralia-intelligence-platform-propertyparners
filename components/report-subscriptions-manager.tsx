@@ -1,16 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface Subscription {
   id: string
@@ -137,145 +127,147 @@ export function ReportSubscriptionsManager() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Email Subscription</CardTitle>
-          <CardDescription>Subscribe users to receive automated reports</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAddSubscription} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium mb-2">Email Address</label>
-                <Input
-                  type="email"
-                  placeholder="user@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
+      {/* Add Subscription Card */}
+      <div className="bg-slate-700 rounded-lg border border-slate-600 p-6">
+        <h2 className="text-xl font-bold text-white mb-2">Add Email Subscription</h2>
+        <p className="text-slate-400 text-sm mb-4">Subscribe users to receive automated reports</p>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Recipient Name (optional)</label>
-                <Input
-                  type="text"
-                  placeholder="John Doe"
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Report Type</label>
-                <Select value={reportType} onValueChange={setReportType} disabled={loading}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REPORT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Cadence</label>
-                <Select value={cadence} onValueChange={setCadence} disabled={loading}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CADENCES.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        {c.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <form onSubmit={handleAddSubscription} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+              <input
+                type="email"
+                placeholder="user@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-400"
+              />
             </div>
 
-            {message && (
-              <div
-                className={`p-3 rounded ${
-                  message.includes('Failed') || message.includes('Error')
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-green-100 text-green-800'
-                }`}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Recipient Name (optional)</label>
+              <input
+                type="text"
+                placeholder="John Doe"
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                disabled={loading}
+                className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Report Type</label>
+              <select
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+                disabled={loading}
+                className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:border-blue-400"
               >
-                {message}
-              </div>
-            )}
+                {REPORT_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Adding...' : 'Add Subscription'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Subscriptions</CardTitle>
-          <CardDescription>{subscriptions.length} email subscriptions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <button
-            onClick={loadSubscriptions}
-            disabled={loading}
-            className="mb-4 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Loading...' : 'Refresh'}
-          </button>
-
-          <div className="space-y-2">
-            {subscriptions.length === 0 ? (
-              <p className="text-gray-500 text-sm">No subscriptions yet</p>
-            ) : (
-              subscriptions.map((sub) => (
-                <div
-                  key={sub.id}
-                  className="flex items-center justify-between p-3 border rounded bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">{sub.email}</p>
-                    <p className="text-sm text-gray-600">
-                      {sub.report_type} • {sub.cadence}
-                      {sub.recipient_name && ` • ${sub.recipient_name}`}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleToggleActive(sub.id, sub.active)}
-                      disabled={loading}
-                      className={`px-2 py-1 text-sm rounded ${
-                        sub.active
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      } disabled:opacity-50`}
-                    >
-                      {sub.active ? 'Active' : 'Inactive'}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSubscription(sub.id)}
-                      disabled={loading}
-                      className="px-2 py-1 text-sm rounded bg-red-100 text-red-800 hover:bg-red-200 disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Cadence</label>
+              <select
+                value={cadence}
+                onChange={(e) => setCadence(e.target.value)}
+                disabled={loading}
+                className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white focus:outline-none focus:border-blue-400"
+              >
+                {CADENCES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {message && (
+            <div
+              className={`p-3 rounded text-sm ${
+                message.includes('Failed') || message.includes('Error')
+                  ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                  : 'bg-green-500/20 text-green-300 border border-green-500/30'
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-medium"
+          >
+            {loading ? 'Adding...' : 'Add Subscription'}
+          </button>
+        </form>
+      </div>
+
+      {/* Subscriptions List Card */}
+      <div className="bg-slate-700 rounded-lg border border-slate-600 p-6">
+        <h2 className="text-xl font-bold text-white mb-2">Active Subscriptions</h2>
+        <p className="text-slate-400 text-sm mb-4">{subscriptions.length} email subscriptions</p>
+
+        <button
+          onClick={loadSubscriptions}
+          disabled={loading}
+          className="mb-4 px-3 py-2 text-sm bg-slate-600 text-white rounded hover:bg-slate-500 disabled:opacity-50"
+        >
+          {loading ? 'Loading...' : 'Refresh'}
+        </button>
+
+        <div className="space-y-2">
+          {subscriptions.length === 0 ? (
+            <p className="text-slate-400 text-sm py-4">No subscriptions yet</p>
+          ) : (
+            subscriptions.map((sub) => (
+              <div
+                key={sub.id}
+                className="flex items-center justify-between p-3 border border-slate-600 rounded bg-slate-600/50"
+              >
+                <div className="flex-1">
+                  <p className="font-medium text-white">{sub.email}</p>
+                  <p className="text-sm text-slate-400">
+                    {sub.report_type} • {sub.cadence}
+                    {sub.recipient_name && ` • ${sub.recipient_name}`}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleToggleActive(sub.id, sub.active)}
+                    disabled={loading}
+                    className={`px-2 py-1 text-sm rounded disabled:opacity-50 ${
+                      sub.active
+                        ? 'bg-green-600/50 text-green-300 hover:bg-green-600'
+                        : 'bg-slate-500 text-slate-300 hover:bg-slate-600'
+                    }`}
+                  >
+                    {sub.active ? 'Active' : 'Inactive'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSubscription(sub.id)}
+                    disabled={loading}
+                    className="px-2 py-1 text-sm rounded bg-red-600/50 text-red-300 hover:bg-red-600 disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   )
 }
