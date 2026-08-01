@@ -26,6 +26,7 @@ export type ValuationComparable = {
   parkingSpaces?: number
   priceUf: number
   priceUfM2: number
+  /** Similarity on the canonical 0-100 scale. */
   similarityScore: number
   selected: boolean
   adjustmentPct: number
@@ -65,6 +66,13 @@ export type ValuationResult = {
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const round = (value: number, digits = 2) => Number(value.toFixed(digits))
 
+export function similarityScoreToWeight(similarityScore: number) {
+  if (!Number.isFinite(similarityScore) || similarityScore < 0 || similarityScore > 100) {
+    throw new Error('La similitud debe estar expresada en una escala de 0 a 100.')
+  }
+  return round(clamp(similarityScore / 100, 0.1, 1), 4)
+}
+
 export function calculateQualitativeAdjustment(factors: QualitativeFactors) {
   return round(clamp(
     factors.condition +
@@ -101,7 +109,7 @@ export function calculateContractualValuation(
 
   const adjustedComparableValues = selected.map((item) => ({
     value: item.priceUfM2 * (1 + item.adjustmentPct / 100),
-    weight: clamp(item.similarityScore, 0.1, 1),
+    weight: similarityScoreToWeight(item.similarityScore),
   }))
   const baseUfM2 = round(weightedMedian(adjustedComparableValues))
 
@@ -118,7 +126,7 @@ export function calculateContractualValuation(
   const highValueUf = round(adjustedValueUf * 1.05)
 
   const justification = [
-    `Valor base determinado con ${selected.length} comparables seleccionados y mediana ponderada por similitud.`,
+    `Valor base determinado con ${selected.length} comparables seleccionados y mediana ponderada por similitud 0-100.`,
     `Superficie efectiva utilizada: ${round(effectiveArea)} m².`,
     `Ajuste cualitativo total: ${qualitativeAdjustmentPct}%.`,
     `Rango sugerido: ${lowValueUf.toLocaleString('es-CL')} a ${highValueUf.toLocaleString('es-CL')} UF.`,
@@ -139,6 +147,7 @@ export function calculateContractualValuation(
 export function buildValuationReportPayload(subject: ValuationSubject, comparables: ValuationComparable[], factors: QualitativeFactors, result: ValuationResult) {
   return {
     methodologyVersion: 'valuation-contract-v1',
+    similarityScale: '0-100',
     generatedAt: new Date().toISOString(),
     subject,
     comparables: comparables.filter((item) => item.selected),
