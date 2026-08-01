@@ -39,7 +39,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     const ownsCase = valuationCase.requested_by === scope.profileId
     const canReview = scope.capabilities.includes('valuations.office.review')
-    const canApprove = scope.capabilities.includes('valuations.global.approve') || canReview
+    const canApprove = scope.capabilities.includes('valuations.global.approve')
 
     if (!ownsCase && !canReview && !scope.capabilities.includes('valuations.global.read')) {
       return NextResponse.json({ error: 'No puede operar valorizaciones fuera de su alcance' }, { status: 403 })
@@ -96,7 +96,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ updated: true, status: data?.status ?? 'review', versionNumber: data?.version_number ?? null })
     }
 
-    if (!canApprove) return NextResponse.json({ error: 'Sólo dirección puede ejecutar esta transición' }, { status: 403 })
+    if (target === 'draft' && !canReview && !canApprove) {
+      return NextResponse.json({ error: 'Solo dirección de oficina puede devolver el caso a borrador' }, { status: 403 })
+    }
+    if (target === 'approved' && !canApprove) {
+      return NextResponse.json({ error: 'Solo Dirección puede aprobar' }, { status: 403 })
+    }
+    if (target === 'issued' && !canApprove) {
+      return NextResponse.json({ error: 'Solo Dirección puede emitir' }, { status: 403 })
+    }
     if (target === 'draft' && !reason) return NextResponse.json({ error: 'Se requiere un motivo para devolver el caso a borrador' }, { status: 400 })
 
     if (target === 'approved') {
@@ -187,7 +195,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (target === 'approved') {
       await supabase
         .from('management_tasks')
-        .update({ status: 'done', completed_at: now, resolution_note: 'Valorización aprobada por dirección.', updated_by: scope.profileId })
+        .update({ status: 'done', completed_at: now, resolution_note: 'Valorización aprobada por Dirección.', updated_by: scope.profileId })
         .eq('source_key', `valuation-return:${id}`)
         .in('status', ['open', 'in_progress'])
     }
