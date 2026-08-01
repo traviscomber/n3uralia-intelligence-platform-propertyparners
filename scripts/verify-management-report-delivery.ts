@@ -3,7 +3,7 @@ import {
   buildManagementReportEmailContent,
   getManagementReportDeliveryConfiguration,
   managementReportRetryDelayMs,
-} from '../lib/management-report-delivery'
+} from '../lib/management-report-delivery-core'
 import { buildManagementReportPdf } from '../lib/management-report-artifact'
 
 assert.equal(getManagementReportDeliveryConfiguration({} as NodeJS.ProcessEnv), null)
