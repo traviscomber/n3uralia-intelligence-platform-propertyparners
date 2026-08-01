@@ -1,6 +1,10 @@
 export type ManagementReportTrigger = 'cron' | 'manual'
 export type CronAuthorizationFailure = 'missing_secret' | 'missing_authorization' | 'invalid_authorization' | null
 
+export function canRunManagementReports(role: string | null | undefined) {
+  return ['admin', 'ceo'].includes(String(role ?? '').trim().toLowerCase())
+}
+
 export function getCronAuthorizationFailure(authorization: string | null, cronSecret: string | undefined): CronAuthorizationFailure {
   if (!cronSecret) return 'missing_secret'
   if (!authorization) return 'missing_authorization'
