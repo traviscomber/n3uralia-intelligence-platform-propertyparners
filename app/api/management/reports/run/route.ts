@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runDueManagementReports } from '@/lib/management-monthly-report'
+import { canRunManagementReports } from '@/lib/management-report-schedule'
 
 export async function POST() {
   const supabase = await createClient()
@@ -17,8 +18,7 @@ export async function POST() {
     return NextResponse.json({ error: profileError?.message ?? 'Perfil no configurado' }, { status: 403 })
   }
 
-  const role = String(profile.role ?? '').trim().toLowerCase()
-  if (!['admin', 'ceo'].includes(role)) {
+  if (!canRunManagementReports(profile.role)) {
     return NextResponse.json({ error: 'Solo administración y CEO pueden ejecutar reportes programados.' }, { status: 403 })
   }
 
