@@ -1,4 +1,3 @@
-import 'server-only'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
 export type ManagementReportRecord = {
@@ -79,9 +78,8 @@ function wrapText(font: PDFFont, value: string, fontSize: number, maxWidth: numb
     let current = words.shift() ?? ''
     for (const word of words) {
       const candidate = `${current} ${word}`
-      if (font.widthOfTextAtSize(candidate, fontSize) <= maxWidth) {
-        current = candidate
-      } else {
+      if (font.widthOfTextAtSize(candidate, fontSize) <= maxWidth) current = candidate
+      else {
         lines.push(current)
         current = word
       }
@@ -101,26 +99,17 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const dark = rgb(0.06, 0.08, 0.08)
 
   let cursor: PdfCursor = { page: pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]), y: TOP_Y }
+  const newPage = () => { cursor = { page: pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]), y: TOP_Y } }
+  const ensureSpace = (height: number) => { if (cursor.y - height < BOTTOM_Y) newPage() }
 
-  function newPage() {
-    cursor = { page: pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]), y: TOP_Y }
-  }
-
-  function ensureSpace(height: number) {
-    if (cursor.y - height < BOTTOM_Y) newPage()
-  }
-
-  function drawLines(
-    value: string,
-    options: {
-      font?: PDFFont
-      size?: number
-      color?: ReturnType<typeof rgb>
-      indent?: number
-      gap?: number
-      maxWidth?: number
-    } = {},
-  ) {
+  function drawLines(value: string, options: {
+    font?: PDFFont
+    size?: number
+    color?: ReturnType<typeof rgb>
+    indent?: number
+    gap?: number
+    maxWidth?: number
+  } = {}) {
     const font = options.font ?? regular
     const size = options.size ?? 9
     const indent = options.indent ?? 0
@@ -129,13 +118,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     const lines = wrapText(font, value, size, maxWidth)
     ensureSpace(Math.max(gap, lines.length * gap))
     for (const line of lines) {
-      cursor.page.drawText(line, {
-        x: MARGIN_X + indent,
-        y: cursor.y,
-        size,
-        font,
-        color: options.color ?? dark,
-      })
+      cursor.page.drawText(line, { x: MARGIN_X + indent, y: cursor.y, size, font, color: options.color ?? dark })
       cursor.y -= gap
     }
   }
@@ -197,58 +180,36 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
       const quality = text(metric.quality_status ?? metric.qualityStatus)
       const evaluation = text(metric.evaluation_status)
       const suffix = [quality, evaluation].filter(Boolean).join(' / ')
-      drawLines(`• ${label}: ${value}${unit ? ` ${unit}` : ''}${targetText}${suffix ? ` · ${suffix}` : ''}`, {
-        size: 8.5,
-        indent: 8,
-        gap: 12,
-      })
+      drawLines(`• ${label}: ${value}${unit ? ` ${unit}` : ''}${targetText}${suffix ? ` · ${suffix}` : ''}`, { size: 8.5, indent: 8, gap: 12 })
     }
   }
 
   if (entities.length > 100) {
-    drawLines(`Se omitieron ${entities.length - 100} entidades del PDF por límite editorial; el snapshot completo permanece en el sistema.`, {
-      size: 8,
-      color: muted,
-      gap: 12,
-    })
+    drawLines(`Se omitieron ${entities.length - 100} entidades del PDF por límite editorial; el snapshot completo permanece en el sistema.`, { size: 8, color: muted, gap: 12 })
   }
 
   const alerts = array(snapshot.alerts)
   separator(12, 14)
   drawLines(`Alertas abiertas o reconocidas: ${alerts.length}`, { font: bold, size: 11, gap: 18 })
-  if (!alerts.length) {
-    drawLines('No existen alertas incluidas en el snapshot del período.', { size: 9, color: muted, gap: 13 })
-  } else {
+  if (!alerts.length) drawLines('No existen alertas incluidas en el snapshot del período.', { size: 9, color: muted, gap: 13 })
+  else {
     for (const rawAlert of alerts.slice(0, 100)) {
       const alert = record(rawAlert)
       if (!alert) continue
       const title = text(alert.title, 'Alerta')
       const detail = text(alert.detail)
       const severity = text(alert.severity, 'n/d')
-      drawLines(`• [${severity.toUpperCase()}] ${title}${detail ? ` — ${detail}` : ''}`, {
-        size: 8.5,
-        indent: 8,
-        gap: 12,
-      })
+      drawLines(`• [${severity.toUpperCase()}] ${title}${detail ? ` — ${detail}` : ''}`, { size: 8.5, indent: 8, gap: 12 })
     }
   }
 
   separator(14, 12)
   drawLines('Metodología', { font: bold, size: 11, gap: 18 })
-  drawLines(
-    `Documento generado exclusivamente desde el snapshot persistido del reporte. No incorpora proyecciones ni datos externos. Métricas renderizadas: ${renderedMetrics}.`,
-    { size: 8.5, color: muted, gap: 12 },
-  )
+  drawLines(`Documento generado exclusivamente desde el snapshot persistido del reporte. No incorpora proyecciones ni datos externos. Métricas renderizadas: ${renderedMetrics}.`, { size: 8.5, color: muted, gap: 12 })
 
   const pages = pdf.getPages()
   pages.forEach((page, index) => {
-    page.drawText(`Property Partners · N3uralia Intelligence · ${index + 1}/${pages.length}`, {
-      x: MARGIN_X,
-      y: 24,
-      size: 7,
-      font: regular,
-      color: muted,
-    })
+    page.drawText(`Property Partners · N3uralia Intelligence · ${index + 1}/${pages.length}`, { x: MARGIN_X, y: 24, size: 7, font: regular, color: muted })
   })
 
   const bytes = await pdf.save()
