@@ -38,6 +38,7 @@ function text(value: unknown, fallback = '') {
 }
 
 function formatNumber(value: unknown) {
+  if (value == null || value === '') return 'n/d'
   const numeric = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(numeric)
     ? numeric.toLocaleString('es-CL', { maximumFractionDigits: 2 })
