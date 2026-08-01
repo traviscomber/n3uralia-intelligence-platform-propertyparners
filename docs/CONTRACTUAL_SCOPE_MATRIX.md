@@ -60,31 +60,31 @@ Los porcentajes históricos, roadmaps y presentaciones de avance no sustituyen e
 
 | ID | Requisito canónico | Estado verificado | Evidencia técnica | Gap o dependencia |
 |---|---|---|---|---|
-| MGT-01 | Dashboard CEO | Parcial | Consolidado, oficinas, personas, metas, comparaciones, tareas y decisiones | Las métricas comerciales principales provienen del corte documental 2026, no de un pipeline vivo mensual |
-| MGT-02 | Dashboard dirección | Parcial | Oficina, equipo, fichas, tareas, valorizaciones y asignaciones con alcance | Requiere QA de aislamiento cruzado por oficina |
-| MGT-03 | Dashboard subdirección | Parcial | Comparte capacidades y alcance de oficina definidos centralmente | Falta aceptación explícita de equivalencia funcional por el Cliente |
-| MGT-04 | Dashboard partner/ejecutiva | Parcial | Métricas personales, propiedades, valorizaciones y tareas propias | La ficha canónica depende de coincidencia inequívoca entre perfil y presentación |
-| MGT-05 | Captaciones brutas | Pendiente Cliente | El sistema evita sustituir captaciones por stock o variación neta | Falta definición y fuente separada oficial |
-| MGT-06 | Ventas | Parcial | Valores, metas, UF, acumulados y comparación canónica 2025–2026 | Falta ingestión operacional periódica desde la fuente comercial oficial |
-| MGT-07 | Seguimiento | Parcial | Score documental, tareas persistentes y actividad operacional | Falta fórmula y fuente viva aprobadas |
-| MGT-08 | Conversión | Parcial | Score canónico visible con período y procedencia | Falta definición oficial de numerador, denominador y universo |
-| MGT-09 | Productividad | Pendiente Cliente | Sólo existe una lectura auxiliar no declarada como KPI oficial | Falta fórmula, alcance y aprobación |
-| MGT-10 | Cumplimiento de metas | Parcial | Valor, meta y porcentaje de cumplimiento por entidad | Falta fuente oficial y mantenimiento sin deployment |
-| MGT-11 | Variación MoM | Parcial | Comparación cuando existe mes anterior en la fuente canónica | Falta pipeline periódico y política para períodos incompletos |
-| MGT-12 | Variación YoY | Parcial | Recalculada desde bases explícitas 2025 y 2026, con notas de calidad | Falta continuidad mensual operacional |
+| MGT-01 | Dashboard CEO | Parcial, bloque 4–6 | El resumen conserva fallback documental y reemplaza cada KPI equivalente sólo desde `management_approved_metric_values`; incluye procedencia, período, conciliación y versión | Producción aún no contiene valores persistidos aprobados; por eso los KPI visibles continúan en el corte documental 2026 |
+| MGT-02 | Dashboard dirección | Parcial, bloque 4–6 | Oficina, equipo, tareas, valorizaciones y asignaciones con RLS; `can_access_management_entity` reconoce oficina por nombre y descendientes | Se verificó la política mediante JWT simulado para el director existente; falta ejecución del workflow con login real y prueba cruzada completa |
+| MGT-03 | Dashboard subdirección | Parcial | Comparte capacidades y alcance de oficina; existe caso en matriz de rutas y runner autenticado de QA | No existe perfil subdirector productivo para ejecutar aceptación real; falta aprobación explícita de equivalencia funcional |
+| MGT-04 | Dashboard partner/ejecutiva | Parcial, bloque 4–6 | Métricas, propiedades, valorizaciones y tareas propias; el overlay admite una entidad persistida vinculada aunque no exista ficha documental coincidente | Falta una serie aprobada de métricas vivas y QA con todas las cuentas reales autorizadas |
+| MGT-05 | Captaciones brutas | Pendiente Cliente | El dashboard sólo presenta captaciones desde la métrica aprobada `listings` y no sustituye por stock o variación neta | Falta definición y fuente separada oficial |
+| MGT-06 | Ventas | Parcial | Valores, metas, UF, acumulados y comparación canónica; preparado para valores aprobados persistidos | Falta ingestión operacional periódica y reconciliación desde la fuente comercial oficial |
+| MGT-07 | Seguimiento | Parcial | Diccionario y motor canónico, tareas persistentes y sustitución desde valores aprobados | Falta fuente viva aprobada y continuidad mensual |
+| MGT-08 | Conversión | Parcial | Fórmulas versionadas, estado no evaluable y valor aprobado cuando exista | Falta definición oficial de numerador, denominador, cohorte y universo operacional |
+| MGT-09 | Productividad | Pendiente Cliente | Existe definición técnica, pero no se declara KPI oficial ni se publica sin aprobación | Falta fórmula, ponderación, alcance y aprobación |
+| MGT-10 | Cumplimiento de metas | Parcial | Valor y meta se vinculan por entidad, métrica y período; sólo se usa una meta aprobada | Producción no contiene metas aprobadas y falta mantenimiento operacional |
+| MGT-11 | Variación MoM | Parcial | El overlay calcula variación desde el período aprobado anterior y mantiene fallback documental | Falta serie mensual aprobada y política para períodos incompletos |
+| MGT-12 | Variación YoY | Parcial | El overlay busca período aprobado equivalente del año anterior; fallback recalculado desde bases documentales | Falta continuidad operacional de al menos dos años comparables |
 | MGT-13 | Rankings | Pendiente Cliente | Existen ordenamientos de apoyo marcados como provisionales | Falta regla oficial, desempates, vigencia y aprobación |
-| MGT-14 | Alertas | Pendiente Cliente | Existen alertas derivadas y tareas persistentes | Falta umbral, severidad, escalamiento y responsable oficiales |
+| MGT-14 | Alertas | Pendiente Cliente | Existen reglas versionables, evaluación persistida y alertas derivadas | Falta umbral, severidad, escalamiento y responsable oficiales |
 
 ## Automatizaciones
 
 | ID | Requisito canónico | Estado verificado | Evidencia técnica | Gap o dependencia |
 |---|---|---|---|---|
-| AUT-01 | Dashboard interactivo | Parcial | Vistas por rol, filtros, navegación y datos con procedencia | Falta QA visual, responsive y accesibilidad autenticada final |
+| AUT-01 | Dashboard interactivo | Parcial | Vistas por rol, filtros, navegación, datos con procedencia y workflow manual de QA autenticada | Falta ejecutar y aprobar QA visual, responsive, accesibilidad y RLS con credenciales autorizadas |
 | AUT-02 | Presentación ejecutiva | Parcial | Vista de presentación y reportes web estructurados | PowerPoint y archivo editorial final no están verificados |
 | AUT-03 | Presentación por oficina | Parcial | Reporte/vista de dirección por alcance | Falta archivo final generado y registrado |
-| AUT-04 | Indicadores mensuales | Parcial | Período y metas visibles en fuente canónica | Falta pipeline mensual operacional |
-| AUT-05 | Indicadores acumulados | Parcial | YTD y comparación anual disponibles para el corte documental | Falta continuidad automática |
-| AUT-06 | Reportes periódicos | Sólo estructura | Cron, schedules, report runs y distribuciones `pending` | Falta envío efectivo, reintentos, entrega/fallo y evidencia de destinatario |
+| AUT-04 | Indicadores mensuales | Parcial, bloque 4–6 | El dashboard puede sustituir KPI documentales por valores mensuales reconciliados y aprobados | No existen valores aprobados ni pipeline mensual activo en producción |
+| AUT-05 | Indicadores acumulados | Parcial | YTD y comparación anual disponibles para el corte documental | Falta serie persistida acumulada y continuidad automática |
+| AUT-06 | Reportes periódicos | Sólo estructura reforzada | Cron y recuperación manual idempotente, schedules, report runs y distribuciones `pending` | `CRON_SECRET` productivo no está verificado; falta proveedor de correo, reintentos, entrega/fallo y evidencia de destinatario |
 
 ## Arquitectura y transferencia
 
@@ -94,17 +94,25 @@ Los porcentajes históricos, roadmaps y presentaciones de avance no sustituyen e
 | ARC-02 | ETL | Parcial | Pipelines canónicos con raw records, validación y ejecuciones | Falta automatización de todas las fuentes contractuales |
 | ARC-03 | APIs | Parcial | Rutas de mercado, valorización, gestión, reportes y administración | Falta inventario contractual final y pruebas negativas completas |
 | ARC-04 | Autenticación | Completo | Supabase Auth y guards de sesión |
-| ARC-05 | Perfiles y permisos | Parcial | Capacidades centrales, guards, RLS y alcance global/oficina/personal | Falta matriz QA final por usuario real o cuentas autorizadas |
+| ARC-05 | Perfiles y permisos | Parcial, bloque 4–6 | Guards, RLS, vistas `security_invoker`, privilegios de vistas restringidos y alcance global/oficina/personal; SQL simulado verificó director y seller existentes | Falta workflow autenticado con cuentas reales, subdirección y aislamiento cruzado completo |
 | ARC-06 | Infraestructura cloud | Completo | Vercel, Supabase y repositorio privado conectados |
 | ARC-07 | Repositorio Git | Completo | Historial, PR, CI y deployments trazables |
-| ARC-08 | Scripts de instalación | Pendiente | Instalación local básica disponible | Falta reconstrucción documentada y probada desde cero |
-| ARC-09 | Modelo y diccionario de datos | Pendiente | Migraciones y tipos existen | Falta diagrama y diccionario entregable consolidados |
-| ARC-10 | Documentación técnica | Parcial | README, roadmap, seguridad, migraciones y documentos operativos | Falta paquete final correspondiente exactamente a producción |
-| ARC-11 | Documentación funcional | Parcial | Matriz, flujos y metodología parcial | Faltan manuales completos por rol y excepciones operativas |
-| ARC-12 | Manual de usuario | Pendiente | Ayudas dispersas dentro de la interfaz | Falta documento transferible por rol |
-| ARC-13 | Manual de administración | Pendiente | Funciones administrativas implementadas parcialmente | Faltan procedimientos de usuarios, fuentes, respaldos y configuración |
-| ARC-14 | Capacitación | Pendiente | Sin evidencia versionada | Requiere sesión, material, asistentes y registro de aceptación |
-| ARC-15 | ZIP y transferencia completa | Pendiente | Repositorio privado operativo | Falta paquete íntegro, accesos transferibles y prueba de despliegue por tercero autorizado |
+| ARC-08 | Scripts de instalación | Parcial, bloque 4–6 | Runbook con lockfile, variables, migraciones, despliegue, recuperación y checklist limpio | Falta que un tercero ejecute y documente la reconstrucción desde cero |
+| ARC-09 | Modelo y diccionario de datos | Completo en bloque 4–6 | Diagrama ER, diccionario de tablas, vistas, estados y funciones contrastado con producción | Debe actualizarse con cada migración contractual |
+| ARC-10 | Documentación técnica | Parcial, bloque 4–6 | README, matriz, runbook, modelo, seguridad, migraciones y manifiesto de transferencia | Falta congelar el paquete final contra un commit/tag de entrega y ejecutar la prueba independiente |
+| ARC-11 | Documentación funcional | Parcial, bloque 4–6 | Manual por rol, límites de datos, flujos, errores y excepciones operativas | Requiere revisión editorial y aceptación del Cliente |
+| ARC-12 | Manual de usuario | Parcial, bloque 4–6 | `docs/manuals/ROLE_USER_MANUAL.md` cubre CEO, dirección/subdirección, partner, mercado, valorización y reportes | Falta capacitación, prueba con usuarios y acta de aceptación |
+| ARC-13 | Manual de administración | Parcial, bloque 4–6 | `docs/manuals/ADMINISTRATION_MANUAL.md` cubre usuarios, entidades, fuentes, métricas, cron, secretos, backup, release e incidentes | Falta ejercicio operativo de recuperación y aprobación del administrador receptor |
+| ARC-14 | Capacitación | Pendiente | El manifiesto define sesiones y registro requerido | Requiere sesión, material final, asistentes y aceptación |
+| ARC-15 | ZIP y transferencia completa | Pendiente | Manifiesto de contenido, checksums, accesos, UAT y rotación disponible | Falta generar paquete final, transferir accesos, ejecutar despliegue independiente y obtener firma |
+
+## Seguridad operacional del bloque 4–6
+
+- Las vistas contractuales activas conservan `security_invoker=true`.
+- Se revocaron todos los privilegios de `anon` sobre esas vistas.
+- `authenticated` conserva únicamente `SELECT`.
+- `can_access_management_entity` reconoce la oficina raíz por nombre normalizado y mantiene descendientes dentro del alcance.
+- Las funciones privilegiadas conservan `search_path` fijo y `EXECUTE` sólo para `authenticated` y `service_role`.
 
 ## Fuera de Versión 1
 

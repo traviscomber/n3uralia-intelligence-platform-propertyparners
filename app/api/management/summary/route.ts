@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getManagementEntities, type ManagementEntity } from '@/lib/presentations-2026'
 import { getCanonicalPortfolioComparison, parseCanonicalSalesComparison } from '@/lib/canonical-commercial-comparisons'
+import {
+  overlayApprovedManagementMetrics,
+  type ApprovedMetricValue,
+  type DashboardEntity,
+  type MetricSourceValue,
+  type PersistedGoal,
+  type PersistedManagementEntity,
+  type PersistedMetricDefinition,
+} from '@/lib/management-persisted-overlay'
 
 const normalize = (value: string | null | undefined) =>
   String(value ?? '')
@@ -83,6 +92,7 @@ const metric = (
   periodEnd: options?.periodEnd ?? '2026-06-30',
   qualityStatus: value === null ? 'missing' : options?.qualityStatus ?? 'canonical_presentation',
   sourceReference,
+  dataLayer: 'documentary' as const,
 })
 
 function toPayloadEntity(rawEntity: ManagementEntity, entityType: 'company' | 'branch' | 'partner') {
@@ -202,11 +212,11 @@ type DirectorAlert = {
   createdAt: string
 }
 
-function getMetricValue(entity: PayloadEntity, code: string) {
+function getMetricValue(entity: DashboardEntity, code: string) {
   return entity.metrics.find((item) => item.code === code)?.value ?? null
 }
 
-function buildDirectorAlerts(entities: PayloadEntity[]): DirectorAlert[] {
+function buildDirectorAlerts(entities: DashboardEntity[]): DirectorAlert[] {
   return entities
     .filter((entity) => entity.entityType === 'partner')
     .flatMap((entity): DirectorAlert[] => {
@@ -238,9 +248,9 @@ function buildDirectorAlerts(entities: PayloadEntity[]): DirectorAlert[] {
           severity: sales.compliance < 60 ? 'critical' : 'warning',
           status: 'open',
           title: 'Meta de cierres en riesgo',
-          detail: `Cumplimiento junio: ${sales.compliance.toFixed(1)}%. Meta: ${sales.target?.toLocaleString('es-CL') ?? 'n/d'} cierres.`,
+          detail: `Cumplimiento: ${sales.compliance.toFixed(1)}%. Meta: ${sales.target?.toLocaleString('es-CL') ?? 'n/d'} cierres.`,
           entityName: entity.name,
-          createdAt: '2026-06-30T23:59:59.000Z',
+          createdAt: sales.periodEnd ? `${sales.periodEnd}T23:59:59.000Z` : '2026-06-30T23:59:59.000Z',
         })
       }
       if (stock && stock.compliance !== null && stock.compliance < 90) {
@@ -251,12 +261,19 @@ function buildDirectorAlerts(entities: PayloadEntity[]): DirectorAlert[] {
           title: 'Cartera bajo meta',
           detail: `Stock actual: ${stock.value?.toLocaleString('es-CL') ?? 'n/d'} de ${stock.target?.toLocaleString('es-CL') ?? 'n/d'}. Cumplimiento: ${stock.compliance.toFixed(1)}%.`,
           entityName: entity.name,
-          createdAt: '2026-06-30T23:59:59.000Z',
+          createdAt: stock.periodEnd ? `${stock.periodEnd}T23:59:59.000Z` : '2026-06-30T23:59:59.000Z',
         })
       }
       return [...scoreAlerts, ...commercialAlerts]
     })
     .sort((a, b) => (a.severity === b.severity ? a.entityName.localeCompare(b.entityName) : a.severity === 'critical' ? -1 : 1))
+}
+
+function periodLabel(periodEnd: string | null) {
+  if (!periodEnd) return 'Enero–junio 2026 · cierre junio · comparación 2025'
+  const date = new Date(`${periodEnd}T12:00:00.000Z`)
+  if (Number.isNaN(date.getTime())) return `Datos aprobados hasta ${periodEnd}`
+  return `Datos aprobados hasta ${new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)}`
 }
 
 export async function GET() {
@@ -269,7 +286,7 @@ export async function GET() {
 
   const role = normalize(profile.role)
   const canonical = getManagementEntities()
-  let entities: PayloadEntity[] = []
+  let entities: DashboardEntity[] = []
   let scopeLabel = 'Ámbito sin configurar'
 
   if (role === 'admin' || role === 'ceo') {
@@ -284,8 +301,53 @@ export async function GET() {
   } else if (role === 'seller') {
     const partner = canonical.partners.find((item) => normalize(item.name) === normalize(profile.full_name))
     if (partner) entities = [toPayloadEntity(partner, 'partner')]
-    scopeLabel = partner ? `${partner.name} · ${partner.branch ?? profile.team ?? 'Sin sucursal'}` : `${profile.full_name ?? 'Partner'} · sin ficha canónica vinculada`
+    scopeLabel = partner ? `${partner.name} · ${partner.branch ?? profile.team ?? 'Sin sucursal'}` : `${profile.full_name ?? 'Partner'} · sin ficha documental vinculada`
   } else return NextResponse.json({ error: 'Rol no autorizado.' }, { status: 403 })
+
+  const [persistedEntitiesResult, definitionsResult, approvedValuesResult, goalsResult] = await Promise.all([
+    supabase.from('management_entities').select('id,entity_type,name,parent_id,profile_id').eq('active', true).order('name'),
+    supabase.from('management_metric_definitions').select('code,label,unit,methodology,formula_version').eq('active', true).order('sort_order'),
+    supabase.from('management_approved_metric_values').select('*').order('period_end', { ascending: true }),
+    supabase.from('management_goals').select('entity_id,metric_code,period_start,period_end,target_value,status,approved_at,source_name').order('period_end', { ascending: true }),
+  ])
+
+  const approvedValues = (approvedValuesResult.data ?? []) as ApprovedMetricValue[]
+  const metricValueIds = [...new Set(approvedValues.map((row) => row.metric_value_id).filter((id): id is string => Boolean(id)))]
+  let sourceValues: MetricSourceValue[] = []
+  let sourceValuesError: string | null = null
+
+  if (metricValueIds.length) {
+    const sourceResult = await supabase
+      .from('management_metric_values')
+      .select('id,source_name,source_reference,source_cutoff_at,quality_status,evaluation_status')
+      .in('id', metricValueIds)
+    sourceValues = (sourceResult.data ?? []) as MetricSourceValue[]
+    sourceValuesError = sourceResult.error?.message ?? null
+  }
+
+  const overlayErrors = [
+    persistedEntitiesResult.error?.message,
+    definitionsResult.error?.message,
+    approvedValuesResult.error?.message,
+    goalsResult.error?.message,
+    sourceValuesError,
+  ].filter((message): message is string => Boolean(message))
+
+  const overlay = overlayErrors.length
+    ? {
+        entities,
+        stats: { approvedMetricCount: 0, matchedEntities: 0, persistedOnlyEntities: 0, latestPeriodEnd: null, mode: 'documentary' as const },
+      }
+    : overlayApprovedManagementMetrics({
+        entities,
+        persistedEntities: (persistedEntitiesResult.data ?? []) as PersistedManagementEntity[],
+        definitions: (definitionsResult.data ?? []) as PersistedMetricDefinition[],
+        approvedValues,
+        sourceValues,
+        goals: (goalsResult.data ?? []) as PersistedGoal[],
+      })
+
+  entities = overlay.entities
 
   const isDirector = role === 'director' || role === 'subdirector'
   let operational = null
@@ -319,7 +381,9 @@ export async function GET() {
     { label: 'Reportes', href: '/dashboard/reportes/autonomos', permission: 'read', detail: 'Consultar reportes autorizados para dirección.' },
   ] : []
 
-  const qualityNotes = [...new Set(entities.flatMap((entity) => entity.commercialCoverage.yoy.qualityNotes))]
+  const payloadEntities = entities as PayloadEntity[]
+  const qualityNotes = [...new Set(payloadEntities.flatMap((entity) => entity.commercialCoverage?.yoy.qualityNotes ?? []))]
+  const persistedCount = overlay.stats.approvedMetricCount
 
   return NextResponse.json({
     role,
@@ -328,13 +392,24 @@ export async function GET() {
     alerts: isDirector ? buildDirectorAlerts(entities) : [],
     operational,
     accesses,
-    periodLabel: 'Enero–junio 2026 · cierre junio · comparación 2025',
+    periodLabel: periodLabel(overlay.stats.latestPeriodEnd),
     generatedAt: new Date().toISOString(),
-    dataProvenance: 'Presentaciones canónicas 2026, bases comparables 2025 contenidas en las mismas tablas y registros operativos visibles mediante RLS.',
+    dataProvenance: persistedCount
+      ? `${persistedCount} valores persistidos, reconciliados y aprobados reemplazan sus métricas documentales equivalentes. Las métricas sin aprobación conservan el corte documental 2026 con su fuente visible.`
+      : 'Presentaciones canónicas 2026, bases comparables 2025 contenidas en las mismas tablas y registros operativos visibles mediante RLS. No existen valores persistidos aprobados para sustituir este corte.',
+    dataLayers: {
+      mode: overlay.stats.mode,
+      approvedMetricCount: persistedCount,
+      matchedEntities: overlay.stats.matchedEntities,
+      persistedOnlyEntities: overlay.stats.persistedOnlyEntities,
+      latestApprovedPeriodEnd: overlay.stats.latestPeriodEnd,
+      fallback: 'documentary_2026',
+      errors: overlayErrors,
+    },
     commercialMethodology: {
-      yoy: 'Variación interanual recalculada desde valores base 2026 y 2025. El Δ% AA impreso se conserva como control de calidad, no como única fuente del cálculo.',
-      captations: 'No disponible como métrica separada en la fuente canónica. No se sustituye por stock ni por variación neta de cartera.',
-      portfolioNetChange: 'Diferencia entre cartera actual de junio y cartera actual de mayo. Es un flujo neto y no equivale a captaciones brutas.',
+      yoy: 'Los valores persistidos calculan la variación desde períodos aprobados equivalentes. El fallback documental recalcula desde valores base 2026 y 2025 y conserva el Δ% impreso sólo como control de calidad.',
+      captations: 'Sólo se presenta como captación cuando existe la métrica persistida y aprobada `listings`. El fallback documental no sustituye captaciones por stock ni por variación neta.',
+      portfolioNetChange: 'Diferencia entre cartera actual y período anterior. Es un flujo neto y no equivale a captaciones brutas.',
       qualityNotes,
     },
   }, { headers: { 'Cache-Control': 'no-store' } })
