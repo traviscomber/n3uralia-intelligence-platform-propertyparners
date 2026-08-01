@@ -1,6 +1,6 @@
 import type { ManagementReportRecord } from '@/lib/management-report-artifact'
 
-export const DEFAULT_REPORT_FROM_EMAIL = 'Property Partners Intelligence <info@ppartnersgroup.app>'
+export const DEFAULT_REPORT_FROM_EMAIL = 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
 export const DEFAULT_REPORT_ALLOWED_FROM_DOMAINS = ['ppartnersgroup.app'] as const
 
 export type ManagementReportDeliveryConfiguration = {
