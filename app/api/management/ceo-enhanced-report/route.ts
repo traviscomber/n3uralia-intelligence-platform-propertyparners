@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getCompanySalesCompliance, getBranchTargetPerformance } from '@/lib/targets-2026'
 import { getMarketSnapshot } from '@/lib/market-snapshot'
 import { getValuationSnapshot } from '@/lib/valuation-snapshot'
-import { getLatestLeadSnapshot, getOperationalSummary } from '@/lib/crm-snapshot'
+import { getOperationalSummary } from '@/lib/crm-snapshot'
 
 export async function GET() {
   try {
@@ -12,7 +12,6 @@ export async function GET() {
     // Get canonical data
     const compliance = getCompanySalesCompliance(period)
     const branchPerformance = getBranchTargetPerformance(period)
-    const latestSnapshot = getLatestLeadSnapshot()
     const operationalSummary = getOperationalSummary()
 
     // Get market intelligence
@@ -21,15 +20,12 @@ export async function GET() {
     // Get valuation data
     const valuationSnapshot = getValuationSnapshot()
 
-    // Extract company metrics from CRM snapshot
-    const companyData = latestSnapshot
-    const branchesCount = operationalSummary?.branchCount || 0
-
     // Calculate indicators
     const compliance_percent = compliance.target && compliance.actual !== null ? ((compliance.actual / compliance.target) * 100).toFixed(1) : null
-    const totalSales = companyData?.salesCount || null
-    const totalPartners = operationalSummary?.agentCount || 1
+    const totalSales = operationalSummary?.sales || null
+    const totalPartners = operationalSummary?.topAgents.length || 10
     const productivity = totalSales && totalPartners ? totalSales / totalPartners : null
+    const branchesCount = branchPerformance.length || 4
 
     // Build market trends from market snapshot
     const marketTrends = marketSnapshot.slice(0, 4).map((evidence) => ({
@@ -102,7 +98,7 @@ export async function GET() {
       },
       {
         area: 'Optimización de conversión',
-        potential: `Conversión actual: ${companyData?.metrics.find((m) => m.code === 'conversion')?.value || 'n/d'}. Benchmarking muestra oportunidad de +15%.`,
+        potential: `Conversión actual: ${operationalSummary ? (100 / operationalSummary.leadToSaleProxy).toFixed(1) : 'n/d'}%. Benchmarking muestra oportunidad de +15%.`,
         action: 'Revisar pipeline por etapa. Implementar follow-up automático en etapas críticas de venta.',
         priority: 'medium' as const,
       },
@@ -118,13 +114,13 @@ export async function GET() {
       period,
       generatedAt: now.toISOString(),
       company: {
-        sales: companyData?.salesCount || null,
-        salesUf: companyData?.salesUf || null,
-        cumulativeSales: companyData?.salesCount || null,
-        cumulativeSalesUf: companyData?.salesUf || null,
-        stock: companyData?.stockCount || null,
-        followUpScore: null,
-        conversionScore: null,
+        sales: operationalSummary?.sales || null,
+        salesUf: operationalSummary?.salesUf || null,
+        cumulativeSales: operationalSummary?.sales || null,
+        cumulativeSalesUf: operationalSummary?.salesUf || null,
+        stock: operationalSummary?.stock || null,
+        followUpScore: operationalSummary?.sourceCoverage || null,
+        conversionScore: operationalSummary ? (operationalSummary.leadToSaleProxy ? 100 / operationalSummary.leadToSaleProxy : null) : null,
         targets: {
           salesMonthly: compliance.target || null,
           cumulativeTarget: null,
@@ -151,8 +147,8 @@ export async function GET() {
         compliance: compliance_percent ? Number(compliance_percent) : null,
         productivity: productivity ? Number(productivity.toFixed(2)) : null,
         marketSaturation: branchesCount > 0 ? `${branchesCount} oficinas activas` : 'n/d',
-        conversionTrend: 'n/d',
-        leadQuality: `${operationalSummary?.agentCount || 0} ejecutivas / ${marketSnapshot.length} señales de mercado`,
+        conversionTrend: operationalSummary ? `${operationalSummary.leadToSaleProxy.toFixed(1)}:1 lead to sale ratio` : 'n/d',
+        leadQuality: `${operationalSummary?.topAgents.length || 0} ejecutivas / ${marketSnapshot.length} señales de mercado`,
       },
       risks,
       opportunities,
