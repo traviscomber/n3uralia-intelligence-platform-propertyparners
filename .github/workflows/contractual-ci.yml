@@ -58,6 +58,9 @@ jobs:
       - name: Verify market identity
         run: pnpm market:identity:verify
 
+      - name: Verify contractual market imports
+        run: pnpm market:contract:verify
+
       - name: Verify valuation model
         run: pnpm valuation:model:verify
 
@@ -69,6 +72,9 @@ jobs:
 
       - name: Verify canonical management scoring
         run: pnpm management:scoring:verify
+
+      - name: Verify management report scheduling
+        run: pnpm management:reports:verify
 
       - name: Verify dashboard access
         run: pnpm access:verify
