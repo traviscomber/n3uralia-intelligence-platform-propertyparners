@@ -59,6 +59,7 @@ const valuationReport = readFileSync('components/valuation/valuation-evidence-re
 const marketPage = readFileSync('app/dashboard/market/page.tsx', 'utf8')
 const marketExport = readFileSync('app/api/market/export/route.ts', 'utf8')
 const marketPrint = readFileSync('app/dashboard/market/export/page.tsx', 'utf8')
+const marketPrintButton = readFileSync('components/market/market-print-button.tsx', 'utf8')
 const scopeMatrix = readFileSync('docs/CONTRACTUAL_SCOPE_MATRIX.md', 'utf8')
 
 assert.match(valuationPage, /Latitud/, 'Valuation form must expose subject latitude.')
@@ -76,7 +77,8 @@ assert.match(marketExport, /market_transactions/, 'Market export must use persis
 assert.match(marketPage, /dataset=summary&format=csv/, 'Market dashboard must expose CSV export.')
 assert.match(marketPage, /dataset=listings&format=xlsx/, 'Market dashboard must expose XLSX export.')
 assert.match(marketPage, /\/dashboard\/market\/export/, 'Market dashboard must expose printable report.')
-assert.match(marketPrint, /Imprimir o guardar PDF/, 'Market report must expose browser PDF output.')
+assert.match(marketPrint, /MarketPrintButton/, 'Market report must mount the browser print control.')
+assert.match(marketPrintButton, /Imprimir o guardar PDF/, 'Market print control must expose browser PDF output.')
 assert.doesNotMatch(scopeMatrix, /Estado inicial/, 'Contractual matrix must not retain historical initial-state labels.')
 assert.match(scopeMatrix, /MKT-15/, 'Contractual matrix must track export completion explicitly.')
 assert.match(scopeMatrix, /VAL-01/, 'Contractual matrix must track objective valuation fields explicitly.')
