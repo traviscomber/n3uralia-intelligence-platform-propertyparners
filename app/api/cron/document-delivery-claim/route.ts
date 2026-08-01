@@ -56,8 +56,8 @@ export async function POST(request: Request) {
             distribution.recipient_email
           )
 
-          if (response.id) {
-            await markDocumentAsSent(distribution.id, response.id)
+          if (response.data?.id) {
+            await markDocumentAsSent(distribution.id, response.data.id)
             sent++
 
             // Update schedule next_send_at if this is the last distribution for today
