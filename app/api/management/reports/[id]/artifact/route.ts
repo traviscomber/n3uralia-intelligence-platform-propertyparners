@@ -1,0 +1,43 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { buildManagementReportPdf, type ManagementReportRecord } from '@/lib/management-report-artifact'
+
+export const runtime = 'nodejs'
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id } = await context.params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const { data, error } = await supabase
+    .from('management_report_runs')
+    .select('id,report_type,period_start,period_end,generated_at,snapshot')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!data) return NextResponse.json({ error: 'Reporte no encontrado o fuera de alcance.' }, { status: 404 })
+
+  try {
+    const artifact = await buildManagementReportPdf(data as ManagementReportRecord)
+    return new Response(Buffer.from(artifact.bytes), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${artifact.filename}"`,
+        'Cache-Control': 'private, no-store, max-age=0',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    })
+  } catch (cause) {
+    console.error('[management-report-artifact] generation failed', {
+      reportId: id,
+      message: cause instanceof Error ? cause.message : 'Error no identificado',
+    })
+    return NextResponse.json({ error: 'No fue posible generar el PDF.' }, { status: 500 })
+  }
+}
