@@ -101,7 +101,7 @@ export async function runManagementReportDelivery(options: DeliveryOptions = {})
       failed: 0,
       terminal: 0,
       results: [],
-      reason: 'Faltan RESEND_API_KEY o REPORT_FROM_EMAIL.',
+      reason: 'Falta RESEND_API_KEY o el remitente no pertenece a un dominio autorizado.',
     }
   }
 
@@ -196,7 +196,9 @@ export async function runManagementReportDelivery(options: DeliveryOptions = {})
     } catch (error) {
       const permanent = isPermanent(error) || distribution.attempt_count >= MAX_ATTEMPTS
       const nextAttemptAt = new Date(
-        now.getTime() + (permanent ? 365 * 24 * 60 * 60 * 1000 : managementReportRetryDelayMs),
+        now.getTime() + (permanent
+          ? 365 * 24 * 60 * 60 * 1000
+          : managementReportRetryDelayMs(distribution.attempt_count)),
       ).toISOString()
       const message = errorMessage(error)
       const update = await supabase
