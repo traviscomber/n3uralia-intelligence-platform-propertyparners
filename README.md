@@ -45,6 +45,7 @@ pnpm valuation:condition:verify
 pnpm management:scoring:verify
 pnpm management:reports:verify
 pnpm management:persisted:verify
+pnpm management:delivery:verify
 pnpm build
 ```
 
@@ -63,6 +64,7 @@ Los scripts que dependen de datasets o variables privadas deben ejecutarse únic
 - `/dashboard/director`: gestión de oficina y equipo.
 - `/dashboard/partner`: desempeño y operación personal.
 - `/dashboard/reportes/autonomos`: reportes contractuales autorizados.
+- `/dashboard/reportes/operacion`: generación, PDF, destinatarios, reintentos y entrega.
 
 Las rutas antiguas `/dashboard/valorizador` y `/dashboard/agente` se mantienen únicamente como redirecciones de compatibilidad hacia las rutas canónicas.
 
@@ -72,7 +74,14 @@ Las rutas antiguas `/dashboard/valorizador` y `/dashboard/agente` se mantienen �
 
 ## Automatización de reportes
 
-Vercel ejecuta `/api/cron/management-monthly` según `vercel.json`. La ruta requiere `CRON_SECRET` en Production. CEO y administración disponen de recuperación autenticada mediante `POST /api/management/reports/run`, que procesa únicamente programaciones vencidas y conserva idempotencia por programación y período.
+Vercel ejecuta dos rutas protegidas por `CRON_SECRET`:
+
+- `/api/cron/management-monthly`: genera snapshots para programaciones vencidas;
+- `/api/cron/management-delivery`: procesa cada hora la cola de destinatarios.
+
+CEO y administración pueden recuperar ambos pasos mediante `POST /api/management/reports/run` y `POST /api/management/reports/deliver`. La cola usa bloqueo transaccional, idempotencia por distribución, hasta seis intentos y backoff exponencial. Los PDFs se generan desde el snapshot persistido y pueden descargarse desde `/api/management/reports/:id/artifact` bajo sesión y RLS.
+
+La entrega por correo requiere `RESEND_API_KEY` y `REPORT_FROM_EMAIL`. Mientras falten, el worker informa que está bloqueado y no reclama filas ni incrementa intentos.
 
 ## Roles y seguridad
 
@@ -83,6 +92,7 @@ Las vistas contractuales son `security_invoker`, no conceden acceso a `anon` y s
 ## Documentación de operación y transferencia
 
 - `docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md`
+- `docs/operations/REPORT_DELIVERY.md`
 - `docs/architecture/DATA_MODEL_AND_DICTIONARY.md`
 - `docs/manuals/ROLE_USER_MANUAL.md`
 - `docs/manuals/ADMINISTRATION_MANUAL.md`
