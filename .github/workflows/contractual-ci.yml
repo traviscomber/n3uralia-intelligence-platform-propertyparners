@@ -53,6 +53,9 @@ jobs:
       - name: Verify valuation workflow
         run: pnpm valuation:workflow:verify
 
+      - name: Verify canonical management scoring
+        run: pnpm management:scoring:verify
+
       - name: Verify dashboard access
         run: pnpm access:verify
 
