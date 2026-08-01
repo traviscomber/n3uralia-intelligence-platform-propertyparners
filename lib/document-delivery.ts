@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery-core'
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -7,6 +8,7 @@ const supabase = createClient(
 )
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
+const reportConfig = getManagementReportDeliveryConfiguration()
 
 export const DOCUMENT_MAX_ATTEMPTS = 6
 export const DOCUMENT_RETRY_DELAY_MS = 5000
@@ -148,8 +150,10 @@ export async function sendDocumentEmail(
   
   const text = `${documentTitle}\n\nYour scheduled presentation document is ready.\n\nDocument: ${documentTitle}\nSent: ${new Date().toLocaleDateString('es-CL')}\nType: Presentation\n\nDownload: ${documentUrl}`
   
+  const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
+  
   const resendResponse = await resend.emails.send({
-    from: 'Reporte Property Partners <onboarding@resend.dev>',
+    from: senderEmail,
     to: recipientEmail,
     subject,
     html,
