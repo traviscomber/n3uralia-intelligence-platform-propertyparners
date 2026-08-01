@@ -133,7 +133,7 @@ export async function PATCH(request: Request) {
     await ctx.supabase.from('management_change_log').insert({
       entity_name: 'management_report_schedules',
       entity_id: id,
-      action: record.active === before.active ? 'update' : record.active ? 'activate' : 'deactivate',
+      action: 'update',
       before_data: before,
       after_data: data,
       changed_by: ctx.user.id,
