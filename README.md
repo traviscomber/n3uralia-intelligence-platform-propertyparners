@@ -23,7 +23,9 @@ Los copilotos, sistemas multiagente, grafos ejecutivos, ML Lab, memoria corporat
 ## Desarrollo local
 
 ```bash
-pnpm install
+corepack enable
+pnpm install --frozen-lockfile
+cp .env.example .env.local
 pnpm dev
 ```
 
@@ -42,8 +44,11 @@ pnpm valuation:workflow:verify
 pnpm valuation:condition:verify
 pnpm management:scoring:verify
 pnpm management:reports:verify
+pnpm management:persisted:verify
 pnpm build
 ```
+
+La QA autenticada y RLS se ejecuta con `pnpm qa:roles` o mediante el workflow manual `Authenticated role QA`; requiere cuentas `QA_*` autorizadas.
 
 Los scripts que dependen de datasets o variables privadas deben ejecutarse únicamente en ambientes autorizados.
 
@@ -61,6 +66,10 @@ Los scripts que dependen de datasets o variables privadas deben ejecutarse únic
 
 Las rutas antiguas `/dashboard/valorizador` y `/dashboard/agente` se mantienen únicamente como redirecciones de compatibilidad hacia las rutas canónicas.
 
+## Datos de control de gestión
+
+`/api/management/summary` conserva el corte documental 2026 como fallback identificado. Cuando existen valores en `management_approved_metric_values`, el dashboard sustituye únicamente las métricas equivalentes que estén verificadas, reconciliadas y aprobadas. Las metas se usan sólo cuando contienen aprobación registrada. El acceso a entidades y valores se mantiene bajo RLS.
+
 ## Automatización de reportes
 
 Vercel ejecuta `/api/cron/management-monthly` según `vercel.json`. La ruta requiere `CRON_SECRET` en Production. CEO y administración disponen de recuperación autenticada mediante `POST /api/management/reports/run`, que procesa únicamente programaciones vencidas y conserva idempotencia por programación y período.
@@ -68,6 +77,18 @@ Vercel ejecuta `/api/cron/management-monthly` según `vercel.json`. La ruta requ
 ## Roles y seguridad
 
 Los roles vigentes son CEO/administrador, director, subdirector y partner o agente. El acceso debe validarse en la interfaz, en el servidor y mediante políticas RLS de Supabase.
+
+Las vistas contractuales son `security_invoker`, no conceden acceso a `anon` y sólo permiten lectura a usuarios autenticados. Las funciones privilegiadas mantienen `search_path` fijo y permisos explícitos.
+
+## Documentación de operación y transferencia
+
+- `docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md`
+- `docs/architecture/DATA_MODEL_AND_DICTIONARY.md`
+- `docs/manuals/ROLE_USER_MANUAL.md`
+- `docs/manuals/ADMINISTRATION_MANUAL.md`
+- `docs/transfer/TRANSFER_ACCEPTANCE_PACKAGE.md`
+
+La existencia de estos documentos no reemplaza la prueba limpia de reconstrucción, la capacitación ni la aceptación del Cliente.
 
 ## Trazabilidad contractual
 
