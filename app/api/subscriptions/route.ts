@@ -1,23 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireCopilotRole } from '@/lib/copilot-authorization'
+import { createClient } from '@/lib/supabase/server'
 import {
   addEmailSubscription,
   getEmailSubscriptions,
-  updateEmailSubscription,
-  deleteEmailSubscription,
 } from '@/lib/report-subscriptions'
 
 export const runtime = 'nodejs'
 
-// GET /api/subscriptions - List all email subscriptions
-export async function GET(request: NextRequest) {
-  try {
-    await requireCopilotRole(['ceo', 'director'])
+const MANAGER_ROLES = new Set(['admin', 'ceo'])
+const REPORT_TYPES = new Set(['executive', 'office', 'partner', 'monthly', 'cumulative', 'all'])
+const CADENCES = new Set(['weekly', 'biweekly', 'monthly', 'quarterly', 'yearly'])
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+function text(value: unknown, maxLength: number) {
+  const normalized = String(value ?? '').trim()
+  return normalized ? normalized.slice(0, maxLength) : undefined
+}
+
+async function requireSubscriptionManager() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
+  }
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (error) {
+    console.error('[subscriptions] profile lookup failed', { message: error.message })
+    return { error: NextResponse.json({ error: 'No fue posible validar el perfil' }, { status: 500 }) }
+  }
+
+  const role = String(profile?.role ?? '').trim().toLowerCase()
+  if (!MANAGER_ROLES.has(role)) {
+    return { error: NextResponse.json({ error: 'Acceso denegado' }, { status: 403 }) }
+  }
+
+  return { user }
+}
+
+export async function GET(request: NextRequest) {
+  const context = await requireSubscriptionManager()
+  if ('error' in context) return context.error
+
+  try {
     const { searchParams } = new URL(request.url)
     const reportType = searchParams.get('reportType')
     const entityId = searchParams.get('entityId')
     const active = searchParams.get('active')
+
+    if (reportType && !REPORT_TYPES.has(reportType)) {
+      return NextResponse.json({ error: 'Tipo de reporte inválido' }, { status: 400 })
+    }
+    if (entityId && !UUID_PATTERN.test(entityId)) {
+      return NextResponse.json({ error: 'Entidad inválida' }, { status: 400 })
+    }
+    if (active !== null && !['true', 'false'].includes(active)) {
+      return NextResponse.json({ error: 'Filtro active inválido' }, { status: 400 })
+    }
 
     const subscriptions = await getEmailSubscriptions({
       reportType: reportType || undefined,
@@ -25,71 +69,54 @@ export async function GET(request: NextRequest) {
       active: active !== null ? active === 'true' : undefined,
     })
 
-    return NextResponse.json({
-      success: true,
-      data: subscriptions,
-      count: subscriptions.length,
-    })
+    return NextResponse.json({ success: true, data: subscriptions, count: subscriptions.length })
   } catch (cause) {
-    const message = cause instanceof Error ? cause.message : 'Unknown error'
-    console.error('[subscriptions] GET failed:', message)
-    return NextResponse.json(
-      { error: 'Failed to fetch subscriptions', details: message },
-      { status: 500 }
-    )
+    console.error('[subscriptions] GET failed', {
+      message: cause instanceof Error ? cause.message : 'Unknown error',
+    })
+    return NextResponse.json({ error: 'No fue posible consultar las suscripciones' }, { status: 500 })
   }
 }
 
-// POST /api/subscriptions - Add new email subscription
 export async function POST(request: NextRequest) {
+  const context = await requireSubscriptionManager()
+  if ('error' in context) return context.error
+
   try {
-    await requireCopilotRole(['ceo', 'director'])
+    const body = await request.json() as Record<string, unknown>
+    const email = String(body.email ?? '').trim().toLowerCase()
+    const reportType = String(body.reportType ?? '').trim()
+    const cadence = String(body.cadence ?? '').trim()
+    const entityId = text(body.entityId, 36)
 
-    const body = await request.json()
-    const { email, reportType, cadence, recipientName, recipientRole, entityId, notes } = body
-
-    if (!email || !reportType || !cadence) {
-      return NextResponse.json(
-        { error: 'Missing required fields: email, reportType, cadence' },
-        { status: 400 }
-      )
+    if (!EMAIL_PATTERN.test(email)) {
+      return NextResponse.json({ error: 'Correo inválido' }, { status: 400 })
     }
-
-    // Validate email format
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
+    if (!REPORT_TYPES.has(reportType)) {
+      return NextResponse.json({ error: 'Tipo de reporte inválido' }, { status: 400 })
+    }
+    if (!CADENCES.has(cadence)) {
+      return NextResponse.json({ error: 'Frecuencia inválida' }, { status: 400 })
+    }
+    if (entityId && !UUID_PATTERN.test(entityId)) {
+      return NextResponse.json({ error: 'Entidad inválida' }, { status: 400 })
     }
 
     const subscription = await addEmailSubscription(email, reportType, cadence, {
-      recipientName,
-      recipientRole,
+      recipientName: text(body.recipientName, 160),
+      recipientRole: text(body.recipientRole, 80),
       entityId,
-      notes,
+      notes: text(body.notes, 1000),
+      createdBy: context.user.id,
     })
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: subscription,
-        message: `Email subscription added for ${email}`,
-      },
-      { status: 201 }
-    )
+    return NextResponse.json({ success: true, data: subscription }, { status: 201 })
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : 'Unknown error'
-    console.error('[subscriptions] POST failed:', message)
-
-    // Handle unique constraint violations
-    if (message.includes('duplicate') || message.includes('unique')) {
-      return NextResponse.json(
-        { error: 'This email is already subscribed to this report type' },
-        { status: 409 }
-      )
+    console.error('[subscriptions] POST failed', { message })
+    if (/duplicate|unique/i.test(message)) {
+      return NextResponse.json({ error: 'El correo ya está suscrito a este reporte y alcance' }, { status: 409 })
     }
-
-    return NextResponse.json(
-      { error: 'Failed to add subscription', details: message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'No fue posible crear la suscripción' }, { status: 500 })
   }
 }
