@@ -1,24 +1,48 @@
 import assert from 'node:assert/strict'
 import {
   buildManagementReportEmailContent,
+  DEFAULT_REPORT_FROM_EMAIL,
+  extractReportEmailAddress,
   getManagementReportDeliveryConfiguration,
+  isAllowedReportSender,
   managementReportRetryDelayMs,
 } from '../lib/management-report-delivery-core'
 import { buildManagementReportPdf } from '../lib/management-report-artifact'
 
 async function main() {
   assert.equal(getManagementReportDeliveryConfiguration({} as NodeJS.ProcessEnv), null)
+  assert.equal(extractReportEmailAddress('Property Partners <reportes@ppartnersgroup.app>'), 'reportes@ppartnersgroup.app')
+  assert.equal(extractReportEmailAddress('invalid-address'), null)
+  assert.equal(isAllowedReportSender('reportes@ppartnersgroup.app', {} as NodeJS.ProcessEnv), true)
+  assert.equal(isAllowedReportSender('reportes@ppartnersgroup.com', {} as NodeJS.ProcessEnv), false)
 
   const configuration = getManagementReportDeliveryConfiguration({
     RESEND_API_KEY: 're_test',
-    REPORT_FROM_EMAIL: 'Property Partners <reports@example.com>',
-    REPORT_REPLY_TO: 'support@example.com',
-    APP_BASE_URL: 'https://example.com/',
+    REPORT_REPLY_TO: 'operaciones@ppartnersgroup.com',
+    APP_BASE_URL: 'https://n3uralia-intelligence-platform.vercel.app/',
   } as NodeJS.ProcessEnv)
   assert.ok(configuration)
   assert.equal(configuration.provider, 'resend')
-  assert.equal(configuration.appBaseUrl, 'https://example.com')
-  assert.equal(configuration.replyTo, 'support@example.com')
+  assert.equal(configuration.from, DEFAULT_REPORT_FROM_EMAIL)
+  assert.equal(configuration.fromEmail, 'reportes@ppartnersgroup.app')
+  assert.equal(configuration.fromDomain, 'ppartnersgroup.app')
+  assert.equal(configuration.appBaseUrl, 'https://n3uralia-intelligence-platform.vercel.app')
+  assert.equal(configuration.replyTo, 'operaciones@ppartnersgroup.com')
+
+  const rejectedOverride = getManagementReportDeliveryConfiguration({
+    RESEND_API_KEY: 're_test',
+    REPORT_FROM_EMAIL: 'Unauthorized <reports@example.com>',
+  } as NodeJS.ProcessEnv)
+  assert.ok(rejectedOverride)
+  assert.equal(rejectedOverride.from, DEFAULT_REPORT_FROM_EMAIL)
+
+  const explicitlyAllowedOverride = getManagementReportDeliveryConfiguration({
+    RESEND_API_KEY: 're_test',
+    REPORT_FROM_EMAIL: 'Property Partners <reports@example.com>',
+    REPORT_ALLOWED_FROM_DOMAINS: 'ppartnersgroup.app,example.com',
+  } as NodeJS.ProcessEnv)
+  assert.ok(explicitlyAllowedOverride)
+  assert.equal(explicitlyAllowedOverride.fromDomain, 'example.com')
 
   assert.equal(managementReportRetryDelayMs(1), 5 * 60 * 1000)
   assert.equal(managementReportRetryDelayMs(2), 10 * 60 * 1000)
