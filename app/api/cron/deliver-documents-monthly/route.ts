@@ -10,7 +10,9 @@ export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
   // Verify CRON_SECRET
-  const authFailure = getCronAuthorizationFailure(request)
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+  const authFailure = getCronAuthorizationFailure(authHeader, cronSecret)
   if (authFailure) {
     return new NextResponse(JSON.stringify({ error: 'Unauthorized', details: authFailure }), {
       status: 401,
