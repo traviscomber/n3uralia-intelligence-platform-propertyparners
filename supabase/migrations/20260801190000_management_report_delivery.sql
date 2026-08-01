@@ -47,6 +47,8 @@ begin
     select distribution.id
     from public.management_report_distributions distribution
     where distribution.status in ('pending', 'failed')
+      and distribution.attempt_count < 6
+      and distribution.metadata->>'terminalFailure' is distinct from 'true'
       and distribution.next_attempt_at <= now()
       and (
         distribution.locked_at is null
