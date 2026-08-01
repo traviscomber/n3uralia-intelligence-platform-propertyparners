@@ -1,0 +1,281 @@
+{
+  "presentation": {
+    "index": 3,
+    "name": "presentation-3",
+    "slug": "03-presentation-3",
+    "metadata": {
+      "file": "Jun_Partners_Nueva_Costanera.pptx",
+      "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+      "byteSize": 2764734,
+      "slideCount": 84,
+      "mediaCount": 84,
+      "embeddingCount": 60,
+      "stats": {
+        "objects": 1454,
+        "textObjects": 829,
+        "tables": 91,
+        "charts": 60,
+        "pictures": 84,
+        "notes": 84
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3414
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1222
+          ],
+          [
+            "8",
+            1184
+          ],
+          [
+            "6",
+            400
+          ],
+          [
+            "9",
+            191
+          ],
+          [
+            "13",
+            91
+          ],
+          [
+            "14",
+            82
+          ],
+          [
+            "10",
+            80
+          ],
+          [
+            "11",
+            49
+          ],
+          [
+            "22",
+            40
+          ],
+          [
+            "18",
+            30
+          ],
+          [
+            "20",
+            20
+          ],
+          [
+            "26",
+            20
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            711
+          ],
+          [
+            "#FFFFFF",
+            680
+          ],
+          [
+            "#7F8C8D",
+            624
+          ],
+          [
+            "#E74C3C",
+            521
+          ],
+          [
+            "#27AE60",
+            512
+          ],
+          [
+            "#F39C12",
+            205
+          ],
+          [
+            "#1565C0",
+            110
+          ],
+          [
+            "#C0392B",
+            51
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            180
+          ],
+          [
+            "#000000",
+            91
+          ],
+          [
+            "#E74C3C",
+            54
+          ],
+          [
+            "#27AE60",
+            40
+          ],
+          [
+            "#F39C12",
+            36
+          ],
+          [
+            "#1565C0",
+            30
+          ],
+          [
+            "#2E7D32",
+            20
+          ],
+          [
+            "#E65100",
+            20
+          ],
+          [
+            "#C0392B",
+            10
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            81
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 24,
+  "slide": {
+    "canonicalPage": 24,
+    "index": 24,
+    "title": "María Alejandra García — Indicadores Ene-Jun",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "María Alejandra García — Indicadores Ene-Jun",
+      "Nueva Costanera",
+      "Calidad de Cartera",
+      "Indicador Valor Meta Jun % Cumpl Cartera actual 13 18 72% Requerimientos 20 Esp:28 71% Pricing ≤1.05:5 | ≤1.10:2 | >1.10:1 Score 75.0",
+      "Calidad de Seguimiento",
+      "Indicador Dato Detalle Score Leads clasif/activos 26/49 A: 5 53.1 Leads sg 90d / activos 8/49 16% sin gest 83.7 Leads A sg 15d / A 3/5 60% sin gest 40.0",
+      "Calidad de Conversión",
+      "Indicador Valor Referencia % / Score Visitas realizadas 8 Meta: 17 47.0 Vis realizadas / agendadas 8 / 11 Ratio cumplimiento 72.7 TC 6 meses 1.0 ci / 49 ld Tasa conversión 2.0%"
+    ],
+    "tables": [
+      {
+        "id": 25,
+        "name": "Table 0",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Meta Jun",
+            "% Cumpl"
+          ],
+          [
+            "Cartera actual",
+            "13",
+            "18",
+            "72%"
+          ],
+          [
+            "Requerimientos",
+            "20",
+            "Esp:28",
+            "71%"
+          ],
+          [
+            "Pricing",
+            "≤1.05:5 | ≤1.10:2 | >1.10:1",
+            "Score",
+            "75.0"
+          ]
+        ]
+      },
+      {
+        "id": 49,
+        "name": "Table 1",
+        "value": [
+          [
+            "Indicador",
+            "Dato",
+            "Detalle",
+            "Score"
+          ],
+          [
+            "Leads clasif/activos",
+            "26/49",
+            "A: 5",
+            "53.1"
+          ],
+          [
+            "Leads sg 90d / activos",
+            "8/49",
+            "16% sin gest",
+            "83.7"
+          ],
+          [
+            "Leads A sg 15d / A",
+            "3/5",
+            "60% sin gest",
+            "40.0"
+          ]
+        ]
+      },
+      {
+        "id": 73,
+        "name": "Table 2",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Referencia",
+            "% / Score"
+          ],
+          [
+            "Visitas realizadas",
+            "8",
+            "Meta: 17",
+            "47.0"
+          ],
+          [
+            "Vis realizadas / agendadas",
+            "8 / 11",
+            "Ratio cumplimiento",
+            "72.7"
+          ],
+          [
+            "TC 6 meses",
+            "1.0 ci / 49 ld",
+            "Tasa conversión",
+            "2.0%"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "24"
+    ]
+  }
+}

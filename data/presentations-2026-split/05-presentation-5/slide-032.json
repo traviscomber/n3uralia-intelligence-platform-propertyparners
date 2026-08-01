@@ -1,0 +1,345 @@
+{
+  "presentation": {
+    "index": 5,
+    "name": "presentation-5",
+    "slug": "05-presentation-5",
+    "metadata": {
+      "file": "Q2_Directorio_1.pptx",
+      "sha256": "dd2f364521aa74027bc9495ec829d21db2e704b79dc8479c3318f15cd1f22f2d",
+      "byteSize": 1241665,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1386
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            508
+          ],
+          [
+            "8",
+            476
+          ],
+          [
+            "6",
+            160
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            303
+          ],
+          [
+            "#FFFFFF",
+            279
+          ],
+          [
+            "#7F8C8D",
+            231
+          ],
+          [
+            "#E74C3C",
+            182
+          ],
+          [
+            "#27AE60",
+            180
+          ],
+          [
+            "#F39C12",
+            146
+          ],
+          [
+            "#1565C0",
+            44
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            33
+          ],
+          [
+            "#27AE60",
+            13
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            6
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 32,
+  "slide": {
+    "canonicalPage": 32,
+    "index": 32,
+    "title": "Lo Beltrán — Evolución Venta",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Lo Beltrán — Evolución Venta",
+      "Q1 2026 Q2 2026 Δ Cierres Q 3.5 6.5 +3.0 UF Q 62.875 87.300 Meta ci Q 5.1 7.4 Meta UF Q 65.031 88.457 Cumpl ci 68% 88% Cumpl UF 97% 99% H1 ci 10.0 H1 UF 150.175 Cumpl H1 ci 80% Cumpl H1 UF 98%"
+    ],
+    "tables": [
+      {
+        "id": 33,
+        "name": "Table 0",
+        "value": [
+          [
+            "",
+            "Q1 2026",
+            "Q2 2026",
+            "Δ",
+            "",
+            ""
+          ],
+          [
+            "Cierres Q",
+            "3.5",
+            "6.5",
+            "+3.0",
+            "",
+            ""
+          ],
+          [
+            "UF Q",
+            "62.875",
+            "87.300",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Meta ci Q",
+            "5.1",
+            "7.4",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Meta UF Q",
+            "65.031",
+            "88.457",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Cumpl ci",
+            "68%",
+            "88%",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Cumpl UF",
+            "97%",
+            "99%",
+            "",
+            "",
+            ""
+          ],
+          [
+            "H1 ci",
+            "10.0",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "H1 UF",
+            "150.175",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Cumpl H1 ci",
+            "80%",
+            "",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Cumpl H1 UF",
+            "98%",
+            "",
+            "",
+            "",
+            ""
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart19.xml",
+          "title": "",
+          "chartKinds": [
+            "barChart"
+          ],
+          "series": [
+            {
+              "name": "Cierres del mes",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$B$2:$B$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "3.5",
+                "6.5"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "name": "Chart 1",
+        "value": {
+          "entry": "ppt/charts/chart20.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "UF Acumulado",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$B$2:$B$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "62875",
+                "150175"
+              ]
+            },
+            {
+              "name": "Meta UF Acum.",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$C$2:$C$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "65030.81155474894",
+                "153487.76860254083"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "32"
+    ]
+  }
+}

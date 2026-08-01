@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "1.1.0",
+  "status": "canonical_interpretation",
+  "source": {
+    "deck": "Jun_Directorio_5.pptx",
+    "page": 6,
+    "sourceFile": "data/presentations-2026-split/01-presentation-1/slide-006.json",
+    "supportingPages": [2, 7],
+    "period": "2026-06"
+  },
+  "title": "PL Real Estate — Scores Jun",
+  "entity": "PL Real Estate SpA",
+  "backgroundColor": "#F0F0F0",
+  "explicitValues": {
+    "managementQuality": 63.3,
+    "classification": "development",
+    "portfolioQuality": 68.0,
+    "followUpQuality": 59.4,
+    "conversionQuality": 61.0,
+    "portfolioSubscores": {
+      "portfolioGoal": 60.0,
+      "requirementsByPropertyType": 86.4,
+      "priceQuality": 57.6
+    },
+    "followUpSubscores": {
+      "classifiedLeads": 30.2,
+      "leadsManagedWithin90Days": 85.1,
+      "priorityLeadsManagedWithin15Days": 62.9
+    },
+    "conversionSubscores": {
+      "completedVisitsGoal": 46.0,
+      "completedScheduledVisits": 60.6,
+      "sixMonthCloseRate": 76.6
+    }
+  },
+  "baseData": {
+    "portfolio": {
+      "actual": 316,
+      "goal": 527
+    },
+    "requirements": {
+      "actual": 500,
+      "expectedBenchmark": 579
+    },
+    "pricingBuckets": {
+      "ratioAtOrBelow1_05": 122,
+      "ratioAbove1_05AtOrBelow1_10": 60,
+      "ratioAbove1_10": 82,
+      "totalEvaluated": 264
+    },
+    "leads": {
+      "active": 1439,
+      "classified": 434,
+      "priorityA": 124,
+      "unmanagedOver90Days": 215,
+      "priorityAUnmanagedOver15Days": 46
+    },
+    "visits": {
+      "completed": 198,
+      "goal": 431,
+      "scheduled": 327
+    },
+    "sixMonthConversion": {
+      "attributedClosings": 31.5,
+      "totalLeads": 1439,
+      "ratePercent": 2.2,
+      "benchmarkCapPercent": 2.86
+    }
+  },
+  "verifiedCalculations": [
+    {
+      "metric": "portfolioGoal",
+      "formula": "316 / 527 * 100",
+      "result": 59.9620493359,
+      "displayedResult": 60.0,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "requirementsByPropertyType",
+      "formula": "min(500 / 579, 1) * 100",
+      "result": 86.3557858377,
+      "displayedResult": 86.4,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "priceQuality",
+      "formula": "(122 * 100 + 60 * 50 + 82 * 0) / 264",
+      "result": 57.5757575758,
+      "displayedResult": 57.6,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "portfolioQuality",
+      "formula": "(60.0 + 86.4 + 57.6) / 3",
+      "result": 68.0,
+      "status": "verified"
+    },
+    {
+      "metric": "classifiedLeads",
+      "formula": "434 / 1439 * 100",
+      "result": 30.1598332175,
+      "displayedResult": 30.2,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "leadsManagedWithin90Days",
+      "formula": "(1 - 215 / 1439) * 100",
+      "result": 85.0590687978,
+      "displayedResult": 85.1,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "priorityLeadsManagedWithin15Days",
+      "formula": "(1 - 46 / 124) * 100",
+      "result": 62.9032258065,
+      "displayedResult": 62.9,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "followUpQuality",
+      "formula": "(30.2 + 85.1 + 62.9) / 3",
+      "result": 59.4,
+      "status": "verified"
+    },
+    {
+      "metric": "completedVisitsGoal",
+      "formula": "min(198 / 431, 1) * 100",
+      "result": 45.939675174,
+      "displayedResult": 46.0,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "completedScheduledVisits",
+      "formula": "198 / 327 * 100",
+      "result": 60.5504587156,
+      "displayedResult": 60.6,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "sixMonthCloseRatePercent",
+      "formula": "31.5 / 1439 * 100",
+      "result": 2.1886726894,
+      "displayedResult": 2.2,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "sixMonthCloseRateScore",
+      "formula": "min(2.1886726894, 2.86) * 35",
+      "result": 76.603544128,
+      "displayedResult": 76.6,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "conversionQuality",
+      "formula": "(46.0 + 60.6 + 76.6) / 3",
+      "result": 61.0666666667,
+      "displayedResult": 61.0,
+      "status": "verified_with_display_rounding"
+    },
+    {
+      "metric": "managementQuality",
+      "formula": "0.4 * 68.0 + 0.3 * 59.4 + 0.3 * 61.0",
+      "result": 63.32,
+      "displayedResult": 63.3,
+      "status": "verified_with_display_rounding"
+    }
+  ],
+  "trafficLights": {
+    "managementQuality": "yellow",
+    "portfolioQuality": "yellow",
+    "followUpQuality": "yellow",
+    "conversionQuality": "yellow",
+    "portfolioGoal": "yellow",
+    "requirementsByPropertyType": "green",
+    "priceQuality": "yellow",
+    "classifiedLeads": "red",
+    "leadsManagedWithin90Days": "green",
+    "priorityLeadsManagedWithin15Days": "yellow",
+    "completedVisitsGoal": "red",
+    "completedScheduledVisits": "yellow",
+    "sixMonthCloseRate": "green"
+  },
+  "managementInterpretation": [
+    "La gestión consolidada se encuentra en nivel amarillo y se clasifica como Desarrollo.",
+    "La cartera alcanza 316 propiedades frente a una meta de 527, equivalente a 60.0 puntos.",
+    "El benchmark de requerimientos usado en esta lámina es 579 y el resultado observado es 500, equivalente a 86.4 puntos.",
+    "El score de precio es una media ponderada por 264 propiedades evaluadas: 122 reciben 100 puntos, 60 reciben 50 y 82 reciben 0.",
+    "La principal debilidad de seguimiento es la baja clasificación: 434 de 1439 leads activos.",
+    "El abandono prolongado afecta a 215 leads activos y la falta de gestión prioritaria afecta a 46 de 124 leads A.",
+    "La principal debilidad de conversión es el volumen de visitas: 198 realizadas frente a una meta de 431.",
+    "De 327 visitas agendadas se realizaron 198, equivalente a 60.6%.",
+    "La tasa de cierre a seis meses se calcula con 31.5 cierres atribuidos sobre 1439 leads, equivalente a 2.19% y 76.6 puntos.",
+    "La clasificación Desarrollo es consistente con la regla residual: no cumple Estrella, Potencial, Captador, Vendedor, Perseverante ni Riesgo."
+  ],
+  "pendingDefinitions": [
+    "Definir por qué los cierres de seis meses pueden expresarse como 31.5 y documentar la regla de atribución fraccionada.",
+    "Confirmar cómo se construye el benchmark esperado de 579 requerimientos por tipo de propiedad.",
+    "Confirmar el universo excluido del pricing: la cartera contiene 316 propiedades, pero sólo 264 aparecen clasificadas en los tres tramos de precio."
+  ]
+}

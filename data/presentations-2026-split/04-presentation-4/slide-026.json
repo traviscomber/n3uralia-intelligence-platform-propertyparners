@@ -1,0 +1,301 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 26,
+  "slide": {
+    "canonicalPage": 26,
+    "index": 26,
+    "title": "Felipe Elizalde — Evolución Subscores Cartera",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Felipe Elizalde — Evolución Subscores Cartera",
+      "Subscore Ene Feb Mar Abr Jun Δ Meta cartera 81.8 81.8 64.3 47.1 39.1 -8.0 Reqs x Tipo Prop 100.0 100.0 100.0 100.0 49.0 -51.0 Calidad Precio 57.1 57.1 38.9 31.3 38.9 +7.6",
+      "Cartera:",
+      "42.3",
+      "-20.2"
+    ],
+    "tables": [
+      {
+        "id": 27,
+        "name": "Table 0",
+        "value": [
+          [
+            "Subscore",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "Jun",
+            "Δ"
+          ],
+          [
+            "Meta cartera",
+            "81.8",
+            "81.8",
+            "64.3",
+            "47.1",
+            "39.1",
+            "-8.0"
+          ],
+          [
+            "Reqs x Tipo Prop",
+            "100.0",
+            "100.0",
+            "100.0",
+            "100.0",
+            "49.0",
+            "-51.0"
+          ],
+          [
+            "Calidad Precio",
+            "57.1",
+            "57.1",
+            "38.9",
+            "31.3",
+            "38.9",
+            "+7.6"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart40.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Meta cartera",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$B$2:$B$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "81.81818181818183",
+                "81.81818181818183",
+                "64.28571428571429",
+                "47.05882352941176",
+                "39.1"
+              ]
+            },
+            {
+              "name": "Reqs x Tipo Prop",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$C$2:$C$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "100.0",
+                "100.0",
+                "100.0",
+                "100.0",
+                "49.0"
+              ]
+            },
+            {
+              "name": "Calidad Precio",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$D$2:$D$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "57.142857142857146",
+                "57.142857142857146",
+                "38.888888888888886",
+                "31.25",
+                "38.9"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "26"
+    ]
+  }
+}

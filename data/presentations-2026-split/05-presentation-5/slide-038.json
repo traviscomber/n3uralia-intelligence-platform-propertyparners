@@ -1,0 +1,283 @@
+{
+  "presentation": {
+    "index": 5,
+    "name": "presentation-5",
+    "slug": "05-presentation-5",
+    "metadata": {
+      "file": "Q2_Directorio_1.pptx",
+      "sha256": "dd2f364521aa74027bc9495ec829d21db2e704b79dc8479c3318f15cd1f22f2d",
+      "byteSize": 1241665,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1386
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            508
+          ],
+          [
+            "8",
+            476
+          ],
+          [
+            "6",
+            160
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            303
+          ],
+          [
+            "#FFFFFF",
+            279
+          ],
+          [
+            "#7F8C8D",
+            231
+          ],
+          [
+            "#E74C3C",
+            182
+          ],
+          [
+            "#27AE60",
+            180
+          ],
+          [
+            "#F39C12",
+            146
+          ],
+          [
+            "#1565C0",
+            44
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            33
+          ],
+          [
+            "#27AE60",
+            13
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            6
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 38,
+  "slide": {
+    "canonicalPage": 38,
+    "index": 38,
+    "title": "Lo Beltrán — Evolución Subscores Conversión",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Lo Beltrán — Evolución Subscores Conversión",
+      "Subscore Q1 2026 Q2 2026 Δ Vis Realiz/Meta *Mar26 57.9 — %Vis realizad/agend *Mar26 59.1 — TC 6m/leads tot *Mar26 83.3 —",
+      "Conversión:",
+      "76.9",
+      "+19.7"
+    ],
+    "tables": [
+      {
+        "id": 39,
+        "name": "Table 0",
+        "value": [
+          [
+            "Subscore",
+            "Q1 2026",
+            "Q2 2026",
+            "Δ",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Vis Realiz/Meta",
+            "*Mar26",
+            "57.9",
+            "—",
+            "",
+            "",
+            ""
+          ],
+          [
+            "%Vis realizad/agend",
+            "*Mar26",
+            "59.1",
+            "—",
+            "",
+            "",
+            ""
+          ],
+          [
+            "TC 6m/leads tot",
+            "*Mar26",
+            "83.3",
+            "—",
+            "",
+            "",
+            ""
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart24.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Vis Realiz/Meta",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$B$2:$B$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "59.737162166494116",
+                "57.9"
+              ]
+            },
+            {
+              "name": "%Vis realizad/agend",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$C$2:$C$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "63.10679611650486",
+                "59.1"
+              ]
+            },
+            {
+              "name": "TC 6m/leads tot",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$D$2:$D$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "76.52091254752851",
+                "83.3"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "38"
+    ]
+  }
+}

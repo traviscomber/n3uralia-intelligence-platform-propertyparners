@@ -1,0 +1,326 @@
+{
+  "presentation": {
+    "index": 3,
+    "name": "presentation-3",
+    "slug": "03-presentation-3",
+    "metadata": {
+      "file": "Jun_Partners_Nueva_Costanera.pptx",
+      "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+      "byteSize": 2764734,
+      "slideCount": 84,
+      "mediaCount": 84,
+      "embeddingCount": 60,
+      "stats": {
+        "objects": 1454,
+        "textObjects": 829,
+        "tables": 91,
+        "charts": 60,
+        "pictures": 84,
+        "notes": 84
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3414
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1222
+          ],
+          [
+            "8",
+            1184
+          ],
+          [
+            "6",
+            400
+          ],
+          [
+            "9",
+            191
+          ],
+          [
+            "13",
+            91
+          ],
+          [
+            "14",
+            82
+          ],
+          [
+            "10",
+            80
+          ],
+          [
+            "11",
+            49
+          ],
+          [
+            "22",
+            40
+          ],
+          [
+            "18",
+            30
+          ],
+          [
+            "20",
+            20
+          ],
+          [
+            "26",
+            20
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            711
+          ],
+          [
+            "#FFFFFF",
+            680
+          ],
+          [
+            "#7F8C8D",
+            624
+          ],
+          [
+            "#E74C3C",
+            521
+          ],
+          [
+            "#27AE60",
+            512
+          ],
+          [
+            "#F39C12",
+            205
+          ],
+          [
+            "#1565C0",
+            110
+          ],
+          [
+            "#C0392B",
+            51
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            180
+          ],
+          [
+            "#000000",
+            91
+          ],
+          [
+            "#E74C3C",
+            54
+          ],
+          [
+            "#27AE60",
+            40
+          ],
+          [
+            "#F39C12",
+            36
+          ],
+          [
+            "#1565C0",
+            30
+          ],
+          [
+            "#2E7D32",
+            20
+          ],
+          [
+            "#E65100",
+            20
+          ],
+          [
+            "#C0392B",
+            10
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            81
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 73,
+  "slide": {
+    "canonicalPage": 73,
+    "index": 73,
+    "title": "Soledad Fernandez — Evolución Scores",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Soledad Fernandez — Evolución Scores",
+      "Score Ene Feb Mar Abr Jun Δ Calidad Gestión 49.3 55.5 67.5 67.8 68.2 +0.4 Calidad Cartera (40%) 71.3 69.4 88.7 84.2 67.6 -16.6 Calidad Seguim (30%) 41.9 41.9 47.0 48.2 65.1 +16.9 Calidad Conversión (30%) 27.3 50.5 59.8 65.6 71.9 +6.3"
+    ],
+    "tables": [
+      {
+        "id": 74,
+        "name": "Table 0",
+        "value": [
+          [
+            "Score",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "Jun",
+            "Δ"
+          ],
+          [
+            "Calidad Gestión",
+            "49.3",
+            "55.5",
+            "67.5",
+            "67.8",
+            "68.2",
+            "+0.4"
+          ],
+          [
+            "Calidad Cartera (40%)",
+            "71.3",
+            "69.4",
+            "88.7",
+            "84.2",
+            "67.6",
+            "-16.6"
+          ],
+          [
+            "Calidad Seguim (30%)",
+            "41.9",
+            "41.9",
+            "47.0",
+            "48.2",
+            "65.1",
+            "+16.9"
+          ],
+          [
+            "Calidad Conversión (30%)",
+            "27.3",
+            "50.5",
+            "59.8",
+            "65.6",
+            "71.9",
+            "+6.3"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart129.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Calidad Gestión",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$B$2:$B$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "49.29549194315992",
+                "55.4706026679448",
+                "67.5292207792208",
+                "67.81660687358546",
+                "68.2"
+              ]
+            },
+            {
+              "name": "Calidad Cartera",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$C$2:$C$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "71.32027889037234",
+                "69.37583444592791",
+                "88.72053872053873",
+                "84.20820353063344",
+                "67.6"
+              ]
+            },
+            {
+              "name": "Calidad Seguim",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$D$2:$D$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "41.94585448392555",
+                "41.94585448392555",
+                "47.037037037037045",
+                "48.173149041037185",
+                "65.1"
+              ]
+            },
+            {
+              "name": "Calidad Conversión",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$E$2:$E$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "27.278746806111048",
+                "50.455041814653235",
+                "59.7663139329806",
+                "65.6046024967364",
+                "71.9"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "73"
+    ]
+  }
+}

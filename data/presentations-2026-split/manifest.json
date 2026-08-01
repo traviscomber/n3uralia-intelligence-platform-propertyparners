@@ -1,0 +1,1163 @@
+{
+  "generatedAt": "2026-07-31T15:06:19.497Z",
+  "source": "data/presentations-2026.json",
+  "rootKeys": [
+    "schemaVersion",
+    "generatedAt",
+    "source",
+    "scope",
+    "brandbook",
+    "scoringDefinition",
+    "management",
+    "reconciliation",
+    "decks"
+  ],
+  "presentationCount": 5,
+  "slideCount": 304,
+  "presentations": [
+    {
+      "index": 1,
+      "name": "presentation-1",
+      "slug": "01-presentation-1",
+      "slideCount": 38,
+      "metadata": {
+        "file": "Jun_Directorio_5.pptx",
+        "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+        "byteSize": 1252175,
+        "slideCount": 38,
+        "mediaCount": 38,
+        "embeddingCount": 24,
+        "stats": {
+          "objects": 587,
+          "textObjects": 332,
+          "tables": 37,
+          "charts": 24,
+          "pictures": 38,
+          "notes": 38
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              1498
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              552
+            ],
+            [
+              "8",
+              528
+            ],
+            [
+              "6",
+              176
+            ],
+            [
+              "9",
+              77
+            ],
+            [
+              "13",
+              36
+            ],
+            [
+              "14",
+              34
+            ],
+            [
+              "10",
+              32
+            ],
+            [
+              "22",
+              16
+            ],
+            [
+              "11",
+              13
+            ],
+            [
+              "18",
+              12
+            ],
+            [
+              "20",
+              8
+            ],
+            [
+              "26",
+              8
+            ],
+            [
+              "28",
+              6
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              311
+            ],
+            [
+              "#FFFFFF",
+              299
+            ],
+            [
+              "#7F8C8D",
+              247
+            ],
+            [
+              "#E74C3C",
+              212
+            ],
+            [
+              "#27AE60",
+              211
+            ],
+            [
+              "#F39C12",
+              145
+            ],
+            [
+              "#1565C0",
+              52
+            ],
+            [
+              "#C0392B",
+              21
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              72
+            ],
+            [
+              "#000000",
+              37
+            ],
+            [
+              "#F39C12",
+              31
+            ],
+            [
+              "#27AE60",
+              14
+            ],
+            [
+              "#1565C0",
+              12
+            ],
+            [
+              "#2E7D32",
+              8
+            ],
+            [
+              "#E65100",
+              8
+            ],
+            [
+              "#E74C3C",
+              7
+            ],
+            [
+              "#C0392B",
+              4
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              33
+            ],
+            [
+              "#000000",
+              5
+            ]
+          ]
+        }
+      },
+      "slides": [
+        "01-presentation-1/slide-001.json",
+        "01-presentation-1/slide-002.json",
+        "01-presentation-1/slide-003.json",
+        "01-presentation-1/slide-004.json",
+        "01-presentation-1/slide-005.json",
+        "01-presentation-1/slide-006.json",
+        "01-presentation-1/slide-007.json",
+        "01-presentation-1/slide-008.json",
+        "01-presentation-1/slide-009.json",
+        "01-presentation-1/slide-010.json",
+        "01-presentation-1/slide-011.json",
+        "01-presentation-1/slide-012.json",
+        "01-presentation-1/slide-013.json",
+        "01-presentation-1/slide-014.json",
+        "01-presentation-1/slide-015.json",
+        "01-presentation-1/slide-016.json",
+        "01-presentation-1/slide-017.json",
+        "01-presentation-1/slide-018.json",
+        "01-presentation-1/slide-019.json",
+        "01-presentation-1/slide-020.json",
+        "01-presentation-1/slide-021.json",
+        "01-presentation-1/slide-022.json",
+        "01-presentation-1/slide-023.json",
+        "01-presentation-1/slide-024.json",
+        "01-presentation-1/slide-025.json",
+        "01-presentation-1/slide-026.json",
+        "01-presentation-1/slide-027.json",
+        "01-presentation-1/slide-028.json",
+        "01-presentation-1/slide-029.json",
+        "01-presentation-1/slide-030.json",
+        "01-presentation-1/slide-031.json",
+        "01-presentation-1/slide-032.json",
+        "01-presentation-1/slide-033.json",
+        "01-presentation-1/slide-034.json",
+        "01-presentation-1/slide-035.json",
+        "01-presentation-1/slide-036.json",
+        "01-presentation-1/slide-037.json",
+        "01-presentation-1/slide-038.json"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "presentation-2",
+      "slug": "02-presentation-2",
+      "slideCount": 68,
+      "metadata": {
+        "file": "Jun_Partners_Lo_Beltran.pptx",
+        "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+        "byteSize": 2237308,
+        "slideCount": 68,
+        "mediaCount": 68,
+        "embeddingCount": 48,
+        "stats": {
+          "objects": 1166,
+          "textObjects": 665,
+          "tables": 73,
+          "charts": 48,
+          "pictures": 68,
+          "notes": 68
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              2740
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              984
+            ],
+            [
+              "8",
+              948
+            ],
+            [
+              "6",
+              320
+            ],
+            [
+              "9",
+              153
+            ],
+            [
+              "13",
+              73
+            ],
+            [
+              "14",
+              66
+            ],
+            [
+              "10",
+              64
+            ],
+            [
+              "11",
+              39
+            ],
+            [
+              "22",
+              32
+            ],
+            [
+              "18",
+              24
+            ],
+            [
+              "20",
+              16
+            ],
+            [
+              "26",
+              16
+            ],
+            [
+              "28",
+              5
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              575
+            ],
+            [
+              "#FFFFFF",
+              546
+            ],
+            [
+              "#7F8C8D",
+              499
+            ],
+            [
+              "#E74C3C",
+              421
+            ],
+            [
+              "#27AE60",
+              389
+            ],
+            [
+              "#F39C12",
+              181
+            ],
+            [
+              "#1565C0",
+              88
+            ],
+            [
+              "#C0392B",
+              41
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              144
+            ],
+            [
+              "#000000",
+              73
+            ],
+            [
+              "#27AE60",
+              43
+            ],
+            [
+              "#E74C3C",
+              31
+            ],
+            [
+              "#F39C12",
+              30
+            ],
+            [
+              "#1565C0",
+              24
+            ],
+            [
+              "#2E7D32",
+              16
+            ],
+            [
+              "#E65100",
+              16
+            ],
+            [
+              "#C0392B",
+              8
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              65
+            ],
+            [
+              "#000000",
+              3
+            ]
+          ]
+        }
+      },
+      "slides": [
+        "02-presentation-2/slide-001.json",
+        "02-presentation-2/slide-002.json",
+        "02-presentation-2/slide-003.json",
+        "02-presentation-2/slide-004.json",
+        "02-presentation-2/slide-005.json",
+        "02-presentation-2/slide-006.json",
+        "02-presentation-2/slide-007.json",
+        "02-presentation-2/slide-008.json",
+        "02-presentation-2/slide-009.json",
+        "02-presentation-2/slide-010.json",
+        "02-presentation-2/slide-011.json",
+        "02-presentation-2/slide-012.json",
+        "02-presentation-2/slide-013.json",
+        "02-presentation-2/slide-014.json",
+        "02-presentation-2/slide-015.json",
+        "02-presentation-2/slide-016.json",
+        "02-presentation-2/slide-017.json",
+        "02-presentation-2/slide-018.json",
+        "02-presentation-2/slide-019.json",
+        "02-presentation-2/slide-020.json",
+        "02-presentation-2/slide-021.json",
+        "02-presentation-2/slide-022.json",
+        "02-presentation-2/slide-023.json",
+        "02-presentation-2/slide-024.json",
+        "02-presentation-2/slide-025.json",
+        "02-presentation-2/slide-026.json",
+        "02-presentation-2/slide-027.json",
+        "02-presentation-2/slide-028.json",
+        "02-presentation-2/slide-029.json",
+        "02-presentation-2/slide-030.json",
+        "02-presentation-2/slide-031.json",
+        "02-presentation-2/slide-032.json",
+        "02-presentation-2/slide-033.json",
+        "02-presentation-2/slide-034.json",
+        "02-presentation-2/slide-035.json",
+        "02-presentation-2/slide-036.json",
+        "02-presentation-2/slide-037.json",
+        "02-presentation-2/slide-038.json",
+        "02-presentation-2/slide-039.json",
+        "02-presentation-2/slide-040.json",
+        "02-presentation-2/slide-041.json",
+        "02-presentation-2/slide-042.json",
+        "02-presentation-2/slide-043.json",
+        "02-presentation-2/slide-044.json",
+        "02-presentation-2/slide-045.json",
+        "02-presentation-2/slide-046.json",
+        "02-presentation-2/slide-047.json",
+        "02-presentation-2/slide-048.json",
+        "02-presentation-2/slide-049.json",
+        "02-presentation-2/slide-050.json",
+        "02-presentation-2/slide-051.json",
+        "02-presentation-2/slide-052.json",
+        "02-presentation-2/slide-053.json",
+        "02-presentation-2/slide-054.json",
+        "02-presentation-2/slide-055.json",
+        "02-presentation-2/slide-056.json",
+        "02-presentation-2/slide-057.json",
+        "02-presentation-2/slide-058.json",
+        "02-presentation-2/slide-059.json",
+        "02-presentation-2/slide-060.json",
+        "02-presentation-2/slide-061.json",
+        "02-presentation-2/slide-062.json",
+        "02-presentation-2/slide-063.json",
+        "02-presentation-2/slide-064.json",
+        "02-presentation-2/slide-065.json",
+        "02-presentation-2/slide-066.json",
+        "02-presentation-2/slide-067.json",
+        "02-presentation-2/slide-068.json"
+      ]
+    },
+    {
+      "index": 3,
+      "name": "presentation-3",
+      "slug": "03-presentation-3",
+      "slideCount": 84,
+      "metadata": {
+        "file": "Jun_Partners_Nueva_Costanera.pptx",
+        "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+        "byteSize": 2764734,
+        "slideCount": 84,
+        "mediaCount": 84,
+        "embeddingCount": 60,
+        "stats": {
+          "objects": 1454,
+          "textObjects": 829,
+          "tables": 91,
+          "charts": 60,
+          "pictures": 84,
+          "notes": 84
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              3414
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              1222
+            ],
+            [
+              "8",
+              1184
+            ],
+            [
+              "6",
+              400
+            ],
+            [
+              "9",
+              191
+            ],
+            [
+              "13",
+              91
+            ],
+            [
+              "14",
+              82
+            ],
+            [
+              "10",
+              80
+            ],
+            [
+              "11",
+              49
+            ],
+            [
+              "22",
+              40
+            ],
+            [
+              "18",
+              30
+            ],
+            [
+              "20",
+              20
+            ],
+            [
+              "26",
+              20
+            ],
+            [
+              "28",
+              5
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              711
+            ],
+            [
+              "#FFFFFF",
+              680
+            ],
+            [
+              "#7F8C8D",
+              624
+            ],
+            [
+              "#E74C3C",
+              521
+            ],
+            [
+              "#27AE60",
+              512
+            ],
+            [
+              "#F39C12",
+              205
+            ],
+            [
+              "#1565C0",
+              110
+            ],
+            [
+              "#C0392B",
+              51
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              180
+            ],
+            [
+              "#000000",
+              91
+            ],
+            [
+              "#E74C3C",
+              54
+            ],
+            [
+              "#27AE60",
+              40
+            ],
+            [
+              "#F39C12",
+              36
+            ],
+            [
+              "#1565C0",
+              30
+            ],
+            [
+              "#2E7D32",
+              20
+            ],
+            [
+              "#E65100",
+              20
+            ],
+            [
+              "#C0392B",
+              10
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              81
+            ],
+            [
+              "#000000",
+              3
+            ]
+          ]
+        }
+      },
+      "slides": [
+        "03-presentation-3/slide-001.json",
+        "03-presentation-3/slide-002.json",
+        "03-presentation-3/slide-003.json",
+        "03-presentation-3/slide-004.json",
+        "03-presentation-3/slide-005.json",
+        "03-presentation-3/slide-006.json",
+        "03-presentation-3/slide-007.json",
+        "03-presentation-3/slide-008.json",
+        "03-presentation-3/slide-009.json",
+        "03-presentation-3/slide-010.json",
+        "03-presentation-3/slide-011.json",
+        "03-presentation-3/slide-012.json",
+        "03-presentation-3/slide-013.json",
+        "03-presentation-3/slide-014.json",
+        "03-presentation-3/slide-015.json",
+        "03-presentation-3/slide-016.json",
+        "03-presentation-3/slide-017.json",
+        "03-presentation-3/slide-018.json",
+        "03-presentation-3/slide-019.json",
+        "03-presentation-3/slide-020.json",
+        "03-presentation-3/slide-021.json",
+        "03-presentation-3/slide-022.json",
+        "03-presentation-3/slide-023.json",
+        "03-presentation-3/slide-024.json",
+        "03-presentation-3/slide-025.json",
+        "03-presentation-3/slide-026.json",
+        "03-presentation-3/slide-027.json",
+        "03-presentation-3/slide-028.json",
+        "03-presentation-3/slide-029.json",
+        "03-presentation-3/slide-030.json",
+        "03-presentation-3/slide-031.json",
+        "03-presentation-3/slide-032.json",
+        "03-presentation-3/slide-033.json",
+        "03-presentation-3/slide-034.json",
+        "03-presentation-3/slide-035.json",
+        "03-presentation-3/slide-036.json",
+        "03-presentation-3/slide-037.json",
+        "03-presentation-3/slide-038.json",
+        "03-presentation-3/slide-039.json",
+        "03-presentation-3/slide-040.json",
+        "03-presentation-3/slide-041.json",
+        "03-presentation-3/slide-042.json",
+        "03-presentation-3/slide-043.json",
+        "03-presentation-3/slide-044.json",
+        "03-presentation-3/slide-045.json",
+        "03-presentation-3/slide-046.json",
+        "03-presentation-3/slide-047.json",
+        "03-presentation-3/slide-048.json",
+        "03-presentation-3/slide-049.json",
+        "03-presentation-3/slide-050.json",
+        "03-presentation-3/slide-051.json",
+        "03-presentation-3/slide-052.json",
+        "03-presentation-3/slide-053.json",
+        "03-presentation-3/slide-054.json",
+        "03-presentation-3/slide-055.json",
+        "03-presentation-3/slide-056.json",
+        "03-presentation-3/slide-057.json",
+        "03-presentation-3/slide-058.json",
+        "03-presentation-3/slide-059.json",
+        "03-presentation-3/slide-060.json",
+        "03-presentation-3/slide-061.json",
+        "03-presentation-3/slide-062.json",
+        "03-presentation-3/slide-063.json",
+        "03-presentation-3/slide-064.json",
+        "03-presentation-3/slide-065.json",
+        "03-presentation-3/slide-066.json",
+        "03-presentation-3/slide-067.json",
+        "03-presentation-3/slide-068.json",
+        "03-presentation-3/slide-069.json",
+        "03-presentation-3/slide-070.json",
+        "03-presentation-3/slide-071.json",
+        "03-presentation-3/slide-072.json",
+        "03-presentation-3/slide-073.json",
+        "03-presentation-3/slide-074.json",
+        "03-presentation-3/slide-075.json",
+        "03-presentation-3/slide-076.json",
+        "03-presentation-3/slide-077.json",
+        "03-presentation-3/slide-078.json",
+        "03-presentation-3/slide-079.json",
+        "03-presentation-3/slide-080.json",
+        "03-presentation-3/slide-081.json",
+        "03-presentation-3/slide-082.json",
+        "03-presentation-3/slide-083.json",
+        "03-presentation-3/slide-084.json"
+      ]
+    },
+    {
+      "index": 4,
+      "name": "presentation-4",
+      "slug": "04-presentation-4",
+      "slideCount": 76,
+      "metadata": {
+        "file": "Jun_Partners_Santa_Maria.pptx",
+        "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+        "byteSize": 2502992,
+        "slideCount": 76,
+        "mediaCount": 76,
+        "embeddingCount": 54,
+        "stats": {
+          "objects": 1310,
+          "textObjects": 747,
+          "tables": 82,
+          "charts": 54,
+          "pictures": 76,
+          "notes": 76
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              3077
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              1103
+            ],
+            [
+              "8",
+              1066
+            ],
+            [
+              "6",
+              360
+            ],
+            [
+              "9",
+              172
+            ],
+            [
+              "13",
+              82
+            ],
+            [
+              "14",
+              74
+            ],
+            [
+              "10",
+              72
+            ],
+            [
+              "11",
+              44
+            ],
+            [
+              "22",
+              36
+            ],
+            [
+              "18",
+              27
+            ],
+            [
+              "20",
+              18
+            ],
+            [
+              "26",
+              18
+            ],
+            [
+              "28",
+              5
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              643
+            ],
+            [
+              "#FFFFFF",
+              613
+            ],
+            [
+              "#E74C3C",
+              556
+            ],
+            [
+              "#7F8C8D",
+              545
+            ],
+            [
+              "#27AE60",
+              388
+            ],
+            [
+              "#F39C12",
+              187
+            ],
+            [
+              "#1565C0",
+              99
+            ],
+            [
+              "#C0392B",
+              46
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              162
+            ],
+            [
+              "#000000",
+              82
+            ],
+            [
+              "#E74C3C",
+              49
+            ],
+            [
+              "#F39C12",
+              37
+            ],
+            [
+              "#27AE60",
+              31
+            ],
+            [
+              "#1565C0",
+              27
+            ],
+            [
+              "#2E7D32",
+              18
+            ],
+            [
+              "#E65100",
+              18
+            ],
+            [
+              "#C0392B",
+              9
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              73
+            ],
+            [
+              "#000000",
+              3
+            ]
+          ]
+        }
+      },
+      "slides": [
+        "04-presentation-4/slide-001.json",
+        "04-presentation-4/slide-002.json",
+        "04-presentation-4/slide-003.json",
+        "04-presentation-4/slide-004.json",
+        "04-presentation-4/slide-005.json",
+        "04-presentation-4/slide-006.json",
+        "04-presentation-4/slide-007.json",
+        "04-presentation-4/slide-008.json",
+        "04-presentation-4/slide-009.json",
+        "04-presentation-4/slide-010.json",
+        "04-presentation-4/slide-011.json",
+        "04-presentation-4/slide-012.json",
+        "04-presentation-4/slide-013.json",
+        "04-presentation-4/slide-014.json",
+        "04-presentation-4/slide-015.json",
+        "04-presentation-4/slide-016.json",
+        "04-presentation-4/slide-017.json",
+        "04-presentation-4/slide-018.json",
+        "04-presentation-4/slide-019.json",
+        "04-presentation-4/slide-020.json",
+        "04-presentation-4/slide-021.json",
+        "04-presentation-4/slide-022.json",
+        "04-presentation-4/slide-023.json",
+        "04-presentation-4/slide-024.json",
+        "04-presentation-4/slide-025.json",
+        "04-presentation-4/slide-026.json",
+        "04-presentation-4/slide-027.json",
+        "04-presentation-4/slide-028.json",
+        "04-presentation-4/slide-029.json",
+        "04-presentation-4/slide-030.json",
+        "04-presentation-4/slide-031.json",
+        "04-presentation-4/slide-032.json",
+        "04-presentation-4/slide-033.json",
+        "04-presentation-4/slide-034.json",
+        "04-presentation-4/slide-035.json",
+        "04-presentation-4/slide-036.json",
+        "04-presentation-4/slide-037.json",
+        "04-presentation-4/slide-038.json",
+        "04-presentation-4/slide-039.json",
+        "04-presentation-4/slide-040.json",
+        "04-presentation-4/slide-041.json",
+        "04-presentation-4/slide-042.json",
+        "04-presentation-4/slide-043.json",
+        "04-presentation-4/slide-044.json",
+        "04-presentation-4/slide-045.json",
+        "04-presentation-4/slide-046.json",
+        "04-presentation-4/slide-047.json",
+        "04-presentation-4/slide-048.json",
+        "04-presentation-4/slide-049.json",
+        "04-presentation-4/slide-050.json",
+        "04-presentation-4/slide-051.json",
+        "04-presentation-4/slide-052.json",
+        "04-presentation-4/slide-053.json",
+        "04-presentation-4/slide-054.json",
+        "04-presentation-4/slide-055.json",
+        "04-presentation-4/slide-056.json",
+        "04-presentation-4/slide-057.json",
+        "04-presentation-4/slide-058.json",
+        "04-presentation-4/slide-059.json",
+        "04-presentation-4/slide-060.json",
+        "04-presentation-4/slide-061.json",
+        "04-presentation-4/slide-062.json",
+        "04-presentation-4/slide-063.json",
+        "04-presentation-4/slide-064.json",
+        "04-presentation-4/slide-065.json",
+        "04-presentation-4/slide-066.json",
+        "04-presentation-4/slide-067.json",
+        "04-presentation-4/slide-068.json",
+        "04-presentation-4/slide-069.json",
+        "04-presentation-4/slide-070.json",
+        "04-presentation-4/slide-071.json",
+        "04-presentation-4/slide-072.json",
+        "04-presentation-4/slide-073.json",
+        "04-presentation-4/slide-074.json",
+        "04-presentation-4/slide-075.json",
+        "04-presentation-4/slide-076.json"
+      ]
+    },
+    {
+      "index": 5,
+      "name": "presentation-5",
+      "slug": "05-presentation-5",
+      "slideCount": 38,
+      "metadata": {
+        "file": "Q2_Directorio_1.pptx",
+        "sha256": "dd2f364521aa74027bc9495ec829d21db2e704b79dc8479c3318f15cd1f22f2d",
+        "byteSize": 1241665,
+        "slideCount": 38,
+        "mediaCount": 38,
+        "embeddingCount": 24,
+        "stats": {
+          "objects": 587,
+          "textObjects": 332,
+          "tables": 37,
+          "charts": 24,
+          "pictures": 38,
+          "notes": 38
+        },
+        "style": {
+          "fonts": [
+            [
+              "Calibri",
+              1386
+            ]
+          ],
+          "sizes": [
+            [
+              "7",
+              508
+            ],
+            [
+              "8",
+              476
+            ],
+            [
+              "6",
+              160
+            ],
+            [
+              "9",
+              77
+            ],
+            [
+              "13",
+              36
+            ],
+            [
+              "14",
+              34
+            ],
+            [
+              "10",
+              32
+            ],
+            [
+              "22",
+              16
+            ],
+            [
+              "11",
+              13
+            ],
+            [
+              "18",
+              12
+            ],
+            [
+              "20",
+              8
+            ],
+            [
+              "26",
+              8
+            ],
+            [
+              "28",
+              6
+            ]
+          ],
+          "colors": [
+            [
+              "#333333",
+              303
+            ],
+            [
+              "#FFFFFF",
+              279
+            ],
+            [
+              "#7F8C8D",
+              231
+            ],
+            [
+              "#E74C3C",
+              182
+            ],
+            [
+              "#27AE60",
+              180
+            ],
+            [
+              "#F39C12",
+              146
+            ],
+            [
+              "#1565C0",
+              44
+            ],
+            [
+              "#C0392B",
+              21
+            ]
+          ],
+          "fills": [
+            [
+              "#FFFFFF",
+              72
+            ],
+            [
+              "#000000",
+              37
+            ],
+            [
+              "#F39C12",
+              33
+            ],
+            [
+              "#27AE60",
+              13
+            ],
+            [
+              "#1565C0",
+              12
+            ],
+            [
+              "#2E7D32",
+              8
+            ],
+            [
+              "#E65100",
+              8
+            ],
+            [
+              "#E74C3C",
+              6
+            ],
+            [
+              "#C0392B",
+              4
+            ]
+          ],
+          "backgrounds": [
+            [
+              "#F0F0F0",
+              33
+            ],
+            [
+              "#000000",
+              5
+            ]
+          ]
+        }
+      },
+      "slides": [
+        "05-presentation-5/slide-001.json",
+        "05-presentation-5/slide-002.json",
+        "05-presentation-5/slide-003.json",
+        "05-presentation-5/slide-004.json",
+        "05-presentation-5/slide-005.json",
+        "05-presentation-5/slide-006.json",
+        "05-presentation-5/slide-007.json",
+        "05-presentation-5/slide-008.json",
+        "05-presentation-5/slide-009.json",
+        "05-presentation-5/slide-010.json",
+        "05-presentation-5/slide-011.json",
+        "05-presentation-5/slide-012.json",
+        "05-presentation-5/slide-013.json",
+        "05-presentation-5/slide-014.json",
+        "05-presentation-5/slide-015.json",
+        "05-presentation-5/slide-016.json",
+        "05-presentation-5/slide-017.json",
+        "05-presentation-5/slide-018.json",
+        "05-presentation-5/slide-019.json",
+        "05-presentation-5/slide-020.json",
+        "05-presentation-5/slide-021.json",
+        "05-presentation-5/slide-022.json",
+        "05-presentation-5/slide-023.json",
+        "05-presentation-5/slide-024.json",
+        "05-presentation-5/slide-025.json",
+        "05-presentation-5/slide-026.json",
+        "05-presentation-5/slide-027.json",
+        "05-presentation-5/slide-028.json",
+        "05-presentation-5/slide-029.json",
+        "05-presentation-5/slide-030.json",
+        "05-presentation-5/slide-031.json",
+        "05-presentation-5/slide-032.json",
+        "05-presentation-5/slide-033.json",
+        "05-presentation-5/slide-034.json",
+        "05-presentation-5/slide-035.json",
+        "05-presentation-5/slide-036.json",
+        "05-presentation-5/slide-037.json",
+        "05-presentation-5/slide-038.json"
+      ]
+    }
+  ]
+}

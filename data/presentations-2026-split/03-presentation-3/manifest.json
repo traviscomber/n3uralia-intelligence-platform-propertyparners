@@ -1,0 +1,252 @@
+{
+  "index": 3,
+  "name": "presentation-3",
+  "slug": "03-presentation-3",
+  "slideCount": 84,
+  "metadata": {
+    "file": "Jun_Partners_Nueva_Costanera.pptx",
+    "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+    "byteSize": 2764734,
+    "slideCount": 84,
+    "mediaCount": 84,
+    "embeddingCount": 60,
+    "stats": {
+      "objects": 1454,
+      "textObjects": 829,
+      "tables": 91,
+      "charts": 60,
+      "pictures": 84,
+      "notes": 84
+    },
+    "style": {
+      "fonts": [
+        [
+          "Calibri",
+          3414
+        ]
+      ],
+      "sizes": [
+        [
+          "7",
+          1222
+        ],
+        [
+          "8",
+          1184
+        ],
+        [
+          "6",
+          400
+        ],
+        [
+          "9",
+          191
+        ],
+        [
+          "13",
+          91
+        ],
+        [
+          "14",
+          82
+        ],
+        [
+          "10",
+          80
+        ],
+        [
+          "11",
+          49
+        ],
+        [
+          "22",
+          40
+        ],
+        [
+          "18",
+          30
+        ],
+        [
+          "20",
+          20
+        ],
+        [
+          "26",
+          20
+        ],
+        [
+          "28",
+          5
+        ]
+      ],
+      "colors": [
+        [
+          "#333333",
+          711
+        ],
+        [
+          "#FFFFFF",
+          680
+        ],
+        [
+          "#7F8C8D",
+          624
+        ],
+        [
+          "#E74C3C",
+          521
+        ],
+        [
+          "#27AE60",
+          512
+        ],
+        [
+          "#F39C12",
+          205
+        ],
+        [
+          "#1565C0",
+          110
+        ],
+        [
+          "#C0392B",
+          51
+        ]
+      ],
+      "fills": [
+        [
+          "#FFFFFF",
+          180
+        ],
+        [
+          "#000000",
+          91
+        ],
+        [
+          "#E74C3C",
+          54
+        ],
+        [
+          "#27AE60",
+          40
+        ],
+        [
+          "#F39C12",
+          36
+        ],
+        [
+          "#1565C0",
+          30
+        ],
+        [
+          "#2E7D32",
+          20
+        ],
+        [
+          "#E65100",
+          20
+        ],
+        [
+          "#C0392B",
+          10
+        ]
+      ],
+      "backgrounds": [
+        [
+          "#F0F0F0",
+          81
+        ],
+        [
+          "#000000",
+          3
+        ]
+      ]
+    }
+  },
+  "slides": [
+    "03-presentation-3/slide-001.json",
+    "03-presentation-3/slide-002.json",
+    "03-presentation-3/slide-003.json",
+    "03-presentation-3/slide-004.json",
+    "03-presentation-3/slide-005.json",
+    "03-presentation-3/slide-006.json",
+    "03-presentation-3/slide-007.json",
+    "03-presentation-3/slide-008.json",
+    "03-presentation-3/slide-009.json",
+    "03-presentation-3/slide-010.json",
+    "03-presentation-3/slide-011.json",
+    "03-presentation-3/slide-012.json",
+    "03-presentation-3/slide-013.json",
+    "03-presentation-3/slide-014.json",
+    "03-presentation-3/slide-015.json",
+    "03-presentation-3/slide-016.json",
+    "03-presentation-3/slide-017.json",
+    "03-presentation-3/slide-018.json",
+    "03-presentation-3/slide-019.json",
+    "03-presentation-3/slide-020.json",
+    "03-presentation-3/slide-021.json",
+    "03-presentation-3/slide-022.json",
+    "03-presentation-3/slide-023.json",
+    "03-presentation-3/slide-024.json",
+    "03-presentation-3/slide-025.json",
+    "03-presentation-3/slide-026.json",
+    "03-presentation-3/slide-027.json",
+    "03-presentation-3/slide-028.json",
+    "03-presentation-3/slide-029.json",
+    "03-presentation-3/slide-030.json",
+    "03-presentation-3/slide-031.json",
+    "03-presentation-3/slide-032.json",
+    "03-presentation-3/slide-033.json",
+    "03-presentation-3/slide-034.json",
+    "03-presentation-3/slide-035.json",
+    "03-presentation-3/slide-036.json",
+    "03-presentation-3/slide-037.json",
+    "03-presentation-3/slide-038.json",
+    "03-presentation-3/slide-039.json",
+    "03-presentation-3/slide-040.json",
+    "03-presentation-3/slide-041.json",
+    "03-presentation-3/slide-042.json",
+    "03-presentation-3/slide-043.json",
+    "03-presentation-3/slide-044.json",
+    "03-presentation-3/slide-045.json",
+    "03-presentation-3/slide-046.json",
+    "03-presentation-3/slide-047.json",
+    "03-presentation-3/slide-048.json",
+    "03-presentation-3/slide-049.json",
+    "03-presentation-3/slide-050.json",
+    "03-presentation-3/slide-051.json",
+    "03-presentation-3/slide-052.json",
+    "03-presentation-3/slide-053.json",
+    "03-presentation-3/slide-054.json",
+    "03-presentation-3/slide-055.json",
+    "03-presentation-3/slide-056.json",
+    "03-presentation-3/slide-057.json",
+    "03-presentation-3/slide-058.json",
+    "03-presentation-3/slide-059.json",
+    "03-presentation-3/slide-060.json",
+    "03-presentation-3/slide-061.json",
+    "03-presentation-3/slide-062.json",
+    "03-presentation-3/slide-063.json",
+    "03-presentation-3/slide-064.json",
+    "03-presentation-3/slide-065.json",
+    "03-presentation-3/slide-066.json",
+    "03-presentation-3/slide-067.json",
+    "03-presentation-3/slide-068.json",
+    "03-presentation-3/slide-069.json",
+    "03-presentation-3/slide-070.json",
+    "03-presentation-3/slide-071.json",
+    "03-presentation-3/slide-072.json",
+    "03-presentation-3/slide-073.json",
+    "03-presentation-3/slide-074.json",
+    "03-presentation-3/slide-075.json",
+    "03-presentation-3/slide-076.json",
+    "03-presentation-3/slide-077.json",
+    "03-presentation-3/slide-078.json",
+    "03-presentation-3/slide-079.json",
+    "03-presentation-3/slide-080.json",
+    "03-presentation-3/slide-081.json",
+    "03-presentation-3/slide-082.json",
+    "03-presentation-3/slide-083.json",
+    "03-presentation-3/slide-084.json"
+  ]
+}

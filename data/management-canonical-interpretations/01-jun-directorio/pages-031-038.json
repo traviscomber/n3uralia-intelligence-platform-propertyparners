@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical_interpretation",
+  "source": {
+    "deck": "Jun_Directorio_5.pptx",
+    "pages": [31,32,33,34,35,36,37,38],
+    "period": "2026-06"
+  },
+  "entity": "Lo Beltrán",
+  "sales": {
+    "june": {"closings": 1.5, "uf": 30525, "closingGoal": 2.7, "ufGoal": 34044, "closingCompliance": 56, "ufCompliance": 90},
+    "ytd": {"closings": 10.0, "uf": 150175, "closingGoal": 12.5, "ufGoal": 153488, "closingCompliance": 80, "ufCompliance": 98},
+    "yearOverYear": {"juneClosings": 200, "juneUf": 496, "ytdClosings": 5, "ytdUf": 30}
+  },
+  "scores": {
+    "managementQuality": 70.2,
+    "classification": "potential",
+    "portfolioQuality": 76.0,
+    "followUpQuality": 67.9,
+    "conversionQuality": 65.0
+  },
+  "bases": {
+    "portfolio": {"current": 96, "goalDisplayed": 152, "requirements": 219, "expectedRequirementsDisplayed": 217, "pricingEligible": 85},
+    "pricingBuckets": {"ratioLe105": 44, "ratioLe110": 22, "ratioGt110": 19},
+    "leads": {"active": 399, "classified": 123, "priorityA": 35, "unmanaged90Days": 17, "priorityUnmanaged15Days": 8},
+    "visits": {"completed": 78, "goal": 150, "scheduled": 131},
+    "sixMonthClosings": 9.5
+  },
+  "verifiedCalculations": [
+    {"metric":"portfolioGoal","formula":"96 / displayed goal near 152","displayedResult":63.2,"status":"verified_using_unrounded_internal_goal"},
+    {"metric":"requirementsByType","formula":"min(219 / displayed expected 217, 1) * 100","result":100,"status":"verified_capped"},
+    {"metric":"priceQuality","formula":"(44*100 + 22*50 + 19*0) / 85","result":64.7058823529,"displayedResult":64.7,"status":"verified"},
+    {"metric":"classifiedLeads","formula":"123 / 399 * 100","result":30.8270676692,"displayedResult":30.8,"status":"verified"},
+    {"metric":"managedWithin90Days","formula":"(1 - 17 / 399) * 100","result":95.7393483709,"displayedResult":95.7,"status":"verified"},
+    {"metric":"priorityManagedWithin15Days","formula":"(1 - 8 / 35) * 100","result":77.1428571429,"displayedResult":77.1,"status":"verified"},
+    {"metric":"completedVisitsGoal","formula":"78 / 150 * 100","result":52.0,"status":"verified"},
+    {"metric":"completedScheduledVisits","formula":"78 / 131 * 100","result":59.5419847328,"displayedResult":59.5,"status":"verified"},
+    {"metric":"sixMonthCloseRate","formula":"9.5 / 399 * 100","result":2.380952381,"status":"verified"},
+    {"metric":"sixMonthCloseScore","formula":"min(2.380952381,2.86) * 35","result":83.333333335,"displayedResult":83.3,"status":"verified"},
+    {"metric":"portfolioQuality","formula":"(63.2 + 100.0 + 64.7) / 3","result":75.9666666667,"displayedResult":76.0,"status":"verified_with_rounding"},
+    {"metric":"followUpQuality","formula":"(30.8 + 95.7 + 77.1) / 3","result":67.8666666667,"displayedResult":67.9,"status":"verified_with_rounding"},
+    {"metric":"conversionQuality","formula":"(52.0 + 59.5 + 83.3) / 3","result":64.9333333333,"displayedResult":65.0,"status":"verified_with_rounding"},
+    {"metric":"managementQuality","formula":"0.4*76.0 + 0.3*67.9 + 0.3*65.0","result":70.27,"displayedResult":70.2,"status":"verified_using_internal_precision"}
+  ],
+  "interpretation": [
+    "Lo Beltrán es la única oficina del deck CEO con score general verde y clasificación Potencial en junio.",
+    "La fortaleza principal es cartera: los requerimientos superan el benchmark esperado y el pricing es el mejor de las tres oficinas.",
+    "El seguimiento mantiene muy bajo abandono de 90 días y buena atención de leads A, pero baja clasificación de leads.",
+    "La conversión cae frente a mayo por menor actividad de visitas y menor tasa de cierre, aunque permanece en nivel amarillo.",
+    "El cumplimiento acumulado en UF es casi total, mientras cierres queda bajo meta; el ticket promedio sostiene el resultado económico.",
+    "Los cierres fraccionados aparecen de forma consistente en ventas mensuales, acumuladas y ventanas de seis meses, confirmando una unidad contable deliberada y no un error de extracción."
+  ],
+  "resolvedQuestions": [
+    "La tasa de cierre usa cierres fraccionados en el numerador y leads activos/totales en el denominador.",
+    "El score de requerimientos se limita a 100 cuando los requerimientos reales superan el valor esperado.",
+    "El universo de pricing es siempre un subconjunto de la cartera y se calcula sólo sobre propiedades con ratio disponible.",
+    "Los porcentajes pueden usar metas internas con más decimales que las cifras visibles redondeadas."
+  ],
+  "remainingQuestions": [
+    "Definición contractual del evento cierre y regla exacta de atribución de 0.5 entre participantes.",
+    "Regla de atribución de UF cuando una operación o cierre es compartido.",
+    "Fórmula de construcción del benchmark esperado de requerimientos por tipo de propiedad.",
+    "Campos y estados exactos exigidos para que una propiedad sea elegible en el cálculo de pricing.",
+    "Fórmula de construcción de metas mensuales variables de cierres, UF, cartera y visitas.",
+    "Definición de los valores laterales de variación en páginas de subscores, porque no coinciden consistentemente con junio-mayo ni junio-enero.",
+    "Prioridad formal entre clasificaciones cuando una entidad cumple más de una regla."
+  ],
+  "deckCompletion": {"processedPages":38,"totalPages":38,"complete":true}
+}

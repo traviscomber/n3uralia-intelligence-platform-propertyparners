@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical",
+  "approvedAt": "2026-07-31",
+  "source": {
+    "file": "Jun_Directorio_5.pptx",
+    "canonicalCorpus": "data/presentations-2026.json",
+    "period": "2026-01-01/2026-06-30",
+    "reportIssued": "2026-07"
+  },
+  "scope": {
+    "deck": "Jun_Directorio_5.pptx",
+    "pages": [1, 2, 3, 4, 5],
+    "entity": "PL Real Estate SpA"
+  },
+  "definitions": {
+    "managementScore": {
+      "formula": "0.4 * portfolioQuality + 0.3 * followUpQuality + 0.3 * conversionQuality",
+      "weights": {
+        "portfolioQuality": 0.4,
+        "followUpQuality": 0.3,
+        "conversionQuality": 0.3
+      },
+      "subscoreWeight": 0.3333333333
+    },
+    "portfolioQuality": [
+      {
+        "key": "portfolioGoal",
+        "label": "Meta cartera",
+        "formula": "min(portfolio / goal, 1) * 100",
+        "meaning": "Cumplimiento de la meta de propiedades"
+      },
+      {
+        "key": "requirementsByPropertyType",
+        "label": "Requerimientos por tipo de propiedad",
+        "formula": "min(requirementRatio, 1) * 100",
+        "meaning": "Requerimientos frente al benchmark"
+      },
+      {
+        "key": "priceQuality",
+        "label": "Calidad de precio",
+        "formula": "ratio <= 1.05 ? 100 : ratio <= 1.10 ? 50 : 0",
+        "meaning": "Precio publicado frente a valorización"
+      }
+    ],
+    "followUpQuality": [
+      {
+        "key": "classifiedLeads",
+        "label": "% leads clasificados",
+        "formula": "classifiedLeads / activeLeads * 100",
+        "meaning": "Disciplina de clasificación de leads"
+      },
+      {
+        "key": "leadsManagedWithin90Days",
+        "label": "% leads sin abandono de 90 días",
+        "formula": "(1 - unmanaged90DayLeads / activeLeads) * 100",
+        "meaning": "Leads activos no abandonados"
+      },
+      {
+        "key": "priorityLeadsManagedWithin15Days",
+        "label": "% leads A contactados en 15 días",
+        "formula": "(1 - unmanaged15DayPriorityLeads / priorityClients) * 100",
+        "meaning": "Atención oportuna de leads prioritarios"
+      }
+    ],
+    "conversionQuality": [
+      {
+        "key": "completedVisitsGoal",
+        "label": "Visitas realizadas frente a meta",
+        "formula": "min(completedVisits / visitGoal, 1) * 100",
+        "meaning": "Cumplimiento de meta de visitas"
+      },
+      {
+        "key": "completedScheduledVisits",
+        "label": "% visitas realizadas/agendadas",
+        "formula": "completedVisits / scheduledVisits * 100",
+        "meaning": "Cumplimiento de agenda"
+      },
+      {
+        "key": "sixMonthCloseRate",
+        "label": "Tasa de cierre 6 meses/leads totales",
+        "formula": "min(sixMonthCloseRatePercent, 2.86) * 35",
+        "meaning": "Conversión de oportunidades en negocios"
+      }
+    ],
+    "trafficLights": {
+      "goalCompliance": [
+        { "status": "red", "condition": "value < 90" },
+        { "status": "yellow", "condition": "value >= 90 && value < 100" },
+        { "status": "green", "condition": "value >= 100" }
+      ],
+      "yearOverYearGrowth": [
+        { "status": "red", "condition": "value < 0" },
+        { "status": "yellow", "condition": "value >= 0 && value < 20" },
+        { "status": "green", "condition": "value >= 20" }
+      ],
+      "qualityScore": [
+        { "status": "red", "condition": "value < 50" },
+        { "status": "yellow", "condition": "value >= 50 && value < 70" },
+        { "status": "green", "condition": "value >= 70" }
+      ]
+    },
+    "personClassifications": [
+      { "key": "star", "label": "Estrella", "condition": "portfolio >= 70 && followUp >= 70 && conversion >= 70" },
+      { "key": "potential", "label": "Potencial", "condition": "oneScore >= 70 && remainingScores >= 50" },
+      { "key": "capturer", "label": "Captador", "condition": "portfolio >= 70" },
+      { "key": "seller", "label": "Vendedor", "condition": "conversion >= 70" },
+      { "key": "persistent", "label": "Perseverante", "condition": "followUp >= 70" },
+      { "key": "risk", "label": "Riesgo", "condition": "atLeastTwoScores < 30" },
+      { "key": "development", "label": "Desarrollo", "condition": "fallback" }
+    ]
+  },
+  "pages": [
+    {
+      "page": 1,
+      "type": "cover",
+      "title": "Control de Gestión Cierre Junio",
+      "subtitle": "Reporte CEO — Enero a Junio 2026",
+      "caption": "Julio 2026 | Cierre Junio — Acumulado Ene-Jun",
+      "background": "#000000"
+    },
+    {
+      "page": 2,
+      "type": "methodology",
+      "title": "Modelo de Scoring — Definiciones",
+      "background": "#F0F0F0"
+    },
+    {
+      "page": 3,
+      "type": "section-cover",
+      "title": "PL Real Estate SpA",
+      "background": "#000000"
+    },
+    {
+      "page": 4,
+      "type": "sales-summary",
+      "title": "PL Real Estate — Venta Jun",
+      "background": "#F0F0F0",
+      "monthly": {
+        "period": "2026-06",
+        "closings": { "actual": 7, "goal": 8.8, "compliancePercent": 80, "priorYear": 6, "yoyPercent": 17 },
+        "salesUf": { "actual": 135600, "goal": 130830, "compliancePercent": 104, "priorYear": 74350, "yoyPercent": 82 }
+      },
+      "cumulative": {
+        "period": "2026-01/2026-06",
+        "closings": { "actual": 33, "goal": 43, "compliancePercent": 77, "priorYear": 30, "yoyPercent": 10 },
+        "salesUf": { "actual": 620870, "goal": 687075, "compliancePercent": 90, "priorYear": 388820, "yoyPercent": 60 }
+      },
+      "derived": {
+        "monthlyAverageTicketUf": 19371.43,
+        "monthlyPriorYearAverageTicketUf": 12391.67,
+        "cumulativeAverageTicketUf": 18814.24,
+        "cumulativePriorYearAverageTicketUf": 12960.67
+      }
+    },
+    {
+      "page": 5,
+      "type": "sales-evolution",
+      "title": "PL Real Estate — Evolución Venta",
+      "background": "#F0F0F0",
+      "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+      "series": {
+        "monthlyClosings": [4, 3, 7, 8, 4, 7],
+        "monthlySalesUf": [103150, 48800, 155970, 107500, 69850, 135600],
+        "monthlyClosingGoals": [5.86, 4.63, 7.8, 7.33, 8.6, 8.8],
+        "monthlySalesUfGoals": [99306, 77955, 131874, 118087, 129023, 130830],
+        "cumulativeClosings": [4, 7, 14, 22, 26, 33],
+        "cumulativeSalesUf": [103150, 151950, 307920, 415420, 485270, 620870],
+        "cumulativeClosingGoals": [5.86, 10.49, 18.29, 25.61, 34.2, 43],
+        "cumulativeSalesUfGoals": [99306, 177261, 309135, 427222, 556245, 687075],
+        "cumulativeClosingCompliancePercent": [68, 67, 77, 86, 76, 77],
+        "cumulativeSalesUfCompliancePercent": [104, 86, 100, 97, 87, 90]
+      }
+    }
+  ],
+  "pendingDefinitions": [
+    "Definir el benchmark exacto del ratio de requerimientos por tipo de propiedad.",
+    "Definir la fuente oficial de valorización usada para calidad de precio.",
+    "Confirmar la interpretación operacional de leads sin gestión durante 90 días.",
+    "Confirmar la interpretación operacional de leads A sin gestión durante 15 días.",
+    "Confirmar si 2,86% es una meta corporativa fija de conversión a seis meses.",
+    "Definir prioridad cuando una persona cumple más de una clasificación.",
+    "Definir las reglas específicas de la clasificación Desarrollo.",
+    "Definir el evento exacto que constituye un cierre.",
+    "Definir la atribución de UF en operaciones compartidas.",
+    "Documentar la metodología de construcción de metas mensuales."
+  ]
+}

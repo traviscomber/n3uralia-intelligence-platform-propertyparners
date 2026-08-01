@@ -1,0 +1,224 @@
+{
+  "presentation": {
+    "index": 2,
+    "name": "presentation-2",
+    "slug": "02-presentation-2",
+    "metadata": {
+      "file": "Jun_Partners_Lo_Beltran.pptx",
+      "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+      "byteSize": 2237308,
+      "slideCount": 68,
+      "mediaCount": 68,
+      "embeddingCount": 48,
+      "stats": {
+        "objects": 1166,
+        "textObjects": 665,
+        "tables": 73,
+        "charts": 48,
+        "pictures": 68,
+        "notes": 68
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            2740
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            984
+          ],
+          [
+            "8",
+            948
+          ],
+          [
+            "6",
+            320
+          ],
+          [
+            "9",
+            153
+          ],
+          [
+            "13",
+            73
+          ],
+          [
+            "14",
+            66
+          ],
+          [
+            "10",
+            64
+          ],
+          [
+            "11",
+            39
+          ],
+          [
+            "22",
+            32
+          ],
+          [
+            "18",
+            24
+          ],
+          [
+            "20",
+            16
+          ],
+          [
+            "26",
+            16
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            575
+          ],
+          [
+            "#FFFFFF",
+            546
+          ],
+          [
+            "#7F8C8D",
+            499
+          ],
+          [
+            "#E74C3C",
+            421
+          ],
+          [
+            "#27AE60",
+            389
+          ],
+          [
+            "#F39C12",
+            181
+          ],
+          [
+            "#1565C0",
+            88
+          ],
+          [
+            "#C0392B",
+            41
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            144
+          ],
+          [
+            "#000000",
+            73
+          ],
+          [
+            "#27AE60",
+            43
+          ],
+          [
+            "#E74C3C",
+            31
+          ],
+          [
+            "#F39C12",
+            30
+          ],
+          [
+            "#1565C0",
+            24
+          ],
+          [
+            "#2E7D32",
+            16
+          ],
+          [
+            "#E65100",
+            16
+          ],
+          [
+            "#C0392B",
+            8
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            65
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 31,
+  "slide": {
+    "canonicalPage": 31,
+    "index": 31,
+    "title": "Jorge Zurob — Scores Jun",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Jorge Zurob — Scores Jun",
+      "Lo Beltrán",
+      "Calidad Gestión",
+      "67.7",
+      "📈 Potencial",
+      "Calidad Cartera (40%)",
+      "63.4",
+      "Calidad Seguim (30%)",
+      "74.7",
+      "Calidad Conversión (30%)",
+      "66.5",
+      "Calidad Cartera: 63.4",
+      "Meta cartera (33%)",
+      "100.0",
+      "Cartera/Meta",
+      "Reqs x Tipo Prop (33%)",
+      "18.6",
+      "min(Ratio,1)×100",
+      "Calidad Precio (33%)",
+      "71.7",
+      "Pricing prom",
+      "Calidad Seguim: 74.7",
+      "% Leads Clasif (33%)",
+      "28.0",
+      "Clasif/Activos",
+      "% Leads c-g90 (33%)",
+      "96.0",
+      "1-L90d/Act",
+      "%LeadsA c-g15 (33%)",
+      "100.0",
+      "1-L15dA/CliA",
+      "Calidad Conversión: 66.5",
+      "Vis Realiz/Meta (33%)",
+      "26.7",
+      "Vis/Meta",
+      "%Vis realizad/agend (33%)",
+      "72.7",
+      "Vis/Agend",
+      "TC 6m/leads tot (33%)",
+      "100.1",
+      "min(TC%,2.86)×35",
+      "Calidad Gestión: 67.7 | 📈 Potencial |"
+    ],
+    "tables": [],
+    "charts": [],
+    "notes": [
+      "",
+      "31"
+    ]
+  }
+}

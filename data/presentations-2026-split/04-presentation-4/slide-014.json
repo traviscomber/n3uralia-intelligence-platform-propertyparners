@@ -1,0 +1,363 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 14,
+  "slide": {
+    "canonicalPage": 14,
+    "index": 14,
+    "title": "Alejandra Cambiaso — Evolución Venta",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Alejandra Cambiaso — Evolución Venta",
+      "Ene Feb Mar Abr Jun Cierres mes 0.0 0.5 0.5 0.0 0.0 UF mes 0 16.500 29.750 0 0 Meta ci mes 0.22 0.16 0.28 0.25 0.3 Meta UF mes 7.535 5.663 9.908 8.612 9.531 Cierres acum. 0.0 0.5 1.0 1.0 1.0 UF acum. 0 16.500 46.250 46.250 46.250 Meta ci acum. 0.22 0.38 0.66 0.91 1.5 Meta UF acum. 7.535 13.198 23.106 31.718 51.049 % Cumpl ci 0% 133% 151% 110% 67% % Cumpl UF 0% 125% 200% 146% 91%"
+    ],
+    "tables": [
+      {
+        "id": 15,
+        "name": "Table 0",
+        "value": [
+          [
+            "",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "Jun"
+          ],
+          [
+            "Cierres mes",
+            "0.0",
+            "0.5",
+            "0.5",
+            "0.0",
+            "0.0"
+          ],
+          [
+            "UF mes",
+            "0",
+            "16.500",
+            "29.750",
+            "0",
+            "0"
+          ],
+          [
+            "Meta ci mes",
+            "0.22",
+            "0.16",
+            "0.28",
+            "0.25",
+            "0.3"
+          ],
+          [
+            "Meta UF mes",
+            "7.535",
+            "5.663",
+            "9.908",
+            "8.612",
+            "9.531"
+          ],
+          [
+            "Cierres acum.",
+            "0.0",
+            "0.5",
+            "1.0",
+            "1.0",
+            "1.0"
+          ],
+          [
+            "UF acum.",
+            "0",
+            "16.500",
+            "46.250",
+            "46.250",
+            "46.250"
+          ],
+          [
+            "Meta ci acum.",
+            "0.22",
+            "0.38",
+            "0.66",
+            "0.91",
+            "1.5"
+          ],
+          [
+            "Meta UF acum.",
+            "7.535",
+            "13.198",
+            "23.106",
+            "31.718",
+            "51.049"
+          ],
+          [
+            "% Cumpl ci",
+            "0%",
+            "133%",
+            "151%",
+            "110%",
+            "67%"
+          ],
+          [
+            "% Cumpl UF",
+            "0%",
+            "125%",
+            "200%",
+            "146%",
+            "91%"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart31.xml",
+          "title": "",
+          "chartKinds": [
+            "barChart"
+          ],
+          "series": [
+            {
+              "name": "Cierres del mes",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$B$2:$B$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "0.0",
+                "0.5",
+                "0.5",
+                "0.0",
+                "0"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "name": "Chart 1",
+        "value": {
+          "entry": "ppt/charts/chart32.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "UF Acumulado",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$B$2:$B$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "0.0",
+                "16500.0",
+                "46250.0",
+                "46250.0",
+                "46250.0"
+              ]
+            },
+            {
+              "name": "Meta UF Acum.",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$C$2:$C$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "7535.446153846155",
+                "13198.338461538462",
+                "23106.03076923077",
+                "31717.96923076923",
+                "41248.96923076923"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "14"
+    ]
+  }
+}

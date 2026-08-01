@@ -1,0 +1,301 @@
+{
+  "presentation": {
+    "index": 3,
+    "name": "presentation-3",
+    "slug": "03-presentation-3",
+    "metadata": {
+      "file": "Jun_Partners_Nueva_Costanera.pptx",
+      "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+      "byteSize": 2764734,
+      "slideCount": 84,
+      "mediaCount": 84,
+      "embeddingCount": 60,
+      "stats": {
+        "objects": 1454,
+        "textObjects": 829,
+        "tables": 91,
+        "charts": 60,
+        "pictures": 84,
+        "notes": 84
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3414
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1222
+          ],
+          [
+            "8",
+            1184
+          ],
+          [
+            "6",
+            400
+          ],
+          [
+            "9",
+            191
+          ],
+          [
+            "13",
+            91
+          ],
+          [
+            "14",
+            82
+          ],
+          [
+            "10",
+            80
+          ],
+          [
+            "11",
+            49
+          ],
+          [
+            "22",
+            40
+          ],
+          [
+            "18",
+            30
+          ],
+          [
+            "20",
+            20
+          ],
+          [
+            "26",
+            20
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            711
+          ],
+          [
+            "#FFFFFF",
+            680
+          ],
+          [
+            "#7F8C8D",
+            624
+          ],
+          [
+            "#E74C3C",
+            521
+          ],
+          [
+            "#27AE60",
+            512
+          ],
+          [
+            "#F39C12",
+            205
+          ],
+          [
+            "#1565C0",
+            110
+          ],
+          [
+            "#C0392B",
+            51
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            180
+          ],
+          [
+            "#000000",
+            91
+          ],
+          [
+            "#E74C3C",
+            54
+          ],
+          [
+            "#27AE60",
+            40
+          ],
+          [
+            "#F39C12",
+            36
+          ],
+          [
+            "#1565C0",
+            30
+          ],
+          [
+            "#2E7D32",
+            20
+          ],
+          [
+            "#E65100",
+            20
+          ],
+          [
+            "#C0392B",
+            10
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            81
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 44,
+  "slide": {
+    "canonicalPage": 44,
+    "index": 44,
+    "title": "María Sol Marsiglia — Evolución Subscores Conversión",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "María Sol Marsiglia — Evolución Subscores Conversión",
+      "Subscore Ene Feb Mar Abr Jun Δ Vis Realiz/Meta 15.5 100.0 60.2 79.3 83.6 +4.3 %Vis realizad/agend 50.0 63.0 64.7 81.3 47.1 -34.2 TC 6m/leads tot 0.0 0.0 63.6 100.0 100.1 +0.1",
+      "Conversión:",
+      "76.9",
+      "+65.0"
+    ],
+    "tables": [
+      {
+        "id": 45,
+        "name": "Table 0",
+        "value": [
+          [
+            "Subscore",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "Jun",
+            "Δ"
+          ],
+          [
+            "Vis Realiz/Meta",
+            "15.5",
+            "100.0",
+            "60.2",
+            "79.3",
+            "83.6",
+            "+4.3"
+          ],
+          [
+            "%Vis realizad/agend",
+            "50.0",
+            "63.0",
+            "64.7",
+            "81.3",
+            "47.1",
+            "-34.2"
+          ],
+          [
+            "TC 6m/leads tot",
+            "0.0",
+            "0.0",
+            "63.6",
+            "100.0",
+            "100.1",
+            "+0.1"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart108.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Vis Realiz/Meta",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$B$2:$B$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "15.521360059175185",
+                "100.0",
+                "60.17094017094017",
+                "79.26980315935899",
+                "83.6"
+              ]
+            },
+            {
+              "name": "%Vis realizad/agend",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$C$2:$C$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "50.0",
+                "62.96296296296296",
+                "64.70588235294117",
+                "81.25",
+                "47.1"
+              ]
+            },
+            {
+              "name": "TC 6m/leads tot",
+              "categoryFormula": "Sheet1!$A$2:$A$6",
+              "valueFormula": "Sheet1!$D$2:$D$6",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "Jun"
+              ],
+              "values": [
+                "0.0",
+                "0.0",
+                "63.63636363636363",
+                "100.0",
+                "100.1"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "44"
+    ]
+  }
+}

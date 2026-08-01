@@ -1,0 +1,281 @@
+{
+  "presentation": {
+    "index": 4,
+    "name": "presentation-4",
+    "slug": "04-presentation-4",
+    "metadata": {
+      "file": "Jun_Partners_Santa_Maria.pptx",
+      "sha256": "a4a9a4f27f293ecae17def5652d85dfdb1b80ca62161e8b9f0fbf2868bae114d",
+      "byteSize": 2502992,
+      "slideCount": 76,
+      "mediaCount": 76,
+      "embeddingCount": 54,
+      "stats": {
+        "objects": 1310,
+        "textObjects": 747,
+        "tables": 82,
+        "charts": 54,
+        "pictures": 76,
+        "notes": 76
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3077
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1103
+          ],
+          [
+            "8",
+            1066
+          ],
+          [
+            "6",
+            360
+          ],
+          [
+            "9",
+            172
+          ],
+          [
+            "13",
+            82
+          ],
+          [
+            "14",
+            74
+          ],
+          [
+            "10",
+            72
+          ],
+          [
+            "11",
+            44
+          ],
+          [
+            "22",
+            36
+          ],
+          [
+            "18",
+            27
+          ],
+          [
+            "20",
+            18
+          ],
+          [
+            "26",
+            18
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            643
+          ],
+          [
+            "#FFFFFF",
+            613
+          ],
+          [
+            "#E74C3C",
+            556
+          ],
+          [
+            "#7F8C8D",
+            545
+          ],
+          [
+            "#27AE60",
+            388
+          ],
+          [
+            "#F39C12",
+            187
+          ],
+          [
+            "#1565C0",
+            99
+          ],
+          [
+            "#C0392B",
+            46
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            162
+          ],
+          [
+            "#000000",
+            82
+          ],
+          [
+            "#E74C3C",
+            49
+          ],
+          [
+            "#F39C12",
+            37
+          ],
+          [
+            "#27AE60",
+            31
+          ],
+          [
+            "#1565C0",
+            27
+          ],
+          [
+            "#2E7D32",
+            18
+          ],
+          [
+            "#E65100",
+            18
+          ],
+          [
+            "#C0392B",
+            9
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            73
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 32,
+  "slide": {
+    "canonicalPage": 32,
+    "index": 32,
+    "title": "Francisca Santos — Indicadores Ene-Jun",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Francisca Santos — Indicadores Ene-Jun",
+      "Santa María",
+      "Calidad de Cartera",
+      "Indicador Valor Meta Jun % Cumpl Cartera actual 11 18 61% Requerimientos 30 Esp:30 99% Pricing ≤1.05:5 | ≤1.10:1 | >1.10:4 Score 55.0",
+      "Calidad de Seguimiento",
+      "Indicador Dato Detalle Score Leads clasif/activos 14/140 A: 5 10.0 Leads sg 90d / activos 5/140 4% sin gest 96.4 Leads A sg 15d / A 3/5 60% sin gest 40.0",
+      "Calidad de Conversión",
+      "Indicador Valor Referencia % / Score Visitas realizadas 3 Meta: 20 15.3 Vis realizadas / agendadas 3 / 3 Ratio cumplimiento 100.0 TC 6 meses 2.0 ci / 140 ld Tasa conversión 1.4%"
+    ],
+    "tables": [
+      {
+        "id": 33,
+        "name": "Table 0",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Meta Jun",
+            "% Cumpl"
+          ],
+          [
+            "Cartera actual",
+            "11",
+            "18",
+            "61%"
+          ],
+          [
+            "Requerimientos",
+            "30",
+            "Esp:30",
+            "99%"
+          ],
+          [
+            "Pricing",
+            "≤1.05:5 | ≤1.10:1 | >1.10:4",
+            "Score",
+            "55.0"
+          ]
+        ]
+      },
+      {
+        "id": 65,
+        "name": "Table 1",
+        "value": [
+          [
+            "Indicador",
+            "Dato",
+            "Detalle",
+            "Score"
+          ],
+          [
+            "Leads clasif/activos",
+            "14/140",
+            "A: 5",
+            "10.0"
+          ],
+          [
+            "Leads sg 90d / activos",
+            "5/140",
+            "4% sin gest",
+            "96.4"
+          ],
+          [
+            "Leads A sg 15d / A",
+            "3/5",
+            "60% sin gest",
+            "40.0"
+          ]
+        ]
+      },
+      {
+        "id": 97,
+        "name": "Table 2",
+        "value": [
+          [
+            "Indicador",
+            "Valor",
+            "Referencia",
+            "% / Score"
+          ],
+          [
+            "Visitas realizadas",
+            "3",
+            "Meta: 20",
+            "15.3"
+          ],
+          [
+            "Vis realizadas / agendadas",
+            "3 / 3",
+            "Ratio cumplimiento",
+            "100.0"
+          ],
+          [
+            "TC 6 meses",
+            "2.0 ci / 140 ld",
+            "Tasa conversión",
+            "1.4%"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "32"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+name: Contractual modules CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - agent/contractual-scope-sanitization
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contractual-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, models and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit legacy code
+        run: pnpm audit:legacy
+
+      - name: Upload legacy audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-code-audit
+          path: artifacts/legacy-code-audit.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Verify market identity
+        run: pnpm market:identity:verify
+
+      - name: Verify contractual market imports
+        run: pnpm market:contract:verify
+
+      - name: Verify valuation model
+        run: pnpm valuation:model:verify
+
+      - name: Verify valuation workflow
+        run: pnpm valuation:workflow:verify
+
+      - name: Verify property condition assessment
+        run: pnpm valuation:condition:verify
+
+      - name: Verify canonical management scoring
+        run: pnpm management:scoring:verify
+
+      - name: Verify management report scheduling
+        run: pnpm management:reports:verify
+
+      - name: Verify approved management metric overlay
+        run: pnpm management:persisted:verify
+
+      - name: Verify management report delivery
+        run: pnpm management:delivery:verify
+
+      - name: Verify dashboard access
+        run: pnpm access:verify
+
+      - name: Build application
+        run: pnpm build

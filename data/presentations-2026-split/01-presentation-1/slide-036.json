@@ -1,0 +1,311 @@
+{
+  "presentation": {
+    "index": 1,
+    "name": "presentation-1",
+    "slug": "01-presentation-1",
+    "metadata": {
+      "file": "Jun_Directorio_5.pptx",
+      "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+      "byteSize": 1252175,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1498
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            552
+          ],
+          [
+            "8",
+            528
+          ],
+          [
+            "6",
+            176
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            311
+          ],
+          [
+            "#FFFFFF",
+            299
+          ],
+          [
+            "#7F8C8D",
+            247
+          ],
+          [
+            "#E74C3C",
+            212
+          ],
+          [
+            "#27AE60",
+            211
+          ],
+          [
+            "#F39C12",
+            145
+          ],
+          [
+            "#1565C0",
+            52
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            31
+          ],
+          [
+            "#27AE60",
+            14
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            7
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 36,
+  "slide": {
+    "canonicalPage": 36,
+    "index": 36,
+    "title": "Lo Beltrán — Evolución Subscores Cartera",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Lo Beltrán — Evolución Subscores Cartera",
+      "Subscore Ene Feb Mar Abr May Jun Δ Meta cartera 90.9 92.4 83.9 77.0 65.5 63.2 -2.3 Reqs x Tipo Prop 92.8 69.4 93.0 83.6 86.8 100.0 +13.2 Calidad Precio 68.8 67.1 66.3 64.4 65.4 64.7 -0.7",
+      "Cartera:",
+      "76.0",
+      "-2.4"
+    ],
+    "tables": [
+      {
+        "id": 37,
+        "name": "Table 0",
+        "value": [
+          [
+            "Subscore",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "May",
+            "Jun",
+            "Δ"
+          ],
+          [
+            "Meta cartera",
+            "90.9",
+            "92.4",
+            "83.9",
+            "77.0",
+            "65.5",
+            "63.2",
+            "-2.3"
+          ],
+          [
+            "Reqs x Tipo Prop",
+            "92.8",
+            "69.4",
+            "93.0",
+            "83.6",
+            "86.8",
+            "100.0",
+            "+13.2"
+          ],
+          [
+            "Calidad Precio",
+            "68.8",
+            "67.1",
+            "66.3",
+            "64.4",
+            "65.4",
+            "64.7",
+            "-0.7"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart22.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Meta cartera",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$B$2:$B$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "90.9090909090909",
+                "92.38095238095238",
+                "83.92857142857143",
+                "76.98412698412699",
+                "65.5",
+                "63.2"
+              ]
+            },
+            {
+              "name": "Reqs x Tipo Prop",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$C$2:$C$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "92.82178217821783",
+                "69.38258872064131",
+                "92.99781181619258",
+                "83.64644838074791",
+                "86.8",
+                "100"
+              ]
+            },
+            {
+              "name": "Calidad Precio",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$D$2:$D$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "68.75",
+                "67.05882352941177",
+                "66.26506024096386",
+                "64.36781609195403",
+                "65.4",
+                "64.7"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "36"
+    ]
+  }
+}

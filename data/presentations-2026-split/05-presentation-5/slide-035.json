@@ -1,0 +1,302 @@
+{
+  "presentation": {
+    "index": 5,
+    "name": "presentation-5",
+    "slug": "05-presentation-5",
+    "metadata": {
+      "file": "Q2_Directorio_1.pptx",
+      "sha256": "dd2f364521aa74027bc9495ec829d21db2e704b79dc8479c3318f15cd1f22f2d",
+      "byteSize": 1241665,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1386
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            508
+          ],
+          [
+            "8",
+            476
+          ],
+          [
+            "6",
+            160
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            303
+          ],
+          [
+            "#FFFFFF",
+            279
+          ],
+          [
+            "#7F8C8D",
+            231
+          ],
+          [
+            "#E74C3C",
+            182
+          ],
+          [
+            "#27AE60",
+            180
+          ],
+          [
+            "#F39C12",
+            146
+          ],
+          [
+            "#1565C0",
+            44
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            33
+          ],
+          [
+            "#27AE60",
+            13
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            6
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 35,
+  "slide": {
+    "canonicalPage": 35,
+    "index": 35,
+    "title": "Lo Beltrán — Evolución Scores",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Lo Beltrán — Evolución Scores",
+      "Score Q1 2026 Q2 2026 Δ Q2-Q1 Calidad Gestión *Mar26 68.6 — Calidad Cartera (40%) *Mar26 70.5 — Calidad Seguim (30%) *Mar26 67.9 — Calidad Conversión (30%) *Mar26 66.8 —"
+    ],
+    "tables": [
+      {
+        "id": 36,
+        "name": "Table 0",
+        "value": [
+          [
+            "Score",
+            "Q1 2026",
+            "Q2 2026",
+            "Δ Q2-Q1",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Calidad Gestión",
+            "*Mar26",
+            "68.6",
+            "—",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Calidad Cartera (40%)",
+            "*Mar26",
+            "70.5",
+            "—",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Calidad Seguim (30%)",
+            "*Mar26",
+            "67.9",
+            "—",
+            "",
+            "",
+            ""
+          ],
+          [
+            "Calidad Conversión (30%)",
+            "*Mar26",
+            "66.8",
+            "—",
+            "",
+            "",
+            ""
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart21.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Calidad Gestión",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$B$2:$B$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "68.32969348951481",
+                "68.6"
+              ]
+            },
+            {
+              "name": "Calidad Cartera",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$C$2:$C$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "81.06381449524262",
+                "70.5"
+              ]
+            },
+            {
+              "name": "Calidad Seguim",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$D$2:$D$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "53.22560202788339",
+                "67.9"
+              ]
+            },
+            {
+              "name": "Calidad Conversión",
+              "categoryFormula": "Sheet1!$A$2:$A$3",
+              "valueFormula": "Sheet1!$E$2:$E$3",
+              "categories": [
+                "Q1 2026",
+                "Q2 2026"
+              ],
+              "values": [
+                "66.45495694350916",
+                "66.8"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "35"
+    ]
+  }
+}

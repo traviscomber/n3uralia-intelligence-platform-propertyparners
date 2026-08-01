@@ -1,0 +1,254 @@
+{
+  "presentation": {
+    "index": 3,
+    "name": "presentation-3",
+    "slug": "03-presentation-3",
+    "metadata": {
+      "file": "Jun_Partners_Nueva_Costanera.pptx",
+      "sha256": "7c76c2d29ecaa6df27fc7afb0b4555e5e1b23e3c52c236bd5165935b9735c571",
+      "byteSize": 2764734,
+      "slideCount": 84,
+      "mediaCount": 84,
+      "embeddingCount": 60,
+      "stats": {
+        "objects": 1454,
+        "textObjects": 829,
+        "tables": 91,
+        "charts": 60,
+        "pictures": 84,
+        "notes": 84
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            3414
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            1222
+          ],
+          [
+            "8",
+            1184
+          ],
+          [
+            "6",
+            400
+          ],
+          [
+            "9",
+            191
+          ],
+          [
+            "13",
+            91
+          ],
+          [
+            "14",
+            82
+          ],
+          [
+            "10",
+            80
+          ],
+          [
+            "11",
+            49
+          ],
+          [
+            "22",
+            40
+          ],
+          [
+            "18",
+            30
+          ],
+          [
+            "20",
+            20
+          ],
+          [
+            "26",
+            20
+          ],
+          [
+            "28",
+            5
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            711
+          ],
+          [
+            "#FFFFFF",
+            680
+          ],
+          [
+            "#7F8C8D",
+            624
+          ],
+          [
+            "#E74C3C",
+            521
+          ],
+          [
+            "#27AE60",
+            512
+          ],
+          [
+            "#F39C12",
+            205
+          ],
+          [
+            "#1565C0",
+            110
+          ],
+          [
+            "#C0392B",
+            51
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            180
+          ],
+          [
+            "#000000",
+            91
+          ],
+          [
+            "#E74C3C",
+            54
+          ],
+          [
+            "#27AE60",
+            40
+          ],
+          [
+            "#F39C12",
+            36
+          ],
+          [
+            "#1565C0",
+            30
+          ],
+          [
+            "#2E7D32",
+            20
+          ],
+          [
+            "#E65100",
+            20
+          ],
+          [
+            "#C0392B",
+            10
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            81
+          ],
+          [
+            "#000000",
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 2,
+  "slide": {
+    "canonicalPage": 2,
+    "index": 2,
+    "title": "Modelo de Scoring — Definiciones",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Modelo de Scoring — Definiciones",
+      "Calidad Gestión = 0.4×Calidad Cartera + 0.3×Calidad Seguim + 0.3×Calidad Conversión | Subscores: 33.3% cada uno",
+      "Score Subscore Fórmula Mide Calidad Cartera (40%) Meta cartera min(Cart/Meta,1)×100 Cumple meta props Reqs x Tipo Prop min(Ratio Req,1)×100 Reqs vs benchmark Calidad Precio ≤1.05→100, ≤1.10→50, >1.10→0 Pricing vs valorización Calidad Seguim (30%) % Leads Clasif (Clasif/Activos)×100 Clasifica leads % Leads c-g90 (1−L90d/Act)×100 Leads no abandonados %LeadsA c-g15 (1−LA15d/CliA)×100 Leads A contactados Calidad Conversión (30%) Vis Realiz/Meta min(Vis/Meta,1)×100 Cumple meta visitas %Vis realizad/agend (VisReal/Agend)×100 Cumple agenda TC 6m/leads tot min(TC%6m,2.86)×35 Cierra negocios",
+      "Semáforos — Cumpl. meta: 🔴<90% 🟡90-100% 🟢≥100% | Crec. AA: 🔴<0% 🟡0-20% 🟢≥20% | Scores: 🔴<50 🟡50-70 🟢≥70",
+      "⭐Estrella (3≥70) | 📈Potencial (1≥70+2≥50) | 🧲Captador (Cart≥70) | 🏆Vendedor (Conv≥70) | 🔄Perseverante (Seg≥70) | ⚠️Riesgo (2<30) | 🔧Desarrollo"
+    ],
+    "tables": [
+      {
+        "id": 3,
+        "name": "Table 0",
+        "value": [
+          [
+            "Score",
+            "Subscore",
+            "Fórmula",
+            "Mide"
+          ],
+          [
+            "Calidad Cartera (40%)",
+            "Meta cartera",
+            "min(Cart/Meta,1)×100",
+            "Cumple meta props"
+          ],
+          [
+            "",
+            "Reqs x Tipo Prop",
+            "min(Ratio Req,1)×100",
+            "Reqs vs benchmark"
+          ],
+          [
+            "",
+            "Calidad Precio",
+            "≤1.05→100, ≤1.10→50, >1.10→0",
+            "Pricing vs valorización"
+          ],
+          [
+            "Calidad Seguim (30%)",
+            "% Leads Clasif",
+            "(Clasif/Activos)×100",
+            "Clasifica leads"
+          ],
+          [
+            "",
+            "% Leads c-g90",
+            "(1−L90d/Act)×100",
+            "Leads no abandonados"
+          ],
+          [
+            "",
+            "%LeadsA c-g15",
+            "(1−LA15d/CliA)×100",
+            "Leads A contactados"
+          ],
+          [
+            "Calidad Conversión (30%)",
+            "Vis Realiz/Meta",
+            "min(Vis/Meta,1)×100",
+            "Cumple meta visitas"
+          ],
+          [
+            "",
+            "%Vis realizad/agend",
+            "(VisReal/Agend)×100",
+            "Cumple agenda"
+          ],
+          [
+            "",
+            "TC 6m/leads tot",
+            "min(TC%6m,2.86)×35",
+            "Cierra negocios"
+          ]
+        ]
+      }
+    ],
+    "charts": [],
+    "notes": [
+      "",
+      "2"
+    ]
+  }
+}

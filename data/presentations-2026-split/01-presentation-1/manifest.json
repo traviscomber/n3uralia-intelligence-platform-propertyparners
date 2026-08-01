@@ -1,0 +1,206 @@
+{
+  "index": 1,
+  "name": "presentation-1",
+  "slug": "01-presentation-1",
+  "slideCount": 38,
+  "metadata": {
+    "file": "Jun_Directorio_5.pptx",
+    "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+    "byteSize": 1252175,
+    "slideCount": 38,
+    "mediaCount": 38,
+    "embeddingCount": 24,
+    "stats": {
+      "objects": 587,
+      "textObjects": 332,
+      "tables": 37,
+      "charts": 24,
+      "pictures": 38,
+      "notes": 38
+    },
+    "style": {
+      "fonts": [
+        [
+          "Calibri",
+          1498
+        ]
+      ],
+      "sizes": [
+        [
+          "7",
+          552
+        ],
+        [
+          "8",
+          528
+        ],
+        [
+          "6",
+          176
+        ],
+        [
+          "9",
+          77
+        ],
+        [
+          "13",
+          36
+        ],
+        [
+          "14",
+          34
+        ],
+        [
+          "10",
+          32
+        ],
+        [
+          "22",
+          16
+        ],
+        [
+          "11",
+          13
+        ],
+        [
+          "18",
+          12
+        ],
+        [
+          "20",
+          8
+        ],
+        [
+          "26",
+          8
+        ],
+        [
+          "28",
+          6
+        ]
+      ],
+      "colors": [
+        [
+          "#333333",
+          311
+        ],
+        [
+          "#FFFFFF",
+          299
+        ],
+        [
+          "#7F8C8D",
+          247
+        ],
+        [
+          "#E74C3C",
+          212
+        ],
+        [
+          "#27AE60",
+          211
+        ],
+        [
+          "#F39C12",
+          145
+        ],
+        [
+          "#1565C0",
+          52
+        ],
+        [
+          "#C0392B",
+          21
+        ]
+      ],
+      "fills": [
+        [
+          "#FFFFFF",
+          72
+        ],
+        [
+          "#000000",
+          37
+        ],
+        [
+          "#F39C12",
+          31
+        ],
+        [
+          "#27AE60",
+          14
+        ],
+        [
+          "#1565C0",
+          12
+        ],
+        [
+          "#2E7D32",
+          8
+        ],
+        [
+          "#E65100",
+          8
+        ],
+        [
+          "#E74C3C",
+          7
+        ],
+        [
+          "#C0392B",
+          4
+        ]
+      ],
+      "backgrounds": [
+        [
+          "#F0F0F0",
+          33
+        ],
+        [
+          "#000000",
+          5
+        ]
+      ]
+    }
+  },
+  "slides": [
+    "01-presentation-1/slide-001.json",
+    "01-presentation-1/slide-002.json",
+    "01-presentation-1/slide-003.json",
+    "01-presentation-1/slide-004.json",
+    "01-presentation-1/slide-005.json",
+    "01-presentation-1/slide-006.json",
+    "01-presentation-1/slide-007.json",
+    "01-presentation-1/slide-008.json",
+    "01-presentation-1/slide-009.json",
+    "01-presentation-1/slide-010.json",
+    "01-presentation-1/slide-011.json",
+    "01-presentation-1/slide-012.json",
+    "01-presentation-1/slide-013.json",
+    "01-presentation-1/slide-014.json",
+    "01-presentation-1/slide-015.json",
+    "01-presentation-1/slide-016.json",
+    "01-presentation-1/slide-017.json",
+    "01-presentation-1/slide-018.json",
+    "01-presentation-1/slide-019.json",
+    "01-presentation-1/slide-020.json",
+    "01-presentation-1/slide-021.json",
+    "01-presentation-1/slide-022.json",
+    "01-presentation-1/slide-023.json",
+    "01-presentation-1/slide-024.json",
+    "01-presentation-1/slide-025.json",
+    "01-presentation-1/slide-026.json",
+    "01-presentation-1/slide-027.json",
+    "01-presentation-1/slide-028.json",
+    "01-presentation-1/slide-029.json",
+    "01-presentation-1/slide-030.json",
+    "01-presentation-1/slide-031.json",
+    "01-presentation-1/slide-032.json",
+    "01-presentation-1/slide-033.json",
+    "01-presentation-1/slide-034.json",
+    "01-presentation-1/slide-035.json",
+    "01-presentation-1/slide-036.json",
+    "01-presentation-1/slide-037.json",
+    "01-presentation-1/slide-038.json"
+  ]
+}

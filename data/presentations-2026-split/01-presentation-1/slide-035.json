@@ -1,0 +1,339 @@
+{
+  "presentation": {
+    "index": 1,
+    "name": "presentation-1",
+    "slug": "01-presentation-1",
+    "metadata": {
+      "file": "Jun_Directorio_5.pptx",
+      "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+      "byteSize": 1252175,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1498
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            552
+          ],
+          [
+            "8",
+            528
+          ],
+          [
+            "6",
+            176
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            311
+          ],
+          [
+            "#FFFFFF",
+            299
+          ],
+          [
+            "#7F8C8D",
+            247
+          ],
+          [
+            "#E74C3C",
+            212
+          ],
+          [
+            "#27AE60",
+            211
+          ],
+          [
+            "#F39C12",
+            145
+          ],
+          [
+            "#1565C0",
+            52
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            31
+          ],
+          [
+            "#27AE60",
+            14
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            7
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 35,
+  "slide": {
+    "canonicalPage": 35,
+    "index": 35,
+    "title": "Lo Beltrán — Evolución Scores",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Lo Beltrán — Evolución Scores",
+      "Score Ene Feb Mar Abr May Jun Δ Calidad Gestión 66.2 62.5 68.3 62.7 74.8 70.2 -4.6 Calidad Cartera (40%) 84.2 76.3 81.1 75.0 72.6 76.0 +3.4 Calidad Seguim (30%) 48.4 48.4 53.2 51.7 75.8 67.9 -7.9 Calidad Conversión (30%) 59.9 58.1 66.5 57.2 76.9 65.0 -11.9"
+    ],
+    "tables": [
+      {
+        "id": 36,
+        "name": "Table 0",
+        "value": [
+          [
+            "Score",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "May",
+            "Jun",
+            "Δ"
+          ],
+          [
+            "Calidad Gestión",
+            "66.2",
+            "62.5",
+            "68.3",
+            "62.7",
+            "74.8",
+            "70.2",
+            "-4.6"
+          ],
+          [
+            "Calidad Cartera (40%)",
+            "84.2",
+            "76.3",
+            "81.1",
+            "75.0",
+            "72.6",
+            "76.0",
+            "+3.4"
+          ],
+          [
+            "Calidad Seguim (30%)",
+            "48.4",
+            "48.4",
+            "53.2",
+            "51.7",
+            "75.8",
+            "67.9",
+            "-7.9"
+          ],
+          [
+            "Calidad Conversión (30%)",
+            "59.9",
+            "58.1",
+            "66.5",
+            "57.2",
+            "76.9",
+            "65.0",
+            "-11.9"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart21.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Calidad Gestión",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$B$2:$B$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "66.15174931726503",
+                "62.474672337482424",
+                "68.32969348951481",
+                "62.691334804827164",
+                "74.8",
+                "70.2"
+              ]
+            },
+            {
+              "name": "Calidad Cartera",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$C$2:$C$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "84.16029102910291",
+                "76.27412154366849",
+                "81.06381449524262",
+                "74.99946381894297",
+                "72.6",
+                "76.0"
+              ]
+            },
+            {
+              "name": "Calidad Seguim",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$D$2:$D$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "48.427960927960925",
+                "48.427960927960925",
+                "53.22560202788339",
+                "51.73382173382174",
+                "75.8",
+                "67.9"
+              ]
+            },
+            {
+              "name": "Calidad Conversión",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$E$2:$E$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "59.86414875745194",
+                "58.12211813875586",
+                "66.45495694350916",
+                "57.238009190344826",
+                "76.9",
+                "65.0"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "35"
+    ]
+  }
+}

@@ -1,0 +1,311 @@
+{
+  "presentation": {
+    "index": 1,
+    "name": "presentation-1",
+    "slug": "01-presentation-1",
+    "metadata": {
+      "file": "Jun_Directorio_5.pptx",
+      "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+      "byteSize": 1252175,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1498
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            552
+          ],
+          [
+            "8",
+            528
+          ],
+          [
+            "6",
+            176
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            311
+          ],
+          [
+            "#FFFFFF",
+            299
+          ],
+          [
+            "#7F8C8D",
+            247
+          ],
+          [
+            "#E74C3C",
+            212
+          ],
+          [
+            "#27AE60",
+            211
+          ],
+          [
+            "#F39C12",
+            145
+          ],
+          [
+            "#1565C0",
+            52
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            31
+          ],
+          [
+            "#27AE60",
+            14
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            7
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 38,
+  "slide": {
+    "canonicalPage": 38,
+    "index": 38,
+    "title": "Lo Beltrán — Evolución Subscores Conversión",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "Lo Beltrán — Evolución Subscores Conversión",
+      "Subscore Ene Feb Mar Abr May Jun Δ Vis Realiz/Meta 60.9 61.4 59.7 52.7 68.7 52.0 -16.7 %Vis realizad/agend 59.8 59.7 63.1 55.0 61.8 59.5 -2.3 TC 6m/leads tot 58.9 53.3 76.5 64.1 100.1 83.3 -16.8",
+      "Conversión:",
+      "65.0",
+      "+19.7"
+    ],
+    "tables": [
+      {
+        "id": 39,
+        "name": "Table 0",
+        "value": [
+          [
+            "Subscore",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "May",
+            "Jun",
+            "Δ"
+          ],
+          [
+            "Vis Realiz/Meta",
+            "60.9",
+            "61.4",
+            "59.7",
+            "52.7",
+            "68.7",
+            "52.0",
+            "-16.7"
+          ],
+          [
+            "%Vis realizad/agend",
+            "59.8",
+            "59.7",
+            "63.1",
+            "55.0",
+            "61.8",
+            "59.5",
+            "-2.3"
+          ],
+          [
+            "TC 6m/leads tot",
+            "58.9",
+            "53.3",
+            "76.5",
+            "64.1",
+            "100.1",
+            "83.3",
+            "-16.8"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart24.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "Vis Realiz/Meta",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$B$2:$B$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "60.9156068074729",
+                "61.35887578378893",
+                "59.737162166494116",
+                "52.6565085135154",
+                "68.7",
+                "52.0"
+              ]
+            },
+            {
+              "name": "%Vis realizad/agend",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$C$2:$C$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "59.78260869565217",
+                "59.72222222222222",
+                "63.10679611650486",
+                "54.95495495495496",
+                "61.8",
+                "59.5"
+              ]
+            },
+            {
+              "name": "TC 6m/leads tot",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$D$2:$D$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "58.89423076923077",
+                "53.28525641025641",
+                "76.52091254752851",
+                "64.1025641025641",
+                "100.1",
+                "83.3"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "38"
+    ]
+  }
+}

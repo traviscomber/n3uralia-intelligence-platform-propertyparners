@@ -1,0 +1,311 @@
+{
+  "presentation": {
+    "index": 1,
+    "name": "presentation-1",
+    "slug": "01-presentation-1",
+    "metadata": {
+      "file": "Jun_Directorio_5.pptx",
+      "sha256": "ea9b718b8c919aa3f6fd7f1f05edb9dc9b1195cd960ef84b96d0b6ace6d62f5b",
+      "byteSize": 1252175,
+      "slideCount": 38,
+      "mediaCount": 38,
+      "embeddingCount": 24,
+      "stats": {
+        "objects": 587,
+        "textObjects": 332,
+        "tables": 37,
+        "charts": 24,
+        "pictures": 38,
+        "notes": 38
+      },
+      "style": {
+        "fonts": [
+          [
+            "Calibri",
+            1498
+          ]
+        ],
+        "sizes": [
+          [
+            "7",
+            552
+          ],
+          [
+            "8",
+            528
+          ],
+          [
+            "6",
+            176
+          ],
+          [
+            "9",
+            77
+          ],
+          [
+            "13",
+            36
+          ],
+          [
+            "14",
+            34
+          ],
+          [
+            "10",
+            32
+          ],
+          [
+            "22",
+            16
+          ],
+          [
+            "11",
+            13
+          ],
+          [
+            "18",
+            12
+          ],
+          [
+            "20",
+            8
+          ],
+          [
+            "26",
+            8
+          ],
+          [
+            "28",
+            6
+          ]
+        ],
+        "colors": [
+          [
+            "#333333",
+            311
+          ],
+          [
+            "#FFFFFF",
+            299
+          ],
+          [
+            "#7F8C8D",
+            247
+          ],
+          [
+            "#E74C3C",
+            212
+          ],
+          [
+            "#27AE60",
+            211
+          ],
+          [
+            "#F39C12",
+            145
+          ],
+          [
+            "#1565C0",
+            52
+          ],
+          [
+            "#C0392B",
+            21
+          ]
+        ],
+        "fills": [
+          [
+            "#FFFFFF",
+            72
+          ],
+          [
+            "#000000",
+            37
+          ],
+          [
+            "#F39C12",
+            31
+          ],
+          [
+            "#27AE60",
+            14
+          ],
+          [
+            "#1565C0",
+            12
+          ],
+          [
+            "#2E7D32",
+            8
+          ],
+          [
+            "#E65100",
+            8
+          ],
+          [
+            "#E74C3C",
+            7
+          ],
+          [
+            "#C0392B",
+            4
+          ]
+        ],
+        "backgrounds": [
+          [
+            "#F0F0F0",
+            33
+          ],
+          [
+            "#000000",
+            5
+          ]
+        ]
+      }
+    }
+  },
+  "canonicalPage": 10,
+  "slide": {
+    "canonicalPage": 10,
+    "index": 10,
+    "title": "PL Real Estate — Evolución Subscores Seguimiento",
+    "backgroundColor": "#F0F0F0",
+    "texts": [
+      "PL Real Estate — Evolución Subscores Seguimiento",
+      "Subscore Ene Feb Mar Abr May Jun Δ % Leads Clasif 17.4 17.4 21.1 20.0 50.7 30.2 -20.5 % Leads c-g90 43.4 43.4 43.1 39.8 69.4 85.1 +15.7 %LeadsA c-g15 65.8 65.8 70.9 78.7 73.1 62.9 -10.2",
+      "Seguimiento:",
+      "59.4",
+      "+18.2"
+    ],
+    "tables": [
+      {
+        "id": 11,
+        "name": "Table 0",
+        "value": [
+          [
+            "Subscore",
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "May",
+            "Jun",
+            "Δ"
+          ],
+          [
+            "% Leads Clasif",
+            "17.4",
+            "17.4",
+            "21.1",
+            "20.0",
+            "50.7",
+            "30.2",
+            "-20.5"
+          ],
+          [
+            "% Leads c-g90",
+            "43.4",
+            "43.4",
+            "43.1",
+            "39.8",
+            "69.4",
+            "85.1",
+            "+15.7"
+          ],
+          [
+            "%LeadsA c-g15",
+            "65.8",
+            "65.8",
+            "70.9",
+            "78.7",
+            "73.1",
+            "62.9",
+            "-10.2"
+          ]
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": 5,
+        "name": "Chart 0",
+        "value": {
+          "entry": "ppt/charts/chart5.xml",
+          "title": "",
+          "chartKinds": [
+            "lineChart"
+          ],
+          "series": [
+            {
+              "name": "% Leads Clasif",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$B$2:$B$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "17.38066095471236",
+                "17.38066095471236",
+                "21.091719272187152",
+                "19.985850725150335",
+                "50.7",
+                "30.2"
+              ]
+            },
+            {
+              "name": "% Leads c-g90",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$C$2:$C$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "43.39045287637698",
+                "43.39045287637698",
+                "43.148904567396954",
+                "39.83020870180404",
+                "69.4",
+                "85.1"
+              ]
+            },
+            {
+              "name": "%LeadsA c-g15",
+              "categoryFormula": "Sheet1!$A$2:$A$7",
+              "valueFormula": "Sheet1!$D$2:$D$7",
+              "categories": [
+                "Ene",
+                "Feb",
+                "Mar",
+                "Abr",
+                "May",
+                "Jun"
+              ],
+              "values": [
+                "65.76086956521738",
+                "65.76086956521738",
+                "70.85714285714286",
+                "78.72340425531915",
+                "73.1",
+                "62.9"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": [
+      "",
+      "10"
+    ]
+  }
+}

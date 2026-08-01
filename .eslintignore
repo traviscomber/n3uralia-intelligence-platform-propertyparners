@@ -1,8 +1,0 @@
-.next/
-node_modules/
-*.config.js
-dist/
-build/
-out/
-coverage/
-.turbo/

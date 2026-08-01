@@ -1,0 +1,236 @@
+{
+  "index": 2,
+  "name": "presentation-2",
+  "slug": "02-presentation-2",
+  "slideCount": 68,
+  "metadata": {
+    "file": "Jun_Partners_Lo_Beltran.pptx",
+    "sha256": "af031c1cecbd01cac1cab3d99729b3399b97fab0efc745ec8ab995dabfcbd6a3",
+    "byteSize": 2237308,
+    "slideCount": 68,
+    "mediaCount": 68,
+    "embeddingCount": 48,
+    "stats": {
+      "objects": 1166,
+      "textObjects": 665,
+      "tables": 73,
+      "charts": 48,
+      "pictures": 68,
+      "notes": 68
+    },
+    "style": {
+      "fonts": [
+        [
+          "Calibri",
+          2740
+        ]
+      ],
+      "sizes": [
+        [
+          "7",
+          984
+        ],
+        [
+          "8",
+          948
+        ],
+        [
+          "6",
+          320
+        ],
+        [
+          "9",
+          153
+        ],
+        [
+          "13",
+          73
+        ],
+        [
+          "14",
+          66
+        ],
+        [
+          "10",
+          64
+        ],
+        [
+          "11",
+          39
+        ],
+        [
+          "22",
+          32
+        ],
+        [
+          "18",
+          24
+        ],
+        [
+          "20",
+          16
+        ],
+        [
+          "26",
+          16
+        ],
+        [
+          "28",
+          5
+        ]
+      ],
+      "colors": [
+        [
+          "#333333",
+          575
+        ],
+        [
+          "#FFFFFF",
+          546
+        ],
+        [
+          "#7F8C8D",
+          499
+        ],
+        [
+          "#E74C3C",
+          421
+        ],
+        [
+          "#27AE60",
+          389
+        ],
+        [
+          "#F39C12",
+          181
+        ],
+        [
+          "#1565C0",
+          88
+        ],
+        [
+          "#C0392B",
+          41
+        ]
+      ],
+      "fills": [
+        [
+          "#FFFFFF",
+          144
+        ],
+        [
+          "#000000",
+          73
+        ],
+        [
+          "#27AE60",
+          43
+        ],
+        [
+          "#E74C3C",
+          31
+        ],
+        [
+          "#F39C12",
+          30
+        ],
+        [
+          "#1565C0",
+          24
+        ],
+        [
+          "#2E7D32",
+          16
+        ],
+        [
+          "#E65100",
+          16
+        ],
+        [
+          "#C0392B",
+          8
+        ]
+      ],
+      "backgrounds": [
+        [
+          "#F0F0F0",
+          65
+        ],
+        [
+          "#000000",
+          3
+        ]
+      ]
+    }
+  },
+  "slides": [
+    "02-presentation-2/slide-001.json",
+    "02-presentation-2/slide-002.json",
+    "02-presentation-2/slide-003.json",
+    "02-presentation-2/slide-004.json",
+    "02-presentation-2/slide-005.json",
+    "02-presentation-2/slide-006.json",
+    "02-presentation-2/slide-007.json",
+    "02-presentation-2/slide-008.json",
+    "02-presentation-2/slide-009.json",
+    "02-presentation-2/slide-010.json",
+    "02-presentation-2/slide-011.json",
+    "02-presentation-2/slide-012.json",
+    "02-presentation-2/slide-013.json",
+    "02-presentation-2/slide-014.json",
+    "02-presentation-2/slide-015.json",
+    "02-presentation-2/slide-016.json",
+    "02-presentation-2/slide-017.json",
+    "02-presentation-2/slide-018.json",
+    "02-presentation-2/slide-019.json",
+    "02-presentation-2/slide-020.json",
+    "02-presentation-2/slide-021.json",
+    "02-presentation-2/slide-022.json",
+    "02-presentation-2/slide-023.json",
+    "02-presentation-2/slide-024.json",
+    "02-presentation-2/slide-025.json",
+    "02-presentation-2/slide-026.json",
+    "02-presentation-2/slide-027.json",
+    "02-presentation-2/slide-028.json",
+    "02-presentation-2/slide-029.json",
+    "02-presentation-2/slide-030.json",
+    "02-presentation-2/slide-031.json",
+    "02-presentation-2/slide-032.json",
+    "02-presentation-2/slide-033.json",
+    "02-presentation-2/slide-034.json",
+    "02-presentation-2/slide-035.json",
+    "02-presentation-2/slide-036.json",
+    "02-presentation-2/slide-037.json",
+    "02-presentation-2/slide-038.json",
+    "02-presentation-2/slide-039.json",
+    "02-presentation-2/slide-040.json",
+    "02-presentation-2/slide-041.json",
+    "02-presentation-2/slide-042.json",
+    "02-presentation-2/slide-043.json",
+    "02-presentation-2/slide-044.json",
+    "02-presentation-2/slide-045.json",
+    "02-presentation-2/slide-046.json",
+    "02-presentation-2/slide-047.json",
+    "02-presentation-2/slide-048.json",
+    "02-presentation-2/slide-049.json",
+    "02-presentation-2/slide-050.json",
+    "02-presentation-2/slide-051.json",
+    "02-presentation-2/slide-052.json",
+    "02-presentation-2/slide-053.json",
+    "02-presentation-2/slide-054.json",
+    "02-presentation-2/slide-055.json",
+    "02-presentation-2/slide-056.json",
+    "02-presentation-2/slide-057.json",
+    "02-presentation-2/slide-058.json",
+    "02-presentation-2/slide-059.json",
+    "02-presentation-2/slide-060.json",
+    "02-presentation-2/slide-061.json",
+    "02-presentation-2/slide-062.json",
+    "02-presentation-2/slide-063.json",
+    "02-presentation-2/slide-064.json",
+    "02-presentation-2/slide-065.json",
+    "02-presentation-2/slide-066.json",
+    "02-presentation-2/slide-067.json",
+    "02-presentation-2/slide-068.json"
+  ]
+}

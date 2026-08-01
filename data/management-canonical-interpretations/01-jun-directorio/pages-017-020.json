@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "canonical_interpretation",
+  "source": {
+    "deck": "Jun_Directorio_5.pptx",
+    "pages": [17, 18, 19, 20],
+    "period": "2026-01/2026-06"
+  },
+  "entity": "Santa María",
+  "pages": [
+    {
+      "page": 17,
+      "title": "Santa María — Evolución Scores",
+      "monthlySeries": {
+        "managementQuality": [61.8, 55.4, 62.2, 59.1, 63.5, 56.0],
+        "portfolioQuality": [78.0, 70.9, 79.4, 77.3, 68.0, 60.3],
+        "followUpQuality": [38.8, 38.8, 42.0, 39.3, 58.5, 51.1],
+        "conversionQuality": [63.1, 51.2, 59.5, 54.6, 62.3, 55.1]
+      },
+      "mayToJuneChange": {
+        "managementQuality": -7.5,
+        "portfolioQuality": -7.7,
+        "followUpQuality": -7.4,
+        "conversionQuality": -7.2
+      },
+      "interpretation": [
+        "Junio presenta una caída transversal: las tres dimensiones principales retroceden en magnitudes similares.",
+        "El deterioro general no depende de un único indicador, sino de cartera, seguimiento y conversión simultáneamente.",
+        "La calidad de cartera fue verde entre enero y abril, pero pasa a amarillo en mayo y se debilita nuevamente en junio."
+      ]
+    },
+    {
+      "page": 18,
+      "title": "Santa María — Evolución Subscores Cartera",
+      "monthlySeries": {
+        "portfolioGoal": [95.4, 90.6, 85.5, 76.3, 66.8, 60.7],
+        "requirementsByPropertyType": [82.0, 64.7, 97.6, 100.0, 81.7, 66.3],
+        "priceQuality": [56.6, 57.5, 54.9, 55.6, 55.6, 53.8]
+      },
+      "mayToJuneChange": {
+        "portfolioGoal": -6.1,
+        "requirementsByPropertyType": -15.4,
+        "priceQuality": -1.8
+      },
+      "januaryToJuneChange": {
+        "portfolioQualityDisplayed": -9.3
+      },
+      "interpretation": [
+        "La caída mensual de cartera se explica principalmente por requerimientos por tipo y por menor cumplimiento de la meta de inventario.",
+        "La calidad de precio es estructuralmente estable en torno a 54–57 puntos y no explica por sí sola el deterioro de junio.",
+        "El benchmark de requerimientos es dinámico: el score varía fuertemente aun cuando el modelo de fórmula permanece constante."
+      ]
+    },
+    {
+      "page": 19,
+      "title": "Santa María — Evolución Subscores Seguimiento",
+      "monthlySeries": {
+        "classifiedLeads": [14.1, 14.1, 17.2, 16.0, 37.7, 23.4],
+        "leadsManagedWithin90Days": [36.3, 36.3, 34.1, 37.0, 71.2, 75.4],
+        "priorityLeadsManagedWithin15Days": [66.1, 66.1, 74.6, 65.0, 66.7, 54.5]
+      },
+      "mayToJuneChange": {
+        "classifiedLeads": -14.3,
+        "leadsManagedWithin90Days": 4.2,
+        "priorityLeadsManagedWithin15Days": -12.2
+      },
+      "januaryToJuneChange": {
+        "followUpQualityDisplayed": 19.2
+      },
+      "interpretation": [
+        "El seguimiento mejora frente a enero por la fuerte reducción del abandono mayor a 90 días.",
+        "La caída de junio se concentra en clasificación de leads y atención oportuna de leads A.",
+        "El problema de junio es de priorización y actualización de CRM, no de abandono general de la base."
+      ]
+    },
+    {
+      "page": 20,
+      "title": "Santa María — Evolución Subscores Conversión",
+      "monthlySeries": {
+        "completedVisitsGoal": [87.9, 59.4, 76.3, 70.9, 62.9, 50.6],
+        "completedScheduledVisits": [74.1, 68.3, 72.7, 62.0, 74.8, 70.2],
+        "sixMonthCloseRateScore": [27.3, 25.9, 29.4, 31.0, 49.1, 44.6]
+      },
+      "mayToJuneChange": {
+        "completedVisitsGoal": -12.3,
+        "completedScheduledVisits": -4.6,
+        "sixMonthCloseRateScore": -4.5
+      },
+      "januaryToJuneChange": {
+        "conversionQualityDisplayed": 7.7
+      },
+      "interpretation": [
+        "La conversión de junio cae por menor actividad, menor cumplimiento de agenda y menor tasa de cierre.",
+        "El cumplimiento de visitas conserva una ejecución relativamente razonable sobre lo agendado, pero el volumen contra meta es insuficiente.",
+        "La conversión sigue sobre enero, aunque pierde parte de la mejora obtenida hasta mayo."
+      ]
+    }
+  ],
+  "crossPageFindings": [
+    "La columna Δ de las tablas representa junio menos mayo.",
+    "Los recuadros laterales de cartera, seguimiento y conversión parecen representar junio menos enero, no el mismo Δ mensual de la tabla.",
+    "Los valores históricos conservan precisión interna mayor que la cifra redondeada visible.",
+    "El benchmark esperado de requerimientos cambia mensualmente y por oficina; su fórmula de construcción aún no está explícita.",
+    "La exclusión de propiedades del universo de pricing sigue confirmada, pero el criterio exacto de elegibilidad aún no aparece."
+  ],
+  "pendingDefinitions": [
+    "Definir la regla operacional exacta de atribución de cierres fraccionados.",
+    "Definir cómo se calcula el benchmark esperado de requerimientos por tipo de propiedad.",
+    "Definir el criterio de inclusión y exclusión del universo evaluable para calidad de precio."
+  ]
+}

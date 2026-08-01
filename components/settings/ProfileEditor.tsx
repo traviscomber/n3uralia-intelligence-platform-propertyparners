@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { RefreshCw, Save, UserRound } from 'lucide-react'
@@ -12,14 +12,12 @@ type Props = {
 
 type FormState = {
   full_name: string
-  team: string
   avatar_url: string
 }
 
 function toFormState(profile: Profile | null): FormState {
   return {
     full_name: profile?.full_name || '',
-    team: profile?.team || '',
     avatar_url: profile?.avatar_url || '',
   }
 }
@@ -48,25 +46,18 @@ export default function ProfileEditor({ profile, email }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           full_name: form.full_name,
-          team: form.team,
           avatar_url: form.avatar_url,
         }),
       })
 
-      const json = (await response.json()) as {
-        error?: string
-        profile?: Profile
-      }
-
+      const json = (await response.json()) as { error?: string; profile?: Profile }
       if (!response.ok || !json.profile) {
         throw new Error(json.error || 'No pudimos actualizar el perfil.')
       }
 
       setForm(toFormState(json.profile))
       setMessage('Perfil actualizado.')
-      setTimeout(() => {
-        router.refresh()
-      }, 300)
+      setTimeout(() => router.refresh(), 300)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos actualizar el perfil.')
     } finally {
@@ -88,43 +79,32 @@ export default function ProfileEditor({ profile, email }: Props) {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <label className="space-y-1 md:col-span-2">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
-            Nombre completo
-          </span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>Nombre completo</span>
           <input
             value={form.full_name}
             onChange={(e) => setForm({ ...form, full_name: e.target.value })}
             placeholder="Nombre y apellido"
-            className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors"
+            maxLength={160}
+            className="min-h-11 w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]"
             style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
           />
         </label>
 
-        <label className="space-y-1">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
-            Equipo
-          </span>
-          <input
-            value={form.team}
-            onChange={(e) => setForm({ ...form, team: e.target.value })}
-            placeholder="Ventas, operaciones, etc."
-            className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors"
-            style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
-          />
-        </label>
-
-        <label className="space-y-1">
-          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>
-            URL del avatar
-          </span>
+        <label className="space-y-1 md:col-span-2">
+          <span className="text-xs font-medium uppercase tracking-[0.18em]" style={{ color: '#6b7280' }}>URL del avatar</span>
           <input
             value={form.avatar_url}
             onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
             placeholder="https://..."
-            className="w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors"
+            maxLength={500}
+            className="min-h-11 w-full rounded-2xl border px-3 py-2.5 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]"
             style={{ borderColor: '#e5e7eb', background: '#f9fafb', color: '#111827' }}
           />
         </label>
+      </div>
+
+      <div className="rounded-xl border border-[var(--n3-line)] bg-black/5 px-3 py-2 text-xs text-gray-600">
+        Equipo: <strong>{profile?.team || 'Sin equipo'}</strong>. El equipo y el rol sólo pueden modificarse desde administración autorizada.
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -132,22 +112,19 @@ export default function ProfileEditor({ profile, email }: Props) {
           type="button"
           onClick={() => void handleSave()}
           disabled={saving}
-          className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)] disabled:opacity-60"
           style={{ background: 'var(--n3-teal)' }}
         >
           {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
           {saving ? 'Guardando...' : 'Guardar cambios'}
         </button>
         <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium" style={{ background: '#f9fafb', color: '#374151' }}>
-          <UserRound size={13} />
-          Rol {profile?.role || 'vendedor'}
+          <UserRound size={13} /> Rol {profile?.role || 'seller'}
         </span>
       </div>
 
-      {error && <p className="text-sm" style={{ color: '#b45309' }}>{error}</p>}
-      {message && <p className="text-sm" style={{ color: '#166534' }}>{message}</p>}
+      {error && <p role="alert" className="text-sm" style={{ color: '#b45309' }}>{error}</p>}
+      {message && <p role="status" aria-live="polite" className="text-sm" style={{ color: '#166534' }}>{message}</p>}
     </div>
   )
 }
-
-
