@@ -15,11 +15,23 @@ Variables de Production requeridas:
 
 - `CRON_SECRET`: autentica las dos rutas de Vercel Cron.
 - `RESEND_API_KEY`: credencial privada del proveedor.
-- `REPORT_FROM_EMAIL`: remitente verificado.
-- `REPORT_REPLY_TO`: respuesta opcional.
-- `APP_BASE_URL`: origen canónico para el enlace autenticado al PDF.
+- `REPORT_FROM_EMAIL`: remitente verificado; el valor temporal recomendado es `Property Partners Intelligence <reportes@ppartnersgroup.app>`.
+- `REPORT_REPLY_TO`: respuesta opcional; debe apuntar a una bandeja realmente atendida.
+- `REPORT_ALLOWED_FROM_DOMAINS`: lista de dominios remitentes autorizados; por defecto `ppartnersgroup.app`.
+- `APP_BASE_URL`: origen canónico para el enlace autenticado al PDF, actualmente `https://n3uralia-intelligence-platform.vercel.app`.
 
-No registrar valores reales en Git, issues, logs o documentos.
+El código utiliza `reportes@ppartnersgroup.app` cuando `REPORT_FROM_EMAIL` está vacío o intenta usar un dominio no autorizado. Esto permite operar temporalmente con las identidades transaccionales creadas en Resend sin permitir que una variable mal configurada suplante dominios externos.
+
+No registrar valores reales de `RESEND_API_KEY` o `CRON_SECRET` en Git, issues, logs o documentos.
+
+## Identidad de envío temporal
+
+- Dominio transaccional: `ppartnersgroup.app`.
+- Remitente central: `Property Partners Intelligence <reportes@ppartnersgroup.app>`.
+- La URL de la aplicación permanece en `https://n3uralia-intelligence-platform.vercel.app`.
+- El dominio de aplicación y el dominio de correo no necesitan coincidir.
+- Las respuestas deben dirigirse mediante `REPORT_REPLY_TO` a una cuenta operativa real; no se presupone que `reportes@ppartnersgroup.app` tenga buzón de entrada.
+- No se habilita remitente dinámico por usuario hasta contar con una política aprobada de identidad y auditoría.
 
 ## Programación
 
@@ -104,7 +116,9 @@ No eliminar distribuciones para forzar un reenvío; conservar el historial.
 El flujo se considera operacional cuando existe evidencia de:
 
 - `CRON_SECRET` válido;
-- remitente verificado;
+- dominio `ppartnersgroup.app` verificado en Resend;
+- `RESEND_API_KEY` instalada en Vercel Production;
+- remitente central aceptado por Resend;
 - una programación autorizada;
 - reporte generado;
 - PDF descargable;
