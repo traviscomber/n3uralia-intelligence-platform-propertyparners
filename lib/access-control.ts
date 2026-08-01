@@ -54,7 +54,6 @@ const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
     'market.read',
     'market.manage_sources',
     'valuations.global.read',
-    'valuations.global.approve',
     'properties.global.read',
     'properties.global.assign',
     'tasks.global.manage',
