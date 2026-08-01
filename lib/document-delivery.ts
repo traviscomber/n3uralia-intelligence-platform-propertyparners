@@ -149,7 +149,7 @@ export async function sendDocumentEmail(
   const text = `${documentTitle}\n\nYour scheduled presentation document is ready.\n\nDocument: ${documentTitle}\nSent: ${new Date().toLocaleDateString('es-CL')}\nType: Presentation\n\nDownload: ${documentUrl}`
   
   const resendResponse = await resend.emails.send({
-    from: 'Business Intelligence Property Partners <info@ppartnersgroup.app>',
+    from: 'Reporte Property Partners <onboarding@resend.dev>',
     to: recipientEmail,
     subject,
     html,
