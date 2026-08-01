@@ -17,7 +17,10 @@ export async function POST(request: Request) {
   // Verify CRON_SECRET
   const authFailure = getCronAuthorizationFailure(request)
   if (authFailure) {
-    return NextResponse.json({ error: 'Unauthorized', details: authFailure }, { status: 401 })
+    return new NextResponse(JSON.stringify({ error: 'Unauthorized', details: authFailure }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   try {
@@ -79,16 +82,25 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({
-      configured: true,
-      claimed,
-      sent,
-      failed,
-      total: distributions.length,
-      timestamp: new Date().toISOString(),
-    })
+    return new NextResponse(
+      JSON.stringify({
+        configured: true,
+        claimed,
+        sent,
+        failed,
+        total: distributions.length,
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
   } catch (error) {
     console.error('[Document Delivery Claim] Cron error:', error)
-    return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 })
+    return new NextResponse(JSON.stringify({ error: 'Internal server error', details: String(error) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 }

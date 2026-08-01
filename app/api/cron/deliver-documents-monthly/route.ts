@@ -12,7 +12,10 @@ export async function POST(request: Request) {
   // Verify CRON_SECRET
   const authFailure = getCronAuthorizationFailure(request)
   if (authFailure) {
-    return NextResponse.json({ error: 'Unauthorized', details: authFailure }, { status: 401 })
+    return new NextResponse(JSON.stringify({ error: 'Unauthorized', details: authFailure }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   try {
@@ -53,6 +56,9 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('[Document Delivery] Cron error:', error)
-    return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 })
+    return new NextResponse(JSON.stringify({ error: 'Internal server error', details: String(error) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 }
