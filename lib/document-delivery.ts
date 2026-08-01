@@ -118,44 +118,94 @@ export async function sendDocumentEmail(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Calibri, Trebuchet MS, sans-serif; background-color: #f0f0f0; }
+    body { font-family: Calibri, 'Trebuchet MS', sans-serif; background-color: #f0f0f0; line-height: 1.6; color: #333333; }
     table { width: 100%; border-collapse: collapse; }
-    .header { background-color: #000000; color: white; padding: 40px; text-align: center; }
-    .header h1 { font-size: 24px; font-weight: bold; margin: 0; }
-    .header p { font-size: 14px; margin: 10px 0 0 0; opacity: 0.9; }
-    .container { max-width: 600px; margin: 0 auto; background: white; }
-    .content { padding: 30px; text-align: center; color: #333333; }
-    .content p { font-size: 13px; line-height: 1.6; margin: 15px 0; }
-    .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 11px; color: #666666; }
+    .wrapper { max-width: 680px; margin: 0 auto; }
+    .header { background-color: #000000; color: white; padding: 60px 40px; text-align: center; }
+    .header h1 { font-size: 26px; font-weight: bold; margin: 0 0 12px 0; line-height: 1.3; }
+    .header .subtitle { font-size: 13px; opacity: 0.85; margin: 0; }
+    .container { background: white; }
+    .content { padding: 50px 40px; text-align: left; }
+    .greeting { font-size: 16px; font-weight: bold; color: #000000; margin: 0 0 20px 0; }
+    .intro-text { font-size: 13px; color: #555555; margin: 0 0 30px 0; line-height: 1.8; }
+    .section { margin: 30px 0; }
+    .section-title { font-size: 14px; font-weight: bold; color: #1565C0; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section-content { font-size: 13px; color: #555555; margin: 0; line-height: 1.7; }
+    .highlight { background-color: #f0f0f0; padding: 15px; border-left: 3px solid #27AE60; margin: 15px 0; font-size: 13px; color: #333333; }
+    .attachment-note { background-color: #fffbea; border: 1px solid #f39c12; padding: 15px; border-radius: 4px; margin: 25px 0; font-size: 12px; color: #333333; }
+    .contact-info { margin: 40px 0 0 0; padding-top: 25px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #666666; }
+    .contact-info p { margin: 5px 0; }
+    .contact-link { color: #1565C0; text-decoration: none; }
+    .divider { height: 1px; background: #e0e0e0; margin: 25px 0; }
+    .footer { background: #f0f0f0; padding: 30px 40px; text-align: center; font-size: 11px; color: #888888; }
+    .footer p { margin: 5px 0; }
+    ul { margin: 10px 0 10px 20px; font-size: 13px; color: #555555; }
+    li { margin: 6px 0; }
   </style>
 </head>
 <body>
-  <table cellpadding="0" cellspacing="0">
-    <tr>
-      <td class="header">
-        <h1>${documentTitle}</h1>
-        <p>Documento adjunto</p>
-      </td>
-    </tr>
-    <tr>
-      <td class="content">
-        <p>El reporte está adjunto en este email.</p>
-        <p style="font-size: 12px; color: #999999; margin-top: 25px;">
-          Property Partners Intelligence<br>
-          info@ppartnersgroup.app
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td class="footer">
-        <p>© ${new Date().getFullYear()} Property Partners. Todos los derechos reservados.</p>
-      </td>
-    </tr>
-  </table>
+  <div class="wrapper">
+    <table cellpadding="0" cellspacing="0" class="container">
+      <tr>
+        <td class="header">
+          <h1>${documentTitle}</h1>
+          <p class="subtitle">Período 2026-08</p>
+        </td>
+      </tr>
+      <tr>
+        <td class="content">
+          <p class="greeting">Buenos días,</p>
+          
+          <p class="intro-text">
+            Adjunto encontrarás el reporte integral ejecutivo correspondiente a este período. Este documento contiene análisis completo de desempeño, inteligencia de mercado y recomendaciones estratégicas.
+          </p>
+
+          <div class="section">
+            <p class="section-title">📊 Contenido del Reporte</p>
+            <p class="section-content">
+              El reporte incluye:
+            </p>
+            <ul>
+              <li>Modelo de scoring con métricas de desempeño (40/30/30)</li>
+              <li>Tabla de evolución con 6 meses de datos históricos</li>
+              <li>Sistema de tráfico (Verde/Amarillo/Rojo) para priorización</li>
+              <li>Análisis de cumplimiento vs objetivos</li>
+              <li>Indicadores clave de negocio y productividad</li>
+              <li>Definiciones pendientes y transparencia operacional</li>
+            </ul>
+          </div>
+
+          <div class="attachment-note">
+            <strong>📎 Documento Adjunto:</strong> El reporte está disponible como archivo HTML adjunto a este email. Puedes abrirlo directamente en cualquier navegador web o convertirlo a PDF si lo necesitas.
+          </div>
+
+          <div class="section">
+            <p class="section-title">✓ Próximos Pasos</p>
+            <p class="section-content">
+              Revisa el reporte y contáctanos si tienes preguntas sobre los datos, interpretación de métricas o necesitas información adicional.
+            </p>
+          </div>
+
+          <div class="contact-info">
+            <p><strong>Property Partners Intelligence</strong></p>
+            <p>Email: <a href="mailto:info@ppartnersgroup.app" class="contact-link">info@ppartnersgroup.app</a></p>
+            <p>Web: <a href="https://www.ppartnersgroup.app" class="contact-link">www.ppartnersgroup.app</a></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="footer">
+          <p><strong>© ${new Date().getFullYear()} Property Partners Group.</strong></p>
+          <p>Todos los derechos reservados. Información confidencial.</p>
+          <p style="margin-top: 10px; font-size: 10px;">Este email contiene información confidencial destinada exclusivamente a su destinatario.</p>
+        </td>
+      </tr>
+    </table>
+  </div>
 </body>
 </html>`
   
-  const text = `${documentTitle}\n\nEl reporte está adjunto en este email.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app`
+  const text = `${documentTitle}\nPeríodo 2026-08\n\nBuenos días,\n\nAdjunto encontrarás el reporte integral ejecutivo correspondiente a este período.\n\nCONTENIDO DEL REPORTE:\n- Modelo de scoring con métricas de desempeño (40/30/30)\n- Tabla de evolución con 6 meses de datos históricos\n- Sistema de tráfico (Verde/Amarillo/Rojo) para priorización\n- Análisis de cumplimiento vs objetivos\n- Indicadores clave de negocio y productividad\n- Definiciones pendientes y transparencia operacional\n\nEl reporte está disponible como archivo HTML adjunto a este email.\n\nPróximos Pasos:\nRevisa el reporte y contáctanos si tienes preguntas.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app\nwww.ppartnersgroup.app\n\n© ${new Date().getFullYear()} Property Partners Group. Todos los derechos reservados.`
   
   const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
   
