@@ -7,6 +7,18 @@
     {
       "path": "/api/cron/management-delivery",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/deliver-documents-weekly",
+      "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/deliver-documents-monthly",
+      "schedule": "0 6 1 * *"
+    },
+    {
+      "path": "/api/cron/document-delivery-claim",
+      "schedule": "0 * * * *"
     }
   ]
 }
