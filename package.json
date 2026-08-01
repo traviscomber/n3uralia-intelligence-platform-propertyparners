@@ -21,6 +21,7 @@
     "targets:verify": "node scripts/verify-targets-2026.mjs",
     "presentations:build": "node scripts/build-presentations-2026.mjs",
     "presentations:verify": "node scripts/verify-presentations-2026.mjs",
+    "management:scoring:verify": "node --import tsx scripts/verify-canonical-management-scoring.ts",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
     "market:identity:verify": "node --import tsx scripts/verify-market-identity.ts",
