@@ -1,0 +1,128 @@
+alter table public.valuation_cases
+  drop constraint if exists valuation_cases_subject_property_id_fkey;
+
+alter table public.valuation_cases
+  add constraint valuation_cases_subject_property_id_fkey
+  foreign key (subject_property_id)
+  references public.market_properties(id)
+  on delete set null;
+
+create or replace function public.valuation_candidate_pool(p_case_id uuid, p_limit integer default 30)
+returns table(
+  source_type text,
+  source_reference text,
+  comparable_property_id uuid,
+  source_transaction_id uuid,
+  source_listing_id uuid,
+  transaction_date date,
+  observed_at timestamptz,
+  address text,
+  neighborhood text,
+  property_type text,
+  useful_area_m2 numeric,
+  built_area_m2 numeric,
+  land_area_m2 numeric,
+  bedrooms integer,
+  bathrooms integer,
+  parking_spaces integer,
+  price_uf numeric,
+  price_uf_m2 numeric,
+  distance_meters numeric,
+  similarity_score numeric,
+  evidence jsonb
+)
+language sql
+stable
+set search_path to 'public','extensions'
+as $function$
+with subject as (
+  select vc.*, mp.neighborhood_id
+  from public.valuation_cases vc
+  left join public.market_properties mp on mp.id = vc.subject_property_id
+  where vc.id = p_case_id
+),
+transaction_candidates as (
+  select
+    'transaction'::text,
+    mt.event_key,
+    mp.id,
+    mt.id,
+    null::uuid,
+    mt.transaction_date,
+    null::timestamptz,
+    mp.normalized_address,
+    mn.name,
+    mp.property_type,
+    mp.useful_area_m2,
+    mp.built_area_m2,
+    mp.land_area_m2,
+    mp.bedrooms,
+    mp.bathrooms,
+    mp.parking_spaces,
+    mt.price_uf,
+    mt.price_uf_m2,
+    case when s.latitude is not null and s.longitude is not null and mp.latitude is not null and mp.longitude is not null
+      then 111320 * sqrt(power((mp.latitude-s.latitude)::numeric,2)+power(((mp.longitude-s.longitude)*cos(radians(s.latitude::double precision)))::numeric,2))
+      else null end,
+    greatest(0, least(100,
+      100
+      - case when lower(coalesce(mp.property_type,''))=lower(coalesce(s.property_type,'')) then 0 else 25 end
+      - case when mp.neighborhood_id is not distinct from s.neighborhood_id then 0 else 20 end
+      - least(25,coalesce(abs(mp.built_area_m2-s.built_area_m2)/nullif(s.built_area_m2,0)*100,10))
+      - least(15,coalesce(abs(mp.bedrooms-s.bedrooms)*5,5))
+      - least(15,coalesce(abs(mp.bathrooms-s.bathrooms)*5,5))
+    ))::numeric,
+    jsonb_build_array(jsonb_build_object('marketSourceId',mt.source_id,'eventKey',mt.event_key,'transactionDate',mt.transaction_date,'priceUf',mt.price_uf,'priceUfM2',mt.price_uf_m2))
+  from subject s
+  join public.market_transactions mt on mt.price_uf is not null
+  join public.market_properties mp on mp.id=mt.property_id
+  left join public.market_neighborhoods mn on mn.id=mp.neighborhood_id
+  where s.subject_property_id is null or mp.id <> s.subject_property_id
+),
+listing_candidates as (
+  select
+    'listing'::text,
+    ml.source_listing_id,
+    mp.id,
+    null::uuid,
+    ml.id,
+    null::date,
+    ml.observed_at,
+    coalesce(ml.normalized_address,mp.normalized_address),
+    mn.name,
+    mp.property_type,
+    mp.useful_area_m2,
+    mp.built_area_m2,
+    mp.land_area_m2,
+    mp.bedrooms,
+    mp.bathrooms,
+    mp.parking_spaces,
+    ml.price_uf,
+    ml.price_uf_m2,
+    case when s.latitude is not null and s.longitude is not null and ml.latitude is not null and ml.longitude is not null
+      then 111320 * sqrt(power((ml.latitude-s.latitude)::numeric,2)+power(((ml.longitude-s.longitude)*cos(radians(s.latitude::double precision)))::numeric,2))
+      else null end,
+    greatest(0, least(100,
+      92
+      - case when lower(coalesce(mp.property_type,''))=lower(coalesce(s.property_type,'')) then 0 else 25 end
+      - case when mp.neighborhood_id is not distinct from s.neighborhood_id then 0 else 20 end
+      - least(25,coalesce(abs(mp.built_area_m2-s.built_area_m2)/nullif(s.built_area_m2,0)*100,10))
+      - least(15,coalesce(abs(mp.bedrooms-s.bedrooms)*5,5))
+      - least(15,coalesce(abs(mp.bathrooms-s.bathrooms)*5,5))
+    ))::numeric,
+    jsonb_build_array(jsonb_build_object('marketSourceId',ml.source_id,'listingId',ml.source_listing_id,'url',ml.url,'observedAt',ml.observed_at,'status',ml.status,'priceUf',ml.price_uf,'priceUfM2',ml.price_uf_m2))
+  from subject s
+  join public.market_listings ml on ml.price_uf is not null and ml.status in ('active','observed','sold','removed')
+  join public.market_properties mp on mp.id=ml.property_id
+  left join public.market_neighborhoods mn on mn.id=mp.neighborhood_id
+  where s.subject_property_id is null or mp.id <> s.subject_property_id
+),
+unioned as (
+  select * from transaction_candidates
+  union all
+  select * from listing_candidates
+)
+select * from unioned
+order by similarity_score desc, transaction_date desc nulls last, observed_at desc nulls last
+limit greatest(1,least(coalesce(p_limit,30),100));
+$function$;
