@@ -1,52 +1,59 @@
--- Email subscriptions for automated report delivery
--- Allows users and stakeholders to subscribe to reports and receive them automatically
+-- Audited email subscriptions for automated report delivery.
+-- Access is server-side only. Authenticated users operate through authorized API routes.
 
-create table if not exists report_email_subscriptions (
+create table if not exists public.report_email_subscriptions (
   id uuid primary key default gen_random_uuid(),
-  email text not null,
+  email text not null check (email = lower(email) and email ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'),
   report_type text not null check (report_type in ('executive','office','partner','monthly','cumulative','all')),
   cadence text not null default 'monthly' check (cadence in ('weekly','biweekly','monthly','quarterly','yearly')),
   active boolean not null default true,
-  recipient_name text,
-  recipient_role text,
-  entity_id uuid references management_entities(id) on delete cascade,
-  notes text,
-  created_by uuid references profiles(id) on delete set null,
+  recipient_name text check (recipient_name is null or char_length(recipient_name) <= 160),
+  recipient_role text check (recipient_role is null or char_length(recipient_role) <= 80),
+  entity_id uuid references public.management_entities(id) on delete set null,
+  notes text check (notes is null or char_length(notes) <= 1000),
+  created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (email, report_type, entity_id)
+  updated_at timestamptz not null default now()
 );
 
-create table if not exists report_subscription_events (
+create table if not exists public.report_subscription_events (
   id uuid primary key default gen_random_uuid(),
-  subscription_id uuid not null references report_email_subscriptions(id) on delete cascade,
-  report_run_id uuid references management_report_runs(id) on delete set null,
+  subscription_id uuid not null references public.report_email_subscriptions(id) on delete restrict,
+  report_run_id uuid references public.management_report_runs(id) on delete set null,
   event_type text not null check (event_type in ('sent','failed','acknowledged','unsubscribed')),
-  details jsonb,
+  details jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
-create index if not exists report_email_subscriptions_active_idx on report_email_subscriptions(active, report_type, cadence);
-create index if not exists report_email_subscriptions_email_idx on report_email_subscriptions(email);
-create index if not exists report_email_subscriptions_entity_idx on report_email_subscriptions(entity_id);
-create index if not exists report_subscription_events_subscription_idx on report_subscription_events(subscription_id);
-create index if not exists report_subscription_events_report_idx on report_subscription_events(report_run_id);
+create unique index if not exists report_email_subscriptions_global_unique
+  on public.report_email_subscriptions(email, report_type)
+  where entity_id is null;
+create unique index if not exists report_email_subscriptions_entity_unique
+  on public.report_email_subscriptions(email, report_type, entity_id)
+  where entity_id is not null;
+create index if not exists report_email_subscriptions_active_idx
+  on public.report_email_subscriptions(active, report_type, cadence);
+create index if not exists report_email_subscriptions_entity_idx
+  on public.report_email_subscriptions(entity_id);
+create index if not exists report_subscription_events_subscription_idx
+  on public.report_subscription_events(subscription_id, created_at desc);
+create index if not exists report_subscription_events_report_idx
+  on public.report_subscription_events(report_run_id);
 
-alter table report_email_subscriptions enable row level security;
-alter table report_subscription_events enable row level security;
+alter table public.report_email_subscriptions enable row level security;
+alter table public.report_subscription_events enable row level security;
 
-create policy "authenticated users read subscriptions" on report_email_subscriptions for select to authenticated using (
-  coalesce((select role from profiles where id=auth.uid()), '') in ('admin','ceo','director','subdirector')
-);
+revoke all on table public.report_email_subscriptions from public, anon, authenticated;
+revoke all on table public.report_subscription_events from public, anon, authenticated;
+grant all on table public.report_email_subscriptions to service_role;
+grant all on table public.report_subscription_events to service_role;
 
-create policy "ceo and admin manage subscriptions" on report_email_subscriptions for all to authenticated using (
-  coalesce((select role from profiles where id=auth.uid()), '') in ('admin','ceo')
-) with check (
-  coalesce((select role from profiles where id=auth.uid()), '') in ('admin','ceo')
-);
+drop policy if exists "authenticated users read subscriptions" on public.report_email_subscriptions;
+drop policy if exists "ceo and admin manage subscriptions" on public.report_email_subscriptions;
+drop policy if exists "authenticated users read events" on public.report_subscription_events;
+drop policy if exists "system can insert events" on public.report_subscription_events;
 
-create policy "authenticated users read events" on report_subscription_events for select to authenticated using (
-  coalesce((select role from profiles where id=auth.uid()), '') in ('admin','ceo','director','subdirector')
-);
-
-create policy "system can insert events" on report_subscription_events for insert with check (true);
+drop trigger if exists report_email_subscriptions_set_updated_at on public.report_email_subscriptions;
+create trigger report_email_subscriptions_set_updated_at
+before update on public.report_email_subscriptions
+for each row execute function public.set_updated_at();
