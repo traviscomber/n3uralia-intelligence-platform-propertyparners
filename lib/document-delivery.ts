@@ -111,92 +111,63 @@ export async function sendDocumentEmail(
 ) {
   const subject = `Business Intelligence Document: ${documentTitle}`
   
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 0; font-family: Calibri, 'Trebuchet MS', sans-serif; background-color: #f0f0f0;">
-  <table cellpadding="0" cellspacing="0" width="100%" style="width: 100%; border-collapse: collapse; background-color: #f0f0f0;">
-    <tr>
-      <td align="center" style="padding: 0;">
-        <table cellpadding="0" cellspacing="0" width="680" style="width: 680px; max-width: 100%; border-collapse: collapse; background-color: white;">
-          <!-- Logo Section -->
-          <tr>
-            <td bgcolor="#000000" align="center" style="background-color: #000000; padding: 30px 40px; text-align: center;">
-              <img src="https://www.ppartnersgroup.app/images/property-partners-logo.svg" alt="Property Partners" style="max-width: 400px; height: auto; display: block;">
-            </td>
-          </tr>
-          <!-- Header -->
-          <tr>
-            <td bgcolor="#000000" style="background-color: #000000; color: white; padding: 40px 40px; text-align: center; border-collapse: collapse;">
-              <h1 style="font-size: 26px; font-weight: bold; margin: 0 0 12px 0; line-height: 1.3; color: white;">${documentTitle}</h1>
-              <p style="font-size: 13px; margin: 0; color: #cccccc;">Período 2026-08</p>
-            </td>
-          </tr>
-          <!-- Content -->
-          <tr>
-            <td style="padding: 40px 40px; text-align: left; background-color: white;">
-              <p style="font-size: 16px; font-weight: bold; color: #000000; margin: 0 0 20px 0;">Buenos días,</p>
-              
-              <p style="font-size: 13px; color: #555555; margin: 0 0 30px 0; line-height: 1.8;">
-                Adjunto encontrarás el reporte integral ejecutivo correspondiente a este período. Este documento contiene análisis completo de desempeño, inteligencia de mercado y recomendaciones estratégicas.
-              </p>
+  const html = `<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f0f0; margin: 0; padding: 0;">
+  <tr>
+    <td align="center" style="padding: 20px;">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-collapse: collapse;">
+        <tr>
+          <td style="background-color: #000000; padding: 30px; text-align: center;">
+            <img src="https://www.ppartnersgroup.app/images/property-partners-logo.svg" alt="Property Partners" width="300" style="display: block; margin: 0 auto;">
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #000000; color: white; padding: 30px; text-align: center;">
+            <h2 style="font-family: Calibri, sans-serif; font-size: 24px; margin: 0 0 10px 0; color: white;">${documentTitle}</h2>
+            <p style="font-family: Calibri, sans-serif; font-size: 12px; margin: 0; color: #ccc;">Período 2026-08</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 30px; background-color: white;">
+            <p style="font-family: Calibri, sans-serif; font-size: 14px; font-weight: bold; color: #000; margin: 0 0 15px 0;">Buenos días,</p>
+            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 20px 0; line-height: 1.6;">Adjunto encontrarás el reporte integral ejecutivo correspondiente a este período. Este documento contiene análisis completo de desempeño, inteligencia de mercado y recomendaciones estratégicas.</p>
+            
+            <p style="font-family: Calibri, sans-serif; font-size: 13px; font-weight: bold; color: #1565C0; margin: 20px 0 10px 0;">Contenido del Reporte:</p>
+            <ul style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 20px 20px; padding: 0;">
+              <li style="margin: 5px 0;">Modelo de scoring con métricas de desempeño</li>
+              <li style="margin: 5px 0;">Tabla de evolución con 6 meses de datos</li>
+              <li style="margin: 5px 0;">Sistema de tráfico (Verde/Amarillo/Rojo)</li>
+              <li style="margin: 5px 0;">Análisis de cumplimiento vs objetivos</li>
+              <li style="margin: 5px 0;">Indicadores clave de negocio</li>
+            </ul>
 
-              <!-- Section 1 -->
-              <p style="font-size: 14px; font-weight: bold; color: #1565C0; margin: 30px 0 12px 0; text-transform: uppercase;">📊 Contenido del Reporte</p>
-              <p style="font-size: 13px; color: #555555; margin: 0 0 10px 0;">El reporte incluye:</p>
-              <ul style="margin: 10px 0 20px 20px; padding: 0; font-size: 13px; color: #555555;">
-                <li style="margin: 6px 0;">Modelo de scoring con métricas de desempeño (40/30/30)</li>
-                <li style="margin: 6px 0;">Tabla de evolución con 6 meses de datos históricos</li>
-                <li style="margin: 6px 0;">Sistema de tráfico (Verde/Amarillo/Rojo) para priorización</li>
-                <li style="margin: 6px 0;">Análisis de cumplimiento vs objetivos</li>
-                <li style="margin: 6px 0;">Indicadores clave de negocio y productividad</li>
-                <li style="margin: 6px 0;">Definiciones pendientes y transparencia operacional</li>
-              </ul>
+            <table width="100%" cellpadding="15" cellspacing="0" style="background-color: #fffbea; border-left: 3px solid #f39c12; margin: 20px 0; border-collapse: collapse;">
+              <tr>
+                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #333;">El reporte está adjunto como archivo HTML. Puedes abrirlo en cualquier navegador.</td>
+              </tr>
+            </table>
 
-              <!-- Attachment Note -->
-              <table cellpadding="15" cellspacing="0" width="100%" style="background-color: #fffbea; border: 1px solid #f39c12; margin: 25px 0; border-collapse: collapse;">
-                <tr>
-                  <td style="font-size: 12px; color: #333333;">
-                    <strong>📎 Documento Adjunto:</strong> El reporte está disponible como archivo HTML adjunto a este email. Puedes abrirlo directamente en cualquier navegador web o convertirlo a PDF si lo necesitas.
-                  </td>
-                </tr>
-              </table>
+            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 20px 0; line-height: 1.6;">Contáctanos si tienes preguntas sobre los datos o necesitas información adicional.</p>
 
-              <!-- Section 2 -->
-              <p style="font-size: 14px; font-weight: bold; color: #1565C0; margin: 30px 0 12px 0; text-transform: uppercase;">✓ Próximos Pasos</p>
-              <p style="font-size: 13px; color: #555555; margin: 0 0 30px 0; line-height: 1.7;">
-                Revisa el reporte y contáctanos si tienes preguntas sobre los datos, interpretación de métricas o necesitas información adicional.
-              </p>
-
-              <!-- Contact Info -->
-              <table cellpadding="0" cellspacing="0" width="100%" style="margin: 40px 0 0 0; padding-top: 25px; border-top: 1px solid #e0e0e0; border-collapse: collapse;">
-                <tr>
-                  <td style="font-size: 12px; color: #666666; padding: 15px 0 0 0;">
-                    <p style="margin: 0 0 5px 0; font-weight: bold;">Property Partners Intelligence</p>
-                    <p style="margin: 5px 0;">Email: <a href="mailto:info@ppartnersgroup.app" style="color: #1565C0; text-decoration: none;">info@ppartnersgroup.app</a></p>
-                    <p style="margin: 5px 0;">Web: <a href="https://www.ppartnersgroup.app" style="color: #1565C0; text-decoration: none;">www.ppartnersgroup.app</a></p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <!-- Footer -->
-          <tr>
-            <td bgcolor="#f0f0f0" align="center" style="background-color: #f0f0f0; padding: 30px 40px; text-align: center;">
-              <p style="font-size: 11px; color: #888888; margin: 5px 0;"><strong>© ${new Date().getFullYear()} Property Partners Group.</strong></p>
-              <p style="font-size: 11px; color: #888888; margin: 5px 0;">Todos los derechos reservados. Información confidencial.</p>
-              <p style="font-size: 10px; color: #888888; margin: 10px 0 0 0;">Este email contiene información confidencial destinada exclusivamente a su destinatario.</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e0e0e0; margin-top: 20px; padding-top: 20px; border-collapse: collapse;">
+              <tr>
+                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #666; padding-top: 15px;">
+                  <p style="margin: 0 0 5px 0; font-weight: bold;">Property Partners Intelligence</p>
+                  <p style="margin: 3px 0;"><a href="mailto:info@ppartnersgroup.app" style="color: #1565C0; text-decoration: none;">info@ppartnersgroup.app</a></p>
+                  <p style="margin: 3px 0;"><a href="https://www.ppartnersgroup.app" style="color: #1565C0; text-decoration: none;">www.ppartnersgroup.app</a></p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #f0f0f0; padding: 20px; text-align: center; font-family: Calibri, sans-serif; font-size: 10px; color: #888;">
+            <p style="margin: 3px 0;">© ${new Date().getFullYear()} Property Partners Group. Todos los derechos reservados.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`
   
   const text = `${documentTitle}\nPeríodo 2026-08\n\nBuenos días,\n\nAdjunto encontrarás el reporte integral ejecutivo correspondiente a este período.\n\nCONTENIDO DEL REPORTE:\n- Modelo de scoring con métricas de desempeño (40/30/30)\n- Tabla de evolución con 6 meses de datos históricos\n- Sistema de tráfico (Verde/Amarillo/Rojo) para priorización\n- Análisis de cumplimiento vs objetivos\n- Indicadores clave de negocio y productividad\n- Definiciones pendientes y transparencia operacional\n\nEl reporte está disponible como archivo HTML adjunto a este email.\n\nPróximos Pasos:\nRevisa el reporte y contáctanos si tienes preguntas.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app\nwww.ppartnersgroup.app\n\n© ${new Date().getFullYear()} Property Partners Group. Todos los derechos reservados.`
   
