@@ -8,11 +8,16 @@ import {
   type ValuationComparable,
   type ValuationSubject,
 } from '@/lib/valuation-contract'
+import {
+  evaluatePropertyCondition,
+  type PropertyConditionAssessment,
+} from '@/lib/valuation-condition'
 
 type CreateCasePayload = {
   subject: ValuationSubject
   comparables: ValuationComparable[]
   qualitativeFactors: QualitativeFactors
+  conditionAssessment?: PropertyConditionAssessment | null
   justification?: string
   propertyAssignmentId?: string | null
   sourcePropertyId?: string | null
@@ -24,7 +29,7 @@ export async function GET() {
     const supabase = await createClient()
     let query = supabase
       .from('valuation_cases')
-      .select('id,status,valuation_date,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,version_number,created_at,updated_at')
+      .select('id,status,valuation_date,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,condition_status,condition_score,condition_version,version_number,created_at,updated_at')
       .order('updated_at', { ascending: false })
       .limit(50)
 
@@ -75,10 +80,30 @@ export async function POST(request: Request) {
     }
 
     const result = calculateContractualValuation(payload.subject, payload.comparables, payload.qualitativeFactors)
-    const reportPayload = buildValuationReportPayload(payload.subject, payload.comparables, payload.qualitativeFactors, result)
+    const conditionResult = payload.conditionAssessment
+      ? evaluatePropertyCondition(payload.conditionAssessment)
+      : null
+    const reportPayload = {
+      ...buildValuationReportPayload(payload.subject, payload.comparables, payload.qualitativeFactors, result),
+      conditionAssessment: payload.conditionAssessment ?? null,
+      conditionResult,
+    }
     const status = 'draft' as const
-    const evidence = { comparableCount: result.comparableCount, assignment: assignmentEvidence }
-    const assumptions = { selectedComparablesOnly: true, sourceAssignmentVerified: Boolean(assignmentEvidence) }
+    const evidence = {
+      comparableCount: result.comparableCount,
+      assignment: assignmentEvidence,
+      conditionEvidenceCoveragePct: conditionResult?.evidenceCoveragePct ?? null,
+    }
+    const assumptions = {
+      selectedComparablesOnly: true,
+      sourceAssignmentVerified: Boolean(assignmentEvidence),
+      conditionDoesNotApplyAutomaticEconomicAdjustment: true,
+    }
+    const warnings = [
+      ...(result.comparableCount < 3 ? ['Se requieren al menos tres comparables aceptados para solicitar revisión.'] : []),
+      ...(conditionResult?.status === 'not_evaluable' ? ['El estado de la propiedad no es evaluable con la evidencia disponible.'] : []),
+      ...(conditionResult?.blockers ?? []).map((blocker) => `Estado de propiedad: ${blocker}`),
+    ]
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
@@ -103,6 +128,8 @@ export async function POST(request: Request) {
         construction_year: payload.subject.constructionYear ?? null,
         floor_number: payload.subject.floorNumber ?? null,
         qualitative_factors: payload.qualitativeFactors,
+        condition_assessment: payload.conditionAssessment ?? {},
+        condition_result: conditionResult ?? {},
         adjustment_total_pct: result.qualitativeAdjustmentPct,
         base_value_uf: result.baseValueUf,
         estimated_value_uf: result.adjustedValueUf,
@@ -112,11 +139,11 @@ export async function POST(request: Request) {
         methodology_version: 'valuation-contract-v1',
         evidence,
         assumptions,
-        warnings: result.comparableCount < 3 ? ['Se requieren al menos tres comparables aceptados para solicitar revisión.'] : [],
+        warnings,
         justification: payload.justification || result.justification,
         report_payload: { ...reportPayload, evidence, assumptions },
       })
-      .select('id,version_number')
+      .select('id,version_number,condition_status,condition_score,condition_version')
       .single()
 
     if (caseError || !valuationCase) {
@@ -176,10 +203,22 @@ export async function POST(request: Request) {
         ? 'Caso creado desde una propiedad asignada y verificada. La revisión debe solicitarse desde el expediente canónico.'
         : 'Caso creado como borrador. La revisión debe solicitarse desde el expediente canónico.',
       actor_id: scope.profileId,
-      metadata: { comparableCount: result.comparableCount, assignment: assignmentEvidence },
+      metadata: {
+        comparableCount: result.comparableCount,
+        assignment: assignmentEvidence,
+        conditionStatus: valuationCase.condition_status,
+        conditionScore: valuationCase.condition_score,
+        conditionVersion: valuationCase.condition_version,
+      },
     })
 
-    return NextResponse.json({ caseId: valuationCase.id, result, status, assignmentVerified: Boolean(assignmentEvidence) }, { status: 201 })
+    return NextResponse.json({
+      caseId: valuationCase.id,
+      result,
+      conditionResult,
+      status,
+      assignmentVerified: Boolean(assignmentEvidence),
+    }, { status: 201 })
   } catch (error) {
     return accessErrorResponse(error)
   }
