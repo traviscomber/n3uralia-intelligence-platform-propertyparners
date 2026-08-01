@@ -56,8 +56,11 @@ async function main() {
   assert.match(comparableRoute, /existingKeys/)
   assert.match(comparableRoute, /seenKeys/)
   assert.match(comparableRoute, /duplicatesSkipped/)
-  assert.match(comparableRoute, /estimated_value_uf:\s*null/)
   assert.match(comparableRoute, /match_status:\s*['"]accepted['"]/)
+  assert.match(comparableRoute, /canApprove:\s*access\.role === ['"]ceo['"]/)
+  assert.match(comparableRoute, /canIssue:\s*access\.role === ['"]ceo['"]/)
+  assert.doesNotMatch(comparableRoute, /canApprove:\s*ELEVATED_ROLES\.includes/)
+  assert.doesNotMatch(comparableRoute, /canIssue:\s*ELEVATED_ROLES\.includes/)
 
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/comparables/)
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/workflow/)
