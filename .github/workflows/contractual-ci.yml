@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: contractual-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   quality:
@@ -40,6 +40,17 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Audit legacy code
+        run: pnpm audit:legacy
+
+      - name: Upload legacy audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-code-audit
+          path: artifacts/legacy-code-audit.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Lint
         run: pnpm lint
