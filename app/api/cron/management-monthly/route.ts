@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getCronAuthorizationFailure, runDueManagementReports } from '@/lib/management-monthly-report'
+import { runDueManagementReports } from '@/lib/management-monthly-report'
+import { getCronAuthorizationFailure } from '@/lib/management-report-schedule'
 
 export async function GET(request: Request) {
   const authorizationFailure = getCronAuthorizationFailure(
