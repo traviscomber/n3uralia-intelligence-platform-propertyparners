@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { apartmentOfferWeightedUfM2, calculateDeterministicValuation, houseWeightedUfM2 } from '../lib/valuation-model'
 import { calculateContractualValuation, similarityScoreToWeight } from '../lib/valuation-contract'
 
@@ -38,16 +39,46 @@ const weighted = calculateContractualValuation(
     propertyType: 'Departamento',
     address: 'Caso de prueba',
     neighborhood: 'Vitacura',
+    latitude: -33.38,
+    longitude: -70.57,
     usefulAreaM2: 100,
     terraceAreaM2: 0,
   },
   [
-    { id: 'a', sourceType: 'Portal', sourceReference: 'a', address: 'a', neighborhood: 'Vitacura', propertyType: 'Departamento', priceUf: 5000, priceUfM2: 50, similarityScore: 0.95, selected: true, adjustmentPct: 0 },
-    { id: 'b', sourceType: 'Portal', sourceReference: 'b', address: 'b', neighborhood: 'Vitacura', propertyType: 'Departamento', priceUf: 7000, priceUfM2: 70, similarityScore: 0.78, selected: true, adjustmentPct: 0 },
-    { id: 'c', sourceType: 'Portal', sourceReference: 'c', address: 'c', neighborhood: 'Vitacura', propertyType: 'Departamento', priceUf: 9000, priceUfM2: 90, similarityScore: 0.62, selected: true, adjustmentPct: 0 },
+    { id: 'a', sourceType: 'Portal', sourceReference: 'a', address: 'a', neighborhood: 'Vitacura', propertyType: 'Departamento', transactionDate: '2026-01-10', distanceMeters: 300, priceUf: 5000, priceUfM2: 50, similarityScore: 0.95, selected: true, adjustmentPct: 0 },
+    { id: 'b', sourceType: 'Portal', sourceReference: 'b', address: 'b', neighborhood: 'Vitacura', propertyType: 'Departamento', transactionDate: '2026-02-10', distanceMeters: 500, priceUf: 7000, priceUfM2: 70, similarityScore: 0.78, selected: true, adjustmentPct: 0 },
+    { id: 'c', sourceType: 'Portal', sourceReference: 'c', address: 'c', neighborhood: 'Vitacura', propertyType: 'Departamento', transactionDate: '2026-03-10', distanceMeters: 700, priceUf: 9000, priceUfM2: 90, similarityScore: 0.62, selected: true, adjustmentPct: 0 },
   ],
   { condition: 0, remodeling: 0, orientation: 0, floor: 0, light: 0, view: 0, noise: 0, commercialPotential: 0 },
 )
 assert.equal(weighted.baseUfM2, 70)
 
-console.log('Valuation model verified against historical formulas and the canonical 0-1 similarity scale.')
+const valuationPage = readFileSync('app/dashboard/valuation/page.tsx', 'utf8')
+const valuationApi = readFileSync('app/api/valuation/cases/route.ts', 'utf8')
+const valuationReport = readFileSync('components/valuation/valuation-evidence-report.tsx', 'utf8')
+const marketPage = readFileSync('app/dashboard/market/page.tsx', 'utf8')
+const marketExport = readFileSync('app/api/market/export/route.ts', 'utf8')
+const marketPrint = readFileSync('app/dashboard/market/export/page.tsx', 'utf8')
+const scopeMatrix = readFileSync('docs/CONTRACTUAL_SCOPE_MATRIX.md', 'utf8')
+
+assert.match(valuationPage, /Latitud/, 'Valuation form must expose subject latitude.')
+assert.match(valuationPage, /Longitud/, 'Valuation form must expose subject longitude.')
+assert.match(valuationPage, /Fecha de transacción/, 'Valuation form must expose comparable transaction date.')
+assert.match(valuationPage, /Distancia al sujeto/, 'Valuation form must expose comparable distance.')
+assert.match(valuationApi, /distance_meters: item\.distanceMeters \?\? null/, 'Valuation API must persist comparable distance.')
+assert.match(valuationApi, /transaction_date: item\.transactionDate \?\? null/, 'Valuation API must persist transaction date.')
+assert.match(valuationReport, /transaction_date/, 'Printable valuation report must include transaction date.')
+assert.match(valuationReport, /distance_meters/, 'Printable valuation report must include distance.')
+assert.match(marketExport, /requireCapability\('market\.read'\)/, 'Market exports must require centralized authorization.')
+assert.match(marketExport, /XLSX\.utils\.book_new/, 'Market export must generate XLSX from the operational dataset.')
+assert.match(marketExport, /market_current_listings/, 'Market export must use operational listings.')
+assert.match(marketExport, /market_transactions/, 'Market export must use persisted transactions.')
+assert.match(marketPage, /dataset=summary&format=csv/, 'Market dashboard must expose CSV export.')
+assert.match(marketPage, /dataset=listings&format=xlsx/, 'Market dashboard must expose XLSX export.')
+assert.match(marketPage, /\/dashboard\/market\/export/, 'Market dashboard must expose printable report.')
+assert.match(marketPrint, /Imprimir o guardar PDF/, 'Market report must expose browser PDF output.')
+assert.doesNotMatch(scopeMatrix, /Estado inicial/, 'Contractual matrix must not retain historical initial-state labels.')
+assert.match(scopeMatrix, /MKT-15/, 'Contractual matrix must track export completion explicitly.')
+assert.match(scopeMatrix, /VAL-01/, 'Contractual matrix must track objective valuation fields explicitly.')
+
+console.log('Valuation model and canonical delivery gaps 1-3 verified.')
