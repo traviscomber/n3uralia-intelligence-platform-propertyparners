@@ -1,6 +1,9 @@
-export const CANONICAL_MANAGEMENT_FORMULA_VERSION = 1
+export const CANONICAL_MANAGEMENT_FORMULA_VERSION = 2
+export const HISTORICAL_MANAGEMENT_FORMULA_VERSION = 1
 
 export type ScoreValue = number | null
+export type ScoreEvaluationState = 'evaluable' | 'not_evaluable' | 'inconsistent_source'
+export type CanonicalScoringMode = 'canonical_v2' | 'historical_v1'
 export type ManagementCategory =
   | 'Estrella'
   | 'Potencial'
@@ -13,6 +16,7 @@ export type ManagementCategory =
 export type ScoreComponent = {
   score: ScoreValue
   evaluable: boolean
+  evaluationState: ScoreEvaluationState
   reason?: string
   numerator?: number | null
   denominator?: number | null
@@ -39,12 +43,15 @@ export type CanonicalManagementInputs = {
 }
 
 export type CanonicalScoringPolicy = {
-  conversionCap: 'formula' | '100'
+  mode?: CanonicalScoringMode
+  /** @deprecated Use mode. `formula` selects the historical v1 replay; `100` selects canonical v2. */
+  conversionCap?: 'formula' | '100'
   specializedPriority?: Array<'Captador' | 'Vendedor' | 'Perseverante'>
 }
 
 export type CanonicalManagementResult = {
   formulaVersion: number
+  scoringMode: CanonicalScoringMode
   components: {
     portfolio: {
       stock: ScoreComponent
@@ -79,57 +86,149 @@ export type CanonicalManagementResult = {
   }
 }
 
-const round = (value: number, decimals = 4) => Number(value.toFixed(decimals))
-const average = (values: ScoreValue[]) => {
+const legacyRound = (value: number, decimals = 4) => Number(value.toFixed(decimals))
+const clampScore = (value: number) => Math.min(Math.max(value, 0), 100)
+
+export function roundScoreForDisplay(value: ScoreValue, decimals = 1): ScoreValue {
+  if (value === null) return null
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 6) {
+    throw new RangeError('decimals must be an integer between 0 and 6')
+  }
+  return Number(value.toFixed(decimals))
+}
+
+function resolveMode(policy: CanonicalScoringPolicy): CanonicalScoringMode {
+  if (policy.mode) return policy.mode
+  return policy.conversionCap === 'formula' ? 'historical_v1' : 'canonical_v2'
+}
+
+function finalizeScore(value: number, mode: CanonicalScoringMode, capAt100: boolean): number {
+  if (mode === 'canonical_v2') return clampScore(value)
+  return legacyRound(capAt100 ? Math.min(value, 100) : value)
+}
+
+function average(values: ScoreValue[], mode: CanonicalScoringMode): ScoreValue {
   const valid = values.filter((value): value is number => value !== null)
-  return valid.length === values.length ? round(valid.reduce((sum, value) => sum + value, 0) / valid.length) : null
+  if (valid.length !== values.length) return null
+  const value = valid.reduce((sum, item) => sum + item, 0) / valid.length
+  return mode === 'historical_v1' ? legacyRound(value) : value
 }
 
-function ratioScore(numerator: number | null, denominator: number | null, capAt100 = false): ScoreComponent {
-  if (numerator === null || denominator === null) return { score: null, evaluable: false, reason: 'missing_source', numerator, denominator }
-  if (denominator <= 0) return { score: null, evaluable: false, reason: 'zero_or_negative_denominator', numerator, denominator }
-  const raw = (numerator / denominator) * 100
-  return { score: round(capAt100 ? Math.min(raw, 100) : raw), evaluable: true, numerator, denominator }
-}
-
-function complementScore(stale: number | null, total: number | null): ScoreComponent {
-  if (stale === null || total === null) return { score: null, evaluable: false, reason: 'missing_source', numerator: stale, denominator: total }
-  if (total <= 0) return { score: null, evaluable: false, reason: 'zero_or_negative_denominator', numerator: stale, denominator: total }
-  return { score: round((1 - stale / total) * 100), evaluable: true, numerator: stale, denominator: total }
-}
-
-function stockScore(stock: number | null, target: number | null): ScoreComponent {
-  if (stock === null || target === null) return { score: null, evaluable: false, reason: 'missing_source', numerator: stock, denominator: target }
-  if (target === 0) return { score: 0, evaluable: false, reason: 'zero_target_operational_score_zero', numerator: stock, denominator: target }
-  if (target < 0) return { score: null, evaluable: false, reason: 'negative_target', numerator: stock, denominator: target }
-  return { score: round(Math.min(stock / target, 1) * 100), evaluable: true, numerator: stock, denominator: target }
-}
-
-function pricingScore(inputs: CanonicalManagementInputs): ScoreComponent {
-  const counts = [inputs.pricingAtOrBelow105, inputs.pricingBetween105And110, inputs.pricingAbove110]
-  if (counts.some((value) => value === null)) return { score: null, evaluable: false, reason: 'missing_source' }
-  const [best, middle, high] = counts as number[]
-  const total = best + middle + high
-  if (total <= 0) return { score: null, evaluable: false, reason: 'zero_eligible_properties', numerator: 0, denominator: total }
-  return { score: round((best * 100 + middle * 50) / total), evaluable: true, numerator: best * 100 + middle * 50, denominator: total }
-}
-
-function closeRateScore(inputs: CanonicalManagementInputs, policy: CanonicalScoringPolicy): ScoreComponent {
-  const closings = inputs.conversionClosings
-  const leads = inputs.conversionLeadBase
-  if (closings === null || leads === null) return { score: null, evaluable: false, reason: 'missing_source', numerator: closings, denominator: leads }
-  if (leads <= 0) return { score: null, evaluable: false, reason: 'zero_or_negative_denominator', numerator: closings, denominator: leads }
-  const conversionPercent = (closings / leads) * 100
-  const formulaScore = Math.min(conversionPercent, 2.86) * 35
+function missingSource(numerator?: number | null, denominator?: number | null): ScoreComponent {
   return {
-    score: round(policy.conversionCap === '100' ? Math.min(formulaScore, 100) : formulaScore),
-    evaluable: true,
-    numerator: closings,
-    denominator: leads,
+    score: null,
+    evaluable: false,
+    evaluationState: 'inconsistent_source',
+    reason: 'missing_source',
+    numerator,
+    denominator,
   }
 }
 
-function resolveClassification(scores: { portfolio: ScoreValue; followUp: ScoreValue; conversion: ScoreValue }, policy: CanonicalScoringPolicy): CanonicalManagementResult['classification'] {
+function invalidSource(reason: string, numerator?: number | null, denominator?: number | null): ScoreComponent {
+  return {
+    score: null,
+    evaluable: false,
+    evaluationState: 'inconsistent_source',
+    reason,
+    numerator,
+    denominator,
+  }
+}
+
+function notEvaluable(reason: string, numerator?: number | null, denominator?: number | null, score: ScoreValue = null): ScoreComponent {
+  return {
+    score,
+    evaluable: false,
+    evaluationState: 'not_evaluable',
+    reason,
+    numerator,
+    denominator,
+  }
+}
+
+function evaluated(score: number, numerator?: number | null, denominator?: number | null): ScoreComponent {
+  return {
+    score,
+    evaluable: true,
+    evaluationState: 'evaluable',
+    numerator,
+    denominator,
+  }
+}
+
+function ratioScore(
+  numerator: number | null,
+  denominator: number | null,
+  mode: CanonicalScoringMode,
+  capAt100 = false,
+): ScoreComponent {
+  if (numerator === null || denominator === null) return missingSource(numerator, denominator)
+  if (numerator < 0) return invalidSource('negative_numerator', numerator, denominator)
+  if (denominator === 0) return notEvaluable('zero_denominator', numerator, denominator)
+  if (denominator < 0) return invalidSource('negative_denominator', numerator, denominator)
+  const raw = (numerator / denominator) * 100
+  return evaluated(finalizeScore(raw, mode, capAt100), numerator, denominator)
+}
+
+function complementScore(stale: number | null, total: number | null, mode: CanonicalScoringMode): ScoreComponent {
+  if (stale === null || total === null) return missingSource(stale, total)
+  if (stale < 0) return invalidSource('negative_numerator', stale, total)
+  if (total === 0) return notEvaluable('zero_denominator', stale, total)
+  if (total < 0) return invalidSource('negative_denominator', stale, total)
+  if (stale > total) return invalidSource('numerator_exceeds_denominator', stale, total)
+  return evaluated(finalizeScore((1 - stale / total) * 100, mode, true), stale, total)
+}
+
+function targetScore(
+  actual: number | null,
+  target: number | null,
+  mode: CanonicalScoringMode,
+): ScoreComponent {
+  if (actual === null || target === null) return missingSource(actual, target)
+  if (actual < 0) return invalidSource('negative_numerator', actual, target)
+  if (target === 0) {
+    return mode === 'historical_v1'
+      ? notEvaluable('zero_target_historical_operational_zero', actual, target, 0)
+      : notEvaluable('zero_target', actual, target)
+  }
+  if (target < 0) return invalidSource('negative_target', actual, target)
+  return evaluated(finalizeScore((actual / target) * 100, mode, true), actual, target)
+}
+
+function pricingScore(inputs: CanonicalManagementInputs, mode: CanonicalScoringMode): ScoreComponent {
+  const counts = [inputs.pricingAtOrBelow105, inputs.pricingBetween105And110, inputs.pricingAbove110]
+  if (counts.some((value) => value === null)) return missingSource()
+  const [best, middle, high] = counts as number[]
+  if (counts.some((value) => value < 0)) return invalidSource('negative_band_count')
+  const total = best + middle + high
+  if (total === 0) return notEvaluable('zero_eligible_properties', 0, total)
+  return evaluated(finalizeScore((best * 100 + middle * 50) / total, mode, true), best * 100 + middle * 50, total)
+}
+
+function closeRateScore(
+  inputs: CanonicalManagementInputs,
+  mode: CanonicalScoringMode,
+): ScoreComponent {
+  const closings = inputs.conversionClosings
+  const leads = inputs.conversionLeadBase
+  if (closings === null || leads === null) return missingSource(closings, leads)
+  if (closings < 0) return invalidSource('negative_numerator', closings, leads)
+  if (leads === 0) return notEvaluable('zero_denominator', closings, leads)
+  if (leads < 0) return invalidSource('negative_denominator', closings, leads)
+
+  const conversionPercent = (closings / leads) * 100
+  const score = mode === 'historical_v1'
+    ? Math.min(conversionPercent, 2.86) * 35
+    : Math.min(conversionPercent / 2.86, 1) * 100
+
+  return evaluated(finalizeScore(score, mode, mode === 'canonical_v2'), closings, leads)
+}
+
+function resolveClassification(
+  scores: { portfolio: ScoreValue; followUp: ScoreValue; conversion: ScoreValue },
+  policy: CanonicalScoringPolicy,
+): CanonicalManagementResult['classification'] {
   const values = [scores.portfolio, scores.followUp, scores.conversion]
   const evaluable = values.filter((value): value is number => value !== null)
   if (evaluable.length < 2) return { value: null, status: 'blocked', candidates: [], reason: 'insufficient_evaluable_dimensions' }
@@ -163,42 +262,49 @@ function resolveClassification(scores: { portfolio: ScoreValue; followUp: ScoreV
 
 export function calculateCanonicalManagementScores(
   inputs: CanonicalManagementInputs,
-  policy: CanonicalScoringPolicy = { conversionCap: 'formula' },
+  policy: CanonicalScoringPolicy = {},
 ): CanonicalManagementResult {
+  const mode = resolveMode(policy)
+  const formulaVersion = mode === 'canonical_v2'
+    ? CANONICAL_MANAGEMENT_FORMULA_VERSION
+    : HISTORICAL_MANAGEMENT_FORMULA_VERSION
+
   const portfolio = {
-    stock: stockScore(inputs.stock, inputs.stockTarget),
-    requirements: ratioScore(inputs.requirements, inputs.requirementsReference, true),
-    pricing: pricingScore(inputs),
+    stock: targetScore(inputs.stock, inputs.stockTarget, mode),
+    requirements: ratioScore(inputs.requirements, inputs.requirementsReference, mode, true),
+    pricing: pricingScore(inputs, mode),
     score: null as ScoreValue,
   }
-  portfolio.score = average([portfolio.stock.score, portfolio.requirements.score, portfolio.pricing.score])
+  portfolio.score = average([portfolio.stock.score, portfolio.requirements.score, portfolio.pricing.score], mode)
 
   const followUp = {
-    classified: ratioScore(inputs.classifiedLeads, inputs.activeLeads),
-    managed90: complementScore(inputs.stale90Leads, inputs.activeLeads),
-    managed15A: complementScore(inputs.stale15ALeads, inputs.activeALeads),
+    classified: ratioScore(inputs.classifiedLeads, inputs.activeLeads, mode, mode === 'canonical_v2'),
+    managed90: complementScore(inputs.stale90Leads, inputs.activeLeads, mode),
+    managed15A: complementScore(inputs.stale15ALeads, inputs.activeALeads, mode),
     score: null as ScoreValue,
   }
-  followUp.score = average([followUp.classified.score, followUp.managed90.score, followUp.managed15A.score])
+  followUp.score = average([followUp.classified.score, followUp.managed90.score, followUp.managed15A.score], mode)
 
   const conversion = {
-    visitsToTarget: inputs.visitsTarget === 0
-      ? { score: 0, evaluable: false, reason: 'zero_target_operational_score_zero', numerator: inputs.realizedVisits, denominator: inputs.visitsTarget }
-      : ratioScore(inputs.realizedVisits, inputs.visitsTarget, true),
-    visitsPerformed: ratioScore(inputs.realizedVisits, inputs.scheduledVisits),
-    closeRate: closeRateScore(inputs, policy),
+    visitsToTarget: targetScore(inputs.realizedVisits, inputs.visitsTarget, mode),
+    visitsPerformed: ratioScore(inputs.realizedVisits, inputs.scheduledVisits, mode, mode === 'canonical_v2'),
+    closeRate: closeRateScore(inputs, mode),
     score: null as ScoreValue,
   }
-  conversion.score = average([conversion.visitsToTarget.score, conversion.visitsPerformed.score, conversion.closeRate.score])
+  conversion.score = average([conversion.visitsToTarget.score, conversion.visitsPerformed.score, conversion.closeRate.score], mode)
 
-  const management = portfolio.score !== null && followUp.score !== null && conversion.score !== null
-    ? round(portfolio.score * 0.4 + followUp.score * 0.3 + conversion.score * 0.3)
+  const managementRaw = portfolio.score !== null && followUp.score !== null && conversion.score !== null
+    ? portfolio.score * 0.4 + followUp.score * 0.3 + conversion.score * 0.3
     : null
+  const management = managementRaw === null
+    ? null
+    : mode === 'historical_v1' ? legacyRound(managementRaw) : managementRaw
 
   const scores = { portfolio: portfolio.score, followUp: followUp.score, conversion: conversion.score, management }
 
   return {
-    formulaVersion: CANONICAL_MANAGEMENT_FORMULA_VERSION,
+    formulaVersion,
+    scoringMode: mode,
     components: { portfolio, followUp, conversion },
     scores,
     classification: resolveClassification(scores, policy),
