@@ -2,10 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCopilotRole } from '@/lib/copilot-authorization'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabaseClient() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing Supabase configuration')
+  }
+  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    const { data: schedules, error } = await supabase
+    const { data: schedules, error } = await getSupabaseClient()
       .from('document_schedules')
       .select(`
         *,
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create schedule
-    const { data: schedule, error: scheduleError } = await supabase
+    const { data: schedule, error: scheduleError } = await getSupabaseClient()
       .from('document_schedules')
       .insert({
         document_id,
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
         active: true,
       }))
 
-      const { error: recipientError } = await supabase
+      const { error: recipientError } = await getSupabaseClient()
         .from('document_recipients')
         .insert(recipients)
 

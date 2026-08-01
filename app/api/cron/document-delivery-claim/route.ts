@@ -99,8 +99,10 @@ export async function POST(request: Request) {
       }
     )
   } catch (error) {
-    console.error('[Document Delivery Claim] Cron error:', error)
-    return new NextResponse(JSON.stringify({ error: 'Internal server error', details: String(error) }), {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorDetails = error instanceof Error ? error.stack : JSON.stringify(error)
+    console.error('[Document Delivery Claim] Cron error:', errorMessage, errorDetails)
+    return new NextResponse(JSON.stringify({ error: 'Internal server error', details: errorMessage }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
