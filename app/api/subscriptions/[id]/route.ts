@@ -13,7 +13,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireCopilotRole(['ceo', 'director'], { request })
+    await requireCopilotRole(['ceo', 'director'])
 
     const { id } = await params
     const body = await request.json()
@@ -41,7 +41,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireCopilotRole(['ceo', 'director'], { request })
+    await requireCopilotRole(['ceo', 'director'])
 
     const { id } = await params
 
