@@ -57,10 +57,11 @@ async function main() {
   assert.match(comparableRoute, /seenKeys/)
   assert.match(comparableRoute, /duplicatesSkipped/)
   assert.match(comparableRoute, /match_status:\s*['"]accepted['"]/)
-  assert.match(comparableRoute, /canApprove:\s*access\.role === ['"]ceo['"]/)
-  assert.match(comparableRoute, /canIssue:\s*access\.role === ['"]ceo['"]/)
-  assert.doesNotMatch(comparableRoute, /canApprove:\s*ELEVATED_ROLES\.includes/)
-  assert.doesNotMatch(comparableRoute, /canIssue:\s*ELEVATED_ROLES\.includes/)
+  assert.match(comparableRoute, /assertProfileVisible\(scope, valuationCase\.requested_by\)/)
+  assert.match(comparableRoute, /scope\.capabilities\.includes\(['"]valuations\.office\.review['"]\)/)
+  assert.match(comparableRoute, /scope\.capabilities\.includes\(['"]valuations\.global\.approve['"]\)/)
+  assert.doesNotMatch(comparableRoute, /ELEVATED_ROLES/)
+  assert.doesNotMatch(comparableRoute, /canOperateCase/)
 
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/comparables/)
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/workflow/)
@@ -76,7 +77,7 @@ async function main() {
     assert.equal(await exists(route), false, `Obsolete valuation route still exists: ${route}`)
   }
 
-  console.log('Valuation workflow verified: CEO-only approval and issuance, office review, evidence rules and audit trail.')
+  console.log('Valuation workflow verified: CEO-only approval, office-scoped review, evidence rules and audit trail.')
 }
 
 main().catch((error) => {
