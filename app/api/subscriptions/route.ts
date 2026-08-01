@@ -12,7 +12,7 @@ export const runtime = 'nodejs'
 // GET /api/subscriptions - List all email subscriptions
 export async function GET(request: NextRequest) {
   try {
-    await requireCopilotRole(['ceo', 'director'], { request })
+    await requireCopilotRole(['ceo', 'director'])
 
     const { searchParams } = new URL(request.url)
     const reportType = searchParams.get('reportType')
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 // POST /api/subscriptions - Add new email subscription
 export async function POST(request: NextRequest) {
   try {
-    await requireCopilotRole(['ceo', 'director'], { request })
+    await requireCopilotRole(['ceo', 'director'])
 
     const body = await request.json()
     const { email, reportType, cadence, recipientName, recipientRole, entityId, notes } = body

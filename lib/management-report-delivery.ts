@@ -196,7 +196,7 @@ export async function runManagementReportDelivery(options: DeliveryOptions = {})
     } catch (error) {
       const permanent = isPermanent(error) || distribution.attempt_count >= MAX_ATTEMPTS
       const nextAttemptAt = new Date(
-        now.getTime() + (permanent ? 365 * 24 * 60 * 60 * 1000 : managementReportRetryDelayMs(distribution.attempt_count)),
+        now.getTime() + (permanent ? 365 * 24 * 60 * 60 * 1000 : managementReportRetryDelayMs),
       ).toISOString()
       const message = errorMessage(error)
       const update = await supabase
