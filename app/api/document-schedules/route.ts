@@ -29,10 +29,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ schedules })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unauthorized'
-    return NextResponse.json(
-      { error: message },
-      { status: message === 'Unauthorized' ? 401 : 500 }
-    )
+    const statusCode = message === 'Unauthorized' ? 401 : 500
+    return NextResponse.json({ error: message }, { status: statusCode })
   }
 }
 
@@ -100,9 +98,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ schedule }, { status: 201 })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Server error'
-    return NextResponse.json(
-      { error: message },
-      { status: message === 'Unauthorized' ? 401 : 500 }
-    )
+    const statusCode = message === 'Unauthorized' ? 401 : 500
+    return NextResponse.json({ error: message }, { status: statusCode })
   }
 }

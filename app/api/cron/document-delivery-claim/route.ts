@@ -88,9 +88,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('[Document Delivery Claim] Cron error:', error)
-    return Response.json(
-      { error: 'Internal server error', details: String(error) },
-      { status: 500 }
-    )
+    return Response.json({ error: 'Internal server error', details: String(error) }, { status: 500 })
   }
 }

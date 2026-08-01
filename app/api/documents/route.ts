@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ documents })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unauthorized'
-    return NextResponse.json({ error: message }, { status: error instanceof Error && message === 'Unauthorized' ? 401 : 500 })
+    const statusCode = error instanceof Error && message === 'Unauthorized' ? 401 : 500
+    return NextResponse.json({ error: message }, { status: statusCode })
   }
 }
 
