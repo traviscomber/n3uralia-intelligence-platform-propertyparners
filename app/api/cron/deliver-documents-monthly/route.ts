@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server'
 import { getCronAuthorizationFailure } from '@/lib/management-report-schedule'
 import {
   getScheduledDocuments,
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
   // Verify CRON_SECRET
   const authFailure = getCronAuthorizationFailure(request)
   if (authFailure) {
-    return Response.json({ error: 'Unauthorized', details: authFailure }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized', details: authFailure }, { status: 401 })
   }
 
   try {
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return Response.json({
+    return NextResponse.json({
       configured: true,
       schedules: monthlySchedules.length,
       distributionsCreated,
@@ -52,6 +53,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('[Document Delivery] Cron error:', error)
-    return Response.json({ error: 'Internal server error', details: String(error) }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 })
   }
 }
