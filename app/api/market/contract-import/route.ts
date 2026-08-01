@@ -1,26 +1,20 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const sourceSystems = ['portal_inmobiliario','cbrs','client','kml','manual_import'] as const
-const datasetKinds = ['portal_apartments','portal_houses','portal_projects','registered_sales','client_sales','kml_neighborhoods'] as const
-
-type Row = Record<string, unknown>
-type SourceSystem = typeof sourceSystems[number]
-type DatasetKind = typeof datasetKinds[number]
+import {
+  isSourceDatasetCompatible,
+  marketDatasetKinds as datasetKinds,
+  marketSourceSystems as sourceSystems,
+  validateMarketContractRow,
+  type MarketContractRow as Row,
+  type MarketDatasetKind as DatasetKind,
+  type MarketSourceSystem as SourceSystem,
+} from '@/lib/market-contract-import'
 
 function clean(value: unknown) { return value == null ? '' : String(value).trim() }
 function numeric(value: unknown) { const n = Number(value); return Number.isFinite(n) ? n : null }
 function integer(value: unknown) { const n = numeric(value); return n == null ? null : Math.trunc(n) }
 function digest(value: unknown) { return createHash('sha256').update(JSON.stringify(value)).digest('hex') }
-function validate(row: Row, kind: DatasetKind) {
-  const errors: string[] = []
-  if (kind.startsWith('portal_') && !clean(row.source_record_id || row.listing_id || row.id)) errors.push('source_record_id requerido')
-  if ((kind === 'registered_sales' || kind === 'client_sales') && !clean(row.event_key || row.source_record_id || row.id)) errors.push('event_key requerido')
-  if (kind === 'kml_neighborhoods' && !clean(row.name || row.neighborhood || row.barrio)) errors.push('name requerido')
-  if (kind === 'kml_neighborhoods' && (!row.geometry || typeof row.geometry !== 'object')) errors.push('geometry GeoJSON requerida')
-  return errors
-}
 function canonicalKey(row: Row, system: SourceSystem) {
   const rol = clean(row.rol)
   if (rol) return `rol:${rol.toLowerCase()}`
@@ -63,6 +57,9 @@ export async function POST(request: Request) {
   const datasetKind = body?.datasetKind as DatasetKind
   const rows = Array.isArray(body?.rows) ? body.rows as Row[] : null
   if (!sourceSystems.includes(sourceSystem) || !datasetKinds.includes(datasetKind) || !rows) return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 })
+  if (!isSourceDatasetCompatible(sourceSystem, datasetKind)) {
+    return NextResponse.json({ error: `La fuente ${sourceSystem} no es compatible con el dataset ${datasetKind}.` }, { status: 400 })
+  }
   if (rows.length < 1 || rows.length > 5000) return NextResponse.json({ error: 'La carga debe contener entre 1 y 5.000 filas' }, { status: 400 })
   if (!body.authorizationConfirmed) return NextResponse.json({ error: 'Debe confirmarse la autorización de uso de la fuente' }, { status: 400 })
 
@@ -90,7 +87,7 @@ export async function POST(request: Request) {
 
   for (let index = 0; index < rows.length; index++) {
     const row = rows[index]
-    const errors = validate(row, datasetKind)
+    const errors = validateMarketContractRow(row, datasetKind)
     const sourceRecordId = clean(row.source_record_id || row.listing_id || row.event_key || row.id) || null
     const observedAt = clean(row.observed_at || row.transaction_date || row.fecha) || new Date().toISOString()
     const recordHash = digest(row)

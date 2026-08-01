@@ -36,10 +36,12 @@ pnpm audit:legacy
 pnpm lint
 pnpm access:verify
 pnpm market:identity:verify
+pnpm market:contract:verify
 pnpm valuation:model:verify
 pnpm valuation:workflow:verify
 pnpm valuation:condition:verify
 pnpm management:scoring:verify
+pnpm management:reports:verify
 pnpm build
 ```
 
@@ -58,6 +60,10 @@ Los scripts que dependen de datasets o variables privadas deben ejecutarse únic
 - `/dashboard/reportes/autonomos`: reportes contractuales autorizados.
 
 Las rutas antiguas `/dashboard/valorizador` y `/dashboard/agente` se mantienen únicamente como redirecciones de compatibilidad hacia las rutas canónicas.
+
+## Automatización de reportes
+
+Vercel ejecuta `/api/cron/management-monthly` según `vercel.json`. La ruta requiere `CRON_SECRET` en Production. CEO y administración disponen de recuperación autenticada mediante `POST /api/management/reports/run`, que procesa únicamente programaciones vencidas y conserva idempotencia por programación y período.
 
 ## Roles y seguridad
 
