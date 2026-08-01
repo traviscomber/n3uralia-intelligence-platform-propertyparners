@@ -117,7 +117,36 @@ export async function sendDocumentEmail(
       <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-collapse: collapse;">
         <tr>
           <td style="background-color: #000000; padding: 30px; text-align: center;">
-            <img src="https://www.ppartnersgroup.app/images/property-partners-logo.svg" alt="Property Partners" width="300" style="display: block; margin: 0 auto;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="350" height="87.5" style="display: block; margin: 0 auto;">
+              <defs>
+                <style>
+                  .pp-text { fill: white; font-family: Arial, sans-serif; font-size: 48px; font-weight: bold; letter-spacing: 4px; }
+                  .pp-subtitle { fill: #E74C3C; font-family: Arial, sans-serif; font-size: 24px; letter-spacing: 6px; }
+                  .pp-line { stroke: #E74C3C; stroke-width: 2; }
+                  .pp-circle { fill: none; stroke: white; stroke-width: 8; }
+                  .pp-compass { fill: white; }
+                </style>
+              </defs>
+              <!-- Compass rose -->
+              <circle cx="120" cy="100" r="45" class="pp-circle"/>
+              <circle cx="120" cy="100" r="35" class="pp-circle" stroke-width="4"/>
+              <polygon points="120,50 130,70 110,70" class="pp-compass"/>
+              <polygon points="170,100 150,110 150,90" class="pp-compass"/>
+              <polygon points="120,150 110,130 130,130" class="pp-compass"/>
+              <polygon points="70,100 90,90 90,110" class="pp-compass"/>
+              <!-- Inner circle with PP -->
+              <circle cx="120" cy="100" r="25" class="pp-circle" stroke-width="3"/>
+              <text x="120" y="110" text-anchor="middle" style="fill: white; font-family: Arial, sans-serif; font-size: 28px; font-weight: bold;">PP</text>
+              <!-- Main text -->
+              <text x="240" y="75" class="pp-text">PROPERTY</text>
+              <text x="240" y="130" class="pp-text">PARTNERS</text>
+              <!-- Registered mark -->
+              <text x="730" y="60" style="fill: white; font-family: Arial, sans-serif; font-size: 14px;">®</text>
+              <!-- Red line separator -->
+              <line x1="240" y1="140" x2="750" y2="140" class="pp-line"/>
+              <!-- Subtitle -->
+              <text x="240" y="175" class="pp-subtitle">VITACURA</text>
+            </svg>
           </td>
         </tr>
         <tr>
