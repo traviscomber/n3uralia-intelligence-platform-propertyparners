@@ -42,6 +42,7 @@ const sections: SidebarSection[] = [
       { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.office.assign' },
       { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.global.manage' },
       { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.office.manage' },
+      { label: 'Programación de reportes', href: '/dashboard/control/schedules', capability: 'management.global.manage' },
       { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', capability: 'market.manage_sources' },
       { label: 'Importar mercado', href: '/dashboard/market/import', capability: 'market.manage_sources' },
       { label: 'Fuentes de propiedades', href: '/dashboard/sources', capability: 'settings.manage' },
