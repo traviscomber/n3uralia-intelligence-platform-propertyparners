@@ -152,7 +152,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         source_transaction_id: candidate.source_transaction_id,
         source_listing_id: candidate.source_listing_id,
         source_observed_at: candidate.observed_at,
-        source_methodology_version: 'valuation_candidate_pool_v1',
+        source_methodology_version: 'valuation_candidate_pool_v2',
       }))
 
       if (inserts.length) {
@@ -165,7 +165,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         valuation_case_id: id,
         action: 'candidate_generated',
         actor_id: scope.profileId,
-        new_state: { candidateCount: inserts.length, duplicatesSkipped, methodology: 'valuation_candidate_pool_v1' },
+        new_state: { candidateCount: inserts.length, duplicatesSkipped, methodology: 'valuation_candidate_pool_v2' },
         reason: String(body?.reason || 'Generación automática desde evidencia del Módulo I'),
       })
       if (logError) return NextResponse.json({ error: logError.message }, { status: 500 })
