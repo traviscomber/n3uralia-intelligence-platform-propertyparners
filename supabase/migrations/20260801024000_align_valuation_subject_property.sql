@@ -43,15 +43,15 @@ with subject as (
 ),
 transaction_candidates as (
   select
-    'transaction'::text,
-    mt.event_key,
-    mp.id,
-    mt.id,
-    null::uuid,
+    'transaction'::text as source_type,
+    mt.event_key as source_reference,
+    mp.id as comparable_property_id,
+    mt.id as source_transaction_id,
+    null::uuid as source_listing_id,
     mt.transaction_date,
-    null::timestamptz,
-    mp.normalized_address,
-    mn.name,
+    null::timestamptz as observed_at,
+    mp.normalized_address as address,
+    mn.name as neighborhood,
     mp.property_type,
     mp.useful_area_m2,
     mp.built_area_m2,
@@ -63,7 +63,7 @@ transaction_candidates as (
     mt.price_uf_m2,
     case when s.latitude is not null and s.longitude is not null and mp.latitude is not null and mp.longitude is not null
       then 111320 * sqrt(power((mp.latitude-s.latitude)::numeric,2)+power(((mp.longitude-s.longitude)*cos(radians(s.latitude::double precision)))::numeric,2))
-      else null end,
+      else null end as distance_meters,
     greatest(0, least(100,
       100
       - case when lower(coalesce(mp.property_type,''))=lower(coalesce(s.property_type,'')) then 0 else 25 end
@@ -71,8 +71,8 @@ transaction_candidates as (
       - least(25,coalesce(abs(mp.built_area_m2-s.built_area_m2)/nullif(s.built_area_m2,0)*100,10))
       - least(15,coalesce(abs(mp.bedrooms-s.bedrooms)*5,5))
       - least(15,coalesce(abs(mp.bathrooms-s.bathrooms)*5,5))
-    ))::numeric,
-    jsonb_build_array(jsonb_build_object('marketSourceId',mt.source_id,'eventKey',mt.event_key,'transactionDate',mt.transaction_date,'priceUf',mt.price_uf,'priceUfM2',mt.price_uf_m2))
+    ))::numeric as similarity_score,
+    jsonb_build_array(jsonb_build_object('marketSourceId',mt.source_id,'eventKey',mt.event_key,'transactionDate',mt.transaction_date,'priceUf',mt.price_uf,'priceUfM2',mt.price_uf_m2)) as evidence
   from subject s
   join public.market_transactions mt on mt.price_uf is not null
   join public.market_properties mp on mp.id=mt.property_id
@@ -81,15 +81,15 @@ transaction_candidates as (
 ),
 listing_candidates as (
   select
-    'listing'::text,
-    ml.source_listing_id,
-    mp.id,
-    null::uuid,
-    ml.id,
-    null::date,
+    'listing'::text as source_type,
+    ml.source_listing_id as source_reference,
+    mp.id as comparable_property_id,
+    null::uuid as source_transaction_id,
+    ml.id as source_listing_id,
+    null::date as transaction_date,
     ml.observed_at,
-    coalesce(ml.normalized_address,mp.normalized_address),
-    mn.name,
+    coalesce(ml.normalized_address,mp.normalized_address) as address,
+    mn.name as neighborhood,
     mp.property_type,
     mp.useful_area_m2,
     mp.built_area_m2,
@@ -101,7 +101,7 @@ listing_candidates as (
     ml.price_uf_m2,
     case when s.latitude is not null and s.longitude is not null and ml.latitude is not null and ml.longitude is not null
       then 111320 * sqrt(power((ml.latitude-s.latitude)::numeric,2)+power(((ml.longitude-s.longitude)*cos(radians(s.latitude::double precision)))::numeric,2))
-      else null end,
+      else null end as distance_meters,
     greatest(0, least(100,
       92
       - case when lower(coalesce(mp.property_type,''))=lower(coalesce(s.property_type,'')) then 0 else 25 end
@@ -109,8 +109,8 @@ listing_candidates as (
       - least(25,coalesce(abs(mp.built_area_m2-s.built_area_m2)/nullif(s.built_area_m2,0)*100,10))
       - least(15,coalesce(abs(mp.bedrooms-s.bedrooms)*5,5))
       - least(15,coalesce(abs(mp.bathrooms-s.bathrooms)*5,5))
-    ))::numeric,
-    jsonb_build_array(jsonb_build_object('marketSourceId',ml.source_id,'listingId',ml.source_listing_id,'url',ml.url,'observedAt',ml.observed_at,'status',ml.status,'priceUf',ml.price_uf,'priceUfM2',ml.price_uf_m2))
+    ))::numeric as similarity_score,
+    jsonb_build_array(jsonb_build_object('marketSourceId',ml.source_id,'listingId',ml.source_listing_id,'url',ml.url,'observedAt',ml.observed_at,'status',ml.status,'priceUf',ml.price_uf,'priceUfM2',ml.price_uf_m2)) as evidence
   from subject s
   join public.market_listings ml on ml.price_uf is not null and ml.status in ('active','observed','sold','removed')
   join public.market_properties mp on mp.id=ml.property_id
