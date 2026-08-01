@@ -71,8 +71,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     decisions: decisions || [],
     permissions: {
       canEditComparables: valuationCase.status === 'draft' && (ELEVATED_ROLES.includes(access.role) || valuationCase.requested_by === access.user.id),
-      canApprove: ELEVATED_ROLES.includes(access.role),
-      canIssue: ELEVATED_ROLES.includes(access.role),
+      canApprove: access.role === 'ceo',
+      canIssue: access.role === 'ceo',
     },
   })
 }
