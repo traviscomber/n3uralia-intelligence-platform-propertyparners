@@ -14,6 +14,18 @@ const EXECUTIVE_ONLY = [
   '/dashboard/reportes/audiencias/director-cuenta',
 ]
 
+// Keep retired and out-of-scope routes explicitly blocked for non-CEO roles.
+// This prevents accidental exposure if a removed route is reintroduced later.
+const RETIRED_OR_OUT_OF_SCOPE = [
+  '/dashboard/agents',
+  '/dashboard/board',
+  '/dashboard/copilot',
+  '/dashboard/inteligencia',
+  '/dashboard/knowledge',
+  '/dashboard/ml-lab',
+  '/dashboard/version-2',
+]
+
 const SELLER_FORBIDDEN = [
   '/dashboard/properties/admin',
 ]
@@ -36,6 +48,7 @@ function matches(pathname: string, route: string) {
 
 export function canAccessDashboardPath(role: DashboardRole, pathname: string) {
   if (role === 'admin' || role === 'ceo') return true
+  if (RETIRED_OR_OUT_OF_SCOPE.some((route) => matches(pathname, route))) return false
   if (EXECUTIVE_ONLY.some((route) => matches(pathname, route))) return false
   if (role === 'director' || role === 'subdirector') return true
   if (role !== 'seller') return false
