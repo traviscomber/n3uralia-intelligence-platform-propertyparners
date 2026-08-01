@@ -56,7 +56,7 @@ async function main() {
   assert.match(comparableRoute, /existingKeys/)
   assert.match(comparableRoute, /seenKeys/)
   assert.match(comparableRoute, /duplicatesSkipped/)
-  assert.match(comparableRoute, /match_status:\s*['"]accepted['"]/)
+  assert.match(comparableRoute, /apply_valuation_comparable_decision/)
   assert.match(comparableRoute, /assertProfileVisible\(scope, valuationCase\.requested_by\)/)
   assert.match(comparableRoute, /scope\.capabilities\.includes\(['"]valuations\.office\.review['"]\)/)
   assert.match(comparableRoute, /scope\.capabilities\.includes\(['"]valuations\.global\.approve['"]\)/)
