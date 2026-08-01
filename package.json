@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "audit:legacy": "node scripts/audit-legacy-code.mjs",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
     "tone:internal": "node scripts/audit-internal-tone.mjs",
@@ -31,9 +32,7 @@
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
     "valuation:workflow:verify": "node --import tsx scripts/verify-valuation-workflow.ts",
     "valuation:condition:verify": "node --import tsx scripts/verify-valuation-condition.ts",
-    "ml:verify": "node --import tsx scripts/verify-ml-readiness.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
-    "test:roles": "node scripts/test-director-partner-copilots.mjs",
     "test:traceability": "node scripts/test-traceability-validator.mjs",
     "test:e2e": "tsx scripts/test-pipeline-end-to-end.mjs",
     "qa:visual": "node scripts/run-authenticated-visual-qa.mjs"
