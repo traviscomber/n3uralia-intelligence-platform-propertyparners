@@ -29,7 +29,7 @@ export async function GET() {
     const supabase = await createClient()
     let query = supabase
       .from('valuation_cases')
-      .select('id,status,valuation_date,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,condition_status,condition_score,condition_version,version_number,created_at,updated_at')
+      .select('id,status,valuation_date,subject_property_id,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,condition_status,condition_score,condition_version,version_number,created_at,updated_at')
       .order('updated_at', { ascending: false })
       .limit(50)
 
@@ -57,6 +57,8 @@ export async function POST(request: Request) {
     }
 
     let assignmentEvidence: Record<string, unknown> | null = null
+    let resolvedSubjectPropertyId = payload.sourcePropertyId?.trim() || null
+
     if (payload.propertyAssignmentId) {
       const { data: assignment, error: assignmentError } = await supabase
         .from('property_assignments')
@@ -68,15 +70,29 @@ export async function POST(request: Request) {
       if (!assignment || assignment.assigned_to !== scope.profileId || assignment.status !== 'active') {
         return NextResponse.json({ error: 'La asignación no pertenece al perfil autenticado o ya no está activa.' }, { status: 403 })
       }
-      if (payload.sourcePropertyId && assignment.property_id !== payload.sourcePropertyId) {
+      if (resolvedSubjectPropertyId && assignment.property_id !== resolvedSubjectPropertyId) {
         return NextResponse.json({ error: 'La propiedad no corresponde a la asignación indicada.' }, { status: 400 })
       }
+      resolvedSubjectPropertyId = assignment.property_id
       assignmentEvidence = {
         propertyAssignmentId: assignment.id,
         sourcePropertyId: assignment.property_id,
         assignmentRole: assignment.assignment_role,
         assignedAt: assignment.assigned_at,
       }
+    } else if (resolvedSubjectPropertyId && scope.scope === 'self') {
+      return NextResponse.json({ error: 'Para vincular una propiedad se requiere una asignación activa.' }, { status: 403 })
+    }
+
+    if (resolvedSubjectPropertyId) {
+      const { data: property, error: propertyError } = await supabase
+        .from('market_properties')
+        .select('id,canonical_key')
+        .eq('id', resolvedSubjectPropertyId)
+        .maybeSingle()
+
+      if (propertyError) return NextResponse.json({ error: propertyError.message }, { status: 422 })
+      if (!property) return NextResponse.json({ error: 'La propiedad vinculada no existe en el inventario operacional.' }, { status: 400 })
     }
 
     const result = calculateContractualValuation(payload.subject, payload.comparables, payload.qualitativeFactors)
@@ -85,22 +101,26 @@ export async function POST(request: Request) {
       : null
     const reportPayload = {
       ...buildValuationReportPayload(payload.subject, payload.comparables, payload.qualitativeFactors, result),
+      subjectPropertyId: resolvedSubjectPropertyId,
       conditionAssessment: payload.conditionAssessment ?? null,
       conditionResult,
     }
     const status = 'draft' as const
     const evidence = {
       comparableCount: result.comparableCount,
+      subjectPropertyId: resolvedSubjectPropertyId,
       assignment: assignmentEvidence,
       conditionEvidenceCoveragePct: conditionResult?.evidenceCoveragePct ?? null,
     }
     const assumptions = {
       selectedComparablesOnly: true,
       sourceAssignmentVerified: Boolean(assignmentEvidence),
+      subjectPropertyLinked: Boolean(resolvedSubjectPropertyId),
       conditionDoesNotApplyAutomaticEconomicAdjustment: true,
     }
     const warnings = [
       ...(result.comparableCount < 3 ? ['Se requieren al menos tres comparables aceptados para solicitar revisión.'] : []),
+      ...(!resolvedSubjectPropertyId ? ['La valorización no está vinculada a una propiedad operacional y no puede alimentar pricing.'] : []),
       ...(conditionResult?.status === 'not_evaluable' ? ['El estado de la propiedad no es evaluable con la evidencia disponible.'] : []),
       ...(conditionResult?.blockers ?? []).map((blocker) => `Estado de propiedad: ${blocker}`),
     ]
@@ -108,6 +128,7 @@ export async function POST(request: Request) {
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
       .insert({
+        subject_property_id: resolvedSubjectPropertyId,
         requested_by: scope.profileId,
         status,
         valuation_date: new Date().toISOString().slice(0, 10),
@@ -143,7 +164,7 @@ export async function POST(request: Request) {
         justification: payload.justification || result.justification,
         report_payload: { ...reportPayload, evidence, assumptions },
       })
-      .select('id,version_number,condition_status,condition_score,condition_version')
+      .select('id,subject_property_id,version_number,condition_status,condition_score,condition_version')
       .single()
 
     if (caseError || !valuationCase) {
@@ -205,6 +226,7 @@ export async function POST(request: Request) {
       actor_id: scope.profileId,
       metadata: {
         comparableCount: result.comparableCount,
+        subjectPropertyId: valuationCase.subject_property_id,
         assignment: assignmentEvidence,
         conditionStatus: valuationCase.condition_status,
         conditionScore: valuationCase.condition_score,
@@ -214,6 +236,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       caseId: valuationCase.id,
+      subjectPropertyId: valuationCase.subject_property_id,
+      propertyLinked: Boolean(valuationCase.subject_property_id),
       result,
       conditionResult,
       status,
