@@ -2,74 +2,71 @@
 
 Plataforma tecnológica integrada para PL Real Estate SpA, licenciatario de Property Partners Chile S.A.
 
-## Alcance de la versión contractual
+## Alcance contractual vigente
 
-La versión actual se limita a tres módulos interoperables:
+La aplicación productiva se limita a tres módulos interoperables:
 
 1. Inteligencia de Mercado.
 2. Valorización de Propiedades.
 3. Control de Gestión Comercial.
 
-Las capacidades adicionales de razonamiento, copilotos, grafos de decisión, ML Lab y conocimiento corporativo se conservan separadas como Versión 2 y no forman parte del alcance funcional vigente.
+Los copilotos, sistemas multiagente, grafos ejecutivos, ML Lab, memoria corporativa experimental y otras capacidades de Versión 2 fueron retirados del runtime. Las migraciones ya aplicadas y la trazabilidad histórica se conservan para no alterar el estado de la base de datos.
 
 ## Stack principal
 
-- Next.js 16
-- React 19
-- Supabase y PostgreSQL
-- TypeScript
-- Tailwind CSS
-- Recharts
-- MapLibre, Leaflet y React Leaflet
-- Generación de PDF, DOCX y XLSX
+- Next.js 16 y React 19.
+- TypeScript y Tailwind CSS.
+- Supabase y PostgreSQL.
+- Recharts, MapLibre y Leaflet para visualización.
+- Generación de PDF, DOCX y XLSX.
 
 ## Desarrollo local
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Abrir `http://localhost:3000`.
 
-## Validaciones disponibles
+## Validación
 
 ```bash
-npm run lint
-npm run build
-npm run access:verify
-npm run data:provenance
-npm run crm:verify
-npm run targets:verify
-npm run market-sources:verify
-npm run valuation:verify
-npm run valuation:model:verify
+pnpm audit:legacy
+pnpm lint
+pnpm access:verify
+pnpm market:identity:verify
+pnpm valuation:model:verify
+pnpm valuation:workflow:verify
+pnpm valuation:condition:verify
+pnpm management:scoring:verify
+pnpm build
 ```
 
 Los scripts que dependen de datasets o variables privadas deben ejecutarse únicamente en ambientes autorizados.
 
-## Estructura funcional
+## Rutas principales
 
 - `/dashboard`: portada del alcance vigente.
 - `/dashboard/market`: inteligencia de mercado.
-- `/dashboard/valorizador`: valorización de propiedades.
+- `/dashboard/valuation`: creación de una valorización.
+- `/dashboard/valuations`: registro y expedientes de valorización.
 - `/dashboard/control`: control de gestión comercial.
-- `/dashboard/reportes/autonomos`: reportes.
-- `/dashboard/version-2`: capacidades futuras separadas.
+- `/dashboard/ceo`: consolidado ejecutivo autorizado.
+- `/dashboard/director`: gestión de oficina y equipo.
+- `/dashboard/partner`: desempeño y operación personal.
+- `/dashboard/reportes/autonomos`: reportes contractuales autorizados.
 
-## Roles
+Las rutas antiguas `/dashboard/valorizador` y `/dashboard/agente` se mantienen únicamente como redirecciones de compatibilidad hacia las rutas canónicas.
 
-- CEO / administrador.
-- Director.
-- Subdirector.
-- Partner o agente.
+## Roles y seguridad
 
-El acceso a rutas y datos debe validarse tanto en interfaz como en servidor y políticas de Supabase.
+Los roles vigentes son CEO/administrador, director, subdirector y partner o agente. El acceso debe validarse en la interfaz, en el servidor y mediante políticas RLS de Supabase.
 
 ## Trazabilidad contractual
 
 La matriz de alcance y cumplimiento se mantiene en `docs/CONTRACTUAL_SCOPE_MATRIX.md`. Todo cambio funcional debe asociarse a un requisito, una fuente, una pantalla y una prueba de aceptación.
 
-## Seguridad y confidencialidad
+## Confidencialidad
 
-El proyecto contiene desarrollos y estructuras específicas de Property Partners. No deben incorporarse secretos, credenciales, documentos contractuales, datos personales ni datasets confidenciales al repositorio. Los datos de producción deben mantenerse en servicios privados y con acceso por rol.
+No deben incorporarse secretos, credenciales, documentos contractuales, datos personales ni datasets confidenciales al repositorio. Los datos de producción se mantienen en servicios privados y con acceso por rol.
