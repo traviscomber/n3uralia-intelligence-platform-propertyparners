@@ -42,7 +42,7 @@ function performanceColor(percent: number) {
   return BRAND.primarySoft
 }
 
-function card(label: string, value: string, detail: string, accent = BRAND.foreground) {
+function card(label: string, value: string, detail: string, accent: string = BRAND.foreground) {
   return `<td width="50%" valign="top" style="padding:0 8px 16px"><table width="100%" role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:${BRAND.surface};border:1px solid ${BRAND.border}"><tr><td style="padding:22px"><div style="font:600 10px/14px Calibri,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:${BRAND.muted};margin-bottom:13px">${label}</div><div style="font:700 38px/42px Calibri,Arial,sans-serif;color:${accent};font-variant-numeric:tabular-nums">${value}</div><div style="font:12px/18px Calibri,Arial,sans-serif;color:${BRAND.muted};margin-top:9px">${detail}</div></td></tr></table></td>`
 }
 
