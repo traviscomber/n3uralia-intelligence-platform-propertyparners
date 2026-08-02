@@ -6,6 +6,7 @@ import type {
 } from '@/lib/n3uralia-runtime-contract'
 
 const DEFAULT_TIMEOUT_MS = 20_000
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1'])
 
 export class N3uraliaRuntimeClientError extends Error {
   constructor(
@@ -18,9 +19,42 @@ export class N3uraliaRuntimeClientError extends Error {
   }
 }
 
+function parseRuntimeUrl(rawUrl: string) {
+  let url: URL
+
+  try {
+    url = new URL(rawUrl)
+  } catch {
+    throw new N3uraliaRuntimeClientError(
+      'N3uralia runtime URL is invalid.',
+      503,
+      'runtime_url_invalid',
+    )
+  }
+
+  const isLocal = LOCAL_HOSTNAMES.has(url.hostname)
+  if (url.protocol !== 'https:' && !(isLocal && url.protocol === 'http:')) {
+    throw new N3uraliaRuntimeClientError(
+      'N3uralia runtime URL must use HTTPS outside local development.',
+      503,
+      'runtime_url_insecure',
+    )
+  }
+
+  if (url.username || url.password || url.search || url.hash) {
+    throw new N3uraliaRuntimeClientError(
+      'N3uralia runtime URL must not contain credentials, query parameters or fragments.',
+      503,
+      'runtime_url_unsafe',
+    )
+  }
+
+  return url.toString().replace(/\/$/, '')
+}
+
 function getRuntimeConfig() {
-  const baseUrl = process.env.N3URALIA_RUNTIME_URL
-  const serviceToken = process.env.N3URALIA_RUNTIME_SERVICE_TOKEN
+  const baseUrl = process.env.N3URALIA_RUNTIME_URL?.trim()
+  const serviceToken = process.env.N3URALIA_RUNTIME_SERVICE_TOKEN?.trim()
 
   if (!baseUrl || !serviceToken) {
     throw new N3uraliaRuntimeClientError(
@@ -30,8 +64,16 @@ function getRuntimeConfig() {
     )
   }
 
+  if (serviceToken.length < 32) {
+    throw new N3uraliaRuntimeClientError(
+      'N3uralia runtime service token does not meet the minimum security requirement.',
+      503,
+      'runtime_token_invalid',
+    )
+  }
+
   return {
-    baseUrl: baseUrl.replace(/\/$/, ''),
+    baseUrl: parseRuntimeUrl(baseUrl),
     serviceToken,
   }
 }
