@@ -154,7 +154,6 @@ export async function sendDocumentEmail(
         </tr>
         <tr>
           <td style="background-color: #111111; color: white; padding: 36px 40px; text-align: center;">
-            <p style="font-family: Calibri, sans-serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E74C3C; margin: 0 0 12px 0; font-weight: bold;">Reporte Integral Ejecutivo</p>
             <h2 style="font-family: Calibri, sans-serif; font-size: 25px; line-height: 1.25; margin: 0 0 16px 0; color: white; font-weight: bold;">${cleanTitle}</h2>
             <span style="display: inline-block; font-family: Calibri, sans-serif; font-size: 11px; letter-spacing: 1px; color: #dddddd; border: 1px solid #444444; border-radius: 20px; padding: 6px 16px;">${periodLabel}</span>
           </td>
