@@ -51,8 +51,15 @@ const sendRoute = readFileSync(
   'utf8',
 )
 
+assert.match(previewRoute, /requireCapability\('management\.global\.read'\)/)
+assert.match(previewRoute, /accessErrorResponse\(error\)/)
 assert.match(previewRoute, /assertClosedMonthlyPeriod\(period\)/)
 assert.match(previewRoute, /previousMonthBounds\(\)/)
+assert.match(previewRoute, /Cache-Control': 'private, no-store, max-age=0'/)
+
+assert.match(sendRoute, /authorizeDelivery\(req\)/)
+assert.match(sendRoute, /getCronAuthorizationFailure/)
+assert.match(sendRoute, /requireCapability\('management\.global\.read'\)/)
 assert.match(sendRoute, /assertClosedMonthlyPeriod\(period\)/)
 assert.doesNotMatch(sendRoute, /error:\s*String\(error\)/)
 assert.match(sendRoute, /Cierre \$\{monthName\} \$\{year\}/)
