@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
+import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
 import { generateCeoReportAprilLayoutV2 } from '@/lib/ceo-report-april-layout-v2'
 import { generateCeoReportJanuaryLayout } from '@/lib/ceo-report-january-layout'
 import {
@@ -24,7 +24,7 @@ const MONTH_NAMES = [
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAnyCapability(['management.global.read', 'reports.global.manage'])
+    await requireCapability('management.global.read')
 
     const defaultPeriod = previousMonthBounds().start.slice(0, 7)
     const period = request.nextUrl.searchParams.get('period') || defaultPeriod
