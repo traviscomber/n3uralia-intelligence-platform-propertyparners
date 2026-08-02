@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { generateCeoReportData, generateCeoReportHTML } from '@/lib/ceo-report-html-generator'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialization to avoid errors during build
+let resend: Resend | null = null
+
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +26,7 @@ export async function POST(request: NextRequest) {
     const reportHTML = generateCeoReportHTML(reportData)
 
     // Send via Resend
-    const response = await resend.emails.send({
+    const response = await getResend().emails.send({
       from: 'onboarding@resend.dev',
       to: email,
       subject: `Reporte Integral Ejecutivo - Property Partners ${reportData.period}`,

@@ -3,30 +3,51 @@ import { Resend } from 'resend'
 import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery-core'
 import { generateCeoReportPDFAttachment } from '@/lib/ceo-report-pdf-generator'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
+// Lazy initialization to avoid errors during build
+let supabase: ReturnType<typeof createClient> | null = null
+let resend: Resend | null = null
+let reportConfig: any = null
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
-const reportConfig = getManagementReportDeliveryConfiguration()
+function getSupabase() {
+  if (!supabase) {
+    supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+  }
+  return supabase
+}
+
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY!)
+  }
+  return resend
+}
+
+function getReportConfig() {
+  if (!reportConfig) {
+    reportConfig = getManagementReportDeliveryConfiguration()
+  }
+  return reportConfig
+}
 
 export const DOCUMENT_MAX_ATTEMPTS = 6
 export const DOCUMENT_RETRY_DELAY_MS = 5000
 
 export type DocumentDistributionStatus = 'pending' | 'claimed' | 'sent' | 'failed' | 'bounced'
 
-export async function getScheduledDocuments() {
+export async function getScheduledDocuments(): Promise<any[]> {
   const now = new Date()
   
-  const { data: schedules, error } = await supabase
+  const { data: schedules, error } = await getSupabase()
     .from('document_schedules')
     .select('*')
     .eq('active', true)
     .lte('next_send_at', now.toISOString())
   
   if (error) throw error
-  return schedules
+  return (schedules || []) as any[]
 }
 
 export async function getRecipientsForSchedule(scheduleId: string) {
@@ -228,7 +249,7 @@ export async function sendDocumentEmail(
     }
   }
   
-  const resendResponse = await resend.emails.send({
+  const resendResponse = await getResend().emails.send({
     from: senderEmail,
     to: recipientEmail,
     subject,
@@ -263,7 +284,7 @@ export async function markDocumentAsSent(
   
   if (error) throw error
   
-  await supabase.from('document_delivery_events').insert({
+  await getSupabase().from('document_delivery_events').insert({
     distribution_id: distributionId,
     event_type: 'sent',
     details: { sent_at: new Date().toISOString(), external_reference: externalReference },
@@ -293,7 +314,7 @@ export async function markDocumentAsFailed(
   
   if (error) throw error
   
-  await supabase.from('document_delivery_events').insert({
+  await getSupabase().from('document_delivery_events').insert({
     distribution_id: distributionId,
     event_type: 'failed',
     details: { error: errorMessage, attempt, isPermanent },
