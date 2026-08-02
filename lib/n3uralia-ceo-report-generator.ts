@@ -4,30 +4,34 @@ import { getValuationSnapshot } from '@/lib/valuation-snapshot'
 import { getOperationalSummary } from '@/lib/crm-snapshot'
 import { generateComplianceChart, generateClosuresChart } from '@/lib/chart-generator'
 
-// ─── Property Partners Design System Colors ──────────────────────────────────
-const PP_COLORS = {
-  primary: '#d7332b',      // Brand red
-  primarySoft: '#ff766f',  // Accessible red for small text
-  background: '#050807',   // Dark bg
-  deepBg: '#0c1111',       // Deeper bg
-  foreground: '#edf4f3',   // Light text
-  muted: '#9ca9a7',        // Muted text
-  mutedDark: '#b6c1bf',    // Darker muted
-  line: 'rgba(215, 51, 43, 0.22)', // Border color
+// ─── Canonical Design System Colors (from presentations) ──────────────────────
+const CANONICAL_COLORS = {
+  // Backgrounds
+  background: '#F0F0F0',   // Primary bg (light gray)
+  headerBg: '#000000',     // Header background (black)
+  cardBg: '#FFFFFF',       // Card/white backgrounds
   
-  // Chart colors (from Property Partners palette)
-  success: '#27ae60',      // Green
-  warning: '#f39c12',      // Orange
-  error: '#e74c3c',        // Red
-  info: '#1565c0',         // Blue
+  // Text Colors
+  textDark: '#333333',     // Primary text (dark gray)
+  textMuted: '#7F8C8D',    // Secondary text (medium gray)
+  textOnDark: '#FFFFFF',   // Text on dark backgrounds (white)
+  
+  // Status Colors (Traffic Light System)
+  success: '#27AE60',      // Verde - positive, goal achievement
+  warning: '#F39C12',      // Amarillo - caution, warning
+  error: '#E74C3C',        // Rojo - critical, alert (NOT primary)
+  info: '#1565C0',         // Blue - information
+  
+  // Accent
+  darkRed: '#C0392B',      // Dark red for high-severity alerts
 }
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function badge(pct: number) {
-  if (pct >= 90) return { cls: PP_COLORS.success, label: 'Óptimo' }
-  if (pct >= 70) return { cls: PP_COLORS.warning, label: 'Normal' }
-  return { cls: PP_COLORS.error, label: 'Crítico' }
+  if (pct >= 100) return { cls: CANONICAL_COLORS.success, label: 'Verde' }
+  if (pct >= 90) return { cls: CANONICAL_COLORS.warning, label: 'Amarillo' }
+  return { cls: CANONICAL_COLORS.error, label: 'Rojo' }
 }
 
 
@@ -106,17 +110,17 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
   <title>Reporte Integral CEO — ${monthName} 2026</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Calibri,Arial,sans-serif;background:#f5f5f5;color:#333;line-height:1.6}
-    .container{max-width:1000px;margin:0 auto;background:#ffffff}
-    .header{background:#050807;color:#edf4f3;padding:40px;border-bottom:2px solid rgba(215, 51, 43, 0.22)}
-    .header-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:#ff766f;margin-bottom:12px;font-weight:700}
-    .header-title{font-size:32px;font-weight:600;margin-bottom:12px;color:#edf4f3}
-    .header-meta{font-size:13px;color:rgba(237, 244, 243, 0.8);margin-bottom:4px}
-    .header-date{font-size:11px;color:rgba(237, 244, 243, 0.6)}
-    .section{padding:40px;border-bottom:1px solid rgba(215, 51, 43, 0.22)}
+    body{font-family:Calibri,Arial,sans-serif;background:#F0F0F0;color:#333333;line-height:1.6}
+    .container{max-width:1000px;margin:0 auto;background:#FFFFFF}
+    .header{background:#000000;color:#FFFFFF;padding:40px}
+    .header-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:#7F8C8D;margin-bottom:12px;font-weight:600}
+    .header-title{font-size:32px;font-weight:600;margin-bottom:12px;color:#FFFFFF}
+    .header-meta{font-size:13px;color:rgba(255, 255, 255, 0.8);margin-bottom:4px}
+    .header-date{font-size:11px;color:rgba(255, 255, 255, 0.6)}
+    .section{padding:40px;background:#FFFFFF;border-bottom:1px solid #E8E8E8}
     .section:last-child{border-bottom:none}
-    .section-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#9ca9a7;margin-bottom:6px;font-weight:600}
-    .section-title{font-size:24px;font-weight:600;color:#050807;margin-bottom:20px}
+    .section-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#7F8C8D;margin-bottom:6px;font-weight:600}
+    .section-title{font-size:24px;font-weight:600;color:#333333;margin-bottom:20px}
     .chart-label{font-size:12px;color:#7F8C8D;margin-bottom:8px;font-weight:500}
     /* scoring */
     .score-total{background:#F5F5F5;border-radius:8px;padding:20px 24px;display:flex;align-items:center;gap:24px;margin-bottom:24px}
@@ -189,7 +193,7 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
     <div class="section-title">Calidad de Gestión</div>
     
     <!-- Overall Score Card -->
-    <div style="background:linear-gradient(135deg, #d7332b 0%, #b82924 100%);color:white;border-radius:8px;padding:28px 24px;margin-bottom:28px;box-shadow:0 2px 8px rgba(215, 51, 43, 0.15)">
+    <div style="background:linear-gradient(135deg, #1565C0 0%, #0F4FA0 100%);color:white;border-radius:8px;padding:28px 24px;margin-bottom:28px;box-shadow:0 2px 8px rgba(21, 101, 192, 0.1)">
       <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
         <div style="font-size:48px;font-weight:800;line-height:1">${mgmtScore}%</div>
         <div style="font-size:14px;opacity:0.9">Puntuación Global</div>
@@ -199,37 +203,37 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
     
     <!-- Three Metrics Grid -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-      <!-- CARTERA -->
-      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #d7332b">
-        <div style="font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Cartera</div>
-        <div style="font-size:32px;font-weight:700;color:#d7332b;margin-bottom:2px">${portfolioQ}%</div>
-        <div style="font-size:12px;color:#999;margin-bottom:14px">Cumplimiento de meta</div>
-        <div style="background:white;height:6px;border-radius:3px;overflow:hidden;background:rgba(215, 51, 43, 0.1)">
-          <div style="height:100%;width:${portfolioQ}%;background:#d7332b;transition:width 0.3s ease"></div>
+      <!-- CARTERA (Blue Info) -->
+      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #1565C0">
+        <div style="font-size:12px;font-weight:600;color:#7F8C8D;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Cartera</div>
+        <div style="font-size:32px;font-weight:700;color:#1565C0;margin-bottom:2px">${portfolioQ}%</div>
+        <div style="font-size:12px;color:#7F8C8D;margin-bottom:14px">Cumplimiento de meta</div>
+        <div style="background:white;height:6px;border-radius:3px;overflow:hidden;background:rgba(21, 101, 192, 0.1)">
+          <div style="height:100%;width:${portfolioQ}%;background:#1565C0;transition:width 0.3s ease"></div>
         </div>
-        <div style="font-size:11px;color:#999;margin-top:8px">Peso: 40%</div>
+        <div style="font-size:11px;color:#7F8C8D;margin-top:8px">Peso: 40%</div>
       </div>
       
-      <!-- SEGUIMIENTO -->
-      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #f39c12">
-        <div style="font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Seguimiento</div>
-        <div style="font-size:32px;font-weight:700;color:#f39c12;margin-bottom:2px">${followUpQ}%</div>
-        <div style="font-size:12px;color:#999;margin-bottom:14px">Disciplina de leads</div>
+      <!-- SEGUIMIENTO (Yellow Warning) -->
+      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #F39C12">
+        <div style="font-size:12px;font-weight:600;color:#7F8C8D;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Seguimiento</div>
+        <div style="font-size:32px;font-weight:700;color:#F39C12;margin-bottom:2px">${followUpQ}%</div>
+        <div style="font-size:12px;color:#7F8C8D;margin-bottom:14px">Disciplina de leads</div>
         <div style="background:white;height:6px;border-radius:3px;overflow:hidden;background:rgba(243, 156, 18, 0.1)">
-          <div style="height:100%;width:${followUpQ}%;background:#f39c12;transition:width 0.3s ease"></div>
+          <div style="height:100%;width:${followUpQ}%;background:#F39C12;transition:width 0.3s ease"></div>
         </div>
-        <div style="font-size:11px;color:#999;margin-top:8px">Peso: 30%</div>
+        <div style="font-size:11px;color:#7F8C8D;margin-top:8px">Peso: 30%</div>
       </div>
       
-      <!-- CONVERSIÓN -->
-      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #27ae60">
-        <div style="font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Conversión</div>
-        <div style="font-size:32px;font-weight:700;color:#27ae60;margin-bottom:2px">${conversionQ}%</div>
-        <div style="font-size:12px;color:#999;margin-bottom:14px">Tasa de cierre</div>
+      <!-- CONVERSIÓN (Green Success) -->
+      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #27AE60">
+        <div style="font-size:12px;font-weight:600;color:#7F8C8D;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Conversión</div>
+        <div style="font-size:32px;font-weight:700;color:#27AE60;margin-bottom:2px">${conversionQ}%</div>
+        <div style="font-size:12px;color:#7F8C8D;margin-bottom:14px">Tasa de cierre</div>
         <div style="background:white;height:6px;border-radius:3px;overflow:hidden;background:rgba(39, 174, 96, 0.1)">
-          <div style="height:100%;width:${conversionQ}%;background:#27ae60;transition:width 0.3s ease"></div>
+          <div style="height:100%;width:${conversionQ}%;background:#27AE60;transition:width 0.3s ease"></div>
         </div>
-        <div style="font-size:11px;color:#999;margin-top:8px">Peso: 30%</div>
+        <div style="font-size:11px;color:#7F8C8D;margin-top:8px">Peso: 30%</div>
       </div>
     </div>
   </div>
@@ -240,8 +244,8 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
     <div class="section-title">Venta ${monthName}</div>
 
     <div class="metrics-grid">
-      <!-- Cierres Card -->
-      <div style="background:linear-gradient(135deg, #d7332b 0%, #b82924 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(215, 51, 43, 0.15)">
+      <!-- Cierres Card (Info Blue) -->
+      <div style="background:linear-gradient(135deg, #1565C0 0%, #0F4FA0 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(21, 101, 192, 0.1)">
         <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Cierres ${monthName}</div>
         <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${currentActual}</div>
         <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Meta: ${currentTarget.toFixed(1)}</div>
@@ -251,8 +255,8 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
         </div>
       </div>
 
-      <!-- Productividad Card -->
-      <div style="background:linear-gradient(135deg, #27ae60 0%, #1f8a48 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(39, 174, 96, 0.15)">
+      <!-- Productividad Card (Success Green) -->
+      <div style="background:linear-gradient(135deg, #27AE60 0%, #1F8A48 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(39, 174, 96, 0.1)">
         <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Productividad</div>
         <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${currentProd}</div>
         <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Por ejecutiva</div>
@@ -262,8 +266,8 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
         </div>
       </div>
 
-      <!-- Inteligencia de Mercado Card -->
-      <div style="background:linear-gradient(135deg, #f39c12 0%, #da8b0a 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(243, 156, 18, 0.15)">
+      <!-- Inteligencia de Mercado Card (Warning Orange) -->
+      <div style="background:linear-gradient(135deg, #F39C12 0%, #DA8B0A 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(243, 156, 18, 0.1)">
         <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Inteligencia de Mercado</div>
         <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${marketSignalCount}</div>
         <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Señales monitoreadas</div>
@@ -273,8 +277,8 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
         </div>
       </div>
 
-      <!-- Valuación Card -->
-      <div style="background:linear-gradient(135deg, #1565c0 0%, #1149a3 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(21, 101, 192, 0.15)">
+      <!-- Valuación Card (Secondary Gray) -->
+      <div style="background:linear-gradient(135deg, #7F8C8D 0%, #5C6A6C 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(127, 140, 141, 0.1)">
         <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Valuación</div>
         <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${propertyTypes.length}</div>
         <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Tipos de propiedad</div>
@@ -296,36 +300,36 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
           <tr style="background:#F5F5F5;border-bottom:2px solid #DDD">
             <th style="text-align:left;padding:12px 10px;font-weight:700;color:#333;text-transform:uppercase;font-size:11px;letter-spacing:0.5px">Indicador</th>
             ${monthShort.map(m => `<th style="padding:12px 8px;font-weight:600;color:#555;text-align:center;font-size:12px">${m}</th>`).join('')}
-            <th style="padding:12px 8px;font-weight:700;color:#fff;background:#d7332b;border-radius:4px;text-align:center;font-size:12px">Acum</th>
+            <th style="padding:12px 8px;font-weight:700;color:#fff;background:#333333;border-radius:4px;text-align:center;font-size:12px">Acum</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Cierres mes (red) -->
-          <tr style="background:rgba(215, 51, 43, 0.05);border-bottom:1px solid #EEE">
-            <td style="padding:12px 10px;font-weight:600;color:#d7332b">Cierres mes</td>
-            ${actuals.map(v => `<td style="padding:12px 8px;text-align:center;color:#333;font-weight:600">${v}</td>`).join('')}
-            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#d7332b;border-radius:4px">${totalSales}</td>
+          <!-- Cierres mes -->
+          <tr style="background:#FFFFFF;border-bottom:1px solid #E8E8E8">
+            <td style="padding:12px 10px;font-weight:600;color:#333333">Cierres mes</td>
+            ${actuals.map(v => `<td style="padding:12px 8px;text-align:center;color:#333333;font-weight:600">${v}</td>`).join('')}
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#1565C0;border-radius:4px">${totalSales}</td>
           </tr>
-          <!-- Meta cierres (green) -->
-          <tr style="background:rgba(39, 174, 96, 0.05);border-bottom:1px solid #EEE">
-            <td style="padding:12px 10px;font-weight:600;color:#27ae60">Meta cierres</td>
-            ${monthlyData.map(m => `<td style="padding:12px 8px;text-align:center;color:#333;font-weight:500">${(m.target || 8.1).toFixed(1)}</td>`).join('')}
-            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#27ae60;border-radius:4px">${totalTarget.toFixed(1)}</td>
+          <!-- Meta cierres -->
+          <tr style="background:#F8F9FA;border-bottom:1px solid #E8E8E8">
+            <td style="padding:12px 10px;font-weight:600;color:#333333">Meta cierres</td>
+            ${monthlyData.map(m => `<td style="padding:12px 8px;text-align:center;color:#333333;font-weight:500">${(m.target || 8.1).toFixed(1)}</td>`).join('')}
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#27AE60;border-radius:4px">${totalTarget.toFixed(1)}</td>
           </tr>
           <!-- Cumplimiento % (color-coded per value) -->
-          <tr style="background:#F9F9F9;border-bottom:1px solid #EEE">
-            <td style="padding:12px 10px;font-weight:600;color:#F57C00">Cumplimiento %</td>
+          <tr style="background:#FFFFFF;border-bottom:1px solid #E8E8E8">
+            <td style="padding:12px 10px;font-weight:600;color:#333333">Cumplimiento %</td>
             ${compliancePcts.map(v => {
               const c = v >= 90 ? '#27AE60' : v >= 70 ? '#F39C12' : '#E74C3C'
               return `<td style="padding:12px 8px;text-align:center;color:${c};font-weight:700">${v}%</td>`
             }).join('')}
-            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#F57C00;border-radius:4px">${totalCompPct}%</td>
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#F39C12;border-radius:4px">${totalCompPct}%</td>
           </tr>
-          <!-- Productividad (blue) -->
-          <tr style="background:rgba(21, 101, 192, 0.05)">
-            <td style="padding:12px 10px;font-weight:600;color:#1565c0">Productividad</td>
-            ${actuals.map(v => `<td style="padding:12px 8px;text-align:center;color:#333;font-weight:600">${(v / totalPartners).toFixed(2)}</td>`).join('')}
-            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#9C27B0;border-radius:4px">${(totalSales / totalPartners).toFixed(2)}</td>
+          <!-- Productividad -->
+          <tr style="background:#F8F9FA">
+            <td style="padding:12px 10px;font-weight:600;color:#333333">Productividad</td>
+            ${actuals.map(v => `<td style="padding:12px 8px;text-align:center;color:#333333;font-weight:600">${(v / totalPartners).toFixed(2)}</td>`).join('')}
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#27AE60;border-radius:4px">${(totalSales / totalPartners).toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
