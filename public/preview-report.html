@@ -1,179 +1,9 @@
-import { getCompanySalesCompliance } from '@/lib/targets-2026'
-import { getMarketSnapshot } from '@/lib/market-snapshot'
-import { getValuationSnapshot } from '@/lib/valuation-snapshot'
-import { getOperationalSummary } from '@/lib/crm-snapshot'
-
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-function badge(pct: number) {
-  if (pct >= 90) return { cls: '#27AE60', label: 'Verde' }
-  if (pct >= 70) return { cls: '#F39C12', label: 'Amarillo' }
-  return { cls: '#E74C3C', label: 'Rojo' }
-}
-
-/** SVG bar chart – horizontal bars, one per month */
-function barChart(values: number[], maxVal: number, months: string[], color = '#333333'): string {
-  const W = 520, BAR_H = 20, GAP = 10, LEFT = 48, RIGHT = 60
-  const chartW = W - LEFT - RIGHT
-  const H = values.length * (BAR_H + GAP) + 10
-
-  const bars = values.map((v, i) => {
-    const barW = maxVal > 0 ? Math.max(2, (v / maxVal) * chartW) : 2
-    const y = i * (BAR_H + GAP) + 5
-    return `
-      <text x="${LEFT - 6}" y="${y + BAR_H / 2 + 4}" text-anchor="end" font-size="11" fill="#7F8C8D">${months[i]}</text>
-      <rect x="${LEFT}" y="${y}" width="${barW}" height="${BAR_H}" rx="3" fill="${color}" opacity="0.85"/>
-      <text x="${LEFT + barW + 6}" y="${y + BAR_H / 2 + 4}" font-size="11" fill="#333333" font-weight="600">${v}</text>`
-  }).join('')
-
-  return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`
-}
-
-/** SVG bar chart – compliance % with color-coded bars */
-function complianceBarChart(values: number[], months: string[]): string {
-  const W = 520, BAR_H = 22, GAP = 10, LEFT = 48, RIGHT = 70
-  const chartW = W - LEFT - RIGHT
-  const H = values.length * (BAR_H + GAP) + 10
-
-  const bars = values.map((v, i) => {
-    const b = badge(v)
-    const barW = Math.max(2, (Math.min(v, 120) / 120) * chartW)
-    const y = i * (BAR_H + GAP) + 5
-    return `
-      <text x="${LEFT - 6}" y="${y + BAR_H / 2 + 4}" text-anchor="end" font-size="11" fill="#7F8C8D">${months[i]}</text>
-      <rect x="${LEFT}" y="${y}" width="${barW}" height="${BAR_H}" rx="3" fill="${b.cls}" opacity="0.85"/>
-      <text x="${LEFT + barW + 6}" y="${y + BAR_H / 2 + 4}" font-size="11" fill="#333333" font-weight="600">${v}%</text>`
-  }).join('')
-
-  // Target line at 100%
-  const targetX = LEFT + ((100 / 120) * chartW)
-  const targetLine = `<line x1="${targetX}" y1="0" x2="${targetX}" y2="${H}" stroke="#E74C3C" stroke-width="1.5" stroke-dasharray="4,3"/>`
-  const targetLabel = `<text x="${targetX + 3}" y="10" font-size="9" fill="#E74C3C">Meta</text>`
-
-  return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${targetLine}${targetLabel}${bars}</svg>`
-}
-
-/** SVG donut chart for scoring */
-function donutChart(pct: number, color: string, size = 80): string {
-  const r = 28, cx = size / 2, cy = size / 2
-  const circumference = 2 * Math.PI * r
-  const dash = (pct / 100) * circumference
-  return `
-  <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#EEEEEE" stroke-width="8"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="8"
-      stroke-dasharray="${dash} ${circumference - dash}"
-      stroke-dashoffset="${circumference * 0.25}"
-      stroke-linecap="round"/>
-    <text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="13" font-weight="700" fill="#333333">${pct}%</text>
-  </svg>`
-}
-
-/** SVG stacked bar for lead tiers */
-function stackedLeadBar(t1: number, t2: number, t3: number, t4: number): string {
-  const total = t1 + t2 + t3 + t4
-  const W = 480, H = 36
-  const w1 = (t1 / total) * W
-  const w2 = (t2 / total) * W
-  const w3 = (t3 / total) * W
-  const w4 = (t4 / total) * W
-  return `
-  <svg width="${W}" height="${H + 20}" xmlns="http://www.w3.org/2000/svg">
-    <rect x="0"              y="0" width="${w1}" height="${H}" rx="0" fill="#27AE60"/>
-    <rect x="${w1}"          y="0" width="${w2}" height="${H}" rx="0" fill="#1976D2"/>
-    <rect x="${w1+w2}"       y="0" width="${w3}" height="${H}" rx="0" fill="#F39C12"/>
-    <rect x="${w1+w2+w3}"    y="0" width="${w4}" height="${H}" rx="0" fill="#E74C3C"/>
-    <text x="${w1/2}"             y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T1 ${((t1/total)*100).toFixed(0)}%</text>
-    <text x="${w1+w2/2}"          y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T2 ${((t2/total)*100).toFixed(0)}%</text>
-    <text x="${w1+w2+w3/2}"       y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T3 ${((t3/total)*100).toFixed(0)}%</text>
-    <text x="${w1+w2+w3+w4/2}"    y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T4 ${((t4/total)*100).toFixed(0)}%</text>
-  </svg>`
-}
-
-/** SVG mini funnel for conversion */
-function funnelChart(steps: { label: string; value: number; color: string }[]): string {
-  const W = 460, BAR_H = 28, GAP = 8, LEFT = 130, RIGHT = 60
-  const H = steps.length * (BAR_H + GAP)
-  const maxVal = steps[0].value
-  const bars = steps.map((s, i) => {
-    const barW = Math.max(8, (s.value / maxVal) * (W - LEFT - RIGHT))
-    const y = i * (BAR_H + GAP)
-    return `
-      <text x="${LEFT - 6}" y="${y + BAR_H / 2 + 4}" text-anchor="end" font-size="11" fill="#555">${s.label}</text>
-      <rect x="${LEFT}" y="${y}" width="${barW}" height="${BAR_H}" rx="4" fill="${s.color}" opacity="0.85"/>
-      <text x="${LEFT + barW + 6}" y="${y + BAR_H / 2 + 4}" font-size="11" fill="#333" font-weight="600">${s.value.toLocaleString()}</text>`
-  }).join('')
-  return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`
-}
-
-// ─── main generator ─────────────────────────────────────────────────────────
-
-export function generateN3uraliaReportHTML(periodOverride?: string): string {
-  const period = periodOverride || '2026-06'
-  const monthlyPeriods = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06']
-  const monthShort = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun']
-  const monthNames: Record<string, string> = {
-    '2026-01': 'Enero', '2026-02': 'Febrero', '2026-03': 'Marzo',
-    '2026-04': 'Abril', '2026-05': 'Mayo', '2026-06': 'Junio'
-  }
-
-  const monthlyData = monthlyPeriods.map(p => getCompanySalesCompliance(p))
-  const compliance   = getCompanySalesCompliance(period)
-  const operational  = getOperationalSummary()
-  const valuationArr = getValuationSnapshot()
-  const marketArr    = getMarketSnapshot()
-
-  // Derive scalar values from arrays
-  const marketSignalCount  = marketArr?.length || 8
-  const marketAvgConf      = marketArr?.length
-    ? Math.round(marketArr.reduce((s, e: any) => s + (parseFloat(e.confidence) || 0.85), 0) / marketArr.length * 100)
-    : 85
-  const propertyTypes: string[] = valuationArr?.length
-    ? [...new Set(valuationArr.map((e: any) => e.propertyType).filter(Boolean))] as string[]
-    : ['Dep.', 'Casa', 'Terreno', 'Comerc.']
-
-  const totalPartners    = operational?.topAgents?.length || 1
-  const currentActual    = compliance.actual    || 0
-  const currentTarget    = compliance.target    || 8.1
-  const currentPct       = currentTarget > 0 ? Math.round((currentActual / currentTarget) * 100) : 0
-  const currentProd      = (currentActual / totalPartners).toFixed(2)
-  const { cls: badgeBg, label: badgeLabel } = badge(currentPct)
-
-  const totalSales   = monthlyData.reduce((s, m) => s + (m.actual || 0), 0)
-  const totalTarget  = monthlyData.reduce((s, m) => s + (m.target || 0), 0)
-  const totalCompPct = totalTarget > 0 ? Math.round((totalSales / totalTarget) * 100) : 0
-
-  // Scoring
-  const portfolioQ   = Math.min(Math.round((currentActual / currentTarget) * 100), 100)
-  const followUpQ    = 85
-  const conversionQ  = Math.min(currentPct, 100)
-  const mgmtScore    = Math.round(portfolioQ * 0.4 + followUpQ * 0.3 + conversionQ * 0.3)
-
-  // Monthly actuals & compliance arrays
-  const actuals     = monthlyData.map(m => m.actual || 0)
-  const compliancePcts = monthlyData.map(m => m.target ? Math.round(((m.actual || 0) / m.target) * 100) : 0)
-  const maxActual   = Math.max(...actuals, 1)
-
-  const monthName = monthNames[period] || 'Mes'
-  const now = new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
-
-  // Lead tier data
-  const T1 = 4131, T2 = 14034, T3 = 3488, T4 = 8572
-
-  // Conversion funnel data
-  const funnelSteps = [
-    { label: 'Leads Totales',   value: 30225, color: '#1976D2' },
-    { label: 'Leads Activos',   value: 14034, color: '#0288D1' },
-    { label: 'Visitas Agendadas', value: 5968, color: '#F39C12' },
-    { label: 'Cierres (6m)',    value: 197,   color: '#27AE60' },
-  ]
-
-  return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reporte Integral CEO — ${monthName} 2026</title>
+  <title>Reporte Integral CEO — Junio 2026</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Calibri,Arial,sans-serif;background:#F0F0F0;color:#333;line-height:1.6}
@@ -248,10 +78,10 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
 
   <!-- ── HEADER ────────────────────────────────────────────────── -->
   <div class="header">
-    <div class="header-eyebrow">Fuente canónica · ${monthName} 2026</div>
-    <div class="header-title">Control de Gestión — Cierre ${monthName}</div>
-    <div class="header-meta">Reporte CEO — Enero a ${monthName} 2026</div>
-    <div class="header-date">Generado ${now}</div>
+    <div class="header-eyebrow">Fuente canónica · Junio 2026</div>
+    <div class="header-title">Control de Gestión — Cierre Junio</div>
+    <div class="header-meta">Reporte CEO — Enero a Junio 2026</div>
+    <div class="header-date">Generado 02 de agosto de 2026</div>
   </div>
 
   <!-- ── CALIDAD DE GESTIÓN ─────────────────────────────────────── -->
@@ -259,7 +89,7 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
     <div class="section-title">Calidad de Gestión</div>
 
     <div class="score-total">
-      <div class="score-total-num">${mgmtScore}%</div>
+      <div class="score-total-num">95%</div>
       <div class="score-total-meta">
         Puntuación global de la operación<br>
         <span style="color:#999">Cartera 40% · Seguimiento 30% · Conversión 30%</span>
@@ -268,17 +98,41 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
 
     <div class="scoring-grid">
       <div class="scoring-card">
-        ${donutChart(portfolioQ, '#1976D2', 90)}
+        
+  <svg width="90" height="90" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="45" cy="45" r="28" fill="none" stroke="#EEEEEE" stroke-width="8"/>
+    <circle cx="45" cy="45" r="28" fill="none" stroke="#1976D2" stroke-width="8"
+      stroke-dasharray="174.16989671501813 1.7592918860102884"
+      stroke-dashoffset="43.982297150257104"
+      stroke-linecap="round"/>
+    <text x="45" y="50" text-anchor="middle" font-size="13" font-weight="700" fill="#333333">99%</text>
+  </svg>
         <div class="scoring-card-label">Cartera</div>
         <div class="scoring-card-weight">Peso 40% · Cumplimiento de meta</div>
       </div>
       <div class="scoring-card">
-        ${donutChart(followUpQ, '#F57C00', 90)}
+        
+  <svg width="90" height="90" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="45" cy="45" r="28" fill="none" stroke="#EEEEEE" stroke-width="8"/>
+    <circle cx="45" cy="45" r="28" fill="none" stroke="#F57C00" stroke-width="8"
+      stroke-dasharray="149.53981031087415 26.38937829015427"
+      stroke-dashoffset="43.982297150257104"
+      stroke-linecap="round"/>
+    <text x="45" y="50" text-anchor="middle" font-size="13" font-weight="700" fill="#333333">85%</text>
+  </svg>
         <div class="scoring-card-label">Seguimiento</div>
         <div class="scoring-card-weight">Peso 30% · Disciplina de leads</div>
       </div>
       <div class="scoring-card">
-        ${donutChart(conversionQ, '#388E3C', 90)}
+        
+  <svg width="90" height="90" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="45" cy="45" r="28" fill="none" stroke="#EEEEEE" stroke-width="8"/>
+    <circle cx="45" cy="45" r="28" fill="none" stroke="#388E3C" stroke-width="8"
+      stroke-dasharray="174.16989671501813 1.7592918860102884"
+      stroke-dashoffset="43.982297150257104"
+      stroke-linecap="round"/>
+    <text x="45" y="50" text-anchor="middle" font-size="13" font-weight="700" fill="#333333">99%</text>
+  </svg>
         <div class="scoring-card-label">Conversión</div>
         <div class="scoring-card-weight">Peso 30% · Tasa de cierre</div>
       </div>
@@ -288,35 +142,35 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
   <!-- ── VENTA MES ───────────────────────────────────────────────── -->
   <div class="section">
     <div class="section-eyebrow">N3uralia Intelligence Platform</div>
-    <div class="section-title">Venta ${monthName}</div>
+    <div class="section-title">Venta Junio</div>
 
     <div class="metrics-grid">
       <div class="metric-card">
-        <div class="metric-label">Cierres ${monthName}</div>
-        <div class="metric-value">${currentActual}</div>
-        <div class="metric-target">Meta: ${currentTarget.toFixed(1)}</div>
+        <div class="metric-label">Cierres Junio</div>
+        <div class="metric-value">8</div>
+        <div class="metric-target">Meta: 8.1</div>
         <div class="metric-row">
-          <span>${currentPct}% Cumplimiento</span>
-          <span class="badge" style="background:${badgeBg}">${badgeLabel}</span>
+          <span>99% Cumplimiento</span>
+          <span class="badge" style="background:#27AE60">Verde</span>
         </div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Productividad</div>
-        <div class="metric-value">${currentProd}</div>
+        <div class="metric-value">1.14</div>
         <div class="metric-target">Por ejecutiva</div>
-        <div class="metric-row"><span>${totalPartners} ejecutivas</span></div>
+        <div class="metric-row"><span>7 ejecutivas</span></div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Inteligencia de Mercado</div>
-        <div class="metric-value">${marketSignalCount}</div>
+        <div class="metric-value">8</div>
         <div class="metric-target">Señales monitoreadas</div>
-        <div class="metric-row"><span>Confianza prom: ${marketAvgConf}%</span></div>
+        <div class="metric-row"><span>Confianza prom: NaN%</span></div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Valuación</div>
-        <div class="metric-value">${propertyTypes.length}</div>
+        <div class="metric-value">2</div>
         <div class="metric-target">Tipos de propiedad</div>
-        <div class="metric-row"><span>${propertyTypes.join(' · ')}</span></div>
+        <div class="metric-row"><span>Casa · Departamento</span></div>
       </div>
     </div>
   </div>
@@ -331,30 +185,30 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
         <thead>
           <tr>
             <th style="text-align:left">Indicador</th>
-            ${monthShort.map(m => `<th>${m}</th>`).join('')}
+            <th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th>
             <th class="acum">Acum</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Cierres mes</td>
-            ${actuals.map(v => `<td>${v}</td>`).join('')}
-            <td class="acum">${totalSales}</td>
+            <td>4</td><td>3</td><td>7</td><td>8</td><td>4</td><td>8</td>
+            <td class="acum">34</td>
           </tr>
           <tr>
             <td>Meta cierres</td>
-            ${monthlyData.map(m => `<td>${(m.target || 8.1).toFixed(1)}</td>`).join('')}
-            <td class="acum">${totalTarget.toFixed(1)}</td>
+            <td>8.1</td><td>8.1</td><td>8.1</td><td>8.1</td><td>8.1</td><td>8.1</td>
+            <td class="acum">48.6</td>
           </tr>
           <tr>
             <td>Cumplimiento %</td>
-            ${compliancePcts.map(v => `<td>${v}%</td>`).join('')}
-            <td class="acum">${totalCompPct}%</td>
+            <td>49%</td><td>37%</td><td>86%</td><td>99%</td><td>49%</td><td>99%</td>
+            <td class="acum">70%</td>
           </tr>
           <tr>
             <td>Productividad</td>
-            ${actuals.map(v => `<td>${(v / totalPartners).toFixed(2)}</td>`).join('')}
-            <td class="acum">${(totalSales / totalPartners).toFixed(2)}</td>
+            <td>0.57</td><td>0.43</td><td>1.00</td><td>1.14</td><td>0.57</td><td>1.14</td>
+            <td class="acum">4.86</td>
           </tr>
         </tbody>
       </table>
@@ -364,14 +218,50 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
     <div class="charts-row" style="margin-top:24px">
       <div class="chart-box">
         <div class="chart-label">Cierres por mes</div>
-        ${barChart(actuals, maxActual + 1, monthShort, '#333333')}
+        <svg width="520" height="190" xmlns="http://www.w3.org/2000/svg">
+      <text x="42" y="19" text-anchor="end" font-size="11" fill="#7F8C8D">Ene</text>
+      <rect x="48" y="5" width="183.11111111111111" height="20" rx="3" fill="#333333" opacity="0.85"/>
+      <text x="237.11111111111111" y="19" font-size="11" fill="#333333" font-weight="600">4</text>
+      <text x="42" y="49" text-anchor="end" font-size="11" fill="#7F8C8D">Feb</text>
+      <rect x="48" y="35" width="137.33333333333331" height="20" rx="3" fill="#333333" opacity="0.85"/>
+      <text x="191.33333333333331" y="49" font-size="11" fill="#333333" font-weight="600">3</text>
+      <text x="42" y="79" text-anchor="end" font-size="11" fill="#7F8C8D">Mar</text>
+      <rect x="48" y="65" width="320.44444444444446" height="20" rx="3" fill="#333333" opacity="0.85"/>
+      <text x="374.44444444444446" y="79" font-size="11" fill="#333333" font-weight="600">7</text>
+      <text x="42" y="109" text-anchor="end" font-size="11" fill="#7F8C8D">Abr</text>
+      <rect x="48" y="95" width="366.22222222222223" height="20" rx="3" fill="#333333" opacity="0.85"/>
+      <text x="420.22222222222223" y="109" font-size="11" fill="#333333" font-weight="600">8</text>
+      <text x="42" y="139" text-anchor="end" font-size="11" fill="#7F8C8D">May</text>
+      <rect x="48" y="125" width="183.11111111111111" height="20" rx="3" fill="#333333" opacity="0.85"/>
+      <text x="237.11111111111111" y="139" font-size="11" fill="#333333" font-weight="600">4</text>
+      <text x="42" y="169" text-anchor="end" font-size="11" fill="#7F8C8D">Jun</text>
+      <rect x="48" y="155" width="366.22222222222223" height="20" rx="3" fill="#333333" opacity="0.85"/>
+      <text x="420.22222222222223" y="169" font-size="11" fill="#333333" font-weight="600">8</text></svg>
         <div style="font-size:10px;color:#999;margin-top:6px">
-          Meta mensual: <strong>8.1</strong> · Acumulado: <strong>${totalSales}</strong>
+          Meta mensual: <strong>8.1</strong> · Acumulado: <strong>34</strong>
         </div>
       </div>
       <div class="chart-box">
         <div class="chart-label">Cumplimiento % (linea roja = meta 100%)</div>
-        ${complianceBarChart(compliancePcts, monthShort)}
+        <svg width="520" height="202" xmlns="http://www.w3.org/2000/svg"><line x1="383" y1="0" x2="383" y2="202" stroke="#E74C3C" stroke-width="1.5" stroke-dasharray="4,3"/><text x="386" y="10" font-size="9" fill="#E74C3C">Meta</text>
+      <text x="42" y="20" text-anchor="end" font-size="11" fill="#7F8C8D">Ene</text>
+      <rect x="48" y="5" width="164.15" height="22" rx="3" fill="#E74C3C" opacity="0.85"/>
+      <text x="218.15" y="20" font-size="11" fill="#333333" font-weight="600">49%</text>
+      <text x="42" y="52" text-anchor="end" font-size="11" fill="#7F8C8D">Feb</text>
+      <rect x="48" y="37" width="123.95" height="22" rx="3" fill="#E74C3C" opacity="0.85"/>
+      <text x="177.95" y="52" font-size="11" fill="#333333" font-weight="600">37%</text>
+      <text x="42" y="84" text-anchor="end" font-size="11" fill="#7F8C8D">Mar</text>
+      <rect x="48" y="69" width="288.1" height="22" rx="3" fill="#F39C12" opacity="0.85"/>
+      <text x="342.1" y="84" font-size="11" fill="#333333" font-weight="600">86%</text>
+      <text x="42" y="116" text-anchor="end" font-size="11" fill="#7F8C8D">Abr</text>
+      <rect x="48" y="101" width="331.65" height="22" rx="3" fill="#27AE60" opacity="0.85"/>
+      <text x="385.65" y="116" font-size="11" fill="#333333" font-weight="600">99%</text>
+      <text x="42" y="148" text-anchor="end" font-size="11" fill="#7F8C8D">May</text>
+      <rect x="48" y="133" width="164.15" height="22" rx="3" fill="#E74C3C" opacity="0.85"/>
+      <text x="218.15" y="148" font-size="11" fill="#333333" font-weight="600">49%</text>
+      <text x="42" y="180" text-anchor="end" font-size="11" fill="#7F8C8D">Jun</text>
+      <rect x="48" y="165" width="331.65" height="22" rx="3" fill="#27AE60" opacity="0.85"/>
+      <text x="385.65" y="180" font-size="11" fill="#333333" font-weight="600">99%</text></svg>
         <div style="font-size:10px;color:#999;margin-top:6px">
           <span class="dot" style="background:#27AE60"></span>Verde ≥90%&nbsp;
           <span class="dot" style="background:#F39C12"></span>Amarillo ≥70%&nbsp;
@@ -385,7 +275,7 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
   <div class="section">
     <div class="section-title">Definiciones Operacionales</div>
     <p style="font-size:13px;color:#7F8C8D;margin-bottom:24px">
-      Estándares operacionales basados en datos reales del CRM — Enero a ${monthName} 2026.
+      Estándares operacionales basados en datos reales del CRM — Enero a Junio 2026.
     </p>
 
     <!-- 1. Lead Prioritization -->
@@ -398,28 +288,38 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
       <div class="def-grid-4">
         <div class="def-tile">
           <div class="def-tile-label">TIER 1 · Clasificados</div>
-          <div class="def-tile-value">${T1.toLocaleString('es-CL')}</div>
+          <div class="def-tile-value">4.131</div>
           <div class="def-tile-sub">66% de leads</div>
         </div>
         <div class="def-tile">
           <div class="def-tile-label">TIER 2 · Activos &lt;30d</div>
-          <div class="def-tile-value">${T2.toLocaleString('es-CL')}</div>
+          <div class="def-tile-value">14.034</div>
           <div class="def-tile-sub">100% activos</div>
         </div>
         <div class="def-tile">
           <div class="def-tile-label">TIER 3 · 15–90 días</div>
-          <div class="def-tile-value">${T3.toLocaleString('es-CL')}</div>
+          <div class="def-tile-value">3.488</div>
           <div class="def-tile-sub">Seguimiento</div>
         </div>
         <div class="def-tile">
           <div class="def-tile-label">TIER 4 · &gt;90 días</div>
-          <div class="def-tile-value">${T4.toLocaleString('es-CL')}</div>
+          <div class="def-tile-value">8.572</div>
           <div class="def-tile-sub">Reactivación</div>
         </div>
       </div>
 
       <div class="chart-label" style="margin-bottom:6px">Distribución de leads por tier</div>
-      ${stackedLeadBar(T1, T2, T3, T4)}
+      
+  <svg width="480" height="56" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0"              y="0" width="65.60397022332506" height="36" rx="0" fill="#27AE60"/>
+    <rect x="65.60397022332506"          y="0" width="222.87245657568238" height="36" rx="0" fill="#1976D2"/>
+    <rect x="288.4764267990074"       y="0" width="55.39255583126551" height="36" rx="0" fill="#F39C12"/>
+    <rect x="343.8689826302729"    y="0" width="136.13101736972703" height="36" rx="0" fill="#E74C3C"/>
+    <text x="32.80198511166253"             y="50" text-anchor="middle" font-size="9" fill="#555">T1 14%</text>
+    <text x="177.04019851116624"          y="50" text-anchor="middle" font-size="9" fill="#555">T2 46%</text>
+    <text x="316.1727047146402"       y="50" text-anchor="middle" font-size="9" fill="#555">T3 12%</text>
+    <text x="411.9344913151364"    y="50" text-anchor="middle" font-size="9" fill="#555">T4 28%</text>
+  </svg>
       <div style="margin-top:10px;font-size:10px;color:#999">
         <span class="dot" style="background:#27AE60"></span>T1 Clasificados&nbsp;
         <span class="dot" style="background:#1976D2"></span>T2 Activos&nbsp;
@@ -427,7 +327,7 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
         <span class="dot" style="background:#E74C3C"></span>T4 Reactivar
       </div>
       <div class="alert-orange" style="margin-top:12px">
-        <strong>Oportunidad:</strong> ${T4.toLocaleString('es-CL')} leads (61%) en estatus >90 días requieren reactivación estratégica.
+        <strong>Oportunidad:</strong> 8.572 leads (61%) en estatus >90 días requieren reactivación estratégica.
       </div>
     </div>
 
@@ -465,8 +365,20 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
       </div>
 
       <div style="margin-bottom:16px">
-        <div class="chart-label">Embudo de conversión (Enero–${monthName} 2026)</div>
-        ${funnelChart(funnelSteps)}
+        <div class="chart-label">Embudo de conversión (Enero–Junio 2026)</div>
+        <svg width="460" height="144" xmlns="http://www.w3.org/2000/svg">
+      <text x="124" y="18" text-anchor="end" font-size="11" fill="#555">Leads Totales</text>
+      <rect x="130" y="0" width="270" height="28" rx="4" fill="#1976D2" opacity="0.85"/>
+      <text x="406" y="18" font-size="11" fill="#333" font-weight="600">30,225</text>
+      <text x="124" y="54" text-anchor="end" font-size="11" fill="#555">Leads Activos</text>
+      <rect x="130" y="36" width="125.36575682382134" height="28" rx="4" fill="#0288D1" opacity="0.85"/>
+      <text x="261.36575682382136" y="54" font-size="11" fill="#333" font-weight="600">14,034</text>
+      <text x="124" y="90" text-anchor="end" font-size="11" fill="#555">Visitas Agendadas</text>
+      <rect x="130" y="72" width="53.312158808933006" height="28" rx="4" fill="#F39C12" opacity="0.85"/>
+      <text x="189.31215880893302" y="90" font-size="11" fill="#333" font-weight="600">5,968</text>
+      <text x="124" y="126" text-anchor="end" font-size="11" fill="#555">Cierres (6m)</text>
+      <rect x="130" y="108" width="8" height="28" rx="4" fill="#27AE60" opacity="0.85"/>
+      <text x="144" y="126" font-size="11" fill="#333" font-weight="600">197</text></svg>
       </div>
 
       <div class="def-grid-2" style="margin-top:16px">
@@ -492,10 +404,9 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
 
   <!-- ── FOOTER ─────────────────────────────────────────────────── -->
   <div class="footer">
-    N3uralia Intelligence Platform · Reporte CEO ${monthName} 2026 · Generado ${now}
+    N3uralia Intelligence Platform · Reporte CEO Junio 2026 · Generado 02 de agosto de 2026
   </div>
 
 </div>
 </body>
-</html>`
-}
+</html>
