@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { generateCeoReportBrandbook } from '@/lib/ceo-report-brandbook-generator'
+import { generateCeoReportAprilLayout } from '@/lib/ceo-report-april-layout'
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,46 +9,58 @@ export async function POST(req: NextRequest) {
     if (!process.env.RESEND_API_KEY) {
       return NextResponse.json(
         { success: false, error: 'RESEND_API_KEY not configured' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    // Extract month from period (e.g., "2026-06" -> "Junio")
-    const [year, month] = period.split('-')
-    const monthIndex = parseInt(month) - 1
+    if (!period || !/^\d{4}-\d{2}$/.test(period)) {
+      return NextResponse.json(
+        { success: false, error: 'period must use YYYY-MM format' },
+        { status: 400 },
+      )
+    }
+
+    const monthIndex = Number(period.split('-')[1]) - 1
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
     const monthName = monthNames[monthIndex]
 
-    // Generate report HTML
-    const reportHTML = await generateCeoReportBrandbook(monthName, period)
+    if (!monthName) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid report month' },
+        { status: 400 },
+      )
+    }
 
-    // Send via Resend with full HTML rendering
+    const reportHTML = await generateCeoReportAprilLayout(monthName, period)
+    const recipient = recipient_email || 'juan@n3uralia.com'
+
     const resend = new Resend(process.env.RESEND_API_KEY)
     const response = await resend.emails.send({
       from: 'info@ppartnersgroup.app',
-      to: recipient_email || 'juan@n3uralia.com',
-      subject: `Reporte CEO Integral — ${monthName} 2026`,
+      to: recipient,
+      subject: `Control de Gestión — Cierre ${monthName} 2026`,
       html: reportHTML,
     })
 
     if (response.error) {
       return NextResponse.json(
         { success: false, error: response.error },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     return NextResponse.json({
       success: true,
       emailId: response.data?.id,
-      recipient: recipient_email,
+      recipient,
       period,
+      layout: 'april-canonical-v1',
     })
   } catch (error) {
     console.error('Error sending report:', error)
     return NextResponse.json(
       { success: false, error: String(error) },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
