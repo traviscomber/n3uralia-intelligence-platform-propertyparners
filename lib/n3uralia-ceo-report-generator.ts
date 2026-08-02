@@ -169,36 +169,49 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
   <!-- ── CALIDAD DE GESTIÓN ─────────────────────────────────────── -->
   <div class="section">
     <div class="section-title">Calidad de Gestión</div>
-
-    <div class="score-total">
-      <div class="score-total-num">${mgmtScore}%</div>
-      <div class="score-total-meta">
-        Puntuación global de la operación<br>
-        <span style="color:#999">Cartera 40% · Seguimiento 30% · Conversión 30%</span>
+    
+    <!-- Overall Score Card -->
+    <div style="background:linear-gradient(135deg, #1976D2 0%, #1565C0 100%);color:white;border-radius:8px;padding:28px 24px;margin-bottom:28px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+        <div style="font-size:48px;font-weight:800;line-height:1">${mgmtScore}%</div>
+        <div style="font-size:14px;opacity:0.9">Puntuación Global</div>
       </div>
+      <div style="font-size:13px;opacity:0.85">Operación Integral — Cartera 40% · Seguimiento 30% · Conversión 30%</div>
     </div>
-
-    <div class="scoring-grid">
-      <div class="scoring-card">
-        <div style="height:60px;background:#F5F5F5;border-radius:30px;position:relative;margin-bottom:12px">
-          <div style="height:100%;width:${portfolioQ}%;background:#1976D2;border-radius:30px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px">${portfolioQ}%</div>
+    
+    <!-- Three Metrics Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <!-- CARTERA -->
+      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #1976D2">
+        <div style="font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Cartera</div>
+        <div style="font-size:32px;font-weight:700;color:#1976D2;margin-bottom:2px">${portfolioQ}%</div>
+        <div style="font-size:12px;color:#999;margin-bottom:14px">Cumplimiento de meta</div>
+        <div style="background:white;height:6px;border-radius:3px;overflow:hidden;background:#E3F2FD">
+          <div style="height:100%;width:${portfolioQ}%;background:#1976D2;transition:width 0.3s ease"></div>
         </div>
-        <div class="scoring-card-label">Cartera</div>
-        <div class="scoring-card-weight">Peso 40% · Cumplimiento de meta</div>
+        <div style="font-size:11px;color:#999;margin-top:8px">Peso: 40%</div>
       </div>
-      <div class="scoring-card">
-        <div style="height:60px;background:#F5F5F5;border-radius:30px;position:relative;margin-bottom:12px">
-          <div style="height:100%;width:${followUpQ}%;background:#F57C00;border-radius:30px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px">${followUpQ}%</div>
+      
+      <!-- SEGUIMIENTO -->
+      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #F57C00">
+        <div style="font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Seguimiento</div>
+        <div style="font-size:32px;font-weight:700;color:#F57C00;margin-bottom:2px">${followUpQ}%</div>
+        <div style="font-size:12px;color:#999;margin-bottom:14px">Disciplina de leads</div>
+        <div style="background:white;height:6px;border-radius:3px;overflow:hidden;background:#FFF3E0">
+          <div style="height:100%;width:${followUpQ}%;background:#F57C00;transition:width 0.3s ease"></div>
         </div>
-        <div class="scoring-card-label">Seguimiento</div>
-        <div class="scoring-card-weight">Peso 30% · Disciplina de leads</div>
+        <div style="font-size:11px;color:#999;margin-top:8px">Peso: 30%</div>
       </div>
-      <div class="scoring-card">
-        <div style="height:60px;background:#F5F5F5;border-radius:30px;position:relative;margin-bottom:12px">
-          <div style="height:100%;width:${conversionQ}%;background:#388E3C;border-radius:30px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px">${conversionQ}%</div>
+      
+      <!-- CONVERSIÓN -->
+      <div style="background:#F8F9FA;border-radius:8px;padding:20px;border-left:4px solid #388E3C">
+        <div style="font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px">Conversión</div>
+        <div style="font-size:32px;font-weight:700;color:#388E3C;margin-bottom:2px">${conversionQ}%</div>
+        <div style="font-size:12px;color:#999;margin-bottom:14px">Tasa de cierre</div>
+        <div style="background:white;height:6px;border-radius:3px;overflow:hidden;background:#E8F5E9">
+          <div style="height:100%;width:${conversionQ}%;background:#388E3C;transition:width 0.3s ease"></div>
         </div>
-        <div class="scoring-card-label">Conversión</div>
-        <div class="scoring-card-weight">Peso 30% · Tasa de cierre</div>
+        <div style="font-size:11px;color:#999;margin-top:8px">Peso: 30%</div>
       </div>
     </div>
   </div>
