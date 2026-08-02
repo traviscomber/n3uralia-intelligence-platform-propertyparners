@@ -1,0 +1,62 @@
+{
+  "reportId": "property-partners-ceo-2026-04",
+  "title": "Control de Gestión - Cierre Abril",
+  "brand": "Property Partners Vitacura",
+  "fontFamily": "Calibri, Segoe UI, Arial, sans-serif",
+  "commercialCutoff": "2026-04-30",
+  "operationalSnapshotUpdatedAt": "2026-08-01",
+  "commercial": {
+    "month": "2026-04",
+    "closings": 8,
+    "monthlyTarget": 8.1,
+    "monthlyCompliancePct": 99,
+    "productivityPerExecutive": 1.14,
+    "previousMonthClosings": 7,
+    "closingDelta": 1,
+    "cumulativeClosings": 22,
+    "cumulativeTarget": 32.4,
+    "cumulativeCompliancePct": 67.9,
+    "series": [
+      { "month": "2026-01", "closings": 4, "target": 8.1, "compliancePct": 49, "productivity": 0.57 },
+      { "month": "2026-02", "closings": 3, "target": 8.1, "compliancePct": 37, "productivity": 0.43 },
+      { "month": "2026-03", "closings": 7, "target": 8.1, "compliancePct": 86, "productivity": 1.0 },
+      { "month": "2026-04", "closings": 8, "target": 8.1, "compliancePct": 99, "productivity": 1.14 }
+    ]
+  },
+  "operationalSnapshot": {
+    "periodCovered": "2026-01/2026-06",
+    "label": "Total operacional actualizado",
+    "leads": 30225,
+    "activeLeads": 14034,
+    "visits": 5968,
+    "closings": 197,
+    "conversionPct": 3.3,
+    "leadTiers": [
+      { "tier": 1, "count": 4131, "label": "Clasificados", "note": "66% de leads" },
+      { "tier": 2, "count": 14034, "label": "Activos <30 días", "note": "100% activos" },
+      { "tier": 3, "count": 3488, "label": "15-90 días", "note": "Seguimiento" },
+      { "tier": 4, "count": 8572, "label": "Más de 90 días", "note": "Reactivación" }
+    ]
+  },
+  "operationalParameters": {
+    "classification": "reference-not-result",
+    "contactStandards": {
+      "house": { "firstContactHours": 48, "followUpHours": 24, "recontactDays": 7 },
+      "apartment": { "firstContactHours": 24, "followUpHours": 12, "recontactDays": 5 }
+    },
+    "conversionBenchmarks": {
+      "classification": "reference-not-measured-result",
+      "house": { "leadToVisitPct": "15-20", "visitToClosePct": "3.5-4.5", "totalPct": "0.5-0.9" },
+      "apartment": { "leadToVisitPct": "20-25", "visitToClosePct": "2.5-3.5", "totalPct": "0.5-0.9" }
+    }
+  },
+  "presentationRules": {
+    "prioritizeMeasuredResults": true,
+    "showOperationalSnapshotSeparately": true,
+    "neverPresentBenchmarksAsMeasuredResults": true,
+    "neverMixFutureOperationalDataIntoCommercialCutoff": true,
+    "hideUnavailableMetricsInsteadOfShowingND": true,
+    "useTabularNumbers": true,
+    "preventMetricOverflow": true
+  }
+}
