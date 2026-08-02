@@ -117,7 +117,7 @@ export async function sendDocumentEmail(
       <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-collapse: collapse;">
         <tr>
           <td style="background-color: #000000; padding: 0; text-align: center; font-size: 0; line-height: 0;">
-            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CoWqmCXZyQx7lijDgOpxDWW9YmiCEu.png" alt="Property Partners Vitacura" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0;">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-bcIKL0Aq2V18sQvduTI22Aow5vCOY2.png" alt="Property Partners Vitacura" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0;">
           </td>
         </tr>
         <tr>
