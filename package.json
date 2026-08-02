@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/verify-github-delivery-classification.mjs",
+    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -13,6 +13,7 @@
     "security:credential-boundaries": "node scripts/check-credential-boundaries.mjs",
     "security:exposure-boundaries": "node scripts/audit-exposure-boundaries.mjs",
     "security:delivery-classification": "node scripts/verify-github-delivery-classification.mjs",
+    "security:delivery-surface": "node scripts/verify-github-delivery-surface.mjs",
     "security:runtime-readiness": "node scripts/check-n3uralia-runtime-readiness.mjs",
     "security:runtime-cutover": "node scripts/verify-n3uralia-runtime-cutover.mjs",
     "security:runtime-consumers": "node scripts/inventory-n3uralia-consumers.mjs",
