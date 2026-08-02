@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   advanceSchedule,
   assertClosedMonthlyPeriod,
@@ -40,6 +42,21 @@ assert.throws(
   /mes completamente terminado/,
 )
 
+const previewRoute = readFileSync(
+  resolve(process.cwd(), 'app/api/management/reports/preview/route.ts'),
+  'utf8',
+)
+const sendRoute = readFileSync(
+  resolve(process.cwd(), 'app/api/cron/send-ceo-report-brandbook/route.ts'),
+  'utf8',
+)
+
+assert.match(previewRoute, /assertClosedMonthlyPeriod\(period\)/)
+assert.match(previewRoute, /previousMonthBounds\(\)/)
+assert.match(sendRoute, /assertClosedMonthlyPeriod\(period\)/)
+assert.doesNotMatch(sendRoute, /error:\s*String\(error\)/)
+assert.match(sendRoute, /Cierre \$\{monthName\} \$\{year\}/)
+
 const now = new Date('2026-08-01T09:00:00.000Z')
 assert.equal(advanceSchedule('2026-08-01T09:00:00.000Z', 'monthly', now), '2026-09-01T09:00:00.000Z')
 assert.equal(advanceSchedule('2026-05-01T09:00:00.000Z', 'quarterly', now), '2026-11-01T09:00:00.000Z')
@@ -47,4 +64,4 @@ assert.equal(advanceSchedule('2024-08-01T09:00:00.000Z', 'yearly', now), '2027-0
 assert.throws(() => advanceSchedule('invalid', 'monthly', now), /next_run_at inválido/)
 assert.throws(() => advanceSchedule('2026-08-01T09:00:00.000Z', 'weekly', now), /Cadencia no soportada/)
 
-console.log('Management report scheduling, closure and authorization rules verified.')
+console.log('Management report scheduling, route closure and authorization rules verified.')
