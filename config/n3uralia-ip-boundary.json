@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "policy": "preserve-client-operation-while-extracting-proprietary-runtime",
   "classes": {
     "client": {
@@ -24,6 +24,17 @@
         "types-and-transport-only",
         "no-inference-rules",
         "no-provider-secrets"
+      ]
+    },
+    "transitional-boundary": {
+      "paths": [
+        "lib/n3uralia-intelligence-gateway.ts"
+      ],
+      "restrictions": [
+        "server-only",
+        "temporary-local-fallback",
+        "must-be-removed-after-remote-validation",
+        "must-not-be-imported-by-client-components"
       ]
     },
     "n3uralia-proprietary": {
@@ -62,6 +73,12 @@
     "requireFunctionalEquivalence": true,
     "requireCredentialRotationBeforeClientTransfer": true,
     "requireGitHistoryReviewBeforeClientTransfer": true,
-    "verifiedInventoryDocument": "docs/canonical/N3URALIA_PROPRIETARY_MODULE_INVENTORY.md"
+    "verifiedInventoryDocument": "docs/canonical/N3URALIA_PROPRIETARY_MODULE_INVENTORY.md",
+    "gateway": "lib/n3uralia-intelligence-gateway.ts",
+    "allowedModes": [
+      "local",
+      "shadow",
+      "remote"
+    ]
   }
 }
