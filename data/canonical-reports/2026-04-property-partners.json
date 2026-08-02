@@ -24,8 +24,9 @@
     ]
   },
   "operationalSnapshot": {
+    "classification": "measured-consolidated-results",
     "periodCovered": "2026-01/2026-06",
-    "label": "Total operacional actualizado",
+    "label": "Resultados operacionales consolidados actualizados",
     "leads": 30225,
     "activeLeads": 14034,
     "visits": 5968,
@@ -38,14 +39,15 @@
       { "tier": 4, "count": 8572, "label": "Más de 90 días", "note": "Reactivación" }
     ]
   },
-  "operationalParameters": {
-    "classification": "reference-not-result",
+  "operationalDefinitions": {
+    "sourceBasis": "Definiciones operacionales activas basadas en datos reales del CRM",
     "contactStandards": {
+      "classification": "active-operational-standard",
       "house": { "firstContactHours": 48, "followUpHours": 24, "recontactDays": 7 },
       "apartment": { "firstContactHours": 24, "followUpHours": 12, "recontactDays": 5 }
     },
     "conversionBenchmarks": {
-      "classification": "reference-not-measured-result",
+      "classification": "active-operational-benchmark",
       "house": { "leadToVisitPct": "15-20", "visitToClosePct": "3.5-4.5", "totalPct": "0.5-0.9" },
       "apartment": { "leadToVisitPct": "20-25", "visitToClosePct": "2.5-3.5", "totalPct": "0.5-0.9" }
     }
@@ -53,7 +55,10 @@
   "presentationRules": {
     "prioritizeMeasuredResults": true,
     "showOperationalSnapshotSeparately": true,
-    "neverPresentBenchmarksAsMeasuredResults": true,
+    "labelStandardsAsActiveOperationalStandards": true,
+    "labelBenchmarksAsActiveOperationalBenchmarks": true,
+    "neverPresentStandardsOrBenchmarksAsObservedResults": true,
+    "neverDowngradeActiveOperationalDefinitionsToGenericReferences": true,
     "neverMixFutureOperationalDataIntoCommercialCutoff": true,
     "hideUnavailableMetricsInsteadOfShowingND": true,
     "useTabularNumbers": true,
