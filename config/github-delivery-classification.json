@@ -62,8 +62,9 @@
     },
     {
       "pattern": "lib/n3uralia-intelligence-gateway.ts",
-      "class": "requires-review",
-      "delivery": "review-before-transfer"
+      "class": "n3uralia-proprietary",
+      "delivery": "exclude-before-transfer",
+      "note": "Contains reusable orchestration, parity evaluation and direct coupling to the proprietary engine."
     },
     {
       "pattern": ".env*",
