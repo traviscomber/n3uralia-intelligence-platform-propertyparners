@@ -112,10 +112,15 @@ export async function sendDocumentEmail(
 ) {
   const subject = `Business Intelligence Document: ${documentTitle}`
 
-  // Determine greeting based on time of day (before 12:00 = Buenos días, after 12:00 = Buenas tardes)
+  // Determine greeting based on time of day in Chile timezone (before 12:00 = Buenos días, after 12:00 = Buenas tardes)
   const now = new Date()
-  const hour = now.getHours()
-  const greeting = hour < 12 ? 'Buenos días' : 'Buenas tardes'
+  const chileTimeStr = new Intl.DateTimeFormat('es-CL', {
+    timeZone: 'America/Santiago',
+    hour: '2-digit',
+    hour12: false,
+  }).format(now)
+  const chileHour = parseInt(chileTimeStr, 10)
+  const greeting = chileHour < 12 ? 'Buenos días' : 'Buenas tardes'
 
   // Parse the period (YYYY-MM) out of the title so we can show it once, formatted nicely,
   // and strip the redundant trailing period/brand text from the displayed title.
