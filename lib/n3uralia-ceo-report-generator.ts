@@ -11,100 +11,7 @@ function badge(pct: number) {
   return { cls: '#E74C3C', label: 'Rojo' }
 }
 
-/** SVG bar chart – horizontal bars, one per month */
-function barChart(values: number[], maxVal: number, months: string[], color = '#333333'): string {
-  const W = 520, BAR_H = 20, GAP = 10, LEFT = 48, RIGHT = 60
-  const chartW = W - LEFT - RIGHT
-  const H = values.length * (BAR_H + GAP) + 10
 
-  const bars = values.map((v, i) => {
-    const barW = maxVal > 0 ? Math.max(2, (v / maxVal) * chartW) : 2
-    const y = i * (BAR_H + GAP) + 5
-    return `
-      <text x="${LEFT - 6}" y="${y + BAR_H / 2 + 4}" text-anchor="end" font-size="11" fill="#7F8C8D">${months[i]}</text>
-      <rect x="${LEFT}" y="${y}" width="${barW}" height="${BAR_H}" rx="3" fill="${color}" opacity="0.85"/>
-      <text x="${LEFT + barW + 6}" y="${y + BAR_H / 2 + 4}" font-size="11" fill="#333333" font-weight="600">${v}</text>`
-  }).join('')
-
-  return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`
-}
-
-/** SVG bar chart – compliance % with color-coded bars */
-function complianceBarChart(values: number[], months: string[]): string {
-  const W = 520, BAR_H = 22, GAP = 10, LEFT = 48, RIGHT = 70
-  const chartW = W - LEFT - RIGHT
-  const H = values.length * (BAR_H + GAP) + 10
-
-  const bars = values.map((v, i) => {
-    const b = badge(v)
-    const barW = Math.max(2, (Math.min(v, 120) / 120) * chartW)
-    const y = i * (BAR_H + GAP) + 5
-    return `
-      <text x="${LEFT - 6}" y="${y + BAR_H / 2 + 4}" text-anchor="end" font-size="11" fill="#7F8C8D">${months[i]}</text>
-      <rect x="${LEFT}" y="${y}" width="${barW}" height="${BAR_H}" rx="3" fill="${b.cls}" opacity="0.85"/>
-      <text x="${LEFT + barW + 6}" y="${y + BAR_H / 2 + 4}" font-size="11" fill="#333333" font-weight="600">${v}%</text>`
-  }).join('')
-
-  // Target line at 100%
-  const targetX = LEFT + ((100 / 120) * chartW)
-  const targetLine = `<line x1="${targetX}" y1="0" x2="${targetX}" y2="${H}" stroke="#E74C3C" stroke-width="1.5" stroke-dasharray="4,3"/>`
-  const targetLabel = `<text x="${targetX + 3}" y="10" font-size="9" fill="#E74C3C">Meta</text>`
-
-  return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${targetLine}${targetLabel}${bars}</svg>`
-}
-
-/** SVG donut chart for scoring */
-function donutChart(pct: number, color: string, size = 80): string {
-  const r = 28, cx = size / 2, cy = size / 2
-  const circumference = 2 * Math.PI * r
-  const dash = (pct / 100) * circumference
-  return `
-  <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#EEEEEE" stroke-width="8"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="8"
-      stroke-dasharray="${dash} ${circumference - dash}"
-      stroke-dashoffset="${circumference * 0.25}"
-      stroke-linecap="round"/>
-    <text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="13" font-weight="700" fill="#333333">${pct}%</text>
-  </svg>`
-}
-
-/** SVG stacked bar for lead tiers */
-function stackedLeadBar(t1: number, t2: number, t3: number, t4: number): string {
-  const total = t1 + t2 + t3 + t4
-  const W = 480, H = 36
-  const w1 = (t1 / total) * W
-  const w2 = (t2 / total) * W
-  const w3 = (t3 / total) * W
-  const w4 = (t4 / total) * W
-  return `
-  <svg width="${W}" height="${H + 20}" xmlns="http://www.w3.org/2000/svg">
-    <rect x="0"              y="0" width="${w1}" height="${H}" rx="0" fill="#27AE60"/>
-    <rect x="${w1}"          y="0" width="${w2}" height="${H}" rx="0" fill="#1976D2"/>
-    <rect x="${w1+w2}"       y="0" width="${w3}" height="${H}" rx="0" fill="#F39C12"/>
-    <rect x="${w1+w2+w3}"    y="0" width="${w4}" height="${H}" rx="0" fill="#E74C3C"/>
-    <text x="${w1/2}"             y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T1 ${((t1/total)*100).toFixed(0)}%</text>
-    <text x="${w1+w2/2}"          y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T2 ${((t2/total)*100).toFixed(0)}%</text>
-    <text x="${w1+w2+w3/2}"       y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T3 ${((t3/total)*100).toFixed(0)}%</text>
-    <text x="${w1+w2+w3+w4/2}"    y="${H+14}" text-anchor="middle" font-size="9" fill="#555">T4 ${((t4/total)*100).toFixed(0)}%</text>
-  </svg>`
-}
-
-/** SVG mini funnel for conversion */
-function funnelChart(steps: { label: string; value: number; color: string }[]): string {
-  const W = 460, BAR_H = 28, GAP = 8, LEFT = 130, RIGHT = 60
-  const H = steps.length * (BAR_H + GAP)
-  const maxVal = steps[0].value
-  const bars = steps.map((s, i) => {
-    const barW = Math.max(8, (s.value / maxVal) * (W - LEFT - RIGHT))
-    const y = i * (BAR_H + GAP)
-    return `
-      <text x="${LEFT - 6}" y="${y + BAR_H / 2 + 4}" text-anchor="end" font-size="11" fill="#555">${s.label}</text>
-      <rect x="${LEFT}" y="${y}" width="${barW}" height="${BAR_H}" rx="4" fill="${s.color}" opacity="0.85"/>
-      <text x="${LEFT + barW + 6}" y="${y + BAR_H / 2 + 4}" font-size="11" fill="#333" font-weight="600">${s.value.toLocaleString()}</text>`
-  }).join('')
-  return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`
-}
 
 // ─── main generator ─────────────────────────────────────────────────────────
 
@@ -268,17 +175,23 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
 
     <div class="scoring-grid">
       <div class="scoring-card">
-        ${donutChart(portfolioQ, '#1976D2', 90)}
+        <div style="height:60px;background:#F5F5F5;border-radius:30px;position:relative;margin-bottom:12px">
+          <div style="height:100%;width:${portfolioQ}%;background:#1976D2;border-radius:30px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px">${portfolioQ}%</div>
+        </div>
         <div class="scoring-card-label">Cartera</div>
         <div class="scoring-card-weight">Peso 40% · Cumplimiento de meta</div>
       </div>
       <div class="scoring-card">
-        ${donutChart(followUpQ, '#F57C00', 90)}
+        <div style="height:60px;background:#F5F5F5;border-radius:30px;position:relative;margin-bottom:12px">
+          <div style="height:100%;width:${followUpQ}%;background:#F57C00;border-radius:30px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px">${followUpQ}%</div>
+        </div>
         <div class="scoring-card-label">Seguimiento</div>
         <div class="scoring-card-weight">Peso 30% · Disciplina de leads</div>
       </div>
       <div class="scoring-card">
-        ${donutChart(conversionQ, '#388E3C', 90)}
+        <div style="height:60px;background:#F5F5F5;border-radius:30px;position:relative;margin-bottom:12px">
+          <div style="height:100%;width:${conversionQ}%;background:#388E3C;border-radius:30px;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:12px">${conversionQ}%</div>
+        </div>
         <div class="scoring-card-label">Conversión</div>
         <div class="scoring-card-weight">Peso 30% · Tasa de cierre</div>
       </div>
@@ -360,18 +273,16 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
       </table>
     </div>
 
-    <!-- Gráficos de evolución -->
+    <!-- Gráficos simplificados sin SVG pesados -->
     <div class="charts-row" style="margin-top:24px">
       <div class="chart-box">
         <div class="chart-label">Cierres por mes</div>
-        ${barChart(actuals, maxActual + 1, monthShort, '#333333')}
         <div style="font-size:10px;color:#999;margin-top:6px">
           Meta mensual: <strong>8.1</strong> · Acumulado: <strong>${totalSales}</strong>
         </div>
       </div>
       <div class="chart-box">
-        <div class="chart-label">Cumplimiento % (linea roja = meta 100%)</div>
-        ${complianceBarChart(compliancePcts, monthShort)}
+        <div class="chart-label">Cumplimiento %</div>
         <div style="font-size:10px;color:#999;margin-top:6px">
           <span class="dot" style="background:#27AE60"></span>Verde ≥90%&nbsp;
           <span class="dot" style="background:#F39C12"></span>Amarillo ≥70%&nbsp;
@@ -418,8 +329,7 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
         </div>
       </div>
 
-      <div class="chart-label" style="margin-bottom:6px">Distribución de leads por tier</div>
-      ${stackedLeadBar(T1, T2, T3, T4)}
+      <div class="chart-label" style="margin-bottom:6px">Distribución de leads por tier (T1: ${T1}, T2: ${T2}, T3: ${T3}, T4: ${T4})</div>
       <div style="margin-top:10px;font-size:10px;color:#999">
         <span class="dot" style="background:#27AE60"></span>T1 Clasificados&nbsp;
         <span class="dot" style="background:#1976D2"></span>T2 Activos&nbsp;
@@ -466,7 +376,7 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
 
       <div style="margin-bottom:16px">
         <div class="chart-label">Embudo de conversión (Enero–${monthName} 2026)</div>
-        ${funnelChart(funnelSteps)}
+        <div style="font-size:11px;color:#7F8C8D;margin-top:8px">Leads: ${funnelSteps[0]?.value || 0} → Activos: ${funnelSteps[1]?.value || 0} → Visitas: ${funnelSteps[2]?.value || 0} → Cierres: ${funnelSteps[3]?.value || 0}</div>
       </div>
 
       <div class="def-grid-2" style="margin-top:16px">
