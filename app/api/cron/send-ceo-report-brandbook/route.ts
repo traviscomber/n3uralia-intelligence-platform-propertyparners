@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
 import { generateCeoReportAprilLayoutV2 } from '@/lib/ceo-report-april-layout-v2'
 import { generateCeoReportJanuaryLayout } from '@/lib/ceo-report-january-layout'
-import { assertClosedMonthlyPeriod } from '@/lib/management-report-schedule'
+import {
+  assertClosedMonthlyPeriod,
+  getCronAuthorizationFailure,
+} from '@/lib/management-report-schedule'
 
 const MONTH_NAMES = [
   'Enero',
@@ -19,8 +23,20 @@ const MONTH_NAMES = [
   'Diciembre',
 ]
 
+async function authorizeDelivery(req: NextRequest) {
+  const cronFailure = getCronAuthorizationFailure(
+    req.headers.get('authorization'),
+    process.env.CRON_SECRET,
+  )
+
+  if (cronFailure === null) return
+  await requireCapability('management.global.read')
+}
+
 export async function POST(req: NextRequest) {
   try {
+    await authorizeDelivery(req)
+
     const { period, recipient_email } = await req.json()
 
     if (!process.env.RESEND_API_KEY) {
@@ -85,6 +101,9 @@ export async function POST(req: NextRequest) {
       layout: period === '2026-01' ? 'january-canonical-v1' : 'april-canonical-v2-charts',
     })
   } catch (error) {
+    const accessResponse = accessErrorResponse(error)
+    if (accessResponse.status !== 500) return accessResponse
+
     console.error(
       'Error sending CEO report:',
       error instanceof Error ? error.name : 'unknown_error',
