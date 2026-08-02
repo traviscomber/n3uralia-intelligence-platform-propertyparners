@@ -1,164 +1,108 @@
-# Arquitectura propietaria de ejecución N3uralia
+# Protección del código propietario N3uralia
 
-## Decisión obligatoria
+## Decisión vigente
 
-El repositorio que será entregado o administrado por Property Partners no puede contener el código fuente del motor propietario de N3uralia.
+La aplicación de Property Partners puede continuar funcionando como una sola plataforma y dentro del mismo despliegue de Vercel.
 
-Cualquier código incluido en ese repositorio debe considerarse accesible al Cliente, aunque el repositorio sea privado, el código esté minificado o exista una licencia restrictiva.
+No existe una obligación técnica de dividir el producto en dos servicios ni de mover el motor a otro proveedor. La prioridad es proteger únicamente la lógica diferencial de N3uralia que no corresponde al core inmobiliario de Property Partners.
 
-Por lo tanto, la protección real exige separación física de repositorios y separación de ejecución.
+La arquitectura operativa principal es `local-server-only`.
 
-## Arquitectura objetivo
+## Qué permanece en el proyecto Property Partners
 
-### Repositorio del Cliente
+Debe permanecer en el proyecto todo lo necesario para operar el negocio contratado:
 
-Debe contener únicamente:
+- CRM, contactos, propiedades y operaciones;
+- dashboards y flujos inmobiliarios;
+- autenticación, roles y permisos;
+- valorizaciones y reportes específicos del Cliente;
+- integraciones de Property Partners;
+- componentes visuales y experiencia de usuario;
+- modelos, reglas y datos propios del negocio inmobiliario;
+- rutas API y procesos server-side necesarios para la operación;
+- despliegue y ejecución en Vercel.
 
-- interfaz web;
-- rutas y componentes del producto Property Partners;
-- contratos de API y tipos públicos;
-- adaptadores de datos del Cliente;
-- documentación canónica;
-- migraciones y configuraciones específicas del Cliente;
-- clientes SDK sin lógica propietaria;
-- validaciones de entrada y presentación de resultados.
+No debe separarse código sólo por ser complejo o por haber sido desarrollado por N3uralia. La clasificación depende de su función y reutilización, no de su autoría.
 
-No debe contener:
+## Qué se considera propietario de N3uralia
 
-- prompts de sistema;
-- reglas internas de razonamiento;
-- scoring propietario;
-- lógica de priorización;
-- heurísticas;
-- orquestadores de agentes;
-- plantillas internas de análisis;
-- cadenas de decisión;
-- memoria estratégica reutilizable;
-- lógica transversal reutilizable entre clientes;
-- secretos o claves de servicio N3uralia.
+La protección especial se limita a elementos diferenciales y reutilizables fuera de Property Partners:
 
-### Repositorio privado N3uralia
+- heurísticas generales reutilizables;
+- reglas de inferencia transversal;
+- scoring propietario genérico;
+- priorización de señales, riesgos y acciones;
+- prompts internos;
+- orquestadores y metodología reutilizable entre clientes;
+- memoria estratégica genérica;
+- lógica de recomendación no específica del negocio de Property Partners.
 
-Debe permanecer bajo control exclusivo de N3uralia y contener:
+Estos módulos pueden permanecer en el mismo repositorio mientras N3uralia conserve su control y no exista una transferencia del código fuente al Cliente.
 
-- motor de inteligencia;
-- agentes y orquestadores;
-- prompts y políticas internas;
-- modelos de scoring;
-- reglas de interpretación;
-- normalización propietaria;
-- lógica de recomendación;
-- memoria y contexto reutilizable;
-- evaluación de confianza;
-- herramientas internas de auditoría;
-- conectores genéricos reutilizables.
+## Protección dentro del mismo despliegue
 
-### Servicio de ejecución N3uralia
+Los módulos propietarios deben:
 
-El motor debe desplegarse como un servicio separado, controlado por N3uralia.
+1. declarar `server-only`;
+2. ser importados únicamente desde componentes servidor, rutas API o procesos backend;
+3. quedar excluidos de bundles del navegador;
+4. no exponer prompts, reglas, scoring, heurísticas o trazas internas;
+5. devolver a la UI sólo resultados mínimos y tipados;
+6. evitar logs con secretos, evidencia sensible o lógica interna;
+7. mantener separación clara respecto de la lógica específica de Property Partners;
+8. permanecer bajo control de acceso de N3uralia en GitHub y Vercel.
 
-El repositorio del Cliente sólo debe consumir una API versionada mediante autenticación de servicio a servicio.
+La minificación u ofuscación no reemplazan estas protecciones.
 
-Flujo:
+## Respuestas permitidas
 
-```text
-Property Partners App
-  -> API adapter del Cliente
-  -> N3uralia Runtime API
-  -> motor propietario N3uralia
-  -> respuesta mínima y tipada
-  -> UI / reportes del Cliente
-```
+Las APIs y componentes pueden consumir y mostrar:
 
-## Contrato de API
+- señales finales;
+- riesgos finales;
+- acciones recomendadas;
+- severidad, prioridad y dominio;
+- evidencia autorizada y no sensible;
+- nivel de confianza cuando corresponda;
+- estado operativo y advertencias de disponibilidad.
 
-La API sólo puede devolver resultados necesarios para el producto:
-
-- identificador de ejecución;
-- versión del contrato;
-- resultado final;
-- evidencia autorizada;
-- clasificación de fuente;
-- nivel de confianza;
-- advertencias;
-- acciones permitidas;
-- referencias de auditoría no sensibles.
-
-No puede devolver:
+No deben devolver:
 
 - prompts;
 - instrucciones internas;
 - reglas completas;
-- pesos del modelo;
-- trazas de razonamiento;
-- chain of thought;
+- pesos o fórmulas de scoring;
+- cadenas de razonamiento;
 - stack traces internos;
 - nombres de módulos privados;
 - secretos;
-- payloads completos de otros clientes.
+- datos de otros clientes.
 
-## Datos de Property Partners
+## Runtime remoto opcional
 
-Los datos canónicos de Property Partners deben mantenerse aislados por tenant y propósito.
+Los modos `shadow` y `remote` se mantienen únicamente como una opción futura.
 
-Reglas:
+Pueden ser útiles si posteriormente ocurre alguna de estas condiciones:
 
-1. no reutilizar datos del Cliente para otros clientes;
-2. no usarlos para entrenamiento general;
-3. no incorporarlos a benchmarks o demos;
-4. no copiar datos identificables al repositorio privado N3uralia;
-5. procesar sólo el mínimo necesario;
-6. registrar procedencia, período y autorización;
-7. aplicar eliminación y retención según contrato;
-8. cifrar tránsito y almacenamiento;
-9. impedir cruces entre tenants;
-10. separar evidencia del Cliente de modelos e inferencias N3uralia.
+- transferencia del repositorio al Cliente;
+- acceso directo del Cliente al código fuente;
+- reutilización del motor en múltiples productos;
+- exigencia contractual de separación;
+- necesidad operativa de desplegar el motor de forma independiente.
 
-## Autenticación y autorización
+Mientras esas condiciones no existan, `local-server-only` es una arquitectura válida y preferida por simplicidad operacional.
 
-La comunicación debe utilizar:
+## Regla ante una eventual transferencia
 
-- credenciales de servicio por ambiente;
-- rotación de secretos;
-- scopes mínimos;
-- allowlist de origen o red cuando sea posible;
-- rate limiting;
-- firma o token de corta duración;
-- auditoría por ejecución;
-- revocación inmediata.
+Antes de entregar al Cliente una copia o control del repositorio, se debe realizar una revisión específica. Sólo en ese momento será obligatorio decidir entre:
 
-Las credenciales del runtime N3uralia no deben quedar en el repositorio del Cliente ni ser visibles para usuarios finales.
+- retirar los módulos propietarios de la copia entregable;
+- mantenerlos en un repositorio o paquete privado controlado por N3uralia;
+- reemplazarlos por una API privada;
+- acordar contractualmente una licencia o cesión explícita.
 
-## Protección de distribución
+No se debe ejecutar una extracción física anticipada que complique el producto sin una necesidad contractual real.
 
-No se considera protección suficiente:
+## Criterio operativo
 
-- minificación;
-- ofuscación;
-- archivos compilados dentro del mismo repositorio;
-- comentarios legales sin separación técnica;
-- CODEOWNERS cuando el Cliente controla el repositorio;
-- ocultar archivos mediante convenciones de nombres.
-
-Estas medidas sólo son complementarias.
-
-## Migración requerida
-
-Antes de transferir el repositorio al Cliente:
-
-1. inventariar módulos propietarios;
-2. clasificar cada archivo como `client`, `shared-contract` o `n3uralia-proprietary`;
-3. mover los módulos propietarios al repositorio privado N3uralia;
-4. crear un contrato API estable;
-5. reemplazar imports directos por un SDK cliente mínimo;
-6. retirar prompts, reglas y heurísticas del repositorio del Cliente;
-7. eliminar historial Git que contenga secretos o código que no deba transferirse;
-8. rotar todas las credenciales utilizadas durante el desarrollo;
-9. verificar bundles y respuestas de API;
-10. ejecutar revisión legal y técnica antes de la entrega.
-
-## Regla de entrega
-
-El repositorio del Cliente puede contener la aplicación y los datos canónicos autorizados, pero no la implementación del motor N3uralia.
-
-El Cliente recibe acceso al servicio contratado y a sus resultados, no al código fuente del motor propietario, salvo acuerdo contractual explícito firmado por N3uralia.
+Property Partners recibe y opera todas las funcionalidades contratadas. N3uralia protege únicamente su metodología reutilizable y diferencial, sin fragmentar innecesariamente la plataforma ni alterar su funcionamiento en Vercel.
