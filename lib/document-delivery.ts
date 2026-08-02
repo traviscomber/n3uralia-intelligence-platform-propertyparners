@@ -145,11 +145,6 @@ export async function sendDocumentEmail(
           </td>
         </tr>
         <tr>
-          <td style="background-color: #000000; padding: 20px 40px; text-align: center;">
-            <p style="font-family: Calibri, sans-serif; font-size: 12px; letter-spacing: 2px; color: #999; margin: 0;">Inteligencia de mercado Vitacura</p>
-          </td>
-        </tr>
-        <tr>
           <td style="background-color: #E74C3C; font-size: 0; line-height: 0; height: 3px;">&nbsp;</td>
         </tr>
         <tr>
