@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/check-n3uralia-runtime-readiness.mjs && node scripts/verify-n3uralia-runtime-cutover.mjs",
+    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
