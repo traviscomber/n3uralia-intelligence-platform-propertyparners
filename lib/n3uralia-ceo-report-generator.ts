@@ -180,6 +180,12 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
 <body>
 <div class="container">
 
+  <!-- ── PROPERTY PARTNERS VITACURA HEADER ────────────────────────── -->
+  <div style="background:#000000;padding:32px 40px;text-align:center;border-bottom:1px solid #333333">
+    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-xvWb95Djb4pEo706gUgW8IBMweYarT.png" style="height:80px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto" alt="Property Partners Vitacura">
+    <div style="font-size:14px;color:#7F8C8D;font-weight:500;letter-spacing:1px">Inteligencia de mercado Vitacura</div>
+  </div>
+
   <!-- ── HEADER ────────────────────────────────────────────────── -->
   <div class="header">
     <div class="header-eyebrow">Fuente canónica · ${monthName} 2026</div>
