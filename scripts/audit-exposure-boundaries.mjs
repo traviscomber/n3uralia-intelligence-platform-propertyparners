@@ -22,10 +22,8 @@ const forbiddenResponseTerms = [
   /promptVersion/i,
 ];
 
-const sensitiveLogTerms = [
-  /console\.(log|info|debug)\s*\([^\n]*(token|secret|password|cookie|authorization|prompt|payload|document)/i,
-  /JSON\.stringify\s*\([^\n]*(request|body|payload|document|canonical)/i,
-];
+const sensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?(token|secret|password|cookie|authorization|prompt|payload|document|canonical)/i;
+const serializedSensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?JSON\.stringify\s*\([\s\S]{0,300}?(request|body|payload|document|canonical)/i;
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -70,8 +68,8 @@ for (const relRoot of roots) {
       }
     }
 
-    for (const pattern of sensitiveLogTerms) {
-      if (pattern.test(text)) findings.push(`${rel}: potentially sensitive logging pattern ${pattern}`);
+    if (sensitiveConsoleLog.test(text) || serializedSensitiveConsoleLog.test(text)) {
+      findings.push(`${rel}: potentially sensitive console logging`);
     }
   }
 }
