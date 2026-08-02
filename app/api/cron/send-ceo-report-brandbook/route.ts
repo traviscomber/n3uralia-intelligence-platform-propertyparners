@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
     // Generate report HTML
     const reportHTML = await generateCeoReportBrandbook(monthName, period)
 
-    // Send via Resend
+    // Send via Resend with full HTML rendering
     const resend = new Resend(process.env.RESEND_API_KEY)
     const response = await resend.emails.send({
-      from: 'rgalarce@gn.cl',
+      from: 'onboarding@resend.dev',
       to: recipient_email,
       subject: `Reporte CEO Integral — ${monthName} 2026`,
       html: reportHTML,
