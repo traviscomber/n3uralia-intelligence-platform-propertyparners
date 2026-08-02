@@ -346,107 +346,177 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
   <!-- ── DEFINICIONES OPERACIONALES ────────────────────────────── -->
   <div class="section">
     <div class="section-title">Definiciones Operacionales</div>
-    <p style="font-size:13px;color:#7F8C8D;margin-bottom:24px">
-      Estándares operacionales basados en datos reales del CRM — Enero a ${monthName} 2026.
+    <p style="font-size:13px;color:#7F8C8D;margin-bottom:32px">
+    Estándares operacionales basados en datos reales del CRM — Enero a ${monthName} 2026.
     </p>
-
+    
     <!-- 1. Lead Prioritization -->
-    <div class="def-card">
-      <div class="def-header">
-        <div class="def-title">1. Criterios de Priorización de Leads</div>
-        <span class="def-status">ACTIVO</span>
+    <div style="background:#FAFAFA;border-radius:8px;padding:28px;margin-bottom:32px;border-left:4px solid #1976D2">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px">
+        <div style="font-size:15px;font-weight:700;color:#333">1. Criterios de Priorización de Leads</div>
+        <span style="background:#1976D2;color:white;font-size:10px;font-weight:700;padding:5px 12px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px">ACTIVO</span>
       </div>
-
-      <div class="def-grid-4">
-        <div class="def-tile">
-          <div class="def-tile-label">TIER 1 · Clasificados</div>
-          <div class="def-tile-value">${T1.toLocaleString('es-CL')}</div>
-          <div class="def-tile-sub">66% de leads</div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:24px">
+        <!-- T1 -->
+        <div style="background:linear-gradient(135deg, #27AE60 0%, #229954 100%);border-radius:8px;padding:20px;text-align:center;color:white;box-shadow:0 2px 6px rgba(39, 174, 96, 0.15)">
+          <div style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">TIER 1</div>
+          <div style="font-size:32px;font-weight:800;margin-bottom:4px">${T1.toLocaleString('es-CL')}</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Clasificados</div>
+          <div style="font-size:11px;opacity:0.8">66% de leads</div>
         </div>
-        <div class="def-tile">
-          <div class="def-tile-label">TIER 2 · Activos &lt;30d</div>
-          <div class="def-tile-value">${T2.toLocaleString('es-CL')}</div>
-          <div class="def-tile-sub">100% activos</div>
+        <!-- T2 -->
+        <div style="background:linear-gradient(135deg, #1976D2 0%, #1565C0 100%);border-radius:8px;padding:20px;text-align:center;color:white;box-shadow:0 2px 6px rgba(25, 118, 210, 0.15)">
+          <div style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">TIER 2</div>
+          <div style="font-size:32px;font-weight:800;margin-bottom:4px">${T2.toLocaleString('es-CL')}</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Activos &lt;30d</div>
+          <div style="font-size:11px;opacity:0.8">100% activos</div>
         </div>
-        <div class="def-tile">
-          <div class="def-tile-label">TIER 3 · 15–90 días</div>
-          <div class="def-tile-value">${T3.toLocaleString('es-CL')}</div>
-          <div class="def-tile-sub">Seguimiento</div>
+        <!-- T3 -->
+        <div style="background:linear-gradient(135deg, #F39C12 0%, #E67E22 100%);border-radius:8px;padding:20px;text-align:center;color:white;box-shadow:0 2px 6px rgba(243, 156, 18, 0.15)">
+          <div style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">TIER 3</div>
+          <div style="font-size:32px;font-weight:800;margin-bottom:4px">${T3.toLocaleString('es-CL')}</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">15–90 días</div>
+          <div style="font-size:11px;opacity:0.8">Seguimiento</div>
         </div>
-        <div class="def-tile">
-          <div class="def-tile-label">TIER 4 · &gt;90 días</div>
-          <div class="def-tile-value">${T4.toLocaleString('es-CL')}</div>
-          <div class="def-tile-sub">Reactivación</div>
+        <!-- T4 -->
+        <div style="background:linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);border-radius:8px;padding:20px;text-align:center;color:white;box-shadow:0 2px 6px rgba(231, 76, 60, 0.15)">
+          <div style="font-size:10px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">TIER 4</div>
+          <div style="font-size:32px;font-weight:800;margin-bottom:4px">${T4.toLocaleString('es-CL')}</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">&gt;90 días</div>
+          <div style="font-size:11px;opacity:0.8">Reactivación</div>
         </div>
       </div>
-
-      <div class="chart-label" style="margin-bottom:6px">Distribución de leads por tier (T1: ${T1}, T2: ${T2}, T3: ${T3}, T4: ${T4})</div>
-      <div style="margin-top:10px;font-size:10px;color:#999">
-        <span class="dot" style="background:#27AE60"></span>T1 Clasificados&nbsp;
-        <span class="dot" style="background:#1976D2"></span>T2 Activos&nbsp;
-        <span class="dot" style="background:#F39C12"></span>T3 Seguimiento&nbsp;
-        <span class="dot" style="background:#E74C3C"></span>T4 Reactivar
-      </div>
-      <div class="alert-orange" style="margin-top:12px">
-        <strong>Oportunidad:</strong> ${T4.toLocaleString('es-CL')} leads (61%) en estatus >90 días requieren reactivación estratégica.
+      
+      <div style="background:white;border-radius:6px;padding:14px;border-left:3px solid #E74C3C">
+        <div style="font-size:12px;color:#E74C3C;font-weight:700;margin-bottom:4px">⚠ Oportunidad crítica:</div>
+        <div style="font-size:12px;color:#333"><strong>${T4.toLocaleString('es-CL')} leads (61%)</strong> en estatus >90 días requieren reactivación estratégica inmediata.</div>
       </div>
     </div>
-
+    
     <!-- 2. Contact Timing -->
-    <div class="def-card">
-      <div class="def-header">
-        <div class="def-title">2. Estándares de Contacto por Tipo de Propiedad</div>
-        <span class="def-status">ACTIVO</span>
+    <div style="background:#FAFAFA;border-radius:8px;padding:28px;margin-bottom:32px;border-left:4px solid #F39C12">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px">
+        <div style="font-size:15px;font-weight:700;color:#333">2. Estándares de Contacto por Tipo</div>
+        <span style="background:#F39C12;color:white;font-size:10px;font-weight:700;padding:5px 12px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px">ACTIVO</span>
       </div>
-
-      <div class="def-grid-2">
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px">
+        <!-- CASA -->
         <div>
-          <div style="font-weight:700;color:#1976D2;margin-bottom:10px;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Casa</div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Primera toma</div><div class="def-tile-value" style="color:#1976D2">48h</div></div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Seguimiento</div><div class="def-tile-value" style="color:#1976D2">24h</div></div>
-          <div class="def-tile"><div class="def-tile-label">Re-contacto</div><div class="def-tile-value" style="color:#1976D2">7 días</div></div>
+          <div style="font-weight:700;color:#1976D2;margin-bottom:14px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px">Casa</div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #1976D2">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Primera toma</div>
+              <div style="font-size:24px;font-weight:800;color:#1976D2">48h</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #1976D2">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Seguimiento</div>
+              <div style="font-size:24px;font-weight:800;color:#1976D2">24h</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #1976D2">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Re-contacto</div>
+              <div style="font-size:24px;font-weight:800;color:#1976D2">7 días</div>
+            </div>
+          </div>
         </div>
+        
+        <!-- DEPARTAMENTO -->
         <div>
-          <div style="font-weight:700;color:#F57C00;margin-bottom:10px;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Departamento</div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Primera toma</div><div class="def-tile-value" style="color:#F57C00">24h</div></div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Seguimiento</div><div class="def-tile-value" style="color:#F57C00">12h</div></div>
-          <div class="def-tile"><div class="def-tile-label">Re-contacto</div><div class="def-tile-value" style="color:#F57C00">5 días</div></div>
+          <div style="font-weight:700;color:#F57C00;margin-bottom:14px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px">Departamento</div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #F57C00">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Primera toma</div>
+              <div style="font-size:24px;font-weight:800;color:#F57C00">24h</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #F57C00">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Seguimiento</div>
+              <div style="font-size:24px;font-weight:800;color:#F57C00">12h</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #F57C00">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Re-contacto</div>
+              <div style="font-size:24px;font-weight:800;color:#F57C00">5 días</div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="alert-blue">
-        <strong>Base:</strong> 5,968 visitas realizadas. Tiempos más agresivos para departamentos por mayor competencia.
+      
+      <div style="background:white;border-radius:6px;padding:14px;border-left:3px solid #1976D2">
+        <div style="font-size:12px;color:#0D47A1;font-weight:700;margin-bottom:4px">ℹ Base operacional:</div>
+        <div style="font-size:12px;color:#333">5,968 visitas realizadas. Tiempos más agresivos para departamentos por mayor competencia.</div>
       </div>
     </div>
-
+    
     <!-- 3. Conversion Benchmarks -->
-    <div class="def-card">
-      <div class="def-header">
-        <div class="def-title">3. Benchmarks de Conversión por Tipo</div>
-        <span class="def-status">ACTIVO</span>
+    <div style="background:#FAFAFA;border-radius:8px;padding:28px;border-left:4px solid #9C27B0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px">
+        <div style="font-size:15px;font-weight:700;color:#333">3. Benchmarks de Conversión por Tipo</div>
+        <span style="background:#9C27B0;color:white;font-size:10px;font-weight:700;padding:5px 12px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px">ACTIVO</span>
       </div>
-
-      <div style="margin-bottom:16px">
-        <div class="chart-label">Embudo de conversión (Enero–${monthName} 2026)</div>
-        <div style="font-size:11px;color:#7F8C8D;margin-top:8px">Leads: ${funnelSteps[0]?.value || 0} → Activos: ${funnelSteps[1]?.value || 0} → Visitas: ${funnelSteps[2]?.value || 0} → Cierres: ${funnelSteps[3]?.value || 0}</div>
+      
+      <div style="font-size:13px;color:#666;margin-bottom:20px;padding:12px;background:white;border-radius:6px;border-left:3px solid #9C27B0">
+        <strong>Embudo (Enero–${monthName} 2026):</strong> ${funnelSteps[0]?.value || 0} leads → ${funnelSteps[1]?.value || 0} activos → ${funnelSteps[2]?.value || 0} visitas → ${funnelSteps[3]?.value || 0} cierres
       </div>
-
-      <div class="def-grid-2" style="margin-top:16px">
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px">
+        <!-- CASA -->
         <div>
-          <div style="font-weight:700;color:#333;margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Casa</div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Lead → Visita</div><div class="def-tile-value">15–20%</div></div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Visita → Cierre</div><div class="def-tile-value">3.5–4.5%</div></div>
-          <div class="def-tile"><div class="def-tile-label">Lead → Cierre total</div><div class="def-tile-value">0.5–0.9%</div></div>
+          <div style="font-weight:700;color:#333;margin-bottom:14px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px">Casa</div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #4CAF50">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Lead → Visita</div>
+              <div style="font-size:24px;font-weight:800;color:#4CAF50">15–20%</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #FF9800">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Visita → Cierre</div>
+              <div style="font-size:24px;font-weight:800;color:#FF9800">3.5–4.5%</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #2196F3">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Total</div>
+              <div style="font-size:24px;font-weight:800;color:#2196F3">0.5–0.9%</div>
+            </div>
+          </div>
         </div>
+        
+        <!-- DEPARTAMENTO -->
         <div>
-          <div style="font-weight:700;color:#333;margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em">Departamento</div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Lead → Visita</div><div class="def-tile-value">20–25%</div></div>
-          <div class="def-tile" style="margin-bottom:6px"><div class="def-tile-label">Visita → Cierre</div><div class="def-tile-value">2.5–3.5%</div></div>
-          <div class="def-tile"><div class="def-tile-label">Lead → Cierre total</div><div class="def-tile-value">0.5–0.9%</div></div>
+          <div style="font-weight:700;color:#333;margin-bottom:14px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px">Departamento</div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #4CAF50">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Lead → Visita</div>
+              <div style="font-size:24px;font-weight:800;color:#4CAF50">20–25%</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #FF9800">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Visita → Cierre</div>
+              <div style="font-size:24px;font-weight:800;color:#FF9800">2.5–3.5%</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;background:white;border-radius:6px;padding:14px;text-align:center;border-top:3px solid #2196F3">
+              <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px">Total</div>
+              <div style="font-size:24px;font-weight:800;color:#2196F3">0.5–0.9%</div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="alert-pink" style="margin-top:12px">
-        <strong>Conversión total:</strong> 3.3% (197 cierres / 5,968 visitas). Reactivación estratégica puede recuperar 400–600 oportunidades.
+      
+      <div style="background:white;border-radius:6px;padding:14px;border-left:3px solid #E91E63">
+        <div style="font-size:12px;color:#880E4F;font-weight:700;margin-bottom:4px">📊 Conversión actual:</div>
+        <div style="font-size:12px;color:#333"><strong>3.3%</strong> (197 cierres / 5,968 visitas). Reactivación estratégica puede recuperar 400–600 oportunidades.</div>
       </div>
     </div>
   </div>
