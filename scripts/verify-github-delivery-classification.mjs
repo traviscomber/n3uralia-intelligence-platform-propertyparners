@@ -42,14 +42,27 @@ for (const entry of manifest.classifications ?? []) {
   }
 }
 
-const engine = manifest.classifications.find(
-  (entry) => entry.pattern === 'lib/n3uralia-intelligence-engine.ts',
+for (const protectedPath of [
+  'lib/n3uralia-intelligence-engine.ts',
+  'lib/n3uralia-intelligence-gateway.ts',
+]) {
+  const entry = manifest.classifications.find((item) => item.pattern === protectedPath)
+  if (
+    entry?.class !== 'n3uralia-proprietary' ||
+    entry?.delivery !== 'exclude-before-transfer'
+  ) {
+    fail(`${protectedPath} must remain proprietary and excluded before transfer.`)
+  }
+}
+
+const proprietaryEntries = (manifest.classifications ?? []).filter(
+  (entry) => entry.class === 'n3uralia-proprietary',
 )
 if (
-  engine?.class !== 'n3uralia-proprietary' ||
-  engine?.delivery !== 'exclude-before-transfer'
+  !proprietaryEntries.length ||
+  proprietaryEntries.some((entry) => entry.delivery !== 'exclude-before-transfer')
 ) {
-  fail('The N3uralia intelligence engine must remain excluded before transfer.')
+  fail('Every confirmed N3uralia proprietary source entry must be excluded before transfer.')
 }
 
 const canonical = manifest.classifications.find(
