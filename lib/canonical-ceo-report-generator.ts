@@ -497,9 +497,6 @@ export function generateCanonicalCeoReportHTML(periodOverride?: string): string 
         <div class="pending-item">
           <span class="pending-number">3.</span> Benchmarks de conversión por tipo de propiedad
         </div>
-        <div class="pending-item">
-          <span class="pending-number">4.</span> Metodología de scoring de ejecutivas
-        </div>
       </div>
     </div>
     
