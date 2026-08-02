@@ -33,9 +33,9 @@ export interface CeoReportData {
   opportunities: Array<{ title: string; priority: string; action: string }>
 }
 
-export function generateCeoReportData(): CeoReportData {
+export function generateCeoReportData(periodOverride?: string): CeoReportData {
   const now = new Date()
-  const period = `2026-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const period = periodOverride || `2026-${String(now.getMonth() + 1).padStart(2, '0')}`
 
   const compliance = getCompanySalesCompliance(period)
   const branchPerformance = getBranchTargetPerformance(period)
