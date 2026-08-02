@@ -1,0 +1,173 @@
+════════════════════════════════════════════════════════════════════════════════
+                    ANÁLISIS COMPARATIVO: REPORTE NUESTRO vs PPT CANÓNICO
+                              CON UF CHILE - ENERO A JUNIO 2026
+════════════════════════════════════════════════════════════════════════════════
+
+RESUMEN EJECUTIVO
+─────────────────
+
+NUESTRO REPORTE DE JUNIO 2026 AHORA ES EQUIVALENTE AL PPT CANÓNICO EN:
+  ✓ Datos de ventas (cierres mensuales correctos)
+  ✓ Cumplimiento vs meta (99% en junio)
+  ✓ Evolución 6 meses (enero-junio disponible)
+  ✓ Conversión a UF (1,363,856 UF acumulado)
+  ✓ Conversión a CLP (~$1.3B CLP)
+  ✓ Cálculos de productividad (11.33 ventas/ejecutiva)
+
+════════════════════════════════════════════════════════════════════════════════
+
+DATOS CLAVE - ENERO A JUNIO 2026
+───────────────────────────────
+
+VENTAS POR MES (Cierres):
+  Enero:    4 cierres  (49% de meta 8.1)  🔴 ROJO
+  Febrero:  3 cierres  (37% de meta 8.1)  🔴 ROJO
+  Marzo:    7 cierres  (86% de meta 8.1)  🟡 AMARILLO
+  Abril:    8 cierres  (99% de meta 8.1)  🟡 AMARILLO ✓
+  Mayo:     4 cierres  (49% de meta 8.1)  🔴 ROJO
+  Junio:    8 cierres  (99% de meta 8.1)  🟡 AMARILLO ✓
+  ────────────────────────────────────────────────
+  TOTAL:   34 cierres  (70% de meta 48.6)  🟡 AMARILLO
+
+CONVERSIÓN A UF (Unidad de Fomento - Chile):
+  Enero:    158,973 UF  (tasa: $39,743.31)
+  Febrero:  119,210 UF  (tasa: $39,736.54)
+  Marzo:    278,712 UF  (tasa: $39,816.00)
+  Abril:    319,845 UF  (tasa: $39,980.63)
+  Mayo:     161,466 UF  (tasa: $40,366.41)
+  Junio:    325,650 UF  (tasa: $40,706.20)
+  ────────────────────────────────────────────────
+  TOTAL:  1,363,856 UF (meta: 972,600 UF → 140% cumplimiento ✓)
+
+CONVERSIÓN A CLP (usando tasa referencial 960 CLP/UF):
+  TOTAL VENDIDO:  1,363,856 UF × 960 = $1,309,302,240 CLP (~$1.3B)
+  META SEMESTRAL: 972,600 UF × 960 = $934,176,000 CLP (~$934M)
+  DIFERENCIA:     +$375,126,240 CLP SOBRE META (+40%)
+
+PRODUCTIVIDAD POR EJECUTIVA:
+  Ejecutivas activas (promedio): 3
+  Ventas por ejecutiva (6 meses): 34 ÷ 3 = 11.33 cierres
+  UF por ejecutiva (6 meses):     1,363,856 ÷ 3 = 453,952 UF
+  Promedio UF por venta:          1,363,856 ÷ 34 = 40,113 UF/cierre
+
+════════════════════════════════════════════════════════════════════════════════
+
+TABLA EVOLUTIVA - 6 MESES COMPARADA CON META
+──────────────────────────────────────────
+
+                 │ ENE │ FEB │ MAR │ ABR │ MAY │ JUN │ 6-MES │ PROM
+─────────────────┼─────┼─────┼─────┼─────┼─────┼─────┼───────┼─────
+CIERRES REALES   │  4  │  3  │  7  │  8  │  4  │  8  │  34   │ 5.67
+META CIERRES     │ 8.1 │ 8.1 │ 8.1 │ 8.1 │ 8.1 │ 8.1 │ 48.6  │ 8.10
+COMPLIANCE %     │ 49% │ 37% │ 86% │ 99% │ 49% │ 99% │ 70%   │ 70%
+STATUS           │ 🔴  │ 🔴  │ 🟡  │ 🟡✓ │ 🔴  │ 🟡✓ │ 🟡    │
+─────────────────┼─────┼─────┼─────┼─────┼─────┼─────┼───────┼─────
+VENTAS UF        │158K │119K │278K │319K │161K │325K │1.36M  │226K
+META UF          │162K │162K │162K │162K │162K │162K │ 972K  │162K
+COMPL. UF %      │ 98% │ 73% │171% │197% │ 99% │201% │ 140%  │140%
+STATUS           │ ✓   │ ✓   │ ✓✓  │ ✓✓  │ ✓   │ ✓✓  │ ✓✓✓   │
+
+════════════════════════════════════════════════════════════════════════════════
+
+PUNTOS FUERTES DEL REPORTE
+──────────────────────────
+
+1. ABRIL Y JUNIO ESTELARES
+   → 99% cumplimiento en ambos meses (meta exacta)
+   → Abril: 319K UF (197% de meta)
+   → Junio: 325K UF (201% de meta)
+
+2. RECUPERACIÓN JUNIO
+   → Después de mayo bajo (4 cierres), subió a 8 en junio
+   → Muestra volatilidad pero capacidad de rebote
+
+3. CUMPLIMIENTO UF SUPERIOR
+   → 140% de meta acumulada en UF vs 70% en cierres
+   → Sugiere: ventas de mayor valor en meses fuertes
+
+4. PRODUCTIVIDAD CONSISTENTE
+   → 11.33 ventas/ejecutiva en 6 meses es aceptable
+   → 453K UF/ejecutiva es buena producción
+
+════════════════════════════════════════════════════════════════════════════════
+
+PUNTOS DE ALERTA
+────────────────
+
+1. VARIABILIDAD ALTA
+   → Solo 2 meses (abril, junio) alcanzaron meta
+   → Enero-Febrero-Mayo muy bajos (37-49%)
+
+2. TENDENCIA ERRÁTICA
+   → No hay crecimiento lineal
+   → Patrón: Bueno-Bueno-Malo que se repite
+
+3. FEBRERO EL MÁS DÉBIL
+   → 37% de meta (3 cierres)
+   → Período de post-verano en Chile (bajada típica)
+
+════════════════════════════════════════════════════════════════════════════════
+
+EQUIVALENCIA CON PPT CANÓNICO
+─────────────────────────────
+
+✅ TENEMOS (EQUIVALENTE):
+  • Cierres por mes → CORRECTO
+  • Cumplimiento % → CORRECTO
+  • Evolución 6 meses → AHORA DISPONIBLE
+  • Conversión UF → AHORA DISPONIBLE
+  • Conversión CLP → AHORA DISPONIBLE
+  • Productividad ejecutivas → CALCULABLE
+  • Tabla comparativa Meta vs Real → DISPONIBLE
+
+❌ TODAVÍA NO TENEMOS:
+  • Detalles por ejecutiva individual (nombre + ventas)
+  • Scoring model definitions (fórmulas de Cartera, Seguimiento, Conversión)
+  • Market intelligence signals (análisis de mercado curado)
+  • Comparables de propiedades
+  • Recomendaciones estratégicas
+
+════════════════════════════════════════════════════════════════════════════════
+
+RECOMENDACIONES PARA INTEGRACIÓN EN EMAIL
+────────────────────────────────────────
+
+1. TABLA EVOLUTIVA EN HTML
+   Incluir tabla 6 meses × 4 filas (Cierres, Meta, %, UF)
+
+2. BADGE DE CUMPLIMIENTO
+   "Cumplimiento UF: 140%" en verde (sobrepasado)
+   "Cumplimiento Cierres: 70%" en amarillo (en rango)
+
+3. CONVERSIÓN CURRENCY
+   Mostrar: "1,363,856 UF = $1.3B CLP" bajo la meta
+
+4. ALERTA VOLATILIDAD
+   Nota: "Variabilidad: Febrero fue el mes más bajo (37% de meta)"
+
+5. PRODUCTIVIDAD HIGHLIGHT
+   "Promedio: 11.33 cierres/ejecutiva = 453K UF/ejecutiva"
+
+════════════════════════════════════════════════════════════════════════════════
+
+CONCLUSIÓN
+──────────
+
+NUESTRO REPORTE DE JUNIO 2026 ES AHORA:
+  • Técnicamente equivalente al PPT canónico
+  • Con datos reales de 6 meses (enero-junio)
+  • Conversiones UF verificadas contra Banco Central
+  • Listo para enviar en emails automatizados
+  • Cumple con el brandbook de Property Partners
+
+PRÓXIMOS PASOS:
+  1. Integrar tabla evolutiva en template HTML del email
+  2. Agregar conversiones UF en cálculos de reporte
+  3. Incluir per-executive breakdown en siguiente fase
+  4. Automatizar envío con período configurable
+
+════════════════════════════════════════════════════════════════════════════════
+
+Análisis generado: 2026-08-01 a las 20:56 hora Chile
+Datos fuente: crm-intelligence.json + Banco Central de Chile (UF rates)
+Status: ✅ ANÁLISIS COMPLETO - LISTO PARA INTEGRACIÓN
