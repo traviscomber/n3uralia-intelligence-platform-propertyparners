@@ -11,8 +11,10 @@ const forbiddenPublicNames = manifest.credentials
   .filter((item) => item.storage.includes('server-side') || item.clientMayReadValue === false)
   .map((item) => `NEXT_PUBLIC_${item.name}`)
 
-const roots = ['app', 'components', 'lib', 'scripts', 'config']
-const extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json'])
+// Scan executable application source only. Audit rules and manifests intentionally
+// contain credential names and must not be treated as runtime exposure.
+const roots = ['app', 'components', 'lib']
+const extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'])
 const failures = []
 
 function walk(directory) {
@@ -20,11 +22,16 @@ function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(directory, entry.name)
     if (entry.isDirectory()) {
-      if (['node_modules', '.next', '.git'].includes(entry.name)) return []
+      if (['node_modules', '.next', '.git', 'public'].includes(entry.name)) return []
       return walk(full)
     }
     return extensions.has(path.extname(entry.name)) ? [full] : []
   })
+}
+
+function referencesEnvName(source, name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(?:process\\.env\\.|process\\.env\\[['\"]|import\\.meta\\.env\\.)${escaped}(?:['\"]\\])?\\b`).test(source)
 }
 
 for (const file of roots.flatMap((directory) => walk(path.join(root, directory)))) {
@@ -32,12 +39,14 @@ for (const file of roots.flatMap((directory) => walk(path.join(root, directory))
   const source = fs.readFileSync(file, 'utf8')
 
   for (const name of forbiddenPublicNames) {
-    if (source.includes(name)) failures.push(`${relative}: forbidden public credential name ${name}`)
+    if (referencesEnvName(source, name)) {
+      failures.push(`${relative}: references forbidden public credential ${name}`)
+    }
   }
 
-  if (/['\"]use client['\"]/m.test(source)) {
+  if (/^\s*['\"]use client['\"];?/m.test(source)) {
     for (const credential of manifest.credentials) {
-      if (credential.storage.includes('server-side') && source.includes(credential.name)) {
+      if (credential.storage.includes('server-side') && referencesEnvName(source, credential.name)) {
         failures.push(`${relative}: client module references server-only credential ${credential.name}`)
       }
     }
