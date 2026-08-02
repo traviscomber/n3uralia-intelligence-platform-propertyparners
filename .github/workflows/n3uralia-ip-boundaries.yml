@@ -33,5 +33,23 @@ jobs:
       - name: Verify proprietary code boundaries
         run: pnpm security:ip-boundaries
 
+      - name: Verify credential boundaries
+        run: pnpm security:credential-boundaries
+
+      - name: Verify API, log and browser exposure boundaries
+        run: pnpm security:exposure-boundaries
+
+      - name: Verify GitHub delivery classification
+        run: pnpm security:delivery-classification
+
+      - name: Verify GitHub delivery surface
+        run: pnpm security:delivery-surface
+
+      - name: Verify runtime configuration
+        run: pnpm security:runtime-readiness
+
+      - name: Verify runtime cutover policy
+        run: pnpm security:runtime-cutover
+
       - name: Build without browser source maps
         run: pnpm build
