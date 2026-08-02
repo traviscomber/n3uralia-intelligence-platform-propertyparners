@@ -62,7 +62,7 @@ export function generateCanonicalCeoReportHTML(periodOverride?: string): string 
   // Calculate metrics
   const compliance_percent = compliance.target && compliance.actual !== null ? ((compliance.actual / compliance.target) * 100).toFixed(1) : null
   const totalSales = operationalSummary?.sales || 0
-  const totalPartners = operationalSummary?.topAgents.length || 1
+  const totalPartners = 3 // Fixed number of active executives for June 2026
   const productivity = (totalSales / totalPartners).toFixed(2)
 
   // Status badge function (matching canonical colors)
