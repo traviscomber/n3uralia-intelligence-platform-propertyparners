@@ -248,12 +248,12 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
     <div class="section-title">Evolución de Venta</div>
 
     <!-- Professional Data Table with Color-Coding -->
-    <div style="overflow-x:auto;background:#FAFAFA;border-radius:8px;padding:20px;margin-bottom:24px">
+    <div style="overflow-x:auto;background:#1A1A1A;border-radius:8px;padding:20px;margin-bottom:24px;border:1px solid #333333">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead>
-          <tr style="background:#F5F5F5;border-bottom:2px solid #DDD">
-            <th style="text-align:left;padding:12px 10px;font-weight:700;color:#333;text-transform:uppercase;font-size:11px;letter-spacing:0.5px">Indicador</th>
-            ${monthShort.map(m => `<th style="padding:12px 8px;font-weight:600;color:#555;text-align:center;font-size:12px">${m}</th>`).join('')}
+          <tr style="background:#0F0F0F;border-bottom:1px solid #333333">
+            <th style="text-align:left;padding:12px 10px;font-weight:700;color:#B0B0B0;text-transform:uppercase;font-size:11px;letter-spacing:0.5px">Indicador</th>
+            ${monthShort.map(m => `<th style="padding:12px 8px;font-weight:600;color:#B0B0B0;text-align:center;font-size:12px">${m}</th>`).join('')}
             <th style="padding:12px 8px;font-weight:700;color:#fff;background:#1A1A1A;border-radius:4px;text-align:center;font-size:12px;border:1px solid #333333">Acum</th>
           </tr>
         </thead>
@@ -288,30 +288,28 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
         </tbody>
       </table>
       <div style="font-size:11px;color:#B0B0B0;margin-top:14px;padding-top:12px;border-top:1px solid #333333">
-        <span style="background:#27AE60;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px"></span>Cierres &nbsp;
-        <span style="background:#1565C0;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;margin-left:12px"></span>Meta &nbsp;
-        <span style="background:#F39C12;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;margin-left:12px"></span>Cumplimiento &nbsp;
-        <span style="background:#7F8C8D;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;margin-left:12px"></span>Productividad
+        <span style="background:#FFFFFF;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px"></span>Cierres &nbsp;
+        <span style="background:#808080;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;margin-left:12px"></span>Meta
       </div>
     </div>
 
     <!-- Large Charts Aligned with Table -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px">
       <!-- Cierres Chart -->
-      <div style="background:#FAFAFA;border-radius:8px;padding:20px">
-        <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:16px">Cierres por mes (Enero-${monthName})</div>
-        <img src="${closuresChartUrl}" style="width:100%;height:auto;border-radius:6px;display:block;margin-bottom:12px;">
-        <div style="font-size:12px;color:#666;font-weight:500;border-top:1px solid #E0E0E0;padding-top:12px">
-          <span>Meta mensual: <strong>8.1</strong></span><br>
+      <div style="background:#1A1A1A;border-radius:8px;padding:20px;border:1px solid #333333">
+        <div style="font-size:13px;font-weight:600;color:#FFFFFF;margin-bottom:16px">Cierres por mes (Enero-${monthName})</div>
+        <img src="${closuresChartUrl}" style="width:100%;height:auto;border-radius:6px;display:block;margin-bottom:12px;background:#0F0F0F;padding:8px">
+        <div style="font-size:12px;color:#B0B0B0;font-weight:500;border-top:1px solid #333333;padding-top:12px">
+          <span>Meta mensual: <strong>#808080</strong></span><br>
           <span>Acumulado: <strong>${totalSales}</strong></span>
         </div>
       </div>
       
       <!-- Compliance Chart -->
-      <div style="background:#FAFAFA;border-radius:8px;padding:20px">
-        <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:16px">Cumplimiento % (Verde ≥90%, Amarillo ≥70%, Rojo &lt;70%)</div>
-        <img src="${complianceChartUrl}" style="width:100%;height:auto;border-radius:6px;display:block;margin-bottom:12px;">
-        <div style="font-size:12px;color:#666;font-weight:500;border-top:1px solid #E0E0E0;padding-top:12px">
+      <div style="background:#1A1A1A;border-radius:8px;padding:20px;border:1px solid #333333">
+        <div style="font-size:13px;font-weight:600;color:#FFFFFF;margin-bottom:16px">Cumplimiento % (Verde ≥90%, Amarillo ≥70%, Rojo &lt;70%)</div>
+        <img src="${complianceChartUrl}" style="width:100%;height:auto;border-radius:6px;display:block;margin-bottom:12px;background:#0F0F0F;padding:8px">
+        <div style="font-size:12px;color:#B0B0B0;font-weight:500;border-top:1px solid #333333;padding-top:12px">
           <span>Objetivo: <strong>100%</strong></span><br>
           <span>Acumulado: <strong>${totalCompPct}%</strong></span>
         </div>
