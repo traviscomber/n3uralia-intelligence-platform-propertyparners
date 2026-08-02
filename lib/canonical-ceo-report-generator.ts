@@ -353,62 +353,34 @@ export function generateCanonicalCeoReportHTML(periodOverride?: string): string 
     
     <!-- SCORING MODEL SECTION -->
     <div class="section">
-      <h2 class="section-title">Modelo de Scoring — ${monthName}</h2>
-      <p style="font-size: 13px; color: #7F8C8D; margin-bottom: 24px;">
-        Calidad de Gestión = 40% Calidad de Cartera + 30% Calidad de Seguimiento + 30% Calidad de Conversión.
-        <strong style="display: block; margin-top: 8px; color: #333333;">Puntuación Total: ${scoringMetrics.managementScore}%</strong>
-      </p>
+      <h2 class="section-title">Calidad de Gestión</h2>
       
-      <div class="scoring-grid">
-        <div class="scoring-card">
-          <div class="scoring-card-title">Calidad de Cartera (40%)</div>
-          <div style="font-size: 18px; font-weight: bold; color: #333333; margin-bottom: 16px; padding: 12px; background-color: #F0F0F0; border-radius: 6px;">
-            ${scoringMetrics.portfolioQuality}%
-          </div>
-          <div class="scoring-definition">
-            <div class="scoring-definition-label">Meta cartera</div>
-            <div class="scoring-formula">min(portfolio / goal, 1) * 100</div>
-            <div style="font-size: 11px; color: #7F8C8D;">Cumplimiento de la meta de propiedades</div>
-          </div>
-          <div class="scoring-definition" style="margin-top: 12px;">
-            <div class="scoring-definition-label">Requerimientos por tipo</div>
-            <div class="scoring-formula">min(requirementRatio, 1) * 100</div>
-            <div style="font-size: 11px; color: #7F8C8D;">Requerimientos frente al benchmark</div>
-          </div>
+      <div style="background-color: #F5F5F5; padding: 16px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+        <div style="font-size: 12px; color: #7F8C8D; margin-bottom: 8px;">Puntuación Total</div>
+        <div style="font-size: 36px; font-weight: bold; color: #333333;">${scoringMetrics.managementScore}%</div>
+        <div style="font-size: 11px; color: #7F8C8D; margin-top: 8px;">Promedio ponderado: 40% Cartera + 30% Seguimiento + 30% Conversión</div>
+      </div>
+      
+      <div class="scoring-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+        <div style="background-color: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 11px; color: #7F8C8D; margin-bottom: 8px;">Cartera</div>
+          <div style="font-size: 28px; font-weight: bold; color: #1976D2; margin-bottom: 4px;">${scoringMetrics.portfolioQuality}%</div>
+          <div style="font-size: 10px; color: #999999;">Cumplimiento de meta</div>
+          <div style="font-size: 10px; color: #7F8C8D; margin-top: 6px; font-weight: 500;">Peso: 40%</div>
         </div>
         
-        <div class="scoring-card">
-          <div class="scoring-card-title">Calidad de Seguimiento (30%)</div>
-          <div style="font-size: 18px; font-weight: bold; color: #333333; margin-bottom: 16px; padding: 12px; background-color: #F0F0F0; border-radius: 6px;">
-            ${scoringMetrics.followUpQuality}%
-          </div>
-          <div class="scoring-definition">
-            <div class="scoring-definition-label">% Leads clasificados</div>
-            <div class="scoring-formula">classifiedLeads / activeLeads * 100</div>
-            <div style="font-size: 11px; color: #7F8C8D;">Disciplina de clasificación</div>
-          </div>
-          <div class="scoring-definition" style="margin-top: 12px;">
-            <div class="scoring-definition-label">% Leads sin abandono 90 días</div>
-            <div class="scoring-formula">(1 - abandoned90 / active) * 100</div>
-            <div style="font-size: 11px; color: #7F8C8D;">Leads activos no abandonados</div>
-          </div>
+        <div style="background-color: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 11px; color: #7F8C8D; margin-bottom: 8px;">Seguimiento</div>
+          <div style="font-size: 28px; font-weight: bold; color: #F57C00; margin-bottom: 4px;">${scoringMetrics.followUpQuality}%</div>
+          <div style="font-size: 10px; color: #999999;">Disciplina de leads</div>
+          <div style="font-size: 10px; color: #7F8C8D; margin-top: 6px; font-weight: 500;">Peso: 30%</div>
         </div>
         
-        <div class="scoring-card">
-          <div class="scoring-card-title">Calidad de Conversión (30%)</div>
-          <div style="font-size: 18px; font-weight: bold; color: #333333; margin-bottom: 16px; padding: 12px; background-color: #F0F0F0; border-radius: 6px;">
-            ${scoringMetrics.conversionQuality}%
-          </div>
-          <div class="scoring-definition">
-            <div class="scoring-definition-label">Visitas realizadas / meta</div>
-            <div class="scoring-formula">min(completedVisits / visitGoal, 1) * 100</div>
-            <div style="font-size: 11px; color: #7F8C8D;">Cumplimiento de meta de visitas</div>
-          </div>
-          <div class="scoring-definition" style="margin-top: 12px;">
-            <div class="scoring-definition-label">6-Month Close Rate</div>
-            <div class="scoring-formula">closedInSixMonths / totalProcessed * 100</div>
-            <div style="font-size: 11px; color: #7F8C8D;">Tasa de cierre en 6 meses</div>
-          </div>
+        <div style="background-color: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 8px; padding: 16px; text-align: center;">
+          <div style="font-size: 11px; color: #7F8C8D; margin-bottom: 8px;">Conversión</div>
+          <div style="font-size: 28px; font-weight: bold; color: #388E3C; margin-bottom: 4px;">${scoringMetrics.conversionQuality}%</div>
+          <div style="font-size: 10px; color: #999999;">Tasa de cierre</div>
+          <div style="font-size: 10px; color: #7F8C8D; margin-top: 6px; font-weight: 500;">Peso: 30%</div>
         </div>
       </div>
     </div>
