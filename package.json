@@ -5,9 +5,11 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "security:ip-boundaries": "node scripts/check-n3uralia-ip-boundaries.mjs",
     "audit:legacy": "node scripts/audit-legacy-code.mjs",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
