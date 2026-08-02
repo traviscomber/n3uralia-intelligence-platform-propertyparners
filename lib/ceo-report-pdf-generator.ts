@@ -1,12 +1,12 @@
 import { generateCanonicalCeoReportHTML } from '@/lib/canonical-ceo-report-generator'
 
-export async function generateCeoReportPDFAttachment() {
+export async function generateCeoReportPDFAttachment(periodOverride?: string) {
   try {
     const now = new Date()
-    const period = `2026-${String(now.getMonth() + 1).padStart(2, '0')}`
+    const period = periodOverride || `2026-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-    // Generate canonical-compliant HTML report
-    const reportHTML = generateCanonicalCeoReportHTML()
+    // Generate canonical-compliant HTML report with optional period override
+    const reportHTML = generateCanonicalCeoReportHTML(period)
 
     // Convert HTML to base64 for email attachment
     const htmlBase64 = Buffer.from(reportHTML).toString('base64')

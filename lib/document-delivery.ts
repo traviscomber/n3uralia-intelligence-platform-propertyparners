@@ -108,6 +108,7 @@ export async function sendDocumentEmail(
   documentTitle: string,
   documentUrl: string,
   recipientEmail: string,
+  periodOverride?: string,
 ) {
   const subject = `Business Intelligence Document: ${documentTitle}`
 
@@ -205,7 +206,7 @@ export async function sendDocumentEmail(
   // Generate and attach CEO report if it's a CEO report document
   if (documentTitle.includes('Reporte Integral')) {
     try {
-      const reportAttachment = await generateCeoReportPDFAttachment()
+      const reportAttachment = await generateCeoReportPDFAttachment(periodOverride)
       attachments.push({
         filename: reportAttachment.filename,
         content: reportAttachment.content,

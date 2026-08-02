@@ -3,10 +3,19 @@ import { getMarketSnapshot } from '@/lib/market-snapshot'
 import { getValuationSnapshot } from '@/lib/valuation-snapshot'
 import { getOperationalSummary } from '@/lib/crm-snapshot'
 
-export function generateCanonicalCeoReportHTML(): string {
+export function generateCanonicalCeoReportHTML(periodOverride?: string): string {
   const now = new Date()
-  const period = `2026-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const monthName = new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(now).charAt(0).toUpperCase() + new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(now).slice(1)
+  const period = periodOverride || `2026-${String(now.getMonth() + 1).padStart(2, '0')}`
+  
+  // If period is overridden, use it to get the month name; otherwise use current month
+  let monthName: string
+  if (periodOverride) {
+    const [year, month] = periodOverride.split('-')
+    const tempDate = new Date(parseInt(year), parseInt(month) - 1)
+    monthName = new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(tempDate).charAt(0).toUpperCase() + new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(tempDate).slice(1)
+  } else {
+    monthName = new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(now).charAt(0).toUpperCase() + new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(now).slice(1)
+  }
 
   // Aggregate data from canonical sources
   const compliance = getCompanySalesCompliance(period)
