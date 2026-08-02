@@ -2,6 +2,7 @@ import { getCompanySalesCompliance } from '@/lib/targets-2026'
 import { getMarketSnapshot } from '@/lib/market-snapshot'
 import { getValuationSnapshot } from '@/lib/valuation-snapshot'
 import { getOperationalSummary } from '@/lib/crm-snapshot'
+import { generateComplianceChart, generateClosuresChart } from '@/lib/chart-generator'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -15,7 +16,7 @@ function badge(pct: number) {
 
 // ─── main generator ─────────────────────────────────────────────────────────
 
-export function generateN3uraliaReportHTML(periodOverride?: string): string {
+export async function generateN3uraliaReportHTML(periodOverride?: string): Promise<string> {
   const period = periodOverride || '2026-06'
   const monthlyPeriods = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06']
   const monthShort = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun']
@@ -74,6 +75,10 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
     { label: 'Visitas Agendadas', value: 5968, color: '#F39C12' },
     { label: 'Cierres (6m)',    value: 197,   color: '#27AE60' },
   ]
+
+  // Generate charts
+  const complianceChartUrl = await generateComplianceChart(monthShort, compliancePcts)
+  const closuresChartUrl = await generateClosuresChart(monthShort, actuals)
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -273,20 +278,20 @@ export function generateN3uraliaReportHTML(periodOverride?: string): string {
       </table>
     </div>
 
-    <!-- Gráficos simplificados sin SVG pesados -->
+    <!-- Gráficos dinámicos generados con Chart.js -->
     <div class="charts-row" style="margin-top:24px">
       <div class="chart-box">
-        <div class="chart-label">Cierres por mes</div>
+        <div class="chart-label">Cierres por mes (Enero-${monthName})</div>
+        <img src="${closuresChartUrl}" style="width:100%;max-width:280px;height:auto;border-radius:4px;margin-top:8px;">
         <div style="font-size:10px;color:#999;margin-top:6px">
           Meta mensual: <strong>8.1</strong> · Acumulado: <strong>${totalSales}</strong>
         </div>
       </div>
       <div class="chart-box">
-        <div class="chart-label">Cumplimiento %</div>
+        <div class="chart-label">Cumplimiento % (Verde ≥90%, Amarillo ≥70%, Rojo &lt;70%)</div>
+        <img src="${complianceChartUrl}" style="width:100%;max-width:280px;height:auto;border-radius:4px;margin-top:8px;">
         <div style="font-size:10px;color:#999;margin-top:6px">
-          <span class="dot" style="background:#27AE60"></span>Verde ≥90%&nbsp;
-          <span class="dot" style="background:#F39C12"></span>Amarillo ≥70%&nbsp;
-          <span class="dot" style="background:#E74C3C"></span>Rojo &lt;70%
+          Objetivo: 100% · Acumulado: <strong>${totalCompPct}%</strong>
         </div>
       </div>
     </div>

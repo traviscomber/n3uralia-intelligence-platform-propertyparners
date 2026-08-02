@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       )
     }
 
-    const reportHTML = generateN3uraliaReportHTML(period)
+    const reportHTML = await generateN3uraliaReportHTML(period)
 
     return new NextResponse(reportHTML, {
       headers: {
