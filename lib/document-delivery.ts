@@ -112,6 +112,11 @@ export async function sendDocumentEmail(
 ) {
   const subject = `Business Intelligence Document: ${documentTitle}`
 
+  // Determine greeting based on time of day (before 12:00 = Buenos días, after 12:00 = Buenas tardes)
+  const now = new Date()
+  const hour = now.getHours()
+  const greeting = hour < 12 ? 'Buenos días' : 'Buenas tardes'
+
   // Parse the period (YYYY-MM) out of the title so we can show it once, formatted nicely,
   // and strip the redundant trailing period/brand text from the displayed title.
   const monthNames = [
@@ -156,7 +161,7 @@ export async function sendDocumentEmail(
         </tr>
         <tr>
           <td style="padding: 40px; background-color: white;">
-            <p style="font-family: Calibri, sans-serif; font-size: 15px; font-weight: bold; color: #111; margin: 0 0 16px 0;">Buenos días,</p>
+            <p style="font-family: Calibri, sans-serif; font-size: 15px; font-weight: bold; color: #111; margin: 0 0 16px 0;">${greeting},</p>
             <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 28px 0; line-height: 1.7;">Adjunto encontrarás el reporte integral ejecutivo correspondiente a ${periodLabel}. Este documento contiene el análisis completo de desempeño, inteligencia de mercado y recomendaciones estratégicas.</p>
 
             <p style="font-family: Calibri, sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #111; margin: 0 0 14px 0;">Contenido del reporte</p>
@@ -198,7 +203,7 @@ export async function sendDocumentEmail(
   </tr>
 </table>`
   
-  const text = `${cleanTitle}\n${periodLabel}\n\nBuenos días,\n\nAdjunto encontrarás el reporte integral ejecutivo correspondiente a ${periodLabel}.\n\nCONTENIDO DEL REPORTE:\n- Modelo de scoring con métricas de desempeño\n- Tabla de evolución con 6 meses de datos históricos\n- Sistema de semáforo (Verde/Amarillo/Rojo)\n- Análisis de cumplimiento vs objetivos\n- Indicadores clave de negocio y productividad\n\nEl reporte completo está adjunto como archivo HTML; puedes abrirlo en cualquier navegador.\n\nQuedamos atentos si tienes preguntas sobre los datos o necesitas información adicional.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app\nwww.ppartnersgroup.app\n\n© ${new Date().getFullYear()} Property Partners Group · Vitacura. Todos los derechos reservados.`
+  const text = `${cleanTitle}\n${periodLabel}\n\n${greeting},\n\nAdjunto encontrarás el reporte integral ejecutivo correspondiente a ${periodLabel}.\n\nCONTENIDO DEL REPORTE:\n- Modelo de scoring con métricas de desempeño\n- Tabla de evolución con 6 meses de datos históricos\n- Sistema de semáforo (Verde/Amarillo/Rojo)\n- Análisis de cumplimiento vs objetivos\n- Indicadores clave de negocio y productividad\n\nEl reporte completo está adjunto como archivo HTML; puedes abrirlo en cualquier navegador.\n\nQuedamos atentos si tienes preguntas sobre los datos o necesitas información adicional.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app\nwww.ppartnersgroup.app\n\n© ${new Date().getFullYear()} Property Partners Group · Vitacura. Todos los derechos reservados.`
   
   const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
   
