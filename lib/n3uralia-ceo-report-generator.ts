@@ -271,39 +271,52 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
   <div class="section">
     <div class="section-title">Evolución de Venta</div>
 
-    <!-- Tabla -->
-    <div style="overflow-x:auto">
-      <table class="evo-table">
+    <!-- Professional Data Table with Color-Coding -->
+    <div style="overflow-x:auto;background:#FAFAFA;border-radius:8px;padding:20px;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead>
-          <tr>
-            <th style="text-align:left">Indicador</th>
-            ${monthShort.map(m => `<th>${m}</th>`).join('')}
-            <th class="acum">Acum</th>
+          <tr style="background:#F5F5F5;border-bottom:2px solid #DDD">
+            <th style="text-align:left;padding:12px 10px;font-weight:700;color:#333;text-transform:uppercase;font-size:11px;letter-spacing:0.5px">Indicador</th>
+            ${monthShort.map(m => `<th style="padding:12px 8px;font-weight:600;color:#555;text-align:center;font-size:12px">${m}</th>`).join('')}
+            <th style="padding:12px 8px;font-weight:700;color:#fff;background:#1976D2;border-radius:4px;text-align:center;font-size:12px">Acum</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Cierres mes</td>
-            ${actuals.map(v => `<td>${v}</td>`).join('')}
-            <td class="acum">${totalSales}</td>
+          <!-- Cierres mes (green) -->
+          <tr style="background:rgba(39, 174, 96, 0.05);border-bottom:1px solid #EEE">
+            <td style="padding:12px 10px;font-weight:600;color:#27AE60">Cierres mes</td>
+            ${actuals.map(v => `<td style="padding:12px 8px;text-align:center;color:#333;font-weight:600">${v}</td>`).join('')}
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#27AE60;border-radius:4px">${totalSales}</td>
           </tr>
-          <tr>
-            <td>Meta cierres</td>
-            ${monthlyData.map(m => `<td>${(m.target || 8.1).toFixed(1)}</td>`).join('')}
-            <td class="acum">${totalTarget.toFixed(1)}</td>
+          <!-- Meta cierres (blue) -->
+          <tr style="background:rgba(25, 118, 210, 0.05);border-bottom:1px solid #EEE">
+            <td style="padding:12px 10px;font-weight:600;color:#1976D2">Meta cierres</td>
+            ${monthlyData.map(m => `<td style="padding:12px 8px;text-align:center;color:#333;font-weight:500">${(m.target || 8.1).toFixed(1)}</td>`).join('')}
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#1976D2;border-radius:4px">${totalTarget.toFixed(1)}</td>
           </tr>
-          <tr>
-            <td>Cumplimiento %</td>
-            ${compliancePcts.map(v => `<td>${v}%</td>`).join('')}
-            <td class="acum">${totalCompPct}%</td>
+          <!-- Cumplimiento % (color-coded per value) -->
+          <tr style="background:#F9F9F9;border-bottom:1px solid #EEE">
+            <td style="padding:12px 10px;font-weight:600;color:#F57C00">Cumplimiento %</td>
+            ${compliancePcts.map(v => {
+              const c = v >= 90 ? '#27AE60' : v >= 70 ? '#F39C12' : '#E74C3C'
+              return `<td style="padding:12px 8px;text-align:center;color:${c};font-weight:700">${v}%</td>`
+            }).join('')}
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#F57C00;border-radius:4px">${totalCompPct}%</td>
           </tr>
-          <tr>
-            <td>Productividad</td>
-            ${actuals.map(v => `<td>${(v / totalPartners).toFixed(2)}</td>`).join('')}
-            <td class="acum">${(totalSales / totalPartners).toFixed(2)}</td>
+          <!-- Productividad (purple) -->
+          <tr style="background:rgba(156, 39, 176, 0.05)">
+            <td style="padding:12px 10px;font-weight:600;color:#9C27B0">Productividad</td>
+            ${actuals.map(v => `<td style="padding:12px 8px;text-align:center;color:#333;font-weight:600">${(v / totalPartners).toFixed(2)}</td>`).join('')}
+            <td style="padding:12px 8px;text-align:center;font-weight:700;color:#fff;background:#9C27B0;border-radius:4px">${(totalSales / totalPartners).toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
+      <div style="font-size:11px;color:#999;margin-top:14px;padding-top:12px;border-top:1px solid #DDD">
+        <span style="background:#27AE60;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px"></span>Cierres &nbsp;
+        <span style="background:#1976D2;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;margin-left:12px"></span>Meta &nbsp;
+        <span style="background:#F57C00;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;margin-left:12px"></span>Cumplimiento &nbsp;
+        <span style="background:#9C27B0;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;margin-left:12px"></span>Productividad
+      </div>
     </div>
 
     <!-- Gráficos dinámicos generados con Chart.js -->
