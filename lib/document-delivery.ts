@@ -1,7 +1,23 @@
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery-core'
 import { generateCeoReportPDFAttachment } from '@/lib/ceo-report-pdf-generator'
+
+// Load the Property Partners logo once and cache it as base64 for inline (CID) email embedding
+let cachedLogoBase64: string | null = null
+function getEmailLogoBase64(): string | null {
+  if (cachedLogoBase64 !== null) return cachedLogoBase64
+  try {
+    const logoPath = join(process.cwd(), 'public', 'images', 'pp-email-logo.png')
+    cachedLogoBase64 = readFileSync(logoPath).toString('base64')
+  } catch (error) {
+    console.error('[Document Delivery] Failed to load email logo:', error)
+    cachedLogoBase64 = ''
+  }
+  return cachedLogoBase64 || null
+}
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -110,16 +126,19 @@ export async function sendDocumentEmail(
   recipientEmail: string,
 ) {
   const subject = `Business Intelligence Document: ${documentTitle}`
+  const logoBase64 = getEmailLogoBase64()
   
   const html = `<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f0f0; margin: 0; padding: 0;">
   <tr>
     <td align="center" style="padding: 20px;">
       <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-collapse: collapse;">
         <tr>
-          <td style="background-color: #000000; padding: 35px 30px; text-align: center;">
-            <p style="font-family: Calibri, sans-serif; font-size: 42px; font-weight: bold; color: white; margin: 0 0 5px 0; letter-spacing: 2px;">PROPERTY PARTNERS</p>
-            <p style="font-family: Calibri, sans-serif; font-size: 28px; font-weight: bold; color: #E74C3C; margin: 0; letter-spacing: 3px;">VITACURA</p>
-            <p style="font-family: Calibri, sans-serif; font-size: 11px; color: #999; margin: 8px 0 0 0;">Inteligencia de mercado Vitacura</p>
+          <td style="background-color: #000000; padding: 30px; text-align: center;">
+            ${logoBase64
+              ? `<img src="cid:pplogo" alt="Property Partners Vitacura" width="360" style="display: block; margin: 0 auto; max-width: 360px; width: 100%; height: auto;">`
+              : `<p style="font-family: Calibri, sans-serif; font-size: 42px; font-weight: bold; color: white; margin: 0 0 5px 0; letter-spacing: 2px;">PROPERTY PARTNERS</p>
+                 <p style="font-family: Calibri, sans-serif; font-size: 28px; font-weight: bold; color: #E74C3C; margin: 0; letter-spacing: 3px;">VITACURA</p>
+                 <p style="font-family: Calibri, sans-serif; font-size: 11px; color: #999; margin: 8px 0 0 0;">Inteligencia de mercado Vitacura</p>`}
           </td>
         </tr>
         <tr>
@@ -175,18 +194,27 @@ export async function sendDocumentEmail(
   
   const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
   
-  // Generate and attach CEO report if it's a CEO report document
+  // Attach logo inline (CID) so it always renders in the email header
   let attachments: any[] = []
+  if (logoBase64) {
+    attachments.push({
+      filename: 'pp-logo.png',
+      content: logoBase64,
+      content_type: 'image/png',
+      content_id: 'pplogo',
+      disposition: 'inline',
+    })
+  }
+
+  // Generate and attach CEO report if it's a CEO report document
   if (documentTitle.includes('Reporte Integral')) {
     try {
       const reportAttachment = await generateCeoReportPDFAttachment()
-      attachments = [
-        {
-          filename: reportAttachment.filename,
-          content: reportAttachment.content,
-          content_type: reportAttachment.contentType,
-        },
-      ]
+      attachments.push({
+        filename: reportAttachment.filename,
+        content: reportAttachment.content,
+        content_type: reportAttachment.contentType,
+      })
     } catch (attachmentError) {
       console.error('[Document Delivery] Failed to generate report attachment:', attachmentError)
     }
