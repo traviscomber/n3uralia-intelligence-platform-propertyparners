@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { generateCeoReportAprilLayoutV2 } from '@/lib/ceo-report-april-layout-v2'
+import { generateCeoReportJanuaryLayout } from '@/lib/ceo-report-january-layout'
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,9 @@ export async function POST(req: NextRequest) {
     const monthName = monthNames[monthIndex]
     if (!monthName) return NextResponse.json({ success: false, error: 'Invalid report month' }, { status: 400 })
 
-    const reportHTML = await generateCeoReportAprilLayoutV2(monthName, period)
+    const reportHTML = period === '2026-01'
+      ? await generateCeoReportJanuaryLayout()
+      : await generateCeoReportAprilLayoutV2(monthName, period)
     const recipient = recipient_email || 'juan@n3uralia.com'
     const resend = new Resend(process.env.RESEND_API_KEY)
     const response = await resend.emails.send({
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest) {
       emailId: response.data?.id,
       recipient,
       period,
-      layout: 'april-canonical-v2-charts',
+      layout: period === '2026-01' ? 'january-canonical-v1' : 'april-canonical-v2-charts',
     })
   } catch (error) {
     console.error('Error sending report:', error)
