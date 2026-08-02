@@ -77,7 +77,7 @@ function complianceChart(monthly: Array<{ short: string; compliance: number }>) 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolución del cumplimiento mensual" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="${BRAND.surface}"/>${grid}<line x1="${left}" y1="${top + chartH - 100/110*chartH}" x2="${W-20}" y2="${top + chartH - 100/110*chartH}" stroke="${BRAND.chartGray}" stroke-dasharray="4 4"/><polyline points="${polyline}" fill="none" stroke="${BRAND.chartBlue}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg>`
 }
 
-function funnelRow(label: string, value: number, max: number, detail: string, accent = BRAND.chartGray) {
+function funnelRow(label: string, value: number, max: number, detail: string, accent: string = BRAND.chartGray) {
   const width = Math.max(3, Math.round((value / Math.max(max, 1)) * 100))
   return `<tr><td width="110" style="padding:10px 12px 10px 0;font:600 11px Calibri,Arial,sans-serif;color:${BRAND.foreground}">${label}</td><td style="padding:10px 0"><div style="height:22px;background:${BRAND.surfaceMuted}"><div style="height:22px;width:${width}%;background:${accent};min-width:3px"></div></div></td><td width="90" align="right" style="padding:10px 0 10px 12px;font:700 15px Calibri,Arial,sans-serif;color:${BRAND.foreground}">${fmt(value)}</td><td width="105" style="padding:10px 0 10px 10px;font:10px/14px Calibri,Arial,sans-serif;color:${BRAND.muted}">${detail}</td></tr>`
 }
