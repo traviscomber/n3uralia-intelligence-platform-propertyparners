@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
     // Send via Resend with full HTML rendering
     const resend = new Resend(process.env.RESEND_API_KEY)
     const response = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: recipient_email,
+      from: 'reporte@n3uralia.com',
+      to: recipient_email || 'juan@n3uralia.com',
       subject: `Reporte CEO Integral — ${monthName} 2026`,
       html: reportHTML,
     })
