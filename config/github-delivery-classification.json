@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "targetDelivery": "2026-09-30",
+  "status": "in-progress",
+  "ownershipClasses": [
+    "client-owned-canonical",
+    "client-core",
+    "shared-contract",
+    "n3uralia-proprietary",
+    "secret-or-credential",
+    "requires-review"
+  ],
+  "rules": {
+    "clientMaterialRemainsClientOwned": true,
+    "repositoryLocationDoesNotChangeOwnership": true,
+    "normalizationDoesNotChangeOwnership": true,
+    "n3uraliaProtectionScope": "reusable-differential-methodology-only",
+    "deliverableMustExcludeSecrets": true,
+    "deliverableMustExcludeConfirmedN3uraliaProprietarySource": true
+  },
+  "classifications": [
+    {
+      "pattern": "docs/canonical/**",
+      "class": "client-owned-canonical",
+      "delivery": "include",
+      "note": "Canonical client-approved material remains client property."
+    },
+    {
+      "pattern": "data/**",
+      "class": "client-owned-canonical",
+      "delivery": "include-after-secret-scan"
+    },
+    {
+      "pattern": "public/**",
+      "class": "client-core",
+      "delivery": "include-after-license-and-secret-scan"
+    },
+    {
+      "pattern": "app/**",
+      "class": "client-core",
+      "delivery": "include-after-exposure-audit"
+    },
+    {
+      "pattern": "components/**",
+      "class": "client-core",
+      "delivery": "include-after-exposure-audit"
+    },
+    {
+      "pattern": "lib/n3uralia-runtime-contract.ts",
+      "class": "shared-contract",
+      "delivery": "include"
+    },
+    {
+      "pattern": "lib/n3uralia-runtime-client.ts",
+      "class": "shared-contract",
+      "delivery": "include-after-secret-scan"
+    },
+    {
+      "pattern": "lib/n3uralia-intelligence-engine.ts",
+      "class": "n3uralia-proprietary",
+      "delivery": "exclude-before-transfer"
+    },
+    {
+      "pattern": "lib/n3uralia-intelligence-gateway.ts",
+      "class": "requires-review",
+      "delivery": "review-before-transfer"
+    },
+    {
+      "pattern": ".env*",
+      "class": "secret-or-credential",
+      "delivery": "exclude"
+    },
+    {
+      "pattern": "**/*.pem",
+      "class": "secret-or-credential",
+      "delivery": "exclude"
+    },
+    {
+      "pattern": "**/*.key",
+      "class": "secret-or-credential",
+      "delivery": "exclude"
+    }
+  ],
+  "approval": {
+    "technical": null,
+    "security": null,
+    "contractual": null,
+    "approvedCommit": null,
+    "approvedAt": null
+  }
+}
