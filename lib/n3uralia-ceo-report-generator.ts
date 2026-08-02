@@ -4,12 +4,27 @@ import { getValuationSnapshot } from '@/lib/valuation-snapshot'
 import { getOperationalSummary } from '@/lib/crm-snapshot'
 import { generateComplianceChart, generateClosuresChart } from '@/lib/chart-generator'
 
+// ─── N3uralia Design System Colors ──────────────────────────────────────────
+const N3_COLORS = {
+  primary: '#8fb2aa',      // Primary green-gray
+  primaryDark: '#6b8a82',  // Darker variant
+  foreground: '#173634',   // Dark text
+  muted: '#555a56',        // Secondary text
+  border: '#d8e5e2',       // Light border
+  background: '#fbfbfa',   // Off-white background
+  
+  // Semantic status colors (kept for UX clarity)
+  success: '#2d6a4f',      // Green (status indicators only)
+  warning: '#d4a574',      // Warm orange-brown
+  error: '#8b3a3a',        // Deep red-brown
+}
+
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function badge(pct: number) {
-  if (pct >= 90) return { cls: '#27AE60', label: 'Verde' }
-  if (pct >= 70) return { cls: '#F39C12', label: 'Amarillo' }
-  return { cls: '#E74C3C', label: 'Rojo' }
+  if (pct >= 90) return { cls: N3_COLORS.success, label: 'Óptimo' }
+  if (pct >= 70) return { cls: N3_COLORS.warning, label: 'Normal' }
+  return { cls: N3_COLORS.error, label: 'Crítico' }
 }
 
 
