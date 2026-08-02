@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import {
   advanceSchedule,
+  assertClosedMonthlyPeriod,
   canRunManagementReports,
   getCronAuthorizationFailure,
+  isClosedMonthlyPeriod,
   previousMonthBounds,
 } from '../lib/management-report-schedule'
 
@@ -27,6 +29,17 @@ assert.deepEqual(previousMonthBounds(new Date('2026-08-01T09:00:00.000Z')), {
   end: '2026-07-31',
 })
 
+const augustSecond = new Date('2026-08-02T23:31:00.000Z')
+assert.equal(isClosedMonthlyPeriod('2026-07', augustSecond), true)
+assert.equal(isClosedMonthlyPeriod('2026-08', augustSecond), false)
+assert.equal(isClosedMonthlyPeriod('2026-09', augustSecond), false)
+assert.equal(isClosedMonthlyPeriod('invalid', augustSecond), false)
+assert.doesNotThrow(() => assertClosedMonthlyPeriod('2026-07', augustSecond))
+assert.throws(
+  () => assertClosedMonthlyPeriod('2026-08', augustSecond),
+  /mes completamente terminado/,
+)
+
 const now = new Date('2026-08-01T09:00:00.000Z')
 assert.equal(advanceSchedule('2026-08-01T09:00:00.000Z', 'monthly', now), '2026-09-01T09:00:00.000Z')
 assert.equal(advanceSchedule('2026-05-01T09:00:00.000Z', 'quarterly', now), '2026-11-01T09:00:00.000Z')
@@ -34,4 +47,4 @@ assert.equal(advanceSchedule('2024-08-01T09:00:00.000Z', 'yearly', now), '2027-0
 assert.throws(() => advanceSchedule('invalid', 'monthly', now), /next_run_at inválido/)
 assert.throws(() => advanceSchedule('2026-08-01T09:00:00.000Z', 'weekly', now), /Cadencia no soportada/)
 
-console.log('Management report scheduling and authorization rules verified.')
+console.log('Management report scheduling, closure and authorization rules verified.')
