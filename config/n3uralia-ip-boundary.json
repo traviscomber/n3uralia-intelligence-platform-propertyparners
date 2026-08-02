@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "policy": "preserve-client-operation-while-extracting-proprietary-runtime",
   "classes": {
     "client": {
@@ -18,7 +18,7 @@
     "shared-contract": {
       "allowed": [
         "lib/n3uralia-runtime-contract.ts",
-        "lib/n3uralia-runtime-client.server.ts"
+        "lib/n3uralia-runtime-client.ts"
       ],
       "restrictions": [
         "types-and-transport-only",
@@ -27,8 +27,10 @@
       ]
     },
     "n3uralia-proprietary": {
-      "paths": [
-        "lib/n3uralia-intelligence-engine.ts",
+      "confirmedPaths": [
+        "lib/n3uralia-intelligence-engine.ts"
+      ],
+      "candidatePatterns": [
         "lib/agents/**",
         "lib/ai-*",
         "lib/intelligence-*",
@@ -45,7 +47,9 @@
         "data/**",
         "lib/crm-snapshot*",
         "lib/presentations-2026*",
-        "lib/targets-2026*"
+        "lib/targets-2026*",
+        "lib/market-snapshot*",
+        "lib/valuation-snapshot*"
       ],
       "mayEnterGlobalReusableDataset": false,
       "tenantIsolationRequired": true
@@ -57,6 +61,7 @@
     "requireRollback": true,
     "requireFunctionalEquivalence": true,
     "requireCredentialRotationBeforeClientTransfer": true,
-    "requireGitHistoryReviewBeforeClientTransfer": true
+    "requireGitHistoryReviewBeforeClientTransfer": true,
+    "verifiedInventoryDocument": "docs/canonical/N3URALIA_PROPRIETARY_MODULE_INVENTORY.md"
   }
 }
