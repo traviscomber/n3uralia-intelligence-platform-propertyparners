@@ -30,6 +30,9 @@ if (manifest.status !== 'active') fail('Local server-only protection manifest mu
 if (manifest.remoteRuntime?.required !== false) {
   fail('Remote runtime must remain optional unless a future change is explicitly approved.')
 }
+if (typeof manifest.remoteRuntime?.allowed !== 'boolean') {
+  fail('remoteRuntime.allowed must be explicitly declared.')
+}
 
 const requiredProtections = [
   'serverOnlyProprietaryModules',
@@ -71,7 +74,10 @@ const incompleteFutureEvidence = futureEvidenceKeys.filter((key) => {
 })
 
 if (mode === 'remote') {
-  if (manifest.remoteRuntime?.activationPolicy !== 'explicit-approved-change') {
+  if (manifest.remoteRuntime.allowed !== true) {
+    fail('Remote mode is explicitly blocked by the active cutover policy.')
+  }
+  if (manifest.remoteRuntime.activationPolicy !== 'explicit-approved-change') {
     fail('Remote mode requires activationPolicy explicit-approved-change.')
   }
   if (incompleteFutureEvidence.length) {
@@ -84,5 +90,5 @@ if (mode === 'shadow' && !process.env.N3URALIA_RUNTIME_URL) {
 }
 
 console.log(
-  `[runtime-cutover] mode=${mode}; target=${manifest.targetMode}; futureEvidenceIncomplete=${incompleteFutureEvidence.length}`,
+  `[runtime-cutover] mode=${mode}; target=${manifest.targetMode}; remoteAllowed=${manifest.remoteRuntime.allowed}; futureEvidenceIncomplete=${incompleteFutureEvidence.length}`,
 )
