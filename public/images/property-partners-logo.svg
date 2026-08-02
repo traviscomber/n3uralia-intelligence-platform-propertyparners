@@ -1,0 +1,48 @@
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <!-- Background (transparent for email) -->
+  <defs>
+    <style>
+      .pp-logo-text { font-family: 'Arial', sans-serif; font-weight: normal; letter-spacing: 2px; }
+      .pp-logo-initials { font-size: 60px; font-weight: bold; fill: white; }
+      .pp-logo-main { font-size: 48px; fill: white; }
+      .pp-logo-vitacura { font-size: 32px; fill: #E74C3C; font-weight: bold; letter-spacing: 3px; }
+    </style>
+  </defs>
+  
+  <!-- Compass rose circle -->
+  <circle cx="85" cy="100" r="65" fill="none" stroke="white" stroke-width="2"/>
+  <circle cx="85" cy="100" r="60" fill="none" stroke="white" stroke-width="1"/>
+  
+  <!-- Compass points (north, south, east, west) -->
+  <!-- North point -->
+  <polygon points="85,25 75,45 95,45" fill="white"/>
+  <line x1="85" y1="25" x2="85" y2="10" stroke="white" stroke-width="2"/>
+  
+  <!-- South point -->
+  <polygon points="85,175 75,155 95,155" fill="white"/>
+  <line x1="85" y1="175" x2="85" y2="190" stroke="white" stroke-width="2"/>
+  
+  <!-- East point -->
+  <polygon points="145,100 125,90 125,110" fill="white"/>
+  <line x1="145" y1="100" x2="160" y2="100" stroke="white" stroke-width="2"/>
+  
+  <!-- West point -->
+  <polygon points="25,100 45,90 45,110" fill="white"/>
+  <line x1="25" y1="100" x2="10" y2="100" stroke="white" stroke-width="2"/>
+  
+  <!-- Inner circle with PP initials -->
+  <circle cx="85" cy="100" r="40" fill="none" stroke="white" stroke-width="2"/>
+  <text x="85" y="115" text-anchor="middle" class="pp-logo-text pp-logo-initials">PP</text>
+  
+  <!-- Main text: PROPERTY PARTNERS -->
+  <text x="200" y="85" class="pp-logo-text pp-logo-main">PROPERTY PARTNERS</text>
+  
+  <!-- Red line separator -->
+  <line x1="200" y1="95" x2="750" y2="95" stroke="#E74C3C" stroke-width="2"/>
+  
+  <!-- Registered trademark symbol -->
+  <text x="750" y="78" font-size="14" fill="white" font-weight="bold">®</text>
+  
+  <!-- Vitacura text -->
+  <text x="200" y="145" class="pp-logo-text pp-logo-vitacura">VITACURA</text>
+</svg>
