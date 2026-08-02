@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "policy": "preserve-client-operation-while-extracting-proprietary-runtime",
+  "classes": {
+    "client": {
+      "allowed": [
+        "app/**",
+        "components/**",
+        "docs/canonical/**",
+        "public/**"
+      ],
+      "restrictions": [
+        "must-not-contain-prompts",
+        "must-not-contain-proprietary-scoring",
+        "must-not-import-proprietary-runtime-from-use-client"
+      ]
+    },
+    "shared-contract": {
+      "allowed": [
+        "lib/n3uralia-runtime-contract.ts",
+        "lib/n3uralia-runtime-client.server.ts"
+      ],
+      "restrictions": [
+        "types-and-transport-only",
+        "no-inference-rules",
+        "no-provider-secrets"
+      ]
+    },
+    "n3uralia-proprietary": {
+      "paths": [
+        "lib/n3uralia-intelligence-engine.ts",
+        "lib/agents/**",
+        "lib/ai-*",
+        "lib/intelligence-*",
+        "lib/executive-reasoning*",
+        "lib/intelligence-orchestrator*",
+        "lib/ai-runtime*"
+      ],
+      "destination": "dedicated-private-n3uralia-runtime-repository",
+      "clientRepositoryAllowedAfterMigration": false
+    },
+    "client-evidence": {
+      "paths": [
+        "docs/canonical/**",
+        "data/**",
+        "lib/crm-snapshot*",
+        "lib/presentations-2026*",
+        "lib/targets-2026*"
+      ],
+      "mayEnterGlobalReusableDataset": false,
+      "tenantIsolationRequired": true
+    }
+  },
+  "migration": {
+    "mode": "strangler-with-parallel-validation",
+    "deleteLocalImplementationBeforeRemoteValidation": false,
+    "requireRollback": true,
+    "requireFunctionalEquivalence": true,
+    "requireCredentialRotationBeforeClientTransfer": true,
+    "requireGitHistoryReviewBeforeClientTransfer": true
+  }
+}
