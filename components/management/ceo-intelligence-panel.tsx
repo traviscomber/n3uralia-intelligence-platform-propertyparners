@@ -47,6 +47,17 @@ export async function CeoIntelligencePanel() {
         </div>
       ) : null}
 
+      {result.parity ? (
+        <div
+          role="status"
+          className={`border bg-[#0c1111] p-4 text-sm ${result.parity.exactIdParity ? 'border-[#2f8f4e] text-[#65c780]' : 'border-[#a77a22] text-[#f6c453]'}`}
+        >
+          {result.parity.exactIdParity
+            ? 'Validación shadow: paridad exacta de señales, riesgos y acciones.'
+            : `Validación shadow pendiente: diferencias señales ${result.parity.signalCountDelta}, riesgos ${result.parity.riskCountDelta}, acciones ${result.parity.actionCountDelta}.`}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
         <article className={`border bg-[#0c1111] p-5 ${criticalRisk ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}>
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-[#ff766f]">
