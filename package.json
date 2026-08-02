@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "security:ip-boundaries": "node scripts/check-n3uralia-ip-boundaries.mjs",
     "security:credential-boundaries": "node scripts/check-credential-boundaries.mjs",
+    "security:runtime-consumers": "node scripts/inventory-n3uralia-consumers.mjs",
     "audit:legacy": "node scripts/audit-legacy-code.mjs",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
