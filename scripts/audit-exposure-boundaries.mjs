@@ -24,6 +24,7 @@ const forbiddenResponseTerms = [
 
 const sensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?(token|secret|password|cookie|authorization|prompt|payload|document|canonical)/i;
 const serializedSensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?JSON\.stringify\s*\([\s\S]{0,300}?(request|body|payload|document|canonical)/i;
+const dangerousPublicEnv = /NEXT_PUBLIC_[A-Z0-9_]*(SECRET|TOKEN|PASSWORD|PRIVATE|SERVICE_ROLE|PROMPT|SCORING|HEURISTIC)/;
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -41,6 +42,22 @@ function importsProtectedModule(text) {
   return protectedModules.some((moduleName) => text.includes(moduleName));
 }
 
+const nextConfigPath = ['next.config.mjs', 'next.config.js', 'next.config.ts']
+  .map((name) => path.join(root, name))
+  .find((candidate) => fs.existsSync(candidate));
+
+if (!nextConfigPath) {
+  findings.push('Next.js configuration missing: browser source-map policy cannot be verified');
+} else {
+  const nextConfig = fs.readFileSync(nextConfigPath, 'utf8');
+  if (!/productionBrowserSourceMaps\s*:\s*false/.test(nextConfig)) {
+    findings.push(`${path.basename(nextConfigPath)}: productionBrowserSourceMaps must be explicitly false`);
+  }
+  if (!/poweredByHeader\s*:\s*false/.test(nextConfig)) {
+    findings.push(`${path.basename(nextConfigPath)}: poweredByHeader must be explicitly false`);
+  }
+}
+
 for (const relRoot of roots) {
   for (const file of walk(path.join(root, relRoot))) {
     const rel = path.relative(root, file).replaceAll('\\', '/');
@@ -54,6 +71,10 @@ for (const relRoot of roots) {
 
     if (isClient && /server-only/.test(text)) {
       findings.push(`${rel}: client module references server-only material`);
+    }
+
+    if (dangerousPublicEnv.test(text)) {
+      findings.push(`${rel}: potentially privileged material uses a NEXT_PUBLIC_ environment variable`);
     }
 
     if (isApi) {
