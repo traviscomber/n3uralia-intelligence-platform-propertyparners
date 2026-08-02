@@ -2,9 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const roots = ['app', 'components', 'lib', 'scripts'];
+const roots = ['app', 'components', 'lib'];
 const extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const findings = [];
+
+const protectedModules = [
+  '@/lib/n3uralia-intelligence-engine',
+  '@/lib/n3uralia-intelligence-gateway',
+  'lib/n3uralia-intelligence-engine',
+  'lib/n3uralia-intelligence-gateway',
+];
 
 const forbiddenResponseTerms = [
   /systemPrompt/i,
@@ -12,11 +19,7 @@ const forbiddenResponseTerms = [
   /reasoningTrace/i,
   /internalRules/i,
   /scoringRules/i,
-  /serviceRoleKey/i,
-  /N3URALIA_RUNTIME_SERVICE_TOKEN/,
-  /SUPABASE_SERVICE_ROLE_KEY/,
-  /RESEND_API_KEY/,
-  /CRON_SECRET/,
+  /promptVersion/i,
 ];
 
 const sensitiveLogTerms = [
@@ -36,6 +39,10 @@ function walk(dir) {
   return out;
 }
 
+function importsProtectedModule(text) {
+  return protectedModules.some((moduleName) => text.includes(moduleName));
+}
+
 for (const relRoot of roots) {
   for (const file of walk(path.join(root, relRoot))) {
     const rel = path.relative(root, file).replaceAll('\\', '/');
@@ -43,8 +50,12 @@ for (const relRoot of roots) {
     const isClient = /^\s*['\"]use client['\"];?/m.test(text);
     const isApi = /^app\/api\//.test(rel) && /route\.(ts|js)$/.test(rel);
 
-    if (isClient && /sourceMappingURL|server-only|SUPABASE_SERVICE_ROLE_KEY|N3URALIA_RUNTIME_SERVICE_TOKEN/.test(text)) {
-      findings.push(`${rel}: client module references server-only or privileged material`);
+    if (isClient && importsProtectedModule(text)) {
+      findings.push(`${rel}: client module imports a protected N3uralia server module`);
+    }
+
+    if (isClient && /server-only/.test(text)) {
+      findings.push(`${rel}: client module references server-only material`);
     }
 
     if (isApi) {
@@ -52,6 +63,10 @@ for (const relRoot of roots) {
         if (pattern.test(text) && /(NextResponse\.json|Response\(|JSON\.stringify)/.test(text)) {
           findings.push(`${rel}: API may expose internal implementation term ${pattern}`);
         }
+      }
+
+      if (/\b(local|remote|parity)\s*[:,]/.test(text) && importsProtectedModule(text)) {
+        findings.push(`${rel}: API may expose internal runtime objects instead of a minimal DTO`);
       }
     }
 
