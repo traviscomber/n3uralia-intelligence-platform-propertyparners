@@ -16,7 +16,8 @@
     "normalizationDoesNotChangeOwnership": true,
     "n3uraliaProtectionScope": "reusable-differential-methodology-only",
     "deliverableMustExcludeSecrets": true,
-    "deliverableMustExcludeConfirmedN3uraliaProprietarySource": true
+    "deliverableMustExcludeConfirmedN3uraliaProprietarySource": true,
+    "readyStatusMustResolveRequiresReview": true
   },
   "classifications": [
     {
@@ -44,6 +45,23 @@
       "pattern": "components/**",
       "class": "client-core",
       "delivery": "include-after-exposure-audit"
+    },
+    {
+      "pattern": "supabase/migrations/**",
+      "class": "client-core",
+      "delivery": "include-after-security-review",
+      "note": "Property Partners schema, permissions and operational data model remain client-core."
+    },
+    {
+      "pattern": ".github/**",
+      "class": "shared-contract",
+      "delivery": "include-after-secret-scan"
+    },
+    {
+      "pattern": "scripts/**",
+      "class": "requires-review",
+      "delivery": "review-before-transfer",
+      "note": "Contains a mixture of client operational tooling and reusable N3uralia audit or intelligence tooling."
     },
     {
       "pattern": "lib/n3uralia-runtime-contract.ts",
