@@ -26,10 +26,21 @@ export type N3uraliaGatewayOptions = {
   requestId?: string
 }
 
+export type N3uraliaGatewayParity = {
+  signalCountDelta: number
+  riskCountDelta: number
+  actionCountDelta: number
+  matchingSignalIds: number
+  matchingRiskIds: number
+  matchingActionIds: number
+  exactIdParity: boolean
+}
+
 export type N3uraliaGatewayResult = {
   mode: N3uraliaGatewayMode
   local: N3uraliaIntelligenceContext
   remote: N3uraliaRuntimeResponse | null
+  parity: N3uraliaGatewayParity | null
   remoteError: {
     code: string
     status: number
@@ -62,6 +73,72 @@ function createRequest(
   }
 }
 
+function assertRemoteIdentity(
+  request: N3uraliaRuntimeRequest,
+  response: N3uraliaRuntimeResponse,
+) {
+  if (response.protocolVersion !== request.protocolVersion) {
+    throw new N3uraliaRuntimeClientError(
+      'Private N3uralia runtime returned an incompatible protocol version.',
+      502,
+      'protocol_mismatch',
+    )
+  }
+
+  if (response.requestId !== request.requestId) {
+    throw new N3uraliaRuntimeClientError(
+      'Private N3uralia runtime returned a mismatched request identifier.',
+      502,
+      'request_mismatch',
+    )
+  }
+
+  if (response.tenantId !== request.tenantId) {
+    throw new N3uraliaRuntimeClientError(
+      'Private N3uralia runtime returned a mismatched tenant.',
+      502,
+      'tenant_mismatch',
+    )
+  }
+}
+
+function countMatchingIds(localIds: string[], remoteIds: string[]) {
+  const remoteSet = new Set(remoteIds)
+  return localIds.filter((id) => remoteSet.has(id)).length
+}
+
+function buildParity(
+  local: N3uraliaIntelligenceContext,
+  remote: N3uraliaRuntimeResponse,
+): N3uraliaGatewayParity {
+  const localSignalIds = local.signals.map((item) => item.id)
+  const remoteSignalIds = remote.signals.map((item) => item.id)
+  const localRiskIds = local.risks.map((item) => item.id)
+  const remoteRiskIds = remote.risks.map((item) => item.id)
+  const localActionIds = local.actions.map((item) => item.id)
+  const remoteActionIds = remote.actions.map((item) => item.id)
+
+  const matchingSignalIds = countMatchingIds(localSignalIds, remoteSignalIds)
+  const matchingRiskIds = countMatchingIds(localRiskIds, remoteRiskIds)
+  const matchingActionIds = countMatchingIds(localActionIds, remoteActionIds)
+
+  return {
+    signalCountDelta: remoteSignalIds.length - localSignalIds.length,
+    riskCountDelta: remoteRiskIds.length - localRiskIds.length,
+    actionCountDelta: remoteActionIds.length - localActionIds.length,
+    matchingSignalIds,
+    matchingRiskIds,
+    matchingActionIds,
+    exactIdParity:
+      matchingSignalIds === localSignalIds.length
+      && matchingSignalIds === remoteSignalIds.length
+      && matchingRiskIds === localRiskIds.length
+      && matchingRiskIds === remoteRiskIds.length
+      && matchingActionIds === localActionIds.length
+      && matchingActionIds === remoteActionIds.length,
+  }
+}
+
 /**
  * Transitional boundary for the extraction of the proprietary engine.
  *
@@ -82,12 +159,21 @@ export async function getN3uraliaIntelligence(
   const local = buildN3uraliaIntelligenceContext(options.audience ?? 'system')
 
   if (mode === 'local') {
-    return { mode, local, remote: null, remoteError: null }
+    return { mode, local, remote: null, parity: null, remoteError: null }
   }
 
   try {
-    const remote = await executeN3uraliaRuntime(createRequest(local, options))
-    return { mode, local, remote, remoteError: null }
+    const request = createRequest(local, options)
+    const remote = await executeN3uraliaRuntime(request)
+    assertRemoteIdentity(request, remote)
+
+    return {
+      mode,
+      local,
+      remote,
+      parity: mode === 'shadow' ? buildParity(local, remote) : null,
+      remoteError: null,
+    }
   } catch (error) {
     const normalized = error instanceof N3uraliaRuntimeClientError
       ? { code: error.code, status: error.status, message: error.message }
@@ -99,6 +185,7 @@ export async function getN3uraliaIntelligence(
       mode,
       local,
       remote: null,
+      parity: null,
       remoteError: normalized,
     }
   }
