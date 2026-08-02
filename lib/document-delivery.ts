@@ -139,7 +139,14 @@ export async function sendDocumentEmail(
       <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-collapse: collapse;">
         <tr>
           <td style="background-color: #000000; padding: 0; text-align: center; font-size: 0; line-height: 0;">
-            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-bcIKL0Aq2V18sQvduTI22Aow5vCOY2.png" alt="Property Partners Vitacura" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0;">
+            <a href="https://www.ppartnersgroup.app" style="display: block; text-decoration: none;">
+              <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-bcIKL0Aq2V18sQvduTI22Aow5vCOY2.png" alt="Property Partners Vitacura - Click to visit website" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0; cursor: pointer;">
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #000000; padding: 20px 40px; text-align: center;">
+            <p style="font-family: Calibri, sans-serif; font-size: 12px; letter-spacing: 2px; color: #999; margin: 0;">Inteligencia de mercado Vitacura</p>
           </td>
         </tr>
         <tr>
