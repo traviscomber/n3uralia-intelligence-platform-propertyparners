@@ -2,6 +2,7 @@ import { getCompanySalesCompliance, getBranchTargetPerformance } from '@/lib/tar
 import { getMarketSnapshot } from '@/lib/market-snapshot'
 import { getValuationSnapshot } from '@/lib/valuation-snapshot'
 import { getOperationalSummary } from '@/lib/crm-snapshot'
+import { generatePendingDefinitionsHTML } from '@/lib/pending-definitions'
 
 function calculateScoringMetrics(period: string) {
   // Based on canonical formulas from line 224-242 of CANONICAL_PRESENTATIONS_DEEP_STUDY.md
@@ -522,24 +523,7 @@ export function generateCanonicalCeoReportHTML(periodOverride?: string): string 
     </div>
     
     <!-- PENDING DEFINITIONS -->
-    <div class="section">
-      <h2 class="section-title">Definiciones Pendientes</h2>
-      <p style="font-size: 13px; color: #7F8C8D; margin-bottom: 20px;">
-        Estos puntos permanecen explícitamente abiertos y no se convierten en reglas operativas hasta su validación.
-      </p>
-      
-      <div class="pending-grid">
-        <div class="pending-item">
-          <span class="pending-number">1.</span> Definición de criterios de priorización de leads por origen
-        </div>
-        <div class="pending-item">
-          <span class="pending-number">2.</span> Estandarización de tiempos de contacto según zona
-        </div>
-        <div class="pending-item">
-          <span class="pending-number">3.</span> Benchmarks de conversión por tipo de propiedad
-        </div>
-      </div>
-    </div>
+    ${generatePendingDefinitionsHTML()}
     
     <!-- FOOTER -->
     <div class="footer">
