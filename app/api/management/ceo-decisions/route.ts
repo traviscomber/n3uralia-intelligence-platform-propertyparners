@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
+import { getN3uraliaIntelligence } from '@/lib/n3uralia-intelligence-gateway'
+
+const PROPERTY_PARTNERS_TENANT_ID = 'property-partners'
 
 export async function GET() {
   try {
     await requireAnyCapability(['management.global.read', 'tasks.global.manage', 'valuations.global.read'])
-    const supabase = await createClient()
+
+    const [supabase, intelligence] = await Promise.all([
+      createClient(),
+      getN3uraliaIntelligence({
+        tenantId: PROPERTY_PARTNERS_TENANT_ID,
+        audience: 'ceo',
+        domains: ['executive', 'crm', 'market', 'valuation'],
+        purpose: 'decision-support',
+      }),
+    ])
 
     const [casesResult, tasksResult] = await Promise.all([
       supabase
@@ -81,7 +93,39 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ queue, generatedAt: new Date().toISOString() }, { headers: { 'Cache-Control': 'no-store' } })
+    const intelligencePayload = intelligence.mode === 'remote' && intelligence.remote
+      ? {
+          mode: intelligence.mode,
+          signals: intelligence.remote.signals,
+          risks: intelligence.remote.risks,
+          actions: intelligence.remote.actions,
+          provenance: intelligence.remote.provenance,
+        }
+      : {
+          mode: intelligence.mode,
+          signals: intelligence.local.signals,
+          risks: intelligence.local.risks,
+          actions: intelligence.local.actions,
+          provenance: {
+            clientEvidenceIds: intelligence.local.evidence
+              .filter((item) => item.sourceClass === 'client_evidence')
+              .map((item) => item.id),
+            externalSourceIds: intelligence.local.evidence
+              .filter((item) => item.sourceClass === 'external_market')
+              .map((item) => item.id),
+            modelVersion: 'local-transition',
+          },
+          remoteError: intelligence.remoteError,
+        }
+
+    return NextResponse.json(
+      {
+        queue,
+        intelligence: intelligencePayload,
+        generatedAt: new Date().toISOString(),
+      },
+      { headers: { 'Cache-Control': 'private, no-store' } },
+    )
   } catch (error) {
     return accessErrorResponse(error)
   }
