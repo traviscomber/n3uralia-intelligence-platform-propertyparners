@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "property-partners",
+  "targetMode": "remote",
+  "status": "not-ready",
+  "evidence": {
+    "privateRuntimeDeployed": {
+      "complete": false,
+      "reference": null
+    },
+    "protocolValidated": {
+      "complete": false,
+      "reference": null
+    },
+    "tenantIsolationValidated": {
+      "complete": false,
+      "reference": null
+    },
+    "shadowParityValidated": {
+      "complete": false,
+      "reference": null
+    },
+    "rollbackValidated": {
+      "complete": false,
+      "reference": null
+    },
+    "credentialRotationCompleted": {
+      "complete": false,
+      "reference": null
+    },
+    "exposureAuditPassed": {
+      "complete": false,
+      "reference": null
+    },
+    "historyCleanupReviewed": {
+      "complete": false,
+      "reference": null
+    },
+    "technicalApproval": {
+      "complete": false,
+      "reference": null
+    },
+    "contractualApproval": {
+      "complete": false,
+      "reference": null
+    }
+  },
+  "cutover": {
+    "approvedBy": null,
+    "approvedAt": null,
+    "rollbackOwner": null,
+    "rollbackDeadlineMinutes": 15
+  }
+}
