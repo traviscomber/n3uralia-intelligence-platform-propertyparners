@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateCanonicalCeoReportHTML } from '@/lib/canonical-ceo-report-generator'
+import { generateN3uraliaReportHTML } from '@/lib/n3uralia-ceo-report-generator'
 
 // Endpoint to generate CEO report for a specific period (for testing with closed months)
 // Usage: GET /api/documents/generate-report-by-period?period=2026-06
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       )
     }
 
-    const reportHTML = generateCanonicalCeoReportHTML(period)
+    const reportHTML = generateN3uraliaReportHTML(period)
 
     return new NextResponse(reportHTML, {
       headers: {
