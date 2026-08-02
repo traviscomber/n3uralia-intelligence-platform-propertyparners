@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { generateCeoReportBrandbook } from '@/lib/ceo-report-brandbook-generator'
+import { generateCeoReportData, generateCeoReportHTML } from '@/lib/ceo-report-html-generator'
 
 // Lazy initialization to avoid errors during build
 let resend: Resend | null = null
@@ -15,22 +15,21 @@ function getResend() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email = 'juan@n3uralia.com', period = '2026-06' } = body
+    const { email } = body
 
-    // Extract month from period
-    const [year, month] = period.split('-')
-    const monthIndex = parseInt(month) - 1
-    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-    const monthName = monthNames[monthIndex]
+    if (!email) {
+      return NextResponse.json({ error: 'Email required' }, { status: 400 })
+    }
 
-    // Generate report using Brandbook generator
-    const reportHTML = await generateCeoReportBrandbook(monthName, period)
+    // Generate report data and HTML
+    const reportData = generateCeoReportData()
+    const reportHTML = generateCeoReportHTML(reportData)
 
     // Send via Resend
     const response = await getResend().emails.send({
       from: 'onboarding@resend.dev',
       to: email,
-      subject: `Reporte CEO Integral — ${monthName} 2026`,
+      subject: `Reporte Integral Ejecutivo - Property Partners ${reportData.period}`,
       html: reportHTML,
     })
 
@@ -48,7 +47,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: `Reporte enviado a ${email}`,
         emailId: response.data?.id,
-        period,
+        period: reportData.period,
       },
       { status: 200 }
     )
