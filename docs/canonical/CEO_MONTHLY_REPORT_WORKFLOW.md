@@ -6,6 +6,15 @@ Este documento define cómo debe generarse, validarse, previsualizarse y enviars
 
 Dejar cada reporte mensual preparado al cierre del período, con datos validados, diseño consistente con la aplicación y listo para revisión del CEO antes del envío.
 
+## Regla de período cerrado
+
+1. Un informe mensual sólo puede declararse como cierre cuando el mes solicitado terminó completamente.
+2. El mes calendario en curso no puede presentarse como informe cerrado, aunque existan datos parciales.
+3. Los datos del mes en curso deben etiquetarse como avance, período abierto o información preliminar.
+4. Al 2 de agosto de 2026, el último cierre mensual válido es julio de 2026.
+5. El cierre de agosto de 2026 sólo podrá prepararse desde septiembre de 2026, una vez validada la data completa.
+6. La vista previa, exportación y envío deben rechazar cualquier período igual o posterior al mes actual cuando se solicite como cierre mensual.
+
 ## Fuente de datos
 
 1. Usar exclusivamente los datos correspondientes al período solicitado.
@@ -98,6 +107,7 @@ Control de Gestión — Cierre <Mes> <Año>
 
 Antes de declarar un reporte listo:
 
+- [ ] El período solicitado está completamente cerrado.
 - [ ] El período solicitado es correcto.
 - [ ] Los datos coinciden con la fuente canónica disponible.
 - [ ] No se mezclan datos posteriores al corte.
@@ -113,6 +123,7 @@ Antes de declarar un reporte listo:
 
 Un reporte mensual se considera listo cuando:
 
+- el mes solicitado terminó completamente;
 - sus datos están validados;
 - su período y acumulado son correctos;
 - el diseño cumple los tokens visuales de la aplicación;
