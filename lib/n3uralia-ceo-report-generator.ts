@@ -222,32 +222,47 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
     <div class="section-title">Venta ${monthName}</div>
 
     <div class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-label">Cierres ${monthName}</div>
-        <div class="metric-value">${currentActual}</div>
-        <div class="metric-target">Meta: ${currentTarget.toFixed(1)}</div>
-        <div class="metric-row">
-          <span>${currentPct}% Cumplimiento</span>
-          <span class="badge" style="background:${badgeBg}">${badgeLabel}</span>
+      <!-- Cierres Card -->
+      <div style="background:linear-gradient(135deg, #27AE60 0%, #229954 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Cierres ${monthName}</div>
+        <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${currentActual}</div>
+        <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Meta: ${currentTarget.toFixed(1)}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.15);padding:10px 12px;border-radius:6px">
+          <span style="font-size:13px;font-weight:600">${currentPct}% Cumplimiento</span>
+          <span class="badge" style="background:rgba(255,255,255,0.25);color:white;font-size:10px">${badgeLabel}</span>
         </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-label">Productividad</div>
-        <div class="metric-value">${currentProd}</div>
-        <div class="metric-target">Por ejecutiva</div>
-        <div class="metric-row"><span>${totalPartners} ejecutivas</span></div>
+
+      <!-- Productividad Card -->
+      <div style="background:linear-gradient(135deg, #1976D2 0%, #1565C0 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Productividad</div>
+        <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${currentProd}</div>
+        <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Por ejecutiva</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.15);padding:10px 12px;border-radius:6px">
+          <span style="font-size:13px;font-weight:600">${totalPartners} ejecutivas</span>
+          <span style="font-size:11px;opacity:0.85">Promedio:</span>
+        </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-label">Inteligencia de Mercado</div>
-        <div class="metric-value">${marketSignalCount}</div>
-        <div class="metric-target">Señales monitoreadas</div>
-        <div class="metric-row"><span>Confianza prom: ${marketAvgConf}%</span></div>
+
+      <!-- Inteligencia de Mercado Card -->
+      <div style="background:linear-gradient(135deg, #F39C12 0%, #E67E22 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Inteligencia de Mercado</div>
+        <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${marketSignalCount}</div>
+        <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Señales monitoreadas</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.15);padding:10px 12px;border-radius:6px">
+          <span style="font-size:13px;font-weight:600">Confianza prom:</span>
+          <span style="font-size:13px;font-weight:700">${marketAvgConf}%</span>
+        </div>
       </div>
-      <div class="metric-card">
-        <div class="metric-label">Valuación</div>
-        <div class="metric-value">${propertyTypes.length}</div>
-        <div class="metric-target">Tipos de propiedad</div>
-        <div class="metric-row"><span>${propertyTypes.join(' · ')}</span></div>
+
+      <!-- Valuación Card -->
+      <div style="background:linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);color:white;border-radius:8px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9;margin-bottom:12px">Valuación</div>
+        <div style="font-size:42px;font-weight:800;line-height:1;margin-bottom:8px">${propertyTypes.length}</div>
+        <div style="font-size:13px;opacity:0.9;margin-bottom:16px">Tipos de propiedad</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.15);padding:10px 12px;border-radius:6px;font-size:11px;font-weight:600">
+          <span>${propertyTypes.join(' · ')}</span>
+        </div>
       </div>
     </div>
   </div>
