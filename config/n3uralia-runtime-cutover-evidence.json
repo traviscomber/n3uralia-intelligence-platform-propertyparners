@@ -1,9 +1,22 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "tenantId": "property-partners",
-  "targetMode": "remote",
-  "status": "not-ready",
-  "evidence": {
+  "targetMode": "local-server-only",
+  "status": "active",
+  "remoteRuntime": {
+    "required": false,
+    "activationPolicy": "optional-future-change",
+    "notes": "Property Partners and N3uralia may continue operating in a single Vercel deployment. Remote mode is not required unless a future repository transfer or contractual separation makes it necessary."
+  },
+  "requiredProtections": {
+    "serverOnlyProprietaryModules": true,
+    "noClientImports": true,
+    "noBrowserBundleExposure": true,
+    "minimalApiResponses": true,
+    "noPromptRuleOrTraceExposure": true,
+    "propertyPartnersBusinessLogicRemainsLocal": true
+  },
+  "futureRemoteCutoverEvidence": {
     "privateRuntimeDeployed": {
       "complete": false,
       "reference": null
@@ -28,14 +41,6 @@
       "complete": false,
       "reference": null
     },
-    "exposureAuditPassed": {
-      "complete": false,
-      "reference": null
-    },
-    "historyCleanupReviewed": {
-      "complete": false,
-      "reference": null
-    },
     "technicalApproval": {
       "complete": false,
       "reference": null
@@ -44,11 +49,5 @@
       "complete": false,
       "reference": null
     }
-  },
-  "cutover": {
-    "approvedBy": null,
-    "approvedAt": null,
-    "rollbackOwner": null,
-    "rollbackDeadlineMinutes": 15
   }
 }
