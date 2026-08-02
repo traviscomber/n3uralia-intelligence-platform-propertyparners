@@ -17,6 +17,10 @@ export function generateCanonicalCeoReportHTML(periodOverride?: string): string 
     monthName = new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(now).charAt(0).toUpperCase() + new Intl.DateTimeFormat('es-CL', { month: 'long' }).format(now).slice(1)
   }
 
+  // Get monthly data for January through June
+  const monthlyPeriods = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06']
+  const monthlyData = monthlyPeriods.map(p => getCompanySalesCompliance(p))
+
   // Aggregate data from canonical sources
   const compliance = getCompanySalesCompliance(period)
   const branchPerformance = getBranchTargetPerformance(period)
@@ -428,44 +432,49 @@ export function generateCanonicalCeoReportHTML(periodOverride?: string): string 
             <th>Abril</th>
             <th>Mayo</th>
             <th>Junio</th>
+            <th>Acum</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Cierres mes</td>
-            <td>${compliance.actual || 0}</td>
-            <td>${compliance.actual || 0}</td>
-            <td>${compliance.actual || 0}</td>
-            <td>${compliance.actual || 0}</td>
-            <td>${compliance.actual || 0}</td>
-            <td>${compliance.actual || 0}</td>
+            <td>${monthlyData[0]?.actual || 0}</td>
+            <td>${monthlyData[1]?.actual || 0}</td>
+            <td>${monthlyData[2]?.actual || 0}</td>
+            <td>${monthlyData[3]?.actual || 0}</td>
+            <td>${monthlyData[4]?.actual || 0}</td>
+            <td>${monthlyData[5]?.actual || 0}</td>
+            <td>${monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0)}</td>
           </tr>
           <tr>
             <td>Meta cierres mes</td>
-            <td>${compliance.target || 0}</td>
-            <td>${compliance.target || 0}</td>
-            <td>${compliance.target || 0}</td>
-            <td>${compliance.target || 0}</td>
-            <td>${compliance.target || 0}</td>
-            <td>${compliance.target || 0}</td>
+            <td>${monthlyData[0]?.target || 0}</td>
+            <td>${monthlyData[1]?.target || 0}</td>
+            <td>${monthlyData[2]?.target || 0}</td>
+            <td>${monthlyData[3]?.target || 0}</td>
+            <td>${monthlyData[4]?.target || 0}</td>
+            <td>${monthlyData[5]?.target || 0}</td>
+            <td>${monthlyData.reduce((sum, m) => sum + (m.target || 0), 0)}</td>
           </tr>
           <tr>
             <td>Cumplimiento %</td>
-            <td>${compliance_percent}%</td>
-            <td>${compliance_percent}%</td>
-            <td>${compliance_percent}%</td>
-            <td>${compliance_percent}%</td>
-            <td>${compliance_percent}%</td>
-            <td>${compliance_percent}%</td>
+            <td>${monthlyData[0]?.compliance ? monthlyData[0].compliance.toFixed(1) : '0'}%</td>
+            <td>${monthlyData[1]?.compliance ? monthlyData[1].compliance.toFixed(1) : '0'}%</td>
+            <td>${monthlyData[2]?.compliance ? monthlyData[2].compliance.toFixed(1) : '0'}%</td>
+            <td>${monthlyData[3]?.compliance ? monthlyData[3].compliance.toFixed(1) : '0'}%</td>
+            <td>${monthlyData[4]?.compliance ? monthlyData[4].compliance.toFixed(1) : '0'}%</td>
+            <td>${monthlyData[5]?.compliance ? monthlyData[5].compliance.toFixed(1) : '0'}%</td>
+            <td>${monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) > 0 ? (monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) / monthlyData.reduce((sum, m) => sum + (m.target || 0), 0) * 100).toFixed(1) : '0'}%</td>
           </tr>
           <tr>
             <td>Productividad por ejecutiva</td>
-            <td>${productivity}</td>
-            <td>${productivity}</td>
-            <td>${productivity}</td>
-            <td>${productivity}</td>
-            <td>${productivity}</td>
-            <td>${productivity}</td>
+            <td>${(monthlyData[0]?.actual && totalPartners ? monthlyData[0].actual / totalPartners : 0).toFixed(2)}</td>
+            <td>${(monthlyData[1]?.actual && totalPartners ? monthlyData[1].actual / totalPartners : 0).toFixed(2)}</td>
+            <td>${(monthlyData[2]?.actual && totalPartners ? monthlyData[2].actual / totalPartners : 0).toFixed(2)}</td>
+            <td>${(monthlyData[3]?.actual && totalPartners ? monthlyData[3].actual / totalPartners : 0).toFixed(2)}</td>
+            <td>${(monthlyData[4]?.actual && totalPartners ? monthlyData[4].actual / totalPartners : 0).toFixed(2)}</td>
+            <td>${(monthlyData[5]?.actual && totalPartners ? monthlyData[5].actual / totalPartners : 0).toFixed(2)}</td>
+            <td>${(monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) / totalPartners).toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
