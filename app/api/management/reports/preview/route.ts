@@ -1,13 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateCeoReportAprilLayoutV2 } from '@/lib/ceo-report-april-layout-v2'
 import { generateCeoReportJanuaryLayout } from '@/lib/ceo-report-january-layout'
+import {
+  assertClosedMonthlyPeriod,
+  previousMonthBounds,
+} from '@/lib/management-report-schedule'
 
-const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const MONTH_NAMES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+]
 
 export async function GET(request: NextRequest) {
-  const period = request.nextUrl.searchParams.get('period') || '2026-04'
+  const defaultPeriod = previousMonthBounds().start.slice(0, 7)
+  const period = request.nextUrl.searchParams.get('period') || defaultPeriod
+
+  try {
+    assertClosedMonthlyPeriod(period)
+  } catch {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'El período debe corresponder a un mes completamente cerrado.',
+      },
+      { status: 400 },
+    )
+  }
+
   const [, month] = period.split('-')
-  const monthName = MONTH_NAMES[Math.max(0, Number(month) - 1)] || 'Abril'
+  const monthName = MONTH_NAMES[Number(month) - 1]
+  if (!monthName) {
+    return NextResponse.json(
+      { success: false, error: 'El período debe usar el formato YYYY-MM.' },
+      { status: 400 },
+    )
+  }
+
   const html = period === '2026-01'
     ? await generateCeoReportJanuaryLayout()
     : await generateCeoReportAprilLayoutV2(monthName, period)
