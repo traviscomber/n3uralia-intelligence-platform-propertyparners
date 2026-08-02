@@ -1,0 +1,107 @@
+════════════════════════════════════════════════════════════════════════════════
+                   JUNE 2026 DATA COMPARISON
+         CANONICAL PPT vs OUR APP GENERATED REPORT
+════════════════════════════════════════════════════════════════════════════════
+
+OUR APP GENERATES (from our database):
+────────────────────────────────────────
+
+1. CORE METRICS (✓ AVAILABLE)
+   • Ventas Junio: 8 cierres
+   • Meta Cierres: 8.10 operaciones  
+   • Cumplimiento %: 99%
+   • Status Badge: Amarillo (correct for 90-99% range)
+   • Productividad: 1.14 por ejecutiva
+   • Conversión: 50.0% lead-to-sale
+   • Cobertura: 3 oficinas activas
+
+2. CANONICAL REQUIRES (for PPT format):
+   ✗ UF Values (currency in Unidad de Fomento)
+   ✗ 6-Month Evolution Table (Jan-Jun comparison)
+   ✗ Cumulative Metrics (Ene-Jun acumulado)
+   ✗ Per-Executive Breakdown (nombre: X ventas, Y UF)
+   ✗ Scoring Model Definitions (Cartera, Seguimiento, Conversión formulas)
+   ✗ Market Intelligence (curated signals vs raw files)
+
+════════════════════════════════════════════════════════════════════════════════
+                    METRIC-BY-METRIC ALIGNMENT
+════════════════════════════════════════════════════════════════════════════════
+
+Metric                 | Canonical         | Our App (June)  | Match?
+───────────────────────┼───────────────────┼─────────────────┼─────────
+Ventas Mes            | Count (8-15)       | 8              | ✓
+Meta Cierres          | Operaciones        | 8.10           | ✓
+Cumplimiento %        | 90-120%            | 99%            | ✓
+Badge Color           | Amarillo (90-99%)  | Amarillo       | ✓
+Productividad         | Per ejecutiva      | 1.14 avg       | ⚠️ (aggregated)
+Conversión %          | Lead-Sale ratio    | 50.0%          | ? (unverified)
+Cobertura             | N oficinas         | 3              | ✓
+────────────────────────┼───────────────────┼─────────────────┼─────────
+UF Junio              | Currency value     | MISSING        | ✗
+UF Meta               | Target in UF       | MISSING        | ✗
+Cierres Acum (Ene-Jun)| Historical sum     | MISSING        | ✗
+UF Acum (Ene-Jun)     | Cumulative UF      | MISSING        | ✗
+Evolución 6 meses     | Month-by-month     | MISSING        | ✗
+────────────────────────┴───────────────────┴─────────────────┴─────────
+
+════════════════════════════════════════════════════════════════════════════════
+                         BLOCKING ISSUES
+════════════════════════════════════════════════════════════════════════════════
+
+1. NO UF CONVERSIONS
+   → Without UF values, can't generate valid PPT reports
+   → Chile uses UF as official currency for real estate
+   → Need: Current conversion rate + historical monthly rates
+   → Impact: HIGH - Prevents full canonical compliance
+
+2. NO HISTORICAL EVOLUTION
+   → Only showing June data, need Jan-Jun comparison
+   → Canonical format requires 6-month grid
+   → Need: Query & store monthly snapshots
+   → Impact: HIGH - Evolution table completely empty
+
+3. NO CUMULATIVE CALCULATIONS  
+   → Should show Ene-Jun totals, not just June
+   → Canonical format uses both monthly + cumulative
+   → Need: Aggregate functions for period ranges
+   → Impact: MEDIUM - Reduces context
+
+════════════════════════════════════════════════════════════════════════════════
+                           VERDICT
+════════════════════════════════════════════════════════════════════════════════
+
+OUR JUNE REPORT:
+✓ Core sales/compliance metrics CORRECT (8 sales, 99% compliance)
+✓ Can be sent as internal dashboard
+✗ Cannot replace canonical PPT presentations yet
+✗ Missing UF currency conversions (CRITICAL)
+✗ Missing 6-month evolution table (CRITICAL)
+
+NEXT STEPS TO REACH PARITY:
+1. Implement UF currency mapping (high priority)
+2. Add historical data retention (6+ months)
+3. Create evolution table generator
+4. Add per-executive breakdowns
+5. Curate market intelligence signals
+
+════════════════════════════════════════════════════════════════════════════════
+                    WHERE IS THE DATA?
+════════════════════════════════════════════════════════════════════════════════
+
+✓ HAVE:
+  - Sales counts per month (stored in database)
+  - Executive productivity metrics (calculated from sales)
+  - Compliance percentages (calculated vs targets)
+  - Market intelligence snapshots (stored as data files)
+
+✗ MISSING:
+  - UF conversion rates (not tracked)
+  - Monthly snapshots for historical tracking (only current data)
+  - Per-executive breakdown (aggregated only)
+  - Scoring model formulas (need to extract from canonical PPT)
+
+════════════════════════════════════════════════════════════════════════════════
+
+Generated: August 1, 2026
+Report Period: June 2026 (2026-06)
+Generated Report: /tmp/nuestro-reporte-junio.html
