@@ -26,6 +26,9 @@ if (manifest.rules?.deliverableMustExcludeSecrets !== true) {
 if (manifest.rules?.deliverableMustExcludeConfirmedN3uraliaProprietarySource !== true) {
   fail('N3uralia proprietary source exclusion rule must remain enabled.')
 }
+if (manifest.rules?.readyStatusMustResolveRequiresReview !== true) {
+  fail('Ready status must require resolution of all requires-review entries.')
+}
 
 const allowedClasses = new Set([
   'client-owned-canonical',
@@ -39,6 +42,19 @@ const allowedClasses = new Set([
 for (const entry of manifest.classifications ?? []) {
   if (!entry.pattern || !allowedClasses.has(entry.class) || !entry.delivery) {
     fail('Every classification requires pattern, valid class and delivery decision.')
+  }
+}
+
+for (const requiredPattern of [
+  'docs/canonical/**',
+  'app/**',
+  'components/**',
+  'supabase/migrations/**',
+  'scripts/**',
+  '.github/**',
+]) {
+  if (!(manifest.classifications ?? []).some((entry) => entry.pattern === requiredPattern)) {
+    fail(`Required delivery surface classification missing: ${requiredPattern}`)
   }
 }
 
@@ -83,6 +99,13 @@ if (!secretEntries.length || secretEntries.some((entry) => entry.delivery !== 'e
 }
 
 if (manifest.status === 'ready') {
+  const unresolved = (manifest.classifications ?? []).filter(
+    (entry) => entry.class === 'requires-review' || entry.delivery === 'review-before-transfer',
+  )
+  if (unresolved.length) {
+    fail(`Ready status is blocked by ${unresolved.length} unresolved ownership entries.`)
+  }
+
   for (const key of ['technical', 'security', 'contractual', 'approvedCommit', 'approvedAt']) {
     if (typeof manifest.approval?.[key] !== 'string' || manifest.approval[key].trim().length < 8) {
       fail(`Ready status requires approval.${key}.`)
