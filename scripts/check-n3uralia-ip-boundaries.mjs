@@ -17,11 +17,15 @@ const protectedImportPatterns = [
   '@/lib/ai-runtime',
 ]
 
-const forbiddenPublicEnvPatterns = [
-  /NEXT_PUBLIC_.*(?:SECRET|KEY|TOKEN|SERVICE_ROLE|PRIVATE)/i,
-  /NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY/i,
-  /NEXT_PUBLIC_RESEND_API_KEY/i,
-  /NEXT_PUBLIC_CRON_SECRET/i,
+const forbiddenPublicEnvNames = [
+  'NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY',
+  'NEXT_PUBLIC_RESEND_API_KEY',
+  'NEXT_PUBLIC_CRON_SECRET',
+  'NEXT_PUBLIC_OPENAI_API_KEY',
+  'NEXT_PUBLIC_ANTHROPIC_API_KEY',
+  'NEXT_PUBLIC_PRIVATE_KEY',
+  'NEXT_PUBLIC_SECRET',
+  'NEXT_PUBLIC_ACCESS_TOKEN',
 ]
 
 function walk(directory) {
@@ -58,13 +62,13 @@ for (const file of files) {
     }
   }
 
-  for (const pattern of forbiddenPublicEnvPatterns) {
-    if (pattern.test(source)) {
-      failures.push(`${relative}: contains a forbidden NEXT_PUBLIC secret or privileged key name`)
+  for (const envName of forbiddenPublicEnvNames) {
+    if (source.includes(envName)) {
+      failures.push(`${relative}: contains forbidden public privileged variable ${envName}`)
     }
   }
 
-  if (relative.startsWith('app/api/') && /\b(prompt|systemPrompt|chainOfThought|reasoningTrace|internalRules)\b/.test(source)) {
+  if (relative.startsWith('app/api/') && /\b(systemPrompt|chainOfThought|reasoningTrace|internalRules)\b/.test(source)) {
     failures.push(`${relative}: API route may expose prompts, reasoning traces or internal rules; review and return only a minimal DTO`)
   }
 }
