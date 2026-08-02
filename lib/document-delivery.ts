@@ -116,8 +116,10 @@ export async function sendDocumentEmail(
     <td align="center" style="padding: 20px;">
       <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-collapse: collapse;">
         <tr>
-          <td style="background-color: #000000; padding: 25px 30px; text-align: center;">
-            <img src="https://www.ppartnersgroup.app/images/property-partners-vitacura-logo.png" alt="Property Partners Vitacura" width="420" style="display: block; margin: 0 auto; max-width: 420px; height: auto;">
+          <td style="background-color: #000000; padding: 35px 30px; text-align: center;">
+            <p style="font-family: Calibri, sans-serif; font-size: 42px; font-weight: bold; color: white; margin: 0 0 5px 0; letter-spacing: 2px;">PROPERTY PARTNERS</p>
+            <p style="font-family: Calibri, sans-serif; font-size: 28px; font-weight: bold; color: #E74C3C; margin: 0; letter-spacing: 3px;">VITACURA</p>
+            <p style="font-family: Calibri, sans-serif; font-size: 11px; color: #999; margin: 8px 0 0 0;">Inteligencia de mercado Vitacura</p>
           </td>
         </tr>
         <tr>
