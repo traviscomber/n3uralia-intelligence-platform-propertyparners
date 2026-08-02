@@ -110,7 +110,28 @@ export async function sendDocumentEmail(
   recipientEmail: string,
 ) {
   const subject = `Business Intelligence Document: ${documentTitle}`
-  
+
+  // Parse the period (YYYY-MM) out of the title so we can show it once, formatted nicely,
+  // and strip the redundant trailing period/brand text from the displayed title.
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+  ]
+  const periodMatch = documentTitle.match(/(\d{4})-(\d{2})/)
+  let periodLabel = 'Período actual'
+  let cleanTitle = documentTitle
+  if (periodMatch) {
+    const year = periodMatch[1]
+    const monthIndex = parseInt(periodMatch[2], 10) - 1
+    if (monthIndex >= 0 && monthIndex < 12) {
+      periodLabel = `${monthNames[monthIndex]} ${year}`
+    }
+    cleanTitle = documentTitle
+      .replace(/\s*[-–—]\s*Property Partners\s*\d{4}-\d{2}\s*$/i, '')
+      .replace(/\s*\d{4}-\d{2}\s*$/, '')
+      .trim()
+  }
+
   const html = `<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f0f0; margin: 0; padding: 0;">
   <tr>
     <td align="center" style="padding: 20px;">
@@ -121,47 +142,52 @@ export async function sendDocumentEmail(
           </td>
         </tr>
         <tr>
-          <td style="background-color: #000000; color: white; padding: 30px; text-align: center;">
-            <h2 style="font-family: Calibri, sans-serif; font-size: 24px; margin: 0 0 10px 0; color: white;">${documentTitle}</h2>
-            <p style="font-family: Calibri, sans-serif; font-size: 12px; margin: 0; color: #ccc;">Período 2026-08</p>
+          <td style="background-color: #E74C3C; font-size: 0; line-height: 0; height: 3px;">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="background-color: #111111; color: white; padding: 36px 40px; text-align: center;">
+            <p style="font-family: Calibri, sans-serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #E74C3C; margin: 0 0 12px 0; font-weight: bold;">Reporte Integral Ejecutivo</p>
+            <h2 style="font-family: Calibri, sans-serif; font-size: 25px; line-height: 1.25; margin: 0 0 16px 0; color: white; font-weight: bold;">${cleanTitle}</h2>
+            <span style="display: inline-block; font-family: Calibri, sans-serif; font-size: 11px; letter-spacing: 1px; color: #dddddd; border: 1px solid #444444; border-radius: 20px; padding: 6px 16px;">${periodLabel}</span>
           </td>
         </tr>
         <tr>
-          <td style="padding: 30px; background-color: white;">
-            <p style="font-family: Calibri, sans-serif; font-size: 14px; font-weight: bold; color: #000; margin: 0 0 15px 0;">Buenos días,</p>
-            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 20px 0; line-height: 1.6;">Adjunto encontrarás el reporte integral ejecutivo correspondiente a este período. Este documento contiene análisis completo de desempeño, inteligencia de mercado y recomendaciones estratégicas.</p>
-            
-            <p style="font-family: Calibri, sans-serif; font-size: 13px; font-weight: bold; color: #1565C0; margin: 20px 0 10px 0;">Contenido del Reporte:</p>
-            <ul style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 20px 20px; padding: 0;">
-              <li style="margin: 5px 0;">Modelo de scoring con métricas de desempeño</li>
-              <li style="margin: 5px 0;">Tabla de evolución con 6 meses de datos</li>
-              <li style="margin: 5px 0;">Sistema de tráfico (Verde/Amarillo/Rojo)</li>
-              <li style="margin: 5px 0;">Análisis de cumplimiento vs objetivos</li>
-              <li style="margin: 5px 0;">Indicadores clave de negocio</li>
-            </ul>
+          <td style="padding: 40px; background-color: white;">
+            <p style="font-family: Calibri, sans-serif; font-size: 15px; font-weight: bold; color: #111; margin: 0 0 16px 0;">Buenos días,</p>
+            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 28px 0; line-height: 1.7;">Adjunto encontrarás el reporte integral ejecutivo correspondiente a ${periodLabel}. Este documento contiene el análisis completo de desempeño, inteligencia de mercado y recomendaciones estratégicas.</p>
 
-            <table width="100%" cellpadding="15" cellspacing="0" style="background-color: #fffbea; border-left: 3px solid #f39c12; margin: 20px 0; border-collapse: collapse;">
+            <p style="font-family: Calibri, sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #111; margin: 0 0 14px 0;">Contenido del reporte</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 0 0 28px 0;">
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Modelo de scoring con métricas de desempeño</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Tabla de evolución con 6 meses de datos históricos</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Sistema de semáforo (Verde / Amarillo / Rojo)</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Análisis de cumplimiento vs. objetivos</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Indicadores clave de negocio y productividad</td></tr>
+            </table>
+
+            <table width="100%" cellpadding="16" cellspacing="0" style="background-color: #f8f9fb; border-left: 3px solid #111111; margin: 0 0 28px 0; border-collapse: collapse;">
               <tr>
-                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #333;">El reporte está adjunto como archivo HTML. Puedes abrirlo en cualquier navegador.</td>
+                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #444; line-height: 1.6;"><strong style="color:#111;">Documento adjunto.</strong> El reporte completo está adjunto como archivo HTML; puedes abrirlo en cualquier navegador o imprimirlo a PDF.</td>
               </tr>
             </table>
 
-            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 20px 0; line-height: 1.6;">Contáctanos si tienes preguntas sobre los datos o necesitas información adicional.</p>
+            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 32px 0; line-height: 1.7;">Quedamos atentos si tienes preguntas sobre los datos o necesitas información adicional.</p>
 
-            <table width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e0e0e0; margin-top: 20px; padding-top: 20px; border-collapse: collapse;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e6e6e6; border-collapse: collapse;">
               <tr>
-                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #666; padding-top: 15px;">
-                  <p style="margin: 0 0 5px 0; font-weight: bold;">Property Partners Intelligence</p>
-                  <p style="margin: 3px 0;"><a href="mailto:info@ppartnersgroup.app" style="color: #1565C0; text-decoration: none;">info@ppartnersgroup.app</a></p>
-                  <p style="margin: 3px 0;"><a href="https://www.ppartnersgroup.app" style="color: #1565C0; text-decoration: none;">www.ppartnersgroup.app</a></p>
+                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #666; padding-top: 22px;">
+                  <p style="margin: 0 0 6px 0; font-weight: bold; color: #111;">Property Partners Intelligence</p>
+                  <p style="margin: 3px 0;"><a href="mailto:info@ppartnersgroup.app" style="color: #E74C3C; text-decoration: none;">info@ppartnersgroup.app</a></p>
+                  <p style="margin: 3px 0;"><a href="https://www.ppartnersgroup.app" style="color: #E74C3C; text-decoration: none;">www.ppartnersgroup.app</a></p>
                 </td>
               </tr>
             </table>
           </td>
         </tr>
         <tr>
-          <td style="background-color: #f0f0f0; padding: 20px; text-align: center; font-family: Calibri, sans-serif; font-size: 10px; color: #888;">
-            <p style="margin: 3px 0;">© ${new Date().getFullYear()} Property Partners Group. Todos los derechos reservados.</p>
+          <td style="background-color: #111111; padding: 22px; text-align: center; font-family: Calibri, sans-serif; font-size: 10px; color: #999;">
+            <p style="margin: 3px 0;">© ${new Date().getFullYear()} Property Partners Group · Vitacura. Todos los derechos reservados.</p>
+            <p style="margin: 3px 0; color: #666;">Información confidencial destinada exclusivamente a su destinatario.</p>
           </td>
         </tr>
       </table>
@@ -169,7 +195,7 @@ export async function sendDocumentEmail(
   </tr>
 </table>`
   
-  const text = `${documentTitle}\nPeríodo 2026-08\n\nBuenos días,\n\nAdjunto encontrarás el reporte integral ejecutivo correspondiente a este período.\n\nCONTENIDO DEL REPORTE:\n- Modelo de scoring con métricas de desempeño (40/30/30)\n- Tabla de evolución con 6 meses de datos históricos\n- Sistema de tráfico (Verde/Amarillo/Rojo) para priorización\n- Análisis de cumplimiento vs objetivos\n- Indicadores clave de negocio y productividad\n- Definiciones pendientes y transparencia operacional\n\nEl reporte está disponible como archivo HTML adjunto a este email.\n\nPróximos Pasos:\nRevisa el reporte y contáctanos si tienes preguntas.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app\nwww.ppartnersgroup.app\n\n© ${new Date().getFullYear()} Property Partners Group. Todos los derechos reservados.`
+  const text = `${cleanTitle}\n${periodLabel}\n\nBuenos días,\n\nAdjunto encontrarás el reporte integral ejecutivo correspondiente a ${periodLabel}.\n\nCONTENIDO DEL REPORTE:\n- Modelo de scoring con métricas de desempeño\n- Tabla de evolución con 6 meses de datos históricos\n- Sistema de semáforo (Verde/Amarillo/Rojo)\n- Análisis de cumplimiento vs objetivos\n- Indicadores clave de negocio y productividad\n\nEl reporte completo está adjunto como archivo HTML; puedes abrirlo en cualquier navegador.\n\nQuedamos atentos si tienes preguntas sobre los datos o necesitas información adicional.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app\nwww.ppartnersgroup.app\n\n© ${new Date().getFullYear()} Property Partners Group · Vitacura. Todos los derechos reservados.`
   
   const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
   
