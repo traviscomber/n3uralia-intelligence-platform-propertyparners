@@ -5,8 +5,9 @@
   "status": "active",
   "remoteRuntime": {
     "required": false,
-    "activationPolicy": "optional-future-change",
-    "notes": "Property Partners and N3uralia may continue operating in a single Vercel deployment. Remote mode is not required unless a future repository transfer or contractual separation makes it necessary."
+    "allowed": false,
+    "activationPolicy": "explicit-approved-change",
+    "notes": "Property Partners and N3uralia continue operating in one Vercel deployment. Remote mode remains blocked until a future repository transfer or contractual separation is explicitly approved and all evidence is complete."
   },
   "requiredProtections": {
     "serverOnlyProprietaryModules": true,
