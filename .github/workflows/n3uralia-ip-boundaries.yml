@@ -39,6 +39,9 @@ jobs:
       - name: Verify API, log and browser exposure boundaries
         run: pnpm security:exposure-boundaries
 
+      - name: Verify tenant isolation and client-data reuse boundaries
+        run: pnpm security:tenant-isolation
+
       - name: Verify GitHub delivery classification
         run: pnpm security:delivery-classification
 
