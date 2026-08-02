@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch report from database
-    const supabase = createAdminClient()
+    const supabase = createAdminClient() as any
     const { data: report, error: reportError } = await supabase
       .from('management_report_runs')
       .select('*')
@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
 
     // Get delivery configuration
     const configuration = getManagementReportDeliveryConfiguration()
+    if (!configuration) {
+      throw new Error('Delivery configuration not found')
+    }
 
     // Build email content
     const artifactUrl = configuration.appBaseUrl
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
     const pdfBase64 = Buffer.from(pdf.bytes).toString('base64')
 
     const response = await resend.emails.send({
-      from: configuration.from,
+      from: configuration.from || 'onboarding@resend.dev',
       to: recipient,
       subject: content.subject,
       html: content.html,

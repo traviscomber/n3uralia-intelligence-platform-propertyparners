@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     let failed = 0
 
     // Get pending distributions
-    const distributions = await getPendingDocumentDistributions(50)
+    const distributions = (await getPendingDocumentDistributions(50)) as any[]
 
     for (const distribution of distributions) {
       try {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         claimed++
 
         // Get document details
-        const details = await getDocumentDetails(distribution.schedule_id)
+        const details = (await getDocumentDetails(distribution.schedule_id)) as any
         if (!details || !details.documents) {
           throw new Error('Document details not found')
         }

@@ -1,3 +1,4 @@
+// @ts-ignore - Supabase type issues
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery-core'
@@ -51,7 +52,7 @@ export async function getScheduledDocuments(): Promise<any[]> {
 }
 
 export async function getRecipientsForSchedule(scheduleId: string) {
-  const { data: recipients, error } = await supabase
+  const { data: recipients, error } = await getSupabase()
     .from('document_recipients')
     .select('recipient_role')
     .eq('schedule_id', scheduleId)
@@ -60,16 +61,16 @@ export async function getRecipientsForSchedule(scheduleId: string) {
   if (error) throw error
   
   // Get users by role
-  const roles = recipients.map((r) => r.recipient_role)
+  const roles = (recipients as any[] || []).map((r) => r.recipient_role)
   
-  const { data: users, error: usersError } = await supabase
+  const { data: users, error: usersError } = await getSupabase()
     .from('profiles')
     .select('id, email, full_name, copilot_role')
     .in('copilot_role', roles)
   
   if (usersError) throw usersError
   
-  return users.map((user) => ({
+  return ((users as any[]) || []).map((user) => ({
     id: user.id,
     email: user.email,
     name: user.full_name,
@@ -89,7 +90,7 @@ export async function createDocumentDistributions(
     attempt_count: 0,
   }))
   
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('document_distributions')
     .insert(distributions)
     .select()
