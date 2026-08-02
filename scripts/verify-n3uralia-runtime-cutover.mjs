@@ -3,7 +3,7 @@ import path from 'node:path'
 
 const root = process.cwd()
 const manifestPath = path.join(root, 'config', 'n3uralia-runtime-cutover-evidence.json')
-const mode = process.env.N3URALIA_RUNTIME_MODE ?? 'local'
+const mode = (process.env.N3URALIA_RUNTIME_MODE ?? 'local').trim()
 
 function fail(message) {
   console.error(`[runtime-cutover] ${message}`)
@@ -21,51 +21,68 @@ try {
   fail('Cutover evidence manifest is not valid JSON.')
 }
 
-if (manifest.schemaVersion !== 1) fail('Unsupported cutover evidence schemaVersion.')
+if (manifest.schemaVersion !== 2) fail('Unsupported cutover evidence schemaVersion.')
 if (manifest.tenantId !== 'property-partners') fail('Cutover evidence tenantId must be property-partners.')
-if (manifest.targetMode !== 'remote') fail('Cutover evidence targetMode must be remote.')
+if (manifest.targetMode !== 'local-server-only') {
+  fail('Current approved targetMode must remain local-server-only.')
+}
+if (manifest.status !== 'active') fail('Local server-only protection manifest must remain active.')
+if (manifest.remoteRuntime?.required !== false) {
+  fail('Remote runtime must remain optional unless a future change is explicitly approved.')
+}
 
-const requiredEvidence = [
+const requiredProtections = [
+  'serverOnlyProprietaryModules',
+  'noClientImports',
+  'noBrowserBundleExposure',
+  'minimalApiResponses',
+  'noPromptRuleOrTraceExposure',
+  'propertyPartnersBusinessLogicRemainsLocal',
+]
+
+const disabledProtections = requiredProtections.filter(
+  (key) => manifest.requiredProtections?.[key] !== true,
+)
+if (disabledProtections.length) {
+  fail(`Required local protections disabled: ${disabledProtections.join(', ')}.`)
+}
+
+const futureEvidenceKeys = [
   'privateRuntimeDeployed',
   'protocolValidated',
   'tenantIsolationValidated',
   'shadowParityValidated',
   'rollbackValidated',
   'credentialRotationCompleted',
-  'exposureAuditPassed',
-  'historyCleanupReviewed',
   'technicalApproval',
   'contractualApproval',
 ]
 
-const missingEntries = requiredEvidence.filter((key) => !manifest.evidence?.[key])
-if (missingEntries.length) {
-  fail(`Missing evidence entries: ${missingEntries.join(', ')}.`)
+const missingFutureEvidence = futureEvidenceKeys.filter(
+  (key) => !manifest.futureRemoteCutoverEvidence?.[key],
+)
+if (missingFutureEvidence.length) {
+  fail(`Future remote evidence entries missing: ${missingFutureEvidence.join(', ')}.`)
 }
 
-const incomplete = requiredEvidence.filter((key) => {
-  const item = manifest.evidence[key]
+const incompleteFutureEvidence = futureEvidenceKeys.filter((key) => {
+  const item = manifest.futureRemoteCutoverEvidence[key]
   return item.complete !== true || typeof item.reference !== 'string' || item.reference.trim().length < 8
 })
 
-const cutoverMetadataReady =
-  typeof manifest.cutover?.approvedBy === 'string'
-  && manifest.cutover.approvedBy.trim().length >= 3
-  && typeof manifest.cutover?.approvedAt === 'string'
-  && !Number.isNaN(Date.parse(manifest.cutover.approvedAt))
-  && typeof manifest.cutover?.rollbackOwner === 'string'
-  && manifest.cutover.rollbackOwner.trim().length >= 3
-  && Number.isInteger(manifest.cutover?.rollbackDeadlineMinutes)
-  && manifest.cutover.rollbackDeadlineMinutes > 0
-
 if (mode === 'remote') {
-  if (manifest.status !== 'ready') fail('Remote mode requires cutover manifest status ready.')
-  if (incomplete.length) fail(`Remote mode blocked by incomplete evidence: ${incomplete.join(', ')}.`)
-  if (!cutoverMetadataReady) fail('Remote mode requires complete approval and rollback metadata.')
+  if (manifest.remoteRuntime?.activationPolicy !== 'explicit-approved-change') {
+    fail('Remote mode requires activationPolicy explicit-approved-change.')
+  }
+  if (incompleteFutureEvidence.length) {
+    fail(`Remote mode blocked by incomplete evidence: ${incompleteFutureEvidence.join(', ')}.`)
+  }
 }
 
-if (manifest.status === 'ready' && (incomplete.length || !cutoverMetadataReady)) {
-  fail('Manifest status cannot be ready while evidence or cutover metadata is incomplete.')
+if (mode === 'shadow' && !process.env.N3URALIA_RUNTIME_URL) {
+  fail('Shadow mode requires N3URALIA_RUNTIME_URL.')
 }
 
-console.log(`[runtime-cutover] mode=${mode}; status=${manifest.status}; incomplete=${incomplete.length}`)
+console.log(
+  `[runtime-cutover] mode=${mode}; target=${manifest.targetMode}; futureEvidenceIncomplete=${incompleteFutureEvidence.length}`,
+)
