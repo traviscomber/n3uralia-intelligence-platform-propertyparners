@@ -319,20 +319,25 @@ export async function generateN3uraliaReportHTML(periodOverride?: string): Promi
       </div>
     </div>
 
-    <!-- Gráficos dinámicos generados con Chart.js -->
-    <div class="charts-row" style="margin-top:24px">
-      <div class="chart-box">
-        <div class="chart-label">Cierres por mes (Enero-${monthName})</div>
-        <img src="${closuresChartUrl}" style="width:100%;max-width:280px;height:auto;border-radius:4px;margin-top:8px;">
-        <div style="font-size:10px;color:#999;margin-top:6px">
-          Meta mensual: <strong>8.1</strong> · Acumulado: <strong>${totalSales}</strong>
+    <!-- Large Charts Aligned with Table -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px">
+      <!-- Cierres Chart -->
+      <div style="background:#FAFAFA;border-radius:8px;padding:20px">
+        <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:16px">Cierres por mes (Enero-${monthName})</div>
+        <img src="${closuresChartUrl}" style="width:100%;height:auto;border-radius:6px;display:block;margin-bottom:12px;">
+        <div style="font-size:12px;color:#666;font-weight:500;border-top:1px solid #E0E0E0;padding-top:12px">
+          <span>Meta mensual: <strong>8.1</strong></span><br>
+          <span>Acumulado: <strong>${totalSales}</strong></span>
         </div>
       </div>
-      <div class="chart-box">
-        <div class="chart-label">Cumplimiento % (Verde ≥90%, Amarillo ≥70%, Rojo &lt;70%)</div>
-        <img src="${complianceChartUrl}" style="width:100%;max-width:280px;height:auto;border-radius:4px;margin-top:8px;">
-        <div style="font-size:10px;color:#999;margin-top:6px">
-          Objetivo: 100% · Acumulado: <strong>${totalCompPct}%</strong>
+      
+      <!-- Compliance Chart -->
+      <div style="background:#FAFAFA;border-radius:8px;padding:20px">
+        <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:16px">Cumplimiento % (Verde ≥90%, Amarillo ≥70%, Rojo &lt;70%)</div>
+        <img src="${complianceChartUrl}" style="width:100%;height:auto;border-radius:6px;display:block;margin-bottom:12px;">
+        <div style="font-size:12px;color:#666;font-weight:500;border-top:1px solid #E0E0E0;padding-top:12px">
+          <span>Objetivo: <strong>100%</strong></span><br>
+          <span>Acumulado: <strong>${totalCompPct}%</strong></span>
         </div>
       </div>
     </div>
