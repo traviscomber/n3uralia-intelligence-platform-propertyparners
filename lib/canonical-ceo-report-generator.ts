@@ -436,62 +436,64 @@ export function generateCanonicalCeoReportHTML(periodOverride?: string): string 
     <div class="section">
       <h2 class="section-title">Evolución de Venta</h2>
       
-      <table class="evolution-table">
-        <thead>
-          <tr>
-            <th>Indicador</th>
-            <th>Enero</th>
-            <th>Febrero</th>
-            <th>Marzo</th>
-            <th>Abril</th>
-            <th>Mayo</th>
-            <th>Junio</th>
-            <th>Acum</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Cierres mes</td>
-            <td>${monthlyData[0]?.actual || 0}</td>
-            <td>${monthlyData[1]?.actual || 0}</td>
-            <td>${monthlyData[2]?.actual || 0}</td>
-            <td>${monthlyData[3]?.actual || 0}</td>
-            <td>${monthlyData[4]?.actual || 0}</td>
-            <td>${monthlyData[5]?.actual || 0}</td>
-            <td>${monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0)}</td>
-          </tr>
-          <tr>
-            <td>Meta cierres mes</td>
-            <td>${monthlyData[0]?.target || 0}</td>
-            <td>${monthlyData[1]?.target || 0}</td>
-            <td>${monthlyData[2]?.target || 0}</td>
-            <td>${monthlyData[3]?.target || 0}</td>
-            <td>${monthlyData[4]?.target || 0}</td>
-            <td>${monthlyData[5]?.target || 0}</td>
-            <td>${monthlyData.reduce((sum, m) => sum + (m.target || 0), 0)}</td>
-          </tr>
-          <tr>
-            <td>Cumplimiento %</td>
-            <td>${monthlyData[0]?.compliance ? monthlyData[0].compliance.toFixed(1) : '0'}%</td>
-            <td>${monthlyData[1]?.compliance ? monthlyData[1].compliance.toFixed(1) : '0'}%</td>
-            <td>${monthlyData[2]?.compliance ? monthlyData[2].compliance.toFixed(1) : '0'}%</td>
-            <td>${monthlyData[3]?.compliance ? monthlyData[3].compliance.toFixed(1) : '0'}%</td>
-            <td>${monthlyData[4]?.compliance ? monthlyData[4].compliance.toFixed(1) : '0'}%</td>
-            <td>${monthlyData[5]?.compliance ? monthlyData[5].compliance.toFixed(1) : '0'}%</td>
-            <td>${monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) > 0 ? (monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) / monthlyData.reduce((sum, m) => sum + (m.target || 0), 0) * 100).toFixed(1) : '0'}%</td>
-          </tr>
-          <tr>
-            <td>Productividad por ejecutiva</td>
-            <td>${(monthlyData[0]?.actual && totalPartners ? monthlyData[0].actual / totalPartners : 0).toFixed(2)}</td>
-            <td>${(monthlyData[1]?.actual && totalPartners ? monthlyData[1].actual / totalPartners : 0).toFixed(2)}</td>
-            <td>${(monthlyData[2]?.actual && totalPartners ? monthlyData[2].actual / totalPartners : 0).toFixed(2)}</td>
-            <td>${(monthlyData[3]?.actual && totalPartners ? monthlyData[3].actual / totalPartners : 0).toFixed(2)}</td>
-            <td>${(monthlyData[4]?.actual && totalPartners ? monthlyData[4].actual / totalPartners : 0).toFixed(2)}</td>
-            <td>${(monthlyData[5]?.actual && totalPartners ? monthlyData[5].actual / totalPartners : 0).toFixed(2)}</td>
-            <td>${(monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) / totalPartners).toFixed(2)}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div style="overflow-x: auto; margin: 0 -20px; padding: 0 20px;">
+        <table class="evolution-table" style="min-width: 100%; width: 100%; font-size: 12px;">
+          <thead>
+            <tr>
+              <th style="text-align: left; padding: 8px 4px;">Indicador</th>
+              <th style="text-align: center; padding: 8px 4px;">Enero</th>
+              <th style="text-align: center; padding: 8px 4px;">Feb</th>
+              <th style="text-align: center; padding: 8px 4px;">Mar</th>
+              <th style="text-align: center; padding: 8px 4px;">Abr</th>
+              <th style="text-align: center; padding: 8px 4px;">May</th>
+              <th style="text-align: center; padding: 8px 4px;">Jun</th>
+              <th style="text-align: center; padding: 8px 4px; background-color: #F5F5F5; font-weight: bold;">Acum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align: left; padding: 8px 4px;">Cierres mes</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[0]?.actual || 0}</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[1]?.actual || 0}</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[2]?.actual || 0}</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[3]?.actual || 0}</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[4]?.actual || 0}</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[5]?.actual || 0}</td>
+              <td style="text-align: center; padding: 8px 4px; background-color: #F5F5F5; font-weight: bold;">${monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0)}</td>
+            </tr>
+            <tr style="background-color: #FAFAFA;">
+              <td style="text-align: left; padding: 8px 4px;">Meta cierres</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[0]?.target || 0).toFixed(1)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[1]?.target || 0).toFixed(1)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[2]?.target || 0).toFixed(1)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[3]?.target || 0).toFixed(1)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[4]?.target || 0).toFixed(1)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[5]?.target || 0).toFixed(1)}</td>
+              <td style="text-align: center; padding: 8px 4px; background-color: #F5F5F5; font-weight: bold;">${(monthlyData.reduce((sum, m) => sum + (m.target || 0), 0)).toFixed(1)}</td>
+            </tr>
+            <tr>
+              <td style="text-align: left; padding: 8px 4px;">Cumplimiento %</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[0]?.compliance ? monthlyData[0].compliance.toFixed(0) : '0'}%</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[1]?.compliance ? monthlyData[1].compliance.toFixed(0) : '0'}%</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[2]?.compliance ? monthlyData[2].compliance.toFixed(0) : '0'}%</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[3]?.compliance ? monthlyData[3].compliance.toFixed(0) : '0'}%</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[4]?.compliance ? monthlyData[4].compliance.toFixed(0) : '0'}%</td>
+              <td style="text-align: center; padding: 8px 4px;">${monthlyData[5]?.compliance ? monthlyData[5].compliance.toFixed(0) : '0'}%</td>
+              <td style="text-align: center; padding: 8px 4px; background-color: #F5F5F5; font-weight: bold;">${monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) > 0 ? (monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) / monthlyData.reduce((sum, m) => sum + (m.target || 0), 0) * 100).toFixed(0) : '0'}%</td>
+            </tr>
+            <tr style="background-color: #FAFAFA;">
+              <td style="text-align: left; padding: 8px 4px;">Productividad</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[0]?.actual && totalPartners ? monthlyData[0].actual / totalPartners : 0).toFixed(2)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[1]?.actual && totalPartners ? monthlyData[1].actual / totalPartners : 0).toFixed(2)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[2]?.actual && totalPartners ? monthlyData[2].actual / totalPartners : 0).toFixed(2)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[3]?.actual && totalPartners ? monthlyData[3].actual / totalPartners : 0).toFixed(2)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[4]?.actual && totalPartners ? monthlyData[4].actual / totalPartners : 0).toFixed(2)}</td>
+              <td style="text-align: center; padding: 8px 4px;">${(monthlyData[5]?.actual && totalPartners ? monthlyData[5].actual / totalPartners : 0).toFixed(2)}</td>
+              <td style="text-align: center; padding: 8px 4px; background-color: #F5F5F5; font-weight: bold;">${(monthlyData.reduce((sum, m) => sum + (m.actual || 0), 0) / totalPartners).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     
     <!-- PENDING DEFINITIONS -->
