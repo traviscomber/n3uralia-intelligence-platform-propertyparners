@@ -17,6 +17,12 @@ function numberFrom(text: string | null, pattern: RegExp) {
   return Number.isFinite(value) ? value : null
 }
 
+function logCaptureFailure(error: unknown) {
+  console.error('PORTAL_LIVE_CAPTURE_FAILED', {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
+}
+
 export async function POST(request: Request) {
   const access = await requireExecutiveAccess()
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido a CEO y administradores.' }, { status: access.status })
@@ -89,7 +95,8 @@ export async function POST(request: Request) {
       note: 'Muestra observada sin imputaciones. Debe conciliarse con los archivos enviados antes de aprobarse.',
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No fue posible capturar la fuente viva.', writesPerformed: 0 }, { status: 502 })
+    logCaptureFailure(error)
+    return NextResponse.json({ error: 'No fue posible capturar la fuente viva.', writesPerformed: 0 }, { status: 502 })
   } finally {
     await browser.close()
   }
