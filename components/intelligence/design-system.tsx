@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
 type Action = { label: string; href: string; primary?: boolean }
 type StatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'critical'
+type ActionVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive'
 
 const statusToneClasses: Record<StatusTone, string> = {
   neutral: 'border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-muted)]',
@@ -11,6 +12,15 @@ const statusToneClasses: Record<StatusTone, string> = {
   warning: 'border-[#f6c453]/45 bg-[#211a0d] text-[#f8d77f]',
   critical: 'border-[var(--destructive)]/60 bg-[#160d0c] text-[var(--n3-teal-soft)]',
 }
+
+const actionVariantClasses: Record<ActionVariant, string> = {
+  primary: 'border-[var(--n3-teal)] bg-[var(--n3-teal)] text-white hover:opacity-90',
+  secondary: 'border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-light)] hover:border-[var(--n3-teal-soft)]',
+  tertiary: 'border-transparent bg-transparent text-[var(--n3-text-light)] hover:border-[var(--n3-line)] hover:bg-[var(--muted)]',
+  destructive: 'border-[var(--destructive)] bg-[#160d0c] text-[var(--n3-teal-soft)] hover:bg-[#21100e]',
+}
+
+const actionBaseClasses = 'inline-flex min-h-10 items-center justify-center gap-2 border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50'
 
 export function IntelligencePage({ children }: { children: ReactNode }) {
   return <div className="mx-auto max-w-[1500px] space-y-8 pb-16">{children}</div>
@@ -39,15 +49,13 @@ export function IntelligenceHeader({
           {actions.length > 0 ? (
             <nav aria-label="Acciones de la vista" className="mt-6 flex flex-wrap gap-2">
               {actions.map((action) => (
-                <Link
+                <ActionLink
                   key={`${action.href}-${action.label}`}
                   href={action.href}
-                  className={action.primary
-                    ? 'inline-flex min-h-10 items-center border border-[var(--n3-teal)] bg-[var(--n3-teal)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90'
-                    : 'inline-flex min-h-10 items-center border border-[var(--n3-line)] bg-[var(--n3-deep)] px-4 py-2 text-sm font-medium text-[var(--n3-text-light)] transition-colors hover:border-[var(--n3-teal-soft)]'}
+                  variant={action.primary ? 'primary' : 'secondary'}
                 >
                   {action.label}
-                </Link>
+                </ActionLink>
               ))}
             </nav>
           ) : null}
@@ -67,6 +75,63 @@ export function SectionHeading({ eyebrow, title, description, action }: { eyebro
         {description ? <p className="mt-2 max-w-3xl text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  )
+}
+
+export function ActionLink({
+  href,
+  children,
+  variant = 'secondary',
+  className = '',
+}: {
+  href: string
+  children: ReactNode
+  variant?: ActionVariant
+  className?: string
+}) {
+  return <Link href={href} className={`${actionBaseClasses} ${actionVariantClasses[variant]} ${className}`}>{children}</Link>
+}
+
+export function ActionButton({
+  children,
+  variant = 'secondary',
+  className = '',
+  type = 'button',
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: ReactNode
+  variant?: ActionVariant
+}) {
+  return <button type={type} className={`${actionBaseClasses} ${actionVariantClasses[variant]} ${className}`} {...props}>{children}</button>
+}
+
+export function FormField({
+  id,
+  label,
+  children,
+  hint,
+  error,
+  required = false,
+}: {
+  id: string
+  label: string
+  children: ReactNode
+  hint?: ReactNode
+  error?: ReactNode
+  required?: boolean
+}) {
+  const hintId = hint ? `${id}-hint` : undefined
+  const errorId = error ? `${id}-error` : undefined
+
+  return (
+    <div className="space-y-2" data-field-id={id} data-hint-id={hintId} data-error-id={errorId}>
+      <label htmlFor={id} className="block text-sm font-semibold text-[var(--n3-text-light)]">
+        {label}{required ? <span className="ml-1 text-[var(--n3-teal-soft)]" aria-hidden="true">*</span> : null}
+      </label>
+      {children}
+      {hint ? <p id={hintId} className="text-xs leading-5 text-[var(--n3-text-muted)]">{hint}</p> : null}
+      {error ? <p id={errorId} role="alert" className="text-xs leading-5 text-[var(--n3-teal-soft)]">{error}</p> : null}
     </div>
   )
 }
