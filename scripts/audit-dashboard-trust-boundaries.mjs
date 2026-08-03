@@ -49,6 +49,10 @@ const unsafePatterns = [
     regex: /\{\s*(?:error|err|cause|failure)\.(?:message|detail|hint)\s*\}/gi,
     description: 'raw Error object field interpolated in dashboard UI',
   },
+  {
+    regex: /<OperationalState\b[^>]*\bdetail\s*=/gs,
+    description: 'OperationalState detail prop is forbidden in dashboard UI',
+  },
 ]
 
 const dashboardFiles = walk(dashboardRoot)
