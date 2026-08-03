@@ -48,6 +48,9 @@ jobs:
       - name: Verify GitHub delivery surface
         run: pnpm security:delivery-surface
 
+      - name: Report GitHub delivery readiness
+        run: pnpm security:delivery-readiness
+
       - name: Verify runtime configuration
         run: pnpm security:runtime-readiness
 
