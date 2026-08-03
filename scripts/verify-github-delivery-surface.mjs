@@ -9,6 +9,7 @@ const findings = []
 const sourceRoots = ['app', 'components', 'lib']
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'])
 const prohibitedOwnedRoots = ['app/', 'components/', 'public/', 'data/', 'docs/canonical/']
+const serverOnlyDirective = /^\s*import\s+['"]server-only['"];?/m
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return []
@@ -40,10 +41,18 @@ for (const entry of proprietaryEntries) {
   const absolute = path.join(root, entry.pattern)
   if (!fs.existsSync(absolute)) {
     findings.push(`${entry.pattern}: classified proprietary file does not exist`)
+    continue
   }
 
   if (prohibitedOwnedRoots.some((prefix) => entry.pattern.startsWith(prefix))) {
     findings.push(`${entry.pattern}: proprietary source cannot live inside a client-owned delivery root`)
+  }
+
+  if (sourceExtensions.has(path.extname(absolute))) {
+    const text = fs.readFileSync(absolute, 'utf8')
+    if (!serverOnlyDirective.test(text)) {
+      findings.push(`${entry.pattern}: proprietary source must explicitly import server-only`)
+    }
   }
 }
 
@@ -71,7 +80,7 @@ for (const sourceRoot of sourceRoots) {
 
     if (!imported.length) continue
 
-    const isClient = /^\s*['\"]use client['\"];?/m.test(text)
+    const isClient = /^\s*['"]use client['"];?/m.test(text)
     if (isClient) {
       findings.push(`${rel}: client module imports proprietary N3uralia source`)
       continue
