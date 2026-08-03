@@ -18,7 +18,6 @@ function getSupabaseClient() {
   })
 }
 
-// Fetch all features from ArcGIS paged — uses f=json (Esri native, geojson not supported)
 async function fetchAllFeatures() {
   const features: any[] = []
   let offset = 0
@@ -55,7 +54,6 @@ async function fetchAllFeatures() {
   return features
 }
 
-// Convert Esri rings geometry → WKT POLYGON / MULTIPOLYGON
 function esriToWkt(geometry: any): string | null {
   if (!geometry || !geometry.rings || !geometry.rings.length) return null
 
@@ -128,13 +126,12 @@ export async function POST() {
       failedZones: failedZones.slice(0, 10),
       enrichmentCompleted: !enrichmentError,
     })
-  } catch (error) {
-    console.error('PRC_SYNC_FAILED', { code: error instanceof Error ? error.message : 'UNKNOWN' })
+  } catch {
+    console.error('PRC_SYNC_FAILED')
     return NextResponse.json({ ok: false, error: 'No pudimos sincronizar las zonas PRC.' }, { status: 500 })
   }
 }
 
-// GET: preview — how many PRC features are available in ArcGIS
 export async function GET() {
   const access = await requireExecutiveAccess()
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
