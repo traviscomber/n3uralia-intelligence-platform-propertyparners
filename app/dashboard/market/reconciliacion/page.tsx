@@ -44,7 +44,7 @@ export default async function CanonicalMarketReconciliationPage() {
         }
       />
 
-      {reconciliation.error ? <div className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">La reconciliación operativa está incompleta: {reconciliation.error}</div> : null}
+      {reconciliation.error ? <div className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">La reconciliación operativa está incompleta. Reintenta más tarde o revisa la trazabilidad con un administrador.</div> : null}
 
       <section>
         <SectionHeading eyebrow="01 · Universo canónico" title="Fuentes auditadas disponibles" description="Estos conteos provienen de manifiestos con hash y perfiles de estructura. No implican que cada fila ya esté reconciliada como entidad operativa." />
