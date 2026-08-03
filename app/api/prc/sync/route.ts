@@ -10,10 +10,12 @@ function getSupabaseClient() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
+    throw new Error('MISSING_SUPABASE_CREDENTIALS')
   }
 
-  return createClient(supabaseUrl, supabaseKey)
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 // Fetch all features from ArcGIS paged — uses f=json (Esri native, geojson not supported)
@@ -27,7 +29,7 @@ async function fetchAllFeatures() {
       where: '1=1',
       outFields: 'ZONA,NOMBRE,UPREF,SECTOR,SHAPE_Area',
       outSR: '4326',
-      f: 'json',               // ← Esri JSON (this server doesn't support geojson)
+      f: 'json',
       resultOffset: String(offset),
       resultRecordCount: String(batchSize),
       returnGeometry: 'true',
@@ -38,10 +40,10 @@ async function fetchAllFeatures() {
       next: { revalidate: 0 },
     })
 
-    if (!res.ok) throw new Error(`ArcGIS HTTP ${res.status}`)
+    if (!res.ok) throw new Error('ARCGIS_REQUEST_FAILED')
 
     const json = await res.json()
-    if (json.error) throw new Error(`ArcGIS error: ${json.error.message}`)
+    if (json.error) throw new Error('ARCGIS_RESPONSE_FAILED')
 
     const batch = json.features || []
     features.push(...batch)
@@ -65,27 +67,27 @@ function esriToWkt(geometry: any): string | null {
     return `POLYGON(${rings[0]})`
   }
 
-  // Multiple rings → use first as outer, rest as inner (holes)
   return `POLYGON(${rings.join(',')})`
 }
 
 export async function POST() {
   const access = await requireExecutiveAccess()
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+
   try {
     const supabase = getSupabaseClient()
     const features = await fetchAllFeatures()
 
     if (features.length === 0) {
       return NextResponse.json(
-        { ok: false, message: 'No features returned from ArcGIS' },
+        { ok: false, message: 'La fuente oficial no devolvió zonas disponibles.' },
         { status: 502 },
       )
     }
 
     let synced = 0
     let skipped = 0
-    const errors: string[] = []
+    const failedZones: string[] = []
 
     for (const feature of features) {
       const props = feature.attributes || {}
@@ -105,25 +107,30 @@ export async function POST() {
       })
 
       if (error) {
-        errors.push(`${props.ZONA}: ${error.message}`)
+        console.error('PRC_ZONE_UPSERT_FAILED', { code: error.code ?? 'UNKNOWN', zone: String(props.ZONA) })
+        failedZones.push(String(props.ZONA))
         skipped++
       } else {
         synced++
       }
     }
 
-    // After sync: enrich neighborhood zona_prc from official PRC polygons
-    await supabase.rpc('enrich_neighborhoods_zona_prc')
+    const { error: enrichmentError } = await supabase.rpc('enrich_neighborhoods_zona_prc')
+    if (enrichmentError) {
+      console.error('PRC_ENRICHMENT_FAILED', { code: enrichmentError.code ?? 'UNKNOWN' })
+    }
 
     return NextResponse.json({
       ok: true,
       total: features.length,
       synced,
       skipped,
-      errors: errors.slice(0, 10),
+      failedZones: failedZones.slice(0, 10),
+      enrichmentCompleted: !enrichmentError,
     })
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('PRC_SYNC_FAILED', { code: error instanceof Error ? error.message : 'UNKNOWN' })
+    return NextResponse.json({ ok: false, error: 'No pudimos sincronizar las zonas PRC.' }, { status: 500 })
   }
 }
 
@@ -131,6 +138,7 @@ export async function POST() {
 export async function GET() {
   const access = await requireExecutiveAccess()
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+
   try {
     const params = new URLSearchParams({
       where: '1=1',
@@ -138,9 +146,16 @@ export async function GET() {
       f: 'json',
     })
     const res = await fetch(`${ARCGIS_URL}?${params}`)
+    if (!res.ok) {
+      return NextResponse.json({ error: 'No pudimos consultar la fuente PRC.' }, { status: 502 })
+    }
     const json = await res.json()
+    if (json.error) {
+      return NextResponse.json({ error: 'No pudimos consultar la fuente PRC.' }, { status: 502 })
+    }
     return NextResponse.json({ available: json.count ?? 0 })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch {
+    console.error('PRC_PREVIEW_FAILED')
+    return NextResponse.json({ error: 'No pudimos consultar la fuente PRC.' }, { status: 500 })
   }
 }
