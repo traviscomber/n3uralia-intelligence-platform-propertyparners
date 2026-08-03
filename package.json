@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs && node scripts/verify-contract-closeout.mjs && node scripts/verify-contract-closeout-evidence.mjs && node scripts/verify-client-dependencies.mjs",
+    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs && node scripts/verify-contract-closeout.mjs && node scripts/verify-contract-closeout-evidence.mjs && node scripts/verify-client-dependencies.mjs && node scripts/verify-contract-closeout-documents.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -23,6 +23,7 @@
     "contract:closeout:evidence:verify": "node scripts/verify-contract-closeout-evidence.mjs",
     "contract:closeout:report": "node scripts/report-contract-closeout.mjs",
     "contract:dependencies:verify": "node scripts/verify-client-dependencies.mjs",
+    "contract:documents:verify": "node scripts/verify-contract-closeout-documents.mjs",
     "audit:legacy": "node scripts/audit-legacy-code.mjs",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
@@ -59,13 +60,7 @@
     "qa:roles": "node scripts/run-authenticated-role-qa.mjs"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "core-js",
-      "esbuild",
-      "puppeteer",
-      "sharp",
-      "unrs-resolver"
-    ]
+    "onlyBuiltDependencies": ["core-js", "esbuild", "puppeteer", "sharp", "unrs-resolver"]
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
