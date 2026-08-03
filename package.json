@@ -19,6 +19,7 @@
     "security:runtime-readiness": "node scripts/check-n3uralia-runtime-readiness.mjs",
     "security:runtime-cutover": "node scripts/verify-n3uralia-runtime-cutover.mjs",
     "security:runtime-consumers": "node scripts/inventory-n3uralia-consumers.mjs",
+    "contract:closeout:verify": "node scripts/verify-contract-closeout.mjs",
     "audit:legacy": "node scripts/audit-legacy-code.mjs",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
