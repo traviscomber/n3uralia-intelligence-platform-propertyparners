@@ -57,6 +57,9 @@ jobs:
       - name: Report contract closeout status
         run: pnpm contract:closeout:report
 
+      - name: Verify contract release candidate gate
+        run: node scripts/verify-contract-release-candidate.mjs
+
       - name: Verify runtime configuration
         run: pnpm security:runtime-readiness
 
