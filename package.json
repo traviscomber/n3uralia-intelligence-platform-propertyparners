@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs && node scripts/verify-contract-closeout.mjs && node scripts/verify-contract-closeout-evidence.mjs",
+    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs && node scripts/verify-contract-closeout.mjs && node scripts/verify-contract-closeout-evidence.mjs && node scripts/verify-client-dependencies.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -22,6 +22,7 @@
     "contract:closeout:verify": "node scripts/verify-contract-closeout.mjs",
     "contract:closeout:evidence:verify": "node scripts/verify-contract-closeout-evidence.mjs",
     "contract:closeout:report": "node scripts/report-contract-closeout.mjs",
+    "contract:dependencies:verify": "node scripts/verify-client-dependencies.mjs",
     "audit:legacy": "node scripts/audit-legacy-code.mjs",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
