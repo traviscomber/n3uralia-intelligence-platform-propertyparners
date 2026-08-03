@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-02",
+  "allowedStatuses": ["pending", "received", "approved", "waived"],
+  "dependencies": [
+    {
+      "id": "market-cbr-sales",
+      "label": "Base histórica CBR y ventas recientes",
+      "owner": "Client",
+      "status": "pending",
+      "requiredFor": ["market-intelligence", "uat-and-acceptance"],
+      "evidence": []
+    },
+    {
+      "id": "market-kml",
+      "label": "KML oficial",
+      "owner": "Client",
+      "status": "pending",
+      "requiredFor": ["market-intelligence"],
+      "evidence": []
+    },
+    {
+      "id": "kpi-dictionary",
+      "label": "Diccionario oficial de KPI",
+      "owner": "Shared",
+      "status": "pending",
+      "requiredFor": ["management-intelligence", "automation-and-reporting"],
+      "evidence": []
+    },
+    {
+      "id": "users-and-roles",
+      "label": "Directorio final de usuarios, roles y capacidades",
+      "owner": "Client",
+      "status": "pending",
+      "requiredFor": ["uat-and-acceptance", "training-and-handover"],
+      "evidence": []
+    },
+    {
+      "id": "reporting-approval",
+      "label": "Calendario, destinatarios y reglas de reportes",
+      "owner": "Shared",
+      "status": "pending",
+      "requiredFor": ["automation-and-reporting"],
+      "evidence": []
+    },
+    {
+      "id": "uat-participants",
+      "label": "Responsables y participantes UAT",
+      "owner": "Client",
+      "status": "pending",
+      "requiredFor": ["uat-and-acceptance"],
+      "evidence": []
+    },
+    {
+      "id": "training-participants",
+      "label": "Asistentes y fechas de capacitación",
+      "owner": "Client",
+      "status": "pending",
+      "requiredFor": ["training-and-handover"],
+      "evidence": []
+    },
+    {
+      "id": "third-party-ownership",
+      "label": "Titularidad y costos de servicios de terceros",
+      "owner": "Shared",
+      "status": "pending",
+      "requiredFor": ["final-delivery-package"],
+      "evidence": []
+    }
+  ]
+}
