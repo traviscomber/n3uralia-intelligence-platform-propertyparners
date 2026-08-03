@@ -45,9 +45,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params
   const body = await request.json().catch(() => null)
-  const recipients = Array.isArray(body?.recipients)
-    ? [...new Set(body.recipients.map(String).map((value: string) => value.trim()).filter(Boolean))].slice(0, 200)
-    : []
+  const recipientValues: unknown[] = Array.isArray(body?.recipients) ? body.recipients : []
+  const recipients: string[] = [...new Set(
+    recipientValues
+      .map((value) => String(value).trim())
+      .filter((value): value is string => value.length > 0),
+  )].slice(0, 200)
   if (!recipients.length) return NextResponse.json({ error: 'Debe indicar al menos un destinatario.' }, { status: 400 })
 
   const channel = String(body?.channel ?? 'manual')
@@ -56,7 +59,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'Canal o estado de distribución inválido.' }, { status: 400 })
   }
 
-  const rows = recipients.map((recipient: string) => ({
+  const rows = recipients.map((recipient) => ({
     report_run_id: id,
     recipient,
     channel,
