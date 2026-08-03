@@ -105,6 +105,9 @@ const designSystemPath = path.join(root, 'components/intelligence/design-system.
 if (fs.existsSync(designSystemPath)) {
   const source = fs.readFileSync(designSystemPath, 'utf8')
   const requiredExports = [
+    'ActionLink',
+    'ActionButton',
+    'FormField',
     'StatusBadge',
     'FilterBar',
     'DataTable',
