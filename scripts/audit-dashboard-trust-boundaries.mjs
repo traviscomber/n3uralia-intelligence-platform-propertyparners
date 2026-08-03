@@ -9,12 +9,17 @@ const requiredRoutes = [
   'app/dashboard/valuation/page.tsx',
   'app/dashboard/control/page.tsx',
 ]
+const requiredSafetyFiles = [
+  'components/feedback/public-error-notice.tsx',
+  'components/ui/operational-state.tsx',
+  'lib/public-error.ts',
+]
 
 const failures = []
 
-for (const route of requiredRoutes) {
+for (const route of [...requiredRoutes, ...requiredSafetyFiles]) {
   if (!fs.existsSync(path.join(root, route))) {
-    failures.push(`Missing required dashboard route: ${route}`)
+    failures.push(`Missing required dashboard safety file: ${route}`)
   }
 }
 
@@ -53,6 +58,17 @@ for (const file of dashboardFiles) {
   for (const pattern of unsafePatterns) {
     for (const match of source.matchAll(pattern.regex)) {
       recordMatch(file, source, match, pattern.description)
+    }
+  }
+}
+
+const operationalStatePath = path.join(root, 'components/ui/operational-state.tsx')
+if (fs.existsSync(operationalStatePath)) {
+  const source = fs.readFileSync(operationalStatePath, 'utf8')
+  const forbiddenLabels = [/Detalle técnico:/g, /Technical detail:/gi]
+  for (const regex of forbiddenLabels) {
+    for (const match of source.matchAll(regex)) {
+      recordMatch(operationalStatePath, source, match, 'shared operational state renders technical details')
     }
   }
 }
