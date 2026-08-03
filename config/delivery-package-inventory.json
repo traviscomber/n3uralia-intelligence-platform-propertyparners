@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-02",
+  "status": "draft",
+  "allowedStatuses": ["draft", "assembled", "verified", "delivered"],
+  "requiredSections": [
+    "code-and-reconstruction",
+    "functional-documentation",
+    "operations",
+    "security-and-custody",
+    "quality-and-acceptance"
+  ],
+  "included": [],
+  "excludedPatterns": [".env", ".env.*", "node_modules", ".next", "*.log", "*.pem", "*.key"],
+  "checksumSha256": null,
+  "cleanReconstruction": {"status":"pending","evidence":[]},
+  "deliveryAuthorization": {"status":"pending","evidence":[]}
+}
