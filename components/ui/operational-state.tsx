@@ -7,11 +7,6 @@ type OperationalStateProps = {
   kind: OperationalStateKind
   title: string
   description: string
-  /**
-   * Deprecated. Technical errors must never be rendered in the browser.
-   * Kept temporarily for compatibility while callers migrate.
-   */
-  detail?: string | null
   reference?: string | null
   action?: { label: string; href: string }
   children?: ReactNode
@@ -31,8 +26,8 @@ const labels: Record<OperationalStateKind, string> = {
 const accents: Record<OperationalStateKind, string> = {
   loading: 'border-[var(--n3-line)]',
   empty: 'border-[var(--n3-line)]',
-  error: 'border-[#d7332b]',
-  restricted: 'border-[#d7332b]',
+  error: 'border-[var(--destructive)]',
+  restricted: 'border-[var(--destructive)]',
   success: 'border-[#65d3a5]',
   stale: 'border-[#f6c453]',
   info: 'border-[var(--n3-line)]',
@@ -47,13 +42,16 @@ export function OperationalState({
   children,
   compact = false,
 }: OperationalStateProps) {
+  const isError = kind === 'error'
+
   return (
     <div
-      className={`border bg-[#0c1111] ${accents[kind]} ${compact ? 'p-4' : 'p-6 sm:p-8'}`}
-      role={kind === 'error' ? 'alert' : 'status'}
-      aria-live={kind === 'loading' ? 'polite' : undefined}
+      className={`border bg-[var(--n3-deep)] ${accents[kind]} ${compact ? 'p-4' : 'p-6 sm:p-8'}`}
+      role={isError ? 'alert' : 'status'}
+      aria-live={isError ? 'assertive' : kind === 'loading' ? 'polite' : undefined}
+      aria-busy={kind === 'loading' ? true : undefined}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">
         {labels[kind]}
       </p>
       <h3 className="mt-2 text-lg font-semibold text-[var(--n3-text-light)]">{title}</h3>
@@ -67,7 +65,7 @@ export function OperationalState({
       {action ? (
         <Link
           href={action.href}
-          className="mt-5 inline-flex border border-[var(--n3-line)] px-4 py-2 text-xs font-semibold text-[var(--n3-text-light)] hover:border-[var(--n3-teal)]"
+          className="mt-5 inline-flex min-h-10 items-center border border-[var(--n3-line)] px-4 py-2 text-sm font-semibold text-[var(--n3-text-light)] transition-colors hover:border-[var(--n3-teal)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]"
         >
           {action.label}
         </Link>
