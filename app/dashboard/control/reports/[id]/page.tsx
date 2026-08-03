@@ -13,15 +13,15 @@ export default function PrintableManagementReportPage() {
   useEffect(() => {
     fetch(`/api/management/reports/${params.id}`, { cache:'no-store' }).then(async response => {
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'No fue posible cargar el reporte.')
+      if (!response.ok) throw new Error('No fue posible cargar el reporte.')
       setReport(data.report)
-    }).catch(cause => setError(cause instanceof Error ? cause.message : 'No fue posible cargar el reporte.'))
+    }).catch(() => setError('No fue posible cargar el reporte. Reintenta más tarde o consulta con un administrador.'))
   }, [params.id])
 
   const entities = useMemo(() => report?.snapshot?.entities ?? [], [report])
   const alerts = useMemo(() => report?.snapshot?.alerts ?? [], [report])
 
-  if (error) return <div className="p-8 text-sm text-red-400">{error}</div>
+  if (error) return <div className="p-8 text-sm text-red-400">No fue posible cargar el reporte. Reintenta más tarde o consulta con un administrador.</div>
   if (!report) return <div className="p-8 text-sm text-[var(--n3-text-muted)]">Cargando reporte…</div>
 
   return <main className="mx-auto max-w-6xl bg-white p-8 text-black print:max-w-none print:p-0">
