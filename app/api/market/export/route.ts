@@ -101,7 +101,10 @@ export async function GET(request: NextRequest) {
     const format = parseFormat(request.nextUrl.searchParams.get('format'))
     const generatedAt = new Date().toISOString()
     const snapshot = await getOperationalMarketSnapshot()
-    if (snapshot.error) return NextResponse.json({ error: snapshot.error }, { status: 503 })
+    if (snapshot.error) {
+      console.error('MARKET_EXPORT_SNAPSHOT_UNAVAILABLE')
+      return NextResponse.json({ error: 'Los datos de mercado no están disponibles para exportación.' }, { status: 503 })
+    }
 
     let rows: ExportRow[]
     let truncated = false
@@ -163,6 +166,8 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No fue posible generar la exportación.' }, { status: 500 })
+    const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : 'unknown'
+    console.error('MARKET_EXPORT_FAILED', { code })
+    return NextResponse.json({ error: 'No fue posible generar la exportación.' }, { status: 500 })
   }
 }
