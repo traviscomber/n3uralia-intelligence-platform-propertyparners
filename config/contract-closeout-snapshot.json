@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": null,
+  "commit": null,
+  "deployment": null,
+  "contractStatus": "in-progress",
+  "productionReadiness": "in-review",
+  "clientAcceptance": "pending",
+  "uat": "pending",
+  "training": "not-scheduled",
+  "deliveryPackage": "not-ready",
+  "clientDependenciesOpen": 8,
+  "criticalFindingsOpen": 0,
+  "highFindingsOpen": 0,
+  "evidence": []
+}
