@@ -4,6 +4,10 @@ import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
 
 const allowedStatuses = new Set(['open', 'in_progress', 'done'])
 
+function logTaskFailure(stage: string, error: { code?: string } | null) {
+  console.error('TASK_SELF_UPDATE_FAILED', { stage, code: error?.code ?? 'unknown' })
+}
+
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const scope = await requireCapability('tasks.self.manage')
@@ -26,7 +30,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       .eq('id', id)
       .maybeSingle()
 
-    if (taskError) return NextResponse.json({ error: taskError.message }, { status: 500 })
+    if (taskError) {
+      logTaskFailure('lookup', taskError)
+      return NextResponse.json({ error: 'No pudimos consultar la tarea.' }, { status: 500 })
+    }
     if (!task) return NextResponse.json({ error: 'Tarea no encontrada' }, { status: 404 })
     if (task.assigned_to !== scope.profileId) {
       return NextResponse.json({ error: 'No puede modificar tareas asignadas a otro perfil' }, { status: 403 })
@@ -48,7 +55,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       .select('id,status,started_at,completed_at,resolution_note,updated_at')
       .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 422 })
+    if (error) {
+      logTaskFailure('update', error)
+      return NextResponse.json({ error: 'No pudimos actualizar la tarea.' }, { status: 422 })
+    }
     return NextResponse.json({ task: data })
   } catch (error) {
     return accessErrorResponse(error)
