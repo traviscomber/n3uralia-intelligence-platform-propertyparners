@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { createClient } from '@/lib/supabase/server'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
 import { getDashboardOperationalSnapshot } from '@/lib/dashboard-operational'
@@ -78,7 +79,7 @@ export default async function DashboardHome() {
     const entityName = entityResult.data?.name || profile?.full_name || 'Ejecutiva'
     const metadata = (entityResult.data?.metadata || {}) as Record<string, unknown>
     const branch = String(metadata.branch || profile?.team || 'Sucursal no informada')
-    const personalError = entityResult.error?.message || assignmentResult.error?.message || valuationResult.error?.message || null
+    const personalDataUnavailable = Boolean(entityResult.error || assignmentResult.error || valuationResult.error)
 
     return (
       <div className="mx-auto max-w-[1400px] space-y-7 pb-16">
@@ -93,7 +94,13 @@ export default async function DashboardHome() {
           </div>
         </header>
 
-        {personalError ? <div className="border border-[#d7332b] bg-[#160d0c] p-4 text-sm text-[#ff766f]">Parte del resumen personal no pudo consultarse: {personalError}</div> : null}
+        {personalDataUnavailable ? (
+          <PublicErrorNotice
+            code="DATA_UNAVAILABLE"
+            title="Resumen personal incompleto"
+            compact
+          />
+        ) : null}
 
         <section className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
           <Link href="/dashboard/partner" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
@@ -177,7 +184,7 @@ export default async function DashboardHome() {
 
       <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Criterio de producto</p><h2 className="mt-3 text-xl font-semibold">Información verificable, sin funcionalidades ajenas al contrato</h2><div className="mt-6 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">{principles.map((principle) => <div key={principle} className="bg-[#080d0d] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">{principle}</div>)}</div></div>
-        <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p><div className="mt-5 space-y-3 text-sm"><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Mercado</span><strong className={`text-right ${market.error || !market.connected ? 'text-[#ff766f]' : ''}`}>{marketStatus}</strong></div><p className="mt-2 text-right text-xs leading-5 text-[var(--n3-text-muted)]">{n(market.confirmedSales)} ventas confirmadas · {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}</p><p className="mt-1 text-right text-[10px] leading-4 text-[var(--n3-text-muted)]">Última observación: {formatDate(market.latestObservedAt)}</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Valorización</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{valuationStatus}</strong></div><p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.valuationApproved)} casos aprobados o emitidos</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Control de gestión</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{managementStatus}</strong></div><p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.managementAlerts)} alertas abiertas o reconocidas</p></div><div className="flex justify-between gap-4"><span>Reportes</span><strong className="text-right">Estructura disponible · ejecuciones no consolidadas en este resumen</strong></div></div>{market.error ? <p className="mt-4 border-t border-[var(--n3-line)] pt-4 text-xs leading-5 text-[#ff766f]">No fue posible consultar todo el estado operativo de Mercado: {market.error}</p> : null}{operations.error ? <p className="mt-4 border-t border-[var(--n3-line)] pt-4 text-xs leading-5 text-[#ff766f]">No fue posible consultar todo el estado operativo de Valorización y Control: {operations.error}</p> : null}</div>
+        <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p><div className="mt-5 space-y-3 text-sm"><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Mercado</span><strong className={`text-right ${market.error || !market.connected ? 'text-[#ff766f]' : ''}`}>{marketStatus}</strong></div><p className="mt-2 text-right text-xs leading-5 text-[var(--n3-text-muted)]">{n(market.confirmedSales)} ventas confirmadas · {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}</p><p className="mt-1 text-right text-[10px] leading-4 text-[var(--n3-text-muted)]">Última observación: {formatDate(market.latestObservedAt)}</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Valorización</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{valuationStatus}</strong></div><p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.valuationApproved)} casos aprobados o emitidos</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Control de gestión</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{managementStatus}</strong></div><p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.managementAlerts)} alertas abiertas o reconocidas</p></div><div className="flex justify-between gap-4"><span>Reportes</span><strong className="text-right">Estructura disponible · ejecuciones no consolidadas en este resumen</strong></div></div>{market.error || operations.error ? <div className="mt-4 border-t border-[var(--n3-line)] pt-4"><PublicErrorNotice code="DATA_UNAVAILABLE" title="Estado operativo incompleto" compact /></div> : null}</div>
       </section>
     </div>
   )
