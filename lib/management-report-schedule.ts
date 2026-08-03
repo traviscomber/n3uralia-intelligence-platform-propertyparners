@@ -21,6 +21,20 @@ export function previousMonthBounds(now = new Date()) {
   }
 }
 
+export function isClosedMonthlyPeriod(period: string, now = new Date()) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return false
+  const [year, month] = period.split('-').map(Number)
+  const periodStart = new Date(Date.UTC(year, month - 1, 1))
+  const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+  return periodStart < currentMonthStart
+}
+
+export function assertClosedMonthlyPeriod(period: string, now = new Date()) {
+  if (!isClosedMonthlyPeriod(period, now)) {
+    throw new Error('El informe mensual sólo puede cerrarse para un mes completamente terminado.')
+  }
+}
+
 export function advanceSchedule(nextRunAt: string | null, cadence: string, now = new Date()) {
   const next = new Date(nextRunAt || now.toISOString())
   if (Number.isNaN(next.getTime())) throw new Error('La programación contiene next_run_at inválido.')

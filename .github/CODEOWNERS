@@ -1,0 +1,17 @@
+# N3uralia proprietary intelligence and client data boundaries
+* @traviscomber
+
+# Canonical governance and client-specific rules
+/docs/canonical/ @traviscomber
+
+# Proprietary intelligence engines, agents and server logic
+/lib/ @traviscomber
+/app/api/ @traviscomber
+/supabase/ @traviscomber
+
+# Deployment, security and dependency configuration
+/.github/ @traviscomber
+/vercel.json @traviscomber
+/package.json @traviscomber
+/pnpm-lock.yaml @traviscomber
+/.env* @traviscomber
