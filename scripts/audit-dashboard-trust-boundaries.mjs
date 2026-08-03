@@ -14,12 +14,18 @@ const requiredSafetyFiles = [
   'components/ui/operational-state.tsx',
   'lib/public-error.ts',
 ]
+const requiredDesignFiles = [
+  'DESIGN.md',
+  'docs/design/COMPONENTS.md',
+  'docs/design/DATA-FORMATTING.md',
+  'components/intelligence/design-system.tsx',
+]
 
 const failures = []
 
-for (const route of [...requiredRoutes, ...requiredSafetyFiles]) {
+for (const route of [...requiredRoutes, ...requiredSafetyFiles, ...requiredDesignFiles]) {
   if (!fs.existsSync(path.join(root, route))) {
-    failures.push(`Missing required dashboard safety file: ${route}`)
+    failures.push(`Missing required dashboard governance file: ${route}`)
   }
 }
 
@@ -87,10 +93,59 @@ if (fs.existsSync(operationalStatePath)) {
   }
 }
 
+const layoutPath = path.join(root, 'app/layout.tsx')
+if (fs.existsSync(layoutPath)) {
+  const source = fs.readFileSync(layoutPath, 'utf8')
+  if (!/weight:\s*\[[^\]]*['"]600['"][^\]]*\]/s.test(source)) {
+    failures.push('app/layout.tsx: Montserrat 600 must be loaded because canonical components use font-semibold')
+  }
+}
+
+const designSystemPath = path.join(root, 'components/intelligence/design-system.tsx')
+if (fs.existsSync(designSystemPath)) {
+  const source = fs.readFileSync(designSystemPath, 'utf8')
+  const requiredExports = [
+    'StatusBadge',
+    'FilterBar',
+    'DataTable',
+    'DataTableHead',
+    'DataTableBody',
+    'DataTableHeaderCell',
+    'DataTableCell',
+  ]
+
+  for (const exportName of requiredExports) {
+    if (!new RegExp(`export function ${exportName}\\b`).test(source)) {
+      failures.push(`components/intelligence/design-system.tsx: missing canonical ${exportName} primitive`)
+    }
+  }
+
+  const forbiddenDesignPatterns = [
+    {
+      regex: /\brounded(?:-[A-Za-z0-9\[\]-]+)?\b/g,
+      description: 'canonical intelligence primitives must preserve square geometry',
+    },
+    {
+      regex: /\bshadow(?:-[A-Za-z0-9\[\]-]+)?\b/g,
+      description: 'canonical intelligence primitives must not use routine drop shadows',
+    },
+    {
+      regex: /\bbg-white\b/g,
+      description: 'canonical intelligence primitives must use semantic product surfaces',
+    },
+  ]
+
+  for (const pattern of forbiddenDesignPatterns) {
+    for (const match of source.matchAll(pattern.regex)) {
+      recordMatch(designSystemPath, source, match, pattern.description)
+    }
+  }
+}
+
 if (failures.length > 0) {
-  console.error('Dashboard trust-boundary audit failed:')
+  console.error('Dashboard trust-boundary and design-system audit failed:')
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
 
-console.log(`Dashboard trust-boundary audit passed for ${dashboardFiles.length} source files.`)
+console.log(`Dashboard trust-boundary and design-system audit passed for ${dashboardFiles.length} source files.`)
