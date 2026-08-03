@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "classification": "client-owned-canonical",
+  "documents": [
+    "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
+    "docs/canonical/UAT_EXECUTION_RECORD_TEMPLATE.md",
+    "docs/canonical/TRAINING_AND_HANDOVER_PLAN.md",
+    "docs/canonical/TRAINING_ATTENDANCE_RECORD_TEMPLATE.md",
+    "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
+    "docs/canonical/CLIENT_ACCEPTANCE_RECORD_TEMPLATE.md",
+    "docs/canonical/CLIENT_DEPENDENCIES_REGISTER.md",
+    "docs/canonical/REPORTING_AUTOMATION_APPROVAL_TEMPLATE.md",
+    "docs/canonical/THIRD_PARTY_OWNERSHIP_AND_COSTS_TEMPLATE.md",
+    "docs/canonical/KPI_DICTIONARY_APPROVAL_TEMPLATE.md",
+    "docs/canonical/USER_ROLE_DIRECTORY_TEMPLATE.md",
+    "docs/canonical/SUPPORT_AND_INCIDENT_RUNBOOK.md",
+    "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md",
+    "docs/canonical/ROLLBACK_AND_RECOVERY_PLAN.md",
+    "docs/canonical/ENVIRONMENT_VARIABLE_INVENTORY_TEMPLATE.md",
+    "docs/canonical/DATA_PROVENANCE_ACCEPTANCE_TEMPLATE.md",
+    "docs/canonical/POST_CLOSEOUT_BACKLOG_TEMPLATE.md",
+    "docs/canonical/FINAL_CLOSEOUT_CHECKLIST.md",
+    "docs/canonical/ACCESS_TRANSFER_CHECKLIST.md",
+    "docs/canonical/CREDENTIAL_ROTATION_REGISTER_TEMPLATE.md",
+    "docs/canonical/DATA_EXPORT_AUTHORIZATION_TEMPLATE.md",
+    "docs/canonical/SERVICE_LEVEL_AND_SUPPORT_MATRIX_TEMPLATE.md",
+    "docs/canonical/BUSINESS_CONTINUITY_TEST_RECORD_TEMPLATE.md",
+    "docs/canonical/CHANGE_MANAGEMENT_AND_RELEASE_APPROVAL_TEMPLATE.md",
+    "docs/canonical/CONTRACT_EVIDENCE_INDEX.md",
+    "docs/canonical/OPEN_OBSERVATIONS_REGISTER_TEMPLATE.md",
+    "docs/canonical/FINAL_HANDOVER_MEETING_MINUTES_TEMPLATE.md"
+  ]
+}
