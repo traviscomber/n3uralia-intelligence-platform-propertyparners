@@ -51,6 +51,12 @@ jobs:
       - name: Report GitHub delivery readiness
         run: pnpm security:delivery-readiness
 
+      - name: Verify contract closeout manifest
+        run: pnpm contract:closeout:verify
+
+      - name: Report contract closeout status
+        run: pnpm contract:closeout:report
+
       - name: Verify runtime configuration
         run: pnpm security:runtime-readiness
 
