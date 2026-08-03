@@ -100,30 +100,15 @@ export async function GET() {
       }
     })
 
-    const intelligencePayload = intelligence.mode === 'remote' && intelligence.remote
-      ? {
-          mode: intelligence.mode,
-          signals: intelligence.remote.signals,
-          risks: intelligence.remote.risks,
-          actions: intelligence.remote.actions,
-          provenance: intelligence.remote.provenance,
-        }
-      : {
-          mode: intelligence.mode,
-          signals: intelligence.local.signals,
-          risks: intelligence.local.risks,
-          actions: intelligence.local.actions,
-          provenance: {
-            clientEvidenceIds: intelligence.local.evidence
-              .filter((item) => item.sourceClass === 'client_evidence')
-              .map((item) => item.id),
-            externalSourceIds: intelligence.local.evidence
-              .filter((item) => item.sourceClass === 'external_market')
-              .map((item) => item.id),
-            modelVersion: 'local-transition',
-          },
-          remoteError: intelligence.remoteError,
-        }
+    const selectedIntelligence = intelligence.mode === 'remote' && intelligence.remote
+      ? intelligence.remote
+      : intelligence.local
+
+    const intelligencePayload = {
+      signals: selectedIntelligence.signals,
+      risks: selectedIntelligence.risks,
+      actions: selectedIntelligence.actions,
+    }
 
     return NextResponse.json(
       {
