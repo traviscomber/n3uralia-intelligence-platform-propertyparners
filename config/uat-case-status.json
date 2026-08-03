@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-02",
+  "allowedStatuses": ["pending", "passed", "failed", "blocked-client-input", "accepted-with-observation"],
+  "cases": [
+    {"id":"UAT-01","area":"access-and-permissions","status":"pending","evidence":[],"owner":"Shared","blocking":true},
+    {"id":"UAT-02","area":"ceo-dashboard","status":"pending","evidence":[],"owner":"Shared","blocking":true},
+    {"id":"UAT-03","area":"crm-commercial","status":"pending","evidence":[],"owner":"Shared","blocking":true},
+    {"id":"UAT-04","area":"market-intelligence","status":"blocked-client-input","evidence":[],"owner":"Client","blocking":false},
+    {"id":"UAT-05","area":"valuation","status":"pending","evidence":[],"owner":"Shared","blocking":true},
+    {"id":"UAT-06","area":"monthly-reporting","status":"pending","evidence":[],"owner":"Shared","blocking":true},
+    {"id":"UAT-07","area":"functional-security","status":"pending","evidence":[],"owner":"N3uralia","blocking":true},
+    {"id":"UAT-08","area":"operational-continuity","status":"pending","evidence":[],"owner":"N3uralia","blocking":true}
+  ]
+}
