@@ -22,7 +22,7 @@ const rajdhani = Rajdhani({
 
 const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['300', '400', '500'],
+  weight: ['300', '400', '500', '600'],
   variable: '--font-montserrat',
   display: 'swap',
 })
@@ -36,4 +36,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   )
 }
-

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-02",
+  "allowedStatuses": ["not-scheduled", "scheduled", "completed", "waived-by-client"],
+  "sessions": [
+    {"id":"TRN-01","title":"Vision general y gobierno","status":"not-scheduled","date":null,"attendees":[],"evidence":[]},
+    {"id":"TRN-02","title":"CEO, direccion y reportes","status":"not-scheduled","date":null,"attendees":[],"evidence":[]},
+    {"id":"TRN-03","title":"CRM y operacion comercial","status":"not-scheduled","date":null,"attendees":[],"evidence":[]},
+    {"id":"TRN-04","title":"Mercado y valorizacion","status":"not-scheduled","date":null,"attendees":[],"evidence":[]},
+    {"id":"TRN-05","title":"Administracion tecnica y continuidad","status":"not-scheduled","date":null,"attendees":[],"evidence":[]}
+  ]
+}

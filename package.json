@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs",
+    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs && node scripts/verify-contract-closeout.mjs && node scripts/verify-contract-closeout-evidence.mjs && node scripts/verify-client-dependencies.mjs && node scripts/verify-contract-closeout-documents.mjs && node scripts/verify-uat-case-status.mjs && node scripts/verify-training-session-status.mjs && node scripts/verify-delivery-package-inventory.mjs && node scripts/verify-client-acceptance-status.mjs && node scripts/verify-production-readiness-status.mjs && node scripts/verify-contract-closeout-snapshot.mjs && node scripts/audit-dashboard-trust-boundaries.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -19,6 +19,18 @@
     "security:runtime-readiness": "node scripts/check-n3uralia-runtime-readiness.mjs",
     "security:runtime-cutover": "node scripts/verify-n3uralia-runtime-cutover.mjs",
     "security:runtime-consumers": "node scripts/inventory-n3uralia-consumers.mjs",
+    "security:dashboard-trust": "node scripts/audit-dashboard-trust-boundaries.mjs",
+    "contract:closeout:verify": "node scripts/verify-contract-closeout.mjs",
+    "contract:closeout:evidence:verify": "node scripts/verify-contract-closeout-evidence.mjs",
+    "contract:closeout:report": "node scripts/report-contract-closeout.mjs",
+    "contract:dependencies:verify": "node scripts/verify-client-dependencies.mjs",
+    "contract:documents:verify": "node scripts/verify-contract-closeout-documents.mjs",
+    "contract:uat:verify": "node scripts/verify-uat-case-status.mjs",
+    "contract:training:verify": "node scripts/verify-training-session-status.mjs",
+    "contract:package:verify": "node scripts/verify-delivery-package-inventory.mjs",
+    "contract:acceptance:verify": "node scripts/verify-client-acceptance-status.mjs",
+    "contract:production:verify": "node scripts/verify-production-readiness-status.mjs",
+    "contract:snapshot:verify": "node scripts/verify-contract-closeout-snapshot.mjs",
     "audit:legacy": "node scripts/audit-legacy-code.mjs",
     "brand:contrast": "node scripts/audit-brand-contrast.mjs",
     "brand:dashboard": "node scripts/audit-dashboard-brand.mjs",
@@ -55,13 +67,7 @@
     "qa:roles": "node scripts/run-authenticated-role-qa.mjs"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "core-js",
-      "esbuild",
-      "puppeteer",
-      "sharp",
-      "unrs-resolver"
-    ]
+    "onlyBuiltDependencies": ["core-js", "esbuild", "puppeteer", "sharp", "unrs-resolver"]
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

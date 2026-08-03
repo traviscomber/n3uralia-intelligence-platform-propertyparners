@@ -1,40 +1,84 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+const LEADER_ROLES = new Set(['admin', 'ceo', 'director', 'subdirector'])
+const SCHEDULER_ROLES = new Set(['admin', 'ceo'])
+const CADENCES = new Set(['monthly'])
+const REPORT_TYPES = new Set(['management', 'executive', 'director'])
+
 async function context() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+
+  const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (error) {
+    console.error('[management-schedules] profile lookup failed', { code: error.code })
+    return { error: NextResponse.json({ error: 'No fue posible validar el perfil.' }, { status: 500 }) }
+  }
+
   return { supabase, user, role: String(profile?.role ?? '').toLowerCase() }
 }
 
 export async function GET() {
   const ctx = await context()
   if ('error' in ctx) return ctx.error
-  if (!['admin','ceo','director','subdirector'].includes(ctx.role)) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
-  const [{ data: schedules, error }, { data: entities }] = await Promise.all([
+  if (!LEADER_ROLES.has(ctx.role)) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+
+  const [{ data: schedules, error: scheduleError }, { data: entities, error: entityError }] = await Promise.all([
     ctx.supabase.from('management_report_schedules').select('*').order('created_at', { ascending: false }),
     ctx.supabase.from('management_entities').select('id,name,entity_type').eq('active', true).order('name'),
   ])
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (scheduleError || entityError) {
+    console.error('[management-schedules] lookup failed', {
+      scheduleCode: scheduleError?.code ?? null,
+      entityCode: entityError?.code ?? null,
+    })
+    return NextResponse.json({ error: 'No fue posible cargar la programación de reportes.' }, { status: 500 })
+  }
+
   return NextResponse.json({ schedules: schedules ?? [], entities: entities ?? [] })
 }
 
 export async function POST(request: Request) {
   const ctx = await context()
   if ('error' in ctx) return ctx.error
-  if (!['admin','ceo'].includes(ctx.role)) return NextResponse.json({ error: 'Solo administración y CEO pueden programar reportes.' }, { status: 403 })
+  if (!SCHEDULER_ROLES.has(ctx.role)) {
+    return NextResponse.json({ error: 'Solo administración y CEO pueden programar reportes.' }, { status: 403 })
+  }
+
   const body = await request.json().catch(() => null)
-  if (!body?.name || !body?.reportType || !body?.cadence) return NextResponse.json({ error: 'Faltan campos requeridos.' }, { status: 400 })
-  const recipients = Array.isArray(body.recipients) ? body.recipients.map(String).filter(Boolean) : []
+  const name = String(body?.name ?? '').trim().slice(0, 160)
+  const reportType = String(body?.reportType ?? '').trim().toLowerCase()
+  const cadence = String(body?.cadence ?? '').trim().toLowerCase()
+  const dayOfMonth = Math.min(28, Math.max(1, Number(body?.dayOfMonth ?? 1)))
+  const recipients = Array.isArray(body?.recipients)
+    ? [...new Set(body.recipients.map(String).map((value: string) => value.trim()).filter(Boolean))].slice(0, 200)
+    : []
+
+  if (!name || !REPORT_TYPES.has(reportType) || !CADENCES.has(cadence) || !Number.isInteger(dayOfMonth)) {
+    return NextResponse.json({ error: 'La configuración del reporte es inválida.' }, { status: 400 })
+  }
+
   const now = new Date()
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, Math.min(28, Math.max(1, Number(body.dayOfMonth ?? 1))), 9, 0, 0))
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, dayOfMonth, 9, 0, 0))
   const { data, error } = await ctx.supabase.from('management_report_schedules').insert({
-    name: String(body.name), report_type: String(body.reportType), entity_id: body.entityId || null,
-    cadence: String(body.cadence), day_of_month: Math.min(28, Math.max(1, Number(body.dayOfMonth ?? 1))),
-    recipients, active: body.active !== false, next_run_at: next.toISOString(), created_by: ctx.user.id,
+    name,
+    report_type: reportType,
+    entity_id: body?.entityId || null,
+    cadence,
+    day_of_month: dayOfMonth,
+    recipients,
+    active: body?.active !== false,
+    next_run_at: next.toISOString(),
+    created_by: ctx.user.id,
   }).select('*').single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ schedule: data })
+
+  if (error) {
+    console.error('[management-schedules] schedule creation failed', { code: error.code })
+    return NextResponse.json({ error: 'No fue posible crear la programación del reporte.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ schedule: data }, { status: 201 })
 }

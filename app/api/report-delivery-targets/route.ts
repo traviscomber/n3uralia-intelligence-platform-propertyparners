@@ -19,12 +19,22 @@ type DeliveryTarget = {
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase credentials')
-  return createSupabaseClient(supabaseUrl, supabaseKey)
+  if (!supabaseUrl || !supabaseKey) throw new Error('MISSING_SUPABASE_CREDENTIALS')
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 function clean(value: string) {
   return value.trim()
+}
+
+function isAccessError(error: unknown) {
+  return error instanceof Error && ['AuthenticationRequiredError', 'ProfileRequiredError', 'AccessDeniedError'].includes(error.name)
+}
+
+function internalCode(error: unknown) {
+  return typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN'
 }
 
 async function requireSettingsAccess() {
@@ -39,10 +49,9 @@ export async function GET() {
     if (error) throw error
     return NextResponse.json({ targets: data || [] })
   } catch (error) {
-    if (error instanceof Error && ['AuthenticationRequiredError', 'ProfileRequiredError', 'AccessDeniedError'].includes(error.name)) {
-      return accessErrorResponse(error)
-    }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos cargar los destinatarios.' }, { status: 500 })
+    if (isAccessError(error)) return accessErrorResponse(error)
+    console.error('REPORT_DELIVERY_TARGETS_LOAD_FAILED', { code: internalCode(error) })
+    return NextResponse.json({ error: 'No pudimos cargar los destinatarios.' }, { status: 500 })
   }
 }
 
@@ -76,10 +85,9 @@ export async function POST(req: NextRequest) {
     if (error) throw error
     return NextResponse.json({ target: data }, { status: 201 })
   } catch (error) {
-    if (error instanceof Error && ['AuthenticationRequiredError', 'ProfileRequiredError', 'AccessDeniedError'].includes(error.name)) {
-      return accessErrorResponse(error)
-    }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos crear el destinatario.' }, { status: 500 })
+    if (isAccessError(error)) return accessErrorResponse(error)
+    console.error('REPORT_DELIVERY_TARGET_CREATE_FAILED', { code: internalCode(error) })
+    return NextResponse.json({ error: 'No pudimos crear el destinatario.' }, { status: 500 })
   }
 }
 
@@ -102,10 +110,9 @@ export async function PATCH(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'Destinatario no encontrado.' }, { status: 404 })
     return NextResponse.json({ target: data })
   } catch (error) {
-    if (error instanceof Error && ['AuthenticationRequiredError', 'ProfileRequiredError', 'AccessDeniedError'].includes(error.name)) {
-      return accessErrorResponse(error)
-    }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos actualizar el destinatario.' }, { status: 500 })
+    if (isAccessError(error)) return accessErrorResponse(error)
+    console.error('REPORT_DELIVERY_TARGET_UPDATE_FAILED', { code: internalCode(error) })
+    return NextResponse.json({ error: 'No pudimos actualizar el destinatario.' }, { status: 500 })
   }
 }
 
@@ -120,9 +127,8 @@ export async function DELETE(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'Destinatario no encontrado.' }, { status: 404 })
     return NextResponse.json({ success: true })
   } catch (error) {
-    if (error instanceof Error && ['AuthenticationRequiredError', 'ProfileRequiredError', 'AccessDeniedError'].includes(error.name)) {
-      return accessErrorResponse(error)
-    }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos eliminar el destinatario.' }, { status: 500 })
+    if (isAccessError(error)) return accessErrorResponse(error)
+    console.error('REPORT_DELIVERY_TARGET_DELETE_FAILED', { code: internalCode(error) })
+    return NextResponse.json({ error: 'No pudimos eliminar el destinatario.' }, { status: 500 })
   }
 }

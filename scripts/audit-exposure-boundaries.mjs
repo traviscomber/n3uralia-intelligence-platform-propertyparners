@@ -29,6 +29,7 @@ const forbiddenResponseTerms = [
 
 const internalRuntimeResponseFields = /\b(mode|provenance|remoteError|modelVersion|parity)\s*:/
 const protectedApiDatabaseError = /NextResponse\.json\s*\(\s*\{[\s\S]{0,300}?error\s*:\s*[A-Za-z0-9_.]+\.error\.message/
+const rawApiExceptionMessage = /NextResponse\.json\s*\(\s*\{[\s\S]{0,400}?error\s*:\s*(?:(?:error|err|cause)\s+instanceof\s+Error\s*\?\s*(?:error|err|cause)\.message|(?:error|err|cause)\.message)/i
 const sensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?(token|secret|password|cookie|authorization|prompt|payload|document|canonical)/i
 const serializedSensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?JSON\.stringify\s*\([\s\S]{0,300}?(request|body|payload|document|canonical)/i
 const dangerousPublicEnv = /NEXT_PUBLIC_[A-Z0-9_]*(SECRET|TOKEN|PASSWORD|PRIVATE|SERVICE_ROLE|PROMPT|SCORING|HEURISTIC)/
@@ -111,6 +112,10 @@ for (const relRoot of roots) {
 
       if (protectedImport && protectedApiDatabaseError.test(text)) {
         findings.push(`${rel}: protected API returns a raw database error message`)
+      }
+
+      if (rawApiExceptionMessage.test(text)) {
+        findings.push(`${rel}: API returns a raw exception message`)
       }
     }
 

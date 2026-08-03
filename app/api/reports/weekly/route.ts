@@ -81,10 +81,18 @@ function getServiceClient() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
+    throw new Error('MISSING_SUPABASE_CREDENTIALS')
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseKey)
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
+function logWeeklyReportFailure(error: unknown) {
+  console.error('WEEKLY_REPORT_GENERATION_FAILED', {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
 }
 
 function groupWeekly(rows: KpiSnapshot[]) {
@@ -308,27 +316,17 @@ async function buildWeeklyResponse(persist: boolean) {
           ] as const
         })
 
-    return NextResponse.json({
-      reports,
-      directors,
-      history,
-      learning,
-      generatedAt,
-    })
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos generar los reportes semanales.' },
-      { status: 500 },
-    )
+    return NextResponse.json({ reports, directors, history, learning, generatedAt })
+  } catch (error) {
+    logWeeklyReportFailure(error)
+    return NextResponse.json({ error: 'No pudimos generar los reportes semanales.' }, { status: 500 })
   }
 }
 
-// Reading reports is side-effect free.
 export async function GET() {
   return buildWeeklyResponse(false)
 }
 
-// Generation and persistence are restricted to executive roles.
 export async function POST() {
   const access = await requireRoleAccess(['admin', 'ceo'])
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })

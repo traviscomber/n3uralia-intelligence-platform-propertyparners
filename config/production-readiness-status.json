@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "in-review",
+  "commit": null,
+  "deployment": null,
+  "checks": {
+    "build": "pending",
+    "securityBoundaries": "pending",
+    "tenantIsolation": "pending",
+    "runtimeConfiguration": "pending",
+    "rollback": "pending",
+    "monitoring": "pending",
+    "backupRecovery": "pending",
+    "criticalRoutes": "pending"
+  },
+  "criticalFindings": [],
+  "highFindings": [],
+  "evidence": []
+}

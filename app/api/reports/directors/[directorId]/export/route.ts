@@ -13,10 +13,12 @@ function getServiceClient() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
+    throw new Error('MISSING_SUPABASE_CREDENTIALS')
   }
 
-  return createClient(supabaseUrl, supabaseKey)
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 function csvEscape(value: unknown) {
@@ -100,10 +102,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ dir
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     })
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos exportar el reporte del director.' },
-      { status: 500 },
-    )
+  } catch (error) {
+    console.error('DIRECTOR_REPORT_EXPORT_FAILED', {
+      code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+    })
+    return NextResponse.json({ error: 'No pudimos exportar el reporte del director.' }, { status: 500 })
   }
 }

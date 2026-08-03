@@ -1,3 +1,4 @@
+import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import {
   IntelligenceHeader,
   IntelligencePage,
@@ -69,13 +70,18 @@ export default async function MarketPage() {
         actions={actions}
         meta={
           <div className="grid w-full min-w-0 grid-cols-1 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:min-w-[360px] sm:grid-cols-2">
-            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Base operativa</p><p className="mt-2 text-sm font-semibold">{operational.connected ? 'Conectada' : 'No disponible'}</p></div>
-            <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Frescura del corte</p><p className={`mt-2 text-sm font-semibold ${staleObservation || agingObservation ? 'text-[#ff766f]' : ''}`}>{freshnessLabel(operational.freshnessStatus, operational.observationAgeDays)}</p></div>
+            <div className="bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Base operativa</p><p className="mt-2 text-sm font-semibold">{operational.connected ? 'Conectada' : 'No disponible'}</p></div>
+            <div className="bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Frescura del corte</p><p className={`mt-2 text-sm font-semibold ${staleObservation || agingObservation ? 'text-[var(--n3-teal-soft)]' : ''}`}>{freshnessLabel(operational.freshnessStatus, operational.observationAgeDays)}</p></div>
           </div>
         }
       />
 
-      {operational.error ? <div role="alert" className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">No fue posible consultar toda la información operativa: {operational.error}</div> : null}
+      {operational.error ? (
+        <PublicErrorNotice
+          compact
+          message="No fue posible consultar toda la información operativa. Reintenta más tarde o informa el incidente al responsable de la plataforma."
+        />
+      ) : null}
 
       {!operational.error && operational.canonicalProperties === 0 ? (
         <div className="border border-dashed border-[var(--n3-line)] p-5 text-sm text-[var(--n3-text-muted)]">La conexión está disponible, pero todavía no existen registros materializados para este mercado.</div>
@@ -109,16 +115,16 @@ export default async function MarketPage() {
           <MetricCard label="Velocidad de venta" value={operationalValue(operational.medianDaysOnMarket, ' días')} detail="No se calcula sin ventas confirmadas vinculadas" />
           <MetricCard label="Absorción" value={operational.absorptionRate === null ? 'Sin datos operativos' : pct(operational.absorptionRate)} detail="No se calcula sin inventario y ventas del mismo período" />
         </MetricGrid>
-        {staleObservation ? <div role="status" className="mt-4 border border-[#d7332b] bg-[#0c1111] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">La última observación supera siete días. Estas publicaciones deben tratarse como un corte histórico operativo, no como inventario vigente, hasta ejecutar una nueva observación.</div> : null}
-        {agingObservation ? <div role="status" className="mt-4 border border-[#8a6b2e] bg-[#0c1111] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">La última observación tiene entre cuatro y siete días. La disponibilidad y los precios pueden haber cambiado desde el corte.</div> : null}
+        {staleObservation ? <div role="status" className="mt-4 border border-[var(--destructive)] bg-[var(--n3-deep)] p-4 text-sm leading-5 text-[var(--n3-text-muted)]">La última observación supera siete días. Estas publicaciones deben tratarse como un corte histórico operativo, no como inventario vigente, hasta ejecutar una nueva observación.</div> : null}
+        {agingObservation ? <div role="status" className="mt-4 border border-[#8a6b2e] bg-[var(--n3-deep)] p-4 text-sm leading-5 text-[var(--n3-text-muted)]">La última observación tiene entre cuatro y siete días. La disponibilidad y los precios pueden haber cambiado desde el corte.</div> : null}
       </section>
 
       <section>
         <IntelligencePanel eyebrow="Exportación contractual" title="Mismo corte, múltiples formatos" description="CSV, XLSX y PDF reutilizan los registros operativos visibles y conservan fecha de generación, fecha observada y metodología.">
           <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
-            <div className="bg-[#0c1111] p-5"><p className="text-sm font-semibold">CSV</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Resumen, publicaciones o transacciones para análisis tabular.</p></div>
-            <div className="bg-[#0c1111] p-5"><p className="text-sm font-semibold">XLSX</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Hoja de metadata separada y dataset operacional sin imputaciones.</p></div>
-            <div className="bg-[#0c1111] p-5"><p className="text-sm font-semibold">PDF</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Reporte imprimible con resumen y los 100 registros recientes por categoría.</p></div>
+            <div className="bg-[var(--n3-deep)] p-5"><p className="text-sm font-semibold">CSV</p><p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">Resumen, publicaciones o transacciones para análisis tabular.</p></div>
+            <div className="bg-[var(--n3-deep)] p-5"><p className="text-sm font-semibold">XLSX</p><p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">Hoja de metadata separada y dataset operacional sin imputaciones.</p></div>
+            <div className="bg-[var(--n3-deep)] p-5"><p className="text-sm font-semibold">PDF</p><p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">Reporte imprimible con resumen y los 100 registros recientes por categoría.</p></div>
           </div>
         </IntelligencePanel>
       </section>

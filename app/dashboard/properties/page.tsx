@@ -63,8 +63,8 @@ export default async function PropertiesPage() {
 
   const activeListings = listingResult.count
   const latestObservation = observationResult.data
-  const operationalError = listingResult.error?.message || observationResult.error?.message || null
-  const assignmentError = assignmentResult.error?.message || null
+  const operationalUnavailable = Boolean(listingResult.error || observationResult.error)
+  const assignmentsUnavailable = Boolean(assignmentResult.error)
   const assignments = (assignmentResult.data || []) as AssignedProperty[]
   const role = String(profile?.role || '').toLowerCase()
   const isSeller = role === 'seller'
@@ -78,7 +78,7 @@ export default async function PropertiesPage() {
 
     <section>
       <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Cartera individual</p><h2 className="mt-2 text-2xl font-semibold">Mis propiedades asignadas</h2></div>
-      {assignmentError ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="La plataforma no pudo recuperar las asignaciones activas de este perfil. No se muestran datos parciales como si fueran completos." detail={assignmentError} /> : assignments.length ? <div className="grid gap-4 lg:grid-cols-2">
+      {assignmentsUnavailable ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="La plataforma no pudo recuperar las asignaciones activas de este perfil. No se muestran datos parciales como si fueran completos." /> : assignments.length ? <div className="grid gap-4 lg:grid-cols-2">
         {assignments.map((assignment) => {
           const property = assignment.market_properties[0] ?? null
           return <article key={assignment.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:p-6">
@@ -107,11 +107,11 @@ export default async function PropertiesPage() {
 
     <section>
       <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">02 · Operación observada</p><h2 className="mt-2 text-2xl font-semibold">Publicaciones en Supabase</h2></div>
-      {operationalError ? <OperationalState kind="error" title="Base operativa incompleta" description="No fue posible consultar toda la evidencia operativa. El snapshot documental permanece separado y no se usa para simular datos actuales." detail={operationalError} /> : <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+      {operationalUnavailable ? <OperationalState kind="error" title="Base operativa incompleta" description="No fue posible consultar toda la evidencia operativa. El snapshot documental permanece separado y no se usa para simular datos actuales." /> : <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
         <article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Publicaciones marcadas activas</p><p className="mt-3 text-4xl font-semibold">{n(activeListings ?? 0)}</p><p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">Estado del último corte persistido; no equivale a disponibilidad confirmada hoy.</p></article>
         <article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Última observación</p><p className="mt-3 text-xl font-semibold sm:text-2xl">{formatDate(latestObservation?.observed_at ?? null)}</p><p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">La fecha de observación determina la vigencia; una ingestión posterior no actualiza por sí sola la publicación.</p></article>
       </div>}
-      {!operationalError && latestObservation?.observed_at ? <OperationalState compact kind="stale" title="La disponibilidad requiere verificación" description="Las publicaciones reflejan el último corte observado. Antes de contactar a un cliente o usar una propiedad como comparable debe confirmarse su vigencia." /> : null}
+      {!operationalUnavailable && latestObservation?.observed_at ? <OperationalState compact kind="stale" title="La disponibilidad requiere verificación" description="Las publicaciones reflejan el último corte observado. Antes de contactar a un cliente o usar una propiedad como comparable debe confirmarse su vigencia." /> : null}
       <div className="mt-4"><Link href="/dashboard/market" className="inline-flex border border-[var(--n3-line)] px-4 py-2 text-xs font-semibold text-[var(--n3-text-light)] hover:border-[var(--n3-teal)]">Abrir inteligencia de mercado</Link></div>
     </section>
 

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-02",
+  "records": {
+    "uat": {
+      "status": "pending",
+      "executedAt": null,
+      "validatedCommit": null,
+      "validatedDeployment": null,
+      "caseRegister": null,
+      "criticalOpen": 0,
+      "highOpen": 0,
+      "clientRepresentative": null
+    },
+    "training": {
+      "status": "pending",
+      "completedAt": null,
+      "sessionRegister": null,
+      "attendanceRecord": null,
+      "functionalAdministrator": null,
+      "technicalCounterpart": null
+    },
+    "deliveryPackage": {
+      "status": "pending",
+      "generatedAt": null,
+      "sourceCommit": null,
+      "artifactReference": null,
+      "sha256": null,
+      "cleanRebuildRecord": null
+    },
+    "clientAcceptance": {
+      "status": "pending",
+      "acceptedAt": null,
+      "acceptanceRecord": null,
+      "acceptedBy": null,
+      "acceptedCommit": null
+    }
+  }
+}

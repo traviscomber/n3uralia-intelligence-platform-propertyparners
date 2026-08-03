@@ -16,8 +16,10 @@ const fields = {
 function service() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error('Missing Supabase credentials')
-  return createServiceClient(url, key)
+  if (!url || !key) throw new Error('REPORT_DIRECTORY_CONFIGURATION_MISSING')
+  return createServiceClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 function clean(value: unknown) { return typeof value === 'string' ? value.trim() : value }
@@ -45,7 +47,7 @@ function validate(entity: Entity, values: Record<string, unknown>) {
 
 async function audit(db: ReturnType<typeof service>, actorId: string, action: string, entity: Entity, id: string, before: unknown, after: unknown) {
   const { error } = await db.from('report_directory_audit_log').insert({ actor_id: actorId, action, entity_type: entity, entity_id: id, before_state: before, after_state: after })
-  if (error) throw error
+  if (error) throw new Error('REPORT_DIRECTORY_AUDIT_FAILED')
 }
 
 export async function GET() {
@@ -60,13 +62,13 @@ export async function GET() {
       db.from('report_directory_audit_log').select('*').order('created_at', { ascending: false }).limit(100),
     ])
     const failure = [people, assignments, subscriptions, auditLog].find((result) => result.error)
-    if (failure?.error) throw failure.error
+    if (failure?.error) throw new Error('REPORT_DIRECTORY_QUERY_FAILED')
     return NextResponse.json({
       people: people.data || [], assignments: assignments.data || [], subscriptions: subscriptions.data || [], auditLog: auditLog.data || [],
       candidates: { branches: presentations.management.branches.map((item) => item.branch), partners: presentations.management.partners.map((item) => ({ name: item.name, branch: item.branch, sourceKey: `${item.branch}:${item.name}` })) },
     })
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos cargar el directorio.' }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'No fue posible cargar el directorio de reportes.' }, { status: 500 })
   }
 }
 
@@ -82,11 +84,11 @@ export async function POST(request: NextRequest) {
     if (invalid) return NextResponse.json({ error: invalid }, { status: 400 })
     const db = service()
     const { data, error } = await db.from(tables[entity]).insert(values).select('*').single()
-    if (error) throw error
+    if (error) throw new Error('REPORT_DIRECTORY_CREATE_FAILED')
     await audit(db, access.userId, 'create', entity, String(data.id), null, data)
     return NextResponse.json({ item: data }, { status: 201 })
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos crear el registro.' }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'No fue posible crear el registro.' }, { status: 500 })
   }
 }
 
@@ -100,17 +102,17 @@ export async function PATCH(request: NextRequest) {
     if (!entity || !id) return NextResponse.json({ error: 'Entidad e id son requeridos.' }, { status: 400 })
     const db = service()
     const { data: before, error: beforeError } = await db.from(tables[entity]).select('*').eq('id', id).single()
-    if (beforeError) throw beforeError
+    if (beforeError) throw new Error('REPORT_DIRECTORY_ITEM_NOT_FOUND')
     const values = permitted(entity, body)
     if (!Object.keys(values).length) return NextResponse.json({ error: 'No hay campos para actualizar.' }, { status: 400 })
     const invalid = validate(entity, { ...before, ...values })
     if (invalid) return NextResponse.json({ error: invalid }, { status: 400 })
     const { data, error } = await db.from(tables[entity]).update(values).eq('id', id).select('*').single()
-    if (error) throw error
+    if (error) throw new Error('REPORT_DIRECTORY_UPDATE_FAILED')
     await audit(db, access.userId, 'update', entity, String(id), before, data)
     return NextResponse.json({ item: data })
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos actualizar el registro.' }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'No fue posible actualizar el registro.' }, { status: 500 })
   }
 }
 
@@ -131,12 +133,12 @@ export async function DELETE(request: NextRequest) {
       if ((assignments || 0) + (subscriptions || 0) > 0) return NextResponse.json({ error: 'Desactiva primero las asignaciones y suscripciones activas de esta persona.' }, { status: 409 })
     }
     const { data: before, error: beforeError } = await db.from(tables[entity]).select('*').eq('id', id).single()
-    if (beforeError) throw beforeError
+    if (beforeError) throw new Error('REPORT_DIRECTORY_ITEM_NOT_FOUND')
     const { data, error } = await db.from(tables[entity]).update({ active: false }).eq('id', id).select('*').single()
-    if (error) throw error
+    if (error) throw new Error('REPORT_DIRECTORY_DEACTIVATE_FAILED')
     await audit(db, access.userId, 'deactivate', entity, String(id), before, data)
     return NextResponse.json({ item: data })
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No pudimos desactivar el registro.' }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'No fue posible desactivar el registro.' }, { status: 500 })
   }
 }

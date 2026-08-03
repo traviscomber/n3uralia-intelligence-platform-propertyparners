@@ -57,7 +57,7 @@ export default async function MarketSourcesPage() {
             </div>
           ))}
         </div>
-        {trace.error ? <p className="border-t border-[#d7332b] p-4 text-xs text-[#ff766f]">{trace.error}</p> : null}
+        {trace.error ? <p className="border-t border-[#d7332b] p-4 text-xs text-[#ff766f]">No fue posible completar la consulta de trazabilidad. Reintenta más tarde o revisa el estado operativo con un administrador.</p> : null}
       </section>
 
       <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
