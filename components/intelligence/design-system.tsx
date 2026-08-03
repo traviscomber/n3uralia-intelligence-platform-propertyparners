@@ -50,16 +50,42 @@ export function IntelligenceHeader({
 }
 
 export function SectionHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
-  return <div className="mb-4 flex items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">{eyebrow}</p><h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em]">{title}</h2>{description ? <p className="mt-2 max-w-3xl text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}</div>{action}</div>
+  return (
+    <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">{eyebrow}</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em]">{title}</h2>
+        {description ? <p className="mt-2 max-w-3xl text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  )
 }
 
-export function MetricGrid({ children, columns = 4 }: { children: ReactNode; columns?: 2 | 3 | 4 }) { const xl = columns === 2 ? 'xl:grid-cols-2' : columns === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'; return <div className={`grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2 ${xl}`}>{children}</div> }
-export function MetricCard({ label, value, detail }: { label: string; value: ReactNode; detail?: ReactNode }) { return <article className="bg-[var(--n3-deep)] p-6"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-4 text-3xl font-semibold text-[var(--n3-text-light)]">{value}</p>{detail ? <p className="mt-2 text-sm text-[var(--n3-text-muted)]">{detail}</p> : null}</article> }
-export function IntelligencePanel({ eyebrow, title, description, children, critical = false }: { eyebrow: string; title: string; description?: string; children?: ReactNode; critical?: boolean }) { return <article className={critical ? 'border border-[var(--destructive)] bg-[#160d0c]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)]'}><div className="p-5"><p className="text-xs uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">{eyebrow}</p><h2 className="mt-2 text-xl font-semibold">{title}</h2>{description ? <p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}</div>{children}</article> }
+export function MetricGrid({ children, columns = 4 }: { children: ReactNode; columns?: 2 | 3 | 4 }) {
+  const xl = columns === 2 ? 'xl:grid-cols-2' : columns === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'
+  return <div className={`grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2 ${xl}`}>{children}</div>
+}
+
+export function MetricCard({ label, value, detail }: { label: string; value: ReactNode; detail?: ReactNode }) {
+  return <article className="bg-[var(--n3-deep)] p-6"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-4 text-3xl font-semibold text-[var(--n3-text-light)]">{value}</p>{detail ? <p className="mt-2 text-sm text-[var(--n3-text-muted)]">{detail}</p> : null}</article>
+}
+
+export function IntelligencePanel({ eyebrow, title, description, children, critical = false }: { eyebrow: string; title: string; description?: string; children?: ReactNode; critical?: boolean }) {
+  return <article className={critical ? 'border border-[var(--destructive)] bg-[#160d0c]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)]'}><div className="p-5"><p className="text-xs uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">{eyebrow}</p><h2 className="mt-2 text-xl font-semibold">{title}</h2>{description ? <p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}</div>{children}</article>
+}
 
 export function RankedRow({ index, rank, label, value, share }: { index?: number; rank?: number; label: ReactNode; value: ReactNode; share?: ReactNode }) {
-  const position = rank ?? index ?? 0
-  return <div className="grid grid-cols-[32px_1fr_auto] items-center gap-3 border-b border-[var(--n3-line)] px-5 py-3"><span className="text-xs text-[var(--n3-teal-soft)]">{String(position + 1).padStart(2, '0')}</span><span className="text-sm">{label}</span><strong className="text-sm">{value}{share ? <span className="ml-2 text-xs text-[var(--n3-text-muted)]">{share}</span> : null}</strong></div>
+  const position = rank ?? ((index ?? 0) + 1)
+  return (
+    <div className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--n3-line)] px-5 py-3 last:border-b-0">
+      <span className="text-xs text-[var(--n3-teal-soft)]">{String(position).padStart(2, '0')}</span>
+      <span className="min-w-0 truncate text-sm" title={typeof label === 'string' ? label : undefined}>{label}</span>
+      <strong className="text-right text-sm">{value}{share ? <span className="ml-2 text-xs font-normal text-[var(--n3-text-muted)]">{share}</span> : null}</strong>
+    </div>
+  )
 }
 
-export function MethodologyNote({ children }: { children: ReactNode }) { return <p className="border-l-2 border-[var(--n3-teal)] pl-3 text-sm leading-5 text-[var(--n3-text-muted)]">{children}</p> }
+export function MethodologyNote({ children }: { children: ReactNode }) {
+  return <p className="border-l-2 border-[var(--n3-teal)] pl-3 text-sm leading-5 text-[var(--n3-text-muted)]">{children}</p>
+}
