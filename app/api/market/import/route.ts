@@ -25,8 +25,16 @@ type SourceSystem = 'portal_inmobiliario' | 'cbrs' | 'client' | 'kml' | 'manual_
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase credentials')
-  return createSupabaseClient(supabaseUrl, supabaseKey)
+  if (!supabaseUrl || !supabaseKey) throw new Error('MISSING_SUPABASE_CREDENTIALS')
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
+function logImportFailure(error: unknown) {
+  console.error('MARKET_IMPORT_FAILED', {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
 }
 
 function parseMode(value: string | null): ImportMode {
@@ -146,31 +154,13 @@ export async function POST(req: NextRequest) {
       const validRows = normalized.filter((row) => row.source_listing_id)
       const skipped = normalized.length - validRows.length
       const preview = normalized.slice(0, 12)
-      const summary = {
-        rows: normalized.length,
-        valid: validRows.length,
-        skipped,
-        datasetKind: portalDatasetKind,
-        fullSnapshot,
-      }
+      const summary = { rows: normalized.length, valid: validRows.length, skipped, datasetKind: portalDatasetKind, fullSnapshot }
 
       if (mode === 'preview') {
-        return NextResponse.json({
-          kind,
-          mode,
-          fileName,
-          source: sourceLabel,
-          sourceSystem: 'portal_inmobiliario',
-          observedAt,
-          summary,
-          preview,
-          message: 'Vista previa de Portal lista. Las filas sin identificador de publicación serán rechazadas.',
-        })
+        return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem: 'portal_inmobiliario', observedAt, summary, preview, message: 'Vista previa de Portal lista. Las filas sin identificador de publicación serán rechazadas.' })
       }
 
-      if (!validRows.length) {
-        return NextResponse.json({ error: 'Ninguna fila de Portal contiene un identificador de publicación válido.' }, { status: 422 })
-      }
+      if (!validRows.length) return NextResponse.json({ error: 'Ninguna fila de Portal contiene un identificador de publicación válido.' }, { status: 422 })
 
       const supabase = getServiceClient()
       const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot', {
@@ -215,22 +205,10 @@ export async function POST(req: NextRequest) {
       const summary = { rows: normalized.length, valid: validRows.length, skipped }
 
       if (mode === 'preview') {
-        return NextResponse.json({
-          kind,
-          mode,
-          fileName,
-          source: sourceLabel,
-          sourceSystem: 'cbrs',
-          observedAt,
-          summary,
-          preview,
-          message: 'Vista previa de CBRS lista. Se requiere fecha, precio y una identidad de propiedad mediante rol o dirección.',
-        })
+        return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem: 'cbrs', observedAt, summary, preview, message: 'Vista previa de CBRS lista. Se requiere fecha, precio y una identidad de propiedad mediante rol o dirección.' })
       }
 
-      if (!validRows.length) {
-        return NextResponse.json({ error: 'Ninguna fila CBRS cumple los campos mínimos: fecha, precio y rol o dirección.' }, { status: 422 })
-      }
+      if (!validRows.length) return NextResponse.json({ error: 'Ninguna fila CBRS cumple los campos mínimos: fecha, precio y rol o dirección.' }, { status: 422 })
 
       const supabase = getServiceClient()
       const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_cbrs_transaction_snapshot', {
@@ -267,12 +245,7 @@ export async function POST(req: NextRequest) {
       const normalized = normalizeBenchmarkImportRows(inputRows, sourceLabel)
       const skipped = Math.max(0, inputRows.length - normalized.length)
       const preview = normalized.slice(0, 12)
-      const benchmarkSummary = {
-        rows: normalized.length,
-        sources: new Set(normalized.map((row) => row.source)).size,
-        neighborhoods: new Set(normalized.map((row) => row.neighborhood)).size,
-        skipped,
-      }
+      const benchmarkSummary = { rows: normalized.length, sources: new Set(normalized.map((row) => row.source)).size, neighborhoods: new Set(normalized.map((row) => row.neighborhood)).size, skipped }
       if (mode === 'preview') {
         return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem, snapshotDate, summary: benchmarkSummary, preview, message: 'Vista previa de benchmarks lista. Confirma para guardar en external_market_benchmarks.' })
       }
@@ -310,9 +283,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem, snapshotDate, summary: { ...summary, skipped }, preview, message: 'Vista previa lista. La confirmación creará ejecución, raw records, validaciones y snapshots canónicos.' })
     }
 
-    if (!normalized.length) {
-      return NextResponse.json({ error: 'Todas las filas fueron rechazadas durante la normalización.' }, { status: 422 })
-    }
+    if (!normalized.length) return NextResponse.json({ error: 'Todas las filas fueron rechazadas durante la normalización.' }, { status: 422 })
 
     const supabase = getServiceClient()
     const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_market_aggregate', {
@@ -342,10 +313,8 @@ export async function POST(req: NextRequest) {
       preview,
       message: `Pipeline completado: ${Number(pipelineResult?.accepted ?? 0)} filas aceptadas y ${Number(pipelineResult?.rejected ?? 0)} rechazadas.`,
     })
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos procesar la importación de mercado.' },
-      { status: 500 },
-    )
+  } catch (error) {
+    logImportFailure(error)
+    return NextResponse.json({ error: 'No pudimos procesar la importación de mercado.' }, { status: 500 })
   }
 }
