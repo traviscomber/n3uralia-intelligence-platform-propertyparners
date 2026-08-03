@@ -19,7 +19,10 @@ export async function GET(
     .eq('id', id)
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[management-report-artifact] report lookup failed', { code: error.code, reportId: id })
+    return NextResponse.json({ error: 'No fue posible cargar el reporte.' }, { status: 500 })
+  }
   if (!data) return NextResponse.json({ error: 'Reporte no encontrado o fuera de alcance.' }, { status: 404 })
 
   try {
@@ -33,11 +36,8 @@ export async function GET(
         'X-Content-Type-Options': 'nosniff',
       },
     })
-  } catch (cause) {
-    console.error('[management-report-artifact] generation failed', {
-      reportId: id,
-      message: cause instanceof Error ? cause.message : 'Error no identificado',
-    })
+  } catch {
+    console.error('[management-report-artifact] generation failed', { reportId: id, code: 'PDF_GENERATION_FAILED' })
     return NextResponse.json({ error: 'No fue posible generar el PDF.' }, { status: 500 })
   }
 }
