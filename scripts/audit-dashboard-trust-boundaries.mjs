@@ -27,24 +27,46 @@ function walk(directory) {
   })
 }
 
-const unsafePatterns = [
+function lineNumber(source, index) {
+  return source.slice(0, index).split('\n').length
+}
+
+function recordMatch(file, source, match, description) {
+  failures.push(`${path.relative(root, file)}:${lineNumber(source, match.index)}: ${description}`)
+}
+
+const directUnsafePatterns = [
   {
-    regex: /\{\s*[A-Za-z0-9_.]*(?:error|Error)\s*\}/g,
-    description: 'raw error interpolation in dashboard UI',
+    regex: /\{\s*[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\.(?:error|message|detail|hint)\s*\}/g,
+    description: 'raw technical field interpolated in dashboard UI',
   },
   {
-    regex: /(?:message|detail|hint)\s*:\s*[A-Za-z0-9_.]*(?:error|Error)/g,
-    description: 'raw technical error assigned to a visible message',
+    regex: /\{\s*[A-Za-z_$][\w$]*(?:Error|Failure)\.(?:message|detail|hint)\s*\}/g,
+    description: 'raw Error object field interpolated in dashboard UI',
+  },
+  {
+    regex: /(?:message|detail|hint)\s*:\s*[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\.(?:error|message|detail|hint)/g,
+    description: 'raw technical field assigned to a visible message',
   },
 ]
 
+const rawAssignmentPattern = /(?:const|let|var)\s+([A-Za-z_$][\w$]*(?:Error|Failure))\s*=\s*[^;\n]*(?:\.error|\.message|\.detail|\.hint)[^;\n]*/g
+
 for (const file of walk(dashboardRoot)) {
   const source = fs.readFileSync(file, 'utf8')
-  for (const pattern of unsafePatterns) {
-    if (pattern.regex.test(source)) {
-      failures.push(`${path.relative(root, file)}: ${pattern.description}`)
+
+  for (const pattern of directUnsafePatterns) {
+    for (const match of source.matchAll(pattern.regex)) {
+      recordMatch(file, source, match, pattern.description)
     }
-    pattern.regex.lastIndex = 0
+  }
+
+  for (const assignment of source.matchAll(rawAssignmentPattern)) {
+    const variable = assignment[1]
+    const visibleInterpolation = new RegExp(`\\{\\s*${variable}\\s*\\}`, 'g')
+    for (const interpolation of source.matchAll(visibleInterpolation)) {
+      recordMatch(file, source, interpolation, `raw technical assignment ${variable} interpolated in dashboard UI`)
+    }
   }
 }
 
