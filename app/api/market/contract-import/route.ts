@@ -15,6 +15,11 @@ function clean(value: unknown) { return value == null ? '' : String(value).trim(
 function numeric(value: unknown) { const n = Number(value); return Number.isFinite(n) ? n : null }
 function integer(value: unknown) { const n = numeric(value); return n == null ? null : Math.trunc(n) }
 function digest(value: unknown) { return createHash('sha256').update(JSON.stringify(value)).digest('hex') }
+function logImportFailure(stage: string, error: unknown) {
+  console.error(stage, {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
+}
 function canonicalKey(row: Row, system: SourceSystem) {
   const rol = clean(row.rol)
   if (rol) return `rol:${rol.toLowerCase()}`
@@ -35,7 +40,11 @@ async function access() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { response: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (profileError) {
+    logImportFailure('MARKET_CONTRACT_PROFILE_LOOKUP_FAILED', profileError)
+    return { response: NextResponse.json({ error: 'No pudimos verificar el acceso.' }, { status: 500 }) }
+  }
   const role = clean(profile?.role).toLowerCase()
   if (!['admin','ceo','director','subdirector'].includes(role)) return { response: NextResponse.json({ error: 'Sin permisos' }, { status: 403 }) }
   return { supabase, user }
@@ -45,7 +54,10 @@ export async function GET() {
   const auth = await access()
   if ('response' in auth) return auth.response
   const { data, error } = await auth.supabase.from('market_ingestion_runs').select('*').order('created_at', { ascending: false }).limit(100)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    logImportFailure('MARKET_CONTRACT_RUNS_LOAD_FAILED', error)
+    return NextResponse.json({ error: 'No pudimos cargar las ejecuciones de importación.' }, { status: 500 })
+  }
   return NextResponse.json({ runs: data ?? [], sourceSystems, datasetKinds })
 }
 
@@ -72,14 +84,20 @@ export async function POST(request: Request) {
     file_hash: sourceSha256, imported_at: new Date().toISOString(), row_count: rows.length, status: 'active',
     metadata: { authorizationConfirmed: true, datasetKind, importedBy: auth.user.id },
   }, { onConflict: 'code' }).select('id').single()
-  if (sourceError) return NextResponse.json({ error: sourceError.message }, { status: 500 })
+  if (sourceError) {
+    logImportFailure('MARKET_CONTRACT_SOURCE_UPSERT_FAILED', sourceError)
+    return NextResponse.json({ error: 'No pudimos registrar la fuente de importación.' }, { status: 500 })
+  }
 
   const { data: run, error: runError } = await auth.supabase.from('market_ingestion_runs').insert({
     source_system: sourceSystem, dataset_kind: datasetKind, source_file: sourceFile, source_sha256: sourceSha256,
     expected_rows: rows.length, received_rows: rows.length, accepted_rows: 0, rejected_rows: 0, status: 'running',
     metadata: { sourceId: source.id, authorizationConfirmed: true, importedBy: auth.user.id },
   }).select('id').single()
-  if (runError) return NextResponse.json({ error: runError.message }, { status: 500 })
+  if (runError) {
+    logImportFailure('MARKET_CONTRACT_RUN_CREATE_FAILED', runError)
+    return NextResponse.json({ error: 'No pudimos iniciar la ejecución de importación.' }, { status: 500 })
+  }
 
   let accepted = 0
   let rejected = 0
@@ -98,7 +116,8 @@ export async function POST(request: Request) {
     }, { onConflict: 'dataset_kind,record_hash' }).select('id').single()
     if (rawError || errors.length) {
       rejected++
-      sampleErrors.push({ row: index + 1, errors: rawError ? [rawError.message] : errors })
+      if (rawError) logImportFailure('MARKET_CONTRACT_RAW_RECORD_FAILED', rawError)
+      sampleErrors.push({ row: index + 1, errors: rawError ? ['No se pudo registrar la fila de origen.'] : errors })
       continue
     }
 
@@ -175,16 +194,22 @@ export async function POST(request: Request) {
       }
       accepted++
     } catch (error) {
+      logImportFailure('MARKET_CONTRACT_ROW_MATERIALIZATION_FAILED', error)
       rejected++
-      sampleErrors.push({ row: index + 1, errors: [error instanceof Error ? error.message : 'Error de materialización'] })
+      sampleErrors.push({ row: index + 1, errors: ['No se pudo materializar la fila.'] })
     }
   }
 
-  await auth.supabase.from('market_ingestion_runs').update({
+  const { error: completionError } = await auth.supabase.from('market_ingestion_runs').update({
     accepted_rows: accepted, rejected_rows: rejected, status: accepted ? 'completed' : 'rejected', completed_at: new Date().toISOString(),
     error_message: rejected ? `${rejected} filas rechazadas` : null,
     metadata: { sourceId: source.id, authorizationConfirmed: true, importedBy: auth.user.id, sampleErrors: sampleErrors.slice(0, 100) },
   }).eq('id', run.id)
+
+  if (completionError) {
+    logImportFailure('MARKET_CONTRACT_RUN_FINALIZE_FAILED', completionError)
+    return NextResponse.json({ error: 'La importación terminó, pero no pudimos cerrar su ejecución.', runId: run.id }, { status: 500 })
+  }
 
   return NextResponse.json({ runId: run.id, sourceId: source.id, received: rows.length, accepted, rejected, sampleErrors: sampleErrors.slice(0, 100) })
 }
