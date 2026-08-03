@@ -37,11 +37,11 @@ function recordMatch(file, source, match, description) {
 
 const unsafePatterns = [
   {
-    regex: /\{\s*[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\.(?:error|detail|hint)\s*\}/g,
-    description: 'raw technical field interpolated in dashboard UI',
+    regex: /\{\s*(?:error|err|cause|failure|payload|response|operationalError|assignmentError|personalError)(?:\??\.[A-Za-z_$][\w$]*)*\.(?:error|message|detail|hint)\s*\}/gi,
+    description: 'raw technical error source interpolated in dashboard UI',
   },
   {
-    regex: /\{\s*[A-Za-z_$][\w$]*(?:Error|Failure)\.(?:message|detail|hint)\s*\}/g,
+    regex: /\{\s*(?:error|err|cause|failure)\.(?:message|detail|hint)\s*\}/gi,
     description: 'raw Error object field interpolated in dashboard UI',
   },
 ]
