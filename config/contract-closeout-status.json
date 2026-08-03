@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-02",
+  "overallStatus": "in-progress",
+  "allowedStatuses": [
+    "not-started",
+    "in-progress",
+    "blocked-client-input",
+    "ready-for-uat",
+    "accepted"
+  ],
+  "documents": [
+    "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
+    "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
+    "docs/canonical/TRAINING_AND_HANDOVER_PLAN.md"
+  ],
+  "workstreams": [
+    {
+      "id": "platform-core",
+      "label": "Arquitectura y plataforma",
+      "status": "ready-for-uat",
+      "owner": "N3uralia",
+      "evidence": [
+        "Produccion desplegada en Vercel",
+        "Aplicacion integrada con Supabase",
+        "Controles de acceso, RLS y aislamiento por tenant"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "valuation",
+      "label": "Valorizacion",
+      "status": "ready-for-uat",
+      "owner": "N3uralia",
+      "evidence": [
+        "Flujo de valorizacion implementado",
+        "Comparables, ajustes, rango y justificacion disponibles",
+        "Verificadores de modelo, workflow y condiciones"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "management-intelligence",
+      "label": "CEO, direccion y agentes",
+      "status": "ready-for-uat",
+      "owner": "N3uralia",
+      "evidence": [
+        "Dashboard ejecutivo operativo",
+        "Reportes mensuales con control de periodo cerrado",
+        "Rutas protegidas por capacidades"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "market-intelligence",
+      "label": "Inteligencia de mercado",
+      "status": "blocked-client-input",
+      "owner": "Shared",
+      "evidence": [
+        "Base tecnica, importacion y comparables implementados"
+      ],
+      "blockers": [
+        "Base historica CBR y ventas recientes",
+        "KML oficial",
+        "Definicion final de absorcion, velocidad y oferta versus ventas"
+      ]
+    },
+    {
+      "id": "automation-and-reporting",
+      "label": "Automatizaciones y reportes",
+      "status": "in-progress",
+      "owner": "Shared",
+      "evidence": [
+        "Generacion, previsualizacion y envio protegidos",
+        "Regla de cierre mensual implementada"
+      ],
+      "blockers": [
+        "Calendario definitivo",
+        "Destinatarios aprobados",
+        "Frecuencia y reglas operativas confirmadas"
+      ]
+    },
+    {
+      "id": "uat-and-acceptance",
+      "label": "UAT y aceptacion",
+      "status": "in-progress",
+      "owner": "Shared",
+      "evidence": [
+        "Plan UAT documentado"
+      ],
+      "blockers": [
+        "Usuarios designados por el Cliente",
+        "Ejecucion de casos",
+        "Acta de aceptacion"
+      ]
+    },
+    {
+      "id": "training-and-handover",
+      "label": "Capacitacion y traspaso",
+      "status": "in-progress",
+      "owner": "Shared",
+      "evidence": [
+        "Plan de capacitacion y traspaso documentado"
+      ],
+      "blockers": [
+        "Fechas y asistentes confirmados",
+        "Sesiones ejecutadas",
+        "Registro de asistencia y cierre"
+      ]
+    },
+    {
+      "id": "final-delivery-package",
+      "label": "Paquete final de entrega",
+      "status": "in-progress",
+      "owner": "N3uralia",
+      "evidence": [
+        "Manifiesto de entrega documentado"
+      ],
+      "blockers": [
+        "Generacion del paquete final",
+        "Checksum",
+        "Prueba de reconstruccion en ambiente limpio"
+      ]
+    }
+  ],
+  "acceptanceRule": {
+    "finalStatusesRequired": ["accepted"],
+    "requireNoOpenBlockers": true,
+    "requireUatEvidence": true,
+    "requireTrainingEvidence": true,
+    "requireDeliveryChecksum": true,
+    "requireClientAcceptanceRecord": true
+  }
+}
