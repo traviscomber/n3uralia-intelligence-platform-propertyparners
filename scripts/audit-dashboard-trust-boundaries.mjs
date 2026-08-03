@@ -69,10 +69,20 @@ for (const file of dashboardFiles) {
 const operationalStatePath = path.join(root, 'components/ui/operational-state.tsx')
 if (fs.existsSync(operationalStatePath)) {
   const source = fs.readFileSync(operationalStatePath, 'utf8')
-  const forbiddenLabels = [/Detalle técnico:/g, /Technical detail:/gi]
-  for (const regex of forbiddenLabels) {
-    for (const match of source.matchAll(regex)) {
-      recordMatch(operationalStatePath, source, match, 'shared operational state renders technical details')
+  const forbiddenComponentPatterns = [
+    {
+      regex: /\bdetail\??\s*:\s*string/gi,
+      description: 'shared operational state reintroduces a technical detail prop',
+    },
+    {
+      regex: /Detalle técnico:|Technical detail:/gi,
+      description: 'shared operational state renders technical details',
+    },
+  ]
+
+  for (const pattern of forbiddenComponentPatterns) {
+    for (const match of source.matchAll(pattern.regex)) {
+      recordMatch(operationalStatePath, source, match, pattern.description)
     }
   }
 }
