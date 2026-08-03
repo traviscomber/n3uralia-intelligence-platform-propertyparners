@@ -5,6 +5,13 @@ import { getN3uraliaIntelligence } from '@/lib/n3uralia-intelligence-gateway'
 
 const PROPERTY_PARTNERS_TENANT_ID = 'property-partners'
 
+function databaseFailure() {
+  return NextResponse.json(
+    { error: 'No fue posible cargar la información ejecutiva.' },
+    { status: 500 },
+  )
+}
+
 export async function GET() {
   try {
     await requireAnyCapability(['management.global.read', 'tasks.global.manage', 'valuations.global.read'])
@@ -34,8 +41,8 @@ export async function GET() {
         .limit(150),
     ])
 
-    if (casesResult.error) return NextResponse.json({ error: casesResult.error.message }, { status: 500 })
-    if (tasksResult.error) return NextResponse.json({ error: tasksResult.error.message }, { status: 500 })
+    if (casesResult.error) return databaseFailure()
+    if (tasksResult.error) return databaseFailure()
 
     const cases = casesResult.data ?? []
     const tasks = tasksResult.data ?? []
@@ -59,8 +66,8 @@ export async function GET() {
         : Promise.resolve({ data: [], error: null }),
     ])
 
-    if (logsResult.error) return NextResponse.json({ error: logsResult.error.message }, { status: 500 })
-    if (profilesResult.error) return NextResponse.json({ error: profilesResult.error.message }, { status: 500 })
+    if (logsResult.error) return databaseFailure()
+    if (profilesResult.error) return databaseFailure()
 
     const profileMap = Object.fromEntries((profilesResult.data ?? []).map((profile) => [profile.id, profile]))
     const taskByCase = new Map<string, typeof tasks>()
