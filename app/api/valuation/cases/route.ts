@@ -23,6 +23,12 @@ type CreateCasePayload = {
   sourcePropertyId?: string | null
 }
 
+function logDatabaseFailure(stage: string, error: unknown) {
+  console.error(stage, {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
+}
+
 function isFiniteOptional(value: number | undefined) {
   return value === undefined || Number.isFinite(value)
 }
@@ -96,7 +102,10 @@ export async function GET() {
     else if (scope.scope === 'office') query = query.in('requested_by', scope.visibleProfileIds)
 
     const { data, error } = await query
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      logDatabaseFailure('VALUATION_CASES_LIST_FAILED', error)
+      return NextResponse.json({ error: 'No pudimos cargar las valorizaciones.' }, { status: 500 })
+    }
     return NextResponse.json({ cases: data ?? [] })
   } catch (error) {
     return accessErrorResponse(error)
@@ -129,7 +138,10 @@ export async function POST(request: Request) {
         .eq('id', payload.propertyAssignmentId)
         .maybeSingle()
 
-      if (assignmentError) return NextResponse.json({ error: assignmentError.message }, { status: 422 })
+      if (assignmentError) {
+        logDatabaseFailure('VALUATION_ASSIGNMENT_LOAD_FAILED', assignmentError)
+        return NextResponse.json({ error: 'No pudimos verificar la asignación de la propiedad.' }, { status: 422 })
+      }
       if (!assignment || assignment.assigned_to !== scope.profileId || assignment.status !== 'active') {
         return NextResponse.json({ error: 'La asignación no pertenece al perfil autenticado o ya no está activa.' }, { status: 403 })
       }
@@ -154,15 +166,18 @@ export async function POST(request: Request) {
         .eq('id', resolvedSubjectPropertyId)
         .maybeSingle()
 
-      if (propertyError) return NextResponse.json({ error: propertyError.message }, { status: 422 })
+      if (propertyError) {
+        logDatabaseFailure('VALUATION_PROPERTY_LOAD_FAILED', propertyError)
+        return NextResponse.json({ error: 'No pudimos verificar la propiedad vinculada.' }, { status: 422 })
+      }
       if (!property) return NextResponse.json({ error: 'La propiedad vinculada no existe en el inventario operacional.' }, { status: 400 })
     }
 
     let result
     try {
       result = calculateContractualValuation(payload.subject, submittedComparables, payload.qualitativeFactors)
-    } catch (error) {
-      return NextResponse.json({ error: error instanceof Error ? error.message : 'No fue posible calcular la valorización.' }, { status: 400 })
+    } catch {
+      return NextResponse.json({ error: 'No fue posible calcular la valorización con los datos enviados.' }, { status: 400 })
     }
 
     const conditionResult = payload.conditionAssessment
@@ -248,7 +263,8 @@ export async function POST(request: Request) {
       .single()
 
     if (caseError || !valuationCase) {
-      return NextResponse.json({ error: caseError?.message ?? 'No fue posible crear la valorización' }, { status: 422 })
+      if (caseError) logDatabaseFailure('VALUATION_CASE_CREATE_FAILED', caseError)
+      return NextResponse.json({ error: 'No fue posible crear la valorización.' }, { status: 422 })
     }
 
     const comparableRows = submittedComparables.map((item, index) => ({
@@ -292,7 +308,10 @@ export async function POST(request: Request) {
     }))
 
     const { error: comparableError } = await supabase.from('valuation_comparables').insert(comparableRows)
-    if (comparableError) return NextResponse.json({ error: comparableError.message, caseId: valuationCase.id }, { status: 422 })
+    if (comparableError) {
+      logDatabaseFailure('VALUATION_COMPARABLES_CREATE_FAILED', comparableError)
+      return NextResponse.json({ error: 'La valorización fue creada, pero no pudimos registrar sus comparables.', caseId: valuationCase.id }, { status: 422 })
+    }
 
     const { error: versionError } = await supabase.from('valuation_case_versions').insert({
       valuation_case_id: valuationCase.id,
@@ -301,7 +320,10 @@ export async function POST(request: Request) {
       snapshot: { ...reportPayload, evidence, assumptions },
       created_by: scope.profileId,
     })
-    if (versionError) return NextResponse.json({ error: versionError.message, caseId: valuationCase.id }, { status: 422 })
+    if (versionError) {
+      logDatabaseFailure('VALUATION_VERSION_CREATE_FAILED', versionError)
+      return NextResponse.json({ error: 'La valorización fue creada, pero no pudimos registrar su versión.', caseId: valuationCase.id }, { status: 422 })
+    }
 
     const { error: decisionError } = await supabase.from('valuation_decision_log').insert({
       valuation_case_id: valuationCase.id,
@@ -324,7 +346,10 @@ export async function POST(request: Request) {
         conditionVersion: valuationCase.condition_version,
       },
     })
-    if (decisionError) return NextResponse.json({ error: decisionError.message, caseId: valuationCase.id }, { status: 422 })
+    if (decisionError) {
+      logDatabaseFailure('VALUATION_DECISION_LOG_CREATE_FAILED', decisionError)
+      return NextResponse.json({ error: 'La valorización fue creada, pero no pudimos registrar su trazabilidad.', caseId: valuationCase.id }, { status: 422 })
+    }
 
     return NextResponse.json({
       caseId: valuationCase.id,
