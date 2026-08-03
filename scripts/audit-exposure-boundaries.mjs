@@ -22,6 +22,8 @@ const forbiddenResponseTerms = [
   /promptVersion/i,
 ];
 
+const internalRuntimeResponseFields = /\b(mode|provenance|remoteError|modelVersion|parity)\s*:/;
+const protectedApiDatabaseError = /NextResponse\.json\s*\(\s*\{[\s\S]{0,300}?error\s*:\s*[A-Za-z0-9_.]+\.error\.message/;
 const sensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?(token|secret|password|cookie|authorization|prompt|payload|document|canonical)/i;
 const serializedSensitiveConsoleLog = /console\.(log|info|debug)\s*\([\s\S]{0,500}?JSON\.stringify\s*\([\s\S]{0,300}?(request|body|payload|document|canonical)/i;
 const dangerousPublicEnv = /NEXT_PUBLIC_[A-Z0-9_]*(SECRET|TOKEN|PASSWORD|PRIVATE|SERVICE_ROLE|PROMPT|SCORING|HEURISTIC)/;
@@ -64,8 +66,9 @@ for (const relRoot of roots) {
     const text = fs.readFileSync(file, 'utf8');
     const isClient = /^\s*['\"]use client['\"];?/m.test(text);
     const isApi = /^app\/api\//.test(rel) && /route\.(ts|js)$/.test(rel);
+    const protectedImport = importsProtectedModule(text);
 
-    if (isClient && importsProtectedModule(text)) {
+    if (isClient && protectedImport) {
       findings.push(`${rel}: client module imports a protected N3uralia server module`);
     }
 
@@ -84,8 +87,12 @@ for (const relRoot of roots) {
         }
       }
 
-      if (/\b(local|remote|parity)\s*[:,]/.test(text) && importsProtectedModule(text)) {
-        findings.push(`${rel}: API may expose internal runtime objects instead of a minimal DTO`);
+      if (protectedImport && internalRuntimeResponseFields.test(text)) {
+        findings.push(`${rel}: API may expose internal runtime metadata instead of a minimal DTO`);
+      }
+
+      if (protectedImport && protectedApiDatabaseError.test(text)) {
+        findings.push(`${rel}: protected API returns a raw database error message`);
       }
     }
 
