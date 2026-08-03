@@ -2,6 +2,15 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 type Action = { label: string; href: string; primary?: boolean }
+type StatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'critical'
+
+const statusToneClasses: Record<StatusTone, string> = {
+  neutral: 'border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-muted)]',
+  info: 'border-[#6aa9ff]/45 bg-[#0d1722] text-[#9bc4ff]',
+  success: 'border-[#65d3a5]/45 bg-[#0c1b16] text-[#8ce2bc]',
+  warning: 'border-[#f6c453]/45 bg-[#211a0d] text-[#f8d77f]',
+  critical: 'border-[var(--destructive)]/60 bg-[#160d0c] text-[var(--n3-teal-soft)]',
+}
 
 export function IntelligencePage({ children }: { children: ReactNode }) {
   return <div className="mx-auto max-w-[1500px] space-y-8 pb-16">{children}</div>
@@ -73,6 +82,67 @@ export function MetricCard({ label, value, detail }: { label: string; value: Rea
 
 export function IntelligencePanel({ eyebrow, title, description, children, critical = false }: { eyebrow: string; title: string; description?: string; children?: ReactNode; critical?: boolean }) {
   return <article className={critical ? 'border border-[var(--destructive)] bg-[#160d0c]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)]'}><div className="p-5"><p className="text-xs uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">{eyebrow}</p><h2 className="mt-2 text-xl font-semibold">{title}</h2>{description ? <p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}</div>{children}</article>
+}
+
+export function StatusBadge({ children, tone = 'neutral' }: { children: ReactNode; tone?: StatusTone }) {
+  return (
+    <span className={`inline-flex min-h-6 items-center border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] ${statusToneClasses[tone]}`}>
+      {children}
+    </span>
+  )
+}
+
+export function FilterBar({
+  children,
+  actions,
+  label = 'Filtros de la vista',
+}: {
+  children: ReactNode
+  actions?: ReactNode
+  label?: string
+}) {
+  return (
+    <section aria-label={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">{children}</div>
+        {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+      </div>
+    </section>
+  )
+}
+
+export function DataTable({
+  children,
+  label,
+  minWidth = 760,
+}: {
+  children: ReactNode
+  label: string
+  minWidth?: number
+}) {
+  return (
+    <div className="overflow-x-auto border border-[var(--n3-line)] bg-[var(--n3-deep)]" role="region" aria-label={label} tabIndex={0}>
+      <table className="w-full border-collapse text-left text-sm" style={{ minWidth }}>
+        {children}
+      </table>
+    </div>
+  )
+}
+
+export function DataTableHead({ children }: { children: ReactNode }) {
+  return <thead className="border-b border-[var(--n3-line)] bg-[var(--muted)] text-xs uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">{children}</thead>
+}
+
+export function DataTableBody({ children }: { children: ReactNode }) {
+  return <tbody className="divide-y divide-[var(--n3-line)]">{children}</tbody>
+}
+
+export function DataTableHeaderCell({ children, numeric = false }: { children: ReactNode; numeric?: boolean }) {
+  return <th scope="col" className={`px-4 py-3 font-semibold ${numeric ? 'text-right' : 'text-left'}`}>{children}</th>
+}
+
+export function DataTableCell({ children, numeric = false }: { children: ReactNode; numeric?: boolean }) {
+  return <td className={`px-4 py-3 align-top text-[var(--n3-text-light)] ${numeric ? 'text-right tabular-nums' : 'text-left'}`}>{children}</td>
 }
 
 export function RankedRow({ index, rank, label, value, share }: { index?: number; rank?: number; label: ReactNode; value: ReactNode; share?: ReactNode }) {
