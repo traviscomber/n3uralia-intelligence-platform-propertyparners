@@ -41,10 +41,12 @@ function getSupabaseClient() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
+    throw new Error('MISSING_SUPABASE_CREDENTIALS')
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseKey)
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 function parseList(value: string | null) {
@@ -128,9 +130,11 @@ export async function GET(request: NextRequest) {
       deliveries,
       summary,
     })
-  } catch (err) {
+  } catch (error) {
+    const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN'
+    console.error('REPORT_DELIVERIES_LOAD_FAILED', { code })
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos cargar la telemetria de entregas.' },
+      { error: 'No pudimos cargar la telemetría de entregas.' },
       { status: 500 },
     )
   }
