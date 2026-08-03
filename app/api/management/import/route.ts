@@ -62,7 +62,11 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (profileError) {
+    console.error('[management-import] profile lookup failed', { code: profileError.code })
+    return NextResponse.json({ error: 'No fue posible validar el perfil.' }, { status: 500 })
+  }
   const role = String(profile?.role ?? '').toLowerCase()
   if (!['admin', 'ceo', 'director', 'subdirector'].includes(role)) {
     return NextResponse.json({ error: 'Sin permisos para importar métricas' }, { status: 403 })
@@ -107,8 +111,13 @@ export async function POST(request: Request) {
     supabase.from('management_metric_definitions').select('code,active,formula_version').in('code', metricCodes),
   ])
 
-  if (entityError) return NextResponse.json({ error: entityError.message }, { status: 500 })
-  if (definitionError) return NextResponse.json({ error: definitionError.message }, { status: 500 })
+  if (entityError || definitionError) {
+    console.error('[management-import] reference lookup failed', {
+      entityCode: entityError?.code ?? null,
+      definitionCode: definitionError?.code ?? null,
+    })
+    return NextResponse.json({ error: 'No fue posible validar las referencias de la carga.' }, { status: 500 })
+  }
 
   const knownEntities = new Set((entities ?? []).map((entity) => entity.id))
   const definitionMap = new Map((definitions ?? []).map((definition) => [definition.code, definition]))
@@ -143,7 +152,10 @@ export async function POST(request: Request) {
     requested_by: user.id,
     started_at: new Date().toISOString(),
   }).select('id').single()
-  if (runError) return NextResponse.json({ error: runError.message }, { status: 500 })
+  if (runError) {
+    console.error('[management-import] run creation failed', { code: runError.code })
+    return NextResponse.json({ error: 'No fue posible iniciar la ejecución de importación.' }, { status: 500 })
+  }
 
   const now = new Date().toISOString()
   const payload = rows.map((row) => {
@@ -173,13 +185,14 @@ export async function POST(request: Request) {
   }).select('id')
 
   if (importError) {
+    console.error('[management-import] metric upsert failed', { code: importError.code, runId: run.id })
     await supabase.from('management_import_runs').update({
       status: 'failed',
       rows_rejected: rows.length,
-      errors: [{ message: importError.message }],
+      errors: [{ code: 'IMPORT_WRITE_FAILED' }],
       completed_at: new Date().toISOString(),
     }).eq('id', run.id)
-    return NextResponse.json({ error: importError.message, runId: run.id }, { status: 500 })
+    return NextResponse.json({ error: 'No fue posible completar la importación.', runId: run.id }, { status: 500 })
   }
 
   const status = warnings.length ? 'completed_with_warnings' : 'completed'
@@ -203,13 +216,17 @@ export async function POST(request: Request) {
     p_period_end: periodEnd,
   })
 
+  if (alertError) {
+    console.error('[management-import] alert evaluation failed', { code: alertError.code, runId: run.id })
+  }
+
   return NextResponse.json({
     runId: run.id,
     status,
     imported: imported?.length ?? rows.length,
     warnings,
     alerts: alerts?.[0] ?? null,
-    alertEvaluationError: alertError?.message ?? null,
+    alertEvaluationFailed: Boolean(alertError),
   })
 }
 
@@ -224,6 +241,9 @@ export async function GET() {
     .order('created_at', { ascending: false })
     .limit(50)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[management-import] history lookup failed', { code: error.code })
+    return NextResponse.json({ error: 'No fue posible cargar el historial de importaciones.' }, { status: 500 })
+  }
   return NextResponse.json({ runs: data ?? [] })
 }
