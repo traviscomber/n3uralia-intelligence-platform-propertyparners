@@ -13,6 +13,12 @@ const transitions: Record<string, string[]> = {
   issued: [],
 }
 
+function logWorkflowFailure(stage: string, error: unknown) {
+  console.error(stage, {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
+}
+
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const scope = await requireAnyCapability([
@@ -32,7 +38,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       .eq('id', id)
       .maybeSingle()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      logWorkflowFailure('VALUATION_WORKFLOW_CASE_LOAD_FAILED', error)
+      return NextResponse.json({ error: 'No pudimos cargar la valorización.' }, { status: 500 })
+    }
     if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
 
     assertProfileVisible(scope, valuationCase.requested_by)
@@ -54,7 +63,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       .select('*')
       .eq('valuation_case_id', id)
       .order('rank')
-    if (compError) return NextResponse.json({ error: compError.message }, { status: 500 })
+    if (compError) {
+      logWorkflowFailure('VALUATION_WORKFLOW_COMPARABLES_LOAD_FAILED', compError)
+      return NextResponse.json({ error: 'No pudimos cargar los comparables de la valorización.' }, { status: 500 })
+    }
     const accepted = (comparables || []).filter((item) => item.selected && item.match_status === 'accepted')
 
     if (target === 'review' && accepted.length < 3) {
@@ -70,7 +82,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         target_case_id: id,
         reason,
       })
-      if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 400 })
+      if (rpcError) {
+        logWorkflowFailure('VALUATION_WORKFLOW_SUBMIT_FAILED', rpcError)
+        return NextResponse.json({ error: 'No pudimos enviar la valorización a revisión.' }, { status: 400 })
+      }
 
       await supabase
         .from('management_tasks')
@@ -144,7 +159,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
 
     const { error: updateError } = await supabase.from('valuation_cases').update(patch).eq('id', id)
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 400 })
+    if (updateError) {
+      logWorkflowFailure('VALUATION_WORKFLOW_UPDATE_FAILED', updateError)
+      return NextResponse.json({ error: 'No pudimos actualizar el estado de la valorización.' }, { status: 400 })
+    }
 
     const { error: versionError } = await supabase.from('valuation_case_versions').insert({
       valuation_case_id: id,
@@ -153,7 +171,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       snapshot,
       created_by: scope.profileId,
     })
-    if (versionError) return NextResponse.json({ error: versionError.message }, { status: 500 })
+    if (versionError) {
+      logWorkflowFailure('VALUATION_WORKFLOW_VERSION_FAILED', versionError)
+      return NextResponse.json({ error: 'El estado fue actualizado, pero no pudimos registrar su versión.' }, { status: 500 })
+    }
 
     const { error: logError } = await supabase.from('valuation_decision_log').insert({
       valuation_case_id: id,
@@ -163,7 +184,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       new_state: { status: target, versionNumber: nextVersion, acceptedComparableCount: accepted.length },
       reason,
     })
-    if (logError) return NextResponse.json({ error: logError.message }, { status: 500 })
+    if (logError) {
+      logWorkflowFailure('VALUATION_WORKFLOW_AUDIT_LOG_FAILED', logError)
+      return NextResponse.json({ error: 'El estado fue actualizado, pero no pudimos registrar la trazabilidad.' }, { status: 500 })
+    }
 
     if (target === 'draft') {
       const due = new Date()
