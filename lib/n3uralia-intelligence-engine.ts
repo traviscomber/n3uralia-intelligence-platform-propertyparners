@@ -1,3 +1,5 @@
+import 'server-only'
+
 import {
   CRM_INTELLIGENCE,
   getDataQuality,
@@ -114,7 +116,6 @@ function buildClientEvidence(): IntelligenceEvidence[] {
   const branches = getBranchSalesYtdPerformance('2026-06')
   const attributedSales = branches.reduce((sum, branch) => sum + branch.actualSales, 0)
 
-  // Base CRM evidence
   const crmEvidence: IntelligenceEvidence[] = [
     {
       id: 'client.crm.sales-ytd',
@@ -178,7 +179,6 @@ function buildClientEvidence(): IntelligenceEvidence[] {
     },
   ]
 
-  // Market evidence from market-snapshot
   const marketRawEvidence = getMarketSnapshot()
   const marketEvidence: IntelligenceEvidence[] = marketRawEvidence.map((m) => ({
     id: m.id,
@@ -191,7 +191,6 @@ function buildClientEvidence(): IntelligenceEvidence[] {
     methodology: m.detail,
   }))
 
-  // Valuation evidence from valuation-snapshot
   const valuationRawEvidence = getValuationSnapshot()
   const valuationEvidence: IntelligenceEvidence[] = valuationRawEvidence.map((v) => ({
     id: v.id,
@@ -204,7 +203,6 @@ function buildClientEvidence(): IntelligenceEvidence[] {
     methodology: v.detail,
   }))
 
-  // Document evidence from presentations and other managed documents
   const documentEvidenceRecords = normalizePresentationDocuments()
   const documentEvidence: IntelligenceEvidence[] = documentEvidenceRecords.map((doc) => ({
     id: doc.id,
