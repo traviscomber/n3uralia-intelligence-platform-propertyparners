@@ -10,20 +10,45 @@ async function context() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
-  const { data: profile, error } = await supabase.from('profiles').select('id,role').eq('id', user.id).maybeSingle()
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id,role')
+    .eq('id', user.id)
+    .maybeSingle()
+
   if (error) {
-    console.error('[management-admin] profile lookup failed', { message: error.message })
-    return { error: NextResponse.json({ error: 'No fue posible validar el perfil' }, { status: 500 }) }
+    console.error('[management-admin] profile lookup failed', { code: error.code })
+    return { error: NextResponse.json({ error: 'No fue posible validar el perfil.' }, { status: 500 }) }
   }
+
   const role = String(profile?.role ?? '').toLowerCase()
-  if (!LEADER_ROLES.has(role)) return { error: NextResponse.json({ error: 'Sin permisos de administración' }, { status: 403 }) }
+  if (!LEADER_ROLES.has(role)) {
+    return { error: NextResponse.json({ error: 'Sin permisos de administración' }, { status: 403 }) }
+  }
+
   return { supabase, user, role }
+}
+
+async function recordChange(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  entry: Record<string, unknown>,
+  scope: string,
+) {
+  const { error } = await supabase.from('management_change_log').insert(entry)
+  if (!error) return null
+  console.error('[management-admin] change log failed', { code: error.code, scope })
+  return NextResponse.json(
+    { error: 'La operación se completó, pero no fue posible registrar su trazabilidad.' },
+    { status: 500 },
+  )
 }
 
 export async function GET() {
   const ctx = await context()
   if ('error' in ctx) return ctx.error
   const { supabase } = ctx
+
   const [entities, definitions, goals, rules, alerts, imports] = await Promise.all([
     supabase.from('management_entities').select('id,name,entity_type,parent_id,active').eq('active', true).order('name'),
     supabase.from('management_metric_definitions').select('code,label,unit,methodology,formula_version').eq('active', true).order('sort_order'),
@@ -32,9 +57,21 @@ export async function GET() {
     supabase.from('management_alerts').select('*,management_entities(name)').order('created_at', { ascending: false }).limit(300),
     supabase.from('management_import_runs').select('*').order('created_at', { ascending: false }).limit(100),
   ])
+
   const failure = [entities, definitions, goals, rules, alerts, imports].find((result) => result.error)
-  if (failure?.error) return NextResponse.json({ error: failure.error.message }, { status: 500 })
-  return NextResponse.json({ entities: entities.data, definitions: definitions.data, goals: goals.data, rules: rules.data, alerts: alerts.data, imports: imports.data })
+  if (failure?.error) {
+    console.error('[management-admin] dashboard query failed', { code: failure.error.code })
+    return NextResponse.json({ error: 'No fue posible cargar la administración.' }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    entities: entities.data,
+    definitions: definitions.data,
+    goals: goals.data,
+    rules: rules.data,
+    alerts: alerts.data,
+    imports: imports.data,
+  })
 }
 
 export async function POST(request: Request) {
@@ -55,15 +92,39 @@ export async function POST(request: Request) {
       approved_by: user.id,
       approved_at: new Date().toISOString(),
     }
-    if (!record.entity_id || !record.metric_code || !record.period_start || !record.period_end || !Number.isFinite(record.target_value)) return NextResponse.json({ error: 'Meta incompleta' }, { status: 400 })
-    const { data, error } = await supabase.from('management_goals').upsert(record, { onConflict: 'entity_id,metric_code,period_start,period_end' }).select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    await supabase.from('management_change_log').insert({ entity_name: 'management_goals', entity_id: data.id, action: 'update', after_data: data, changed_by: user.id })
+
+    if (!record.entity_id || !record.metric_code || !record.period_start || !record.period_end || !Number.isFinite(record.target_value)) {
+      return NextResponse.json({ error: 'Meta incompleta' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('management_goals')
+      .upsert(record, { onConflict: 'entity_id,metric_code,period_start,period_end' })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[management-admin] goal upsert failed', { code: error.code })
+      return NextResponse.json({ error: 'No fue posible guardar la meta.' }, { status: 400 })
+    }
+
+    const traceFailure = await recordChange(supabase, {
+      entity_name: 'management_goals',
+      entity_id: data.id,
+      action: 'update',
+      after_data: data,
+      changed_by: user.id,
+    }, 'goal')
+    if (traceFailure) return traceFailure
+
     return NextResponse.json(data, { status: 201 })
   }
 
   if (type === 'rule') {
-    if (!EXECUTIVE_ROLES.has(role)) return NextResponse.json({ error: 'Solo CEO o administración puede configurar reglas' }, { status: 403 })
+    if (!EXECUTIVE_ROLES.has(role)) {
+      return NextResponse.json({ error: 'Solo CEO o administración puede configurar reglas' }, { status: 403 })
+    }
+
     const record = {
       code: String(body.code ?? '').trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_'),
       label: String(body.label ?? '').trim(),
@@ -75,10 +136,31 @@ export async function POST(request: Request) {
       responsible_role: String(body.responsibleRole || 'director'),
       active: body.active !== false,
     }
-    if (!record.code || !record.label || !record.metric_code || !Number.isFinite(record.threshold)) return NextResponse.json({ error: 'Regla incompleta' }, { status: 400 })
-    const { data, error } = await supabase.from('management_alert_rules').upsert(record, { onConflict: 'code' }).select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    await supabase.from('management_change_log').insert({ entity_name: 'management_alert_rules', entity_id: data.id, action: 'update', after_data: data, changed_by: user.id })
+
+    if (!record.code || !record.label || !record.metric_code || !Number.isFinite(record.threshold)) {
+      return NextResponse.json({ error: 'Regla incompleta' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('management_alert_rules')
+      .upsert(record, { onConflict: 'code' })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[management-admin] rule upsert failed', { code: error.code })
+      return NextResponse.json({ error: 'No fue posible guardar la regla.' }, { status: 400 })
+    }
+
+    const traceFailure = await recordChange(supabase, {
+      entity_name: 'management_alert_rules',
+      entity_id: data.id,
+      action: 'update',
+      after_data: data,
+      changed_by: user.id,
+    }, 'rule')
+    if (traceFailure) return traceFailure
+
     return NextResponse.json(data, { status: 201 })
   }
 
@@ -86,6 +168,7 @@ export async function POST(request: Request) {
     const value = Number(body.value)
     const sourceName = String(body.sourceName || 'Carga administrativa').trim().slice(0, 160)
     const qualityStatus = String(body.qualityStatus || 'provisional').trim().toLowerCase()
+
     if (sourceName === CALCULATED_SOURCE) {
       return NextResponse.json({ error: 'La carga manual no puede utilizar la identidad del cálculo canónico' }, { status: 400 })
     }
@@ -99,7 +182,11 @@ export async function POST(request: Request) {
       .eq('code', String(body.metricCode ?? ''))
       .eq('active', true)
       .maybeSingle()
+
     if (definitionResult.error || !definitionResult.data) {
+      if (definitionResult.error) {
+        console.error('[management-admin] metric definition lookup failed', { code: definitionResult.error.code })
+      }
       return NextResponse.json({ error: 'Definición de métrica inválida' }, { status: 400 })
     }
 
@@ -125,10 +212,31 @@ export async function POST(request: Request) {
         publicationStatus: 'not_published',
       },
     }
-    if (!record.entity_id || !record.metric_code || !record.period_start || !record.period_end || !Number.isFinite(value) || !sourceName) return NextResponse.json({ error: 'Métrica incompleta' }, { status: 400 })
-    const { data, error } = await supabase.from('management_metric_values').upsert(record, { onConflict: 'entity_id,metric_code,period_start,period_end,source_name' }).select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    await supabase.from('management_change_log').insert({ entity_name: 'management_metric_values', entity_id: data.id, action: 'import', after_data: data, changed_by: user.id })
+
+    if (!record.entity_id || !record.metric_code || !record.period_start || !record.period_end || !Number.isFinite(value) || !sourceName) {
+      return NextResponse.json({ error: 'Métrica incompleta' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('management_metric_values')
+      .upsert(record, { onConflict: 'entity_id,metric_code,period_start,period_end,source_name' })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[management-admin] metric upsert failed', { code: error.code })
+      return NextResponse.json({ error: 'No fue posible guardar la métrica.' }, { status: 400 })
+    }
+
+    const traceFailure = await recordChange(supabase, {
+      entity_name: 'management_metric_values',
+      entity_id: data.id,
+      action: 'import',
+      after_data: data,
+      changed_by: user.id,
+    }, 'metric')
+    if (traceFailure) return traceFailure
+
     return NextResponse.json(data, { status: 201 })
   }
 
@@ -142,18 +250,51 @@ export async function PATCH(request: Request) {
   const body = await request.json() as Record<string, unknown>
   const id = String(body.id ?? '')
   const action = String(body.action ?? '')
-  if (!id || !['acknowledge', 'resolve', 'dismiss'].includes(action)) return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
 
-  const { data: before } = await supabase.from('management_alerts').select('*').eq('id', id).maybeSingle()
+  if (!id || !['acknowledge', 'resolve', 'dismiss'].includes(action)) {
+    return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
+  }
+
+  const { data: before, error: beforeError } = await supabase
+    .from('management_alerts')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (beforeError) {
+    console.error('[management-admin] alert lookup failed', { code: beforeError.code })
+    return NextResponse.json({ error: 'No fue posible consultar la alerta.' }, { status: 500 })
+  }
   if (!before) return NextResponse.json({ error: 'Alerta no encontrada' }, { status: 404 })
+
   const now = new Date().toISOString()
   const update = action === 'acknowledge'
     ? { status: 'acknowledged', acknowledged_by: user.id, acknowledged_at: now }
     : action === 'resolve'
       ? { status: 'resolved', resolved_by: user.id, resolved_at: now, resolution_notes: String(body.notes ?? '') }
       : { status: 'dismissed', resolved_by: user.id, resolved_at: now, resolution_notes: String(body.notes ?? '') }
-  const { data, error } = await supabase.from('management_alerts').update(update).eq('id', id).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  await supabase.from('management_change_log').insert({ entity_name: 'management_alerts', entity_id: id, action, before_data: before, after_data: data, changed_by: user.id })
+
+  const { data, error } = await supabase
+    .from('management_alerts')
+    .update(update)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('[management-admin] alert update failed', { code: error.code })
+    return NextResponse.json({ error: 'No fue posible actualizar la alerta.' }, { status: 400 })
+  }
+
+  const traceFailure = await recordChange(supabase, {
+    entity_name: 'management_alerts',
+    entity_id: id,
+    action,
+    before_data: before,
+    after_data: data,
+    changed_by: user.id,
+  }, 'alert')
+  if (traceFailure) return traceFailure
+
   return NextResponse.json(data)
 }
