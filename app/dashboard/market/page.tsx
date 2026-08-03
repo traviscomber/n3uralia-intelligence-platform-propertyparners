@@ -75,7 +75,7 @@ export default async function MarketPage() {
         }
       />
 
-      {operational.error ? <div role="alert" className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">No fue posible consultar toda la información operativa: {operational.error}</div> : null}
+      {operational.error ? <div role="alert" className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">No fue posible consultar toda la información operativa. Reintenta más tarde o informa el incidente al responsable de la plataforma.</div> : null}
 
       {!operational.error && operational.canonicalProperties === 0 ? (
         <div className="border border-dashed border-[var(--n3-line)] p-5 text-sm text-[var(--n3-text-muted)]">La conexión está disponible, pero todavía no existen registros materializados para este mercado.</div>
