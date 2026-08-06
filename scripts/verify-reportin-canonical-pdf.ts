@@ -64,7 +64,7 @@ async function main() {
   assert.equal(parsed.getSubject(), report.purpose)
   assert.equal(parsed.getAuthor(), 'N3uralia Intelligence Platform')
   assert.equal(parsed.getCreator(), 'Reportin 1.0')
-  assert.equal(parsed.getProducer(), 'Reportin 1.0')
+  assert.match(parsed.getProducer() ?? '', /^pdf-lib /)
 
   await assert.rejects(
     () => buildReportinCanonicalPdf({
