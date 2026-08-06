@@ -28,6 +28,21 @@ const ceoSections: SidebarSection[] = [
       { label: 'Informes', href: '/dashboard/reportes/canonicos', capability: 'reports.global.read' },
     ],
   },
+  {
+    label: 'Gestión y administración',
+    items: [
+      { label: 'Resumen', href: '/dashboard', exact: true },
+      { label: 'Valorizaciones', href: '/dashboard/valuations' },
+      { label: 'Control de gestión', href: '/dashboard/control' },
+      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.global.manage' },
+      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.global.assign' },
+      { label: 'Reportes operativos', href: '/dashboard/reportes/autonomos', capability: 'reports.global.read' },
+      { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', capability: 'market.manage_sources' },
+      { label: 'Importar mercado', href: '/dashboard/market/import', capability: 'market.manage_sources' },
+      { label: 'Fuentes de propiedades', href: '/dashboard/sources', capability: 'settings.manage' },
+      { label: 'Usuarios y configuración', href: '/dashboard/settings', capability: 'users.manage' },
+    ],
+  },
 ]
 
 const sections: SidebarSection[] = [
