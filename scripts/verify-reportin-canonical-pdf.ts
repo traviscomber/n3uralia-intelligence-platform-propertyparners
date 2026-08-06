@@ -52,28 +52,35 @@ const report: CanonicalClientReport = {
   limitations: ['Esta prueba valida estructura técnica, no contenido comercial ni datos reales del cliente.'],
 }
 
-const artifact = await buildReportinCanonicalPdf(report)
-assert.equal(artifact.reportinVersion, '1.0')
-assert.match(artifact.filename, /^informe-canonico-de-avance-property-partners-2026-07-31\.pdf$/)
-assert.ok(artifact.bytes.byteLength > 1_000)
+async function main() {
+  const artifact = await buildReportinCanonicalPdf(report)
+  assert.equal(artifact.reportinVersion, '1.0')
+  assert.match(artifact.filename, /^informe-canonico-de-avance-property-partners-2026-07-31\.pdf$/)
+  assert.ok(artifact.bytes.byteLength > 1_000)
 
-const parsed = await PDFDocument.load(artifact.bytes)
-assert.ok(parsed.getPageCount() >= 5)
-assert.equal(parsed.getTitle(), report.title)
-assert.equal(parsed.getSubject(), report.purpose)
-assert.equal(parsed.getAuthor(), 'N3uralia Intelligence Platform')
-assert.equal(parsed.getCreator(), 'Reportin 1.0')
-assert.equal(parsed.getProducer(), 'Reportin 1.0')
+  const parsed = await PDFDocument.load(artifact.bytes)
+  assert.ok(parsed.getPageCount() >= 5)
+  assert.equal(parsed.getTitle(), report.title)
+  assert.equal(parsed.getSubject(), report.purpose)
+  assert.equal(parsed.getAuthor(), 'N3uralia Intelligence Platform')
+  assert.equal(parsed.getCreator(), 'Reportin 1.0')
+  assert.equal(parsed.getProducer(), 'Reportin 1.0')
 
-await assert.rejects(
-  () => buildReportinCanonicalPdf({
-    ...report,
-    canonical_metadata: {
-      ...report.canonical_metadata,
-      source_policy: 'external_sources_forbidden' as CanonicalClientReport['canonical_metadata']['source_policy'],
-    },
-  }),
-  /REPORTIN_INVALID_SOURCE_POLICY/,
-)
+  await assert.rejects(
+    () => buildReportinCanonicalPdf({
+      ...report,
+      canonical_metadata: {
+        ...report.canonical_metadata,
+        source_policy: 'external_sources_forbidden' as CanonicalClientReport['canonical_metadata']['source_policy'],
+      },
+    }),
+    /REPORTIN_INVALID_SOURCE_POLICY/,
+  )
 
-console.log('Reportin canonical PDF verification passed.')
+  console.log('Reportin canonical PDF verification passed.')
+}
+
+main().catch((error) => {
+  console.error('Reportin canonical PDF verification failed.', error)
+  process.exitCode = 1
+})
