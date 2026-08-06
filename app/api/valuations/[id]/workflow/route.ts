@@ -6,12 +6,7 @@ import {
   requireAnyCapability,
 } from '@/lib/access-guards'
 
-const transitions: Record<string, string[]> = {
-  draft: ['review'],
-  review: ['draft', 'approved'],
-  approved: ['review', 'issued'],
-  issued: [],
-}
+const allowedTargets = new Set(['draft', 'review', 'approved', 'issued'])
 
 function logWorkflowFailure(stage: string, error: unknown) {
   console.error(stage, {
@@ -32,161 +27,55 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const target = String(body?.status || '')
     const reason = String(body?.reason || '').trim() || null
 
-    const { data: valuationCase, error } = await supabase
+    if (!allowedTargets.has(target)) {
+      return NextResponse.json({ error: 'Estado de destino inválido' }, { status: 400 })
+    }
+
+    const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
-      .select('*')
+      .select('id,status,requested_by,address,version_number')
       .eq('id', id)
       .maybeSingle()
 
-    if (error) {
-      logWorkflowFailure('VALUATION_WORKFLOW_CASE_LOAD_FAILED', error)
+    if (caseError) {
+      logWorkflowFailure('VALUATION_WORKFLOW_CASE_LOAD_FAILED', caseError)
       return NextResponse.json({ error: 'No pudimos cargar la valorización.' }, { status: 500 })
     }
     if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
 
     assertProfileVisible(scope, valuationCase.requested_by)
 
-    const ownsCase = valuationCase.requested_by === scope.profileId
-    const canReview = scope.capabilities.includes('valuations.office.review')
-    const canApprove = scope.capabilities.includes('valuations.global.approve')
+    const { data, error: transitionError } = await supabase.rpc('transition_valuation_case_atomic', {
+      target_case_id: id,
+      target_status: target,
+      transition_reason: reason,
+    })
 
-    if (!ownsCase && !canReview && !scope.capabilities.includes('valuations.global.read')) {
-      return NextResponse.json({ error: 'No puede operar valorizaciones fuera de su alcance' }, { status: 403 })
+    if (transitionError) {
+      logWorkflowFailure('VALUATION_WORKFLOW_ATOMIC_TRANSITION_FAILED', transitionError)
+      return NextResponse.json({ error: transitionError.message || 'No pudimos actualizar la valorización.' }, { status: 400 })
     }
 
-    if (!(transitions[valuationCase.status] || []).includes(target)) {
-      return NextResponse.json({ error: `Transición ${valuationCase.status} → ${target} no permitida` }, { status: 400 })
+    const result = (data || {}) as {
+      updated?: boolean
+      status?: string
+      versionNumber?: number
+      acceptedComparableCount?: number
     }
+    const now = new Date().toISOString()
 
-    const { data: comparables, error: compError } = await supabase
-      .from('valuation_comparables')
-      .select('*')
-      .eq('valuation_case_id', id)
-      .order('rank')
-    if (compError) {
-      logWorkflowFailure('VALUATION_WORKFLOW_COMPARABLES_LOAD_FAILED', compError)
-      return NextResponse.json({ error: 'No pudimos cargar los comparables de la valorización.' }, { status: 500 })
-    }
-    const accepted = (comparables || []).filter((item) => item.selected && item.match_status === 'accepted')
-
-    if (target === 'review' && accepted.length < 3) {
-      return NextResponse.json({
-        error: 'La valorización requiere al menos 3 comparables aceptados antes de revisión',
-        acceptedComparableCount: accepted.length,
-      }, { status: 400 })
-    }
-
-    if (valuationCase.status === 'draft' && target === 'review') {
-      if (!ownsCase && !canReview) return NextResponse.json({ error: 'Sin permiso para solicitar revisión' }, { status: 403 })
-      const { data, error: rpcError } = await supabase.rpc('submit_valuation_for_review', {
-        target_case_id: id,
-        reason,
-      })
-      if (rpcError) {
-        logWorkflowFailure('VALUATION_WORKFLOW_SUBMIT_FAILED', rpcError)
-        return NextResponse.json({ error: 'No pudimos enviar la valorización a revisión.' }, { status: 400 })
-      }
-
+    if (target === 'review') {
       await supabase
         .from('management_tasks')
         .update({
           status: 'done',
-          completed_at: new Date().toISOString(),
-          resolution_note: reason || 'Corrección realizada y valorización reenviada a revisión.',
+          completed_at: now,
+          resolution_note: reason || 'Corrección realizada y valorización enviada a revisión.',
           updated_by: scope.profileId,
         })
         .eq('source_key', `valuation-return:${id}`)
         .eq('assigned_to', scope.profileId)
         .in('status', ['open', 'in_progress'])
-
-      await supabase.from('valuation_decision_log').insert({
-        valuation_case_id: id,
-        action: 'resubmitted_after_correction',
-        actor_id: scope.profileId,
-        previous_state: { status: 'draft', versionNumber: valuationCase.version_number },
-        new_state: { status: 'review', versionNumber: data?.version_number ?? valuationCase.version_number },
-        reason: reason || 'Caso corregido y reenviado a dirección.',
-      })
-
-      return NextResponse.json({ updated: true, status: data?.status ?? 'review', versionNumber: data?.version_number ?? null })
-    }
-
-    if (target === 'draft' && !canReview && !canApprove) {
-      return NextResponse.json({ error: 'Solo dirección de oficina puede devolver el caso a borrador' }, { status: 403 })
-    }
-    if (target === 'approved' && !canApprove) {
-      return NextResponse.json({ error: 'Solo Dirección puede aprobar' }, { status: 403 })
-    }
-    if (target === 'issued' && !canApprove) {
-      return NextResponse.json({ error: 'Solo Dirección puede emitir' }, { status: 403 })
-    }
-    if (target === 'draft' && !reason) return NextResponse.json({ error: 'Se requiere un motivo para devolver el caso a borrador' }, { status: 400 })
-
-    if (target === 'approved') {
-      if (accepted.length < 3) return NextResponse.json({ error: 'No se puede aprobar sin al menos 3 comparables aceptados' }, { status: 400 })
-      if (!valuationCase.estimated_value_uf || !valuationCase.low_value_uf || !valuationCase.high_value_uf) {
-        return NextResponse.json({ error: 'La valorización no tiene rango calculado' }, { status: 400 })
-      }
-      if (!String(valuationCase.justification || '').trim() && !reason) {
-        return NextResponse.json({ error: 'Se requiere justificación de aprobación' }, { status: 400 })
-      }
-    }
-
-    const now = new Date().toISOString()
-    const patch: Record<string, unknown> = { status: target, updated_at: now }
-    let action = 'status_changed'
-    if (target === 'draft') action = 'rejected'
-    if (target === 'approved') {
-      action = 'approved'
-      patch.reviewed_by = scope.profileId
-      patch.reviewed_at = now
-      patch.approved_by = scope.profileId
-      patch.approved_at = now
-      patch.justification = reason || valuationCase.justification
-    }
-    if (target === 'issued') {
-      action = 'issued'
-      patch.issued_at = now
-    }
-
-    const nextVersion = Number(valuationCase.version_number || 1) + 1
-    patch.version_number = nextVersion
-    const snapshot = {
-      valuationCase: { ...valuationCase, ...patch },
-      comparables,
-      acceptedComparableCount: accepted.length,
-      workflow: { from: valuationCase.status, to: target, actorId: scope.profileId, reason, at: now },
-    }
-
-    const { error: updateError } = await supabase.from('valuation_cases').update(patch).eq('id', id)
-    if (updateError) {
-      logWorkflowFailure('VALUATION_WORKFLOW_UPDATE_FAILED', updateError)
-      return NextResponse.json({ error: 'No pudimos actualizar el estado de la valorización.' }, { status: 400 })
-    }
-
-    const { error: versionError } = await supabase.from('valuation_case_versions').insert({
-      valuation_case_id: id,
-      version_number: nextVersion,
-      status: target,
-      snapshot,
-      created_by: scope.profileId,
-    })
-    if (versionError) {
-      logWorkflowFailure('VALUATION_WORKFLOW_VERSION_FAILED', versionError)
-      return NextResponse.json({ error: 'El estado fue actualizado, pero no pudimos registrar su versión.' }, { status: 500 })
-    }
-
-    const { error: logError } = await supabase.from('valuation_decision_log').insert({
-      valuation_case_id: id,
-      action,
-      actor_id: scope.profileId,
-      previous_state: { status: valuationCase.status, versionNumber: valuationCase.version_number },
-      new_state: { status: target, versionNumber: nextVersion, acceptedComparableCount: accepted.length },
-      reason,
-    })
-    if (logError) {
-      logWorkflowFailure('VALUATION_WORKFLOW_AUDIT_LOG_FAILED', logError)
-      return NextResponse.json({ error: 'El estado fue actualizado, pero no pudimos registrar la trazabilidad.' }, { status: 500 })
     }
 
     if (target === 'draft') {
@@ -194,7 +83,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       due.setDate(due.getDate() + 3)
       const { data: requester } = await supabase
         .from('profiles')
-        .select('team,full_name')
+        .select('team')
         .eq('id', valuationCase.requested_by)
         .maybeSingle()
 
@@ -219,12 +108,23 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (target === 'approved') {
       await supabase
         .from('management_tasks')
-        .update({ status: 'done', completed_at: now, resolution_note: 'Valorización aprobada por Dirección.', updated_by: scope.profileId })
+        .update({
+          status: 'done',
+          completed_at: now,
+          resolution_note: 'Valorización aprobada por CEO.',
+          updated_by: scope.profileId,
+        })
         .eq('source_key', `valuation-return:${id}`)
         .in('status', ['open', 'in_progress'])
     }
 
-    return NextResponse.json({ updated: true, status: target, versionNumber: nextVersion, acceptedComparableCount: accepted.length })
+    return NextResponse.json({
+      updated: result.updated === true,
+      status: result.status || target,
+      versionNumber: result.versionNumber ?? null,
+      acceptedComparableCount: result.acceptedComparableCount ?? null,
+      atomic: true,
+    })
   } catch (error) {
     return accessErrorResponse(error)
   }
