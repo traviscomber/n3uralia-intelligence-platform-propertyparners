@@ -86,19 +86,15 @@ export default async function CanonicalClientReportsPage() {
     <IntelligencePage>
       <IntelligenceHeader
         eyebrow="N3uralia Canonical Publishing"
-        title="Informes canónicos hacia el Cliente"
-        description="Registro oficial de informes ejecutivos construidos sólo con fuentes verificadas. El estándar separa hechos, avances del portal, estado contractual, dependencias, próximos hitos y estado de entrega."
-        actions={[
-          { label: 'Reportes ejecutivos', href: '/dashboard/reportes/autonomos', primary: true },
-          { label: 'Operación de reportes', href: '/dashboard/reportes/operacion' },
-        ]}
-        meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Estándar activo · versión {configuration.standardVersion} · fuentes canónicas únicamente</div>}
+        title="Reportes"
+        description="Centro único para generar, revisar y descargar informes ejecutivos oficiales construidos exclusivamente con fuentes canónicas verificadas."
+        meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Reportin {configuration.reportinVersion} · GPT-5.6 · fuentes canónicas únicamente</div>}
       />
 
       <CanonicalReportGenerator />
 
       <section>
-        <SectionHeading eyebrow="01 · Canonical Standard" title="Configuración editorial y de inteligencia" />
+        <SectionHeading eyebrow="01 · Estándar canónico" title="Configuración editorial y de inteligencia" />
         <MetricGrid>
           <MetricCard label="Tipo" value="Cliente" detail={configuration.name} />
           <MetricCard label="Modelo" value="GPT-5.6 Sol" detail={`${configuration.api} · ${configuration.reasoningMode} · esfuerzo ${configuration.reasoningEffort}`} />
@@ -108,7 +104,7 @@ export default async function CanonicalClientReportsPage() {
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
-        <IntelligencePanel eyebrow="Required Structure" title="Bloques obligatorios" description="Todos los informes mantienen la misma arquitectura para que el Cliente pueda comparar períodos y entregas.">
+        <IntelligencePanel eyebrow="Estructura obligatoria" title="Bloques del informe" description="Todos los informes mantienen la misma arquitectura para que el Cliente pueda comparar períodos y entregas.">
           <div className="grid gap-px bg-[var(--n3-line)] md:grid-cols-2">
             {REQUIRED_SECTIONS.map((section, index) => (
               <div key={section} className="bg-[#080d0d] p-4">
@@ -119,7 +115,7 @@ export default async function CanonicalClientReportsPage() {
           </div>
         </IntelligencePanel>
 
-        <IntelligencePanel eyebrow="Governance" title="Controles no negociables" description="La IA organiza y redacta; no reemplaza la evidencia ni la aprobación humana." critical>
+        <IntelligencePanel eyebrow="Gobernanza" title="Controles no negociables" description="La IA organiza y redacta; no reemplaza la evidencia ni la aprobación humana." critical>
           <div className="space-y-4 p-5">
             {[
               ['Evidencia', 'Cada afirmación material conserva referencias hacia el paquete fuente.'],
@@ -138,13 +134,13 @@ export default async function CanonicalClientReportsPage() {
 
       <section>
         <SectionHeading
-          eyebrow="02 · Client Delivery Registry"
+          eyebrow="02 · Registro ejecutivo"
           title="Informes registrados"
-          description="La copia canónica conserva estado, destinatario, hito comercial, período, fecha de corte y huellas de los archivos entregados."
+          description="La copia canónica conserva estado, destinatario, hito comercial, período, fecha de corte y trazabilidad de cada entrega."
         />
 
         {documents.length === 0 ? (
-          <IntelligencePanel eyebrow="Registry" title="Sin informes registrados" description="No existe todavía un documento con la etiqueta canónica de cliente.">
+          <IntelligencePanel eyebrow="Registro" title="Sin informes registrados" description="No existe todavía un documento con la etiqueta canónica de cliente.">
             <div className="p-5 text-sm text-[var(--n3-text-muted)]">Genere el primer informe mediante la acción autorizada disponible al inicio de esta página.</div>
           </IntelligencePanel>
         ) : (
