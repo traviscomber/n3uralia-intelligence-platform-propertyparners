@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs && node scripts/verify-contract-closeout.mjs && node scripts/verify-contract-closeout-evidence.mjs && node scripts/verify-client-dependencies.mjs && node scripts/verify-contract-closeout-documents.mjs && node scripts/verify-uat-case-status.mjs && node scripts/verify-training-session-status.mjs && node scripts/verify-delivery-package-inventory.mjs && node scripts/verify-client-acceptance-status.mjs && node scripts/verify-production-readiness-status.mjs && node scripts/verify-contract-closeout-snapshot.mjs && node scripts/audit-dashboard-trust-boundaries.mjs",
+    "prebuild": "node scripts/check-n3uralia-ip-boundaries.mjs && node scripts/check-credential-boundaries.mjs && node scripts/audit-exposure-boundaries.mjs && node scripts/audit-tenant-isolation.mjs && node scripts/verify-github-delivery-classification.mjs && node scripts/verify-github-delivery-surface.mjs && node scripts/verify-contract-closeout.mjs && node scripts/verify-contract-closeout-evidence.mjs && node scripts/verify-client-dependencies.mjs && node scripts/verify-contract-closeout-documents.mjs && node scripts/verify-uat-case-status.mjs && node scripts/verify-training-session-status.mjs && node scripts/verify-delivery-package-inventory.mjs && node scripts/verify-client-acceptance-status.mjs && node scripts/verify-production-readiness-status.mjs && node scripts/verify-contract-closeout-snapshot.mjs && node scripts/audit-dashboard-trust-boundaries.mjs && pnpm reportin:verify",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -50,6 +50,7 @@
     "management:persisted:verify": "node --import tsx scripts/verify-management-persisted-overlay.ts",
     "management:reconciliation:verify": "node --import tsx scripts/verify-management-metric-reconciliation.ts",
     "management:delivery:verify": "node --import tsx scripts/verify-management-report-delivery.ts",
+    "reportin:verify": "node --import tsx scripts/verify-reportin-canonical-pdf.ts",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
     "market:identity:verify": "node --import tsx scripts/verify-market-identity.ts",
