@@ -6,12 +6,10 @@ import { Download, FileText, RefreshCw } from 'lucide-react'
 
 type Metric = {
   code: string
-  unit: 'count' | 'uf' | 'percent' | 'days' | 'score'
   value: number | null
   target: number | null
   compliance: number | null
   mom?: number | null
-  yoy?: number | null
 }
 
 type Entity = {
@@ -30,7 +28,7 @@ type Summary = {
 type Operations = {
   valuations: { review: number }
   assignments: { paused: number }
-  market: { properties: number; confirmed: number; pendingIdentity: number }
+  market: { properties: number; confirmed: number }
   tasks: { overdue: number; urgent: number }
   errors: string[]
   generatedAt: string
@@ -63,9 +61,8 @@ const complianceTone = (value: number | null | undefined) => {
   return 'text-[#ff766f]'
 }
 
-function csvCell(value: string | number | null | undefined) {
-  return `"${String(value ?? '').replaceAll('"', '""')}"`
-}
+const csvCell = (value: string | number | null | undefined) =>
+  `"${String(value ?? '').replaceAll('"', '""')}"`
 
 export function CeoDashboardNumeric() {
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -112,7 +109,6 @@ export function CeoDashboardNumeric() {
   const cumulativeUf = metric(company, 'cumulative_sales_uf')
   const portfolioChange = metric(company, 'portfolio_net_change')
   const gap = sales?.value != null && sales?.target != null ? sales.value - sales.target : null
-  const criticalCount = (operations?.tasks.overdue ?? 0) + (operations?.tasks.urgent ?? 0)
 
   const branchRows = useMemo(
     () => branches
@@ -136,19 +132,16 @@ export function CeoDashboardNumeric() {
     {
       label: 'Riesgo',
       value: weakestBranch ? `${weakestBranch.name} · ${percent(weakestBranch.sales?.compliance)}` : '—',
-      href: weakestBranch ? `/dashboard/reportes/${encodeURIComponent(weakestBranch.id)}` : '/dashboard/ceo',
       tone: 'text-[#ff8d87]',
     },
     {
       label: 'Oportunidad',
       value: strongestBranch ? `${strongestBranch.name} · ${percent(strongestBranch.sales?.compliance)}` : '—',
-      href: strongestBranch ? `/dashboard/reportes/${encodeURIComponent(strongestBranch.id)}` : '/dashboard/ceo',
       tone: 'text-[#8fdca8]',
     },
     {
       label: 'Cambio',
       value: sales?.mom != null ? `Cierres ${signed(sales.mom, '%')}` : `Cartera ${signed(portfolioChange?.mom, '%')}`,
-      href: '/dashboard/ceo/reporte',
       tone: 'text-white',
     },
   ]
@@ -159,11 +152,12 @@ export function CeoDashboardNumeric() {
     { label: 'UF', value: uf(salesUf?.value), subvalue: `Acum. ${uf(cumulativeUf?.value)}` },
     { label: 'Cartera', value: number(stock?.value), subvalue: signed(portfolioChange?.mom, '%') },
     { label: 'Conversión', value: number(conversion?.value, 1), subvalue: 'Score' },
-    { label: 'Críticos', value: number(criticalCount), subvalue: 'Vencidas + urgentes', tone: criticalCount > 0 ? 'text-[#ff766f]' : 'text-white' },
+    { label: 'Vencidas', value: number(operations?.tasks.overdue), subvalue: 'Requieren gestión', tone: (operations?.tasks.overdue ?? 0) > 0 ? 'text-[#ff766f]' : 'text-white' },
   ]
 
   function exportCsv() {
     if (!summary || !operations) return
+
     const rows = [
       ['Periodo', summary.periodLabel],
       ['Cierres', sales?.value],
@@ -177,8 +171,8 @@ export function CeoDashboardNumeric() {
       ['Tareas urgentes', operations.tasks.urgent],
       ['Valorizaciones en revisión', operations.valuations.review],
       ['Asignaciones pausadas', operations.assignments.paused],
-      ['Propiedades sin identidad', operations.market.pendingIdentity],
     ]
+
     const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
@@ -250,13 +244,10 @@ export function CeoDashboardNumeric() {
           <h2 id="ceo-intelligence-title" className="text-[10px] uppercase tracking-[0.16em] text-white/40">Inteligencia</h2>
           <div className="mt-3 divide-y divide-white/8 border-y border-white/10 md:grid md:grid-cols-3 md:divide-x md:divide-y-0">
             {insights.map((item) => (
-              <Link key={item.label} href={item.href} className="group flex min-h-20 items-center justify-between gap-5 py-4 transition hover:bg-white/[0.025] md:px-5 md:first:pl-0">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.14em] text-white/35">{item.label}</p>
-                  <p className={`mt-2 text-base font-semibold tabular-nums ${item.tone}`}>{item.value}</p>
-                </div>
-                <span aria-hidden="true" className="text-white/20 transition group-hover:translate-x-0.5 group-hover:text-white/60">→</span>
-              </Link>
+              <article key={item.label} className="min-h-20 py-4 md:px-5 md:first:pl-0">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-white/35">{item.label}</p>
+                <p className={`mt-2 text-base font-semibold tabular-nums ${item.tone}`}>{item.value}</p>
+              </article>
             ))}
           </div>
         </section>
