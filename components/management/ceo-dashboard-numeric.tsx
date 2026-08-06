@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Download, FileText, RefreshCw } from 'lucide-react'
+import { ArrowRight, Download, FileText, RefreshCw } from 'lucide-react'
 
 type Metric = { code: string; value: number | null; target: number | null; compliance: number | null; mom?: number | null }
 type EvolutionPoint = {
@@ -25,7 +25,14 @@ type Operations = {
   generatedAt: string
 }
 
-const metric = (entity: Entity | undefined, code: string) => entity?.metrics.find((item) => item.code === code)
+type ActionItem = {
+  label: string
+  value: string
+  href: string
+  priority: number
+  tone: string
+}
+
 const number = (value: number | null | undefined, digits = 0) => value == null ? '—' : value.toLocaleString('es-CL', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 const percent = (value: number | null | undefined) => value == null ? '—' : `${number(value, 1)}%`
 const uf = (value: number | null | undefined) => value == null ? '—' : `${number(value)} UF`
@@ -91,14 +98,7 @@ export function CeoDashboardNumeric() {
     }
   }).sort((a, b) => Number(a.compliance ?? 999) - Number(b.compliance ?? 999)), [branches, selectedPeriod])
 
-  const comparableBranches = branchRows.filter((item) => item.compliance != null)
-  const weakestBranch = comparableBranches[0]
-  const strongestBranch = [...comparableBranches].sort((a, b) => Number(b.compliance) - Number(a.compliance))[0]
-  const previousPeriodIndex = periods.indexOf(selectedPeriod) - 1
-  const previousCompany = previousPeriodIndex >= 0 ? company?.evolution?.find((item) => item.period === periods[previousPeriodIndex]) : undefined
-  const salesChange = selectedCompany?.sales != null && previousCompany?.sales != null && previousCompany.sales !== 0
-    ? ((selectedCompany.sales - previousCompany.sales) / previousCompany.sales) * 100
-    : null
+  const weakestBranch = branchRows.find((item) => item.compliance != null)
 
   const cards = [
     { label: 'Cierres', value: number(selectedCompany?.sales) },
@@ -109,11 +109,27 @@ export function CeoDashboardNumeric() {
     { label: 'Acumulado', value: number(selectedCompany?.cumulativeSales) },
   ]
 
-  const insights = [
-    { label: 'Menor cumplimiento', value: weakestBranch ? `${weakestBranch.name} · ${percent(weakestBranch.compliance)}` : '—', tone: 'text-[#ff8d87]' },
-    { label: 'Mayor cumplimiento', value: strongestBranch ? `${strongestBranch.name} · ${percent(strongestBranch.compliance)}` : '—', tone: 'text-[#8fdca8]' },
-    { label: 'Variación mensual', value: percent(salesChange), tone: salesChange != null && salesChange < 0 ? 'text-[#ff8d87]' : 'text-white' },
-  ]
+  const actions = useMemo<ActionItem[]>(() => {
+    if (!operations) return []
+
+    const items: ActionItem[] = []
+    if (weakestBranch?.compliance != null && weakestBranch.compliance < 100) {
+      items.push({
+        label: weakestBranch.name,
+        value: `${percent(weakestBranch.compliance)} cumplimiento`,
+        href: '/dashboard/control',
+        priority: weakestBranch.compliance < 80 ? 100 : 70,
+        tone: weakestBranch.compliance < 80 ? 'text-[#ff8d87]' : 'text-[#f0c96a]',
+      })
+    }
+    if (operations.tasks.overdue > 0) items.push({ label: 'Tareas vencidas', value: number(operations.tasks.overdue), href: '/dashboard/control', priority: 95, tone: 'text-[#ff8d87]' })
+    if (operations.tasks.urgent > 0) items.push({ label: 'Tareas urgentes', value: number(operations.tasks.urgent), href: '/dashboard/control', priority: 90, tone: 'text-[#ff8d87]' })
+    if (operations.valuations.review > 0) items.push({ label: 'Valorizaciones', value: `${number(operations.valuations.review)} en revisión`, href: '/dashboard/valuations', priority: 80, tone: 'text-[#f0c96a]' })
+    if (operations.assignments.paused > 0) items.push({ label: 'Asignaciones', value: `${number(operations.assignments.paused)} pausadas`, href: '/dashboard/properties/admin', priority: 75, tone: 'text-[#f0c96a]' })
+    if (gap != null && gap < 0) items.push({ label: 'Meta del período', value: `${number(Math.abs(gap), 1)} cierres de brecha`, href: '/dashboard/control/admin', priority: 85, tone: 'text-[#ff8d87]' })
+
+    return items.sort((a, b) => b.priority - a.priority).slice(0, 5)
+  }, [gap, operations, weakestBranch])
 
   function exportCsv() {
     if (!summary || !operations || !selectedPeriod) return
@@ -153,7 +169,7 @@ export function CeoDashboardNumeric() {
   return <main className="min-h-screen bg-[#050707] px-5 py-5 text-white md:px-8 md:py-7"><div className="mx-auto max-w-[1320px]">
     <header className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">Vista CEO · Corte {freshness}</div>
+        <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">Corte {freshness}</div>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{selectedPeriod ? formatPeriod(selectedPeriod) : '—'}</h1>
           <label className="sr-only" htmlFor="ceo-period">Período</label>
@@ -172,25 +188,32 @@ export function CeoDashboardNumeric() {
     <section aria-label="Indicadores del período" className="grid border-b border-white/10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">{cards.map((item) => <article key={item.label} className="border-b border-white/8 py-5 pr-4 sm:border-r sm:px-4 sm:first:pl-0 xl:border-b-0"><p className="text-[10px] uppercase tracking-[0.13em] text-white/38">{item.label}</p><p className={`mt-3 text-3xl font-semibold tabular-nums tracking-tight ${item.tone ?? 'text-white'}`}>{item.value}</p></article>)}</section>
 
     <section className="mt-7">
-      <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Inteligencia</h2>
-      <div className="mt-2 divide-y divide-white/8 border-y border-white/10 md:grid md:grid-cols-3 md:divide-x md:divide-y-0">{insights.map((item) => <article key={item.label} className="py-4 md:px-4 md:first:pl-0"><p className="text-[10px] uppercase tracking-[0.13em] text-white/35">{item.label}</p><p className={`mt-2 text-base font-semibold tabular-nums ${item.tone}`}>{item.value}</p></article>)}</div>
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Acciones</h2>
+        <span className="text-xs tabular-nums text-white/35">{actions.length}</span>
+      </div>
+      <div className="divide-y divide-white/8">
+        {actions.length > 0 ? actions.map((item) => (
+          <Link key={`${item.label}-${item.href}`} href={item.href} className="group grid min-h-14 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 py-3 transition hover:bg-white/[0.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            <span className="truncate text-sm font-medium text-white/85">{item.label}</span>
+            <span className={`text-sm font-semibold tabular-nums ${item.tone}`}>{item.value}</span>
+            <ArrowRight size={15} className="text-white/30 transition group-hover:translate-x-0.5 group-hover:text-white/70" />
+          </Link>
+        )) : <div className="py-5 text-sm text-white/45">Sin acciones pendientes</div>}
+      </div>
     </section>
 
-    <section className="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)]">
+    <section className="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.52fr)]">
       <div>
         <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Oficinas</h2>
         <div className="mt-2 overflow-x-auto border-t border-white/10"><table className="w-full min-w-[520px] border-collapse text-left"><thead className="border-b border-white/10 text-[10px] uppercase tracking-[0.12em] text-white/35"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-4 py-3 font-medium">Cierres</th><th className="px-4 py-3 font-medium">Meta</th><th className="px-4 py-3 font-medium">Cumplimiento</th><th className="px-4 py-3 font-medium">UF</th></tr></thead><tbody>{branchRows.map((row) => <tr key={row.id} className="border-b border-white/8 text-sm tabular-nums"><td className="py-3 pr-4 font-medium text-white/85">{row.name}</td><td className="px-4 py-3 text-white/70">{number(row.sales)}</td><td className="px-4 py-3 text-white/70">{number(row.target)}</td><td className={`px-4 py-3 font-medium ${complianceTone(row.compliance)}`}>{percent(row.compliance)}</td><td className="px-4 py-3 text-white/70">{uf(row.salesUf)}</td></tr>)}</tbody></table></div>
       </div>
       <div>
-        <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Actual</h2>
-        <dl className="mt-2 grid grid-cols-2 divide-x divide-y divide-white/8 border-y border-white/10">{[
-          ['Vencidas', operations.tasks.overdue],
-          ['Urgentes', operations.tasks.urgent],
-          ['Revisión', operations.valuations.review],
-          ['Pausadas', operations.assignments.paused],
-          ['Oferta', operations.market.properties],
-          ['Confirmadas', operations.market.confirmed],
-        ].map(([label, value]) => <div key={label} className="px-3 py-4"><dt className="text-[9px] uppercase tracking-[0.1em] text-white/35">{label}</dt><dd className={`mt-2 text-xl font-semibold tabular-nums ${Number(value) > 0 && ['Vencidas', 'Urgentes', 'Revisión', 'Pausadas'].includes(String(label)) ? 'text-[#ff8d87]' : 'text-white'}`}>{number(Number(value))}</dd></div>)}</dl>
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Mercado</h2>
+        <dl className="mt-2 grid grid-cols-2 divide-x divide-y divide-white/8 border-y border-white/10">
+          <div className="px-3 py-4"><dt className="text-[9px] uppercase tracking-[0.1em] text-white/35">Oferta</dt><dd className="mt-2 text-xl font-semibold tabular-nums">{number(operations.market.properties)}</dd></div>
+          <div className="px-3 py-4"><dt className="text-[9px] uppercase tracking-[0.1em] text-white/35">Confirmadas</dt><dd className="mt-2 text-xl font-semibold tabular-nums">{number(operations.market.confirmed)}</dd></div>
+        </dl>
       </div>
     </section>
   </div></main>
