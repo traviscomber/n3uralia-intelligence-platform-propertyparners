@@ -13,6 +13,7 @@ type IntelligenceAccessPolicy = {
   domains: readonly IntelligenceDomain[]
   sourceClasses: readonly IntelligenceSourceClass[]
   actionAudiences: readonly IntelligenceAction['audience'][]
+  contextAudience: N3uraliaIntelligenceContext['audience']
 }
 
 export type FilteredIntelligenceContext = N3uraliaIntelligenceContext
@@ -33,21 +34,58 @@ const ALL_SOURCE_CLASSES: readonly IntelligenceSourceClass[] = [
   'n3uralia_inference',
 ]
 
+const DIRECTOR_DOMAINS: readonly IntelligenceDomain[] = [
+  'executive',
+  'crm',
+  'market',
+  'valuation',
+  'documents',
+  'reports',
+]
+
+const SELLER_DOMAINS: readonly IntelligenceDomain[] = ['crm', 'documents']
+const SELLER_SOURCE_CLASSES: readonly IntelligenceSourceClass[] = [
+  'client_evidence',
+  'n3uralia_model',
+  'n3uralia_inference',
+]
+
 const ACCESS_POLICIES: Record<CopilotRole, IntelligenceAccessPolicy> = {
   ceo: {
     domains: ALL_DOMAINS,
     sourceClasses: ALL_SOURCE_CLASSES,
     actionAudiences: ['ceo'],
+    contextAudience: 'ceo',
+  },
+  admin: {
+    domains: ALL_DOMAINS,
+    sourceClasses: ALL_SOURCE_CLASSES,
+    actionAudiences: ['ceo'],
+    contextAudience: 'ceo',
   },
   director: {
-    domains: ['executive', 'crm', 'market', 'valuation', 'documents', 'reports'],
+    domains: DIRECTOR_DOMAINS,
     sourceClasses: ALL_SOURCE_CLASSES,
     actionAudiences: ['director'],
+    contextAudience: 'director',
+  },
+  subdirector: {
+    domains: DIRECTOR_DOMAINS,
+    sourceClasses: ALL_SOURCE_CLASSES,
+    actionAudiences: ['director'],
+    contextAudience: 'director',
   },
   partner: {
-    domains: ['crm', 'documents'],
-    sourceClasses: ['client_evidence', 'n3uralia_model', 'n3uralia_inference'],
+    domains: SELLER_DOMAINS,
+    sourceClasses: SELLER_SOURCE_CLASSES,
     actionAudiences: ['seller'],
+    contextAudience: 'seller',
+  },
+  seller: {
+    domains: SELLER_DOMAINS,
+    sourceClasses: SELLER_SOURCE_CLASSES,
+    actionAudiences: ['seller'],
+    contextAudience: 'seller',
   },
 }
 
@@ -110,7 +148,7 @@ export function applyIntelligenceAccessPolicy(
 
   const filteredContext: FilteredIntelligenceContext = {
     ...context,
-    audience: role === 'partner' ? 'seller' : role,
+    audience: policy.contextAudience,
     evidence,
     signals,
     risks,
