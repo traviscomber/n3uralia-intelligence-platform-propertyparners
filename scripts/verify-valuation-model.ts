@@ -4,12 +4,8 @@ import { apartmentOfferWeightedUfM2, calculateDeterministicValuation, houseWeigh
 import { calculateContractualValuation, similarityScoreToWeight } from '../lib/valuation-contract'
 
 const apartment = calculateDeterministicValuation({
-  propertyType: 'Departamento',
-  usefulAreaM2: 227,
-  terraceAreaM2: 53,
-  appliedUsefulUfM2: 70,
+  propertyType: 'Departamento', usefulAreaM2: 227, terraceAreaM2: 53, appliedUsefulUfM2: 70,
 })
-
 assert.equal(apartment.effectiveAreaM2, 253.5)
 assert.equal(apartment.commercialValueUf, 15890)
 assert.equal(apartment.commercialWeightedUfM2, 62.7)
@@ -17,13 +13,8 @@ assert.deepEqual(apartment.scenarios.map((scenario) => scenario.publicationUf), 
 assert.equal(Number(apartmentOfferWeightedUfM2(14200, 220, 250).toFixed(6)), 60.425532)
 
 const house = calculateDeterministicValuation({
-  propertyType: 'Casa',
-  builtAreaM2: 200,
-  landAreaM2: 800,
-  builtUfM2: 50,
-  landUfM2: 10,
+  propertyType: 'Casa', builtAreaM2: 200, landAreaM2: 800, builtUfM2: 50, landUfM2: 10,
 })
-
 assert.equal(house.effectiveAreaM2, 400)
 assert.equal(house.commercialValueUf, 18000)
 assert.equal(house.commercialWeightedUfM2, 45)
@@ -31,29 +22,23 @@ assert.equal(houseWeightedUfM2(18000, 200, 800), 45)
 
 assert.equal(similarityScoreToWeight(0.95), 0.95)
 assert.equal(similarityScoreToWeight(0.62), 0.62)
-assert.equal(similarityScoreToWeight(0), 0.1)
-assert.throws(() => similarityScoreToWeight(62), /escala de 0 a 1/)
+assert.throws(() => similarityScoreToWeight(0), /mayor que 0/)
+assert.throws(() => similarityScoreToWeight(62), /menor o igual a 1/)
 
-const weighted = calculateContractualValuation(
-  {
-    propertyType: 'Departamento',
-    address: 'Caso de prueba',
-    neighborhood: 'Vitacura',
-    latitude: -33.38,
-    longitude: -70.57,
-    usefulAreaM2: 100,
-    terraceAreaM2: 0,
-  },
-  [
-    { id: 'a', sourceType: 'Portal', sourceReference: 'a', address: 'a', neighborhood: 'Vitacura', propertyType: 'Departamento', transactionDate: '2026-01-10', distanceMeters: 300, priceUf: 5000, priceUfM2: 50, similarityScore: 0.95, selected: true, adjustmentPct: 0 },
-    { id: 'b', sourceType: 'Portal', sourceReference: 'b', address: 'b', neighborhood: 'Vitacura', propertyType: 'Departamento', transactionDate: '2026-02-10', distanceMeters: 500, priceUf: 7000, priceUfM2: 70, similarityScore: 0.78, selected: true, adjustmentPct: 0 },
-    { id: 'c', sourceType: 'Portal', sourceReference: 'c', address: 'c', neighborhood: 'Vitacura', propertyType: 'Departamento', transactionDate: '2026-03-10', distanceMeters: 700, priceUf: 9000, priceUfM2: 90, similarityScore: 0.62, selected: true, adjustmentPct: 0 },
-  ],
-  { condition: 0, remodeling: 0, orientation: 0, floor: 0, light: 0, view: 0, noise: 0, commercialPotential: 0 },
-)
+const factors = { condition: 0, remodeling: 0, orientation: 0, floor: 0, light: 0, view: 0, noise: 0, commercialPotential: 0 }
+const subject = { propertyType: 'Departamento' as const, address: 'Caso de prueba', neighborhood: 'Vitacura', latitude: -33.38, longitude: -70.57, usefulAreaM2: 100, terraceAreaM2: 0 }
+const comparables = [
+  { id: 'a', sourceType: 'Portal' as const, sourceReference: 'a', address: 'a', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-01-10', distanceMeters: 300, priceUf: 5000, priceUfM2: 50, similarityScore: 0.95, selected: true, adjustmentPct: 0 },
+  { id: 'b', sourceType: 'Portal' as const, sourceReference: 'b', address: 'b', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-02-10', distanceMeters: 500, priceUf: 7000, priceUfM2: 70, similarityScore: 0.78, selected: true, adjustmentPct: 0 },
+  { id: 'c', sourceType: 'Portal' as const, sourceReference: 'c', address: 'c', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-03-10', distanceMeters: 700, priceUf: 9000, priceUfM2: 90, similarityScore: 0.62, selected: true, adjustmentPct: 0 },
+]
+const weighted = calculateContractualValuation(subject, comparables, factors)
 assert.equal(weighted.baseUfM2, 70)
+assert.throws(() => calculateContractualValuation(subject, [{ ...comparables[0], similarityScore: 0 }, comparables[1]], factors), /similitud respaldada/)
+assert.throws(() => calculateContractualValuation(subject, [{ ...comparables[0], adjustmentPct: 36 }, comparables[1]], factors), /-35% y 35%/)
 
 const valuationPage = readFileSync('app/dashboard/valuation/page.tsx', 'utf8')
+const valuationWorkspace = readFileSync('app/dashboard/valuations/[id]/page.tsx', 'utf8')
 const valuationApi = readFileSync('app/api/valuation/cases/route.ts', 'utf8')
 const valuationReport = readFileSync('components/valuation/valuation-evidence-report.tsx', 'utf8')
 const marketPage = readFileSync('app/dashboard/market/page.tsx', 'utf8')
@@ -66,6 +51,13 @@ assert.match(valuationPage, /Latitud/, 'Valuation form must expose subject latit
 assert.match(valuationPage, /Longitud/, 'Valuation form must expose subject longitude.')
 assert.match(valuationPage, /Fecha de transacción/, 'Valuation form must expose comparable transaction date.')
 assert.match(valuationPage, /Distancia al sujeto/, 'Valuation form must expose comparable distance.')
+assert.match(valuationPage, /similarityScore: 0,/, 'Blank comparables must start without an assumed similarity.')
+assert.match(valuationPage, /selected: false,/, 'Blank comparables must not start selected.')
+assert.match(valuationPage, /useState<ValuationComparable\[]>\(\[\]\)/, 'Valuation form must not create placeholder comparables.')
+assert.doesNotMatch(valuationPage, /similarityScore: 0\.7/, 'Valuation form must not contain the historical simulated 70% score.')
+assert.match(valuationWorkspace, /similarity_score \* 100/, 'Workspace must render canonical 0-1 similarity as a percentage.')
+assert.match(valuationWorkspace, /min=\{-35\} max=\{35\}/, 'Workspace adjustment range must match the canonical API range.')
+assert.match(valuationWorkspace, /Resultado preliminar/, 'Draft and review values must be clearly marked as preliminary.')
 assert.match(valuationApi, /distance_meters: item\.distanceMeters \?\? null/, 'Valuation API must persist comparable distance.')
 assert.match(valuationApi, /transaction_date: item\.transactionDate \?\? null/, 'Valuation API must persist transaction date.')
 assert.match(valuationReport, /transaction_date/, 'Printable valuation report must include transaction date.')
@@ -83,4 +75,4 @@ assert.doesNotMatch(scopeMatrix, /Estado inicial/, 'Contractual matrix must not 
 assert.match(scopeMatrix, /MKT-15/, 'Contractual matrix must track export completion explicitly.')
 assert.match(scopeMatrix, /VAL-01/, 'Contractual matrix must track objective valuation fields explicitly.')
 
-console.log('Valuation model and canonical delivery gaps 1-3 verified.')
+console.log('Valuation model, canonical evidence and non-mock invariants verified.')
