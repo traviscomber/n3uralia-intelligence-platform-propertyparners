@@ -18,6 +18,7 @@ const STATUSES = new Set(['complete', 'partial', 'pending_client', 'pending_n3ur
 const EVIDENCE_STATUSES = new Set(['verified', 'partial', 'pending_client', 'pending_n3uralia'])
 const DELIVERY_STATUSES = new Set(['draft', 'sent', 'resent', 'acknowledged'])
 const PAYMENT_STATUSES = new Set(['not_applicable', 'pending', 'received'])
+const REPORTIN_VERSION = '1.0'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -144,18 +145,27 @@ function parseInput(value: unknown): CanonicalClientReportInput {
 export async function GET() {
   const access = await requireRoleAccess(['admin', 'ceo'])
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
-  return NextResponse.json({ configuration: getCanonicalClientReportConfiguration() })
+  return NextResponse.json({
+    configuration: getCanonicalClientReportConfiguration(),
+    reportin: { version: REPORTIN_VERSION, artifact: 'pdf', designAuthority: 'DESIGN.md' },
+  })
 }
 
 export async function POST(request: NextRequest) {
   const access = await requireRoleAccess(['admin', 'ceo'])
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
 
+  const startedAt = Date.now()
   try {
     const input = parseInput(await request.json())
+    const generationStartedAt = Date.now()
     const report = await generateCanonicalClientReport(input)
+    const openaiAndValidationMs = Date.now() - generationStartedAt
+
+    const persistenceStartedAt = Date.now()
     const supabase = createAdminClient()
     const periodTag = `${input.periodStart}_${input.periodEnd}`
+    const modelTag = `openai-${report.canonical_metadata.model}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-')
 
     const { data, error } = await supabase
       .from('knowledge_documents')
@@ -168,7 +178,8 @@ export async function POST(request: NextRequest) {
           'canonical',
           'n3uralia-client-report',
           'client-facing',
-          'openai-gpt-5.6-sol',
+          modelTag,
+          `reportin-${REPORTIN_VERSION}`,
           periodTag,
           report.delivery.status,
           report.delivery.paymentMilestonePercent !== null
@@ -182,6 +193,10 @@ export async function POST(request: NextRequest) {
 
     if (error || !data) throw error || new Error('REPORT_PERSISTENCE_FAILED')
 
+    const artifactUrl = `/api/management/reports/canonical-client/${data.id}/artifact`
+    const persistenceMs = Date.now() - persistenceStartedAt
+    const totalMs = Date.now() - startedAt
+
     const { error: auditError } = await supabase.from('report_directory_audit_log').insert({
       actor_id: access.userId,
       action: 'create',
@@ -194,16 +209,29 @@ export async function POST(request: NextRequest) {
         period: report.period,
         delivery: report.delivery,
         canonical_metadata: report.canonical_metadata,
+        reportin: {
+          version: REPORTIN_VERSION,
+          artifact_url: artifactUrl,
+          design_authority: 'DESIGN.md',
+        },
+        timing: { openai_and_validation_ms: openaiAndValidationMs, persistence_ms: persistenceMs, total_ms: totalMs },
       },
     })
 
     if (auditError) console.error('CANONICAL_CLIENT_REPORT_AUDIT_FAILED', { reportId: data.id })
 
-    return NextResponse.json({ id: data.id, createdAt: data.created_at, report }, { status: 201 })
+    return NextResponse.json({
+      id: data.id,
+      createdAt: data.created_at,
+      report,
+      artifactUrl,
+      reportin: { version: REPORTIN_VERSION, format: 'pdf' },
+      timing: { openaiAndValidationMs, persistenceMs, totalMs },
+    }, { status: 201 })
   } catch (error) {
     const code = error instanceof Error ? error.message : 'CANONICAL_CLIENT_REPORT_FAILED'
     const status = code === 'OPENAI_API_KEY_MISSING' ? 503 : code.startsWith('INVALID_') ? 400 : 500
-    console.error('CANONICAL_CLIENT_REPORT_FAILED', { code })
+    console.error('CANONICAL_CLIENT_REPORT_FAILED', { code, totalMs: Date.now() - startedAt })
     return NextResponse.json(
       {
         error: status === 503
