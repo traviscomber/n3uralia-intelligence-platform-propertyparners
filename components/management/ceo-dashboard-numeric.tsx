@@ -14,18 +14,11 @@ type Metric = {
   yoy?: number | null
 }
 
-type Evolution = {
-  period: string
-  sales: number | null
-  salesTarget: number | null
-}
-
 type Entity = {
   id: string
   name: string
   entityType: string
   metrics: Metric[]
-  evolution?: Evolution[]
 }
 
 type Summary = {
@@ -109,7 +102,6 @@ export function CeoDashboardNumeric() {
   const salesUf = metric(company, 'sales_uf')
   const stock = metric(company, 'stock')
   const conversion = metric(company, 'conversion')
-  const cumulativeSales = metric(company, 'cumulative_sales')
   const cumulativeUf = metric(company, 'cumulative_sales_uf')
   const portfolioChange = metric(company, 'portfolio_net_change')
   const gap = sales?.value != null && sales?.target != null ? sales.value - sales.target : null
@@ -166,7 +158,6 @@ export function CeoDashboardNumeric() {
       ['Cierres', sales?.value],
       ['Meta', sales?.target],
       ['Cumplimiento', sales?.compliance],
-      ['Cierres acumulados', cumulativeSales?.value],
       ['UF', salesUf?.value],
       ['UF acumuladas', cumulativeUf?.value],
       ['Cartera', stock?.value],
@@ -245,12 +236,11 @@ export function CeoDashboardNumeric() {
       <section className="mt-8 grid gap-8 xl:grid-cols-2">
         <div>
           <p className="mb-3 text-[10px] uppercase tracking-[0.16em] text-white/45">Mercado</p>
-          <div className="grid gap-px bg-white/10 sm:grid-cols-4">
+          <div className="grid gap-px bg-white/10 sm:grid-cols-3">
             {[
               ['Oferta', operations.market.properties],
               ['Confirmadas', operations.market.confirmed],
-              ['Sin identidad', operations.market.pendingIdentity],
-              ['Variación cartera', portfolioChange?.mom == null ? '—' : `${signed(portfolioChange.mom, '%')}`],
+              ['Variación cartera', portfolioChange?.mom == null ? '—' : signed(portfolioChange.mom, '%')],
             ].map(([label, value]) => (
               <article key={label} className="bg-[#0b0f0f] p-4">
                 <p className="text-[10px] uppercase tracking-[0.12em] text-white/40">{label}</p>
@@ -262,13 +252,12 @@ export function CeoDashboardNumeric() {
 
         <div>
           <p className="mb-3 text-[10px] uppercase tracking-[0.16em] text-white/45">Gestión</p>
-          <div className="grid gap-px bg-white/10 sm:grid-cols-5">
+          <div className="grid gap-px bg-white/10 sm:grid-cols-4">
             {[
               ['Vencidas', operations.tasks.overdue],
               ['Urgentes', operations.tasks.urgent],
               ['Revisión', operations.valuations.review],
               ['Pausadas', operations.assignments.paused],
-              ['Sin identidad', operations.market.pendingIdentity],
             ].map(([label, value]) => (
               <article key={label} className="bg-[#0b0f0f] p-4">
                 <p className="text-[10px] uppercase tracking-[0.12em] text-white/40">{label}</p>
@@ -280,21 +269,17 @@ export function CeoDashboardNumeric() {
       </section>
 
       <section className="mt-8">
-        <div className="mb-3 flex items-end justify-between gap-4">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">Oficinas</p>
-          <Link href="/dashboard/reportes/autonomos" className="text-xs text-white/45 hover:text-white">Ver detalle</Link>
-        </div>
+        <p className="mb-3 text-[10px] uppercase tracking-[0.16em] text-white/45">Oficinas</p>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-left">
+          <table className="w-full min-w-[560px] border-collapse text-left">
             <thead className="border-b border-white/10 text-[10px] uppercase tracking-[0.12em] text-white/40">
-              <tr><th className="py-3 pr-4">Oficina</th><th className="px-4 py-3">Cierres</th><th className="px-4 py-3">Meta</th><th className="px-4 py-3">%</th><th className="px-4 py-3">UF</th><th className="px-4 py-3">Conversión</th></tr>
+              <tr><th className="py-3 pr-4">Oficina</th><th className="px-4 py-3">Cierres</th><th className="px-4 py-3">%</th><th className="px-4 py-3">UF</th><th className="px-4 py-3">Conversión</th></tr>
             </thead>
             <tbody>
               {branchRows.map((row) => (
                 <tr key={row.id} className="border-b border-white/8 text-sm tabular-nums">
                   <td className="py-4 pr-4 font-medium">{row.name}</td>
                   <td className="px-4 py-4">{number(row.sales?.value)}</td>
-                  <td className="px-4 py-4">{number(row.sales?.target)}</td>
                   <td className="px-4 py-4">{percent(row.sales?.compliance)}</td>
                   <td className="px-4 py-4">{uf(row.uf?.value)}</td>
                   <td className="px-4 py-4">{number(row.conversion?.value, 1)}</td>
