@@ -1,0 +1,277 @@
+{
+  "title": "Informe ejecutivo Property Partners — enero a julio 2026 · Vista V2",
+  "subtitle": "Resultados comerciales, disciplina operacional y comparación por oficinas",
+  "executive_summary": "Entre enero y julio de 2026 se registraron 45 cierres frente a una meta acumulada de 56,7, equivalente a 79,37% de cumplimiento y una brecha de 11,7 cierres. Julio fue el mejor mes del período con 11 operaciones, pero la evidencia operacional muestra que la repetibilidad del resultado todavía depende de mejorar seguimiento, realización de visitas y activación de cartera. Lo Beltrán presenta el patrón más equilibrado; Nueva Costanera concentra el mayor riesgo de seguimiento y Santa María el principal riesgo de cartera.",
+  "sections": [
+    {
+      "id": "desempeno-periodo",
+      "title": "Desempeño del período",
+      "status": "verified",
+      "summary": "La serie mensual comparable registra 4, 3, 7, 8, 4, 8 y 11 cierres entre enero y julio.",
+      "key_findings": [
+        "Acumulado enero-julio: 45 cierres.",
+        "Meta acumulada: 56,7 cierres.",
+        "Cumplimiento acumulado: 79,37%.",
+        "Brecha acumulada: 11,7 cierres."
+      ],
+      "next_actions": [
+        "Mantener la serie mensual con la misma metodología durante agosto.",
+        "Separar siempre operaciones, operaciones en alcance y créditos internos."
+      ],
+      "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"]
+    },
+    {
+      "id": "lectura-julio",
+      "title": "Lectura de julio",
+      "status": "verified",
+      "summary": "Julio alcanzó 11 operaciones, 10 operaciones dentro del alcance de gestión y 9,5 cierres acreditados internamente.",
+      "key_findings": [
+        "Julio supera la meta mensual de 8,1 operaciones.",
+        "El crecimiento frente a junio fue 37,5%.",
+        "Un mes fuerte no demuestra todavía una mejora estructural."
+      ],
+      "next_actions": [
+        "Confirmar la tendencia con datos equivalentes de agosto.",
+        "No mezclar operaciones reales con créditos internos."
+      ],
+      "evidence_refs": [
+        "knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517",
+        "knowledge:4859efa6-e978-4182-967e-e10fae7c22a4"
+      ]
+    },
+    {
+      "id": "disciplina-operacional",
+      "title": "Disciplina operacional",
+      "status": "verified",
+      "summary": "El resultado comercial de julio fue superior a la disciplina operacional observada en seguimiento y visitas.",
+      "key_findings": [
+        "Score canónico de seguimiento: 65,92%.",
+        "Cumplimiento de visitas realizadas: 52,12%.",
+        "Clasificación activa: 57,20%."
+      ],
+      "next_actions": [
+        "Definir una meta mensual de realización de visitas.",
+        "Reducir leads sin gestión y mejorar clasificación activa."
+      ],
+      "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"]
+    },
+    {
+      "id": "oficinas",
+      "title": "Comparación por oficinas",
+      "status": "verified",
+      "summary": "Las oficinas presentan riesgos y fortalezas distintas que requieren acciones específicas.",
+      "key_findings": [
+        "Lo Beltrán: seguimiento 81,33%, visitas 55,04% y 4 cierres acreditados.",
+        "Nueva Costanera: seguimiento 54,41%, visitas 38,95% y 3 cierres acreditados.",
+        "Santa María: seguimiento 72,46%, visitas 64,20% y 2,5 cierres acreditados."
+      ],
+      "next_actions": [
+        "Replicar prácticas de seguimiento de Lo Beltrán.",
+        "Ejecutar sprint de reactivación en Nueva Costanera.",
+        "Auditar cartera y suspensiones en Santa María."
+      ],
+      "evidence_refs": [
+        "knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517",
+        "knowledge:4859efa6-e978-4182-967e-e10fae7c22a4"
+      ]
+    },
+    {
+      "id": "riesgos",
+      "title": "Riesgos y limitaciones",
+      "status": "partial",
+      "summary": "La comparación histórica está limitada a métricas con metodología equivalente.",
+      "key_findings": [
+        "Las métricas operacionales detalladas de julio no tienen series equivalentes para enero-junio.",
+        "Los scores de junio y julio no deben compararse sin reconciliación metodológica.",
+        "El balance captaciones-suspensiones no equivale a cambio neto de stock."
+      ],
+      "next_actions": [
+        "Mantener las limitaciones visibles en el informe.",
+        "No completar series ausentes con cero o inferencias."
+      ],
+      "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"]
+    },
+    {
+      "id": "prioridades",
+      "title": "Prioridades ejecutivas",
+      "status": "informational",
+      "summary": "La prioridad es convertir el resultado de julio en una mejora repetible y verificable.",
+      "key_findings": [
+        "Para llegar a 97,2 cierres al cierre del año se requieren 52,2 cierres entre agosto y diciembre.",
+        "El promedio requerido es 10,44 cierres mensuales."
+      ],
+      "next_actions": [
+        "Monitorear agosto con el mismo nivel de detalle.",
+        "Asignar responsables y plazos a cada intervención por oficina.",
+        "Mantener trazabilidad de evidencia para cada cifra material."
+      ],
+      "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"]
+    }
+  ],
+  "charts": [
+    {
+      "id": "cierres-mensuales-vs-meta",
+      "title": "Cierres mensuales versus meta",
+      "purpose": "Mostrar el desempeño mensual y la volatilidad frente a la meta temporal de 8,1 cierres.",
+      "type": "combo_bar_line",
+      "categories": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul"],
+      "series": [
+        {
+          "id": "cierres",
+          "label": "Cierres",
+          "values": [4, 3, 7, 8, 4, 8, 11],
+          "unit": "cierres",
+          "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+          "methodology_version": "cierres-comparables-v1"
+        },
+        {
+          "id": "meta",
+          "label": "Meta mensual",
+          "values": [8.1, 8.1, 8.1, 8.1, 8.1, 8.1, 8.1],
+          "unit": "cierres",
+          "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+          "methodology_version": "cierres-comparables-v1"
+        }
+      ],
+      "source_note": "Fuente: conclusiones canónicas enero-julio 2026. Meta mensual temporal constante de 8,1.",
+      "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+      "status": "verified",
+      "direct_labels": true,
+      "target_series_id": "meta"
+    },
+    {
+      "id": "acumulado-vs-meta",
+      "title": "Cierres acumulados versus meta acumulada",
+      "purpose": "Visualizar la brecha acumulada del período y el efecto del resultado de julio.",
+      "type": "line",
+      "categories": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul"],
+      "series": [
+        {
+          "id": "acumulado-real",
+          "label": "Acumulado real",
+          "values": [4, 7, 14, 22, 26, 34, 45],
+          "unit": "cierres",
+          "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+          "methodology_version": "cierres-comparables-v1"
+        },
+        {
+          "id": "acumulado-meta",
+          "label": "Meta acumulada",
+          "values": [8.1, 16.2, 24.3, 32.4, 40.5, 48.6, 56.7],
+          "unit": "cierres",
+          "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+          "methodology_version": "cierres-comparables-v1"
+        }
+      ],
+      "source_note": "Fuente: serie mensual canónica y meta temporal de 8,1 cierres por mes.",
+      "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+      "status": "verified",
+      "direct_labels": true,
+      "target_series_id": "acumulado-meta"
+    },
+    {
+      "id": "cierres-acreditados-oficina",
+      "title": "Cierres acreditados por oficina — julio",
+      "purpose": "Comparar la distribución interna de cierres acreditados dentro del alcance de gestión.",
+      "type": "bar",
+      "categories": ["Santa María", "Nueva Costanera", "Lo Beltrán"],
+      "series": [
+        {
+          "id": "cierres-acreditados",
+          "label": "Cierres acreditados",
+          "values": [2.5, 3, 4],
+          "unit": "cierres acreditados",
+          "evidence_refs": ["knowledge:4859efa6-e978-4182-967e-e10fae7c22a4"],
+          "methodology_version": "distribucion-50-50-v1"
+        }
+      ],
+      "source_note": "Fuente: aclaración de gerencia sobre distribución 50/50. Total acreditado: 9,5 cierres.",
+      "evidence_refs": ["knowledge:4859efa6-e978-4182-967e-e10fae7c22a4"],
+      "status": "verified",
+      "direct_labels": true,
+      "target_series_id": null
+    },
+    {
+      "id": "disciplina-operacional-oficinas",
+      "title": "Seguimiento y visitas por oficina — julio",
+      "purpose": "Comparar dos indicadores operacionales porcentuales con metodología común para julio.",
+      "type": "grouped_bar",
+      "categories": ["Santa María", "Nueva Costanera", "Lo Beltrán"],
+      "series": [
+        {
+          "id": "seguimiento",
+          "label": "Seguimiento",
+          "values": [72.46, 54.41, 81.33],
+          "unit": "%",
+          "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+          "methodology_version": "operacion-julio-v2"
+        },
+        {
+          "id": "visitas",
+          "label": "Visitas realizadas",
+          "values": [64.2, 38.95, 55.04],
+          "unit": "%",
+          "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+          "methodology_version": "operacion-julio-v2"
+        }
+      ],
+      "source_note": "Fuente: conclusiones canónicas de operación julio 2026. Comparación válida solo para julio.",
+      "evidence_refs": ["knowledge:a210a05c-4c8f-4287-b2ce-594ba8cf3517"],
+      "status": "verified",
+      "direct_labels": true,
+      "target_series_id": null
+    }
+  ],
+  "conclusions": [
+    "Julio representa un quiebre comercial positivo, pero la mejora todavía no está consolidada.",
+    "La brecha acumulada exige sostener un promedio superior a la meta mensual durante agosto-diciembre.",
+    "La disciplina operacional es el principal condicionante de repetibilidad.",
+    "Las oficinas requieren intervenciones diferenciadas según su riesgo principal."
+  ],
+  "client_actions": [
+    "Validar responsables y plazos para las intervenciones por oficina.",
+    "Mantener el mismo nivel de detalle en la carga de agosto."
+  ],
+  "n3uralia_actions": [
+    "Mantener validación canónica y trazabilidad por evidencia.",
+    "No comparar metodologías incompatibles.",
+    "Actualizar el informe cuando exista el corte canónico de agosto."
+  ],
+  "limitations": [
+    "Las métricas operacionales detalladas solo están disponibles con estructura equivalente para julio.",
+    "Los scores de junio y julio no son comparables sin reconciliación metodológica.",
+    "El balance captaciones-suspensiones no representa por sí solo un cambio neto de stock.",
+    "Esta versión es una vista previa técnica en código y no constituye una entrega externa."
+  ],
+  "report_type": "n3uralia_client_canonical",
+  "standard_version": "1.1",
+  "client": "Property Partners Vitacura / PL Real Estate SpA",
+  "audience": "Pedro Pablo y contraparte ejecutiva",
+  "purpose": "Validar la composición Reportin V2 y la representación de gráficos con data canónica.",
+  "period": {
+    "start": "2026-01-01",
+    "end": "2026-07-31",
+    "source_cutoff": "2026-07-31"
+  },
+  "delivery": {
+    "recipient": "Pedro Pablo",
+    "status": "draft",
+    "purpose": "Vista previa técnica para revisión interna.",
+    "paymentMilestonePercent": null,
+    "paymentStatus": "not_applicable",
+    "deliveredAt": null
+  },
+  "canonical_metadata": {
+    "provider": "OpenAI",
+    "model": "GPT-5.6 Thinking",
+    "response_id": null,
+    "prompt_version": "reportin-1.1-code-preview",
+    "api": "chatgpt",
+    "reasoning_effort": "high",
+    "reasoning_mode": "pro",
+    "store": false,
+    "generated_at": "2026-08-06T11:01:00-04:00",
+    "source_policy": "canonical_input_only",
+    "source_snapshot_id": "pp-2026-01-07-canonical-preview-v2"
+  }
+}
