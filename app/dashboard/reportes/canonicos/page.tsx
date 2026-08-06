@@ -1,15 +1,7 @@
-import { BrainCircuit, FileCheck2, Send, ShieldCheck } from 'lucide-react'
+import Link from 'next/link'
+import { Download, ExternalLink, FileText, Plus } from 'lucide-react'
 import { requirePageCapability } from '@/lib/access-guards'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCanonicalClientReportConfiguration } from '@/lib/n3uralia-canonical-client-report'
-import {
-  IntelligenceHeader,
-  IntelligencePage,
-  IntelligencePanel,
-  MetricCard,
-  MetricGrid,
-  SectionHeading,
-} from '@/components/intelligence/design-system'
 
 type CanonicalDocumentRow = {
   id: string
@@ -17,6 +9,16 @@ type CanonicalDocumentRow = {
   content: string
   tags: string[] | null
   created_at: string
+}
+
+type ReportRecord = {
+  id: string
+  title: string
+  period: string
+  status: string
+  createdAt: string
+  pdfUrl: string | null
+  downloadUrl: string | null
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -37,162 +39,173 @@ function readRecord(record: Record<string, unknown> | null, key: string) {
   return record ? asRecord(record[key]) : null
 }
 
-function readString(record: Record<string, unknown> | null, key: string, fallback = 'n/d') {
+function readString(record: Record<string, unknown> | null, key: string, fallback = '') {
   return record && typeof record[key] === 'string' && String(record[key]).trim()
     ? String(record[key])
     : fallback
 }
 
-function readNumber(record: Record<string, unknown> | null, key: string) {
-  if (!record) return null
-  const value = Number(record[key])
-  return Number.isFinite(value) ? value : null
-}
-
-function formatDate(value: string | null | undefined) {
-  if (!value) return 'n/d'
+function formatDate(value: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime())
     ? value
     : new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 
+function formatPeriod(record: Record<string, unknown> | null) {
+  const period = readRecord(record, 'period')
+  const start = readString(period, 'start')
+  const end = readString(period, 'end')
+  if (start && end && start !== end) return `${start} — ${end}`
+  return start || end || 'Sin período'
+}
+
+function getArtifactUrl(parsed: Record<string, unknown> | null, type: 'pdf' | 'download') {
+  const artifacts = readRecord(parsed, 'artifacts')
+  const pdf = readRecord(artifacts, 'pdf')
+  const candidates = type === 'pdf'
+    ? ['url', 'viewUrl', 'artifactUrl', 'path']
+    : ['downloadUrl', 'url', 'artifactUrl', 'path']
+
+  for (const key of candidates) {
+    const value = readString(pdf, key)
+    if (value.startsWith('/')) return value
+    if (value.startsWith('https://')) return value
+  }
+  return null
+}
+
+function normalizeStatus(parsed: Record<string, unknown> | null, tags: string[] | null) {
+  const delivery = readRecord(parsed, 'delivery')
+  const raw = readString(delivery, 'status', tags?.includes('approved') ? 'approved' : 'draft')
+  const labels: Record<string, string> = {
+    draft: 'Borrador',
+    review: 'En revisión',
+    approved: 'Aprobado',
+    sent: 'Enviado',
+    resent: 'Reenviado',
+    registered: 'Registrado',
+  }
+  return labels[raw.toLowerCase()] ?? raw
+}
+
 export default async function CanonicalClientReportsPage() {
   await requirePageCapability('reports.global.read')
-  const configuration = getCanonicalClientReportConfiguration()
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('knowledge_documents')
     .select('id, title, content, tags, created_at')
     .contains('tags', ['n3uralia-client-report'])
     .order('created_at', { ascending: false })
-    .limit(24)
+    .limit(48)
 
   const documents = error ? [] : (data || []) as CanonicalDocumentRow[]
+  const reports: ReportRecord[] = documents.map((document) => {
+    const parsed = parseContent(document.content)
+    return {
+      id: document.id,
+      title: document.title,
+      period: formatPeriod(parsed),
+      status: normalizeStatus(parsed, document.tags),
+      createdAt: document.created_at,
+      pdfUrl: getArtifactUrl(parsed, 'pdf'),
+      downloadUrl: getArtifactUrl(parsed, 'download'),
+    }
+  })
+
+  const current = reports[0] ?? null
+  const history = reports.slice(1)
 
   return (
-    <IntelligencePage>
-      <IntelligenceHeader
-        eyebrow="N3uralia Canonical Publishing"
-        title="Informes canónicos hacia el Cliente"
-        description="Registro oficial de informes ejecutivos construidos sólo con fuentes verificadas. El estándar separa hechos, avances del portal, estado contractual, dependencias, próximos hitos y estado de entrega."
-        actions={[
-          { label: 'Reportes ejecutivos', href: '/dashboard/reportes/autonomos', primary: true },
-          { label: 'Operación de reportes', href: '/dashboard/reportes/operacion' },
-        ]}
-        meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Estándar activo · versión {configuration.standardVersion} · fuentes canónicas únicamente</div>}
-      />
-
-      <section>
-        <SectionHeading eyebrow="01 · Canonical Standard" title="Configuración editorial y de inteligencia" />
-        <MetricGrid>
-          <MetricCard label="Tipo" value="Cliente" detail={configuration.name} />
-          <MetricCard label="Modelo" value="GPT-5.6 Sol" detail={`${configuration.api} · ${configuration.reasoningMode} · esfuerzo ${configuration.reasoningEffort}`} />
-          <MetricCard label="Retención API" value="No" detail="Las solicitudes se ejecutan con store=false." />
-          <MetricCard label="Política de fuentes" value="Canónica" detail="No se permite completar vacíos con supuestos o datos externos." />
-        </MetricGrid>
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
-        <IntelligencePanel eyebrow="Required Structure" title="Bloques obligatorios" description="Todos los informes mantienen la misma arquitectura para que el Cliente pueda comparar períodos y entregas.">
-          <div className="grid gap-px bg-[var(--n3-line)] md:grid-cols-2">
-            {configuration.requiredSections.map((section, index) => (
-              <div key={section} className="bg-[#080d0d] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">0{index + 1}</p>
-                <p className="mt-2 text-sm text-[var(--n3-text-light)]">{section}</p>
-              </div>
-            ))}
+    <main className="min-h-screen bg-[#050707] px-4 py-4 text-white sm:px-6 md:px-8 md:py-6">
+      <div className="mx-auto max-w-[1080px]">
+        <header className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/38">Informes</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight">Informes canónicos</h1>
           </div>
-        </IntelligencePanel>
+          <Link
+            href="/dashboard/reportes/crear"
+            className="inline-flex min-h-10 items-center justify-center gap-2 bg-[#d7332b] px-4 text-xs font-semibold transition hover:bg-[#bd2e28] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <Plus size={15} /> Crear informe
+          </Link>
+        </header>
 
-        <IntelligencePanel eyebrow="Governance" title="Controles no negociables" description="La IA organiza y redacta; no reemplaza la evidencia ni la aprobación humana." critical>
-          <div className="space-y-4 p-5">
-            {[
-              ['Evidencia', 'Cada afirmación material conserva referencias hacia el paquete fuente.'],
-              ['Estados', 'Se distingue completo, parcial, pendiente Cliente y pendiente N3uralia.'],
-              ['Pago', 'Un informe reenviado para cobro no se registra como pagado hasta confirmación.'],
-              ['Publicación', 'La versión distribuible requiere revisión humana antes del envío externo.'],
-            ].map(([title, detail]) => (
-              <div key={title} className="flex gap-3">
-                <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#ff766f]" />
-                <div><p className="text-xs font-semibold text-[var(--n3-text-light)]">{title}</p><p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{detail}</p></div>
-              </div>
-            ))}
+        <section className="mt-6">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Vigente</h2>
+            <span className="text-xs text-white/35">{current ? current.status : 'Sin informe'}</span>
           </div>
-        </IntelligencePanel>
-      </section>
 
-      <section>
-        <SectionHeading
-          eyebrow="02 · Client Delivery Registry"
-          title="Informes registrados"
-          description="La copia canónica conserva estado, destinatario, hito comercial, período, fecha de corte y huellas de los archivos entregados."
-        />
+          {current ? (
+            <article className="grid gap-5 border-b border-white/10 py-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+              <div>
+                <p className="text-xs uppercase tracking-[0.12em] text-white/38">{current.period}</p>
+                <h2 className="mt-2 text-xl font-semibold text-white">{current.title}</h2>
+                <p className="mt-2 text-xs text-white/38">Generado {formatDate(current.createdAt)}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {current.pdfUrl ? (
+                  <Link href={current.pdfUrl} target="_blank" className="inline-flex min-h-10 items-center gap-2 border border-white/15 px-4 text-xs font-medium text-white/75 transition hover:border-white/30 hover:text-white">
+                    <ExternalLink size={14} /> Abrir
+                  </Link>
+                ) : null}
+                {current.downloadUrl ? (
+                  <Link href={current.downloadUrl} className="inline-flex min-h-10 items-center gap-2 border border-white/15 px-4 text-xs font-medium text-white/75 transition hover:border-white/30 hover:text-white">
+                    <Download size={14} /> Descargar PDF
+                  </Link>
+                ) : null}
+                {!current.pdfUrl && !current.downloadUrl ? (
+                  <span className="inline-flex min-h-10 items-center gap-2 border border-white/10 px-4 text-xs text-white/35">
+                    <FileText size={14} /> PDF no vinculado
+                  </span>
+                ) : null}
+              </div>
+            </article>
+          ) : (
+            <div className="border-b border-white/10 py-8">
+              <p className="text-sm text-white/45">No hay informes registrados.</p>
+            </div>
+          )}
+        </section>
 
-        {documents.length === 0 ? (
-          <IntelligencePanel eyebrow="Registry" title="Sin informes registrados" description="No existe todavía un documento con la etiqueta canónica de cliente.">
-            <div className="p-5 text-sm text-[var(--n3-text-muted)]">Genere el primer informe mediante el endpoint autorizado o registre una entrega ya validada.</div>
-          </IntelligencePanel>
-        ) : (
-          <div className="grid gap-5 lg:grid-cols-2">
-            {documents.map((document) => {
-              const parsed = parseContent(document.content)
-              const period = readRecord(parsed, 'period')
-              const delivery = readRecord(parsed, 'delivery')
-              const artifacts = readRecord(parsed, 'artifacts')
-              const milestone = readNumber(delivery, 'paymentMilestonePercent')
-              const summary = readString(parsed, 'executive_summary', readString(parsed, 'summary', document.content.slice(0, 420)))
-              const deliveryStatus = readString(delivery, 'status', document.tags?.includes('resent') ? 'resent' : 'registered')
-              const paymentStatus = readString(delivery, 'paymentStatus', document.tags?.includes('payment-received') ? 'received' : 'pending')
+        <section className="mt-7">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Historial</h2>
+            <span className="text-xs tabular-nums text-white/35">{history.length}</span>
+          </div>
 
-              return (
-                <article key={document.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-6">
-                  <div className="flex items-start justify-between gap-5">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">Informe canónico N3uralia</p>
-                      <h2 className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{document.title}</h2>
-                    </div>
-                    <FileCheck2 size={22} className="shrink-0 text-[#ff766f]" />
+          {history.length > 0 ? (
+            <div className="divide-y divide-white/8">
+              {history.map((report) => (
+                <article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_100px_auto] sm:items-center">
+                  <span className="text-xs font-medium text-white/55">{report.period}</span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white/85">{report.title}</p>
+                    <p className="mt-1 text-[11px] text-white/32">{formatDate(report.createdAt)}</p>
                   </div>
-
-                  <p className="mt-4 text-sm leading-6 text-[var(--n3-text-muted)]">{summary}</p>
-
-                  <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
-                    {[
-                      ['Período', `${readString(period, 'start')} — ${readString(period, 'end')}`],
-                      ['Corte de fuentes', readString(period, 'source_cutoff')],
-                      ['Destinatario', readString(delivery, 'recipient')],
-                      ['Entrega', deliveryStatus],
-                      ['Hito de pago', milestone === null ? 'n/a' : `${milestone}%`],
-                      ['Estado de pago', paymentStatus],
-                    ].map(([label, value]) => (
-                      <div key={label} className="bg-[#080d0d] p-3">
-                        <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
-                        <p className="mt-1 text-xs font-medium text-[var(--n3-text-light)]">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 space-y-2 border-l-2 border-[#d7332b] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">
-                    <p>Registrado: {formatDate(document.created_at)}</p>
-                    <p>PDF: {artifacts ? readString(readRecord(artifacts, 'pdf'), 'sha256', 'huella registrada en la copia canónica') : 'huella registrada en la copia canónica'}</p>
-                    <p>DOCX: {artifacts ? readString(readRecord(artifacts, 'docx'), 'sha256', 'huella registrada en la copia canónica') : 'huella registrada en la copia canónica'}</p>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 border border-[var(--n3-line)] bg-[#080d0d] px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]"><Send size={13} /> {deliveryStatus}</span>
-                    <span className="inline-flex items-center gap-2 border border-[var(--n3-line)] bg-[#080d0d] px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]"><BrainCircuit size={13} /> {configuration.model}</span>
+                  <span className="text-xs text-white/45">{report.status}</span>
+                  <div className="flex justify-end gap-2">
+                    {report.pdfUrl ? (
+                      <Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-9 w-9 items-center justify-center border border-white/10 text-white/55 transition hover:border-white/25 hover:text-white">
+                        <ExternalLink size={14} />
+                      </Link>
+                    ) : null}
+                    {report.downloadUrl ? (
+                      <Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-9 w-9 items-center justify-center border border-white/10 text-white/55 transition hover:border-white/25 hover:text-white">
+                        <Download size={14} />
+                      </Link>
+                    ) : null}
                   </div>
                 </article>
-              )
-            })}
-          </div>
-        )}
-      </section>
-
-      <footer className="flex items-center gap-2 border-t border-[var(--n3-line)] pt-5 text-xs text-[var(--n3-text-muted)]">
-        <ShieldCheck size={15} /> N3uralia Canonical Client Reporting · revisión humana obligatoria antes de distribución
-      </footer>
-    </IntelligencePage>
+              ))}
+            </div>
+          ) : (
+            <div className="py-6 text-sm text-white/40">Sin versiones anteriores.</div>
+          )}
+        </section>
+      </div>
+    </main>
   )
 }
