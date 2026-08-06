@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoleAccess } from '@/lib/api-access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+  createCanonicalSnapshotId,
+  validateCanonicalReportPayload,
+} from '@/lib/reportin-canonical-validation'
+import {
   generateCanonicalClientReport,
   type CanonicalClientReportInput,
   type CanonicalContractItem,
@@ -153,9 +157,26 @@ export async function POST(request: NextRequest) {
     }
 
     const input = buildInput(relevant)
+    const validationStartedAt = Date.now()
+    const snapshotBase = {
+      title: input.title,
+      client: input.client,
+      period: {
+        start: input.periodStart,
+        end: input.periodEnd,
+        sourceCutoff: input.sourceCutoff,
+      },
+      evidence: input.verifiedEvidence,
+      metrics: [],
+      charts: [],
+    }
+    const sourceSnapshotId = createCanonicalSnapshotId(snapshotBase)
+    validateCanonicalReportPayload({ ...snapshotBase, sourceSnapshotId })
+    const validationMs = Date.now() - validationStartedAt
+
     const generationStartedAt = Date.now()
     const report = await generateCanonicalClientReport(input)
-    const openaiAndValidationMs = Date.now() - generationStartedAt
+    const openaiMs = Date.now() - generationStartedAt
 
     const persistenceStartedAt = Date.now()
     const modelTag = `openai-${report.canonical_metadata.model}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-')
@@ -163,7 +184,14 @@ export async function POST(request: NextRequest) {
       .from('knowledge_documents')
       .insert({
         title: report.title,
-        content: JSON.stringify(report),
+        content: JSON.stringify({
+          ...report,
+          canonical_metadata: {
+            ...report.canonical_metadata,
+            source_snapshot_id: sourceSnapshotId,
+            validation_ms: validationMs,
+          },
+        }),
         doc_type: 'report',
         neighborhood: null,
         tags: [
@@ -195,10 +223,11 @@ export async function POST(request: NextRequest) {
       before_state: null,
       after_state: {
         source_count: relevant.length,
+        source_snapshot_id: sourceSnapshotId,
         period: report.period,
         canonical_metadata: report.canonical_metadata,
         reportin: { version: REPORTIN_VERSION, artifact_url: artifactUrl },
-        timing: { openai_and_validation_ms: openaiAndValidationMs, persistence_ms: persistenceMs, total_ms: totalMs },
+        timing: { validation_ms: validationMs, openai_ms: openaiMs, persistence_ms: persistenceMs, total_ms: totalMs },
       },
     })
 
@@ -206,12 +235,16 @@ export async function POST(request: NextRequest) {
       id: inserted.id,
       createdAt: inserted.created_at,
       artifactUrl,
+      sourceSnapshotId,
       reportin: { version: REPORTIN_VERSION, format: 'pdf' },
-      timing: { openaiAndValidationMs, persistenceMs, totalMs },
+      timing: { validationMs, openaiMs, persistenceMs, totalMs },
     }, { status: 201 })
   } catch (cause) {
     const code = cause instanceof Error ? cause.message : 'FULL_PERIOD_REPORT_FAILED'
+    const status = code.startsWith('missing_or_invalid:') || code.startsWith('unknown_evidence:') || code.startsWith('invalid:')
+      ? 422
+      : 500
     console.error('FULL_PERIOD_REPORT_FAILED', { code, totalMs: Date.now() - startedAt })
-    return NextResponse.json({ error: 'No fue posible generar el informe del período completo.', code }, { status: 500 })
+    return NextResponse.json({ error: 'No fue posible generar el informe del período completo.', code }, { status })
   }
 }
