@@ -18,17 +18,18 @@ No se agregan nuevas capacidades si la evidencia, los permisos, la trazabilidad 
 - Informes canónicos simplificados para selección de período, generación, apertura y descarga.
 - Mercado, Propiedades, Metas, Control de gestión y Valorizaciones reducidos a datos y acciones.
 - Navegación centralizada por rol y capacidad.
-- Componentes base de workspace: shell, header, métricas y estado de datos.
+- Componentes base de workspace: shell, header, métricas, estados operativos y estado de datos.
+- Adopción del sistema común en CEO, Mercado, Propiedades, Informes, Valorizaciones, Metas y Control.
 - Valorizaciones sin mocks, con comparables evidenciados, workflow atómico, permisos y PDF preliminar marcado.
 - Restricción inicial de RPC privilegiadas de Valorizaciones.
 - Deployments productivos verificados en Vercel.
 
 ### En curso
 
-- Adopción de componentes canónicos en todos los módulos.
-- Exposición consistente de cobertura, frescura y errores de datos.
-- Consolidación de rutas legacy y redirects.
 - Auditoría completa de funciones SECURITY DEFINER y permisos RPC.
+- Corrección de tablas expuestas sin política RLS explícita.
+- Consolidación de rutas legacy y redirects.
+- Formalización del modelo de autoridad, alcance y capacidad.
 
 ### Dependencias reales
 
@@ -37,7 +38,7 @@ No se agregan nuevas capacidades si la evidencia, los permisos, la trazabilidad 
 - La prueba integral de Valorizaciones requiere una propiedad real, identidad confirmada y evidencia suficiente.
 - La generación de informes necesita observabilidad de modelo, latencia, costo y versión de prompt.
 
-## Bloque actual — Sistema común y verdad de datos
+## Bloque completado — Sistema común y verdad de datos
 
 Objetivo: que todas las vistas compartan estructura y comuniquen claramente qué está respaldado por datos.
 
@@ -45,14 +46,15 @@ Objetivo: que todas las vistas compartan estructura y comuniquen claramente qué
 - [x] WorkspaceShell, WorkspaceHeader, MetricStrip y DataStatusBar.
 - [x] Mercado adopta componentes comunes y muestra cobertura de identidad.
 - [x] Propiedades adopta componentes comunes y muestra identidad/vigencia.
-- [ ] CEO adopta formalmente componentes comunes sin perder su composición ejecutiva.
-- [ ] Informes adopta DataStatusBar y estado de generación.
-- [ ] Valorizaciones adopta DataStatusBar y preparación metodológica.
-- [ ] Metas y Control adoptan componentes comunes.
+- [x] CEO adopta formalmente componentes comunes sin perder su composición ejecutiva.
+- [x] Informes adopta DataStatusBar y estado documental.
+- [x] Valorizaciones adopta DataStatusBar y preparación metodológica.
+- [x] Metas adopta componentes comunes y muestra cobertura por entidad.
+- [x] Control adopta componentes comunes y muestra integridad de importación.
 
-Señal de cierre: las vistas principales comparten encabezado, acciones, métricas, estados empty/error/loading y estado de datos sin duplicación local.
+Señal de cierre alcanzada: las vistas principales comparten encabezado, acciones, métricas, estados empty/error/loading y estado de datos sin depender de patrones visuales paralelos.
 
-## Próximo bloque — Seguridad e integridad global
+## Bloque actual — Seguridad e integridad global
 
 Objetivo: reducir la superficie privilegiada y alinear frontend, API, RLS y RPC.
 
@@ -122,12 +124,11 @@ Señal de cierre: cero patrones visuales paralelos en los flujos principales y v
 
 ## Orden recomendado
 
-1. Terminar adopción de componentes comunes.
-2. Cerrar seguridad e integridad global.
-3. Consolidar rutas y permisos.
-4. Aumentar identidad y evidencia de datos.
-5. Cerrar operación de informes y scrapers.
-6. Ejecutar pulido visual final.
+1. Cerrar seguridad e integridad global.
+2. Consolidar rutas y permisos.
+3. Aumentar identidad y evidencia de datos.
+4. Cerrar operación de informes y scrapers.
+5. Ejecutar pulido visual final.
 
 ## Regla de planificación
 
