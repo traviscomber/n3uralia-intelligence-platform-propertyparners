@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
 
 type ValuationCase = {
   id:string
@@ -58,48 +58,58 @@ export default function ValuationRegistryPage(){
     issued:cases.filter(item=>item.status==='issued').length,
   }),[cases])
 
-  return <div className="space-y-6 pb-10">
-    <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--n3-line)] pb-5">
+  const actionCount = counts.draft + counts.review
+
+  return <div className="mx-auto max-w-5xl space-y-5 pb-12">
+    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--n3-line)] pb-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d7332b]">Módulo II · Valorización</p>
-        <h1 className="mt-2 text-3xl font-semibold text-[var(--n3-text-light)]">Registro de valorizaciones</h1>
-        <p className="mt-2 max-w-3xl text-sm text-[var(--n3-text-muted)]">Casos persistidos, versiones, estados de revisión y acceso al expediente trazable.</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Valorizaciones</p>
+        <h1 className="mt-2 text-3xl font-semibold text-[var(--n3-text-light)]">Registro</h1>
+        <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{actionCount} requieren acción</p>
       </div>
       <div className="flex gap-2">
-        <button onClick={()=>void load()} disabled={loading} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm text-[var(--n3-text-light)] disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading?'animate-spin':''}`}/>Actualizar</button>
-        <Link href="/dashboard/valuation" className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4"/>Nueva valorización</Link>
+        <button onClick={()=>void load()} disabled={loading} aria-label="Actualizar" className="inline-flex items-center border border-[var(--n3-line)] px-3 py-2 text-sm disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading?'animate-spin':''}`}/></button>
+        <Link href="/dashboard/valuation" className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4"/>Nueva</Link>
       </div>
     </header>
 
-    {error && <div className="border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">{error}</div>}
+    {error ? <div className="border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">{error}</div> : null}
 
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+    <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-4">
       {[
-        ['Total',counts.total],['Borradores',counts.draft],['En revisión',counts.review],['Aprobadas',counts.approved],['Emitidas',counts.issued]
-      ].map(([label,value])=><div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{value}</p></div>)}
+        ['Total',counts.total],['Borradores',counts.draft],['En revisión',counts.review],['Aprobadas / emitidas',counts.approved + counts.issued]
+      ].map(([label,value])=><div key={String(label)} className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold text-[var(--n3-text-light)]">{value}</p></div>)}
     </section>
 
-    <section className="flex flex-col gap-3 border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4 md:flex-row">
-      <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Buscar por dirección, barrio, tipo o ID" className="min-w-0 flex-1 border border-[var(--n3-line)] bg-black/20 px-3 py-2 text-sm text-[var(--n3-text-light)]"/>
+    {actionCount > 0 ? <section className="border border-[var(--n3-line)] bg-[#0c1111]">
+      <div className="border-b border-[var(--n3-line)] px-4 py-3"><h2 className="text-sm font-semibold">Acciones</h2></div>
+      <div className="divide-y divide-[var(--n3-line)]">
+        {counts.review > 0 ? <button onClick={()=>setStatus('review')} className="flex w-full items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03]"><span>Revisar valorizaciones</span><strong>{counts.review}</strong></button> : null}
+        {counts.draft > 0 ? <button onClick={()=>setStatus('draft')} className="flex w-full items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03]"><span>Completar borradores</span><strong>{counts.draft}</strong></button> : null}
+      </div>
+    </section> : null}
+
+    <section className="flex flex-col gap-3 border border-[var(--n3-line)] bg-[var(--n3-deep)] p-3 md:flex-row">
+      <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Buscar dirección, barrio, tipo o ID" className="min-w-0 flex-1 border border-[var(--n3-line)] bg-black/20 px-3 py-2 text-sm text-[var(--n3-text-light)]"/>
       <select value={status} onChange={event=>setStatus(event.target.value)} className="border border-[var(--n3-line)] bg-black/20 px-3 py-2 text-sm text-[var(--n3-text-light)]">
-        <option value="all">Todos los estados</option><option value="draft">Borrador</option><option value="review">En revisión</option><option value="approved">Aprobada</option><option value="issued">Emitida</option>
+        <option value="all">Todos</option><option value="draft">Borrador</option><option value="review">En revisión</option><option value="approved">Aprobada</option><option value="issued">Emitida</option>
       </select>
     </section>
 
     <section className="overflow-x-auto border border-[var(--n3-line)]">
-      <table className="min-w-full text-left text-sm">
-        <thead className="bg-[var(--n3-deep)] text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="px-4 py-3">Propiedad</th><th className="px-4 py-3">Estado</th><th className="px-4 py-3">Valor</th><th className="px-4 py-3">Rango</th><th className="px-4 py-3">Versión</th><th className="px-4 py-3">Actualización</th><th className="px-4 py-3"></th></tr></thead>
+      <table className="min-w-[820px] w-full text-left text-sm">
+        <thead className="bg-[var(--n3-deep)] text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="px-4 py-3">Propiedad</th><th className="px-4 py-3">Estado</th><th className="px-4 py-3 text-right">Valor UF</th><th className="px-4 py-3">Confianza</th><th className="px-4 py-3">Versión</th><th className="px-4 py-3">Actualización</th><th className="px-4 py-3"></th></tr></thead>
         <tbody>
-          {filtered.map(item=><tr key={item.id} className="border-t border-[var(--n3-line)]">
-            <td className="px-4 py-4"><p className="font-medium text-[var(--n3-text-light)]">{item.address || 'Propiedad sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'} · {item.id.slice(0,8)}</p></td>
-            <td className="px-4 py-4"><span className="border border-[var(--n3-line)] px-2 py-1 text-xs uppercase tracking-wide text-[var(--n3-text-light)]">{statusLabels[item.status] || item.status}</span></td>
-            <td className="px-4 py-4 font-medium text-[var(--n3-text-light)]">{item.estimated_value_uf==null?'—':`UF ${money.format(item.estimated_value_uf)}`}</td>
-            <td className="px-4 py-4 text-[var(--n3-text-muted)]">{item.low_value_uf==null||item.high_value_uf==null?'—':`${money.format(item.low_value_uf)}–${money.format(item.high_value_uf)} UF`}</td>
-            <td className="px-4 py-4 text-[var(--n3-text-light)]">v{item.version_number || 1}</td>
-            <td className="px-4 py-4 text-[var(--n3-text-muted)]">{new Date(item.updated_at).toLocaleString('es-CL')}</td>
-            <td className="px-4 py-4"><Link href={`/dashboard/valuations/${item.id}`} className="inline-flex items-center gap-1 text-sm font-medium text-[#ff766f]">Abrir<ArrowRight className="h-4 w-4"/></Link></td>
+          {filtered.map(item=><tr key={item.id} className="border-t border-[var(--n3-line)] hover:bg-white/[0.02]">
+            <td className="px-4 py-3"><p className="font-medium text-[var(--n3-text-light)]">{item.address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}</p></td>
+            <td className="px-4 py-3"><span className="text-xs uppercase tracking-wide text-[var(--n3-text-light)]">{statusLabels[item.status] || item.status}</span></td>
+            <td className="px-4 py-3 text-right font-medium text-[var(--n3-text-light)]">{item.estimated_value_uf==null?'—':money.format(item.estimated_value_uf)}</td>
+            <td className="px-4 py-3 text-[var(--n3-text-muted)]">{item.confidence || '—'}</td>
+            <td className="px-4 py-3 text-[var(--n3-text-light)]">v{item.version_number || 1}</td>
+            <td className="px-4 py-3 text-[var(--n3-text-muted)]">{new Date(item.updated_at).toLocaleDateString('es-CL')}</td>
+            <td className="px-4 py-3"><Link href={`/dashboard/valuations/${item.id}`} className="text-sm font-medium text-[#ff766f]">Abrir</Link></td>
           </tr>)}
-          {!loading && !filtered.length && <tr><td colSpan={7} className="px-4 py-12 text-center text-[var(--n3-text-muted)]">No hay valorizaciones que coincidan con los filtros.</td></tr>}
+          {!loading && !filtered.length ? <tr><td colSpan={7} className="px-4 py-10 text-center text-[var(--n3-text-muted)]">Sin resultados</td></tr> : null}
         </tbody>
       </table>
     </section>
