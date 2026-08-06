@@ -69,21 +69,22 @@ export function CeoDashboardNumeric() {
     conversion: metric(branch, 'conversion'),
   })).sort((a, b) => Number(a.sales?.compliance ?? 999) - Number(b.sales?.compliance ?? 999)), [branches])
 
-  const weakestBranch = branchRows[0]
-  const strongestBranch = [...branchRows].filter((item) => item.sales?.compliance != null).sort((a, b) => Number(b.sales?.compliance) - Number(a.sales?.compliance))[0]
+  const comparableBranches = branchRows.filter((item) => item.sales?.compliance != null)
+  const weakestBranch = comparableBranches[0]
+  const strongestBranch = [...comparableBranches].sort((a, b) => Number(b.sales?.compliance) - Number(a.sales?.compliance))[0]
 
   const insights = [
     { label: 'Riesgo', value: weakestBranch ? `${weakestBranch.name} · ${percent(weakestBranch.sales?.compliance)}` : '—', tone: 'text-[#ff8d87]' },
     { label: 'Oportunidad', value: strongestBranch ? `${strongestBranch.name} · ${percent(strongestBranch.sales?.compliance)}` : '—', tone: 'text-[#8fdca8]' },
-    { label: 'Cambio', value: sales?.mom != null ? `Cierres ${signed(sales.mom, '%')}` : `Cartera ${signed(portfolioChange?.mom, '%')}`, tone: 'text-white' },
+    { label: 'Tendencia', value: sales?.mom != null ? `Cierres ${signed(sales.mom, '%')}` : `Cartera ${signed(portfolioChange?.mom, '%')}`, tone: 'text-white' },
   ]
 
   const cards = [
     { label: 'Cierres', value: number(sales?.value), subvalue: `Meta ${number(sales?.target)}` },
     { label: 'Cumplimiento', value: percent(sales?.compliance), subvalue: `Brecha ${number(gap, 1)}`, tone: complianceTone(sales?.compliance) },
-    { label: 'UF', value: uf(salesUf?.value), subvalue: `Acum. ${uf(cumulativeUf?.value)}` },
+    { label: 'UF', value: uf(salesUf?.value), subvalue: `Acumulado ${uf(cumulativeUf?.value)}` },
     { label: 'Cartera', value: number(stock?.value), subvalue: signed(portfolioChange?.mom, '%') },
-    { label: 'Conversión', value: number(conversion?.value, 1), subvalue: 'Score' },
+    { label: 'Score conversión', value: number(conversion?.value, 1), subvalue: 'Gestión comercial' },
     { label: 'Vencidas', value: number(operations?.tasks.overdue), subvalue: 'Requieren gestión', tone: (operations?.tasks.overdue ?? 0) > 0 ? 'text-[#ff766f]' : 'text-white' },
   ]
 
@@ -91,7 +92,7 @@ export function CeoDashboardNumeric() {
     if (!summary || !operations) return
     const rows = [
       ['Periodo', summary.periodLabel], ['Cierres', sales?.value], ['Meta', sales?.target], ['Cumplimiento', sales?.compliance],
-      ['UF', salesUf?.value], ['UF acumuladas', cumulativeUf?.value], ['Cartera', stock?.value], ['Conversión', conversion?.value],
+      ['UF', salesUf?.value], ['UF acumuladas', cumulativeUf?.value], ['Cartera', stock?.value], ['Score conversión', conversion?.value],
       ['Tareas vencidas', operations.tasks.overdue], ['Tareas urgentes', operations.tasks.urgent],
       ['Valorizaciones en revisión', operations.valuations.review], ['Asignaciones pausadas', operations.assignments.paused],
     ]
@@ -105,20 +106,43 @@ export function CeoDashboardNumeric() {
     URL.revokeObjectURL(url)
   }
 
-  if (loading) return <main role="status" className="min-h-screen bg-[#050707] p-6 text-sm text-white/55">Cargando datos…</main>
-  if (error || !summary || !operations) return <main className="min-h-screen bg-[#050707] p-6 text-white"><p role="alert" className="mb-4 text-sm text-[#ff9b95]">No fue posible cargar la vista CEO.</p><button type="button" onClick={() => void load()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-3 text-sm font-semibold"><RefreshCw size={16} /> Reintentar</button></main>
+  if (loading) return <main role="status" aria-busy="true" className="min-h-screen bg-[#050707] p-6 text-sm text-white/55">Cargando datos…</main>
+  if (error || !summary || !operations) return <main className="min-h-screen bg-[#050707] p-6 text-white"><p role="alert" className="mb-4 text-sm text-[#ff9b95]">No fue posible cargar la vista CEO.</p><button type="button" onClick={() => void load()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-3 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><RefreshCw size={16} /> Reintentar</button></main>
 
-  const updatedAt = new Date(summary.generatedAt || operations.generatedAt)
-  const freshness = Number.isNaN(updatedAt.getTime()) ? '—' : new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(updatedAt)
+  const sourceDates = [summary.generatedAt, operations.generatedAt]
+    .map((value) => value ? new Date(value) : null)
+    .filter((value): value is Date => Boolean(value && !Number.isNaN(value.getTime())))
+  const cutoff = sourceDates.length > 0 ? new Date(Math.min(...sourceDates.map((value) => value.getTime()))) : null
+  const freshness = cutoff ? new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(cutoff) : '—'
 
-  return <main className="min-h-screen bg-[#050707] px-5 py-6 text-white md:px-8 md:py-8"><div className="mx-auto max-w-[1500px]">
-    <header className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
-      <div><div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.16em] text-white/40"><span>CEO</span><span aria-hidden="true">·</span><span>Actualizado {freshness}</span>{operations.errors.length > 0 ? <span className="text-[#ff766f]">{operations.errors.length} fuentes con error</span> : null}</div><h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">{summary.periodLabel}</h1></div>
-      <div className="grid grid-cols-3 gap-2 sm:flex"><button type="button" onClick={() => void load()} className="inline-flex min-h-10 items-center justify-center gap-2 border border-white/10 px-3 text-xs text-white/70"><RefreshCw size={14} /> Actualizar</button><Link href="/dashboard/reportes/crear" className="inline-flex min-h-10 items-center justify-center gap-2 bg-[#d7332b] px-3 text-xs font-semibold"><FileText size={14} /> Informe</Link><button type="button" onClick={exportCsv} className="inline-flex min-h-10 items-center justify-center gap-2 border border-white/10 px-3 text-xs text-white/70"><Download size={14} /> Exportar</button></div>
+  return <main className="min-h-screen bg-[#050707] px-5 py-5 text-white md:px-8 md:py-7"><div className="mx-auto max-w-[1320px]">
+    <header className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
+      <div><div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.16em] text-white/40"><span>Vista CEO</span><span aria-hidden="true">·</span><span>Corte {freshness}</span>{operations.errors.length > 0 ? <span className="text-[#ff766f]">{operations.errors.length} fuentes con error</span> : null}</div><h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">{summary.periodLabel}</h1></div>
+      <div className="grid grid-cols-3 gap-2 sm:flex"><button type="button" onClick={() => void load()} className="inline-flex min-h-10 items-center justify-center gap-2 border border-white/10 px-3 text-xs text-white/70 transition hover:border-white/25 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><RefreshCw size={14} /> Actualizar</button><Link href="/dashboard/reportes/crear" className="inline-flex min-h-10 items-center justify-center gap-2 bg-[#d7332b] px-3 text-xs font-semibold transition hover:bg-[#bd2e28] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><FileText size={14} /> Informe</Link><button type="button" onClick={exportCsv} className="inline-flex min-h-10 items-center justify-center gap-2 border border-white/10 px-3 text-xs text-white/70 transition hover:border-white/25 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><Download size={14} /> Exportar</button></div>
     </header>
-    <section aria-label="Indicadores principales" className="grid border-b border-white/10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">{cards.map((item) => <article key={item.label} className="border-b border-white/8 py-6 pr-5 sm:border-r sm:px-5 sm:first:pl-0 xl:border-b-0"><p className="text-[10px] uppercase tracking-[0.14em] text-white/38">{item.label}</p><p className={`mt-4 text-3xl font-semibold tabular-nums tracking-tight ${item.tone ?? 'text-white'}`}>{item.value}</p><p className="mt-1.5 text-xs tabular-nums text-white/38">{item.subvalue}</p></article>)}</section>
-    <section className="mt-10"><h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Inteligencia</h2><div className="mt-3 divide-y divide-white/8 border-y border-white/10 md:grid md:grid-cols-3 md:divide-x md:divide-y-0">{insights.map((item) => <article key={item.label} className="min-h-20 py-4 md:px-5 md:first:pl-0"><p className="text-[10px] uppercase tracking-[0.14em] text-white/35">{item.label}</p><p className={`mt-2 text-base font-semibold tabular-nums ${item.tone}`}>{item.value}</p></article>)}</div></section>
-    <section className="mt-10 grid gap-10 xl:grid-cols-2"><div><h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Mercado</h2><dl className="mt-3 grid grid-cols-3 divide-x divide-white/8 border-y border-white/10">{[['Oferta', operations.market.properties], ['Confirmadas', operations.market.confirmed], ['Variación', portfolioChange?.mom == null ? '—' : signed(portfolioChange.mom, '%')]].map(([label, value]) => <div key={label} className="py-5 text-center first:text-left last:text-right"><dt className="text-[10px] uppercase tracking-[0.12em] text-white/35">{label}</dt><dd className="mt-2 text-2xl font-semibold tabular-nums">{typeof value === 'number' ? number(value) : value}</dd></div>)}</dl></div><div><h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Gestión</h2><dl className="mt-3 grid grid-cols-4 divide-x divide-white/8 border-y border-white/10">{[['Vencidas', operations.tasks.overdue], ['Urgentes', operations.tasks.urgent], ['Revisión', operations.valuations.review], ['Pausadas', operations.assignments.paused]].map(([label, value]) => <div key={label} className="py-5 text-center first:text-left last:text-right"><dt className="text-[10px] uppercase tracking-[0.12em] text-white/35">{label}</dt><dd className={`mt-2 text-2xl font-semibold tabular-nums ${Number(value) > 0 ? 'text-[#ff8d87]' : 'text-white'}`}>{number(Number(value))}</dd></div>)}</dl></div></section>
-    <section className="mt-10"><h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Oficinas</h2><div className="mt-3 overflow-x-auto border-t border-white/10"><table className="w-full min-w-[560px] border-collapse text-left"><thead className="border-b border-white/10 text-[10px] uppercase tracking-[0.12em] text-white/35"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-4 py-3 font-medium">Cierres</th><th className="px-4 py-3 font-medium">Cumplimiento</th><th className="px-4 py-3 font-medium">UF</th><th className="px-4 py-3 font-medium">Conversión</th></tr></thead><tbody>{branchRows.map((row) => <tr key={row.id} className="border-b border-white/8 text-sm tabular-nums"><td className="py-4 pr-4 font-medium text-white/85">{row.name}</td><td className="px-4 py-4 text-white/70">{number(row.sales?.value)}</td><td className={`px-4 py-4 font-medium ${complianceTone(row.sales?.compliance)}`}>{percent(row.sales?.compliance)}</td><td className="px-4 py-4 text-white/70">{uf(row.uf?.value)}</td><td className="px-4 py-4 text-white/70">{number(row.conversion?.value, 1)}</td></tr>)}</tbody></table></div></section>
+
+    <section aria-label="Indicadores principales" className="grid border-b border-white/10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">{cards.map((item) => <article key={item.label} className="border-b border-white/8 py-5 pr-4 sm:border-r sm:px-4 sm:first:pl-0 xl:border-b-0"><p className="text-[10px] uppercase tracking-[0.13em] text-white/38">{item.label}</p><p className={`mt-3 text-3xl font-semibold tabular-nums tracking-tight ${item.tone ?? 'text-white'}`}>{item.value}</p><p className="mt-1 text-xs tabular-nums text-white/38">{item.subvalue}</p></article>)}</section>
+
+    <section className="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)]">
+      <div>
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Inteligencia</h2>
+        <div className="mt-2 divide-y divide-white/8 border-y border-white/10 md:grid md:grid-cols-3 md:divide-x md:divide-y-0">{insights.map((item) => <article key={item.label} className="py-4 md:px-4 md:first:pl-0"><p className="text-[10px] uppercase tracking-[0.13em] text-white/35">{item.label}</p><p className={`mt-2 text-base font-semibold tabular-nums ${item.tone}`}>{item.value}</p></article>)}</div>
+      </div>
+      <div>
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Gestión</h2>
+        <dl className="mt-2 grid grid-cols-4 divide-x divide-white/8 border-y border-white/10">{[['Vencidas', operations.tasks.overdue], ['Urgentes', operations.tasks.urgent], ['Revisión', operations.valuations.review], ['Pausadas', operations.assignments.paused]].map(([label, value]) => <div key={label} className="py-4 text-center first:text-left last:text-right"><dt className="text-[9px] uppercase tracking-[0.1em] text-white/35">{label}</dt><dd className={`mt-2 text-xl font-semibold tabular-nums ${Number(value) > 0 ? 'text-[#ff8d87]' : 'text-white'}`}>{number(Number(value))}</dd></div>)}</dl>
+      </div>
+    </section>
+
+    <section className="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)]">
+      <div>
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Oficinas</h2>
+        <div className="mt-2 overflow-x-auto border-t border-white/10"><table className="w-full min-w-[560px] border-collapse text-left"><thead className="border-b border-white/10 text-[10px] uppercase tracking-[0.12em] text-white/35"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-4 py-3 font-medium">Cierres</th><th className="px-4 py-3 font-medium">Cumplimiento</th><th className="px-4 py-3 font-medium">UF</th><th className="px-4 py-3 font-medium">Score</th></tr></thead><tbody>{branchRows.map((row) => <tr key={row.id} className="border-b border-white/8 text-sm tabular-nums transition hover:bg-white/[0.02]"><td className="py-3 pr-4 font-medium text-white/85">{row.name}</td><td className="px-4 py-3 text-white/70">{number(row.sales?.value)}</td><td className={`px-4 py-3 font-medium ${complianceTone(row.sales?.compliance)}`}>{percent(row.sales?.compliance)}</td><td className="px-4 py-3 text-white/70">{uf(row.uf?.value)}</td><td className="px-4 py-3 text-white/70">{number(row.conversion?.value, 1)}</td></tr>)}</tbody></table></div>
+      </div>
+      <div>
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-white/40">Mercado</h2>
+        <dl className="mt-2 grid grid-cols-3 divide-x divide-white/8 border-y border-white/10">{[['Oferta', operations.market.properties], ['Confirmadas', operations.market.confirmed], ['Variación', portfolioChange?.mom == null ? '—' : signed(portfolioChange.mom, '%')]].map(([label, value]) => <div key={label} className="py-4 text-center first:text-left last:text-right"><dt className="text-[9px] uppercase tracking-[0.1em] text-white/35">{label}</dt><dd className="mt-2 text-xl font-semibold tabular-nums">{typeof value === 'number' ? number(value) : value}</dd></div>)}</dl>
+      </div>
+    </section>
   </div></main>
 }
