@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { OperationalState } from '@/components/ui/operational-state'
+import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 
 type AssignedProperty = {
   id: string
@@ -58,10 +59,8 @@ export default async function PropertiesPage() {
   const assignments = (assignmentResult.data || []) as AssignedProperty[]
   const activeListings = listingResult.count
   const latestObservation = observationResult.data?.observed_at ?? null
-  const pendingIdentity = assignments.filter((assignment) => {
-    const property = assignment.market_properties[0]
-    return !property?.identity_status || property.identity_status !== 'confirmed'
-  }).length
+  const confirmedIdentity = assignments.filter((assignment) => assignment.market_properties[0]?.identity_status === 'confirmed').length
+  const pendingIdentity = assignments.length - confirmedIdentity
   const staleAssignments = assignments.filter((assignment) => {
     const property = assignment.market_properties[0]
     if (!property?.last_seen_at) return true
@@ -70,45 +69,43 @@ export default async function PropertiesPage() {
   }).length
   const role = String(profile?.role || '').toLowerCase()
   const canAssign = ['ceo', 'admin', 'director', 'subdirector'].includes(role)
+  const coverage = assignments.length ? confirmedIdentity / assignments.length : null
+  const dataStatus = assignmentResult.error ? 'blocked' : assignments.length && confirmedIdentity === assignments.length ? 'ready' : 'partial'
 
-  return <div className="mx-auto max-w-5xl space-y-5 pb-12">
-    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--n3-line)] pb-5">
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Propiedades</p>
-        <h1 className="mt-2 text-3xl font-semibold">Cartera y publicaciones</h1>
-        <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Corte {formatDate(latestObservation)}</p>
+  return <WorkspaceShell>
+    <WorkspaceHeader
+      eyebrow="Propiedades"
+      title="Cartera y publicaciones"
+      meta={`Corte ${formatDate(latestObservation)}`}
+      actions={[
+        { label: 'Mercado', href: '/dashboard/market' },
+        ...(canAssign ? [{ label: 'Asignar', href: '/dashboard/properties/admin', primary: true }] : []),
+      ]}
+    />
+
+    <MetricStrip items={[
+      { label: 'Asignadas', value: n(assignments.length) },
+      { label: 'Publicaciones', value: activeListings == null ? '—' : n(activeListings) },
+      { label: 'Identidad pendiente', value: n(pendingIdentity), tone: pendingIdentity > 0 ? 'danger' : 'success' },
+      { label: 'Sin vigencia reciente', value: n(staleAssignments), tone: staleAssignments > 0 ? 'warning' : 'success' },
+    ]} />
+
+    {(pendingIdentity > 0 || staleAssignments > 0) ? <section className="mt-5">
+      <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Acciones</h2>
+        <span className="text-xs text-[var(--n3-text-muted)]">{Number(pendingIdentity > 0) + Number(staleAssignments > 0)}</span>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Link href="/dashboard/market" className="border border-[var(--n3-line)] px-4 py-2 text-sm">Mercado</Link>
-        {canAssign ? <Link href="/dashboard/properties/admin" className="bg-[#d7332b] px-4 py-2 text-sm font-semibold text-white">Asignar</Link> : null}
-      </div>
-    </header>
-
-    <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-4">
-      {[
-        ['Asignadas', assignments.length],
-        ['Publicaciones', activeListings ?? '—'],
-        ['Identidad pendiente', pendingIdentity],
-        ['Sin vigencia reciente', staleAssignments],
-      ].map(([label, value]) => <div key={String(label)} className="bg-[#0c1111] p-4">
-        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p>
-        <p className="mt-2 text-2xl font-semibold">{typeof value === 'number' ? n(value) : value}</p>
-      </div>)}
-    </section>
-
-    {(pendingIdentity > 0 || staleAssignments > 0) ? <section className="border border-[var(--n3-line)] bg-[#0c1111]">
-      <div className="border-b border-[var(--n3-line)] px-4 py-3"><h2 className="text-sm font-semibold">Acciones</h2></div>
       <div className="divide-y divide-[var(--n3-line)]">
-        {pendingIdentity > 0 ? <Link href="/dashboard/properties/admin" className="flex items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03]"><span>Confirmar identidad</span><strong>{pendingIdentity}</strong></Link> : null}
-        {staleAssignments > 0 ? <Link href="/dashboard/market" className="flex items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03]"><span>Verificar vigencia</span><strong>{staleAssignments}</strong></Link> : null}
+        {pendingIdentity > 0 ? <Link href="/dashboard/properties/admin" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Confirmar identidad</span><strong className="text-[#ff8d87]">{pendingIdentity}</strong></Link> : null}
+        {staleAssignments > 0 ? <Link href="/dashboard/market" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Verificar vigencia</span><strong className="text-[#f0c96a]">{staleAssignments}</strong></Link> : null}
       </div>
     </section> : null}
 
-    <section>
+    <section className="mt-6">
       <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold">Cartera asignada</h2><span className="text-xs text-[var(--n3-text-muted)]">{profile?.full_name || 'Usuario'}</span></div>
-      {assignmentResult.error ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="Reintente más tarde." /> : assignments.length ? <div className="overflow-x-auto border border-[var(--n3-line)]">
-        <table className="min-w-[760px] w-full text-sm">
-          <thead className="bg-[#080d0d] text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="p-3 text-left">Propiedad</th><th className="p-3 text-left">Rol</th><th className="p-3 text-right">m²</th><th className="p-3 text-right">Dorm.</th><th className="p-3 text-left">Identidad</th><th className="p-3 text-left">Última evidencia</th></tr></thead>
+      {assignmentResult.error ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="Reintente más tarde." /> : assignments.length ? <div className="overflow-x-auto border-y border-[var(--n3-line)]">
+        <table className="w-full min-w-[760px] text-sm">
+          <thead className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="p-3 text-left">Propiedad</th><th className="p-3 text-left">Rol</th><th className="p-3 text-right">m²</th><th className="p-3 text-right">Dorm.</th><th className="p-3 text-left">Identidad</th><th className="p-3 text-left">Última evidencia</th></tr></thead>
           <tbody>{assignments.map((assignment) => {
             const property = assignment.market_properties[0] ?? null
             return <tr key={assignment.id} className="border-t border-[var(--n3-line)]">
@@ -116,12 +113,19 @@ export default async function PropertiesPage() {
               <td className="p-3">{assignmentRole(assignment.assignment_role)}</td>
               <td className="p-3 text-right">{property?.useful_area_m2 ?? property?.built_area_m2 ?? '—'}</td>
               <td className="p-3 text-right">{property?.bedrooms ?? '—'}</td>
-              <td className="p-3">{property?.identity_status || 'Pendiente'}</td>
+              <td className="p-3">{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</td>
               <td className="p-3 text-[var(--n3-text-muted)]">{formatDate(property?.last_seen_at ?? null)}</td>
             </tr>
           })}</tbody>
         </table>
       </div> : <OperationalState kind="empty" title="Sin propiedades asignadas" description="No existen asignaciones activas para este perfil." action={canAssign ? { label: 'Asignar propiedades', href: '/dashboard/properties/admin' } : undefined} />}
     </section>
-  </div>
+
+    <DataStatusBar
+      cutoff={formatDate(latestObservation)}
+      coverage={assignments.length ? `${confirmedIdentity} de ${assignments.length} asignaciones con identidad confirmada (${Math.round((coverage ?? 0) * 100)}%)` : 'Sin asignaciones activas'}
+      issues={(assignmentResult.error ? 1 : 0) + pendingIdentity + staleAssignments}
+      status={dataStatus}
+    />
+  </WorkspaceShell>
 }
