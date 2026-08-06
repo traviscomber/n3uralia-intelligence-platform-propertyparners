@@ -3,93 +3,26 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { PPLogo } from '@/components/brand/pp-logo'
-import { getRoleLabel, hasCapability, type Capability } from '@/lib/access-control'
+import { getRoleLabel, hasCapability } from '@/lib/access-control'
+import { CEO_NAVIGATION, DEFAULT_NAVIGATION, type NavigationSection } from '@/lib/navigation'
 import type { Profile } from '@/lib/types'
 
-type SidebarItem = {
-  label: string
-  href: string
-  capability?: Capability
-  exact?: boolean
-}
-
-type SidebarSection = {
-  label: string
-  items: SidebarItem[]
-}
-
-const ceoSections: SidebarSection[] = [
-  {
-    label: 'Gestión ejecutiva',
-    items: [
-      { label: 'Vista CEO', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
-      { label: 'Mercado', href: '/dashboard/market', capability: 'market.read' },
-      { label: 'Propiedades', href: '/dashboard/properties' },
-      { label: 'Informes', href: '/dashboard/reportes/canonicos', capability: 'reports.global.read' },
-    ],
-  },
-  {
-    label: 'Gestión y administración',
-    items: [
-      { label: 'Resumen', href: '/dashboard', exact: true },
-      { label: 'Valorizaciones', href: '/dashboard/valuations' },
-      { label: 'Control de gestión', href: '/dashboard/control' },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.global.manage' },
-      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.global.assign' },
-      { label: 'Reportes operativos', href: '/dashboard/reportes/autonomos', capability: 'reports.global.read' },
-      { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', capability: 'market.manage_sources' },
-      { label: 'Importar mercado', href: '/dashboard/market/import', capability: 'market.manage_sources' },
-      { label: 'Fuentes de propiedades', href: '/dashboard/sources', capability: 'settings.manage' },
-      { label: 'Usuarios y configuración', href: '/dashboard/settings', capability: 'users.manage' },
-    ],
-  },
-]
-
-const sections: SidebarSection[] = [
-  {
-    label: 'Operación',
-    items: [
-      { label: 'Resumen', href: '/dashboard', exact: true },
-      { label: 'Vista CEO', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
-      { label: 'Vista director', href: '/dashboard/director', capability: 'dashboard.office.read' },
-      { label: 'Mi desempeño', href: '/dashboard/partner', capability: 'dashboard.self.read' },
-      { label: 'Inteligencia de mercado', href: '/dashboard/market', capability: 'market.read' },
-      { label: 'Valorizaciones', href: '/dashboard/valuations' },
-      { label: 'Control de gestión', href: '/dashboard/control' },
-      { label: 'Propiedades', href: '/dashboard/properties' },
-      { label: 'Informes canónicos', href: '/dashboard/reportes/canonicos', capability: 'reports.global.read' },
-      { label: 'Reportes', href: '/dashboard/reportes/autonomos', capability: 'reports.global.read' },
-      { label: 'Reportes de oficina', href: '/dashboard/reportes/autonomos', capability: 'reports.office.read' },
-      { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', capability: 'reports.self.read' },
-    ],
-  },
-  {
-    label: 'Administración',
-    items: [
-      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.global.assign' },
-      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.office.assign' },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.global.manage' },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.office.manage' },
-      { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', capability: 'market.manage_sources' },
-      { label: 'Importar mercado', href: '/dashboard/market/import', capability: 'market.manage_sources' },
-      { label: 'Fuentes de propiedades', href: '/dashboard/sources', capability: 'settings.manage' },
-      { label: 'Usuarios y configuración', href: '/dashboard/settings', capability: 'users.manage' },
-    ],
-  },
-]
-
-function filterSectionsByCapability(profile: Profile, source: SidebarSection[]): SidebarSection[] {
+function filterSections(profile: Profile, source: NavigationSection[]): NavigationSection[] {
   return source
     .map((section) => ({
       ...section,
-      items: section.items.filter((item) => !item.capability || hasCapability(profile, item.capability)),
+      items: section.items.filter((item) => {
+        const roleAllowed = !item.roles || item.roles.includes(profile.role)
+        const capabilityAllowed = !item.anyCapabilities?.length || item.anyCapabilities.some((capability) => hasCapability(profile, capability))
+        return roleAllowed && capabilityAllowed
+      }),
     }))
     .filter((section) => section.items.length > 0)
 }
 
-function visibleSections(profile: Profile | null): SidebarSection[] {
+function visibleSections(profile: Profile | null): NavigationSection[] {
   if (!profile) return []
-  return filterSectionsByCapability(profile, profile.role === 'ceo' ? ceoSections : sections)
+  return filterSections(profile, profile.role === 'ceo' ? CEO_NAVIGATION : DEFAULT_NAVIGATION)
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
@@ -117,11 +50,12 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                     <Link
                       href={item.href}
                       onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')}
-                      className="flex items-center gap-2.5 border-l-2 px-3 py-2.5 text-sm transition-colors"
+                      aria-current={active ? 'page' : undefined}
+                      className="flex min-h-10 items-center gap-2.5 border-l-2 px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                       style={{
                         color: active ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
                         background: active ? 'rgba(255,255,255,0.035)' : 'transparent',
-                        borderLeftColor: active ? '#d7332b' : 'transparent',
+                        borderLeftColor: active ? 'var(--primary)' : 'transparent',
                       }}
                     >
                       <span aria-hidden="true" className="h-2 w-2 border border-current" />
@@ -137,13 +71,12 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       <div className="border-t border-[var(--n3-line)] px-4 py-4">
         {profile ? (
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--n3-line)] text-xs font-semibold text-[#ff766f]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--n3-line)] text-xs font-semibold text-[var(--n3-teal-soft)]">
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <div className="truncate text-xs font-medium text-[var(--n3-text-light)]">{profile.full_name || 'Usuario'}</div>
               <div className="text-[10px] text-[var(--n3-text-muted)]">{getRoleLabel(profile.role)}</div>
-              {profile.role === 'ceo' ? <div className="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-[#ff766f]">Máxima autoridad de negocio</div> : null}
             </div>
           </div>
         ) : null}
@@ -157,7 +90,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   return (
     <>
       <details className="group fixed left-0 top-0 z-50 md:hidden">
-        <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] [&::-webkit-details-marker]:hidden">
+        <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
           <span aria-hidden="true">☰</span>
         </summary>
         <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl">{navigation}</div>
