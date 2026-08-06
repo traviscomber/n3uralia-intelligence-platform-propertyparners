@@ -30,6 +30,7 @@ const sections: SidebarSection[] = [
       { label: 'Valorizaciones', href: '/dashboard/valuations' },
       { label: 'Control de gestión', href: '/dashboard/control' },
       { label: 'Propiedades', href: '/dashboard/properties' },
+      { label: 'Informes canónicos', href: '/dashboard/reportes/canonicos', capability: 'reports.global.read' },
       { label: 'Reportes', href: '/dashboard/reportes/autonomos', capability: 'reports.global.read' },
       { label: 'Reportes de oficina', href: '/dashboard/reportes/autonomos', capability: 'reports.office.read' },
       { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', capability: 'reports.self.read' },
