@@ -26,7 +26,7 @@ export type ValuationComparable = {
   parkingSpaces?: number
   priceUf: number
   priceUfM2: number
-  /** Similarity on the canonical 0-1 scale. */
+  /** Similarity on the canonical 0-1 scale. Zero means not evaluated. */
   similarityScore: number
   selected: boolean
   adjustmentPct: number
@@ -67,8 +67,8 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 const round = (value: number, digits = 2) => Number(value.toFixed(digits))
 
 export function similarityScoreToWeight(similarityScore: number) {
-  if (!Number.isFinite(similarityScore) || similarityScore < 0 || similarityScore > 1) {
-    throw new Error('La similitud debe estar expresada en una escala de 0 a 1.')
+  if (!Number.isFinite(similarityScore) || similarityScore <= 0 || similarityScore > 1) {
+    throw new Error('La similitud debe estar expresada en una escala mayor que 0 y menor o igual a 1.')
   }
   return round(clamp(similarityScore, 0.1, 1), 4)
 }
@@ -106,6 +106,8 @@ export function calculateContractualValuation(
 ): ValuationResult {
   const selected = comparables.filter((item) => item.selected && item.priceUfM2 > 0)
   if (selected.length < 2) throw new Error('Se requieren al menos dos comparables seleccionados.')
+  if (selected.some((item) => item.similarityScore <= 0)) throw new Error('Todos los comparables seleccionados requieren una similitud respaldada mayor que cero.')
+  if (selected.some((item) => item.adjustmentPct < -35 || item.adjustmentPct > 35)) throw new Error('Los ajustes de comparables deben estar entre -35% y 35%.')
 
   const adjustedComparableValues = selected.map((item) => ({
     value: item.priceUfM2 * (1 + item.adjustmentPct / 100),
@@ -132,16 +134,7 @@ export function calculateContractualValuation(
     `Rango sugerido: ${lowValueUf.toLocaleString('es-CL')} a ${highValueUf.toLocaleString('es-CL')} UF.`,
   ].join(' ')
 
-  return {
-    baseUfM2,
-    baseValueUf,
-    qualitativeAdjustmentPct,
-    adjustedValueUf,
-    lowValueUf,
-    highValueUf,
-    comparableCount: selected.length,
-    justification,
-  }
+  return { baseUfM2, baseValueUf, qualitativeAdjustmentPct, adjustedValueUf, lowValueUf, highValueUf, comparableCount: selected.length, justification }
 }
 
 export function buildValuationReportPayload(subject: ValuationSubject, comparables: ValuationComparable[], factors: QualitativeFactors, result: ValuationResult) {
