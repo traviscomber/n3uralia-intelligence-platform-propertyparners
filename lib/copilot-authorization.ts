@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export type CopilotRole = 'ceo' | 'director' | 'partner'
+export type CopilotRole = 'admin' | 'ceo' | 'director' | 'subdirector' | 'partner' | 'seller'
 
 type AuthorizedCopilotUser = {
   userId: string
@@ -13,7 +13,8 @@ type CopilotAuthorizationResult =
   | { ok: false; response: NextResponse }
 
 function normalizeRole(value: unknown): string {
-  return String(value ?? '').trim().toLowerCase()
+  const role = String(value ?? '').trim().toLowerCase()
+  return role === 'seller' ? 'seller' : role
 }
 
 export async function requireCopilotRole(
