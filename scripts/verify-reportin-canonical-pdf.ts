@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { PDFDocument } from 'pdf-lib'
-import { buildReportinCanonicalPdf } from '../lib/reportin-canonical-pdf'
 import type { CanonicalClientReport } from '../lib/n3uralia-canonical-client-report'
 
 const report: CanonicalClientReport = {
@@ -53,6 +52,7 @@ const report: CanonicalClientReport = {
 }
 
 async function main() {
+  const { buildReportinCanonicalPdf } = await import('../lib/reportin-canonical-pdf')
   const artifact = await buildReportinCanonicalPdf(report)
   assert.equal(artifact.reportinVersion, '1.0')
   assert.match(artifact.filename, /^informe-canonico-de-avance-property-partners-2026-07-31\.pdf$/)
