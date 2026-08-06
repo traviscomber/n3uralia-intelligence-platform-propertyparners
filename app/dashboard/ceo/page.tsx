@@ -1,5 +1,5 @@
-import { CeoDashboardNumeric } from '@/components/management/ceo-dashboard-numeric'
+import { CeoDashboardCommand } from '@/components/management/ceo-dashboard-command'
 
 export default function CeoDashboard() {
-  return <CeoDashboardNumeric />
+  return <CeoDashboardCommand />
 }
