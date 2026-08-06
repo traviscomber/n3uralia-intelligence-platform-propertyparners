@@ -33,7 +33,7 @@ for (const file of scanRoots.flatMap((directory) => walk(path.join(root, directo
   }
 
   if (/^app\/api\//.test(rel) && /(\.from\(|\.rpc\()/i.test(text)) {
-    const hasAuthSignal = /(getUser|getSession|requireAuth|requireCapability|requireAnyCapability|authorize|accessErrorResponse|tenantId|tenant_id|organizationId|organization_id|officeId|office_id|companyId|company_id|CRON_SECRET|authorization)/i.test(text)
+    const hasAuthSignal = /(getUser|getSession|requireAuth|requireRoleAccess|requireCapability|requireAnyCapability|authorize|accessErrorResponse|tenantId|tenant_id|organizationId|organization_id|officeId|office_id|companyId|company_id|CRON_SECRET|authorization)/i.test(text)
     if (!hasAuthSignal) {
       if (reviewedApiRoutes.has(rel)) reviewItems.push(`${rel}: route authorization requires manual verification`)
       else findings.push(`${rel}: untracked database API route lacks a visible authorization or tenant-scope signal`)
