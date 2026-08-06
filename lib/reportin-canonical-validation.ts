@@ -5,7 +5,7 @@ export type CanonicalValidationPayload = {
   client: string
   sourceSnapshotId: string
   period: { start: string; end: string; sourceCutoff: string }
-  evidence: Array<{ id: string; claim: string; source: string; status: string }>
+  evidence: Array<{ id: string; claim: string; source: string; status?: string }>
   metrics?: Array<{ evidenceRefs: string[] }>
   charts?: Array<{
     id: string
@@ -66,6 +66,9 @@ export function validateCanonicalReportPayload(payload: CanonicalValidationPaylo
   const evidenceIds = new Set<string>()
   payload.evidence.forEach((item, index) => {
     if (!item || typeof item !== 'object' || typeof item.id !== 'string' || !item.id) fail(`invalid:evidence[${index}].id`)
+    if (typeof item.claim !== 'string' || !item.claim.trim()) fail(`invalid:evidence[${index}].claim`)
+    if (typeof item.source !== 'string' || !item.source.trim()) fail(`invalid:evidence[${index}].source`)
+    if (item.status !== undefined && typeof item.status !== 'string') fail(`invalid:evidence[${index}].status`)
     if (evidenceIds.has(item.id)) fail(`duplicate_evidence:${item.id}`)
     evidenceIds.add(item.id)
   })
