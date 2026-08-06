@@ -1,0 +1,218 @@
+{
+  "title": "Informe ejecutivo Property Partners — abril 2026",
+  "subtitle": "Desempeño comercial al cierre de abril y evolución acumulada",
+  "executive_summary": "Al cierre de abril de 2026, Property Partners registra 8 cierres durante el mes y 22 cierres acumulados entre enero y abril. La meta mensual vigente es 8,1 cierres, por lo que abril alcanza 98,77% de cumplimiento mensual. El acumulado se ubica en 22 cierres frente a una meta acumulada de 32,4, equivalente a 67,90% de cumplimiento y una brecha de 10,4 cierres. Abril mejora en un cierre respecto de marzo, pero el resultado acumulado continúa bajo la trayectoria objetivo.",
+  "sections": [
+    {
+      "id": "resultado-abril",
+      "title": "Resultado comercial de abril",
+      "status": "verified",
+      "summary": "Abril cerró con 8 operaciones frente a una meta mensual de 8,1.",
+      "key_findings": [
+        "Cierres de abril: 8.",
+        "Meta mensual: 8,1 cierres.",
+        "Cumplimiento mensual: 98,77%.",
+        "Brecha mensual: 0,1 cierres."
+      ],
+      "next_actions": [
+        "Mantener la metodología de cierres comparable para mayo.",
+        "Revisar la brecha acumulada junto con el resultado mensual."
+      ],
+      "evidence_refs": ["repo:lib/reports/property-partners-canonical.ts", "canonical:serie-enero-julio-2026"]
+    },
+    {
+      "id": "evolucion-mensual",
+      "title": "Evolución enero–abril",
+      "status": "verified",
+      "summary": "La serie mensual comparable registra 4, 3, 7 y 8 cierres entre enero y abril.",
+      "key_findings": [
+        "Abril mejora en 1 cierre respecto de marzo.",
+        "Abril es el mejor resultado mensual del período enero–abril.",
+        "La serie todavía permanece bajo la meta en todos los meses."
+      ],
+      "next_actions": [
+        "Confirmar si la mejora de marzo y abril continúa durante mayo.",
+        "No interpretar dos meses de mejora como tendencia consolidada sin nueva evidencia."
+      ],
+      "evidence_refs": ["canonical:serie-enero-julio-2026"]
+    },
+    {
+      "id": "acumulado",
+      "title": "Cumplimiento acumulado",
+      "status": "verified",
+      "summary": "El acumulado enero–abril alcanza 22 cierres frente a una meta de 32,4.",
+      "key_findings": [
+        "Cierres acumulados: 22.",
+        "Meta acumulada: 32,4.",
+        "Cumplimiento acumulado: 67,90%.",
+        "Brecha acumulada: 10,4 cierres."
+      ],
+      "next_actions": [
+        "Definir acciones comerciales que permitan reducir la brecha acumulada.",
+        "Mantener la lectura mensual y acumulada como dimensiones separadas."
+      ],
+      "evidence_refs": ["canonical:serie-enero-julio-2026"]
+    },
+    {
+      "id": "lectura-ejecutiva",
+      "title": "Lectura ejecutiva",
+      "status": "informational",
+      "summary": "Abril está prácticamente alineado con la meta mensual, pero no compensa el déficit acumulado de enero a marzo.",
+      "key_findings": [
+        "El resultado mensual se aproxima a la meta.",
+        "La trayectoria acumulada continúa separándose de la meta.",
+        "La prioridad es sostener resultados iguales o superiores a la meta durante los meses siguientes."
+      ],
+      "next_actions": [
+        "Monitorear mayo con foco en cierres y brecha acumulada.",
+        "Asignar responsables a las acciones comerciales destinadas a recuperar la brecha."
+      ],
+      "evidence_refs": ["canonical:serie-enero-julio-2026"]
+    },
+    {
+      "id": "alcance-operacional",
+      "title": "Alcance operacional",
+      "status": "partial",
+      "summary": "Este corte presenta resultados comerciales hasta abril. Los datos operacionales posteriores deben mantenerse separados y no pueden incorporarse retrospectivamente como resultados de abril.",
+      "key_findings": [
+        "El corte comercial termina el 30 de abril de 2026.",
+        "Los estándares y benchmarks operacionales no constituyen resultados medidos.",
+        "No se incorporan métricas operacionales sin evidencia equivalente al corte."
+      ],
+      "next_actions": [
+        "Agregar métricas operacionales solo cuando exista snapshot canónico fechado y comparable.",
+        "Mantener estándares, benchmarks y resultados observados como categorías separadas."
+      ],
+      "evidence_refs": ["repo:lib/reports/property-partners-canonical.ts"]
+    },
+    {
+      "id": "limitaciones",
+      "title": "Fuentes y limitaciones",
+      "status": "partial",
+      "summary": "El informe utiliza únicamente la serie comercial canónica disponible para enero–abril y las reglas de corte definidas en el contrato de reportes.",
+      "key_findings": [
+        "No se presentan cifras de productividad porque no están respaldadas en las fuentes revisadas.",
+        "No se presentan comparaciones por oficina porque no existe evidencia canónica equivalente para abril en las fuentes revisadas.",
+        "No se convierten ausencias en cero."
+      ],
+      "next_actions": [
+        "Incorporar nuevas dimensiones solo después de validar fuente, período y metodología.",
+        "Conservar la trazabilidad de cada cifra material."
+      ],
+      "evidence_refs": ["repo:lib/reports/property-partners-canonical.ts", "canonical:serie-enero-julio-2026"]
+    }
+  ],
+  "charts": [
+    {
+      "id": "cierres-mensuales-abril",
+      "title": "Cierres mensuales versus meta — enero a abril",
+      "purpose": "Mostrar la evolución mensual de cierres y su relación con la meta vigente.",
+      "type": "combo_bar_line",
+      "categories": ["Ene", "Feb", "Mar", "Abr"],
+      "series": [
+        {
+          "id": "cierres",
+          "label": "Cierres",
+          "values": [4, 3, 7, 8],
+          "unit": "cierres",
+          "evidence_refs": ["canonical:serie-enero-julio-2026"],
+          "methodology_version": "cierres-comparables-v1"
+        },
+        {
+          "id": "meta",
+          "label": "Meta mensual",
+          "values": [8.1, 8.1, 8.1, 8.1],
+          "unit": "cierres",
+          "evidence_refs": ["canonical:serie-enero-julio-2026"],
+          "methodology_version": "cierres-comparables-v1"
+        }
+      ],
+      "source_note": "Fuente: serie comercial canónica enero–julio 2026, recortada al cierre de abril. Meta mensual vigente: 8,1 cierres.",
+      "evidence_refs": ["canonical:serie-enero-julio-2026"],
+      "status": "verified",
+      "direct_labels": true,
+      "target_series_id": "meta"
+    },
+    {
+      "id": "acumulado-abril",
+      "title": "Cierres acumulados versus meta acumulada — enero a abril",
+      "purpose": "Visualizar la brecha acumulada al cierre de abril.",
+      "type": "line",
+      "categories": ["Ene", "Feb", "Mar", "Abr"],
+      "series": [
+        {
+          "id": "real",
+          "label": "Acumulado real",
+          "values": [4, 7, 14, 22],
+          "unit": "cierres",
+          "evidence_refs": ["canonical:serie-enero-julio-2026"],
+          "methodology_version": "cierres-comparables-v1"
+        },
+        {
+          "id": "meta-acumulada",
+          "label": "Meta acumulada",
+          "values": [8.1, 16.2, 24.3, 32.4],
+          "unit": "cierres",
+          "evidence_refs": ["canonical:serie-enero-julio-2026"],
+          "methodology_version": "cierres-comparables-v1"
+        }
+      ],
+      "source_note": "Fuente: serie comercial canónica enero–julio 2026, recortada al cierre de abril. Acumulado calculado únicamente desde valores canónicos mensuales.",
+      "evidence_refs": ["canonical:serie-enero-julio-2026"],
+      "status": "verified",
+      "direct_labels": true,
+      "target_series_id": "meta-acumulada"
+    }
+  ],
+  "conclusions": [
+    "Abril alcanza prácticamente la meta mensual con 8 cierres sobre 8,1.",
+    "El acumulado de 22 cierres mantiene una brecha de 10,4 frente a la meta de 32,4.",
+    "La mejora mensual debe sostenerse durante los siguientes períodos antes de considerarse una tendencia consolidada.",
+    "El reporte excluye métricas sin evidencia canónica equivalente al corte de abril."
+  ],
+  "client_actions": [
+    "Validar responsables y acciones comerciales para recuperar la brecha acumulada.",
+    "Mantener el cierre mensual y la revisión acumulada como controles ejecutivos separados."
+  ],
+  "n3uralia_actions": [
+    "Mantener la serie comercial con metodología estable durante mayo.",
+    "Incorporar nuevas métricas solo cuando exista evidencia canónica fechada y comparable.",
+    "Preservar trazabilidad y limitaciones en cada versión del informe."
+  ],
+  "limitations": [
+    "No se encontraron documentos canónicos etiquetados explícitamente como abril en knowledge_documents.",
+    "La serie enero–abril se obtiene recortando la serie comercial canónica enero–julio al corte del 30 de abril.",
+    "No se presentan métricas por oficina, productividad ni operación porque no existe evidencia suficiente y equivalente para abril en las fuentes revisadas.",
+    "Los estándares y benchmarks operacionales no se presentan como resultados observados."
+  ],
+  "report_type": "n3uralia_client_canonical",
+  "standard_version": "1.1",
+  "client": "Property Partners Vitacura / PL Real Estate SpA",
+  "audience": "Pedro Pablo y contraparte ejecutiva",
+  "purpose": "Presentar el desempeño comercial canónico al cierre de abril de 2026 con gráficos verificables y limitaciones explícitas.",
+  "period": {
+    "start": "2026-01-01",
+    "end": "2026-04-30",
+    "source_cutoff": "2026-04-30"
+  },
+  "delivery": {
+    "recipient": null,
+    "status": "draft",
+    "purpose": "Revisión interna antes de distribución.",
+    "paymentMilestonePercent": null,
+    "paymentStatus": "not_applicable",
+    "deliveredAt": null
+  },
+  "canonical_metadata": {
+    "provider": "OpenAI",
+    "model": "gpt-5.6-thinking",
+    "response_id": null,
+    "prompt_version": "reportin-1.1",
+    "api": "responses",
+    "reasoning_effort": "high",
+    "reasoning_mode": "standard",
+    "store": false,
+    "generated_at": "2026-08-06T15:35:00.000Z",
+    "source_policy": "canonical_input_only"
+  }
+}
