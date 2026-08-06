@@ -18,6 +18,18 @@ type SidebarSection = {
   items: SidebarItem[]
 }
 
+const ceoSections: SidebarSection[] = [
+  {
+    label: 'Gestión ejecutiva',
+    items: [
+      { label: 'Vista CEO', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
+      { label: 'Mercado', href: '/dashboard/market', capability: 'market.read' },
+      { label: 'Propiedades', href: '/dashboard/properties' },
+      { label: 'Informes', href: '/dashboard/reportes/canonicos', capability: 'reports.global.read' },
+    ],
+  },
+]
+
 const sections: SidebarSection[] = [
   {
     label: 'Operación',
@@ -51,15 +63,18 @@ const sections: SidebarSection[] = [
   },
 ]
 
-function visibleSections(profile: Profile | null): SidebarSection[] {
-  if (!profile) return []
-
-  return sections
+function filterSectionsByCapability(profile: Profile, source: SidebarSection[]): SidebarSection[] {
+  return source
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => !item.capability || hasCapability(profile, item.capability)),
     }))
     .filter((section) => section.items.length > 0)
+}
+
+function visibleSections(profile: Profile | null): SidebarSection[] {
+  if (!profile) return []
+  return filterSectionsByCapability(profile, profile.role === 'ceo' ? ceoSections : sections)
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
