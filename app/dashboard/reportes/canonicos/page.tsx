@@ -2,6 +2,7 @@ import { BrainCircuit, FileCheck2, Send, ShieldCheck } from 'lucide-react'
 import { requirePageCapability } from '@/lib/access-guards'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCanonicalClientReportConfiguration } from '@/lib/n3uralia-canonical-client-report'
+import { CanonicalReportGenerator } from '@/components/reports/canonical-report-generator'
 import {
   IntelligenceHeader,
   IntelligencePage,
@@ -18,6 +19,17 @@ type CanonicalDocumentRow = {
   tags: string[] | null
   created_at: string
 }
+
+const REQUIRED_SECTIONS = [
+  'Resumen ejecutivo',
+  'Desempeño y evidencia del período',
+  'Avances y funcionalidades del portal',
+  'Estado técnico y de seguridad',
+  'Alineación contractual',
+  'Dependencias y decisiones del Cliente',
+  'Próximos hitos de N3uralia',
+  'Limitaciones y trazabilidad',
+]
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -83,6 +95,8 @@ export default async function CanonicalClientReportsPage() {
         meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Estándar activo · versión {configuration.standardVersion} · fuentes canónicas únicamente</div>}
       />
 
+      <CanonicalReportGenerator />
+
       <section>
         <SectionHeading eyebrow="01 · Canonical Standard" title="Configuración editorial y de inteligencia" />
         <MetricGrid>
@@ -96,7 +110,7 @@ export default async function CanonicalClientReportsPage() {
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
         <IntelligencePanel eyebrow="Required Structure" title="Bloques obligatorios" description="Todos los informes mantienen la misma arquitectura para que el Cliente pueda comparar períodos y entregas.">
           <div className="grid gap-px bg-[var(--n3-line)] md:grid-cols-2">
-            {configuration.requiredSections.map((section, index) => (
+            {REQUIRED_SECTIONS.map((section, index) => (
               <div key={section} className="bg-[#080d0d] p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">0{index + 1}</p>
                 <p className="mt-2 text-sm text-[var(--n3-text-light)]">{section}</p>
@@ -131,7 +145,7 @@ export default async function CanonicalClientReportsPage() {
 
         {documents.length === 0 ? (
           <IntelligencePanel eyebrow="Registry" title="Sin informes registrados" description="No existe todavía un documento con la etiqueta canónica de cliente.">
-            <div className="p-5 text-sm text-[var(--n3-text-muted)]">Genere el primer informe mediante el endpoint autorizado o registre una entrega ya validada.</div>
+            <div className="p-5 text-sm text-[var(--n3-text-muted)]">Genere el primer informe mediante la acción autorizada disponible al inicio de esta página.</div>
           </IntelligencePanel>
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
@@ -175,12 +189,12 @@ export default async function CanonicalClientReportsPage() {
 
                   <div className="mt-5 space-y-2 border-l-2 border-[#d7332b] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">
                     <p>Registrado: {formatDate(document.created_at)}</p>
-                    <p>PDF: {artifacts ? readString(readRecord(artifacts, 'pdf'), 'sha256', 'huella registrada en la copia canónica') : 'huella registrada en la copia canónica'}</p>
-                    <p>DOCX: {artifacts ? readString(readRecord(artifacts, 'docx'), 'sha256', 'huella registrada en la copia canónica') : 'huella registrada en la copia canónica'}</p>
+                    <p>PDF: {artifacts ? readString(readRecord(artifacts, 'pdf'), 'sha256', 'generado bajo demanda por Reportin') : 'generado bajo demanda por Reportin'}</p>
+                    <p>DOCX: {artifacts ? readString(readRecord(artifacts, 'docx'), 'sha256', 'no aplica') : 'no aplica'}</p>
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 border border-[var(--n3-line)] bg-[#080d0d] px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]"><Send size={13} /> {deliveryStatus}</span>
+                    <a href={`/api/management/reports/canonical-client/${document.id}/artifact`} className="inline-flex items-center gap-2 border border-[var(--n3-line)] bg-[#080d0d] px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)] hover:border-[#d7332b] hover:text-[var(--n3-text-light)]"><Send size={13} /> Descargar PDF</a>
                     <span className="inline-flex items-center gap-2 border border-[var(--n3-line)] bg-[#080d0d] px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]"><BrainCircuit size={13} /> {configuration.model}</span>
                   </div>
                 </article>
