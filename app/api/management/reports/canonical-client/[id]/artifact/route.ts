@@ -10,14 +10,17 @@ export const maxDuration = 300
 
 function isCanonicalClientReport(value: unknown): value is CanonicalClientReport {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
-  const report = value as Partial<CanonicalClientReport>
+  const report = value as Record<string, unknown>
+  const metadata = report.canonical_metadata
   return report.report_type === 'n3uralia_client_canonical'
     && (report.standard_version === '1.0' || report.standard_version === '1.1')
     && typeof report.title === 'string'
     && typeof report.executive_summary === 'string'
     && Array.isArray(report.sections)
-    && Boolean(report.canonical_metadata)
-    && report.canonical_metadata?.source_policy === 'canonical_input_only'
+    && Boolean(metadata)
+    && typeof metadata === 'object'
+    && !Array.isArray(metadata)
+    && (metadata as Record<string, unknown>).source_policy === 'canonical_input_only'
 }
 
 export async function GET(
@@ -53,7 +56,7 @@ export async function GET(
 
     const normalized = {
       ...parsed,
-      charts: Array.isArray((parsed as CanonicalClientReport).charts) ? (parsed as CanonicalClientReport).charts : [],
+      charts: Array.isArray(parsed.charts) ? parsed.charts : [],
       canonical_metadata: {
         ...parsed.canonical_metadata,
         response_id: parsed.canonical_metadata.response_id ?? null,
