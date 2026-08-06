@@ -10,6 +10,8 @@ type SidebarItem = {
   label: string
   href: string
   capability?: Capability
+  anyCapability?: readonly Capability[]
+  roles?: readonly Profile['role'][]
   exact?: boolean
 }
 
@@ -20,29 +22,74 @@ type SidebarSection = {
 
 const sections: SidebarSection[] = [
   {
-    label: 'Operación',
+    label: 'Principal',
     items: [
-      { label: 'Resumen', href: '/dashboard', exact: true },
-      { label: 'Vista CEO', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
-      { label: 'Vista director', href: '/dashboard/director', capability: 'dashboard.office.read' },
+      { label: 'Inicio', href: '/dashboard', exact: true },
+      { label: 'Vista ejecutiva', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
+      { label: 'Vista de oficina', href: '/dashboard/director', capability: 'dashboard.office.read' },
       { label: 'Mi desempeño', href: '/dashboard/partner', capability: 'dashboard.self.read' },
+    ],
+  },
+  {
+    label: 'Negocio',
+    items: [
+      {
+        label: 'Propiedades',
+        href: '/dashboard/properties',
+        anyCapability: ['properties.global.read', 'properties.office.read', 'properties.self.read'],
+      },
+      {
+        label: 'Valorizaciones',
+        href: '/dashboard/valuations',
+        anyCapability: ['valuations.global.read', 'valuations.office.read', 'valuations.self.read'],
+      },
       { label: 'Inteligencia de mercado', href: '/dashboard/market', capability: 'market.read' },
-      { label: 'Valorizaciones', href: '/dashboard/valuations' },
-      { label: 'Control de gestión', href: '/dashboard/control' },
-      { label: 'Propiedades', href: '/dashboard/properties' },
-      { label: 'Informes canónicos', href: '/dashboard/reportes/canonicos', capability: 'reports.global.read' },
-      { label: 'Reportes', href: '/dashboard/reportes/autonomos', capability: 'reports.global.read' },
-      { label: 'Reportes de oficina', href: '/dashboard/reportes/autonomos', capability: 'reports.office.read' },
-      { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', capability: 'reports.self.read' },
+      {
+        label: 'Control de gestión',
+        href: '/dashboard/control',
+        anyCapability: ['management.global.read', 'management.office.read', 'management.self.read'],
+      },
+      {
+        label: 'CRM y decisiones',
+        href: '/dashboard/datos-crm',
+        anyCapability: ['dashboard.global.read', 'dashboard.office.read'],
+      },
+    ],
+  },
+  {
+    label: 'Reportes',
+    items: [
+      {
+        label: 'Centro de reportes',
+        href: '/dashboard/reportes',
+        anyCapability: ['reports.global.read', 'reports.office.read', 'reports.self.read'],
+        exact: true,
+      },
+      {
+        label: 'Directorio ejecutivo',
+        href: '/dashboard/reportes/directorio',
+        capability: 'reports.global.read',
+      },
+      {
+        label: 'Entregas programadas',
+        href: '/dashboard/document-delivery',
+        anyCapability: ['reports.global.read', 'reports.office.read'],
+      },
     ],
   },
   {
     label: 'Administración',
     items: [
-      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.global.assign' },
-      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.office.assign' },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.global.manage' },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.office.manage' },
+      {
+        label: 'Asignación de propiedades',
+        href: '/dashboard/properties/admin',
+        anyCapability: ['properties.global.assign', 'properties.office.assign'],
+      },
+      {
+        label: 'Metas y alertas',
+        href: '/dashboard/control/admin',
+        anyCapability: ['management.global.manage', 'management.office.manage'],
+      },
       { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', capability: 'market.manage_sources' },
       { label: 'Importar mercado', href: '/dashboard/market/import', capability: 'market.manage_sources' },
       { label: 'Fuentes de propiedades', href: '/dashboard/sources', capability: 'settings.manage' },
@@ -51,15 +98,34 @@ const sections: SidebarSection[] = [
   },
 ]
 
+function canSeeItem(profile: Profile, item: SidebarItem) {
+  if (item.roles && !item.roles.includes(profile.role)) return false
+  if (item.capability && !hasCapability(profile, item.capability)) return false
+  if (item.anyCapability && !item.anyCapability.some((capability) => hasCapability(profile, capability))) return false
+  return true
+}
+
 function visibleSections(profile: Profile | null): SidebarSection[] {
   if (!profile) return []
 
   return sections
-    .map((section) => ({
-      ...section,
-      items: section.items.filter((item) => !item.capability || hasCapability(profile, item.capability)),
-    }))
+    .map((section) => {
+      const seen = new Set<string>()
+      const items = section.items.filter((item) => {
+        if (!canSeeItem(profile, item)) return false
+        const key = `${item.label}:${item.href}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      return { ...section, items }
+    })
     .filter((section) => section.items.length > 0)
+}
+
+function isActive(pathname: string, item: SidebarItem) {
+  if (item.href === '/dashboard/reportes') return pathname.startsWith('/dashboard/reportes') || pathname === '/dashboard/document-delivery'
+  return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`)
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
@@ -81,12 +147,13 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
             </div>
             <ul className="flex flex-col gap-0.5">
               {section.items.map((item) => {
-                const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                const active = isActive(pathname, item)
                 return (
                   <li key={`${item.label}-${item.href}`}>
                     <Link
                       href={item.href}
                       onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')}
+                      aria-current={active ? 'page' : undefined}
                       className="flex items-center gap-2.5 border-l-2 px-3 py-2.5 text-sm transition-colors"
                       style={{
                         color: active ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
