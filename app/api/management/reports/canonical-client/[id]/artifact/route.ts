@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoleAccess } from '@/lib/api-access'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { buildReportinCanonicalPdf } from '@/lib/reportin-canonical-pdf'
+import { buildReportinProPdf } from '@/lib/reportin-pro-pdf'
 import type { CanonicalClientReport } from '@/lib/n3uralia-canonical-client-report'
 
 export const runtime = 'nodejs'
@@ -12,7 +12,7 @@ function isCanonicalClientReport(value: unknown): value is CanonicalClientReport
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const report = value as Partial<CanonicalClientReport>
   return report.report_type === 'n3uralia_client_canonical'
-    && report.standard_version === '1.0'
+    && (report.standard_version === '1.0' || report.standard_version === '1.1')
     && typeof report.title === 'string'
     && typeof report.executive_summary === 'string'
     && Array.isArray(report.sections)
@@ -50,8 +50,18 @@ export async function GET(
   try {
     const parsed = JSON.parse(data.content) as unknown
     if (!isCanonicalClientReport(parsed)) throw new Error('REPORTIN_INVALID_CANONICAL_DOCUMENT')
-    const artifact = await buildReportinCanonicalPdf(parsed)
 
+    const normalized = {
+      ...parsed,
+      charts: Array.isArray((parsed as CanonicalClientReport).charts) ? (parsed as CanonicalClientReport).charts : [],
+      canonical_metadata: {
+        ...parsed.canonical_metadata,
+        response_id: parsed.canonical_metadata.response_id ?? null,
+        prompt_version: parsed.canonical_metadata.prompt_version ?? 'reportin-1.0',
+      },
+    } as CanonicalClientReport
+
+    const artifact = await buildReportinProPdf(normalized)
     return new Response(Buffer.from(artifact.bytes), {
       status: 200,
       headers: {
