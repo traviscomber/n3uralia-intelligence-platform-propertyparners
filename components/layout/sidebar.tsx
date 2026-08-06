@@ -8,10 +8,12 @@ import type { Profile } from '@/lib/types'
 
 type SidebarItem = {
   label: string
+  ceoLabel?: string
   href: string
   capability?: Capability
   anyCapability?: readonly Capability[]
   roles?: readonly Profile['role'][]
+  excludeRoles?: readonly Profile['role'][]
   exact?: boolean
 }
 
@@ -24,8 +26,8 @@ const sections: SidebarSection[] = [
   {
     label: 'Principal',
     items: [
-      { label: 'Inicio', href: '/dashboard', exact: true },
-      { label: 'Vista ejecutiva', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
+      { label: 'Inicio', href: '/dashboard', exact: true, excludeRoles: ['ceo'] },
+      { label: 'Vista ejecutiva', ceoLabel: 'Inicio ejecutivo', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
       { label: 'Vista de oficina', href: '/dashboard/director', capability: 'dashboard.office.read' },
       { label: 'Mi desempeño', href: '/dashboard/partner', capability: 'dashboard.self.read' },
     ],
@@ -35,6 +37,7 @@ const sections: SidebarSection[] = [
     items: [
       {
         label: 'Propiedades',
+        ceoLabel: 'Propiedades y cartera',
         href: '/dashboard/properties',
         anyCapability: ['properties.global.read', 'properties.office.read', 'properties.self.read'],
       },
@@ -43,14 +46,16 @@ const sections: SidebarSection[] = [
         href: '/dashboard/valuations',
         anyCapability: ['valuations.global.read', 'valuations.office.read', 'valuations.self.read'],
       },
-      { label: 'Inteligencia de mercado', href: '/dashboard/market', capability: 'market.read' },
+      { label: 'Inteligencia de mercado', ceoLabel: 'Mercado', href: '/dashboard/market', capability: 'market.read' },
       {
         label: 'Control de gestión',
+        ceoLabel: 'Resultados comerciales',
         href: '/dashboard/control',
         anyCapability: ['management.global.read', 'management.office.read', 'management.self.read'],
       },
       {
         label: 'CRM y decisiones',
+        ceoLabel: 'Decisiones pendientes',
         href: '/dashboard/datos-crm',
         anyCapability: ['dashboard.global.read', 'dashboard.office.read'],
       },
@@ -61,6 +66,7 @@ const sections: SidebarSection[] = [
     items: [
       {
         label: 'Centro de reportes',
+        ceoLabel: 'Reportes ejecutivos',
         href: '/dashboard/reportes',
         anyCapability: ['reports.global.read', 'reports.office.read', 'reports.self.read'],
         exact: true,
@@ -99,6 +105,7 @@ const sections: SidebarSection[] = [
 ]
 
 function canSeeItem(profile: Profile, item: SidebarItem) {
+  if (item.excludeRoles?.includes(profile.role)) return false
   if (item.roles && !item.roles.includes(profile.role)) return false
   if (item.capability && !hasCapability(profile, item.capability)) return false
   if (item.anyCapability && !item.anyCapability.some((capability) => hasCapability(profile, capability))) return false
@@ -113,7 +120,7 @@ function visibleSections(profile: Profile | null): SidebarSection[] {
       const seen = new Set<string>()
       const items = section.items.filter((item) => {
         if (!canSeeItem(profile, item)) return false
-        const key = `${item.label}:${item.href}`
+        const key = `${item.href}`
         if (seen.has(key)) return false
         seen.add(key)
         return true
@@ -126,6 +133,10 @@ function visibleSections(profile: Profile | null): SidebarSection[] {
 function isActive(pathname: string, item: SidebarItem) {
   if (item.href === '/dashboard/reportes') return pathname.startsWith('/dashboard/reportes') || pathname === '/dashboard/document-delivery'
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`)
+}
+
+function visibleLabel(profile: Profile | null, item: SidebarItem) {
+  return profile?.role === 'ceo' && item.ceoLabel ? item.ceoLabel : item.label
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
@@ -148,8 +159,9 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
             <ul className="flex flex-col gap-0.5">
               {section.items.map((item) => {
                 const active = isActive(pathname, item)
+                const label = visibleLabel(profile, item)
                 return (
-                  <li key={`${item.label}-${item.href}`}>
+                  <li key={`${label}-${item.href}`}>
                     <Link
                       href={item.href}
                       onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')}
@@ -162,7 +174,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                       }}
                     >
                       <span aria-hidden="true" className="h-2 w-2 border border-current" />
-                      <span className="truncate text-[13px]">{item.label}</span>
+                      <span className="truncate text-[13px]">{label}</span>
                     </Link>
                   </li>
                 )
@@ -180,7 +192,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
             <div className="min-w-0">
               <div className="truncate text-xs font-medium text-[var(--n3-text-light)]">{profile.full_name || 'Usuario'}</div>
               <div className="text-[10px] text-[var(--n3-text-muted)]">{getRoleLabel(profile.role)}</div>
-              {profile.role === 'ceo' ? <div className="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-[#ff766f]">Máxima autoridad de negocio</div> : null}
+              {profile.role === 'ceo' ? <div className="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-[#ff766f]">Vista ejecutiva</div> : null}
             </div>
           </div>
         ) : null}
