@@ -20,10 +20,11 @@ const reportSections = [
 ]
 
 const publicationFormats = [
+  ['Informe canónico N3uralia → Cliente', 'Activo', 'Formato oficial para entregas al Cliente: resumen ejecutivo, evidencia, avances del portal, estado contractual, dependencias y próximos hitos.'],
   ['Web executive view', 'Disponible', 'Lectura interactiva por audiencia dentro de Property Partners.'],
   ['Board brief', 'Estructurado', 'Resumen de gobierno y desempeño para Directorio y CEO.'],
   ['Partner brief', 'Estructurado', 'Vista individual con resultado, evolución y score disponible.'],
-  ['PDF / PowerPoint', 'Próxima fase', 'Exportación editorial desde el mismo modelo de contenido, sin duplicar lógica.'],
+  ['PDF / DOCX', 'Disponible por entrega', 'Archivos editoriales derivados del mismo contenido canónico y registrados por huella digital.'],
 ]
 
 export default function AutonomousReportsPage() {
@@ -36,7 +37,8 @@ export default function AutonomousReportsPage() {
         title="Reportes Ejecutivos"
         description="Un punto único para componer lecturas de Directorio, CEO, Director de Cuenta y Ejecutivo. Cada versión utiliza el mismo contenido validado, adaptado al alcance real de su audiencia."
         actions={[
-          { label: 'Abrir reporte de Directorio', href: '/dashboard/reportes/directorio', primary: true },
+          { label: 'Informes canónicos al Cliente', href: '/dashboard/reportes/canonicos', primary: true },
+          { label: 'Abrir reporte de Directorio', href: '/dashboard/reportes/directorio' },
           { label: 'Ver resumen ejecutivo', href: '/dashboard/ceo' },
         ]}
         meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Powered by N3uralia Intelligence · narrativa sin datos inventados</div>}
@@ -100,7 +102,7 @@ export default function AutonomousReportsPage() {
           <IntelligencePanel eyebrow="Output Registry" title="Canales de publicación" description="Estado actual de las salidas editoriales del sistema.">
             <div className="divide-y divide-[var(--n3-line)]">
               {publicationFormats.map(([name, status, detail]) => (
-                <div key={name} className="grid gap-3 p-5 sm:grid-cols-[minmax(0,1fr)_110px] sm:items-center">
+                <div key={name} className="grid gap-3 p-5 sm:grid-cols-[minmax(0,1fr)_130px] sm:items-center">
                   <div className="flex gap-3">
                     <FileText size={17} className="mt-0.5 shrink-0 text-[#ff766f]" />
                     <div>
@@ -121,6 +123,7 @@ export default function AutonomousReportsPage() {
                 'No mezclar niveles de audiencia ni exponer detalle individual fuera de su alcance.',
                 'Mantener scores, metas, conciliaciones y denominaciones originales cuando existan.',
                 'Mostrar explícitamente limitaciones, ausencia de datos y diferencias metodológicas.',
+                'Separar estado de entrega, solicitud de pago y pago efectivamente recibido.',
               ].map((rule) => (
                 <div key={rule} className="flex gap-3 text-xs leading-5 text-[var(--n3-text-muted)]">
                   <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#ff766f]" />
@@ -135,7 +138,7 @@ export default function AutonomousReportsPage() {
       <section>
         <SectionHeading eyebrow="04 · Methodology" title="Transparencia editorial" />
         <MethodologyNote>
-          “Ejecutivo” también se muestra como “Partner” porque esa es la denominación presente en las fuentes. “Director de Cuenta” organiza información real por sucursal y por Partner; no altera scores, metas, atribuciones ni resultados originales.
+          “Ejecutivo” también se muestra como “Partner” porque esa es la denominación presente en las fuentes. “Director de Cuenta” organiza información real por sucursal y por Partner; no altera scores, metas, atribuciones ni resultados originales. Los informes canónicos hacia el Cliente sólo pueden construirse desde paquetes de evidencia verificada y requieren revisión humana antes de distribuirse.
         </MethodologyNote>
       </section>
 
