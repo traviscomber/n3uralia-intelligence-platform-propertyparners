@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-08-02",
+  "asOf": "2026-08-07",
   "overallStatus": "in-progress",
   "allowedStatuses": [
     "not-started",
@@ -57,7 +57,8 @@
       "status": "blocked-client-input",
       "owner": "Shared",
       "evidence": [
-        "Base tecnica, importacion y comparables implementados"
+        "Base tecnica, importacion y comparables implementados",
+        "Separacion explicita entre mercado externo, CRM interno e inferencia"
       ],
       "blockers": [
         "Base historica CBR y ventas recientes",
@@ -68,11 +69,12 @@
     {
       "id": "automation-and-reporting",
       "label": "Automatizaciones y reportes",
-      "status": "in-progress",
+      "status": "blocked-client-input",
       "owner": "Shared",
       "evidence": [
         "Generacion, previsualizacion y envio protegidos",
-        "Regla de cierre mensual implementada"
+        "Regla de cierre mensual implementada",
+        "Programacion bloqueada en API y UI hasta aprobacion formal de reporting"
       ],
       "blockers": [
         "Calendario definitivo",
@@ -86,18 +88,21 @@
       "status": "in-progress",
       "owner": "Shared",
       "evidence": [
-        "Plan UAT documentado"
+        "Plan UAT documentado",
+        "UAT-07 seguridad funcional passed",
+        "UAT-08 continuidad operativa passed",
+        "Casos restantes preparados con evidencia tecnica"
       ],
       "blockers": [
         "Usuarios designados por el Cliente",
-        "Ejecucion de casos",
+        "Ejecucion y aceptacion de casos compartidos",
         "Acta de aceptacion"
       ]
     },
     {
       "id": "training-and-handover",
       "label": "Capacitacion y traspaso",
-      "status": "in-progress",
+      "status": "blocked-client-input",
       "owner": "Shared",
       "evidence": [
         "Plan de capacitacion y traspaso documentado"
@@ -114,12 +119,14 @@
       "status": "in-progress",
       "owner": "N3uralia",
       "evidence": [
-        "Manifiesto de entrega documentado"
+        "Manifiesto de entrega documentado",
+        "Inventario ensamblado con 20 artefactos clasificados",
+        "Checklist de reconstruccion limpia documentado"
       ],
       "blockers": [
-        "Generacion del paquete final",
-        "Checksum",
-        "Prueba de reconstruccion en ambiente limpio"
+        "Generacion del ZIP final sobre commit aprobado",
+        "Checksum SHA-256 del ZIP final",
+        "Reconstruccion limpia del artefacto final"
       ]
     }
   ],
