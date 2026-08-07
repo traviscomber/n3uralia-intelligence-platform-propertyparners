@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, ExternalLink, RefreshCw } from 'lucide-react'
+import { DecisionTrace } from '@/components/intelligence/decision-trace'
 import { OperationalState } from '@/components/ui/operational-state'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 
 type Comparable = {
   propertyId: string
@@ -68,14 +70,35 @@ type Intelligence = {
   }
   comparables: {
     count: number
+    sourceDomCoverage?: number
     priceUfM2: { p25: number | null; median: number | null; p75: number | null }
     medianSourceReportedDom: number | null
     impliedPriceAtMedian: number | null
     priceVsMedianPct: number | null
     domVsMedianMultiple: number | null
     methodology: string
+    quality?: {
+      score: number
+      label: string
+      freshCount: number
+      confirmedIdentityCount: number
+      sourceDomCount: number
+      freshnessCoverage: number
+      identityCoverage: number
+      domCoverage: number
+      relativeIqrPct: number | null
+    }
     rows: Comparable[]
   }
+  priceConsistency?: {
+    firstPriceUf: number | null
+    latestPriceUf: number | null
+    changePct: number | null
+    maxSequentialChangePct: number | null
+    distinctPriceCount: number
+  }
+  anomalies?: Array<{ id: string; severity: 'warning' | 'info'; label: string; detail: string }>
+  decisionTrace?: DecisionTraceItem[]
   identityMatches: Array<{ id: string; score: number; status: string }>
   signals: { pricePosition: string; marketStagnation: string; freshness: string; identity: string }
   recommendation: string
@@ -123,6 +146,7 @@ export default function PropertyIntelligencePage() {
   const issues = data.missingEvidence.length
   const dataStatus = data.confidenceLabel === 'high' && !issues ? 'ready' : data.confidenceLabel === 'low' ? 'blocked' : 'partial'
   const externalSource = data.sourceEvidence.source || 'mercado externo'
+  const comparableQuality = data.comparables.quality
 
   return <WorkspaceShell>
     <WorkspaceHeader
@@ -168,6 +192,8 @@ export default function PropertyIntelligencePage() {
       </div>
     </section>
 
+    {data.decisionTrace?.length ? <DecisionTrace items={data.decisionTrace} title="Trazabilidad de recomendación" /> : null}
+
     <section className="mt-7">
       <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Tiempo y trazabilidad</h2></div>
       <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
@@ -187,8 +213,19 @@ export default function PropertyIntelligencePage() {
         <div><span className="text-xs text-[var(--n3-text-muted)]">P75</span><strong className="block">{number(data.comparables.priceUfM2.p75)} UF/m²</strong></div>
         <div><span className="text-xs text-[var(--n3-text-muted)]">Precio implícito</span><strong className="block">{uf(data.comparables.impliedPriceAtMedian)}</strong></div>
       </div>
+      {comparableQuality ? <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4" aria-label="Calidad de comparables">
+        <div className="bg-[var(--n3-deep)] p-3"><span className="text-xs text-[var(--n3-text-muted)]">Calidad</span><strong className="mt-1 block">{confidenceLabel(comparableQuality.label)} · {number(comparableQuality.score * 100, 0)}%</strong></div>
+        <div className="bg-[var(--n3-deep)] p-3"><span className="text-xs text-[var(--n3-text-muted)]">Vigentes ≤30d</span><strong className="mt-1 block">{comparableQuality.freshCount}/{data.comparables.count}</strong></div>
+        <div className="bg-[var(--n3-deep)] p-3"><span className="text-xs text-[var(--n3-text-muted)]">Identidad confirmada</span><strong className="mt-1 block">{comparableQuality.confirmedIdentityCount}/{data.comparables.count}</strong></div>
+        <div className="bg-[var(--n3-deep)] p-3"><span className="text-xs text-[var(--n3-text-muted)]">Dispersión IQR</span><strong className="mt-1 block">{comparableQuality.relativeIqrPct == null ? '—' : `${number(comparableQuality.relativeIqrPct)}%`}</strong></div>
+      </div> : null}
       <div className="mt-4 overflow-x-auto border-t border-[var(--n3-line)]"><table className="w-full min-w-[820px] text-sm"><thead className="border-b border-[var(--n3-line)] text-xs text-[var(--n3-text-muted)]"><tr><th className="py-3 text-left">Comparable</th><th className="px-3 py-3 text-right">m²</th><th className="px-3 py-3 text-right">UF</th><th className="px-3 py-3 text-right">UF/m²</th><th className="px-3 py-3 text-right">DOM fuente</th><th className="px-3 py-3 text-left">Identidad</th><th className="py-3 text-right">Fuente</th></tr></thead><tbody>{data.comparables.rows.map((item) => <tr key={item.propertyId} className="border-b border-[var(--n3-line)]"><td className="max-w-[360px] truncate py-3 pr-3">{item.address || item.propertyId}</td><td className="px-3 py-3 text-right tabular-nums">{number(item.areaM2, 0)}</td><td className="px-3 py-3 text-right tabular-nums">{number(item.priceUf, 0)}</td><td className="px-3 py-3 text-right tabular-nums">{number(item.priceUfM2)}</td><td className="px-3 py-3 text-right tabular-nums">{item.sourceReportedDom == null ? '—' : number(item.sourceReportedDom, 0)}</td><td className="px-3 py-3">{signalLabel(item.identityStatus || 'unknown')}</td><td className="py-3 text-right">{item.url ? <a href={item.url} target="_blank" rel="noreferrer" aria-label="Abrir fuente" className="inline-flex items-center gap-1 text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Abrir<ExternalLink size={12}/></a> : '—'}</td></tr>)}</tbody></table></div>
     </section>
+
+    {data.anomalies?.length ? <section className="mt-7">
+      <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Anomalías de evidencia</h2></div>
+      <div className="divide-y divide-[var(--n3-line)]">{data.anomalies.map((item) => <div key={item.id} className="py-3"><p className={item.severity === 'warning' ? 'text-sm font-semibold text-[#f0c96a]' : 'text-sm font-semibold'}>{item.label}</p><p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{item.detail}</p></div>)}</div>
+    </section> : null}
 
     <section className="mt-7">
       <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Evidencia faltante para este dominio</h2></div>
