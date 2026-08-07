@@ -2,6 +2,8 @@ import 'server-only'
 
 import Link from 'next/link'
 import { AlertTriangle, ArrowRight, BrainCircuit, ShieldCheck } from 'lucide-react'
+import { DecisionTrace } from '@/components/intelligence/decision-trace'
+import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 import { getN3uraliaIntelligence } from '@/lib/n3uralia-intelligence-gateway'
 import { evaluateManagementDecisionPolicy } from '@/lib/management-decision-evaluator'
 
@@ -23,8 +25,24 @@ export async function CeoIntelligencePanel() {
   const actions = result.remote?.actions ?? result.local.actions
   const criticalRisk = risks.find((item) => item.severity === 'critical') ?? risks[0] ?? null
   const topActions = actions.slice(0, 3)
-  const topGoverned = governed.signals.slice(0, 2)
   const approvedEvidence = governed.evidenceLayer === 'approved_live'
+  const decisionTrace: DecisionTraceItem[] = governed.signals.slice(0, 4).map((item) => ({
+    id: `ceo-${item.ruleId}-${item.period}`,
+    domain: 'executive',
+    title: item.label,
+    evidenceStatus: item.evidenceLayer === 'approved_live' ? 'approved_live' : 'documentary_canonical',
+    evidenceLabel: item.evidence,
+    source: item.evidenceLayer === 'approved_live' ? 'Métrica de gestión aprobada' : 'Resumen operacional canónico',
+    cutoff: item.period,
+    ruleId: item.ruleId,
+    ruleVersion: governed.policyVersion,
+    ruleOrigin: item.origin === 'client_approved' ? 'client_approved' : 'n3uralia_provisional',
+    severity: item.severity === 'high' ? 'critical' : 'warning',
+    confidence: item.evidenceLayer === 'approved_live' ? 'high' : 'medium',
+    action: item.rationale,
+    href: '/dashboard/ceo/decisiones',
+    evidenceCount: 1,
+  }))
 
   return (
     <section className="space-y-4" aria-labelledby="n3uralia-intelligence-title">
@@ -64,17 +82,9 @@ export async function CeoIntelligencePanel() {
             </p>
           </div>
         </div>
-        {topGoverned.length ? (
-          <div className="mt-3 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
-            {topGoverned.map((item) => (
-              <div key={item.ruleId} className="bg-[#0c1111] p-3">
-                <p className="text-xs font-semibold">{item.label}</p>
-                <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.evidence}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
       </div>
+
+      {decisionTrace.length ? <DecisionTrace items={decisionTrace} title="Trazabilidad ejecutiva" /> : null}
 
       {result.remoteError ? (
         <div role="status" className="border border-[#a77a22] bg-[#0c1111] p-4 text-sm text-[#f6c453]">
