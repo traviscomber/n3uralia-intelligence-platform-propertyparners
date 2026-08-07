@@ -34,7 +34,12 @@ export function WorkspaceHeader({ eyebrow, title, meta, controls, actions = [] }
 }
 
 export function MetricStrip({ items }: { items: Array<{ label: string; value: ReactNode; detail?: ReactNode; tone?: 'default' | 'success' | 'warning' | 'danger' }> }) {
-  const toneClass = { default: 'text-[var(--n3-text-light)]', success: 'text-[#78d59a]', warning: 'text-[#f0c96a]', danger: 'text-[#ff766f]' }
+  const toneClass = {
+    default: 'text-[var(--n3-text-light)]',
+    success: 'text-[var(--chart-3)]',
+    warning: 'text-[var(--chart-4)]',
+    danger: 'text-[var(--destructive)]',
+  }
   return <section aria-label="Indicadores" className="grid border-b border-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">{items.map((item, index) => <article key={item.label} className={`border-b border-[var(--n3-line)] py-4 ${index % 4 ? 'sm:px-4' : 'pr-4'} ${index < items.length - 1 ? 'lg:border-r' : ''}`}>
     <p className="text-[10px] uppercase tracking-[0.13em] text-[var(--n3-text-muted)]">{item.label}</p>
     <div className={`mt-2 text-3xl font-semibold tabular-nums ${toneClass[item.tone ?? 'default']}`}>{item.value}</div>
@@ -44,11 +49,11 @@ export function MetricStrip({ items }: { items: Array<{ label: string; value: Re
 
 export function DataStatusBar({ cutoff, coverage, issues = 0, status, issueLabel = 'observaciones de datos' }: { cutoff: string; coverage?: string; issues?: number; status?: 'ready' | 'partial' | 'blocked'; issueLabel?: string }) {
   const label = status === 'ready' ? 'Datos listos' : status === 'blocked' ? 'Datos insuficientes' : 'Cobertura parcial'
-  const tone = status === 'ready' ? 'text-[#78d59a]' : status === 'blocked' ? 'text-[#ff766f]' : 'text-[#f0c96a]'
+  const tone = status === 'ready' ? 'text-[var(--chart-3)]' : status === 'blocked' ? 'text-[var(--destructive)]' : 'text-[var(--chart-4)]'
   return <section aria-label="Estado de los datos" className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-[var(--n3-line)] py-3 text-xs">
     <span className={`font-semibold ${tone}`}>{label}</span>
     <span className="text-[var(--n3-text-muted)]">Corte {cutoff}</span>
     {coverage ? <span className="text-[var(--n3-text-muted)]">{coverage}</span> : null}
-    <span className={issues ? 'ml-auto text-[#f0c96a]' : 'ml-auto text-[var(--n3-text-muted)]'}>{issues ? `${issues} ${issueLabel}` : 'Sin observaciones reportadas'}</span>
+    <span className={issues ? 'ml-auto text-[var(--chart-4)]' : 'ml-auto text-[var(--n3-text-muted)]'}>{issues ? `${issues} ${issueLabel}` : 'Sin observaciones reportadas'}</span>
   </section>
 }
