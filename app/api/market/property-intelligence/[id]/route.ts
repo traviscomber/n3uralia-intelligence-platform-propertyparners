@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 
 const DAY_MS = 86_400_000
 const LEGACY_PREFIX = 'legacy-property:'
@@ -31,6 +32,10 @@ function percentile(values: number[], p: number) {
 function legacyId(canonicalKey: unknown) {
   const key = String(canonicalKey ?? '')
   return key.startsWith(LEGACY_PREFIX) ? key.slice(LEGACY_PREFIX.length) : null
+}
+
+function boundedScore(value: number) {
+  return Math.max(0, Math.min(1, value))
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
@@ -169,12 +174,45 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const priceVsMedianPct = currentUfM2 != null && medianUfM2 != null && medianUfM2 !== 0 ? (currentUfM2 / medianUfM2 - 1) * 100 : null
   const domVsMedianMultiple = sourceReportedDom != null && medianSourceDom != null && medianSourceDom > 0 ? sourceReportedDom / medianSourceDom : null
 
+  const comparableFreshRows = comparableRows.filter((row) => {
+    const age = daysBetween(String(row.observedAt ?? ''), nowIso)
+    return age != null && age <= 30
+  })
+  const comparableConfirmedRows = comparableRows.filter((row) => row.identityStatus === 'confirmed')
+  const comparableWithSourceDom = comparableRows.filter((row) => row.sourceReportedDom != null)
+  const comparableFreshnessCoverage = comparableRows.length ? comparableFreshRows.length / comparableRows.length : 0
+  const comparableIdentityCoverage = comparableRows.length ? comparableConfirmedRows.length / comparableRows.length : 0
+  const comparableDomCoverage = comparableRows.length ? comparableWithSourceDom.length / comparableRows.length : 0
+  const iqr = p25 != null && p75 != null ? p75 - p25 : null
+  const relativeIqrPct = iqr != null && medianUfM2 != null && medianUfM2 > 0 ? iqr / medianUfM2 * 100 : null
+  const comparableQualityScore = boundedScore(
+    (Math.min(comparableRows.length, 10) / 10) * 0.4
+      + comparableFreshnessCoverage * 0.25
+      + comparableIdentityCoverage * 0.2
+      + comparableDomCoverage * 0.15,
+  )
+
+  const firstPrice = priceHistory[0]?.priceUf ?? null
+  const latestPrice = priceHistory.at(-1)?.priceUf ?? null
+  const priceChangePct = firstPrice != null && latestPrice != null && firstPrice > 0 ? (latestPrice / firstPrice - 1) * 100 : null
+  const sequentialPriceChanges = priceHistory.slice(1).map((row, index) => {
+    const previous = priceHistory[index]?.priceUf
+    return previous && previous > 0 ? (row.priceUf / previous - 1) * 100 : null
+  }).filter((value): value is number => value != null && Number.isFinite(value))
+  const maxSequentialPriceChangePct = sequentialPriceChanges.length ? Math.max(...sequentialPriceChanges.map((value) => Math.abs(value))) : null
+  const anomalies: Array<{ id: string; severity: 'warning' | 'info'; label: string; detail: string }> = []
+  if (relativeIqrPct != null && relativeIqrPct > 35) anomalies.push({ id: 'comparable-dispersion', severity: 'warning', label: 'Alta dispersión de comparables', detail: `El rango intercuartil equivale a ${relativeIqrPct.toFixed(1)}% de la mediana UF/m²; la referencia de precio requiere cautela.` })
+  if (maxSequentialPriceChangePct != null && maxSequentialPriceChangePct >= 15) anomalies.push({ id: 'price-jump', severity: 'warning', label: 'Cambio abrupto de precio', detail: `La serie contiene al menos un cambio de ${maxSequentialPriceChangePct.toFixed(1)}% entre observaciones consecutivas.` })
+  if (distinctPrices.length >= 4) anomalies.push({ id: 'price-volatility', severity: 'info', label: 'Múltiples precios observados', detail: `Se registran ${distinctPrices.length} precios distintos en ${history.length} observaciones.` })
+  if (comparableRows.length > 0 && comparableFreshnessCoverage < 0.5) anomalies.push({ id: 'comparable-staleness', severity: 'warning', label: 'Comparables con baja vigencia', detail: `Sólo ${(comparableFreshnessCoverage * 100).toFixed(0)}% de los comparables tiene observación de los últimos 30 días.` })
+
   const missingEvidence: string[] = []
   if (property.identity_status !== 'confirmed') missingEvidence.push('Identidad canónica pendiente de confirmación humana.')
   if (evidenceAgeDays == null || evidenceAgeDays > 7) missingEvidence.push('Vigencia de publicación sin observación reciente (más de 7 días).')
   if (history.length < 2) missingEvidence.push('Sin serie temporal suficiente para reconstruir cambios de precio o estado.')
   if (!transactions.length) missingEvidence.push('Sin transacción confirmada vinculada; no existe precio efectivo de cierre.')
   if (!matches.length) missingEvidence.push('Sin otra identidad candidata vinculada para esta propiedad.')
+  if (comparableRows.length < 5) missingEvidence.push('Universo comparable reducido; la referencia estadística debe tratarse con cautela.')
   missingEvidence.push('Sin evidencia vinculada de visitas, ofertas o feedback de compradores en este expediente de mercado.')
 
   const signals = {
@@ -195,12 +233,58 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   const confidenceInputs = [
     property.identity_status === 'confirmed' ? 1 : numberOrNull(property.identity_confidence) ?? 0.4,
-    comparableRows.length >= 10 ? 1 : comparableRows.length >= 5 ? 0.7 : comparableRows.length > 0 ? 0.4 : 0,
+    comparableQualityScore,
     evidenceAgeDays != null && evidenceAgeDays <= 7 ? 1 : evidenceAgeDays != null && evidenceAgeDays <= 30 ? 0.6 : 0.25,
     history.length >= 2 ? 1 : 0.35,
     transactions.length ? 1 : 0.3,
   ]
   const confidence = confidenceInputs.reduce((sum, value) => sum + value, 0) / confidenceInputs.length
+  const confidenceLabel = confidence >= 0.8 ? 'high' : confidence >= 0.6 ? 'medium' : 'low'
+
+  const decisionTrace: DecisionTraceItem[] = [
+    {
+      id: `property:${property.id}:price-position`,
+      domain: 'market',
+      title: 'Posición de precio',
+      evidenceStatus: medianUfM2 != null ? 'external_market' : 'non_evaluable',
+      evidenceLabel: priceVsMedianPct == null ? 'No existe una mediana comparable suficiente para posicionar el precio.' : `UF/m² sujeto comparado con mediana de ${comparableRows.length} comparables: ${priceVsMedianPct.toFixed(1)}%.`,
+      source: 'Mercado externo normalizado',
+      sourceReference: neighborhood?.name ?? null,
+      cutoff: currentListing?.observed_at ?? property.last_seen_at ?? null,
+      severity: signals.pricePosition === 'above_market' ? 'warning' : 'info',
+      confidence: confidenceLabel,
+      action: signals.pricePosition === 'above_market' ? 'Revisar posicionamiento junto con exposición y evidencia comercial antes de cambiar precio.' : 'Mantener monitoreo contra comparables vigentes.',
+      href: '/dashboard/market',
+      evidenceCount: comparableRows.length,
+    },
+    {
+      id: `property:${property.id}:stagnation`,
+      domain: 'market',
+      title: 'Estancamiento de mercado',
+      evidenceStatus: domVsMedianMultiple != null ? 'external_market' : 'non_evaluable',
+      evidenceLabel: domVsMedianMultiple == null ? 'No existe cobertura DOM comparable suficiente.' : `DOM reportado por fuente equivale a ${domVsMedianMultiple.toFixed(1)}× la mediana comparable.`,
+      source: sourceReportedDomOrigin ?? 'Mercado externo',
+      cutoff: currentListing?.observed_at ?? property.last_seen_at ?? null,
+      severity: signals.marketStagnation === 'high' ? 'warning' : 'info',
+      confidence: confidenceLabel,
+      action: 'Validar vigencia y contexto antes de atribuir causa al precio.',
+      href: '/dashboard/market',
+      evidenceCount: domValues.length,
+    },
+    {
+      id: `property:${property.id}:freshness`,
+      domain: 'market',
+      title: 'Vigencia de evidencia',
+      evidenceStatus: signals.freshness === 'current' ? 'external_market' : 'missing',
+      evidenceLabel: evidenceAgeDays == null ? 'No existe fecha suficiente para verificar vigencia.' : `Última observación hace ${evidenceAgeDays} días.`,
+      source: legacySubject?.source ?? 'Mercado externo',
+      cutoff: property.last_seen_at ?? null,
+      severity: signals.freshness === 'very_stale' ? 'warning' : 'info',
+      confidence: signals.freshness === 'current' ? 'high' : signals.freshness === 'stale' ? 'medium' : 'low',
+      action: signals.freshness === 'current' ? 'Sin acción de vigencia requerida.' : 'Revalidar publicación antes de una decisión operativa.',
+      evidenceCount: history.length,
+    },
+  ]
 
   return NextResponse.json({
     property: {
@@ -265,14 +349,42 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       priceVsMedianPct,
       domVsMedianMultiple,
       methodology: 'Misma tipología y barrio contractual, superficie útil (o construida si falta) ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
+      quality: {
+        score: Number(comparableQualityScore.toFixed(3)),
+        label: comparableQualityScore >= 0.8 ? 'high' : comparableQualityScore >= 0.6 ? 'medium' : 'low',
+        freshCount: comparableFreshRows.length,
+        confirmedIdentityCount: comparableConfirmedRows.length,
+        sourceDomCount: comparableWithSourceDom.length,
+        freshnessCoverage: Number(comparableFreshnessCoverage.toFixed(3)),
+        identityCoverage: Number(comparableIdentityCoverage.toFixed(3)),
+        domCoverage: Number(comparableDomCoverage.toFixed(3)),
+        relativeIqrPct: relativeIqrPct == null ? null : Number(relativeIqrPct.toFixed(1)),
+      },
       rows: comparableRows.sort((a, b) => Math.abs(Number(a.priceUfM2) - Number(currentUfM2 ?? a.priceUfM2)) - Math.abs(Number(b.priceUfM2) - Number(currentUfM2 ?? b.priceUfM2))).slice(0, 20),
     },
+    priceConsistency: {
+      firstPriceUf: firstPrice,
+      latestPriceUf: latestPrice,
+      changePct: priceChangePct == null ? null : Number(priceChangePct.toFixed(1)),
+      maxSequentialChangePct: maxSequentialPriceChangePct == null ? null : Number(maxSequentialPriceChangePct.toFixed(1)),
+      distinctPriceCount: distinctPrices.length,
+    },
+    anomalies,
     identityMatches: matches,
     signals,
     recommendation,
+    decisionTrace,
     missingEvidence,
+    evidenceQuality: {
+      comparableScore: Number(comparableQualityScore.toFixed(3)),
+      overallScore: Number(confidence.toFixed(3)),
+      evidenceAgeDays,
+      comparableCount: comparableRows.length,
+      observationCount: history.length,
+      transactionCount: transactions.length,
+    },
     confidence: Number(confidence.toFixed(3)),
-    confidenceLabel: confidence >= 0.8 ? 'high' : confidence >= 0.6 ? 'medium' : 'low',
+    confidenceLabel,
     generatedAt: nowIso,
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
