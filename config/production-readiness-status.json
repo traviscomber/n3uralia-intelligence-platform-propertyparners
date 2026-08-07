@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "status": "in-review",
-  "commit": "72c4eb238bb582a5b4c29b0a2cd304e62094a42f",
+  "commit": "8b30eef5e42468a020728c281c20af2c7616969d",
   "deployment": "https://ppartnersgroup.app",
   "checks": {
     "build": "passed",
     "securityBoundaries": "passed",
     "tenantIsolation": "passed",
-    "runtimeConfiguration": "pending",
+    "runtimeConfiguration": "passed",
     "rollback": "passed",
     "monitoring": "passed",
     "backupRecovery": "pending",
@@ -16,10 +16,13 @@
   "criticalFindings": [],
   "highFindings": [],
   "evidence": [
-    "Vercel production deployment for commit 72c4eb238bb582a5b4c29b0a2cd304e62094a42f completed successfully on 2026-08-07",
+    "Vercel project prj_647kJUnmbzEKCcKN3MkKCJaqGc8F verified as Next.js production runtime using Node 24.x with ppartnersgroup.app assigned and deployment dpl_8n2DiVHA3vuyJDYLBJDHJrFKr47L READY on 2026-08-07",
+    "Vercel production deployment for commit 8b30eef5e42468a020728c281c20af2c7616969d completed successfully on 2026-08-07",
     "Prebuild passed IP boundaries, credential boundaries, exposure boundaries, tenant isolation and dashboard trust-boundary checks",
     "Production protected property-intelligence endpoint returned HTTP 401 without internal error disclosure and with no-store/security headers on 2026-08-07",
-    "Vercel runtime error inspection returned no production runtime errors in the verified 24h window on 2026-08-07",
+    "Vercel runtime inspection returned no production error/fatal logs in the verified 24h window on 2026-08-07",
+    "Supabase migration restrict_security_definer_rpc_execution removed anonymous execution of refresh_market_property_match_candidates and restricted ingest_portal_listing_snapshot to service_role",
+    "docs/canonical/SUPABASE_RPC_HARDENING_2026-08-07.md",
     "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"
   ]
 }
