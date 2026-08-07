@@ -16,17 +16,17 @@ function confidenceLabel(confidence: DecisionTraceItem['confidence']) {
 }
 
 function StatusIcon({ status }: { status: DecisionTraceItem['evidenceStatus'] }) {
-  if (status === 'missing' || status === 'non_evaluable') return <CircleHelp size={14} />
-  if (status === 'approved_live' || status === 'documentary_canonical') return <CheckCircle2 size={14} />
-  return <CircleAlert size={14} />
+  if (status === 'missing' || status === 'non_evaluable') return <CircleHelp aria-hidden="true" size={14} />
+  if (status === 'approved_live' || status === 'documentary_canonical') return <CheckCircle2 aria-hidden="true" size={14} />
+  return <CircleAlert aria-hidden="true" size={14} />
 }
 
 export function DecisionTrace({ items, title = 'Trazabilidad de decisión' }: { items: DecisionTraceItem[]; title?: string }) {
   return (
-    <section aria-label={title} className="mt-6 border-y border-[var(--n3-line)] py-5">
+    <section aria-labelledby="decision-trace-title" className="mt-6 border-y border-[var(--n3-line)] py-5">
       <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{title}</p>
+          <h2 id="decision-trace-title" className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{title}</h2>
           <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
             Evidencia, corte y gobernanza usados para sustentar la señal. Esta vista no expone prompts ni lógica propietaria interna.
           </p>
@@ -57,8 +57,8 @@ export function DecisionTrace({ items, title = 'Trazabilidad de decisión' }: { 
               </dl>
 
               {item.href ? (
-                <Link href={item.href} className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">
-                  Revisar evidencia <ArrowRight size={13} />
+                <Link href={item.href} aria-label={`Revisar evidencia: ${item.title}`} className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">
+                  Revisar evidencia <ArrowRight aria-hidden="true" size={13} />
                 </Link>
               ) : null}
             </article>
