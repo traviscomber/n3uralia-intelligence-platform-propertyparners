@@ -8,8 +8,7 @@ import {
 
 export const runtime = 'nodejs'
 
-export async function POST(request: Request) {
-  // Verify CRON_SECRET
+async function handleCron(request: Request) {
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
   const authFailure = getCronAuthorizationFailure(authHeader, cronSecret)
@@ -21,32 +20,22 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Get all active weekly document schedules
     const schedules = await getScheduledDocuments()
-    const weeklySchedules = schedules.filter((s) => s.cadence === 'weekly')
-
+    const weeklySchedules = schedules.filter((schedule) => schedule.cadence === 'weekly')
     let distributionsCreated = 0
 
     for (const schedule of weeklySchedules) {
       try {
-        // Get recipients for this schedule
         const recipients = await getRecipientsForSchedule(schedule.id)
-
         if (recipients.length > 0) {
-          // Create distribution records for each recipient
           await createDocumentDistributions(
             schedule.id,
-            recipients.map((r) => ({
-              email: r.email,
-              role: r.role,
-            }))
+            recipients.map((recipient) => ({ email: recipient.email, role: recipient.role })),
           )
-
           distributionsCreated += recipients.length
         }
       } catch (error) {
         console.error(`[Document Delivery] Error processing schedule ${schedule.id}:`, error)
-        continue
       }
     }
 
@@ -60,9 +49,9 @@ export async function POST(request: Request) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorDetails = error instanceof Error ? error.stack : JSON.stringify(error)
     console.error('[Document Delivery] Cron error:', errorMessage, errorDetails)
-    return new NextResponse(JSON.stringify({ error: 'Internal server error', details: errorMessage }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 })
   }
 }
+
+export const GET = handleCron
+export const POST = handleCron
