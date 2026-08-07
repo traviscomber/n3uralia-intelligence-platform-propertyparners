@@ -16,7 +16,11 @@ type Point = {
   targets?: Record<string, number | null>
 }
 type Entity = { id: string; name: string; entityType: string; evolution?: Point[] }
-type Summary = { generatedAt?: string; entities: Entity[] }
+type Summary = {
+  generatedAt?: string
+  entities: Entity[]
+  dataLayers?: { approvedMetricCount?: number; errors?: string[] }
+}
 type Operations = { valuations: { review: number }; assignments: { paused: number }; market: { properties: number; confirmed: number }; tasks: { overdue: number; urgent: number }; errors: string[]; generatedAt: string }
 type Action = { label: string; value: string; detail?: string; href: string; priority: number; critical: boolean }
 type Risk = 'high' | 'medium' | 'low' | 'unknown'
@@ -29,7 +33,7 @@ const tone = (value: number | null | undefined): 'default' | 'success' | 'warnin
 const periodName = (period: string) => { const [year, month] = period.split('-').map(Number); return new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, 1))) }
 const csv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`
 const metric = (point: Point | undefined, code: string) => point?.metrics?.[code] ?? null
-const riskLabel = (risk: Risk) => risk === 'high' ? 'Alto' : risk === 'medium' ? 'Medio' : risk === 'low' ? 'Bajo' : '—'
+const riskLabel = (risk: Risk) => risk === 'high' ? 'Alto' : risk === 'medium' ? 'Medio' : risk === 'low' ? 'Bajo' : 'Sin evidencia'
 const riskClass = (risk: Risk) => risk === 'high' ? 'text-[#ff8d87]' : risk === 'medium' ? 'text-[#f0c96a]' : risk === 'low' ? 'text-[#78d59a]' : 'text-[var(--n3-text-muted)]'
 
 function sumThrough(points: Point[] | undefined, period: string, key: 'sales' | 'salesTarget') {
@@ -84,16 +88,17 @@ export function CeoDashboardCommand() {
     const visitRate = ratio(realized, scheduled)
     const staleRatio = ratio(stale90, active)
     const suspendedRatio = ratio(suspended, stock)
+    const hasRiskEvidence = staleRatio != null || visitRate != null || suspendedRatio != null || followUp != null
 
-    let risk: Risk = 'low'
-    let action = followUp != null && followUp >= 80 ? 'Replicar gestión' : 'Monitorear'
-    let riskScore = 0
+    let risk: Risk = 'unknown'
+    let action = 'Revisar evidencia'
+    let riskScore = -1
 
     if (staleRatio != null && staleRatio >= 30) { risk = 'high'; action = 'Intervenir backlog'; riskScore = 100 + staleRatio }
     else if (visitRate != null && visitRate < 50) { risk = 'high'; action = 'Mejorar visitas'; riskScore = 95 + (50 - visitRate) }
     else if (suspendedRatio != null && suspendedRatio >= 20) { risk = 'high'; action = 'Revisar cartera'; riskScore = 90 + suspendedRatio }
-    else if ((staleRatio != null && staleRatio >= 15) || (visitRate != null && visitRate < 60) || (suspendedRatio != null && suspendedRatio >= 10)) { risk = 'medium'; riskScore = 50 + Math.max(staleRatio ?? 0, suspendedRatio ?? 0, visitRate == null ? 0 : 60 - visitRate) }
-    else if (active == null && visitRate == null && stock == null) risk = 'unknown'
+    else if ((staleRatio != null && staleRatio >= 15) || (visitRate != null && visitRate < 60) || (suspendedRatio != null && suspendedRatio >= 10)) { risk = 'medium'; action = 'Monitorear'; riskScore = 50 + Math.max(staleRatio ?? 0, suspendedRatio ?? 0, visitRate == null ? 0 : 60 - visitRate) }
+    else if (hasRiskEvidence) { risk = 'low'; action = followUp != null && followUp >= 80 ? 'Replicar gestión' : 'Monitorear'; riskScore = 0 }
 
     return {
       id: branch.id,
@@ -190,8 +195,15 @@ export function CeoDashboardCommand() {
   const freshness = cutoff ? new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(cutoff) : '—'
   const critical = actions.filter((item) => item.critical).length
   const identityCoverage = operations.market.properties > 0 ? operations.market.confirmed / operations.market.properties * 100 : null
-  const dataStatus = operations.errors.length ? 'partial' : identityCoverage === null || identityCoverage === 0 ? 'blocked' : identityCoverage < 100 ? 'partial' : 'ready'
+  const approvedMetricCount = summary.dataLayers?.approvedMetricCount ?? 0
+  const dataLayerIssues = summary.dataLayers?.errors?.length ?? 0
+  const dataStatus = operations.errors.length || dataLayerIssues || approvedMetricCount === 0
+    ? 'partial'
+    : identityCoverage === null || identityCoverage === 0
+      ? 'blocked'
+      : identityCoverage < 100 ? 'partial' : 'ready'
   const creditedDetail = usesCommercialCredit ? `${n(selectedMetrics.management_credited_sales, 1)} crédito gestión` : undefined
+  const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)}`
 
   return <WorkspaceShell>
     <WorkspaceHeader controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }, { label: 'Informe', href: `/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`, primary: true, icon: <FileText size={14} /> }, { label: 'Exportar', onClick: exportData, icon: <Download size={14} />, ariaLabel: 'Exportar' }]} />
@@ -207,6 +219,6 @@ export function CeoDashboardCommand() {
       <div className="mt-2 overflow-x-auto border-t border-[var(--n3-line)]"><table className="w-full min-w-[760px] border-collapse text-left"><thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.11em] text-[var(--n3-text-muted)]"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-3 py-3 font-medium">Resultado</th><th className="px-3 py-3 font-medium">Pipeline</th><th className="px-3 py-3 font-medium">Ejecución</th><th className="px-3 py-3 font-medium">Riesgo</th><th className="px-3 py-3 text-right font-medium">Acción</th></tr></thead><tbody>{offices.map((item) => <tr key={item.id} className="border-b border-[var(--n3-line)] text-sm"><td className="py-3 pr-4 font-medium">{item.name}</td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{item.sales == null ? '—' : `${n(item.sales, Number.isInteger(item.sales) ? 0 : 1)} cierres corporativos`}</span><span className="block text-xs text-[var(--n3-text-muted)]">{uf(item.salesUf)}</span>{item.credited != null ? <span className="mt-1 block text-xs text-[var(--n3-text-muted)]">{n(item.credited, Number.isInteger(item.credited) ? 0 : 1)} crédito gestión{item.creditedUf != null ? ` · ${uf(item.creditedUf)}` : ''}</span> : null}</td><td className="px-3 py-3 tabular-nums"><span className="block">{item.stale90 == null ? (item.active == null ? '—' : `${n(item.active)} activos`) : `${n(item.stale90)} >90d`}</span>{item.staleRatio != null ? <span className="block text-xs text-[var(--n3-text-muted)]">{pct(item.staleRatio)} del activo</span> : null}</td><td className="px-3 py-3 tabular-nums"><span className="block">{item.visitRate == null ? '—' : pct(item.visitRate)}</span>{item.scheduled != null && item.realized != null ? <span className="block text-xs text-[var(--n3-text-muted)]">{n(item.realized)} / {n(item.scheduled)} visitas</span> : null}</td><td className={`px-3 py-3 font-semibold ${riskClass(item.risk)}`}>{riskLabel(item.risk)}</td><td className="px-3 py-3 text-right"><Link href="/dashboard/control/operations" className="inline-flex items-center gap-1 font-medium hover:text-[var(--n3-text-light)]">{item.action}<ArrowRight size={13} /></Link></td></tr>)}</tbody></table></div>
     </section>
 
-    <DataStatusBar cutoff={freshness} coverage={identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} issues={operations.errors.length} status={dataStatus} />
+    <DataStatusBar cutoff={freshness} coverage={coverageLabel} issues={operations.errors.length + dataLayerIssues + (approvedMetricCount === 0 ? 1 : 0)} status={dataStatus} />
   </WorkspaceShell>
 }
