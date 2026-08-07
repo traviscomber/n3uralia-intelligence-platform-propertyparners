@@ -138,7 +138,11 @@ export async function PATCH(request: NextRequest) {
     const id = String(body.id ?? '')
     if (!id) return NextResponse.json({ error: 'Tarea requerida' }, { status: 400 })
 
-    const { data: existing, error: existingError } = await supabase.from('management_tasks').select('id,office,assigned_to').eq('id', id).maybeSingle()
+    const { data: existing, error: existingError } = await supabase
+      .from('management_tasks')
+      .select('id,office,assigned_to,status,resolution_note,started_at')
+      .eq('id', id)
+      .maybeSingle()
     if (existingError) {
       console.error('[management-tasks] task lookup failed', { code: existingError.code })
       return NextResponse.json({ error: 'No fue posible validar la tarea.' }, { status: 500 })
@@ -148,12 +152,23 @@ export async function PATCH(request: NextRequest) {
     if (scope.scope === 'self' && existing.assigned_to !== scope.profileId) return NextResponse.json({ error: 'Tarea fuera del alcance personal' }, { status: 403 })
 
     const update: Record<string, unknown> = { updated_by: scope.profileId }
+    const requestedResolutionNote = body.resolutionNote !== undefined
+      ? String(body.resolutionNote ?? '').trim() || null
+      : undefined
+
     if (body.status !== undefined) {
       const status = String(body.status)
       if (!allowedStatuses.has(status)) return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
+      if (status === 'done') {
+        const resolutionNote = requestedResolutionNote ?? existing.resolution_note
+        if (!resolutionNote) {
+          return NextResponse.json({ error: 'Registra el resultado antes de cerrar la decisión.' }, { status: 400 })
+        }
+        update.resolution_note = resolutionNote
+        update.completed_at = new Date().toISOString()
+      }
       update.status = status
-      if (status === 'in_progress') update.started_at = new Date().toISOString()
-      if (status === 'done') update.completed_at = new Date().toISOString()
+      if (status === 'in_progress' && !existing.started_at) update.started_at = new Date().toISOString()
       if (status === 'open') { update.started_at = null; update.completed_at = null }
     }
     if (body.priority !== undefined) {
@@ -162,7 +177,7 @@ export async function PATCH(request: NextRequest) {
       update.priority = priority
     }
     if (body.dueDate !== undefined) update.due_date = body.dueDate || null
-    if (body.resolutionNote !== undefined) update.resolution_note = String(body.resolutionNote ?? '').trim() || null
+    if (requestedResolutionNote !== undefined && body.status !== 'done') update.resolution_note = requestedResolutionNote
     if (body.assignedTo !== undefined) {
       const assignedTo = body.assignedTo ? String(body.assignedTo) : null
       if (assignedTo) assertProfileVisible(scope, assignedTo)
