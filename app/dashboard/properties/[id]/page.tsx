@@ -37,6 +37,14 @@ type Intelligence = {
     identityStatus: string
     identityConfidence: number | null
   }
+  sourceEvidence: {
+    legacyPropertyId: string | null
+    source: string | null
+    sourceUrl: string | null
+    sourceReportedDom: number | null
+    sourceReportedDomOrigin: string | null
+    description: string | null
+  }
   currentMarket: {
     status: string | null
     priceUf: number | null
@@ -114,10 +122,11 @@ export default function PropertyIntelligencePage() {
   const stale = data.signals.freshness !== 'current'
   const issues = data.missingEvidence.length
   const dataStatus = data.confidenceLabel === 'high' && !issues ? 'ready' : data.confidenceLabel === 'low' ? 'blocked' : 'partial'
+  const externalSource = data.sourceEvidence.source || 'mercado externo'
 
   return <WorkspaceShell>
     <WorkspaceHeader
-      eyebrow="Inteligencia de propiedad"
+      eyebrow="Inteligencia de propiedad · Mercado externo"
       title={data.property.address || 'Propiedad'}
       meta={`${data.property.neighborhood || 'Sin barrio'} · evidencia ${date(data.currentMarket.observedAt)}`}
       actions={[
@@ -125,6 +134,16 @@ export default function PropertyIntelligencePage() {
         { label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar análisis' },
       ]}
     />
+
+    <section className="mb-5 border-y border-[var(--n3-line)] py-3 text-sm">
+      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+        <div>
+          <strong className="font-semibold text-[var(--n3-text-light)]">Dominio de evidencia: mercado externo</strong>
+          <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">Fuente: {externalSource}. Esta ficha analiza publicación, identidad, precio, DOM y comparables de mercado. No atribuye leads, visitas, ofertas ni cierres del CRM de Property Partners mientras no exista un vínculo canónico explícito.</p>
+        </div>
+        <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.12em] text-[#f0c96a]">CRM interno no enlazado</span>
+      </div>
+    </section>
 
     <MetricStrip items={[
       { label: 'Precio', value: uf(data.currentMarket.priceUf) },
@@ -136,8 +155,9 @@ export default function PropertyIntelligencePage() {
     <section className="mt-6 border-y border-[var(--n3-line)] py-5">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(260px,.7fr)]">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Recomendación</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Recomendación de mercado</p>
           <p className="mt-3 max-w-4xl text-base leading-7 text-[var(--n3-text-light)]">{data.recommendation}</p>
+          <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">La recomendación se limita a evidencia de mercado. Cualquier diagnóstico de gestión comercial interna requiere una propiedad CRM enlazada canónicamente.</p>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <div><span className="block text-xs text-[var(--n3-text-muted)]">Precio</span><strong>{signalLabel(data.signals.pricePosition)}</strong></div>
@@ -160,7 +180,7 @@ export default function PropertyIntelligencePage() {
     </section>
 
     <section className="mt-7">
-      <div className="flex items-end justify-between border-b border-[var(--n3-line)] pb-2"><div><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Comparables</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{data.comparables.methodology}</p></div><span className="text-sm font-semibold tabular-nums">{data.comparables.count}</span></div>
+      <div className="flex items-end justify-between border-b border-[var(--n3-line)] pb-2"><div><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Comparables de mercado</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{data.comparables.methodology}</p></div><span className="text-sm font-semibold tabular-nums">{data.comparables.count}</span></div>
       <div className="mt-3 grid gap-3 sm:grid-cols-4">
         <div><span className="text-xs text-[var(--n3-text-muted)]">P25</span><strong className="block">{number(data.comparables.priceUfM2.p25)} UF/m²</strong></div>
         <div><span className="text-xs text-[var(--n3-text-muted)]">Mediana</span><strong className="block">{number(data.comparables.priceUfM2.median)} UF/m²</strong></div>
@@ -171,8 +191,11 @@ export default function PropertyIntelligencePage() {
     </section>
 
     <section className="mt-7">
-      <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Evidencia faltante</h2></div>
-      {data.missingEvidence.length ? <div className="divide-y divide-[var(--n3-line)]">{data.missingEvidence.map((item) => <p key={item} className="py-3 text-sm text-[var(--n3-text-muted)]">{item}</p>)}</div> : <OperationalState compact kind="success" title="Evidencia completa" description="No se detectaron brechas para este análisis." />}
+      <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Evidencia faltante para este dominio</h2></div>
+      {data.missingEvidence.length ? <div className="divide-y divide-[var(--n3-line)]">{data.missingEvidence.map((item) => <p key={item} className="py-3 text-sm text-[var(--n3-text-muted)]">{item}</p>)}</div> : <OperationalState compact kind="success" title="Evidencia de mercado completa" description="No se detectaron brechas para este análisis de mercado." />}
+      <div className="mt-4 border-t border-[var(--n3-line)] pt-4">
+        <p className="text-xs leading-5 text-[var(--n3-text-muted)]"><strong className="text-[var(--n3-text-light)]">Fuera de este dominio:</strong> leads, requerimientos, visitas, ofertas, feedback y cierres internos deben provenir del CRM canónico de Property Partners y sólo se mostrarán cuando exista un identificador canónico que vincule ambos expedientes.</p>
+      </div>
     </section>
 
     <div className="mt-7"><Link href="/dashboard/market" className="text-sm text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver contexto de mercado →</Link></div>
