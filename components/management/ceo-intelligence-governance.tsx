@@ -33,12 +33,12 @@ export async function CeoIntelligenceGovernance() {
           <div className="bg-[var(--n3-black)] p-3">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Política</p>
             <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{MANAGEMENT_DECISION_POLICY.version}</p>
-            <p className="mt-1 text-xs text-[#f6c453]">N3uralia · provisional</p>
+            <p className="mt-1 text-xs text-[var(--chart-4)]">N3uralia · provisional</p>
           </div>
           <div className="bg-[var(--n3-black)] p-3">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Métricas vivas aprobadas</p>
             <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{approvedMetricCount == null ? 'No verificable' : approvedMetricCount}</p>
-            <p className={`mt-1 text-xs ${hasApprovedLiveMetrics ? 'text-[#65d3a5]' : 'text-[#f6c453]'}`}>
+            <p className={`mt-1 text-xs ${hasApprovedLiveMetrics ? 'text-[var(--chart-3)]' : 'text-[var(--chart-4)]'}`}>
               {hasApprovedLiveMetrics ? 'Capa aprobada disponible' : 'Pendiente aprobación/carga'}
             </p>
           </div>
@@ -47,7 +47,7 @@ export async function CeoIntelligenceGovernance() {
 
       {!hasApprovedLiveMetrics ? (
         <div className="mt-4 flex items-start gap-3 border-t border-[var(--n3-line)] pt-4 text-sm text-[var(--n3-text-muted)]">
-          {error ? <AlertTriangle className="mt-0.5 shrink-0 text-[#ff766f]" size={16} /> : <Database className="mt-0.5 shrink-0 text-[#f6c453]" size={16} />}
+          {error ? <AlertTriangle className="mt-0.5 shrink-0 text-[var(--destructive)]" size={16} /> : <Database className="mt-0.5 shrink-0 text-[var(--chart-4)]" size={16} />}
           <p>
             {error
               ? 'No fue posible verificar la capa de métricas aprobadas. Las decisiones deben tratarse como apoyo y no como evidencia aprobada.'
