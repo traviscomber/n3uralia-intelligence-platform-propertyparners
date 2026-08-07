@@ -3,22 +3,27 @@ import 'server-only'
 import Link from 'next/link'
 import { AlertTriangle, ArrowRight, BrainCircuit, ShieldCheck } from 'lucide-react'
 import { getN3uraliaIntelligence } from '@/lib/n3uralia-intelligence-gateway'
+import { evaluateManagementDecisionPolicy } from '@/lib/management-decision-evaluator'
 
 const TENANT_ID = 'property-partners'
 
 export async function CeoIntelligencePanel() {
-  const result = await getN3uraliaIntelligence({
-    tenantId: TENANT_ID,
-    audience: 'ceo',
-    domains: ['executive', 'crm', 'market', 'valuation'],
-    purpose: 'decision-support',
-  })
+  const [result, governed] = await Promise.all([
+    getN3uraliaIntelligence({
+      tenantId: TENANT_ID,
+      audience: 'ceo',
+      domains: ['executive', 'crm', 'market', 'valuation'],
+      purpose: 'decision-support',
+    }),
+    Promise.resolve(evaluateManagementDecisionPolicy()),
+  ])
 
   const signals = result.remote?.signals ?? result.local.signals
   const risks = result.remote?.risks ?? result.local.risks
   const actions = result.remote?.actions ?? result.local.actions
   const criticalRisk = risks.find((item) => item.severity === 'critical') ?? risks[0] ?? null
   const topActions = actions.slice(0, 3)
+  const topGoverned = governed.signals.slice(0, 2)
 
   return (
     <section className="space-y-4" aria-labelledby="n3uralia-intelligence-title">
@@ -39,6 +44,32 @@ export async function CeoIntelligencePanel() {
           <ShieldCheck size={15} />
           {signals.length} señales · {risks.length} riesgos · {actions.length} acciones
         </div>
+      </div>
+
+      <div className="border border-[#a77a22] bg-[#0c1111] p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#f6c453]">
+              Política de decisión · {governed.policyVersion}
+            </p>
+            <p className="mt-1 text-sm text-[var(--n3-text-light)]">
+              Reglas N3uralia provisionales mientras el diccionario KPI del cliente no esté aprobado.
+            </p>
+          </div>
+          <p className="text-xs text-[var(--n3-text-muted)]">
+            {governed.signals.length} señales activas · {governed.unavailableMetrics.length} métricas no evaluables
+          </p>
+        </div>
+        {topGoverned.length ? (
+          <div className="mt-3 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+            {topGoverned.map((item) => (
+              <div key={item.ruleId} className="bg-[#0c1111] p-3">
+                <p className="text-xs font-semibold">{item.label}</p>
+                <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.evidence}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {result.remoteError ? (
