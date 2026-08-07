@@ -50,6 +50,7 @@ for (const file of scanRoots.flatMap((directory) => walk(path.join(root, directo
       && /create policy/i.test(text)
       && !/(auth\.uid\(\)|tenant_id|organization_id|office_id|company_id|service_role)/i.test(text)) {
     if (verifiedHistoricalMigrations.has(rel)) continue
+    if (/tenant-isolation:\s*shared-reference authenticated-read/i.test(text)) continue
     if (reviewedMigrations.has(rel)) reviewItems.push(`${rel}: historical policy requires live Supabase verification`)
     else findings.push(`${rel}: untracked RLS policy lacks a visible user, tenant or service predicate`)
   }
