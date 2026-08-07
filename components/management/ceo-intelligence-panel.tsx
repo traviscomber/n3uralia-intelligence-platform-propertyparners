@@ -15,7 +15,7 @@ export async function CeoIntelligencePanel() {
       domains: ['executive', 'crm', 'market', 'valuation'],
       purpose: 'decision-support',
     }),
-    Promise.resolve(evaluateManagementDecisionPolicy()),
+    evaluateManagementDecisionPolicy(),
   ])
 
   const signals = result.remote?.signals ?? result.local.signals
@@ -24,6 +24,7 @@ export async function CeoIntelligencePanel() {
   const criticalRisk = risks.find((item) => item.severity === 'critical') ?? risks[0] ?? null
   const topActions = actions.slice(0, 3)
   const topGoverned = governed.signals.slice(0, 2)
+  const approvedEvidence = governed.evidenceLayer === 'approved_live'
 
   return (
     <section className="space-y-4" aria-labelledby="n3uralia-intelligence-title">
@@ -46,19 +47,22 @@ export async function CeoIntelligencePanel() {
         </div>
       </div>
 
-      <div className="border border-[#a77a22] bg-[#0c1111] p-4">
+      <div className={`border bg-[#0c1111] p-4 ${approvedEvidence ? 'border-[#2f8f4e]' : 'border-[#a77a22]'}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[#f6c453]">
+            <p className={`text-[10px] uppercase tracking-[0.14em] ${approvedEvidence ? 'text-[#65c780]' : 'text-[#f6c453]'}`}>
               Política de decisión · {governed.policyVersion}
             </p>
             <p className="mt-1 text-sm text-[var(--n3-text-light)]">
               Reglas N3uralia provisionales mientras el diccionario KPI del cliente no esté aprobado.
             </p>
           </div>
-          <p className="text-xs text-[var(--n3-text-muted)]">
-            {governed.signals.length} señales activas · {governed.unavailableMetrics.length} métricas no evaluables
-          </p>
+          <div className="text-right text-xs text-[var(--n3-text-muted)]">
+            <p>{governed.signals.length} señales activas · {governed.unavailableMetrics.length} métricas no evaluables</p>
+            <p className={approvedEvidence ? 'text-[#65c780]' : 'text-[#f6c453]'}>
+              {approvedEvidence ? `Evidencia viva aprobada · corte ${governed.evaluatedPeriod}` : `Fallback documental · corte ${governed.evaluatedPeriod}`}
+            </p>
+          </div>
         </div>
         {topGoverned.length ? (
           <div className="mt-3 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
