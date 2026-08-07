@@ -1,5 +1,6 @@
 'use client'
 
+import { LogOut } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
@@ -8,7 +9,7 @@ import type { User } from '@supabase/supabase-js'
 type ProvenanceState = {
   label: string
   detail: string
-  color: string
+  toneClass: string
 }
 
 function getProvenanceState(pathname: string, consultationDate: string): ProvenanceState {
@@ -16,7 +17,7 @@ function getProvenanceState(pathname: string, consultationDate: string): Provena
     return {
       label: 'Datos operativos',
       detail: `Consulta realizada: ${consultationDate}`,
-      color: '#65d3a5',
+      toneClass: 'text-[var(--chart-3)]',
     }
   }
 
@@ -24,7 +25,7 @@ function getProvenanceState(pathname: string, consultationDate: string): Provena
     return {
       label: 'Fuente viva · separada',
       detail: `Consulta realizada: ${consultationDate}`,
-      color: '#6aa9ff',
+      toneClass: 'text-[var(--chart-1)]',
     }
   }
 
@@ -42,14 +43,14 @@ function getProvenanceState(pathname: string, consultationDate: string): Provena
     return {
       label: 'Alcance contractual',
       detail: 'Contenido y estados definidos por el módulo',
-      color: '#65d3a5',
+      toneClass: 'text-[var(--chart-3)]',
     }
   }
 
   return {
     label: 'Procedencia pendiente',
     detail: 'La procedencia de esta vista requiere validación',
-    color: '#f6c453',
+    toneClass: 'text-[var(--chart-4)]',
   }
 }
 
@@ -77,18 +78,17 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
       </p>
       <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
         <div
-          className="flex min-w-0 items-center gap-1.5 rounded-full border border-[var(--n3-line)] px-2.5 py-1 text-xs"
-          style={{ background: 'rgba(255,255,255,0.04)', color: provenance.color }}
+          className={`flex min-w-0 items-center gap-1.5 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-2.5 py-1 text-xs ${provenance.toneClass}`}
           title={provenance.detail}
         >
-          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: provenance.color }} />
+          <span aria-hidden="true" className="inline-block h-1.5 w-1.5 shrink-0 border border-current bg-current" />
           <span className="truncate">{provenance.label}</span>
         </div>
         <button
           onClick={handleLogout}
-          className="flex shrink-0 items-center gap-1.5 rounded border border-[var(--n3-line)] px-2.5 py-1.5 text-xs text-[var(--n3-text-light)] transition-colors hover:opacity-70 sm:px-3"
+          className="flex shrink-0 items-center gap-1.5 border border-[var(--n3-line)] px-2.5 py-1.5 text-xs text-[var(--n3-text-light)] transition-colors hover:bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] sm:px-3"
         >
-          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M10 11l3-3-3-3M13 8H6" /></svg>
+          <LogOut aria-hidden="true" size={12} strokeWidth={1.6} />
           <span className="hidden sm:inline">{profile?.full_name?.split(' ')[0] || 'Salir'}</span>
           <span className="sm:hidden">Salir</span>
         </button>
