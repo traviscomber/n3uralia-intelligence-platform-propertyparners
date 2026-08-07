@@ -44,12 +44,15 @@ export async function CeoIntelligencePanel() {
     evidenceCount: 1,
   }))
 
+  const evidenceBorderClass = approvedEvidence ? 'border-[var(--chart-3)]' : 'border-[var(--chart-4)]'
+  const evidenceTextClass = approvedEvidence ? 'text-[var(--chart-3)]' : 'text-[var(--chart-4)]'
+
   return (
     <section className="space-y-4" aria-labelledby="n3uralia-intelligence-title">
-      <div className="flex flex-col gap-3 border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-3 border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">
-            <BrainCircuit size={15} />
+            <BrainCircuit size={15} aria-hidden="true" />
             Inteligencia N3uralia · {result.mode}
           </div>
           <h2 id="n3uralia-intelligence-title" className="mt-2 text-xl font-semibold">
@@ -59,16 +62,16 @@ export async function CeoIntelligencePanel() {
             Señales, riesgos y acciones generadas desde evidencia autorizada. No se exponen prompts, reglas internas ni trazas del motor.
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 text-xs text-[var(--n3-teal)]">
-          <ShieldCheck size={15} />
+        <div className="inline-flex items-center gap-2 text-xs text-[var(--n3-teal-soft)]">
+          <ShieldCheck size={15} aria-hidden="true" />
           {signals.length} señales · {risks.length} riesgos · {actions.length} acciones
         </div>
       </div>
 
-      <div className={`border bg-[#0c1111] p-4 ${approvedEvidence ? 'border-[#2f8f4e]' : 'border-[#a77a22]'}`}>
+      <div className={`border bg-[var(--n3-deep)] p-4 ${evidenceBorderClass}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className={`text-[10px] uppercase tracking-[0.14em] ${approvedEvidence ? 'text-[#65c780]' : 'text-[#f6c453]'}`}>
+            <p className={`text-[10px] uppercase tracking-[0.14em] ${evidenceTextClass}`}>
               Política de decisión · {governed.policyVersion}
             </p>
             <p className="mt-1 text-sm text-[var(--n3-text-light)]">
@@ -77,7 +80,7 @@ export async function CeoIntelligencePanel() {
           </div>
           <div className="text-right text-xs text-[var(--n3-text-muted)]">
             <p>{governed.signals.length} señales activas · {governed.unavailableMetrics.length} métricas no evaluables</p>
-            <p className={approvedEvidence ? 'text-[#65c780]' : 'text-[#f6c453]'}>
+            <p className={evidenceTextClass}>
               {approvedEvidence ? `Evidencia viva aprobada · corte ${governed.evaluatedPeriod}` : `Fallback documental · corte ${governed.evaluatedPeriod}`}
             </p>
           </div>
@@ -87,7 +90,7 @@ export async function CeoIntelligencePanel() {
       {decisionTrace.length ? <DecisionTrace items={decisionTrace} title="Trazabilidad ejecutiva" /> : null}
 
       {result.remoteError ? (
-        <div role="status" className="border border-[#a77a22] bg-[#0c1111] p-4 text-sm text-[#f6c453]">
+        <div role="status" className="border border-[var(--chart-4)] bg-[var(--n3-deep)] p-4 text-sm text-[var(--chart-4)]">
           Runtime privado no disponible en modo shadow. La vista mantiene el resultado local autorizado.
         </div>
       ) : null}
@@ -95,7 +98,7 @@ export async function CeoIntelligencePanel() {
       {result.parity ? (
         <div
           role="status"
-          className={`border bg-[#0c1111] p-4 text-sm ${result.parity.exactIdParity ? 'border-[#2f8f4e] text-[#65c780]' : 'border-[#a77a22] text-[#f6c453]'}`}
+          className={`border bg-[var(--n3-deep)] p-4 text-sm ${result.parity.exactIdParity ? 'border-[var(--chart-3)] text-[var(--chart-3)]' : 'border-[var(--chart-4)] text-[var(--chart-4)]'}`}
         >
           {result.parity.exactIdParity
             ? 'Validación shadow: paridad exacta de señales, riesgos y acciones.'
@@ -104,9 +107,9 @@ export async function CeoIntelligencePanel() {
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
-        <article className={`border bg-[#0c1111] p-5 ${criticalRisk ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-[#ff766f]">
-            <AlertTriangle size={15} />
+        <article className={`border bg-[var(--n3-deep)] p-5 ${criticalRisk ? 'border-[var(--destructive)]' : 'border-[var(--n3-line)]'}`}>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">
+            <AlertTriangle size={15} aria-hidden="true" />
             Riesgo prioritario
           </div>
           <p className="mt-4 text-lg font-semibold">{criticalRisk?.title ?? 'Sin riesgo prioritario disponible'}</p>
@@ -117,7 +120,7 @@ export async function CeoIntelligencePanel() {
 
         <div className="space-y-3">
           {topActions.length ? topActions.map((item) => (
-            <article key={item.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-4">
+            <article key={item.id} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">
@@ -128,9 +131,9 @@ export async function CeoIntelligencePanel() {
                   <p className="mt-2 text-sm">{item.action}</p>
                 </div>
                 {'href' in item && typeof item.href === 'string' ? (
-                  <Link href={item.href} className="inline-flex min-h-11 shrink-0 items-center gap-2 text-xs font-semibold text-[#ff766f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+                  <Link href={item.href} className="inline-flex min-h-11 shrink-0 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">
                     Abrir
-                    <ArrowRight size={13} />
+                    <ArrowRight size={13} aria-hidden="true" />
                   </Link>
                 ) : null}
               </div>
