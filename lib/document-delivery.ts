@@ -127,10 +127,7 @@ export async function claimDocumentDistribution(
 }
 
 function emailContent(documentTitle: string, periodOverride?: string) {
-  const hour = Number(new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Santiago', hour: '2-digit', hour12: false,
-  }).format(new Date()))
-  const greeting = hour < 12 ? 'Buenos días' : 'Buenas tardes'
+  const greeting = 'Hola'
   const period = periodOverride || documentTitle.match(/\d{4}-\d{2}/)?.[0] || 'Período actual'
   const html = `
     <div style="font-family:Calibri,Arial,sans-serif;background:#f1f1f1;padding:24px">
@@ -153,7 +150,7 @@ function emailContent(documentTitle: string, periodOverride?: string) {
 }
 
 export async function sendDocumentEmail(
-  _distributionId: string,
+  distributionId: string,
   scheduleId: string,
   documentTitle: string,
   _documentUrl: string,
@@ -174,6 +171,19 @@ export async function sendDocumentEmail(
     })
   }
 
+  const idempotencyKey = `document-delivery/${distributionId}`
+  const client = getSupabase()
+  const { error: eventError } = await client.from('document_delivery_events').insert({
+    distribution_id: distributionId,
+    event_type: 'send_requested',
+    details: {
+      provider: 'resend',
+      idempotency_key: idempotencyKey,
+      requested_at: new Date().toISOString(),
+    },
+  } as any)
+  if (eventError) throw eventError
+
   const result = await getResend().emails.send({
     from: configuration.from,
     to: recipientEmail,
@@ -184,9 +194,17 @@ export async function sendDocumentEmail(
     tags: [
       { name: 'category', value: 'document_delivery' },
       { name: 'schedule_id', value: scheduleId },
+      { name: 'distribution_id', value: distributionId },
     ],
+  }, {
+    idempotencyKey,
   })
-  if (result.error) throw new Error(`Resend API error: ${result.error.message}`)
+
+  if (result.error) {
+    const errorName = String((result.error as any).name ?? '')
+    const prefix = errorName === 'invalid_idempotent_request' ? 'permanent: ' : ''
+    throw new Error(`${prefix}Resend API error${errorName ? ` (${errorName})` : ''}: ${result.error.message}`)
+  }
   return result
 }
 
