@@ -96,17 +96,17 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       .select(propertyFields)
       .neq('id', property.id)
       .eq('property_type', property.property_type)
-      .gte('useful_area_m2', targetArea * 0.75)
-      .lte('useful_area_m2', targetArea * 1.25)
-      .limit(250)
+      .limit(500)
     if (property.neighborhood_id) comparableQuery = comparableQuery.eq('neighborhood_id', property.neighborhood_id)
     const result = await comparableQuery
     if (!result.error) comparableProperties = (result.data ?? []).filter((candidate) => {
+      const candidateArea = numberOrNull(candidate.useful_area_m2) ?? numberOrNull(candidate.built_area_m2)
       const bedrooms = numberOrNull(candidate.bedrooms)
       const bathrooms = numberOrNull(candidate.bathrooms)
+      const areaOk = candidateArea != null && candidateArea >= targetArea * 0.75 && candidateArea <= targetArea * 1.25
       const bedroomOk = property.bedrooms == null || bedrooms == null || Math.abs(Number(property.bedrooms) - bedrooms) <= 1
       const bathroomOk = property.bathrooms == null || bathrooms == null || Math.abs(Number(property.bathrooms) - bathrooms) <= 1
-      return bedroomOk && bathroomOk
+      return areaOk && bedroomOk && bathroomOk
     })
   }
 
@@ -264,7 +264,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       impliedPriceAtMedian,
       priceVsMedianPct,
       domVsMedianMultiple,
-      methodology: 'Misma tipología y barrio contractual, superficie útil ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
+      methodology: 'Misma tipología y barrio contractual, superficie útil (o construida si falta) ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
       rows: comparableRows.sort((a, b) => Math.abs(Number(a.priceUfM2) - Number(currentUfM2 ?? a.priceUfM2)) - Math.abs(Number(b.priceUfM2) - Number(currentUfM2 ?? b.priceUfM2))).slice(0, 20),
     },
     identityMatches: matches,
