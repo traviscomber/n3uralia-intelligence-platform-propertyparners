@@ -207,10 +207,11 @@ export async function markDocumentAsFailed(
   const isPermanent = errorMessage.includes('permanent') || attempt >= DOCUMENT_MAX_ATTEMPTS
   const delay = isPermanent ? 365 * 24 * 60 * 60 * 1000 : DOCUMENT_RETRY_DELAY_MS
   const now = new Date()
+  const nextStatus: DocumentDistributionStatus = isPermanent ? 'failed' : 'pending'
   const { error } = await client
     .from('document_distributions')
     .update({
-      status: 'failed',
+      status: nextStatus,
       error_message: errorMessage.slice(0, 1000),
       attempt_count: attempt,
       last_attempted_at: now.toISOString(),
@@ -221,7 +222,7 @@ export async function markDocumentAsFailed(
   await client.from('document_delivery_events').insert({
     distribution_id: distributionId,
     event_type: 'failed',
-    details: { error: errorMessage, attempt, isPermanent },
+    details: { error: errorMessage, attempt, isPermanent, next_status: nextStatus },
   } as any)
 }
 
