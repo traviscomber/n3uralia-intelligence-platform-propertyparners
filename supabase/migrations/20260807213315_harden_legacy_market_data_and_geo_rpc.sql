@@ -1,3 +1,4 @@
+-- tenant-isolation: shared-reference authenticated-read
 begin;
 
 revoke all on table public.market_data from anon;
