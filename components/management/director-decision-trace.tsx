@@ -86,8 +86,27 @@ export function DirectorDecisionTrace() {
     })
   }, [summary, tasks])
 
-  if (failed || !summary) return null
-  if (!traces.length) return null
+  if (!summary && !failed) return null
+
+  if (failed) {
+    return (
+      <div className="px-4 lg:px-8">
+        <section role="status" aria-label="Trazabilidad de decisiones de oficina" className="mt-6 border-y border-[var(--n3-line)] py-4 text-xs text-[var(--n3-text-muted)]">
+          La trazabilidad no está disponible en este momento. El dashboard operativo permanece disponible y no se muestran inferencias sin evidencia.
+        </section>
+      </div>
+    )
+  }
+
+  if (!traces.length) {
+    return (
+      <div className="px-4 lg:px-8">
+        <section aria-label="Trazabilidad de decisiones de oficina" className="mt-6 border-y border-[var(--n3-line)] py-4 text-xs text-[var(--n3-text-muted)]">
+          No hay señales prioritarias con trazabilidad disponible para este corte.
+        </section>
+      </div>
+    )
+  }
 
   return (
     <div className="px-4 lg:px-8">
