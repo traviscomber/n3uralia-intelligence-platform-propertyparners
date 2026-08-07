@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
 import { DecisionTrace } from '@/components/intelligence/decision-trace'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 
@@ -31,11 +32,20 @@ export function DirectorDecisionTrace() {
   const [summary, setSummary] = useState<SummaryPayload | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [failed, setFailed] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const retry = useCallback(() => {
+    setFailed(false)
+    setLoading(true)
+    setReloadKey((current) => current + 1)
+  }, [])
 
   useEffect(() => {
     let active = true
 
     async function load() {
+      setLoading(true)
       try {
         const [summaryResponse, tasksResponse] = await Promise.all([
           fetch('/api/management/summary', { cache: 'no-store' }),
@@ -49,8 +59,11 @@ export function DirectorDecisionTrace() {
         if (!active) return
         setSummary(summaryData)
         setTasks(tasksData.tasks ?? [])
+        setFailed(false)
       } catch {
         if (active) setFailed(true)
+      } finally {
+        if (active) setLoading(false)
       }
     }
 
@@ -58,7 +71,7 @@ export function DirectorDecisionTrace() {
     return () => {
       active = false
     }
-  }, [])
+  }, [reloadKey])
 
   const traces = useMemo<DecisionTraceItem[]>(() => {
     const alerts = summary?.alerts ?? []
@@ -86,13 +99,25 @@ export function DirectorDecisionTrace() {
     })
   }, [summary, tasks])
 
-  if (!summary && !failed) return null
+  if (loading && !summary) {
+    return (
+      <div className="px-4 lg:px-8">
+        <section role="status" aria-live="polite" aria-label="Trazabilidad de decisiones de oficina" className="mt-6 border-y border-[var(--n3-line)] py-4 text-xs text-[var(--n3-text-muted)]">
+          Cargando trazabilidad de decisiones…
+        </section>
+      </div>
+    )
+  }
 
   if (failed) {
     return (
       <div className="px-4 lg:px-8">
-        <section role="status" aria-label="Trazabilidad de decisiones de oficina" className="mt-6 border-y border-[var(--n3-line)] py-4 text-xs text-[var(--n3-text-muted)]">
-          La trazabilidad no está disponible en este momento. El dashboard operativo permanece disponible y no se muestran inferencias sin evidencia.
+        <section role="alert" aria-label="Trazabilidad de decisiones de oficina" className="mt-6 border-y border-[var(--n3-line)] py-4 text-xs text-[var(--n3-text-muted)]">
+          <p>La trazabilidad no está disponible en este momento. El dashboard operativo permanece disponible y no se muestran inferencias sin evidencia.</p>
+          <button type="button" onClick={retry} className="mt-3 inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-3 text-xs font-semibold text-[var(--n3-text-light)] hover:border-[var(--n3-teal-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">
+            <RefreshCw size={14} aria-hidden="true" />
+            Reintentar trazabilidad
+          </button>
         </section>
       </div>
     )
