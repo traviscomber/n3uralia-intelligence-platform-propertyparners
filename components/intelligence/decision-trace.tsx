@@ -3,8 +3,8 @@ import { ArrowRight, CheckCircle2, CircleAlert, CircleHelp } from 'lucide-react'
 import { decisionTraceStatusLabel, type DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 
 function severityClass(severity: DecisionTraceItem['severity']) {
-  if (severity === 'critical') return 'text-[#ff766f]'
-  if (severity === 'warning') return 'text-[#f0c96a]'
+  if (severity === 'critical') return 'text-[var(--destructive)]'
+  if (severity === 'warning') return 'text-[var(--chart-4)]'
   return 'text-[var(--n3-teal)]'
 }
 
