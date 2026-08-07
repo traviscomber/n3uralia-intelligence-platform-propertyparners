@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { PPLogo } from '@/components/brand/pp-logo'
 import { getRoleLabel, hasCapability } from '@/lib/access-control'
@@ -71,7 +72,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       <div className="border-t border-[var(--n3-line)] px-4 py-4">
         {profile ? (
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--n3-line)] text-xs font-semibold text-[var(--n3-teal-soft)]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--n3-line)] text-xs font-semibold text-[var(--n3-teal-soft)]">
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
@@ -91,9 +92,9 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     <>
       <details className="group fixed left-0 top-0 z-50 md:hidden">
         <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
-          <span aria-hidden="true">☰</span>
+          <Menu aria-hidden="true" size={18} strokeWidth={1.6} />
         </summary>
-        <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl">{navigation}</div>
+        <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)]">{navigation}</div>
       </details>
       <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)] md:flex">{navigation}</aside>
     </>
