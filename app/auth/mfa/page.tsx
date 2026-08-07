@@ -1,12 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 type Factor = { id: string; status: string; friendly_name?: string }
 
-export default function MfaPage() {
+function MfaLoading() {
+  return (
+    <main className="min-h-screen bg-[#050707] px-4 py-12 text-white">
+      <div className="mx-auto max-w-md border border-white/10 bg-[#0c1111] p-6">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">Seguridad</p>
+        <h1 className="mt-2 text-2xl font-semibold">Segundo factor</h1>
+        <div role="status" className="mt-6 text-sm text-white/45">Verificando…</div>
+      </div>
+    </main>
+  )
+}
+
+function MfaContent() {
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -100,4 +112,12 @@ export default function MfaPage() {
       {message ? <p role="alert" className="mt-4 text-sm text-[#ff766f]">{message}</p> : null}
     </div>
   </main>
+}
+
+export default function MfaPage() {
+  return (
+    <Suspense fallback={<MfaLoading />}>
+      <MfaContent />
+    </Suspense>
+  )
 }
