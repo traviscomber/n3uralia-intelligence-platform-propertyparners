@@ -4,6 +4,7 @@ import {
   getScheduledDocuments,
   createDocumentDistributions,
   getRecipientsForSchedule,
+  updateScheduleNextSendAt,
 } from '@/lib/document-delivery'
 
 export const runtime = 'nodejs'
@@ -28,11 +29,19 @@ async function handleCron(request: Request) {
       try {
         const recipients = await getRecipientsForSchedule(schedule.id)
         if (recipients.length > 0) {
-          await createDocumentDistributions(
+          const created = await createDocumentDistributions(
             schedule.id,
+            schedule.next_send_at,
             recipients.map((recipient) => ({ email: recipient.email, role: recipient.role })),
           )
-          distributionsCreated += recipients.length
+          distributionsCreated += created.length
+          await updateScheduleNextSendAt(
+            schedule.id,
+            'monthly',
+            undefined,
+            schedule.day_of_month,
+            schedule.send_time,
+          )
         }
       } catch (error) {
         console.error(`[Document Delivery] Error processing schedule ${schedule.id}:`, error)
