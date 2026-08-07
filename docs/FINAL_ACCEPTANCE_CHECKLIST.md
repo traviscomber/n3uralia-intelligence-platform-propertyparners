@@ -1,124 +1,138 @@
 # Checklist final de aceptación contractual
 
-Última actualización: 30 de julio de 2026
+Última actualización: 6 de agosto de 2026
 
 ## Criterio de estado
 
-- **Verificado:** existe implementación y evidencia técnica reproducible.
-- **Pendiente visual:** requiere sesión autenticada en navegador real.
-- **Pendiente negocio:** requiere definición formal del cliente.
-- **No disponible en fuente:** la plataforma debe mostrar `n/d` y no inferir datos.
+- **Verificado técnico:** implementación disponible y evidencia reproducible mediante código, SQL, RLS, verificadores o build.
+- **Pendiente visual/UAT:** requiere sesión autenticada y revisión humana en navegador real.
+- **Dependencia cliente:** requiere fuente, definición, aprobación, destinatario o criterio formal del Cliente.
+- **No disponible en fuente:** la plataforma debe mostrar `n/d`, `—` o estado equivalente y no inferir el dato.
 
-## 1. Autenticación, perfiles y permisos
+La aceptación técnica se ejecuta con `pnpm qa:technical`. El recorrido visual permanece separado mediante los procedimientos de QA autenticado.
 
-| Requisito | Estado | Evidencia |
-|---|---|---|
-| Autenticación y perfil válido | Verificado | `lib/user-scope.ts`, guards y post-login por rol |
-| Alcance CEO global | Verificado | capacidades, rutas protegidas y matriz RLS |
-| Alcance dirección por oficina | Verificado | RLS autenticada y pruebas negativas entre oficinas |
-| Alcance ejecutiva personal | Verificado | RLS autenticada para tres oficinas |
-| Protección servidor y API | Verificado | `lib/access-guards.ts` y APIs críticas |
-| Recorrido visual de todos los perfiles | Pendiente visual | requiere navegador autenticado |
-| Cuenta QA subdirector independiente | Pendiente negocio | no existe identidad designada; no se crea sin autorización |
-
-## 2. Perfil ejecutiva
+## 1. Plataforma y seguridad
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| Dashboard personal y métricas | Verificado | metas, MoM, YoY, seguimiento, conversión, fuente y período |
-| Cartera asignada | Verificado | workspace personal bajo alcance autenticado |
-| Propiedad a valorización | Verificado | origen y asignación preservados |
-| Comparables y expediente | Verificado | candidatos, aceptación, exclusión y ajustes |
-| Tareas y alertas personales | Verificado | inicio, cierre y nota de resolución |
-| Corrección después de devolución | Verificado | edición sólo en `draft` y propietario |
-| Reporte imprimible de valorización | Verificado por código/build | ruta `/dashboard/valuations/[id]/report` |
-| Responsive y estados vacíos | Verificado por código; pendiente visual | grids adaptativos, tablas con scroll y mensajes explícitos |
+| Autenticación y perfil válido | Verificado técnico | guards, post-login por rol y alcance centralizado |
+| Alcance CEO global | Verificado técnico | capacidades, rutas protegidas y RLS |
+| Alcance dirección por oficina | Verificado técnico | RLS y pruebas negativas entre oficinas |
+| Alcance Partner personal | Verificado técnico | alcance personal y RLS |
+| Protección de APIs críticas | Verificado técnico | guards de servidor y autorización en RPC críticas |
+| MFA para aprobación/emisión de valorizaciones | Verificado técnico | `/auth/mfa`, AAL2 y guard de operación crítica |
+| Recorrido autenticado de perfiles | Pendiente visual/UAT | requiere navegador autenticado |
+| Protección de contraseñas filtradas de Supabase Auth | Pendiente administración | requiere activación en configuración Auth |
 
-## 3. Dirección y subdirección
-
-| Requisito | Estado | Evidencia |
-|---|---|---|
-| Resultados de oficina y equipo | Verificado | dashboard y comparación con promedio |
-| Metas, MoM y YoY | Verificado | bloque canónico por oficina |
-| Fichas individuales | Verificado | navegación y alcance de perfiles visibles |
-| Revisión de valorizaciones | Verificado | cola de revisión por oficina |
-| Devolución con observación | Verificado | motivo obligatorio |
-| Tarea derivada y responsable | Verificado | tarea enlazada al expediente y ejecutiva |
-| Corrección y reenvío | Verificado | tarea cerrada e historial versionado |
-| Aislamiento entre oficinas | Verificado | prueba autenticada negativa |
-| Diferencia director/subdirector | Pendiente negocio | contrato actual no define diferencia operativa específica |
-
-## 4. CEO y consolidación
+## 2. Pilar I — Inteligencia de Mercado
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| Consolidado y por oficina | Verificado | dashboard, detalle y reporte CEO |
-| Metas, MoM, YoY y evolución | Verificado | bases 2025 visibles y metodología |
-| Rankings y alertas | Verificado como regla derivada | etiquetados como operacionales, no aprobados oficialmente |
-| Centro de decisiones | Verificado | oficina, responsable, caso, tarea, vencimiento e historial |
-| Presentación ejecutiva | Verificado por código/build | ruta protegida existente |
-| Reporte CEO | Verificado por código/build | comparación global y por oficina |
-| PDF y recorrido visual | Pendiente visual | requiere navegador autenticado |
-| Umbrales y métrica oficial de ranking | Pendiente negocio | requiere validación formal |
+| Ingestión canónica con raw records | Verificado técnico | `market_ingestion_runs`, `market_raw_records` y RPC de ingestión |
+| Normalización y validación | Verificado técnico | normalizadores de Portal, CBRS y agregados |
+| Deduplicación de propiedades/publicaciones/transacciones | Verificado técnico | claves y constraints; auditoría productiva sin duplicados |
+| Historial de publicaciones | Verificado técnico | versiones por `observed_at` y control de cambios |
+| Persistencia de fallos | Verificado técnico | ejecución `failed` fuera de la transacción revertida |
+| Cuarentena de fuente fallida | Verificado técnico | estado `quarantined` y error persistido |
+| Estado/frescura/error visible por fuente | Verificado técnico | `/dashboard/market/fuentes` |
+| Publicación no presentada como venta confirmada | Verificado técnico | separación listings/transactions e identidad |
+| Identidad canónica auditada | Verificado técnico | decisión con evidencia y trazabilidad |
+| Fuente CBRS real de compraventas | Dependencia cliente/fuente | pipeline disponible; hoy no existen transacciones canónicas cargadas |
+| KML/microbarrios definitivo | Dependencia cliente/fuente | no se inventa geometría final |
+| Scraping Portal en Vercel | Parcial técnico | error de Chromium controlado; fuente no se declara activa si falla |
 
-## 5. Integración de módulos
+## 3. Pilar II — Valorización de Propiedades
 
-| Flujo | Estado | Evidencia |
+| Requisito | Estado | Evidencia |
 |---|---|---|
-| Mercado a comparable | Verificado | publicación persistida y evidencia mínima |
-| Propiedad a asignación a valorización | Verificado | trazabilidad de origen |
-| Valorización a historial y versiones | Verificado | decisión y snapshot |
-| Revisión a tarea a corrección a reenvío | Verificado | ciclo funcional |
-| Alerta a responsable y seguimiento | Verificado | tareas de oficina y CEO |
-| Mercado a comparable QA reversible | Verificado | inserción autenticada y `ROLLBACK` |
-| Evidencia de comparables en reporte | Verificado por código/build | reporte imprimible nuevo |
+| Expediente y propiedad sujeto | Verificado técnico | caso persistido y origen trazable |
+| Comparables aceptados/excluidos | Verificado técnico | decisiones y evidencia por comparable |
+| Ajustes con límites | Verificado técnico | controles de ajuste y cálculo |
+| Valor sugerido, rango y confianza | Verificado técnico | cálculo determinista y validaciones |
+| Mínimo de comparables antes de avanzar | Verificado técnico | guard de workflow en base |
+| Revisión, devolución y reenvío | Verificado técnico | transición atómica e historial |
+| Aprobación/emisión exclusiva CEO | Verificado técnico | capability + RPC + MFA/AAL2 |
+| Versiones y decision log | Verificado técnico | snapshots e historial inmutable |
+| Reporte imprimible/PDF | Verificado técnico; pendiente visual | ruta de reporte y verificador; falta inspección humana final |
+| Caso real completo de punta a punta | Dependencia de datos reales | no se crea fixture ni valorización ficticia |
 
-## 6. Datos y metodología
+## 4. Pilar III — Control de Gestión Comercial
 
-| Requisito | Estado | Tratamiento |
+| Requisito | Estado | Evidencia |
 |---|---|---|
-| Fuente y período visibles | Verificado | métricas personales, dirección y CEO |
-| Publicación no presentada como venta | Verificado | etiqueta de candidato y metodología |
-| Propiedad operativa no confundida con canónica | Verificado | `comparable_property_id = null` sin identidad confirmada |
-| Captaciones brutas | No disponible en fuente | se mantiene `n/d`; no se reemplaza por stock |
-| Comparación YoY | Verificado | valores 2025 y recálculo de calidad |
-| Valores faltantes | Verificado | mensajes `No disponible`, sin datos ficticios |
+| Vista CEO | Verificado técnico | consolidado global y período |
+| Vista dirección/oficina | Verificado técnico | alcance de oficina |
+| Vista Partner | Verificado técnico | alcance personal |
+| Metas y alertas | Verificado técnico como infraestructura | almacenamiento, edición y evaluación |
+| Acción, responsable, plazo y seguimiento | Verificado técnico | tareas y control operativo |
+| Informes por alcance | Verificado técnico | rutas global/oficina/personal |
+| Fuente y período visibles | Verificado técnico | modelo de métricas y estados de datos |
+| Captaciones brutas oficiales | No disponible en fuente | se mantiene `n/d`; no se sustituye por stock |
+| Fórmula oficial de productividad | Dependencia cliente | no se declara definitiva sin aprobación |
+| Ranking y desempates oficiales | Dependencia cliente | reglas derivadas no sustituyen definición oficial |
+| Umbrales/escalamiento oficiales | Dependencia cliente | infraestructura preparada para parametrización |
 
-## 7. Responsive, accesibilidad y recuperación
+## 5. Informes y trazabilidad
 
-### Verificado por revisión de código y build
+| Requisito | Estado | Evidencia |
+|---|---|---|
+| Directorio de informes canónicos | Verificado técnico | `/dashboard/reportes/canonicos` |
+| Generación/entrega operativa | Verificado técnico | `/dashboard/reportes/operacion` |
+| Acción de generación sin ruta rota | Verificado técnico | CTA canónico enlazado al centro operativo |
+| Exclusión de fixtures/pruebas de vista cliente | Verificado técnico | tags `reportin-test`, `qa`, `mock`, `demo`, `fixture` filtrados |
+| Modelo/prompt/costo/fuentes visibles cuando existen | Verificado técnico | trazabilidad leída desde metadata canónica; ausencia se muestra `—` |
+| PDF vinculado | Parcial según documento | cobertura visible; nunca se afirma PDF si no existe artefacto |
+| Generador IA heredado no auditado | Retirado | `/api/reports/generate` devuelve `409 retired` |
+| Calendario y destinatarios definitivos | Dependencia cliente | requiere definición/aprobación |
+| Distribución final por correo | Dependencia cliente/configuración | requiere destinatarios y configuración definitiva |
 
-- estructura semántica con `main`, `header`, `section`, encabezados y tablas;
-- captions de tablas y encabezados con `scope` en el reporte imprimible;
-- estados de carga con `role=status` y `aria-live`;
-- errores recuperables con `role=alert` y acción de reintento;
-- controles con foco visible;
-- objetivos táctiles mínimos en acciones principales;
-- grids adaptativos y tablas anchas dentro de contenedores desplazables;
-- estilos de impresión que ocultan navegación y evitan cortes innecesarios;
-- estados vacíos explícitos para comparables y decisiones.
+## 6. QA técnico reproducible
 
-### Pendiente visual
+El comando `pnpm qa:technical` agrupa los verificadores existentes y detiene la ejecución ante el primer fallo. Debe cubrir, como mínimo:
 
-- revisión móvil 320–430 px;
+1. acceso y cierre contractual;
+2. Mercado;
+3. Valorización;
+4. Control de Gestión;
+5. trazabilidad/documentos;
+6. build de producción.
+
+Un resultado técnico sólo se marca como aprobado cuando el comando y el deployment correspondiente terminan correctamente. No sustituye la inspección visual.
+
+## 7. Pendientes visuales/UAT
+
+- recorrido CEO, dirección/subdirección y Partner con sesión real;
+- móvil 320–430 px;
 - tableta 768–1024 px;
 - escritorio 1280 px o superior;
-- navegación completa sólo con teclado;
-- lector de pantalla;
+- navegación sólo con teclado y foco;
 - contraste medido;
-- impresión y PDF con sesión real.
+- impresión/PDF de informes y valorizaciones;
+- confirmación de estados vacíos, error, éxito y recuperación.
 
-## 8. Producción y aceptación
+## 8. Dependencias exclusivas del Cliente
 
-Para cerrar aceptación definitiva deben cumplirse simultáneamente:
+- dataset oficial/adicional de compraventas;
+- KML/microbarrios definitivo, si corresponde;
+- definición de captaciones;
+- fórmula oficial de productividad;
+- ranking, desempates y umbrales;
+- metas oficiales faltantes;
+- calendario, audiencias y destinatarios de informes;
+- aprobación funcional y UAT final.
 
-1. último commit funcional en deployment `READY`;
-2. TypeScript y build aprobados;
-3. runtime sin errores fatales asociados al deployment;
-4. matriz RLS y pruebas negativas vigentes;
-5. recorrido visual autenticado por CEO, dirección y ejecutiva;
-6. revisión de PDF y responsive;
-7. definición formal de ranking y umbrales, o aceptación explícita de su carácter derivado;
-8. captaciones mantenidas como `n/d` hasta recibir fuente válida.
+Ninguna de estas dependencias autoriza datos ficticios, reglas inventadas o inferencias presentadas como hechos.
 
-La ausencia de navegador autenticado impide declarar cerrados los puntos visuales, pero no invalida las pruebas de código, build, RLS y datos ya ejecutadas.
+## 9. Criterio de listo para entrega técnica
+
+La parte bajo control de N3uralia queda lista cuando simultáneamente:
+
+1. `pnpm qa:technical` termina sin errores;
+2. el último deployment productivo está `READY`;
+3. no existen errores fatales de runtime asociados al release;
+4. las tablas/RPC críticas mantienen RLS y autorización verificadas;
+5. los tres pilares tienen sus flujos técnicos disponibles sin mocks;
+6. los informes de prueba no aparecen como canónicos del cliente;
+7. todos los faltantes externos están clasificados como dependencia y no como dato disponible.
+
+La aceptación contractual definitiva sigue requiriendo los puntos de UAT y las definiciones del Cliente indicadas arriba.
