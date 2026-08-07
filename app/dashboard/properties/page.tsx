@@ -109,7 +109,7 @@ export default async function PropertiesPage() {
           <tbody>{assignments.map((assignment) => {
             const property = assignment.market_properties[0] ?? null
             return <tr key={assignment.id} className="border-t border-[var(--n3-line)]">
-              <td className="p-3"><p className="font-medium">{property?.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}</p></td>
+              <td className="p-3">{property ? <Link href={`/dashboard/properties/${property.id}`} className="group block"><p className="font-medium group-hover:text-[var(--n3-teal-soft)]">{property.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property.property_type || 'Sin tipo'} · Abrir inteligencia →</p></Link> : <><p className="font-medium">Sin dirección</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Sin identidad vinculada</p></>}</td>
               <td className="p-3">{assignmentRole(assignment.assignment_role)}</td>
               <td className="p-3 text-right">{property?.useful_area_m2 ?? property?.built_area_m2 ?? '—'}</td>
               <td className="p-3 text-right">{property?.bedrooms ?? '—'}</td>
