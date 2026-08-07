@@ -26,12 +26,16 @@ function trace(parsed:Record<string,unknown>|null){
     costUsd:readNumber(generation,'costUsd')??readNumber(generation,'cost_usd'),
   }
 }
+function isClientCanonical(document:CanonicalDocumentRow){
+  const tags=document.tags??[]
+  return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')
+}
 
 export default async function CanonicalClientReportsPage(){
   await requirePageCapability('reports.global.read')
   const supabase=createAdminClient()
   const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
-  const documents=error?[]:(data||[]) as CanonicalDocumentRow[]
+  const documents=(error?[]:(data||[]) as CanonicalDocumentRow[]).filter(isClientCanonical)
   const reports:ReportRecord[]=documents.map(document=>{const parsed=parseContent(document.content);const t=trace(parsed);return{id:document.id,title:document.title,period:formatPeriod(parsed),status:normalizeStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:getArtifactUrl(parsed,'pdf'),downloadUrl:getArtifactUrl(parsed,'download'),...t}})
   const current=reports[0]??null;const history=reports.slice(1);const missingArtifacts=reports.filter(r=>!r.pdfUrl&&!r.downloadUrl).length
   const status=error?'blocked':reports.length===0?'blocked':missingArtifacts>0?'partial':'ready'
