@@ -210,17 +210,15 @@ export async function sendDocumentEmail(
 
 export async function markDocumentAsSent(distributionId: string, externalReference: string) {
   const client = getSupabase()
-  const sentAt = new Date().toISOString()
-  const { error } = await client
-    .from('document_distributions')
-    .update({ status: 'sent', sent_at: sentAt, external_reference: externalReference } as any)
-    .eq('id', distributionId)
-  if (error) throw error
-  await client.from('document_delivery_events').insert({
-    distribution_id: distributionId,
-    event_type: 'sent',
-    details: { sent_at: sentAt, external_reference: externalReference },
+  const { data, error } = await client.rpc('mark_document_distribution_sent', {
+    p_distribution_id: distributionId,
+    p_external_reference: externalReference,
   } as any)
+
+  if (error) throw error
+  if (data !== true) {
+    throw new Error(`Document distribution ${distributionId} could not be finalized as sent`)
+  }
 }
 
 export async function markDocumentAsFailed(
