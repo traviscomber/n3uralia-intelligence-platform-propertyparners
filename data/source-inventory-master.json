@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-07T02:18:00.000Z",
+  "purpose": "Recovered source-lineage index for the three Property Partners data pillars. Historical derived JSON is evidence of inspected source lineage and is not automatically current canonical truth.",
+  "historicalReference": {
+    "commit": "16239271d4f410a34828512260d4680ca39edc3d",
+    "rule": "Use source files, hashes, manifests and inspection metadata for provenance. Revalidate historical computed values before promoting them to current canonical data."
+  },
+  "pillars": {
+    "market": {
+      "derivedJson": {
+        "path": "data/market-source-intelligence.json",
+        "blobSha": "0d828ac390bc70715c0bdfaf996c5bb605b0c226",
+        "generatedAt": "2026-07-22T22:57:07.257Z"
+      },
+      "sources": [
+        {
+          "file": "Barrios Vitacura.kml",
+          "folder": ".",
+          "role": "neighborhood_geometry",
+          "sha256": "a7005535961348770f4e29eba6f920cc4aac186ded709ab352d8726212746390",
+          "bytes": 66428
+        },
+        {
+          "file": "BASE_CBR_CON_BARRIO_ASIGNADO VITACURA.xlsx",
+          "folder": "Datos venta CBRS Vitacura",
+          "role": "registered_sales",
+          "sha256": "ac88fa61361b63513617812d9acf09ac46ff240742fb344adaecd375b173e94f",
+          "bytes": 7452205
+        },
+        {
+          "file": "portal_detalle_deptos_full.xlsx",
+          "folder": "Datos Scraper Portal Inmobiliario",
+          "role": "published_offer",
+          "sha256": "0d3da3dc6f963f1e60f66a652825579bb29498a28457328f51c4e927523c9fae",
+          "bytes": 870603
+        },
+        {
+          "file": "portal_detalle_Proyectos.xlsx",
+          "folder": "Datos Scraper Portal Inmobiliario",
+          "role": "published_offer",
+          "sha256": "2ffebb0f99e1a63e8c2216a65cd7f138806387bf68211913352242798d727f2f",
+          "bytes": 193526
+        },
+        {
+          "file": "portal_urls_casas_final.xlsx",
+          "folder": "Datos Scraper Portal Inmobiliario",
+          "role": "published_offer",
+          "sha256": "6500f2017332a2c7ec4ba65011681396119e5a82754b3956354579beada9cd96",
+          "bytes": 785511
+        }
+      ],
+      "cellManifest": {
+        "file": "business_intelligence_cells.jsonl.gz",
+        "sha256": "ddbe5735849b4e3c0b99ac6b5173afde3fb13d59052fb16c0fffc8348a9984e4",
+        "bytes": 8148778,
+        "cellCount": 1282460
+      }
+    },
+    "valuation": {
+      "derivedJson": {
+        "path": "data/valuation-intelligence.json",
+        "blobSha": "0623250ab511dc69b1733f30c79627a78841393a",
+        "generatedAt": "2026-07-22T23:30:24.006Z"
+      },
+      "sources": [
+        {
+          "file": "Plantilla de Valorización Casas.xlsx",
+          "sha256": "66b223472dfcaac6c16ab046e55e08a140bae7a7863bfc44c69a6f2bcec61738",
+          "bytes": 137757,
+          "modifiedAt": "2020-09-06T16:07:59.000Z",
+          "role": "valuation_methodology_template"
+        },
+        {
+          "file": "Plantilla de Valorización Departamentos.xlsx",
+          "sha256": "1f751a089199af12b82a2057168647099b71e0fff99d6026ca0436666356e280",
+          "bytes": 112453,
+          "modifiedAt": "2020-11-09T01:35:32.000Z",
+          "role": "valuation_methodology_template"
+        }
+      ],
+      "dependsOnMarketSources": [
+        "BASE_CBR_CON_BARRIO_ASIGNADO VITACURA.xlsx",
+        "portal_detalle_deptos_full.xlsx",
+        "portal_detalle_Proyectos.xlsx",
+        "portal_urls_casas_final.xlsx"
+      ],
+      "historicalCasePolicy": "Historical template cases are lineage/evidence only and must not be restored as active valuation cases."
+    },
+    "management": {
+      "crm": {
+        "derivedJson": {
+          "path": "data/crm-intelligence.json",
+          "blobSha": "24696d2e1e22236936c6f0f91f2acc9510870a50",
+          "generatedAt": "2026-07-22T00:06:01.259Z",
+          "schemaVersion": 5
+        },
+        "fullWorkbookManifest": "data/crm-intelligence.json#sourceInventory.workbooks",
+        "workbookCount": 84,
+        "sheetCount": 92,
+        "periodStart": "2025-01",
+        "periodEnd": "2026-06",
+        "monthlyOperationalStart": "2026-01",
+        "storedCells": 1209831,
+        "populatedCells": 1208765,
+        "formulaCells": 717,
+        "formulaErrorCells": 331,
+        "datasetCoverage": {
+          "property_capture": { "workbooks": 8, "rows": 430 },
+          "lead_created": { "workbooks": 8, "rows": 6256 },
+          "property_suspension": { "workbooks": 8, "rows": 365 },
+          "requirement_created": { "workbooks": 8, "rows": 8968 },
+          "sales_summary": { "workbooks": 1, "rows": 61 },
+          "property_stock": { "workbooks": 8, "rows": 3391 },
+          "sale_closed": { "workbooks": 11, "rows": 197 },
+          "visit_appointment": { "workbooks": 7, "rows": 5968 },
+          "lead_classified": { "workbooks": 6, "rows": 4131 },
+          "lead_active": { "workbooks": 5, "rows": 14034 },
+          "lead_unclassified": { "workbooks": 4, "rows": 6655 },
+          "lead_stale_15_90": { "workbooks": 5, "rows": 3488 },
+          "lead_stale_over_90": { "workbooks": 5, "rows": 8572 }
+        },
+        "manifestRule": "The authoritative recovered list of all 84 workbook names, hashes, sheet digests and source roles remains sourceInventory.workbooks in the historical CRM JSON; this index points to it rather than duplicating and risking divergence."
+      },
+      "targets": {
+        "derivedJson": {
+          "path": "data/targets-2026.json",
+          "blobSha": "d5f0904782b98f016a3097a7af1f8fb355a9a304",
+          "generatedAt": "2026-07-22T00:23:57.564Z",
+          "historicalStatus": "loaded_with_critical_issues"
+        },
+        "cellManifest": {
+          "path": "data/targets-cell-manifest.json",
+          "blobSha": "c257c1b9e28532e57ade53b073edd8ad2fe49f5b",
+          "workbookCount": 3,
+          "sheetCount": 3,
+          "storedCells": 4382,
+          "populatedCells": 3280,
+          "formulaCells": 715,
+          "formulaErrorCells": 0
+        },
+        "sources": [
+          {
+            "branch": "Lo Beltran",
+            "file": "metas_mensuales_sucursal_partner_lo_beltran_2026_rev_202607.xlsx",
+            "sha256": "369905d93943dcab494878c0f9fe3a4ce34359f6b05c4c876d6a0d5e9fc3f205",
+            "bytes": 21589
+          },
+          {
+            "branch": "Nueva Costanera",
+            "file": "metas_mensuales_sucursal_partner_nueva_costanera_2026_rev_202607.xlsx",
+            "sha256": "62410258860f564dabb4280353eb0d50efb1e977d5b0aba2cddb3d10ba4aff14",
+            "bytes": 25484
+          },
+          {
+            "branch": "Santa María",
+            "file": "metas_mensuales_sucursal_partner_santa_maria_2026_rev_202607.xlsx",
+            "sha256": "d158b6cc2b16b99a43ccdb5926cf7fd539e803729d4420db8cf81003974c05e1",
+            "bytes": 23494
+          }
+        ],
+        "promotionRule": "Historical target values require canonical validation before use because the recovered JSON itself records critical issues."
+      },
+      "presentations": {
+        "derivedJson": {
+          "path": "data/presentations-2026.json",
+          "blobSha": "3e5fe9263fcaa13a5b3662430b9283c77ced2b1c",
+          "summaryPath": "data/presentations-2026-summary.json",
+          "summaryBlobSha": "c23d140abb6a6d4e7d9319cd1c0d9db2267d08f0"
+        },
+        "files": [
+          {
+            "file": "Q2_Directorio_1.pptx",
+            "sha256": "6e249c032b32a3d73cd46a03b7f737b9593d714c691f2b892473a82b669c41e3",
+            "bytes": 225909,
+            "slides": 4
+          },
+          {
+            "file": "Jun_Directorio_5.pptx",
+            "sha256": "52bc9e5c97b733e36b223951b7fa8df35770c828621f1b1ff3b516b14078d908",
+            "bytes": 6292160,
+            "slides": 41
+          },
+          {
+            "file": "Jun_Partners_Lo Beltrán_4.pptx",
+            "sha256": "e2cbe404a8ca382217d45fa6a9c5daedce02a8b8fea9c27f15b10747db38c1ed",
+            "bytes": 8643174,
+            "slides": 77
+          },
+          {
+            "file": "Jun_Partners_Nueva Costanera_2.pptx",
+            "sha256": "461d6ee5a2f7dc2267f9723e23e1434f474ea68d43af2887282a46b0911da34d",
+            "bytes": 10634205,
+            "slides": 93
+          },
+          {
+            "file": "Jun_Partners_Santa María_3.pptx",
+            "sha256": "5466c7bb76769a331de39a0a93001bfd0edd3355f1dedaa6bff0a2dd0a304414",
+            "bytes": 9931280,
+            "slides": 89
+          }
+        ],
+        "inspectionCoverage": {
+          "files": 5,
+          "slides": 304,
+          "tables": 320,
+          "charts": 210,
+          "cells": 74862
+        }
+      }
+    }
+  },
+  "currentProductionComparison": {
+    "capturedAt": "2026-08-07T02:18:00.000Z",
+    "supabaseProject": "orfncinmhymhhoxbxgjb",
+    "marketSources": 8,
+    "quarantinedMarketSources": 1,
+    "marketIngestionRuns": 2,
+    "failedMarketIngestionRuns": 0,
+    "managementMetricValues": 93,
+    "managementByPeriod": {
+      "2026-01": { "metricValues": 2, "withEvidence": 2, "distinctSourceReferences": 1 },
+      "2026-02": { "metricValues": 2, "withEvidence": 2, "distinctSourceReferences": 1 },
+      "2026-03": { "metricValues": 2, "withEvidence": 2, "distinctSourceReferences": 1 },
+      "2026-04": { "metricValues": 2, "withEvidence": 2, "distinctSourceReferences": 1 },
+      "2026-05": { "metricValues": 2, "withEvidence": 2, "distinctSourceReferences": 1 },
+      "2026-06": { "metricValues": 2, "withEvidence": 2, "distinctSourceReferences": 1 },
+      "2026-07": { "metricValues": 81, "withEvidence": 81, "distinctSourceReferences": 15 }
+    },
+    "gapAssessment": [
+      "The recovered 2025-06/2026 source corpus is not represented one-file-per-source in the current production source registry.",
+      "January-June 2026 current management facts retain report-level evidence but not the same granular workbook lineage as the recovered 84-workbook CRM manifest.",
+      "July 2026 has substantially richer file-level evidence in current management metrics.",
+      "Historical source lineage must be recovered independently from promotion of historical computed values."
+    ]
+  }
+}
