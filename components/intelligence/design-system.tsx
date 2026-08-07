@@ -7,20 +7,20 @@ type ActionVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive'
 
 const statusToneClasses: Record<StatusTone, string> = {
   neutral: 'border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-muted)]',
-  info: 'border-[#6aa9ff]/45 bg-[#0d1722] text-[#9bc4ff]',
-  success: 'border-[#65d3a5]/45 bg-[#0c1b16] text-[#8ce2bc]',
-  warning: 'border-[#f6c453]/45 bg-[#211a0d] text-[#f8d77f]',
-  critical: 'border-[var(--destructive)]/60 bg-[#160d0c] text-[var(--n3-teal-soft)]',
+  info: 'border-[var(--chart-1)]/45 bg-[var(--n3-deep)] text-[var(--chart-1)]',
+  success: 'border-[var(--chart-3)]/45 bg-[var(--n3-deep)] text-[var(--chart-3)]',
+  warning: 'border-[var(--chart-4)]/45 bg-[var(--n3-deep)] text-[var(--chart-4)]',
+  critical: 'border-[var(--destructive)]/60 bg-[var(--n3-deep)] text-[var(--n3-teal-soft)]',
 }
 
 const actionVariantClasses: Record<ActionVariant, string> = {
   primary: 'border-[var(--n3-teal)] bg-[var(--n3-teal)] text-white hover:opacity-90',
   secondary: 'border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-light)] hover:border-[var(--n3-teal-soft)]',
   tertiary: 'border-transparent bg-transparent text-[var(--n3-text-light)] hover:border-[var(--n3-line)] hover:bg-[var(--muted)]',
-  destructive: 'border-[var(--destructive)] bg-[#160d0c] text-[var(--n3-teal-soft)] hover:bg-[#21100e]',
+  destructive: 'border-[var(--destructive)] bg-[var(--n3-deep)] text-[var(--n3-teal-soft)] hover:bg-[var(--muted)]',
 }
 
-const actionBaseClasses = 'inline-flex min-h-10 items-center justify-center gap-2 border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+const actionBaseClasses = 'inline-flex min-h-10 items-center justify-center gap-2 border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--n3-black)] disabled:cursor-not-allowed disabled:opacity-50'
 
 export function IntelligencePage({ children }: { children: ReactNode }) {
   return <div className="mx-auto max-w-[1500px] space-y-8 pb-16">{children}</div>
@@ -146,7 +146,7 @@ export function MetricCard({ label, value, detail }: { label: string; value: Rea
 }
 
 export function IntelligencePanel({ eyebrow, title, description, children, critical = false }: { eyebrow: string; title: string; description?: string; children?: ReactNode; critical?: boolean }) {
-  return <article className={critical ? 'border border-[var(--destructive)] bg-[#160d0c]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)]'}><div className="p-5"><p className="text-xs uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">{eyebrow}</p><h2 className="mt-2 text-xl font-semibold">{title}</h2>{description ? <p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}</div>{children}</article>
+  return <article className={critical ? 'border border-[var(--destructive)] bg-[var(--n3-deep)]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)]'}><div className="p-5"><p className="text-xs uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">{eyebrow}</p><h2 className="mt-2 text-xl font-semibold">{title}</h2>{description ? <p className="mt-2 text-sm leading-5 text-[var(--n3-text-muted)]">{description}</p> : null}</div>{children}</article>
 }
 
 export function StatusBadge({ children, tone = 'neutral' }: { children: ReactNode; tone?: StatusTone }) {
@@ -186,7 +186,7 @@ export function DataTable({
   minWidth?: number
 }) {
   return (
-    <div className="overflow-x-auto border border-[var(--n3-line)] bg-[var(--n3-deep)]" role="region" aria-label={label} tabIndex={0}>
+    <div className="overflow-x-auto border border-[var(--n3-line)] bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]" role="region" aria-label={label} tabIndex={0}>
       <table className="w-full border-collapse text-left text-sm" style={{ minWidth }}>
         {children}
       </table>
