@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { NextResponse } from 'next/server'
 import { hasCapability, type Capability } from '@/lib/access-control'
+import { createClient } from '@/lib/supabase/server'
 import {
   AuthenticationRequiredError,
   ProfileRequiredError,
@@ -12,6 +13,13 @@ export class AccessDeniedError extends Error {
   constructor(public readonly capability: Capability) {
     super(`Missing capability: ${capability}`)
     this.name = 'AccessDeniedError'
+  }
+}
+
+export class MfaRequiredError extends Error {
+  constructor() {
+    super('Multi-factor authentication required')
+    this.name = 'MfaRequiredError'
   }
 }
 
@@ -31,6 +39,12 @@ export async function requireAnyCapability(capabilities: readonly Capability[]):
     throw new AccessDeniedError(capabilities[0])
   }
   return scope
+}
+
+export async function requireMfaLevel2(): Promise<void> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (error || data.currentLevel !== 'aal2') throw new MfaRequiredError()
 }
 
 export async function requirePageCapability(capability: Capability): Promise<UserScope> {
@@ -55,6 +69,15 @@ export async function requireAnyPageCapability(capabilities: readonly Capability
   }
 }
 
+export async function requirePageMfaLevel2(nextPath = '/dashboard'): Promise<void> {
+  try {
+    await requireMfaLevel2()
+  } catch (error) {
+    if (error instanceof MfaRequiredError) redirect(`/auth/mfa?next=${encodeURIComponent(nextPath)}`)
+    throw error
+  }
+}
+
 export function accessErrorResponse(error: unknown): NextResponse {
   if (error instanceof AuthenticationRequiredError) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
@@ -64,6 +87,9 @@ export function accessErrorResponse(error: unknown): NextResponse {
   }
   if (error instanceof AccessDeniedError) {
     return NextResponse.json({ error: 'Forbidden', capability: error.capability }, { status: 403 })
+  }
+  if (error instanceof MfaRequiredError) {
+    return NextResponse.json({ error: 'MFA_REQUIRED', message: 'Confirma tu segundo factor para continuar.', mfaUrl: '/auth/mfa' }, { status: 403 })
   }
   return NextResponse.json({ error: 'Internal access-control error' }, { status: 500 })
 }
