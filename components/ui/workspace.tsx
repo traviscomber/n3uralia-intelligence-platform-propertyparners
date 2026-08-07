@@ -42,13 +42,13 @@ export function MetricStrip({ items }: { items: Array<{ label: string; value: Re
   </article>)}</section>
 }
 
-export function DataStatusBar({ cutoff, coverage, issues = 0, status }: { cutoff: string; coverage?: string; issues?: number; status?: 'ready' | 'partial' | 'blocked' }) {
+export function DataStatusBar({ cutoff, coverage, issues = 0, status, issueLabel = 'observaciones de datos' }: { cutoff: string; coverage?: string; issues?: number; status?: 'ready' | 'partial' | 'blocked'; issueLabel?: string }) {
   const label = status === 'ready' ? 'Datos listos' : status === 'blocked' ? 'Datos insuficientes' : 'Cobertura parcial'
   const tone = status === 'ready' ? 'text-[#78d59a]' : status === 'blocked' ? 'text-[#ff766f]' : 'text-[#f0c96a]'
   return <section aria-label="Estado de los datos" className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-[var(--n3-line)] py-3 text-xs">
     <span className={`font-semibold ${tone}`}>{label}</span>
     <span className="text-[var(--n3-text-muted)]">Corte {cutoff}</span>
     {coverage ? <span className="text-[var(--n3-text-muted)]">{coverage}</span> : null}
-    <span className={issues ? 'ml-auto text-[#ff766f]' : 'ml-auto text-[var(--n3-text-muted)]'}>{issues ? `${issues} fuentes con error` : 'Sin errores reportados'}</span>
+    <span className={issues ? 'ml-auto text-[#f0c96a]' : 'ml-auto text-[var(--n3-text-muted)]'}>{issues ? `${issues} ${issueLabel}` : 'Sin observaciones reportadas'}</span>
   </section>
 }
