@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const DAY_MS = 86_400_000
+const LEGACY_PREFIX = 'legacy-property:'
 
 function numberOrNull(value: unknown) {
   if (value == null || value === '') return null
@@ -27,8 +28,9 @@ function percentile(values: number[], p: number) {
   return sorted[low] + (sorted[high] - sorted[low]) * (index - low)
 }
 
-function normalizeType(value: string | null | undefined) {
-  return String(value ?? '').trim().toLowerCase()
+function legacyId(canonicalKey: unknown) {
+  const key = String(canonicalKey ?? '')
+  return key.startsWith(LEGACY_PREFIX) ? key.slice(LEGACY_PREFIX.length) : null
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
@@ -41,22 +43,24 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   let propertyResult = await supabase.from('market_properties').select(propertyFields).eq('id', id).maybeSingle()
   if (!propertyResult.data && !propertyResult.error) {
-    propertyResult = await supabase.from('market_properties').select(propertyFields).eq('canonical_key', `legacy-property:${id}`).maybeSingle()
+    propertyResult = await supabase.from('market_properties').select(propertyFields).eq('canonical_key', `${LEGACY_PREFIX}${id}`).maybeSingle()
   }
   if (propertyResult.error) return NextResponse.json({ error: 'No fue posible consultar la identidad de la propiedad.' }, { status: 500 })
   const property = propertyResult.data
   if (!property) return NextResponse.json({ error: 'Propiedad no encontrada.' }, { status: 404 })
 
-  const [listingResult, historyResult, transactionResult, lifecycleResult, matchResult, neighborhoodResult] = await Promise.all([
+  const subjectLegacyId = legacyId(property.canonical_key)
+  const [listingResult, historyResult, transactionResult, lifecycleResult, matchResult, neighborhoodResult, legacySubjectResult] = await Promise.all([
     supabase.from('market_current_listings').select('id,property_id,source_listing_id,status,operation,url,title,raw_address,normalized_address,price_uf,price_uf_m2,published_at,observed_at,removed_at,raw_payload').eq('property_id', property.id).order('observed_at', { ascending: false }),
     supabase.from('market_listings').select('id,source_id,source_listing_id,status,operation,url,price_uf,price_uf_m2,published_at,observed_at,removed_at').eq('property_id', property.id).order('observed_at', { ascending: true }),
     supabase.from('market_transactions').select('id,transaction_date,price_uf,price_uf_m2,description').eq('property_id', property.id).order('transaction_date', { ascending: true }),
     supabase.from('market_property_lifecycle').select('property_id,first_published_at,last_observed_at,removed_at,first_confirmed_sale_date,days_on_market').eq('property_id', property.id).maybeSingle(),
     supabase.from('market_property_matches').select('id,left_entity_id,right_entity_id,score,status,evidence,contradictions').or(`left_entity_id.eq.${property.id},right_entity_id.eq.${property.id}`).order('score', { ascending: false }),
     property.neighborhood_id ? supabase.from('market_neighborhoods').select('id,name,micro_neighborhood,assignment_status').eq('id', property.neighborhood_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    subjectLegacyId ? supabase.from('properties').select('id,days_on_market,source,source_url,description,created_at').eq('id', subjectLegacyId).maybeSingle() : Promise.resolve({ data: null, error: null }),
   ])
 
-  const queryErrors = [listingResult.error, historyResult.error, transactionResult.error, lifecycleResult.error, matchResult.error, neighborhoodResult.error].filter(Boolean)
+  const queryErrors = [listingResult.error, historyResult.error, transactionResult.error, lifecycleResult.error, matchResult.error, neighborhoodResult.error, legacySubjectResult.error].filter(Boolean)
   if (queryErrors.length) return NextResponse.json({ error: 'No fue posible completar la evidencia de la propiedad.' }, { status: 500 })
 
   const listings = listingResult.data ?? []
@@ -65,12 +69,16 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const lifecycle = lifecycleResult.data ?? null
   const matches = matchResult.data ?? []
   const neighborhood = neighborhoodResult.data ?? null
+  const legacySubject = legacySubjectResult.data ?? null
   const currentListing = listings.find((item) => ['active', 'observed'].includes(String(item.status))) ?? listings[0] ?? null
   const area = numberOrNull(property.useful_area_m2) ?? numberOrNull(property.built_area_m2)
   const currentPrice = numberOrNull(currentListing?.price_uf)
   const currentUfM2 = numberOrNull(currentListing?.price_uf_m2) ?? (currentPrice != null && area != null && area > 0 ? currentPrice / area : null)
   const rawPayload = currentListing?.raw_payload && typeof currentListing.raw_payload === 'object' ? currentListing.raw_payload as Record<string, unknown> : {}
-  const sourceReportedDom = numberOrNull(rawPayload.days_on_market)
+  const listingReportedDom = numberOrNull(rawPayload.days_on_market)
+  const legacyReportedDom = numberOrNull(legacySubject?.days_on_market)
+  const sourceReportedDom = listingReportedDom ?? legacyReportedDom
+  const sourceReportedDomOrigin = listingReportedDom != null ? 'current_listing_payload' : legacyReportedDom != null ? 'legacy_source_bridge' : null
   const nowIso = new Date().toISOString()
   const observedSpanDays = daysBetween(property.first_seen_at, property.last_seen_at)
   const openAgeSinceFirstObservation = currentListing && ['active', 'observed'].includes(String(currentListing.status)) ? daysBetween(property.first_seen_at, nowIso) : null
@@ -103,11 +111,21 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   }
 
   const comparableIds = comparableProperties.map((candidate) => String(candidate.id))
-  const comparableListingResult = comparableIds.length
-    ? await supabase.from('market_current_listings').select('id,property_id,status,url,normalized_address,price_uf,price_uf_m2,observed_at,published_at,raw_payload').in('property_id', comparableIds).in('status', ['active', 'observed']).not('price_uf', 'is', null).order('observed_at', { ascending: false }).limit(500)
-    : { data: [], error: null }
+  const comparableLegacyIds = comparableProperties.map((candidate) => legacyId(candidate.canonical_key)).filter((value): value is string => Boolean(value))
+  const [comparableListingResult, comparableLegacyResult] = await Promise.all([
+    comparableIds.length
+      ? supabase.from('market_current_listings').select('id,property_id,status,url,normalized_address,price_uf,price_uf_m2,observed_at,published_at,raw_payload').in('property_id', comparableIds).in('status', ['active', 'observed']).not('price_uf', 'is', null).order('observed_at', { ascending: false }).limit(500)
+      : Promise.resolve({ data: [], error: null }),
+    comparableLegacyIds.length
+      ? supabase.from('properties').select('id,days_on_market,source_url').in('id', comparableLegacyIds)
+      : Promise.resolve({ data: [], error: null }),
+  ])
+  if (comparableListingResult.error || comparableLegacyResult.error) {
+    return NextResponse.json({ error: 'No fue posible completar los comparables.' }, { status: 500 })
+  }
 
   const propertyById = new Map(comparableProperties.map((candidate) => [String(candidate.id), candidate]))
+  const legacyById = new Map((comparableLegacyResult.data ?? []).map((row) => [String(row.id), row]))
   const latestListingByProperty = new Map<string, Record<string, unknown>>()
   for (const listing of comparableListingResult.data ?? []) {
     const key = String(listing.property_id)
@@ -120,6 +138,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const price = numberOrNull(listing.price_uf)
     const priceUfM2 = numberOrNull(listing.price_uf_m2) ?? (price != null && candidateArea != null && candidateArea > 0 ? price / candidateArea : null)
     const payload = listing.raw_payload && typeof listing.raw_payload === 'object' ? listing.raw_payload as Record<string, unknown> : {}
+    const candidateLegacyId = legacyId(candidate.canonical_key)
+    const legacy = candidateLegacyId ? legacyById.get(candidateLegacyId) ?? null : null
+    const payloadDom = numberOrNull(payload.days_on_market)
+    const bridgeDom = numberOrNull(legacy?.days_on_market)
     return {
       propertyId,
       address: candidate.normalized_address ?? listing.normalized_address ?? null,
@@ -129,10 +151,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       priceUf: price,
       priceUfM2,
       observedAt: listing.observed_at ?? null,
-      sourceReportedDom: numberOrNull(payload.days_on_market),
+      sourceReportedDom: payloadDom ?? bridgeDom,
+      sourceReportedDomOrigin: payloadDom != null ? 'current_listing_payload' : bridgeDom != null ? 'legacy_source_bridge' : null,
       identityStatus: candidate.identity_status ?? null,
       identityConfidence: numberOrNull(candidate.identity_confidence),
-      url: listing.url ?? null,
+      url: listing.url ?? legacy?.source_url ?? null,
     }
   }).filter((row) => row.priceUfM2 != null)
 
@@ -195,6 +218,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       identityConfidence: numberOrNull(property.identity_confidence),
       identityEvidence: property.identity_evidence,
     },
+    sourceEvidence: {
+      legacyPropertyId: subjectLegacyId,
+      source: legacySubject?.source ?? null,
+      sourceUrl: legacySubject?.source_url ?? currentListing?.url ?? null,
+      sourceReportedDom,
+      sourceReportedDomOrigin,
+      description: legacySubject?.description ?? null,
+    },
     currentMarket: {
       listingId: currentListing?.id ?? null,
       status: currentListing?.status ?? null,
@@ -203,11 +234,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       observedAt: currentListing?.observed_at ?? null,
       evidenceAgeDays,
       sourceReportedDom,
+      sourceReportedDomOrigin,
       observedSpanDays,
       openAgeSinceFirstObservation,
       confirmedDom,
       domMethodology: {
-        sourceReportedDom: 'Valor heredado/reportado por la fuente. No se trata como observación canónica.',
+        sourceReportedDom: 'Valor reportado por la fuente o preservado por el bridge legado. Se usa como señal comparativa, nunca como DOM canónico.',
         observedSpanDays: 'Días entre primera y última observación almacenada por la plataforma.',
         openAgeSinceFirstObservation: 'Edad desde primera observación sólo mientras la última publicación siga marcada activa/observada; se degrada con evidencia stale.',
         confirmedDom: 'Sólo existe cuando una transacción confirmada permite cerrar el ciclo contractual.',
@@ -226,12 +258,13 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     },
     comparables: {
       count: comparableRows.length,
+      sourceDomCoverage: domValues.length,
       priceUfM2: { p25, median: medianUfM2, p75 },
       medianSourceReportedDom: medianSourceDom,
       impliedPriceAtMedian,
       priceVsMedianPct,
       domVsMedianMultiple,
-      methodology: 'Misma tipología y barrio contractual, superficie útil ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana.',
+      methodology: 'Misma tipología y barrio contractual, superficie útil ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
       rows: comparableRows.sort((a, b) => Math.abs(Number(a.priceUfM2) - Number(currentUfM2 ?? a.priceUfM2)) - Math.abs(Number(b.priceUfM2) - Number(currentUfM2 ?? b.priceUfM2))).slice(0, 20),
     },
     identityMatches: matches,
