@@ -37,19 +37,13 @@ assert.equal(isClosedMonthlyPeriod('2026-08', augustSecond), false)
 assert.equal(isClosedMonthlyPeriod('2026-09', augustSecond), false)
 assert.equal(isClosedMonthlyPeriod('invalid', augustSecond), false)
 assert.doesNotThrow(() => assertClosedMonthlyPeriod('2026-07', augustSecond))
-assert.throws(
-  () => assertClosedMonthlyPeriod('2026-08', augustSecond),
-  /mes completamente terminado/,
-)
+assert.throws(() => assertClosedMonthlyPeriod('2026-08', augustSecond), /mes completamente terminado/)
 
-const previewRoute = readFileSync(
-  resolve(process.cwd(), 'app/api/management/reports/preview/route.ts'),
-  'utf8',
-)
-const sendRoute = readFileSync(
-  resolve(process.cwd(), 'app/api/cron/send-ceo-report-brandbook/route.ts'),
-  'utf8',
-)
+const previewRoute = readFileSync(resolve(process.cwd(), 'app/api/management/reports/preview/route.ts'), 'utf8')
+const sendRoute = readFileSync(resolve(process.cwd(), 'app/api/cron/send-ceo-report-brandbook/route.ts'), 'utf8')
+const schedulesRoute = readFileSync(resolve(process.cwd(), 'app/api/management/schedules/route.ts'), 'utf8')
+const schedulesPage = readFileSync(resolve(process.cwd(), 'app/dashboard/control/schedules/page.tsx'), 'utf8')
+const dependencies = JSON.parse(readFileSync(resolve(process.cwd(), 'config/client-dependencies-status.json'), 'utf8'))
 
 assert.match(previewRoute, /requireCapability\('management\.global\.read'\)/)
 assert.match(previewRoute, /accessErrorResponse\(error\)/)
@@ -64,6 +58,16 @@ assert.match(sendRoute, /assertClosedMonthlyPeriod\(period\)/)
 assert.doesNotMatch(sendRoute, /error:\s*String\(error\)/)
 assert.match(sendRoute, /Cierre \$\{monthName\} \$\{year\}/)
 
+const reportingApproval = dependencies.dependencies.find((item: { id:string }) => item.id === 'reporting-approval')
+assert.ok(reportingApproval, 'reporting-approval dependency must exist')
+assert.match(schedulesRoute, /reporting-approval/)
+assert.match(schedulesRoute, /APPROVED_DEPENDENCY_STATUSES/)
+assert.match(schedulesRoute, /status:\s*409/)
+assert.match(schedulesPage, /Configuración bloqueada por aprobación del Cliente/)
+if (reportingApproval.status === 'pending') {
+  assert.match(schedulesRoute, /La programación está bloqueada hasta contar con calendario, destinatarios y reglas de reporting aprobados por el Cliente/)
+}
+
 const now = new Date('2026-08-01T09:00:00.000Z')
 assert.equal(advanceSchedule('2026-08-01T09:00:00.000Z', 'monthly', now), '2026-09-01T09:00:00.000Z')
 assert.equal(advanceSchedule('2026-05-01T09:00:00.000Z', 'quarterly', now), '2026-11-01T09:00:00.000Z')
@@ -71,4 +75,4 @@ assert.equal(advanceSchedule('2024-08-01T09:00:00.000Z', 'yearly', now), '2027-0
 assert.throws(() => advanceSchedule('invalid', 'monthly', now), /next_run_at inválido/)
 assert.throws(() => advanceSchedule('2026-08-01T09:00:00.000Z', 'weekly', now), /Cadencia no soportada/)
 
-console.log('Management report scheduling, route closure and authorization rules verified.')
+console.log('Management report scheduling, route closure, client approval gate and authorization rules verified.')
