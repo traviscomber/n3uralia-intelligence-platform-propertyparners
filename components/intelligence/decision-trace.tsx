@@ -23,10 +23,10 @@ function StatusIcon({ status }: { status: DecisionTraceItem['evidenceStatus'] })
 
 export function DecisionTrace({ items, title = 'Trazabilidad de decisión' }: { items: DecisionTraceItem[]; title?: string }) {
   return (
-    <section aria-labelledby="decision-trace-title" className="mt-6 border-y border-[var(--n3-line)] py-5">
+    <section aria-label={title} className="mt-6 border-y border-[var(--n3-line)] py-5">
       <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 id="decision-trace-title" className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{title}</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{title}</h2>
           <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
             Evidencia, corte y gobernanza usados para sustentar la señal. Esta vista no expone prompts ni lógica propietaria interna.
           </p>
