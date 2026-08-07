@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { normalizeMarketProperty, type MarketPropertyInput } from '@/lib/market-normalization'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 type ImportPayload = {
   source: {
@@ -39,7 +40,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Máximo 10.000 filas por solicitud' }, { status: 413 })
   }
 
-  const { data: source, error: sourceError } = await supabase
+  // Authorization is evaluated with the user's session above. Canonical market
+  // writes then cross the privileged server boundary so browser roles never need
+  // mutation grants on shared market intelligence tables.
+  const admin = createAdminClient()
+  const { data: source, error: sourceError } = await admin
     .from('market_sources')
     .upsert({
       code: payload.source.code,
@@ -56,7 +61,8 @@ export async function POST(request: Request) {
     .single()
 
   if (sourceError || !source) {
-    return NextResponse.json({ error: sourceError?.message ?? 'No fue posible registrar la fuente' }, { status: 500 })
+    console.error('MARKET_CANONICAL_SOURCE_UPSERT_FAILED', { code: sourceError?.code ?? 'UNKNOWN' })
+    return NextResponse.json({ error: 'No fue posible registrar la fuente.' }, { status: 500 })
   }
 
   const normalizedRows = payload.rows.map(normalizeMarketProperty)
@@ -84,13 +90,14 @@ export async function POST(request: Request) {
     last_seen_at: new Date().toISOString(),
   }))
 
-  const { error: propertyError } = await supabase
+  const { error: propertyError } = await admin
     .from('market_properties')
     .upsert(propertyRows, { onConflict: 'canonical_key', ignoreDuplicates: false })
 
   if (propertyError) {
-    await supabase.from('market_sources').update({ status: 'quarantined', metadata: { importError: propertyError.message } }).eq('id', source.id)
-    return NextResponse.json({ error: propertyError.message }, { status: 422 })
+    await admin.from('market_sources').update({ status: 'quarantined', metadata: { importErrorCode: propertyError.code ?? 'UNKNOWN' } }).eq('id', source.id)
+    console.error('MARKET_CANONICAL_PROPERTY_UPSERT_FAILED', { code: propertyError.code ?? 'UNKNOWN' })
+    return NextResponse.json({ error: 'No fue posible importar las propiedades canónicas.' }, { status: 422 })
   }
 
   const candidates = normalizedRows.filter((row) => row.identityStatus === 'candidate').length
