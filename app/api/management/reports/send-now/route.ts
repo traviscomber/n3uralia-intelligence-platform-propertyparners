@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireExecutiveAccess } from '@/lib/api-access'
 import { buildManagementReportPdf } from '@/lib/management-report-artifact'
 import {
   buildManagementReportEmailContent,
@@ -8,26 +9,29 @@ import {
 import { Resend } from 'resend'
 
 export async function POST(request: NextRequest) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) {
+    return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+  }
+
   try {
     const body = await request.json()
     const { reportRunId, recipient } = body
 
     if (!reportRunId || !recipient) {
       return NextResponse.json(
-        { error: 'reportRunId and recipient are required' },
+        { error: 'Faltan datos requeridos para enviar el reporte.' },
         { status: 400 }
       )
     }
 
-    // Validate recipient email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
       return NextResponse.json(
-        { error: 'Invalid recipient email' },
+        { error: 'El correo del destinatario no es válido.' },
         { status: 400 }
       )
     }
 
-    // Fetch report from database
     const supabase = createAdminClient() as any
     const { data: report, error: reportError } = await supabase
       .from('management_report_runs')
@@ -37,27 +41,20 @@ export async function POST(request: NextRequest) {
 
     if (reportError || !report) {
       return NextResponse.json(
-        { error: 'Report not found' },
+        { error: 'Reporte no encontrado.' },
         { status: 404 }
       )
     }
 
-    // Generate PDF
     const pdf = await buildManagementReportPdf(report)
-
-    // Get delivery configuration
     const configuration = getManagementReportDeliveryConfiguration()
-    if (!configuration) {
-      throw new Error('Delivery configuration not found')
-    }
+    if (!configuration) throw new Error('DELIVERY_CONFIGURATION_MISSING')
 
-    // Build email content
     const artifactUrl = configuration.appBaseUrl
       ? `${configuration.appBaseUrl}/api/management/reports/${report.id}/artifact`
       : null
     const content = buildManagementReportEmailContent(report, artifactUrl)
 
-    // Send via Resend
     const resend = new Resend(process.env.RESEND_API_KEY)
     const pdfBase64 = Buffer.from(pdf.bytes).toString('base64')
 
@@ -66,25 +63,17 @@ export async function POST(request: NextRequest) {
       to: recipient,
       subject: content.subject,
       html: content.html,
-      attachments: [
-        {
-          filename: pdf.filename,
-          content: pdfBase64,
-        },
-      ],
+      attachments: [{ filename: pdf.filename, content: pdfBase64 }],
     })
 
     if (response.error) {
+      console.error('[send-now] Provider delivery failed')
       return NextResponse.json(
-        {
-          success: false,
-          error: response.error.message,
-        },
-        { status: 500 }
+        { success: false, error: 'No fue posible enviar el reporte.' },
+        { status: 502 }
       )
     }
 
-    // Save delivery record
     const { data: distribution } = await supabase
       .from('management_report_distributions')
       .insert({
@@ -95,6 +84,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           provider: 'resend',
           provider_message_id: response.data?.id,
+          initiated_by: access.userId,
         },
       })
       .select()
@@ -109,10 +99,10 @@ export async function POST(request: NextRequest) {
       filename: pdf.filename,
       distributionId: distribution?.id,
     })
-  } catch (error) {
-    console.error('[send-now] Error:', error)
+  } catch {
+    console.error('[send-now] Report delivery failed')
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'No fue posible completar el envío del reporte.' },
       { status: 500 }
     )
   }
