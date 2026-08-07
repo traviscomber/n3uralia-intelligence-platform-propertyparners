@@ -30,6 +30,8 @@ export type DashboardEvolution = {
   salesUfTarget?: number | null
   cumulativeSales?: number | null
   cumulativeSalesTarget?: number | null
+  metrics?: Record<string, number | null>
+  targets?: Record<string, number | null>
 }
 
 export type DashboardEntity = {
@@ -268,21 +270,40 @@ function mergeEvolution(
   rows: ApprovedMetricValue[],
   goalMap: Map<string, PersistedGoal>,
 ) {
-  const byPeriod = new Map((existing ?? []).map((item) => [item.period, { ...item }]))
+  const byPeriod = new Map((existing ?? []).map((item) => [item.period, {
+    ...item,
+    metrics: { ...(item.metrics ?? {}) },
+    targets: { ...(item.targets ?? {}) },
+  }]))
+
   for (const row of rows) {
-    if (!['sales', 'sales_uf'].includes(row.metric_code)) continue
     const period = row.period_start.slice(0, 7)
-    const current: DashboardEvolution = byPeriod.get(period) ?? { period, sales: null, salesTarget: null }
-    const goal = goalMap.get(metricKey(row.entity_id, row.metric_code, row.period_start, row.period_end))
-    if (row.metric_code === 'sales') {
-      current.sales = numeric(row.value)
-      current.salesTarget = numeric(goal?.target_value)
-    } else {
-      current.salesUf = numeric(row.value)
-      current.salesUfTarget = numeric(goal?.target_value)
+    const current: DashboardEvolution = byPeriod.get(period) ?? {
+      period,
+      sales: null,
+      salesTarget: null,
+      metrics: {},
+      targets: {},
     }
+    const value = numeric(row.value)
+    const goal = goalMap.get(metricKey(row.entity_id, row.metric_code, row.period_start, row.period_end))
+    const target = numeric(goal?.target_value)
+    const displayCode = metricCodeAliases[row.metric_code] ?? row.metric_code
+
+    current.metrics = { ...(current.metrics ?? {}), [displayCode]: value }
+    if (target !== null) current.targets = { ...(current.targets ?? {}), [displayCode]: target }
+
+    if (row.metric_code === 'sales') {
+      current.sales = value
+      current.salesTarget = target
+    } else if (row.metric_code === 'sales_uf') {
+      current.salesUf = value
+      current.salesUfTarget = target
+    }
+
     byPeriod.set(period, current)
   }
+
   return [...byPeriod.values()].sort((left, right) => left.period.localeCompare(right.period))
 }
 
