@@ -4,6 +4,7 @@ import {
   accessErrorResponse,
   assertProfileVisible,
   requireAnyCapability,
+  requireMfaLevel2,
 } from '@/lib/access-guards'
 
 const allowedTargets = new Set(['draft', 'review', 'approved', 'issued'])
@@ -30,6 +31,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (!allowedTargets.has(target)) {
       return NextResponse.json({ error: 'Estado de destino inválido' }, { status: 400 })
     }
+
+    if (target === 'approved' || target === 'issued') await requireMfaLevel2()
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
@@ -111,7 +114,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         .update({
           status: 'done',
           completed_at: now,
-          resolution_note: 'Valorización aprobada por CEO.',
+          resolution_note: 'Valorización aprobada por CEO con MFA.',
           updated_by: scope.profileId,
         })
         .eq('source_key', `valuation-return:${id}`)
@@ -124,6 +127,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       versionNumber: result.versionNumber ?? null,
       acceptedComparableCount: result.acceptedComparableCount ?? null,
       atomic: true,
+      mfaVerified: target === 'approved' || target === 'issued',
     })
   } catch (error) {
     return accessErrorResponse(error)
