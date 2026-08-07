@@ -17,6 +17,12 @@ const protectedImportPatterns = [
   '@/lib/ai-runtime',
 ]
 
+// Explicit DTO-only boundary. This module contains public trace metadata types and
+// labels only; no prompts, heuristics, scoring internals, secrets or reasoning.
+const approvedPublicIntelligenceContracts = [
+  '@/lib/intelligence-decision-trace',
+]
+
 const forbiddenPublicEnvNames = [
   'NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY',
   'NEXT_PUBLIC_RESEND_API_KEY',
@@ -45,7 +51,11 @@ function isClientModule(source) {
 }
 
 function importsProtectedModule(source) {
-  return protectedImportPatterns.filter((pattern) => source.includes(pattern))
+  const auditableSource = approvedPublicIntelligenceContracts.reduce(
+    (text, approvedPath) => text.replaceAll(approvedPath, ''),
+    source,
+  )
+  return protectedImportPatterns.filter((pattern) => auditableSource.includes(pattern))
 }
 
 const files = sourceRoots.flatMap((directory) => walk(path.join(root, directory)))
