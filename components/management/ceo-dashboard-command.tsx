@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Download, FileText, RefreshCw } from 'lucide-react'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { getDecisionThreshold } from '@/lib/management-decision-policy'
 
 type Point = {
   period: string
@@ -35,6 +36,19 @@ const csv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`
 const metric = (point: Point | undefined, code: string) => point?.metrics?.[code] ?? null
 const riskLabel = (risk: Risk) => risk === 'high' ? 'Alto' : risk === 'medium' ? 'Medio' : risk === 'low' ? 'Bajo' : 'Sin evidencia'
 const riskClass = (risk: Risk) => risk === 'high' ? 'text-[#ff8d87]' : risk === 'medium' ? 'text-[#f0c96a]' : risk === 'low' ? 'text-[#78d59a]' : 'text-[var(--n3-text-muted)]'
+
+const DECISION_THRESHOLDS = {
+  leadBacklogCritical: getDecisionThreshold('lead-backlog-critical'),
+  leadBacklogAction: getDecisionThreshold('lead-backlog-action'),
+  leadBacklogWatch: getDecisionThreshold('lead-backlog-watch'),
+  visitsCritical: getDecisionThreshold('visits-critical'),
+  visitsAction: getDecisionThreshold('visits-action'),
+  visitsWatch: getDecisionThreshold('visits-watch'),
+  suspendedCritical: getDecisionThreshold('suspended-critical'),
+  suspendedWatch: getDecisionThreshold('suspended-watch'),
+  unclassifiedCritical: getDecisionThreshold('unclassified-critical'),
+  unclassifiedWatch: getDecisionThreshold('unclassified-watch'),
+} as const
 
 function sumThrough(points: Point[] | undefined, period: string, key: 'sales' | 'salesTarget') {
   const eligible = (points ?? []).filter((item) => item.period <= period)
@@ -94,10 +108,10 @@ export function CeoDashboardCommand() {
     let action = 'Revisar evidencia'
     let riskScore = -1
 
-    if (staleRatio != null && staleRatio >= 30) { risk = 'high'; action = 'Intervenir backlog'; riskScore = 100 + staleRatio }
-    else if (visitRate != null && visitRate < 50) { risk = 'high'; action = 'Mejorar visitas'; riskScore = 95 + (50 - visitRate) }
-    else if (suspendedRatio != null && suspendedRatio >= 20) { risk = 'high'; action = 'Revisar cartera'; riskScore = 90 + suspendedRatio }
-    else if ((staleRatio != null && staleRatio >= 15) || (visitRate != null && visitRate < 60) || (suspendedRatio != null && suspendedRatio >= 10)) { risk = 'medium'; action = 'Monitorear'; riskScore = 50 + Math.max(staleRatio ?? 0, suspendedRatio ?? 0, visitRate == null ? 0 : 60 - visitRate) }
+    if (staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical) { risk = 'high'; action = 'Intervenir backlog'; riskScore = 100 + staleRatio }
+    else if (visitRate != null && visitRate < DECISION_THRESHOLDS.visitsCritical) { risk = 'high'; action = 'Mejorar visitas'; riskScore = 95 + (DECISION_THRESHOLDS.visitsCritical - visitRate) }
+    else if (suspendedRatio != null && suspendedRatio >= DECISION_THRESHOLDS.suspendedCritical) { risk = 'high'; action = 'Revisar cartera'; riskScore = 90 + suspendedRatio }
+    else if ((staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogWatch) || (visitRate != null && visitRate < DECISION_THRESHOLDS.visitsWatch) || (suspendedRatio != null && suspendedRatio >= DECISION_THRESHOLDS.suspendedWatch)) { risk = 'medium'; action = 'Monitorear'; riskScore = 50 + Math.max(staleRatio ?? 0, suspendedRatio ?? 0, visitRate == null ? 0 : DECISION_THRESHOLDS.visitsWatch - visitRate) }
     else if (hasRiskEvidence) { risk = 'low'; action = followUp != null && followUp >= 80 ? 'Replicar gestión' : 'Monitorear'; riskScore = 0 }
 
     return {
@@ -139,10 +153,10 @@ export function CeoDashboardCommand() {
     const unclassifiedRatio = ratio(unclassified, active)
     const suspendedRatio = ratio(suspended, stock)
 
-    if (stale90 != null && staleRatio != null && staleRatio >= 20) items.push({ label: 'Backlog +90 días', value: n(stale90), detail: `${pct(staleRatio)} de leads activos`, href: '/dashboard/control/operations', priority: staleRatio >= 30 ? 100 : 88, critical: staleRatio >= 30 })
-    if (visitRate != null && visitRate < 70) items.push({ label: 'Ejecución de visitas', value: pct(visitRate), detail: `${n(realized)} de ${n(scheduled)} realizadas`, href: '/dashboard/control/operations', priority: visitRate < 50 ? 98 : 90, critical: visitRate < 50 })
-    if (unclassified != null && unclassifiedRatio != null && unclassifiedRatio >= 30) items.push({ label: 'Leads sin clasificar', value: n(unclassified), detail: `${pct(unclassifiedRatio)} de leads activos`, href: '/dashboard/control/operations', priority: unclassifiedRatio >= 40 ? 94 : 82, critical: unclassifiedRatio >= 40 })
-    if (suspended != null && suspendedRatio != null && suspendedRatio >= 10) items.push({ label: 'Cartera suspendida', value: n(suspended), detail: `${pct(suspendedRatio)} del stock`, href: '/dashboard/properties', priority: suspendedRatio >= 20 ? 92 : 76, critical: suspendedRatio >= 20 })
+    if (stale90 != null && staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogAction) items.push({ label: 'Backlog +90 días', value: n(stale90), detail: `${pct(staleRatio)} de leads activos`, href: '/dashboard/control/operations', priority: staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical ? 100 : 88, critical: staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical })
+    if (visitRate != null && visitRate < DECISION_THRESHOLDS.visitsAction) items.push({ label: 'Ejecución de visitas', value: pct(visitRate), detail: `${n(realized)} de ${n(scheduled)} realizadas`, href: '/dashboard/control/operations', priority: visitRate < DECISION_THRESHOLDS.visitsCritical ? 98 : 90, critical: visitRate < DECISION_THRESHOLDS.visitsCritical })
+    if (unclassified != null && unclassifiedRatio != null && unclassifiedRatio >= DECISION_THRESHOLDS.unclassifiedWatch) items.push({ label: 'Leads sin clasificar', value: n(unclassified), detail: `${pct(unclassifiedRatio)} de leads activos`, href: '/dashboard/control/operations', priority: unclassifiedRatio >= DECISION_THRESHOLDS.unclassifiedCritical ? 94 : 82, critical: unclassifiedRatio >= DECISION_THRESHOLDS.unclassifiedCritical })
+    if (suspended != null && suspendedRatio != null && suspendedRatio >= DECISION_THRESHOLDS.suspendedWatch) items.push({ label: 'Cartera suspendida', value: n(suspended), detail: `${pct(suspendedRatio)} del stock`, href: '/dashboard/properties', priority: suspendedRatio >= DECISION_THRESHOLDS.suspendedCritical ? 92 : 76, critical: suspendedRatio >= DECISION_THRESHOLDS.suspendedCritical })
     if (gap != null && gap < 0) items.push({ label: 'Brecha de meta', value: n(Math.abs(gap), 1), detail: `${pct(compliance)} de cumplimiento`, href: '/dashboard/control/admin', priority: 96, critical: true })
     if (credited != null && selected.sales != null && Math.abs(selected.sales - credited) >= 0.25) items.push({ label: 'Crédito comercial', value: `${n(credited, 1)} / ${n(selected.sales)}`, detail: inScope == null ? 'Separado de operaciones corporativas' : `${n(inScope)} operaciones en alcance`, href: '/dashboard/control/operations', priority: 55, critical: false })
 
