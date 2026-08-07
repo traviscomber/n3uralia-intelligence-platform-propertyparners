@@ -1,3 +1,4 @@
+-- tenant-isolation: shared-reference authenticated-read
 begin;
 
 revoke all on table public.external_market_benchmarks from anon;
