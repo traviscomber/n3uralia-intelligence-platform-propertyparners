@@ -96,7 +96,7 @@ export default async function PropertiesPage() {
         <span className="text-xs text-[var(--n3-text-muted)]">{Number(pendingIdentity > 0) + Number(staleAssignments > 0)}</span>
       </div>
       <div className="divide-y divide-[var(--n3-line)]">
-        {pendingIdentity > 0 ? <Link href="/dashboard/properties/admin" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Confirmar identidad</span><strong className="text-[#ff8d87]">{pendingIdentity}</strong></Link> : null}
+        {pendingIdentity > 0 ? <Link href="/dashboard/properties/admin/identity" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Revisar identidad y duplicados</span><strong className="text-[#ff8d87]">{pendingIdentity}</strong></Link> : null}
         {staleAssignments > 0 ? <Link href="/dashboard/market" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Verificar vigencia</span><strong className="text-[#f0c96a]">{staleAssignments}</strong></Link> : null}
       </div>
     </section> : null}
