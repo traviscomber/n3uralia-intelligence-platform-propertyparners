@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCronAuthorizationFailure } from '@/lib/management-report-schedule'
+import { recoverStaleDocumentDistributionClaims } from '@/lib/document-delivery-recovery'
 import {
   getPendingDocumentDistributions,
   claimDocumentDistribution,
@@ -29,6 +30,7 @@ async function handleCron(request: Request) {
     let sent = 0
     let failed = 0
 
+    const recovered = await recoverStaleDocumentDistributionClaims()
     const distributions = (await getPendingDocumentDistributions(50)) as any[]
 
     for (const distribution of distributions) {
@@ -79,6 +81,7 @@ async function handleCron(request: Request) {
 
     return NextResponse.json({
       configured: true,
+      recovered,
       claimed,
       sent,
       failed,
