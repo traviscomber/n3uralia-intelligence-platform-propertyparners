@@ -10,6 +10,7 @@ const reviewManifestPath = path.join(root, 'config', 'tenant-isolation-review.js
 const reviewManifest = JSON.parse(fs.readFileSync(reviewManifestPath, 'utf8'))
 const reviewedApiRoutes = new Set(reviewManifest.apiRoutes ?? [])
 const reviewedMigrations = new Set(reviewManifest.historicalMigrations ?? [])
+const verifiedHistoricalMigrations = new Set(reviewManifest.verifiedHistoricalMigrations ?? [])
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return []
@@ -48,6 +49,7 @@ for (const file of scanRoots.flatMap((directory) => walk(path.join(root, directo
   if (/^supabase\/migrations\//.test(rel)
       && /create policy/i.test(text)
       && !/(auth\.uid\(\)|tenant_id|organization_id|office_id|company_id|service_role)/i.test(text)) {
+    if (verifiedHistoricalMigrations.has(rel)) continue
     if (reviewedMigrations.has(rel)) reviewItems.push(`${rel}: historical policy requires live Supabase verification`)
     else findings.push(`${rel}: untracked RLS policy lacks a visible user, tenant or service predicate`)
   }
@@ -59,5 +61,5 @@ if (findings.length) {
   process.exit(1)
 }
 
-console.log(`Tenant isolation audit passed; manualReview=${reviewItems.length}`)
+console.log(`Tenant isolation audit passed; manualReview=${reviewItems.length}; verifiedHistorical=${verifiedHistoricalMigrations.size}`)
 for (const item of reviewItems) console.warn(`[tenant-isolation-review] ${item}`)
