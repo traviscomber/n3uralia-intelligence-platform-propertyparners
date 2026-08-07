@@ -270,7 +270,7 @@ function mergeEvolution(
   rows: ApprovedMetricValue[],
   goalMap: Map<string, PersistedGoal>,
 ) {
-  const byPeriod = new Map((existing ?? []).map((item) => [item.period, {
+  const byPeriod = new Map<string, DashboardEvolution>((existing ?? []).map((item) => [item.period, {
     ...item,
     metrics: { ...(item.metrics ?? {}) },
     targets: { ...(item.targets ?? {}) },
