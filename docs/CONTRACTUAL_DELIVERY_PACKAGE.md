@@ -10,8 +10,9 @@ Este documento consolida las evidencias técnicas y funcionales disponibles para
 
 - Repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`
 - Rama de entrega: `main`
+- Producción: `https://ppartnersgroup.app`
 - Supabase: `orfncinmhymhhoxbxgjb`
-- Control de acceso: matriz central de capacidades, scopes por rol, guards de páginas y APIs, y RLS autenticada.
+- Control de acceso: matriz central de capacidades, scopes por rol, guards de páginas y APIs, RLS autenticada y MFA/AAL2 en operaciones críticas de valorización.
 
 ## 3. Evidencia por perfil
 
@@ -19,14 +20,15 @@ Este documento consolida las evidencias técnicas y funcionales disponibles para
 
 - Consolidado global, oficinas, metas, evolución e indicadores ejecutivos disponibles.
 - Centro de decisiones conectado con oficina, valorización, tarea, responsable e historial.
-- Navegación global → oficina → expediente → reporte.
+- Acceso a Mercado, Propiedades, Informes y gestión administrativa.
+- Aprobación y emisión de valorizaciones con segundo factor.
 
 ### Dirección y subdirección
 
 - Alcance de oficina resuelto centralmente.
 - Equipo, propiedades, tareas, metas, comparaciones y valorizaciones en revisión.
 - Devolución con motivo, corrección, reenvío e historial versionado.
-- Aislamiento autenticado entre oficinas.
+- Aislamiento entre oficinas.
 
 ### Partner
 
@@ -37,36 +39,37 @@ Este documento consolida las evidencias técnicas y funcionales disponibles para
 
 ## 4. Integración transversal
 
-- Mercado → publicación persistida → comparable candidato.
-- Propiedad → asignación → valorización.
-- Valorización → historial, decisiones y reporte imprimible.
-- Alerta/revisión → tarea → responsable → seguimiento.
-- CEO → oficina → responsable → caso → evidencia.
-
 Cadena operativa del producto:
 
 `Data canónica → inteligencia → acción → responsable → seguimiento → resultado → informe`
 
+Flujos técnicos disponibles:
+
+- Mercado → publicación persistida → comparable candidato.
+- Fuente → ingestión → raw record → normalización → historial → estado/frescura/error.
+- Propiedad → asignación → valorización.
+- Valorización → historial → decisiones → aprobación → reporte.
+- Alerta/revisión → tarea → responsable → seguimiento.
+- CEO → oficina → responsable → caso → evidencia.
+- Informe canónico → artefacto → historial → entrega operativa.
+
 ## 5. Seguridad y QA reproducible
 
-- Matriz RLS autenticada por alcance global, oficina y personal.
+- Matriz RLS por alcance global, oficina y personal.
 - Pruebas negativas entre oficinas y perfiles.
 - Escrituras QA reversibles con `ROLLBACK` cuando corresponde.
 - Separación entre propiedad operativa e identidad canónica confirmada.
-- Regresiones estáticas de capacidades, navegación al reporte y accesibilidad estructural.
-- Helpers de autorización retirados del esquema público cuando corresponde.
+- Helpers de autorización internos fuera del esquema API público cuando corresponde.
 - Aprobación global de valorizaciones reservada al CEO.
+- MFA/AAL2 para aprobación y emisión.
+- Fallos de ingestión persistidos y fuente puesta en cuarentena.
+- Informes técnicos/fixtures excluidos de la vista canónica del cliente.
 
-Scripts principales:
+Comando consolidado de aceptación técnica:
 
-- `scripts/test-access-control.mjs`
-- `scripts/test-authenticated-scope.sql`
-- `scripts/test-partner-reversible-qa.sql`
-- `scripts/test-director-office-scope.sql`
-- `scripts/test-valuation-return-cycle.sql`
-- `scripts/test-market-comparable-link.sql`
-- `scripts/test-valuation-report-access.mjs`
-- `scripts/test-central-access-regression.mjs`
+`pnpm qa:technical`
+
+Este runner agrupa verificaciones de acceso/contrato, Mercado, Valorización, Control de Gestión, trazabilidad/documentos y build de producción. No sustituye el UAT visual autenticado.
 
 ## 6. Documentación de aceptación y operación
 
@@ -80,32 +83,62 @@ Scripts principales:
 - `docs/USER_MANUAL.md`
 - `docs/ADMIN_MANUAL.md`
 - `docs/SECURITY_AUTHORIZATION_MODEL.md`
+- `docs/VALUATION_PRODUCTION_READINESS.md`
 - `docs/CONTRACTUAL_DELIVERY_PACKAGE.md`
 
-Los manuales de usuario y administración describen únicamente funciones y restricciones verificables de la implementación actual. No fijan reglas de negocio que aún dependan del Cliente.
+Los manuales describen únicamente funciones y restricciones verificables de la implementación actual. No fijan reglas de negocio que aún dependan del Cliente.
 
-## 7. Pendientes externos
+## 7. Estado de los tres pilares
+
+### Pilar I — Inteligencia de Mercado
+
+La arquitectura de ingestión, normalización, raw records, deduplicación, historial, control de fallos, cuarentena y observabilidad está disponible. Las ventas confirmadas CBRS y otras fuentes oficiales siguen dependiendo de la entrega o disponibilidad de evidencia real.
+
+### Pilar II — Valorización
+
+El motor, workflow, aprobación, trazabilidad y reporte están técnicamente preparados. El primer caso end-to-end real queda bloqueado por ausencia de una propiedad sujeto y comparables/transacciones canónicos suficientes. No se crea un caso ficticio para simular cierre.
+
+### Pilar III — Control de Gestión Comercial
+
+Las vistas por alcance, metas, alertas, tareas, seguimiento e informes están disponibles. Captaciones, fórmulas, rankings, umbrales y reglas definitivas permanecen como dependencias cuando no existe definición oficial del Cliente.
+
+## 8. Informes canónicos
+
+- la vista canónica no muestra documentos etiquetados como `reportin-test`, `qa`, `mock`, `demo` o `fixture`;
+- el CTA de generación conduce al centro operativo real `/dashboard/reportes/operacion`;
+- el endpoint IA heredado no auditado permanece retirado;
+- modelo, prompt, costo y fuentes se muestran cuando existen en metadata canónica; si faltan, se presenta `—` en vez de inferirlos;
+- la disponibilidad del PDF se calcula desde el artefacto real y no desde una etiqueta.
+
+## 9. Pendientes externos
 
 ### Requieren validación autenticada/UAT
 
-- Recorrido visual completo de los perfiles finales.
-- Responsive real en móvil, tableta y escritorio.
-- Navegación completa por teclado y lector de pantalla.
-- Medición final de contraste.
-- Impresión y PDF sobre casos reales.
+- recorrido visual completo de los perfiles finales;
+- responsive real en móvil, tableta y escritorio;
+- navegación completa por teclado y lector de pantalla;
+- medición final de contraste;
+- impresión y PDF sobre casos reales.
 
-### Requieren definición o fuente de negocio
+### Requieren definición o fuente del Cliente
 
-- Regla oficial de ranking.
-- Umbrales oficiales de alertas y escalamiento.
-- Fuente/definición separada para captaciones brutas.
-- Metas o fórmulas no presentes en fuentes canónicas.
-- Calendario y destinatarios finales de reportes.
-- Fuente adicional de ventas recientes.
+- regla oficial de ranking;
+- umbrales oficiales de alertas y escalamiento;
+- fuente/definición separada para captaciones brutas;
+- metas o fórmulas no presentes en fuentes canónicas;
+- calendario y destinatarios finales de reportes;
+- fuente adicional de ventas recientes;
 - KML final si todavía no ha sido aceptado como fuente oficial.
 
-## 8. Criterio de cierre
+## 10. Criterio de cierre técnico
 
-La entrega técnica puede considerarse cerrada cuando `main` compile, el deployment productivo esté `READY`, no existan errores críticos de runtime y las regresiones reproducibles pasen.
+La parte bajo control de N3uralia puede considerarse lista cuando simultáneamente:
 
-La aceptación definitiva requiere completar UAT, validación sobre datos reales y las definiciones/fuentes externas indicadas arriba. Las dependencias del Cliente deben mantenerse separadas de los defectos técnicos y no deben resolverse mediante datos ficticios o reglas inferidas.
+1. `pnpm qa:technical` termina sin errores;
+2. el último commit de `main` tiene deployment productivo `READY`;
+3. no existen errores críticos de runtime asociados al release;
+4. las verificaciones de seguridad/RLS continúan vigentes;
+5. los tres pilares mantienen sus flujos técnicos disponibles sin mocks;
+6. todas las dependencias externas están identificadas como tales y no convertidas en datos inventados.
+
+La aceptación contractual definitiva requiere UAT, validación sobre datos reales y las definiciones/fuentes externas indicadas arriba.
