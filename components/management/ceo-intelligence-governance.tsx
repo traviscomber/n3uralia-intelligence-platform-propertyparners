@@ -12,13 +12,23 @@ export async function CeoIntelligenceGovernance() {
 
   const approvedMetricCount = error ? null : count ?? 0
   const hasApprovedLiveMetrics = approvedMetricCount != null && approvedMetricCount > 0
+  const metricLayerStatus = error
+    ? 'Verificación no disponible'
+    : hasApprovedLiveMetrics
+      ? 'Capa aprobada disponible'
+      : 'Pendiente aprobación/carga'
+  const metricLayerTone = error
+    ? 'text-[var(--destructive)]'
+    : hasApprovedLiveMetrics
+      ? 'text-[var(--chart-3)]'
+      : 'text-[var(--chart-4)]'
 
   return (
     <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5" aria-labelledby="ceo-intelligence-governance-title">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
-            <ShieldCheck size={14} />
+            <ShieldCheck size={14} aria-hidden="true" />
             Gobernanza de inteligencia
           </div>
           <h2 id="ceo-intelligence-governance-title" className="mt-2 text-lg font-semibold text-[var(--n3-text-light)]">
@@ -38,16 +48,16 @@ export async function CeoIntelligenceGovernance() {
           <div className="bg-[var(--n3-black)] p-3">
             <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Métricas vivas aprobadas</p>
             <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{approvedMetricCount == null ? 'No verificable' : approvedMetricCount}</p>
-            <p className={`mt-1 text-xs ${hasApprovedLiveMetrics ? 'text-[var(--chart-3)]' : 'text-[var(--chart-4)]'}`}>
-              {hasApprovedLiveMetrics ? 'Capa aprobada disponible' : 'Pendiente aprobación/carga'}
+            <p className={`mt-1 text-xs ${metricLayerTone}`}>
+              {metricLayerStatus}
             </p>
           </div>
         </div>
       </div>
 
       {!hasApprovedLiveMetrics ? (
-        <div className="mt-4 flex items-start gap-3 border-t border-[var(--n3-line)] pt-4 text-sm text-[var(--n3-text-muted)]">
-          {error ? <AlertTriangle className="mt-0.5 shrink-0 text-[var(--destructive)]" size={16} /> : <Database className="mt-0.5 shrink-0 text-[var(--chart-4)]" size={16} />}
+        <div className="mt-4 flex items-start gap-3 border-t border-[var(--n3-line)] pt-4 text-sm text-[var(--n3-text-muted)]" role={error ? 'alert' : 'status'}>
+          {error ? <AlertTriangle className="mt-0.5 shrink-0 text-[var(--destructive)]" size={16} aria-hidden="true" /> : <Database className="mt-0.5 shrink-0 text-[var(--chart-4)]" size={16} aria-hidden="true" />}
           <p>
             {error
               ? 'No fue posible verificar la capa de métricas aprobadas. Las decisiones deben tratarse como apoyo y no como evidencia aprobada.'
