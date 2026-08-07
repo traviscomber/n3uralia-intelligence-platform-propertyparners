@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
   isSourceDatasetCompatible,
@@ -64,6 +65,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const auth = await access()
   if ('response' in auth) return auth.response
+  const admin = createAdminClient()
   const body = await request.json().catch(() => null)
   const sourceSystem = body?.sourceSystem as SourceSystem
   const datasetKind = body?.datasetKind as DatasetKind
@@ -79,7 +81,7 @@ export async function POST(request: Request) {
   const sourceSha256 = clean(body.sourceSha256) || digest(rows)
   const sourceCode = `${sourceSystem}-${sourceSha256.slice(0, 16)}`
   const sourceType = sourceSystem === 'portal_inmobiliario' ? 'portal' : sourceSystem === 'cbrs' ? 'cbrs' : sourceSystem === 'client' ? 'client' : sourceSystem === 'kml' ? 'kml' : 'other'
-  const { data: source, error: sourceError } = await auth.supabase.from('market_sources').upsert({
+  const { data: source, error: sourceError } = await admin.from('market_sources').upsert({
     code: sourceCode, name: clean(body.sourceName) || sourceFile, source_type: sourceType, file_name: sourceFile,
     file_hash: sourceSha256, imported_at: new Date().toISOString(), row_count: rows.length, status: 'active',
     metadata: { authorizationConfirmed: true, datasetKind, importedBy: auth.user.id },
@@ -89,7 +91,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No pudimos registrar la fuente de importación.' }, { status: 500 })
   }
 
-  const { data: run, error: runError } = await auth.supabase.from('market_ingestion_runs').insert({
+  const { data: run, error: runError } = await admin.from('market_ingestion_runs').insert({
     source_system: sourceSystem, dataset_kind: datasetKind, source_file: sourceFile, source_sha256: sourceSha256,
     expected_rows: rows.length, received_rows: rows.length, accepted_rows: 0, rejected_rows: 0, status: 'running',
     metadata: { sourceId: source.id, authorizationConfirmed: true, importedBy: auth.user.id },
@@ -109,7 +111,7 @@ export async function POST(request: Request) {
     const sourceRecordId = clean(row.source_record_id || row.listing_id || row.event_key || row.id) || null
     const observedAt = clean(row.observed_at || row.transaction_date || row.fecha) || new Date().toISOString()
     const recordHash = digest(row)
-    const { data: raw, error: rawError } = await auth.supabase.from('market_raw_records').upsert({
+    const { data: raw, error: rawError } = await admin.from('market_raw_records').upsert({
       ingestion_run_id: run.id, source_system: sourceSystem, dataset_kind: datasetKind, source_record_id: sourceRecordId,
       source_file: sourceFile, source_row_number: index + 1, record_hash: recordHash, payload: row, observed_at: observedAt,
       validation_status: errors.length ? 'rejected' : 'accepted', validation_errors: errors,
@@ -123,7 +125,7 @@ export async function POST(request: Request) {
 
     try {
       if (datasetKind === 'kml_neighborhoods') {
-        const { error } = await auth.supabase.from('market_neighborhoods').upsert({
+        const { error } = await admin.from('market_neighborhoods').upsert({
           name: clean(row.name || row.neighborhood || row.barrio), micro_neighborhood: clean(row.micro_neighborhood || row.microbarrio) || null,
           geometry: row.geometry, geometry_source_id: source.id, assignment_status: 'exact', updated_at: new Date().toISOString(),
         }, { onConflict: 'name' })
@@ -138,10 +140,10 @@ export async function POST(request: Request) {
       const type = propertyType(datasetKind, row.property_type || row.tipo)
       let neighborhoodId: string | null = null
       if (neighborhoodName) {
-        const { data } = await auth.supabase.from('market_neighborhoods').select('id').eq('name', neighborhoodName).maybeSingle()
+        const { data } = await admin.from('market_neighborhoods').select('id').eq('name', neighborhoodName).maybeSingle()
         neighborhoodId = data?.id ?? null
       }
-      const { data: property, error: propertyError } = await auth.supabase.from('market_properties').upsert({
+      const { data: property, error: propertyError } = await admin.from('market_properties').upsert({
         canonical_key: key, property_type: type, normalized_address: normalizedAddress,
         street_name: clean(row.street_name || row.calle) || null, street_number: clean(row.street_number || row.numero_calle) || null,
         unit_number: clean(row.unit_number || row.unidad) || null, rol: clean(row.rol) || null,
@@ -155,7 +157,7 @@ export async function POST(request: Request) {
       if (propertyError) throw propertyError
 
       const canonicalType = type === 'Casa' ? 'house' : type === 'Departamento' ? 'apartment' : type === 'Proyecto' ? 'project' : 'other'
-      const { error: canonicalError } = await auth.supabase.from('market_properties_canonical').upsert({
+      const { error: canonicalError } = await admin.from('market_properties_canonical').upsert({
         canonical_key: key, source_system: sourceSystem, source_record_id: sourceRecordId, latest_raw_record_id: raw.id,
         operation: datasetKind.startsWith('portal_') ? 'sale' : 'unknown', property_type: canonicalType,
         commune: clean(row.commune || row.comuna) || null, neighborhood: neighborhoodName || null, address: normalizedAddress,
@@ -171,7 +173,7 @@ export async function POST(request: Request) {
       if (datasetKind.startsWith('portal_')) {
         const priceUf = numeric(row.price_uf || row.precio_uf)
         const area = numeric(row.useful_area_m2 || row.superficie_util || row.built_area_m2)
-        const { error } = await auth.supabase.from('market_listings').upsert({
+        const { error } = await admin.from('market_listings').upsert({
           source_id: source.id, source_listing_id: sourceRecordId!, property_id: property.id, operation: 'Venta',
           status: clean(row.status) || 'active', url: clean(row.url) || null, title: clean(row.title || row.titulo) || null,
           raw_address: clean(row.raw_address || row.address || row.direccion) || null, normalized_address: normalizedAddress,
@@ -184,7 +186,7 @@ export async function POST(request: Request) {
         const eventKey = clean(row.event_key || row.source_record_id || row.id)
         const priceUf = numeric(row.price_uf || row.precio_uf)
         const area = numeric(row.useful_area_m2 || row.superficie_util || row.built_area_m2)
-        const { error } = await auth.supabase.from('market_transactions').upsert({
+        const { error } = await admin.from('market_transactions').upsert({
           source_id: source.id, event_key: eventKey, asset_key: key, property_id: property.id, rol: clean(row.rol) || null,
           transaction_date: clean(row.transaction_date || row.fecha) || null, price_clp: numeric(row.price_clp || row.precio_clp),
           price_uf: priceUf, price_uf_m2: priceUf && area ? priceUf / area : null, description: clean(row.description || row.descripcion) || null,
@@ -200,7 +202,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const { error: completionError } = await auth.supabase.from('market_ingestion_runs').update({
+  const { error: completionError } = await admin.from('market_ingestion_runs').update({
     accepted_rows: accepted, rejected_rows: rejected, status: accepted ? 'completed' : 'rejected', completed_at: new Date().toISOString(),
     error_message: rejected ? `${rejected} filas rechazadas` : null,
     metadata: { sourceId: source.id, authorizationConfirmed: true, importedBy: auth.user.id, sampleErrors: sampleErrors.slice(0, 100) },
