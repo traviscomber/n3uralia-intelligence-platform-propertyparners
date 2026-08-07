@@ -21,11 +21,23 @@ export default function MfaPage() {
   useEffect(() => {
     async function load() {
       const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-      if (assurance.data.currentLevel === 'aal2') {
+      if (assurance.error) {
+        setMessage('No fue posible verificar el nivel de seguridad de la sesión.')
+        setBusy(false)
+        return
+      }
+      if (assurance.data?.currentLevel === 'aal2') {
         router.replace(nextPath)
         return
       }
+
       const factors = await supabase.auth.mfa.listFactors()
+      if (factors.error) {
+        setMessage('No fue posible consultar los factores de autenticación.')
+        setBusy(false)
+        return
+      }
+
       const existing = factors.data?.totp?.find((item) => item.status === 'verified') || factors.data?.totp?.[0]
       setFactor(existing ? { id: existing.id, status: existing.status, friendly_name: existing.friendly_name } : null)
       setBusy(false)
