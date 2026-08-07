@@ -1,10 +1,22 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import dependencyStatus from '@/config/client-dependencies-status.json'
 
 const LEADER_ROLES = new Set(['admin', 'ceo', 'director', 'subdirector'])
 const SCHEDULER_ROLES = new Set(['admin', 'ceo'])
 const CADENCES = new Set(['monthly'])
 const REPORT_TYPES = new Set(['management', 'executive', 'director'])
+const APPROVED_DEPENDENCY_STATUSES = new Set(['received', 'approved', 'waived'])
+
+function reportingApproval() {
+  const dependency = dependencyStatus.dependencies.find((item) => item.id === 'reporting-approval')
+  const status = dependency?.status ?? 'pending'
+  return {
+    status,
+    ready: APPROVED_DEPENDENCY_STATUSES.has(status),
+    label: dependency?.label ?? 'Calendario, destinatarios y reglas de reportes',
+  }
+}
 
 async function context() {
   const supabase = await createClient()
@@ -38,7 +50,7 @@ export async function GET() {
     return NextResponse.json({ error: 'No fue posible cargar la programación de reportes.' }, { status: 500 })
   }
 
-  return NextResponse.json({ schedules: schedules ?? [], entities: entities ?? [] })
+  return NextResponse.json({ schedules: schedules ?? [], entities: entities ?? [], reportingApproval: reportingApproval() })
 }
 
 export async function POST(request: Request) {
@@ -46,6 +58,15 @@ export async function POST(request: Request) {
   if ('error' in ctx) return ctx.error
   if (!SCHEDULER_ROLES.has(ctx.role)) {
     return NextResponse.json({ error: 'Solo administración y CEO pueden programar reportes.' }, { status: 403 })
+  }
+
+  const approval = reportingApproval()
+  if (!approval.ready) {
+    return NextResponse.json({
+      error: 'La programación está bloqueada hasta contar con calendario, destinatarios y reglas de reporting aprobados por el Cliente.',
+      dependency: 'reporting-approval',
+      status: approval.status,
+    }, { status: 409 })
   }
 
   const body = await request.json().catch(() => null)
