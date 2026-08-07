@@ -72,22 +72,39 @@ export async function getRecipientsForSchedule(scheduleId: string) {
 
 export async function createDocumentDistributions(
   scheduleId: string,
+  scheduledFor: string,
   recipients: Array<{ email: string; role: string }>,
 ) {
   if (!recipients.length) return []
-  const distributions = recipients.map((recipient) => ({
-    schedule_id: scheduleId,
-    recipient_email: recipient.email.trim().toLowerCase(),
-    recipient_role: recipient.role,
-    status: 'pending' as DocumentDistributionStatus,
-    attempt_count: 0,
-  }))
-  const { data, error } = await getSupabase()
-    .from('document_distributions')
-    .insert(distributions as any[])
-    .select()
-  if (error) throw error
-  return data ?? []
+
+  const client = getSupabase()
+  const nextAttemptAt = new Date().toISOString()
+  const created: any[] = []
+
+  for (const recipient of recipients) {
+    const { data, error } = await client
+      .from('document_distributions')
+      .insert({
+        schedule_id: scheduleId,
+        recipient_email: recipient.email.trim().toLowerCase(),
+        recipient_role: recipient.role,
+        status: 'pending' as DocumentDistributionStatus,
+        attempt_count: 0,
+        next_attempt_at: nextAttemptAt,
+        scheduled_for: scheduledFor,
+      } as any)
+      .select()
+      .single()
+
+    if (error) {
+      if ((error as any).code === '23505') continue
+      throw error
+    }
+
+    if (data) created.push(data)
+  }
+
+  return created
 }
 
 export async function claimDocumentDistribution(
