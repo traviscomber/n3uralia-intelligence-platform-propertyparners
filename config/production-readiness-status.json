@@ -1,19 +1,25 @@
 {
   "schemaVersion": 1,
   "status": "in-review",
-  "commit": null,
-  "deployment": null,
+  "commit": "72c4eb238bb582a5b4c29b0a2cd304e62094a42f",
+  "deployment": "https://ppartnersgroup.app",
   "checks": {
-    "build": "pending",
-    "securityBoundaries": "pending",
-    "tenantIsolation": "pending",
+    "build": "passed",
+    "securityBoundaries": "passed",
+    "tenantIsolation": "passed",
     "runtimeConfiguration": "pending",
-    "rollback": "pending",
-    "monitoring": "pending",
+    "rollback": "passed",
+    "monitoring": "passed",
     "backupRecovery": "pending",
-    "criticalRoutes": "pending"
+    "criticalRoutes": "passed"
   },
   "criticalFindings": [],
   "highFindings": [],
-  "evidence": []
+  "evidence": [
+    "Vercel production deployment for commit 72c4eb238bb582a5b4c29b0a2cd304e62094a42f completed successfully on 2026-08-07",
+    "Prebuild passed IP boundaries, credential boundaries, exposure boundaries, tenant isolation and dashboard trust-boundary checks",
+    "Production protected property-intelligence endpoint returned HTTP 401 without internal error disclosure and with no-store/security headers on 2026-08-07",
+    "Vercel runtime error inspection returned no production runtime errors in the verified 24h window on 2026-08-07",
+    "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"
+  ]
 }
