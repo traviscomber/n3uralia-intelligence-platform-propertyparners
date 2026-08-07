@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-08-02",
+  "asOf": "2026-08-07",
   "allowedStatuses": ["pending", "passed", "failed", "blocked-client-input", "accepted-with-observation"],
   "cases": [
     {"id":"UAT-01","area":"access-and-permissions","status":"pending","evidence":[],"owner":"Shared","blocking":true},
     {"id":"UAT-02","area":"ceo-dashboard","status":"pending","evidence":[],"owner":"Shared","blocking":true},
     {"id":"UAT-03","area":"crm-commercial","status":"pending","evidence":[],"owner":"Shared","blocking":true},
-    {"id":"UAT-04","area":"market-intelligence","status":"blocked-client-input","evidence":[],"owner":"Client","blocking":false},
+    {"id":"UAT-04","area":"market-intelligence","status":"blocked-client-input","evidence":["config/client-dependencies-status.json#market-cbr-sales","config/client-dependencies-status.json#market-kml"],"owner":"Client","blocking":false},
     {"id":"UAT-05","area":"valuation","status":"pending","evidence":[],"owner":"Shared","blocking":true},
     {"id":"UAT-06","area":"monthly-reporting","status":"pending","evidence":[],"owner":"Shared","blocking":true},
-    {"id":"UAT-07","area":"functional-security","status":"pending","evidence":[],"owner":"N3uralia","blocking":true},
-    {"id":"UAT-08","area":"operational-continuity","status":"pending","evidence":[],"owner":"N3uralia","blocking":true}
+    {"id":"UAT-07","area":"functional-security","status":"passed","evidence":["Vercel production unauthenticated property-intelligence request returned HTTP 401 without stack trace or raw database error on 2026-08-07","Production response included Cache-Control: no-store, X-Frame-Options: DENY, X-Content-Type-Options: nosniff and restrictive Permissions-Policy on 2026-08-07","Prebuild security checks passed: IP boundaries, credential boundaries, exposure boundaries, tenant isolation and dashboard trust boundaries"],"owner":"N3uralia","blocking":true},
+    {"id":"UAT-08","area":"operational-continuity","status":"passed","evidence":["Production deployment 3dd9e8f14344f1f8554bc33461265168c48730e8 reached READY on Vercel","No production runtime errors found in the preceding 24h during verification on 2026-08-07","docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"],"owner":"N3uralia","blocking":true}
   ]
 }
