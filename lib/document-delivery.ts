@@ -111,28 +111,18 @@ export async function claimDocumentDistribution(
   distributionId: string,
 ): Promise<{ schedule_id: string; recipient_email: string } | null> {
   const client = getSupabase()
-  const { data, error } = await client
-    .from('document_distributions')
-    .select('schedule_id,recipient_email,attempt_count')
-    .eq('id', distributionId)
-    .eq('status', 'pending')
-    .maybeSingle()
-  if (error || !data) return null
+  const { data, error } = await client.rpc('claim_document_distribution', {
+    p_distribution_id: distributionId,
+  } as any)
 
-  const { error: updateError } = await client
-    .from('document_distributions')
-    .update({
-      status: 'claimed',
-      attempt_count: Number((data as any).attempt_count ?? 0) + 1,
-      last_attempted_at: new Date().toISOString(),
-    } as any)
-    .eq('id', distributionId)
-    .eq('status', 'pending')
-  if (updateError) throw updateError
+  if (error) throw error
+
+  const claimed = Array.isArray(data) ? data[0] : null
+  if (!claimed) return null
 
   return {
-    schedule_id: String((data as any).schedule_id),
-    recipient_email: String((data as any).recipient_email),
+    schedule_id: String((claimed as any).schedule_id),
+    recipient_email: String((claimed as any).recipient_email),
   }
 }
 
