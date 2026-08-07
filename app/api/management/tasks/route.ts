@@ -6,6 +6,11 @@ const allowedStatuses = new Set(['open', 'in_progress', 'done', 'dismissed'])
 const allowedPriorities = new Set(['low', 'medium', 'high', 'urgent'])
 const taskCapabilities = ['tasks.global.manage', 'tasks.office.manage', 'tasks.self.manage'] as const
 
+function valuationIdFromSourceKey(sourceKey: string | null) {
+  const match = String(sourceKey ?? '').match(/^valuation:([^:]+):/)
+  return match?.[1] ?? null
+}
+
 export async function GET(request: NextRequest) {
   try {
     const scope = await requireAnyCapability(taskCapabilities)
@@ -29,13 +34,15 @@ export async function GET(request: NextRequest) {
 
     const ids = (tasks ?? []).map((task) => task.id)
     const profileIds = Array.from(new Set((tasks ?? []).flatMap((task) => [task.assigned_to, task.subject_profile_id, task.created_by]).filter(Boolean))) as string[]
-    const [commentsResult, eventsResult, profilesResult] = await Promise.all([
+    const valuationIds = Array.from(new Set((tasks ?? []).map((task) => valuationIdFromSourceKey(task.source_key)).filter(Boolean))) as string[]
+    const [commentsResult, eventsResult, profilesResult, valuationsResult] = await Promise.all([
       ids.length ? supabase.from('management_task_comments').select('id,task_id,author_id,body,created_at').in('task_id', ids).order('created_at', { ascending: true }) : Promise.resolve({ data: [], error: null }),
       ids.length ? supabase.from('management_task_events').select('id,task_id,actor_id,event_type,from_status,to_status,changes,created_at').in('task_id', ids).order('created_at', { ascending: true }) : Promise.resolve({ data: [], error: null }),
       profileIds.length ? supabase.from('profiles').select('id,full_name,team,role').in('id', profileIds) : Promise.resolve({ data: [], error: null }),
+      valuationIds.length ? supabase.from('valuation_cases').select('id,address').in('id', valuationIds) : Promise.resolve({ data: [], error: null }),
     ])
 
-    const relatedFailure = [commentsResult, eventsResult, profilesResult].find((result) => result.error)
+    const relatedFailure = [commentsResult, eventsResult, profilesResult, valuationsResult].find((result) => result.error)
     if (relatedFailure?.error) {
       console.error('[management-tasks] related data lookup failed', { code: relatedFailure.error.code })
       return NextResponse.json({ error: 'No fue posible completar la información de las tareas.' }, { status: 500 })
@@ -44,16 +51,23 @@ export async function GET(request: NextRequest) {
     const comments = commentsResult.data ?? []
     const events = eventsResult.data ?? []
     const profiles = profilesResult.data ?? []
+    const valuations = valuationsResult.data ?? []
     const profileMap = Object.fromEntries(profiles.map((profile) => [profile.id, profile]))
+    const valuationMap = Object.fromEntries(valuations.map((valuation) => [valuation.id, valuation]))
 
-    return NextResponse.json({ tasks: (tasks ?? []).map((task) => ({
-      ...task,
-      assignedProfile: task.assigned_to ? profileMap[task.assigned_to] ?? null : null,
-      subjectProfile: task.subject_profile_id ? profileMap[task.subject_profile_id] ?? null : null,
-      createdByProfile: task.created_by ? profileMap[task.created_by] ?? null : null,
-      comments: comments.filter((comment) => comment.task_id === task.id).map((comment) => ({ ...comment, authorProfile: profileMap[comment.author_id] ?? null })),
-      events: events.filter((event) => event.task_id === task.id).map((event) => ({ ...event, actorProfile: event.actor_id ? profileMap[event.actor_id] ?? null : null })),
-    })) }, { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json({ tasks: (tasks ?? []).map((task) => {
+      const valuationId = valuationIdFromSourceKey(task.source_key)
+      const valuation = valuationId ? valuationMap[valuationId] ?? null : null
+      return {
+        ...task,
+        assignedProfile: task.assigned_to ? profileMap[task.assigned_to] ?? null : null,
+        subjectProfile: task.subject_profile_id ? profileMap[task.subject_profile_id] ?? null : null,
+        createdByProfile: task.created_by ? profileMap[task.created_by] ?? null : null,
+        sourceContext: valuationId ? { kind: 'valuation', valuationId, address: valuation?.address ?? null } : null,
+        comments: comments.filter((comment) => comment.task_id === task.id).map((comment) => ({ ...comment, authorProfile: profileMap[comment.author_id] ?? null })),
+        events: events.filter((event) => event.task_id === task.id).map((event) => ({ ...event, actorProfile: event.actor_id ? profileMap[event.actor_id] ?? null : null })),
+      }
+    }) }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     return accessErrorResponse(error)
   }
