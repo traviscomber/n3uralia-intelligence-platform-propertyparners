@@ -21,6 +21,7 @@ export const dynamic = 'force-dynamic'
 type ImportMode = 'preview' | 'import'
 type ImportKind = 'market_data' | 'benchmark_data' | 'portal_listings' | 'cbrs_transactions'
 type SourceSystem = 'portal_inmobiliario' | 'cbrs' | 'client' | 'kml' | 'manual_import'
+type PipelineResult = Record<string, unknown> & { failed?: boolean; error?: string; run_id?: string }
 
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -35,6 +36,15 @@ function logImportFailure(error: unknown) {
   console.error('MARKET_IMPORT_FAILED', {
     code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
   })
+}
+
+function persistedPipelineFailure(result: PipelineResult | null) {
+  if (!result?.failed) return null
+  return NextResponse.json({
+    error: result.error || 'La ingestión falló y quedó registrada para revisión.',
+    runId: result.run_id || null,
+    persisted: true,
+  }, { status: 500 })
 }
 
 function parseMode(value: string | null): ImportMode {
@@ -172,6 +182,8 @@ export async function POST(req: NextRequest) {
         p_full_snapshot: fullSnapshot,
       })
       if (pipelineError) throw pipelineError
+      const persistedFailure = persistedPipelineFailure(pipelineResult as PipelineResult | null)
+      if (persistedFailure) return persistedFailure
 
       return NextResponse.json({
         kind,
@@ -218,6 +230,8 @@ export async function POST(req: NextRequest) {
         p_rows: normalized,
       })
       if (pipelineError) throw pipelineError
+      const persistedFailure = persistedPipelineFailure(pipelineResult as PipelineResult | null)
+      if (persistedFailure) return persistedFailure
 
       return NextResponse.json({
         kind,
@@ -294,6 +308,8 @@ export async function POST(req: NextRequest) {
       p_rows: normalized,
     })
     if (pipelineError) throw pipelineError
+    const persistedFailure = persistedPipelineFailure(pipelineResult as PipelineResult | null)
+    if (persistedFailure) return persistedFailure
 
     return NextResponse.json({
       kind,
