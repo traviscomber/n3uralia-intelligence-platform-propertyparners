@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu } from 'lucide-react'
+import { ChevronDown, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { PPLogo } from '@/components/brand/pp-logo'
 import { getRoleLabel, hasCapability } from '@/lib/access-control'
@@ -30,6 +30,37 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const navigationSections = visibleSections(profile)
 
+  function isActive(href: string, exact?: boolean) {
+    return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  function sectionItems(section: NavigationSection) {
+    return (
+      <ul className="flex flex-col gap-0.5">
+        {section.items.map((item) => {
+          const active = isActive(item.href, item.exact)
+          return (
+            <li key={`${item.label}-${item.href}`}>
+              <Link
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className="flex min-h-10 items-center gap-2.5 border-l-2 px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                style={{
+                  color: active ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
+                  background: active ? 'rgba(255,255,255,0.035)' : 'transparent',
+                  borderLeftColor: active ? 'var(--primary)' : 'transparent',
+                }}
+              >
+                <span aria-hidden="true" className="h-2 w-2 border border-current" />
+                <span className="truncate text-[13px]">{item.label}</span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
+
   const navigation = (
     <>
       <div className="border-b border-[var(--n3-line)] px-5 py-5">
@@ -37,37 +68,33 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
         <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Intelligence Platform</p>
       </div>
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
-        {navigationSections.map((section) => (
-          <div key={section.label} className="mb-5">
-            <div className="mb-1.5 flex items-center gap-2 px-3">
-              <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">{section.label}</span>
-              <div className="h-px flex-1 bg-[var(--n3-line)]" />
+        {navigationSections.map((section, index) => {
+          const sectionActive = section.items.some((item) => isActive(item.href, item.exact))
+          const collapsible = profile?.role === 'ceo' && index > 0
+
+          if (collapsible) {
+            return (
+              <details key={section.label} className="group mb-5" open={sectionActive || undefined}>
+                <summary className="mb-1.5 flex min-h-9 cursor-pointer list-none items-center gap-2 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
+                  <span>{section.label}</span>
+                  <div className="h-px flex-1 bg-[var(--n3-line)]" />
+                  <ChevronDown aria-hidden="true" size={13} className="transition-transform group-open:rotate-180" />
+                </summary>
+                {sectionItems(section)}
+              </details>
+            )
+          }
+
+          return (
+            <div key={section.label} className="mb-5">
+              <div className="mb-1.5 flex items-center gap-2 px-3">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">{section.label}</span>
+                <div className="h-px flex-1 bg-[var(--n3-line)]" />
+              </div>
+              {sectionItems(section)}
             </div>
-            <ul className="flex flex-col gap-0.5">
-              {section.items.map((item) => {
-                const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`)
-                return (
-                  <li key={`${item.label}-${item.href}`}>
-                    <Link
-                      href={item.href}
-                      onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')}
-                      aria-current={active ? 'page' : undefined}
-                      className="flex min-h-10 items-center gap-2.5 border-l-2 px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
-                      style={{
-                        color: active ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
-                        background: active ? 'rgba(255,255,255,0.035)' : 'transparent',
-                        borderLeftColor: active ? 'var(--primary)' : 'transparent',
-                      }}
-                    >
-                      <span aria-hidden="true" className="h-2 w-2 border border-current" />
-                      <span className="truncate text-[13px]">{item.label}</span>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        ))}
+          )
+        })}
       </nav>
       <div className="border-t border-[var(--n3-line)] px-4 py-4">
         {profile ? (
