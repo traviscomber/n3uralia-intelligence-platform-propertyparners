@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { FormEvent, KeyboardEvent, useMemo, useState } from 'react'
-import { ArrowRight, CircleAlert, Database, History, ListChecks, Scale, Send, ShieldCheck, Sparkles, Target } from 'lucide-react'
+import { ArrowRight, CheckCircle2, CircleAlert, Database, History, ListChecks, Scale, Send, ShieldCheck, Sparkles, Target } from 'lucide-react'
 
 type Evidence = {
   label: string
@@ -56,9 +56,38 @@ type AssistantResponse = {
   generatedAt: string
   proposals: ActionProposal[]
   assistantProfile: AssistantProfile
+  availableConfirmedActions: Array<'create_task'>
   proposalPolicy: string
   executionPolicy: string
   executableWrites: number
+}
+
+type TaskDraft = {
+  sourceKey: string
+  title: string
+  detail: string
+  severity: 'info' | 'warning' | 'critical'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  dueDate: string | null
+}
+
+type ActionPreview = {
+  proposal: ActionProposal
+  taskDraft: TaskDraft
+  confirmationRequired: true
+  executable: true
+  executionStatus: 'preview'
+  writesPerformed: 0
+  gatewayPolicy: string
+}
+
+type ActionExecution = {
+  proposalId: string
+  executionStatus: 'executed'
+  writesPerformed: 1
+  task: { id?: string } | null
+  confirmedByHuman: true
+  executedAt: string
 }
 
 type HistoryItem = { query: string; response: AssistantResponse }
@@ -100,24 +129,36 @@ export function PedroPabloWorkspaceV2() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [actionPreview, setActionPreview] = useState<ActionPreview | null>(null)
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
   const evidence = useMemo(() => response?.evidence.slice(0, 8) ?? [], [response])
   const proposals = useMemo(() => response?.proposals.slice(0, 4) ?? [], [response])
+  const canCreateTask = response?.availableConfirmedActions.includes('create_task') ?? false
+
+  async function fetchDecisionSupport(query: string) {
+    const result = await fetch('/api/pedro-pablo/decision-support', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: query }),
+    })
+    const payload = await result.json()
+    if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Pedro Pablo.')
+    return payload as AssistantResponse
+  }
 
   async function ask(value: string) {
     const query = value.trim()
     if (!query || loading) return
     setLoading(true)
     setError(null)
+    setActionPreview(null)
+    setActionError(null)
+    setActionSuccess(null)
     try {
-      const result = await fetch('/api/pedro-pablo/decision-support', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: query }),
-      })
-      const payload = await result.json()
-      if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Pedro Pablo.')
-      const next = payload as AssistantResponse
+      const next = await fetchDecisionSupport(query)
       if (response && lastQuery) setHistory((current) => [...current.slice(-3), { query: lastQuery, response }])
       setResponse(next)
       setLastQuery(query)
@@ -126,6 +167,56 @@ export function PedroPabloWorkspaceV2() {
       setError(cause instanceof Error ? cause.message : 'No fue posible consultar Pedro Pablo.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function previewAction(proposal: ActionProposal) {
+    if (!lastQuery || actionBusyId) return
+    setActionBusyId(proposal.id)
+    setActionError(null)
+    setActionSuccess(null)
+    try {
+      const result = await fetch('/api/pedro-pablo/action-gateway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: lastQuery, proposalId: proposal.id, mode: 'preview' }),
+      })
+      const payload = await result.json()
+      if (!result.ok) throw new Error(payload.error || 'No fue posible preparar la acción.')
+      setActionPreview(payload as ActionPreview)
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : 'No fue posible preparar la acción.')
+    } finally {
+      setActionBusyId(null)
+    }
+  }
+
+  async function executeAction() {
+    if (!lastQuery || !actionPreview || actionBusyId) return
+    const proposalId = actionPreview.proposal.id
+    setActionBusyId(proposalId)
+    setActionError(null)
+    setActionSuccess(null)
+    try {
+      const result = await fetch('/api/pedro-pablo/action-gateway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: lastQuery, proposalId, mode: 'execute', confirm: true }),
+      })
+      const payload = await result.json()
+      if (!result.ok) throw new Error(payload.error || 'No fue posible ejecutar la acción confirmada.')
+      const execution = payload as ActionExecution
+      setActionSuccess(execution.task?.id ? `Tarea creada y registrada · ${execution.task.id}` : 'Tarea creada y registrada.')
+      setActionPreview(null)
+      try {
+        setResponse(await fetchDecisionSupport(lastQuery))
+      } catch {
+        // La escritura ya fue confirmada y registrada. Mantener el resultado visible aunque falle el refresh de lectura.
+      }
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : 'No fue posible ejecutar la acción confirmada.')
+    } finally {
+      setActionBusyId(null)
     }
   }
 
@@ -179,7 +270,7 @@ export function PedroPabloWorkspaceV2() {
 
             {proposals.length ? <section className="mt-7 border-t border-[var(--n3-line)] pt-5" aria-labelledby="pedro-pablo-proposals-title">
               <div className="flex items-center gap-2"><Target aria-hidden="true" size={15} className="text-[var(--n3-teal-soft)]" /><h3 id="pedro-pablo-proposals-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Siguientes acciones verificables</h3></div>
-              <p className="mt-2 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">Cada acción deriva de evidencia visible. No representa una opinión del asistente y no se considera ejecutada hasta completar la validación correspondiente.</p>
+              <p className="mt-2 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">Cada acción deriva de evidencia visible. Sólo los roles autorizados pueden preparar una tarea y toda escritura exige preview y confirmación explícita.</p>
               <div className="mt-4 grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] md:grid-cols-2">
                 {proposals.map((proposal, index) => <div key={proposal.id} className="bg-[var(--n3-black)] p-4">
                   <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.14em]"><span className="text-[var(--n3-text-muted)]">Acción {index + 1} · {proposal.domain}</span><span className={priorityClass(proposal.priority)}>{priorityLabel(proposal.priority)}</span></div>
@@ -187,9 +278,31 @@ export function PedroPabloWorkspaceV2() {
                   <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Objeto: {proposal.objectLabel}</div>
                   <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{proposal.reason}</p>
                   <div className="mt-3 text-[10px] uppercase tracking-[0.12em] text-[var(--chart-4)]">Requiere confirmación humana · no ejecutada</div>
-                  <Link href={proposal.href} className="mt-4 inline-flex min-h-9 items-center gap-2 border border-[var(--primary)] px-3 text-xs font-semibold text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">Revisar evidencia <ArrowRight aria-hidden="true" size={14} /></Link>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link href={proposal.href} className="inline-flex min-h-9 items-center gap-2 border border-[var(--primary)] px-3 text-xs font-semibold text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">Revisar evidencia <ArrowRight aria-hidden="true" size={14} /></Link>
+                    {canCreateTask ? <button type="button" onClick={() => void previewAction(proposal)} disabled={Boolean(actionBusyId)} className="min-h-9 border border-[var(--n3-line)] px-3 text-xs font-semibold text-[var(--n3-text-light)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{actionBusyId === proposal.id ? 'Preparando…' : 'Preparar tarea'}</button> : null}
+                  </div>
                 </div>)}
               </div>
+
+              {actionPreview ? <div className="mt-4 border border-[var(--primary)] bg-[var(--n3-black)] p-4" aria-live="polite">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">Preview de acción · sin escritura</div>
+                <div className="mt-3 text-sm font-semibold text-[var(--n3-text-light)]">Crear tarea: {actionPreview.taskDraft.title}</div>
+                <div className="mt-2 grid gap-1 text-xs leading-5 text-[var(--n3-text-muted)]">
+                  <div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {actionPreview.taskDraft.priority}</div>
+                  <div><span className="text-[var(--n3-text-light)]">Severidad:</span> {actionPreview.taskDraft.severity}</div>
+                  <div><span className="text-[var(--n3-text-light)]">Origen:</span> {actionPreview.taskDraft.sourceKey}</div>
+                  <div className="mt-1"><span className="text-[var(--n3-text-light)]">Detalle:</span> {actionPreview.taskDraft.detail}</div>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <button type="button" onClick={() => void executeAction()} disabled={Boolean(actionBusyId)} className="min-h-10 border border-[var(--primary)] px-4 text-xs font-semibold text-[var(--n3-text-light)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{actionBusyId === actionPreview.proposal.id ? 'Registrando…' : 'Confirmar y crear tarea'}</button>
+                  <button type="button" onClick={() => setActionPreview(null)} disabled={Boolean(actionBusyId)} className="min-h-10 px-3 text-xs text-[var(--n3-text-muted)] disabled:opacity-40">Cancelar</button>
+                  <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--chart-4)]">Esta confirmación realizará 1 escritura gobernada.</span>
+                </div>
+              </div> : null}
+
+              {actionError ? <div className="mt-4 flex items-start gap-2 border-l-2 border-[var(--destructive)] pl-3 text-xs leading-5 text-[var(--destructive)]" role="alert"><CircleAlert aria-hidden="true" size={15} className="mt-0.5 shrink-0" />{actionError}</div> : null}
+              {actionSuccess ? <div className="mt-4 flex items-start gap-2 border-l-2 border-[var(--chart-3)] pl-3 text-xs leading-5 text-[var(--n3-text-light)]" role="status"><CheckCircle2 aria-hidden="true" size={15} className="mt-0.5 shrink-0 text-[var(--chart-3)]" />{actionSuccess}</div> : null}
             </section> : null}
           </article> : null}
 
@@ -214,11 +327,11 @@ export function PedroPabloWorkspaceV2() {
           </div>
         </div> : null}
 
-        {history.length ? <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><History aria-hidden="true" size={14} /> Sesión actual</div><div className="mt-4 space-y-3">{history.slice().reverse().map((item, index) => <button key={`${item.query}-${index}`} type="button" onClick={() => { setResponse(item.response); setLastQuery(item.query) }} className="block w-full border-t border-[var(--n3-line)] pt-3 text-left first:border-t-0 first:pt-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"><div className="text-xs leading-5 text-[var(--n3-text-light)]">{item.query}</div><div className="mt-1 text-[10px] text-[var(--n3-text-muted)]">{item.response.title}</div></button>)}</div></div> : null}
+        {history.length ? <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><History aria-hidden="true" size={14} /> Sesión actual</div><div className="mt-4 space-y-3">{history.slice().reverse().map((item, index) => <button key={`${item.query}-${index}`} type="button" onClick={() => { setResponse(item.response); setLastQuery(item.query); setActionPreview(null); setActionError(null); setActionSuccess(null) }} className="block w-full border-t border-[var(--n3-line)] pt-3 text-left first:border-t-0 first:pt-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"><div className="text-xs leading-5 text-[var(--n3-text-light)]">{item.query}</div><div className="mt-1 text-[10px] text-[var(--n3-text-muted)]">{item.response.title}</div></button>)}</div></div> : null}
 
         <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Database aria-hidden="true" size={14} /> Evidencia</div>{response ? <div className="mt-4 space-y-4">{evidence.length ? evidence.map((item, index) => <div key={`${item.label}-${index}`} className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0"><div className="flex items-start justify-between gap-3"><div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div>{item.domain ? <span className="text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{item.domain}</span> : null}</div><div className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{item.source}</div>{item.reference ? <div className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{item.reference}</div> : null}{item.cutoff ? <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Corte {item.cutoff}</div> : null}</div>) : <div className="mt-4 text-sm text-[var(--n3-text-muted)]">Sin evidencia adicional disponible.</div>}</div> : <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La procedencia aparecerá junto a cada lectura evaluable.</p>}</div>
 
-        <div className="border border-[var(--n3-line)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Scale aria-hidden="true" size={14} /> Criterio del asistente</div><div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]"><div><span className="text-[var(--n3-text-light)]">Objetivo:</span> apoyar decisiones rápidas con evidencia autorizada.</div><div><span className="text-[var(--n3-text-light)]">Opiniones:</span> no emite opiniones personales ni juicios de valor.</div><div><span className="text-[var(--n3-text-light)]">Orden:</span> situación → prioridad → evidencia → siguiente acción → dato faltante.</div><div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se declaran; no se completan ni estiman.</div><div><span className="text-[var(--n3-text-light)]">Ámbito:</span> usuario autenticado + capabilities + RLS.</div><div><span className="text-[var(--n3-text-light)]">Ejecución:</span> toda acción consecuencial requiere validación humana.</div>{response ? <><div><span className="text-[var(--n3-text-light)]">Perfil:</span> {response.assistantProfile.id}</div><div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {response.decisionPolicy}</div></> : null}</div></div>
+        <div className="border border-[var(--n3-line)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Scale aria-hidden="true" size={14} /> Criterio del asistente</div><div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]"><div><span className="text-[var(--n3-text-light)]">Objetivo:</span> apoyar decisiones rápidas con evidencia autorizada.</div><div><span className="text-[var(--n3-text-light)]">Opiniones:</span> no emite opiniones personales ni juicios de valor.</div><div><span className="text-[var(--n3-text-light)]">Orden:</span> situación → prioridad → evidencia → siguiente acción → dato faltante.</div><div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se declaran; no se completan ni estiman.</div><div><span className="text-[var(--n3-text-light)]">Ámbito:</span> usuario autenticado + capabilities + RLS.</div><div><span className="text-[var(--n3-text-light)]">Ejecución:</span> {canCreateTask ? 'puede crear una tarea sólo mediante preview + confirmación humana.' : 'no hay escrituras disponibles para este rol.'}</div>{response ? <><div><span className="text-[var(--n3-text-light)]">Perfil:</span> {response.assistantProfile.id}</div><div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {response.decisionPolicy}</div></> : null}</div></div>
       </aside>
     </div>
   </section>
