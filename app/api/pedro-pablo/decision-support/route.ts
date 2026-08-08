@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 
 type Evidence = {
@@ -84,11 +85,19 @@ function proposalReason(response: BaseResponse, domain: ProposalDomain) {
   return 'La recomendación deriva de evidencia autorizada y de la política visible de priorización.'
 }
 
+function proposalId(response: BaseResponse, action: LegacyAction, domain: ProposalDomain) {
+  const digest = createHash('sha256')
+    .update(JSON.stringify({ title: response.title, action: action.label, href: action.href, domain, period: response.periodLabel }))
+    .digest('hex')
+    .slice(0, 16)
+  return `pp-${domain}-${digest}`
+}
+
 function buildProposals(response: BaseResponse): ActionProposal[] {
-  return response.actions.slice(0, 4).map((action, index) => {
+  return response.actions.slice(0, 4).map((action) => {
     const domain = inferDomain(action)
     return {
-      id: `pp-proposal-${index + 1}-${domain}`,
+      id: proposalId(response, action, domain),
       kind: inferKind(action, domain),
       domain,
       action: action.label,
@@ -136,7 +145,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     ...response,
     proposals,
-    proposalPolicy: 'pedro-pablo-proposal-contract-v1',
+    proposalPolicy: 'pedro-pablo-proposal-contract-v2-content-addressed',
     executionPolicy: 'human-confirmation-required',
     executableWrites: 0,
   }, { headers: { 'Cache-Control': 'no-store' } })
