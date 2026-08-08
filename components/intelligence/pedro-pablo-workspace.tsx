@@ -2,13 +2,20 @@
 
 import Link from 'next/link'
 import { FormEvent, useMemo, useState } from 'react'
-import { ArrowRight, CircleAlert, Database, Send, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowRight, CircleAlert, Database, ListChecks, Scale, Send, ShieldCheck, Sparkles } from 'lucide-react'
 
 type Evidence = {
   label: string
   source: string
   reference?: string | null
   cutoff?: string | null
+  domain?: 'management' | 'tasks' | 'valuations'
+}
+
+type Coverage = {
+  management: { available: boolean; entities: number; alerts: number }
+  tasks: { available: boolean; total: number; active: number; overdue: number }
+  valuations: { available: boolean; total: number; review: number; drafts: number; approved: number }
 }
 
 type AssistantResponse = {
@@ -19,6 +26,8 @@ type AssistantResponse = {
   confidence: 'high' | 'medium'
   evidence: Evidence[]
   actions: Array<{ label: string; href: string }>
+  coverage: Coverage
+  decisionPolicy: string
   mode: string
   writesPerformed: number
   generatedAt: string
@@ -26,9 +35,22 @@ type AssistantResponse = {
 
 const starters = [
   '¿Qué requiere mi atención hoy?',
-  '¿Cómo vamos en desempeño y cumplimiento?',
+  '¿Qué tareas están pendientes o vencidas?',
+  '¿Cómo están las valorizaciones?',
   '¿Dónde están las principales brechas?',
 ]
+
+function CoverageItem({ label, value, detail, unavailable = false }: { label: string; value: string; detail: string; unavailable?: boolean }) {
+  return (
+    <div className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-xs text-[var(--n3-text-muted)]">{label}</span>
+        <span className={unavailable ? 'text-xs text-[var(--n3-text-muted)]' : 'text-sm font-semibold text-[var(--n3-text-light)]'}>{value}</span>
+      </div>
+      <div className="mt-1 text-[10px] leading-4 text-[var(--n3-text-muted)]">{detail}</div>
+    </div>
+  )
+}
 
 export function PedroPabloWorkspace() {
   const [prompt, setPrompt] = useState('')
@@ -36,7 +58,7 @@ export function PedroPabloWorkspace() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const evidence = useMemo(() => response?.evidence.slice(0, 6) ?? [], [response])
+  const evidence = useMemo(() => response?.evidence.slice(0, 8) ?? [], [response])
 
   async function ask(value: string) {
     const query = value.trim()
@@ -73,13 +95,13 @@ export function PedroPabloWorkspace() {
           <div className="max-w-3xl">
             <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--n3-teal-soft)]">
               <Sparkles aria-hidden="true" size={14} strokeWidth={1.6} />
-              Intelligence assistant
+              Operating intelligence
             </div>
             <h1 id="pedro-pablo-title" className="font-[var(--font-rajdhani)] text-3xl font-semibold tracking-[-0.02em] text-[var(--n3-text-light)] md:text-4xl">
               Pedro Pablo
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">
-              Consulta prioridades, desempeño y evidencia dentro de tu ámbito autorizado. Las respuestas usan datos canónicos disponibles y no completan vacíos con supuestos.
+              Prioriza gestión, tareas y valorizaciones dentro de tu ámbito autorizado. Cada respuesta conserva procedencia, corte y límites de cobertura.
             </p>
           </div>
           <div className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
@@ -93,19 +115,19 @@ export function PedroPabloWorkspace() {
         <div className="min-w-0 border border-[var(--n3-line)] bg-[var(--n3-deep)]">
           <div className="border-b border-[var(--n3-line)] px-5 py-4">
             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Consulta operacional</div>
-            <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, cumplimiento o una entidad visible para tu rol.</div>
+            <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, tareas, valorizaciones, cumplimiento o una entidad visible para tu rol.</div>
           </div>
 
-          <div className="min-h-[360px] p-5 md:p-6">
+          <div className="min-h-[380px] p-5 md:p-6">
             {!response && !loading ? (
-              <div className="flex min-h-[300px] flex-col justify-between gap-8">
+              <div className="flex min-h-[320px] flex-col justify-between gap-8">
                 <div>
                   <div className="max-w-xl text-xl font-medium leading-8 text-[var(--n3-text-light)]">¿Qué necesitas entender antes de decidir?</div>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--n3-text-muted)]">
-                    Pedro Pablo prioriza información disponible, muestra su procedencia y mantiene separadas las reglas operativas de los hechos documentales.
+                    Pedro Pablo cruza únicamente información que tu rol puede consultar y separa hechos, reglas operativas y datos no disponibles.
                   </p>
                 </div>
-                <div className="grid gap-2 md:grid-cols-3">
+                <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                   {starters.map((starter) => (
                     <button
                       key={starter}
@@ -121,8 +143,8 @@ export function PedroPabloWorkspace() {
             ) : null}
 
             {loading ? (
-              <div className="flex min-h-[300px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">
-                Consultando inteligencia autorizada…
+              <div className="flex min-h-[320px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">
+                Componiendo contexto autorizado…
               </div>
             ) : null}
 
@@ -150,7 +172,7 @@ export function PedroPabloWorkspace() {
             ) : null}
 
             {error ? (
-              <div className="flex min-h-[300px] items-center gap-3 text-sm text-[var(--destructive)]" role="alert">
+              <div className="flex min-h-[320px] items-center gap-3 text-sm text-[var(--destructive)]" role="alert">
                 <CircleAlert aria-hidden="true" size={18} />
                 {error}
               </div>
@@ -182,6 +204,30 @@ export function PedroPabloWorkspace() {
         </div>
 
         <aside className="space-y-4">
+          {response ? (
+            <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
+                <ListChecks aria-hidden="true" size={14} />
+                Cobertura operativa
+              </div>
+              <div className="mt-4 space-y-3">
+                <CoverageItem label="Gestión" value={`${response.coverage.management.entities} entidades`} detail={`${response.coverage.management.alerts} alertas visibles`} />
+                <CoverageItem
+                  label="Tareas"
+                  value={response.coverage.tasks.available ? `${response.coverage.tasks.active} activas` : 'No disponible'}
+                  detail={response.coverage.tasks.available ? `${response.coverage.tasks.overdue} vencidas · ${response.coverage.tasks.total} visibles` : 'El rol no expone este módulo'}
+                  unavailable={!response.coverage.tasks.available}
+                />
+                <CoverageItem
+                  label="Valorizaciones"
+                  value={response.coverage.valuations.available ? `${response.coverage.valuations.total} casos` : 'No disponible'}
+                  detail={response.coverage.valuations.available ? `${response.coverage.valuations.review} revisión · ${response.coverage.valuations.drafts} borrador · ${response.coverage.valuations.approved} aprobadas/emitidas` : 'El rol no expone este módulo'}
+                  unavailable={!response.coverage.valuations.available}
+                />
+              </div>
+            </div>
+          ) : null}
+
           <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5">
             <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
               <Database aria-hidden="true" size={14} />
@@ -191,7 +237,10 @@ export function PedroPabloWorkspace() {
               <div className="mt-4 space-y-4">
                 {evidence.length ? evidence.map((item, index) => (
                   <div key={`${item.label}-${index}`} className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0">
-                    <div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div>
+                      {item.domain ? <span className="text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{item.domain}</span> : null}
+                    </div>
                     <div className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{item.source}</div>
                     {item.reference ? <div className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{item.reference}</div> : null}
                     {item.cutoff ? <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Corte {item.cutoff}</div> : null}
@@ -204,12 +253,16 @@ export function PedroPabloWorkspace() {
           </div>
 
           <div className="border border-[var(--n3-line)] p-5">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Gobernanza</div>
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
+              <Scale aria-hidden="true" size={14} />
+              Gobernanza
+            </div>
             <div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]">
               <div><span className="text-[var(--n3-text-light)]">Ámbito:</span> heredado del usuario autenticado.</div>
-              <div><span className="text-[var(--n3-text-light)]">Escrituras:</span> desactivadas en esta versión.</div>
-              <div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se muestran como no evaluables; no se estiman.</div>
-              <div><span className="text-[var(--n3-text-light)]">Modo:</span> inteligencia canónica gobernada.</div>
+              <div><span className="text-[var(--n3-text-light)]">Escrituras:</span> desactivadas; Pedro Pablo sólo propone navegación.</div>
+              <div><span className="text-[var(--n3-text-light)]">Vacíos:</span> no se completan ni estiman.</div>
+              <div><span className="text-[var(--n3-text-light)]">Modo:</span> operating agent canónico y gobernado.</div>
+              {response ? <div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {response.decisionPolicy}</div> : null}
             </div>
           </div>
         </aside>
