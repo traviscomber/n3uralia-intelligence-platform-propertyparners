@@ -29,33 +29,42 @@ function getAdminClient() {
   })
 }
 
-function visibleMemoryFilter(profileId: string, team: string | null) {
-  const clauses = [`and(scope_type.eq.profile,subject_profile_id.eq.${profileId})`, 'scope_type.eq.global']
-  if (team) clauses.push(`and(scope_type.eq.office,office.eq.${team})`)
-  return clauses.join(',')
+function isVisibleMemory(row: MemoryRow, profileId: string, team: string | null) {
+  if (row.scope_type === 'global') return true
+  if (row.scope_type === 'profile') return row.subject_profile_id === profileId
+  if (row.scope_type === 'office') return Boolean(team && row.office === team)
+  return false
+}
+
+function isCurrentMemory(row: MemoryRow, nowMs: number) {
+  if (row.status !== 'active') return false
+  if (!row.expires_at) return true
+  return Date.parse(row.expires_at) > nowMs
 }
 
 export async function GET() {
   try {
     const scope = await requireUserScope()
     const supabase = getAdminClient()
-    const now = new Date().toISOString()
+    const nowMs = Date.now()
 
     const { data, error } = await supabase
       .from('pedro_pablo_memory_items')
       .select('id,scope_type,subject_profile_id,office,memory_kind,content,source_kind,source_reference,status,confidence,expires_at,created_at,updated_at')
       .eq('status', 'active')
-      .or(visibleMemoryFilter(scope.profileId, scope.team))
-      .or(`expires_at.is.null,expires_at.gt.${now}`)
       .order('created_at', { ascending: false })
-      .limit(30)
+      .limit(100)
 
     if (error) {
       console.error('[pedro-pablo-memory] load failed', { code: error.code })
       return NextResponse.json({ error: 'No fue posible cargar la memoria confirmada.' }, { status: 500 })
     }
 
-    const memories = (data ?? []) as MemoryRow[]
+    const memories = ((data ?? []) as MemoryRow[])
+      .filter((row) => isVisibleMemory(row, scope.profileId, scope.team))
+      .filter((row) => isCurrentMemory(row, nowMs))
+      .slice(0, 30)
+
     return NextResponse.json({
       memories,
       memoryPolicy: 'explicit-confirmation-provenance-bound-noncanonical',
