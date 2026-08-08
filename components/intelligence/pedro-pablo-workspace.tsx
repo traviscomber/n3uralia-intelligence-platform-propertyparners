@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { FormEvent, useMemo, useState } from 'react'
-import { ArrowRight, CircleAlert, Database, ListChecks, Scale, Send, ShieldCheck, Sparkles } from 'lucide-react'
+import { FormEvent, KeyboardEvent, useMemo, useState } from 'react'
+import { ArrowRight, CircleAlert, Database, History, ListChecks, Scale, Send, ShieldCheck, Sparkles, Target } from 'lucide-react'
 
 type Evidence = {
   label: string
@@ -33,11 +33,16 @@ type AssistantResponse = {
   generatedAt: string
 }
 
+type HistoryItem = {
+  query: string
+  response: AssistantResponse
+}
+
 const starters = [
   '¿Qué requiere mi atención hoy?',
+  '¿Qué debería hacer ahora?',
   '¿Qué tareas están pendientes o vencidas?',
   '¿Cómo están las valorizaciones?',
-  '¿Dónde están las principales brechas?',
 ]
 
 function CoverageItem({ label, value, detail, unavailable = false }: { label: string; value: string; detail: string; unavailable?: boolean }) {
@@ -55,10 +60,13 @@ function CoverageItem({ label, value, detail, unavailable = false }: { label: st
 export function PedroPabloWorkspace() {
   const [prompt, setPrompt] = useState('')
   const [response, setResponse] = useState<AssistantResponse | null>(null)
+  const [lastQuery, setLastQuery] = useState<string | null>(null)
+  const [history, setHistory] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const evidence = useMemo(() => response?.evidence.slice(0, 8) ?? [], [response])
+  const proposedActions = useMemo(() => response?.actions.slice(0, 4) ?? [], [response])
 
   async function ask(value: string) {
     const query = value.trim()
@@ -74,7 +82,12 @@ export function PedroPabloWorkspace() {
       })
       const payload = await result.json()
       if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Pedro Pablo.')
-      setResponse(payload as AssistantResponse)
+      const nextResponse = payload as AssistantResponse
+      if (response && lastQuery) {
+        setHistory((current) => [...current.slice(-3), { query: lastQuery, response }])
+      }
+      setResponse(nextResponse)
+      setLastQuery(query)
       setPrompt('')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No fue posible consultar Pedro Pablo.')
@@ -86,6 +99,13 @@ export function PedroPabloWorkspace() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     void ask(prompt)
+  }
+
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+      event.preventDefault()
+      void ask(prompt)
+    }
   }
 
   return (
@@ -101,12 +121,12 @@ export function PedroPabloWorkspace() {
               Pedro Pablo
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">
-              Prioriza gestión, tareas y valorizaciones dentro de tu ámbito autorizado. Cada respuesta conserva procedencia, corte y límites de cobertura.
+              Prioriza gestión, tareas y valorizaciones dentro de tu ámbito autorizado. Cada respuesta conserva procedencia, corte, cobertura y una siguiente acción verificable.
             </p>
           </div>
           <div className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
             <ShieldCheck aria-hidden="true" size={14} />
-            Solo lectura
+            Lectura gobernada · sin escrituras
           </div>
         </div>
       </header>
@@ -118,9 +138,9 @@ export function PedroPabloWorkspace() {
             <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, tareas, valorizaciones, cumplimiento o una entidad visible para tu rol.</div>
           </div>
 
-          <div className="min-h-[380px] p-5 md:p-6">
+          <div className="min-h-[420px] p-5 md:p-6">
             {!response && !loading ? (
-              <div className="flex min-h-[320px] flex-col justify-between gap-8">
+              <div className="flex min-h-[360px] flex-col justify-between gap-8">
                 <div>
                   <div className="max-w-xl text-xl font-medium leading-8 text-[var(--n3-text-light)]">¿Qué necesitas entender antes de decidir?</div>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--n3-text-muted)]">
@@ -143,36 +163,55 @@ export function PedroPabloWorkspace() {
             ) : null}
 
             {loading ? (
-              <div className="flex min-h-[320px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">
+              <div className="flex min-h-[360px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">
                 Componiendo contexto autorizado…
               </div>
             ) : null}
 
             {response && !loading ? (
               <article aria-live="polite">
+                {lastQuery ? (
+                  <div className="mb-4 border-l-2 border-[var(--primary)] pl-3 text-xs leading-5 text-[var(--n3-text-muted)]">
+                    Consulta: <span className="text-[var(--n3-text-light)]">{lastQuery}</span>
+                  </div>
+                ) : null}
                 <div className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
                   <span>{response.scopeLabel}</span>
                   <span aria-hidden="true">/</span>
                   <span>{response.periodLabel}</span>
+                  <span aria-hidden="true">/</span>
+                  <span>{response.confidence === 'high' ? 'Confianza alta' : 'Confianza media'}</span>
                 </div>
                 <h2 className="text-xl font-semibold text-[var(--n3-text-light)]">{response.title}</h2>
                 <div className="mt-4 whitespace-pre-line text-sm leading-7 text-[var(--n3-text-light)]">{response.answer}</div>
 
-                {response.actions.length ? (
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {response.actions.map((action) => (
-                      <Link key={`${action.href}-${action.label}`} href={action.href} className="inline-flex min-h-10 items-center gap-2 border border-[var(--primary)] px-3 text-xs font-semibold text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">
-                        {action.label}
-                        <ArrowRight aria-hidden="true" size={14} />
-                      </Link>
-                    ))}
-                  </div>
+                {proposedActions.length ? (
+                  <section className="mt-7 border-t border-[var(--n3-line)] pt-5" aria-labelledby="pedro-pablo-plan-title">
+                    <div className="flex items-center gap-2">
+                      <Target aria-hidden="true" size={15} className="text-[var(--n3-teal-soft)]" />
+                      <h3 id="pedro-pablo-plan-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Plan sugerido</h3>
+                    </div>
+                    <p className="mt-2 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">Estas acciones no se ejecutan automáticamente. Abren el módulo correspondiente para revisión humana dentro del mismo ámbito autorizado.</p>
+                    <div className="mt-4 grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] md:grid-cols-2">
+                      {proposedActions.map((action, index) => (
+                        <div key={`${action.href}-${action.label}`} className="bg-[var(--n3-black)] p-4">
+                          <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Paso {index + 1} · requiere revisión</div>
+                          <div className="mt-2 text-sm font-medium text-[var(--n3-text-light)]">{action.label}</div>
+                          <div className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Motivo: deriva de la lectura actual y de la política de priorización visible.</div>
+                          <Link href={action.href} className="mt-4 inline-flex min-h-9 items-center gap-2 border border-[var(--primary)] px-3 text-xs font-semibold text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">
+                            Revisar antes de actuar
+                            <ArrowRight aria-hidden="true" size={14} />
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
                 ) : null}
               </article>
             ) : null}
 
             {error ? (
-              <div className="flex min-h-[320px] items-center gap-3 text-sm text-[var(--destructive)]" role="alert">
+              <div className="flex min-h-[360px] items-center gap-3 text-sm text-[var(--destructive)]" role="alert">
                 <CircleAlert aria-hidden="true" size={18} />
                 {error}
               </div>
@@ -186,6 +225,7 @@ export function PedroPabloWorkspace() {
                 id="pedro-pablo-query"
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
+                onKeyDown={handleComposerKeyDown}
                 rows={2}
                 maxLength={800}
                 placeholder="Pregunta a Pedro Pablo…"
@@ -200,6 +240,7 @@ export function PedroPabloWorkspace() {
                 <Send aria-hidden="true" size={16} />
               </button>
             </div>
+            <div className="mt-2 text-[10px] text-[var(--n3-text-muted)]">Enviar: botón o Ctrl/⌘ + Enter.</div>
           </form>
         </div>
 
@@ -224,6 +265,31 @@ export function PedroPabloWorkspace() {
                   detail={response.coverage.valuations.available ? `${response.coverage.valuations.review} revisión · ${response.coverage.valuations.drafts} borrador · ${response.coverage.valuations.approved} aprobadas/emitidas` : 'El rol no expone este módulo'}
                   unavailable={!response.coverage.valuations.available}
                 />
+              </div>
+            </div>
+          ) : null}
+
+          {history.length ? (
+            <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
+                <History aria-hidden="true" size={14} />
+                Sesión actual
+              </div>
+              <div className="mt-4 space-y-3">
+                {history.slice().reverse().map((item, index) => (
+                  <button
+                    key={`${item.query}-${index}`}
+                    type="button"
+                    onClick={() => {
+                      setResponse(item.response)
+                      setLastQuery(item.query)
+                    }}
+                    className="block w-full border-t border-[var(--n3-line)] pt-3 text-left first:border-t-0 first:pt-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                  >
+                    <div className="text-xs leading-5 text-[var(--n3-text-light)]">{item.query}</div>
+                    <div className="mt-1 text-[10px] text-[var(--n3-text-muted)]">{item.response.title}</div>
+                  </button>
+                ))}
               </div>
             </div>
           ) : null}
@@ -259,7 +325,8 @@ export function PedroPabloWorkspace() {
             </div>
             <div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]">
               <div><span className="text-[var(--n3-text-light)]">Ámbito:</span> heredado del usuario autenticado.</div>
-              <div><span className="text-[var(--n3-text-light)]">Escrituras:</span> desactivadas; Pedro Pablo sólo propone navegación.</div>
+              <div><span className="text-[var(--n3-text-light)]">Escrituras:</span> desactivadas; Pedro Pablo sólo analiza y propone revisión.</div>
+              <div><span className="text-[var(--n3-text-light)]">Confirmación:</span> toda acción consecuencial seguirá requiriendo intervención humana.</div>
               <div><span className="text-[var(--n3-text-light)]">Vacíos:</span> no se completan ni estiman.</div>
               <div><span className="text-[var(--n3-text-light)]">Modo:</span> operating agent canónico y gobernado.</div>
               {response ? <div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {response.decisionPolicy}</div> : null}
