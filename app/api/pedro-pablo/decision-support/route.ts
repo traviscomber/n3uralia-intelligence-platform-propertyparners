@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { hasCapability } from '@/lib/access-control'
+import { requireUserScope } from '@/lib/access-guards'
 import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profile'
 
 type Evidence = {
@@ -142,6 +144,8 @@ export async function POST(request: NextRequest) {
 
   const response = payload as BaseResponse
   const proposals = buildProposals(response)
+  const scope = await requireUserScope()
+  const canCreateTask = hasCapability(scope.role, 'tasks.global.manage') || hasCapability(scope.role, 'tasks.office.manage')
 
   return NextResponse.json({
     ...response,
@@ -154,7 +158,8 @@ export async function POST(request: NextRequest) {
       opinionPolicy: 'evidence-only-no-personal-opinion',
       missingDataPolicy: 'state-unavailable-do-not-infer',
     },
-    proposalPolicy: 'pedro-pablo-proposal-contract-v2-content-addressed',
+    availableConfirmedActions: canCreateTask ? ['create_task'] : [],
+    proposalPolicy: 'pedro-pablo-proposal-contract-v3-capability-aware',
     executionPolicy: 'human-confirmation-required',
     executableWrites: 0,
   }, { headers: { 'Cache-Control': 'no-store' } })
