@@ -62,18 +62,42 @@ type ManagementTask = {
   sourceContext?: { kind: string; valuationId?: string | null; address?: string | null } | null
 }
 
+type PropertyAttention = {
+  assignmentId: string
+  propertyId: string | null
+  address: string | null
+  propertyType: string | null
+  identityStatus: string | null
+  lastSeenAt: string | null
+  needsIdentityReview: boolean
+  needsFreshnessReview: boolean
+}
+
+type PropertyContext = {
+  scope: string
+  totalAssignments: number
+  confirmedIdentity: number
+  pendingIdentity: number
+  staleAssignments: number
+  attention: PropertyAttention[]
+  generatedAt: string
+  mode: string
+  writesPerformed: number
+}
+
 type Evidence = {
   label: string
   source: string
   reference?: string | null
   cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations'
+  domain?: 'management' | 'tasks' | 'valuations' | 'properties'
 }
 
 type Coverage = {
   management: { available: boolean; entities: number; alerts: number }
   tasks: { available: boolean; total: number; active: number; overdue: number }
   valuations: { available: boolean; total: number; review: number; drafts: number; approved: number }
+  properties: { available: boolean; total: number; pendingIdentity: number; stale: number; attention: number }
 }
 
 type PedroPabloResponse = {
@@ -92,6 +116,7 @@ type ContextPack = {
   summary: ManagementSummary
   valuations: ValuationCase[]
   tasks: ManagementTask[]
+  properties: PropertyContext | null
   coverage: Coverage
 }
 
@@ -143,7 +168,19 @@ function valuationStatusLabel(status: string | null) {
   return status || 'sin estado'
 }
 
-function buildCoverage(summary: ManagementSummary, tasks: ManagementTask[] | null, valuations: ValuationCase[] | null): Coverage {
+function propertyAttentionReason(item: PropertyAttention) {
+  const reasons: string[] = []
+  if (item.needsIdentityReview) reasons.push('identidad pendiente')
+  if (item.needsFreshnessReview) reasons.push('vigencia por verificar')
+  return reasons.join(' y ') || 'requiere revisión'
+}
+
+function buildCoverage(
+  summary: ManagementSummary,
+  tasks: ManagementTask[] | null,
+  valuations: ValuationCase[] | null,
+  properties: PropertyContext | null,
+): Coverage {
   const today = new Date().toISOString().slice(0, 10)
   const safeTasks = tasks ?? []
   const safeValuations = valuations ?? []
@@ -166,6 +203,13 @@ function buildCoverage(summary: ManagementSummary, tasks: ManagementTask[] | nul
       drafts: safeValuations.filter((item) => item.status === 'draft').length,
       approved: safeValuations.filter((item) => item.status === 'approved' || item.status === 'issued').length,
     },
+    properties: {
+      available: properties !== null,
+      total: properties?.totalAssignments ?? 0,
+      pendingIdentity: properties?.pendingIdentity ?? 0,
+      stale: properties?.staleAssignments ?? 0,
+      attention: properties?.attention.length ?? 0,
+    },
   }
 }
 
@@ -175,12 +219,12 @@ function baseResponse(context: ContextPack) {
     periodLabel: context.summary.periodLabel,
     confidence: 'high' as const,
     coverage: context.coverage,
-    decisionPolicy: 'pedro-pablo-prioritization-v1 · evidencia autorizada > tareas vencidas/urgentes > valorizaciones en revisión > brechas de cumplimiento',
+    decisionPolicy: 'pedro-pablo-prioritization-v2 · evidencia autorizada > tareas vencidas/urgentes > valorizaciones en revisión > cartera con identidad/vigencia pendiente > brechas de cumplimiento',
   }
 }
 
 function answerPriorities(context: ContextPack): PedroPabloResponse {
-  const { summary, tasks, valuations } = context
+  const { summary, tasks, valuations, properties } = context
   const today = new Date().toISOString().slice(0, 10)
   const lines: string[] = []
   const evidence: Evidence[] = []
@@ -220,6 +264,15 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     actions.push({ label: 'Revisar valorizaciones', href: '/dashboard/valuations' })
   }
 
+  const propertyAttention = properties?.attention.slice(0, Math.max(0, 5 - lines.length)) ?? []
+  for (const item of propertyAttention) {
+    lines.push(`${lines.length + 1}. Propiedad: ${item.address || item.propertyId || item.assignmentId} · ${propertyAttentionReason(item)}.`)
+  }
+  if (propertyAttention.length && properties) {
+    evidence.push({ label: 'Cartera que requiere revisión', source: 'property_assignments + market_properties · alcance autorizado', cutoff: properties.generatedAt, domain: 'properties' })
+    actions.push({ label: 'Revisar cartera', href: '/dashboard/properties' })
+  }
+
   if (lines.length < 5) {
     const risks = topRiskMetrics(summary.entities).slice(0, 5 - lines.length)
     for (const { entity, metric } of risks) {
@@ -235,7 +288,7 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     return {
       ...baseResponse(context),
       title: 'Sin prioridades evaluables',
-      answer: 'No hay alertas, tareas activas, valorizaciones en revisión ni métricas con cumplimiento evaluable dentro de tu alcance actual. Pedro Pablo no completará vacíos con supuestos.',
+      answer: 'No hay alertas, tareas activas, valorizaciones en revisión, propiedades con atención pendiente ni métricas con cumplimiento evaluable dentro de tu alcance actual. Pedro Pablo no completará vacíos con supuestos.',
       evidence: [{ label: 'Cobertura actual', source: summary.dataProvenance, cutoff: summary.generatedAt, domain: 'management' }],
       actions: [{ label: 'Revisar datos disponibles', href: '/dashboard/control/operations' }],
     }
@@ -324,6 +377,52 @@ function answerValuations(context: ContextPack): PedroPabloResponse {
   }
 }
 
+function answerProperties(context: ContextPack): PedroPabloResponse {
+  const properties = context.properties
+  if (!properties) {
+    return {
+      ...baseResponse(context),
+      title: 'Cartera no disponible',
+      answer: 'Tu rol actual no expone la cartera a Pedro Pablo o la consulta no pudo completarse. No se infieren propiedades fuera de ese alcance.',
+      evidence: [],
+      actions: [],
+    }
+  }
+
+  if (!properties.totalAssignments) {
+    return {
+      ...baseResponse(context),
+      title: 'Sin propiedades asignadas',
+      answer: 'No hay asignaciones activas de propiedades dentro de tu alcance actual.',
+      evidence: [{ label: 'Cartera operacional', source: 'property_assignments + market_properties · alcance autorizado', cutoff: properties.generatedAt, domain: 'properties' }],
+      actions: [{ label: 'Abrir propiedades', href: '/dashboard/properties' }],
+    }
+  }
+
+  if (!properties.attention.length) {
+    return {
+      ...baseResponse(context),
+      title: 'Cartera sin alertas de identidad o vigencia',
+      answer: `${properties.totalAssignments} asignaciones activas visibles. ${properties.confirmedIdentity} tienen identidad confirmada y no hay propiedades marcadas por identidad pendiente o evidencia anterior a siete días.`,
+      evidence: [{ label: 'Cartera operacional', source: 'property_assignments + market_properties · alcance autorizado', cutoff: properties.generatedAt, domain: 'properties' }],
+      actions: [{ label: 'Abrir propiedades', href: '/dashboard/properties' }],
+    }
+  }
+
+  const lines = properties.attention.slice(0, 8).map((item, index) => {
+    const observed = item.lastSeenAt ? ` · última evidencia ${item.lastSeenAt}` : ' · sin fecha de evidencia'
+    return `${index + 1}. ${item.address || item.propertyId || item.assignmentId} · ${propertyAttentionReason(item)}${observed}.`
+  })
+
+  return {
+    ...baseResponse(context),
+    title: 'Propiedades que requieren atención',
+    answer: lines.join('\n'),
+    evidence: [{ label: 'Cartera que requiere revisión', source: 'property_assignments + market_properties · alcance autorizado', cutoff: properties.generatedAt, domain: 'properties' }],
+    actions: [{ label: 'Revisar cartera', href: '/dashboard/properties' }],
+  }
+}
+
 function answerEntity(context: ContextPack, prompt: string): PedroPabloResponse | null {
   const normalizedPrompt = normalize(prompt)
   const entity = context.summary.entities
@@ -381,6 +480,7 @@ function buildResponse(context: ContextPack, prompt: string): PedroPabloResponse
   const normalized = normalize(prompt)
   if (normalized.includes('tarea') || normalized.includes('pendiente') || normalized.includes('venc')) return answerTasks(context)
   if (normalized.includes('valoriza') || normalized.includes('tasacion') || normalized.includes('tasar')) return answerValuations(context)
+  if (normalized.includes('propiedad') || normalized.includes('cartera') || normalized.includes('inmueble') || normalized.includes('vigencia') || normalized.includes('identidad')) return answerProperties(context)
   if (normalized.includes('prior') || normalized.includes('atencion') || normalized.includes('hoy') || normalized.includes('urg')) return answerPriorities(context)
   if (normalized.includes('desempen') || normalized.includes('rendimiento') || normalized.includes('cumplimiento') || normalized.includes('como vamos') || normalized.includes('brecha')) return answerPerformance(context)
   return { ...answerPriorities(context), title: 'Lectura recomendada' }
@@ -391,6 +491,12 @@ async function optionalJson<T>(response: Response, key: string): Promise<T[] | n
   if (!response.ok) return null
   const payload = await response.json() as Record<string, unknown>
   return Array.isArray(payload[key]) ? payload[key] as T[] : []
+}
+
+async function optionalObject<T>(response: Response): Promise<T | null> {
+  if (response.status === 401) throw new Error('UNAUTHORIZED')
+  if (!response.ok) return null
+  return await response.json() as T
 }
 
 export async function POST(request: NextRequest) {
@@ -408,10 +514,11 @@ export async function POST(request: NextRequest) {
 
   const cookie = request.headers.get('cookie') ?? ''
   const requestHeaders = { cookie }
-  const [summaryResponse, tasksResponse, valuationsResponse] = await Promise.all([
+  const [summaryResponse, tasksResponse, valuationsResponse, propertiesResponse] = await Promise.all([
     fetch(new URL('/api/management/summary', request.url), { headers: requestHeaders, cache: 'no-store' }),
     fetch(new URL('/api/management/tasks', request.url), { headers: requestHeaders, cache: 'no-store' }),
     fetch(new URL('/api/valuations/cases', request.url), { headers: requestHeaders, cache: 'no-store' }),
+    fetch(new URL('/api/pedro-pablo/properties', request.url), { headers: requestHeaders, cache: 'no-store' }),
   ])
 
   if (!summaryResponse.ok) {
@@ -421,15 +528,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const summary = await summaryResponse.json() as ManagementSummary
-    const [tasks, valuations] = await Promise.all([
+    const [tasks, valuations, properties] = await Promise.all([
       optionalJson<ManagementTask>(tasksResponse, 'tasks'),
       optionalJson<ValuationCase>(valuationsResponse, 'cases'),
+      optionalObject<PropertyContext>(propertiesResponse),
     ])
     const context: ContextPack = {
       summary,
       tasks: tasks ?? [],
       valuations: valuations ?? [],
-      coverage: buildCoverage(summary, tasks, valuations),
+      properties,
+      coverage: buildCoverage(summary, tasks, valuations, properties),
     }
     const response = buildResponse(context, prompt)
 
