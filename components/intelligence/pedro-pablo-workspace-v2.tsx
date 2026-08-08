@@ -9,7 +9,7 @@ type Evidence = {
   source: string
   reference?: string | null
   cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations' | 'properties'
+  domain?: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports'
 }
 
 type Coverage = {
@@ -17,12 +17,13 @@ type Coverage = {
   tasks: { available: boolean; total: number; active: number; overdue: number }
   valuations: { available: boolean; total: number; review: number; drafts: number; approved: number }
   properties: { available: boolean; total: number; pendingIdentity: number; stale: number; attention: number }
+  reports: { available: boolean; total: number; sent: number; failed: number; queued: number; escalated: number }
 }
 
 type ActionProposal = {
   id: string
   kind: 'review' | 'follow_up' | 'verify' | 'prepare'
-  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'cross-domain'
+  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'cross-domain'
   action: string
   objectLabel: string
   reason: string
@@ -97,6 +98,7 @@ const starters = [
   '¿Qué propiedades necesitan revisión?',
   '¿Qué tareas están vencidas?',
   '¿Cómo están las valorizaciones?',
+  '¿Cómo están los reportes?',
 ]
 
 function CoverageItem({ label, value, detail, unavailable = false }: { label: string; value: string; detail: string; unavailable?: boolean }) {
@@ -248,7 +250,7 @@ export function PedroPabloWorkspaceV2() {
       <div className="min-w-0 border border-[var(--n3-line)] bg-[var(--n3-deep)]">
         <div className="border-b border-[var(--n3-line)] px-5 py-4">
           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Consulta ejecutiva</div>
-          <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, cartera, tareas, valorizaciones, cumplimiento o una entidad visible. La respuesta se limita a hechos verificables.</div>
+          <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, cartera, tareas, valorizaciones, reportes, cumplimiento o una entidad visible. La respuesta se limita a hechos verificables.</div>
         </div>
 
         <div className="min-h-[430px] p-5 md:p-6">
@@ -257,7 +259,7 @@ export function PedroPabloWorkspaceV2() {
               <div className="max-w-xl text-xl font-medium leading-8 text-[var(--n3-text-light)]">¿Qué necesitas decidir?</div>
               <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--n3-text-muted)]">Pedro Pablo resume situación, prioridad, evidencia y siguiente acción. Si la evidencia no alcanza, lo indica y no concluye.</p>
             </div>
-            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">{starters.map((starter) => <button key={starter} type="button" onClick={() => void ask(starter)} className="min-h-24 border border-[var(--n3-line)] px-4 py-3 text-left text-sm leading-5 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{starter}</button>)}</div>
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">{starters.map((starter) => <button key={starter} type="button" onClick={() => void ask(starter)} className="min-h-24 border border-[var(--n3-line)] px-4 py-3 text-left text-sm leading-5 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{starter}</button>)}</div>
           </div> : null}
 
           {loading ? <div className="flex min-h-[370px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">Componiendo evidencia autorizada…</div> : null}
@@ -324,6 +326,7 @@ export function PedroPabloWorkspaceV2() {
             <CoverageItem label="Tareas" value={response.coverage.tasks.available ? `${response.coverage.tasks.active} activas` : 'No disponible'} detail={response.coverage.tasks.available ? `${response.coverage.tasks.overdue} vencidas · ${response.coverage.tasks.total} visibles` : 'El rol no expone este módulo'} unavailable={!response.coverage.tasks.available} />
             <CoverageItem label="Valorizaciones" value={response.coverage.valuations.available ? `${response.coverage.valuations.total} casos` : 'No disponible'} detail={response.coverage.valuations.available ? `${response.coverage.valuations.review} revisión · ${response.coverage.valuations.drafts} borrador · ${response.coverage.valuations.approved} aprobadas/emitidas` : 'El rol no expone este módulo'} unavailable={!response.coverage.valuations.available} />
             <CoverageItem label="Propiedades" value={response.coverage.properties.available ? `${response.coverage.properties.total} asignadas` : 'No disponible'} detail={response.coverage.properties.available ? `${response.coverage.properties.pendingIdentity} identidad pendiente · ${response.coverage.properties.stale} sin vigencia reciente · ${response.coverage.properties.attention} requieren atención` : 'El rol no expone este módulo'} unavailable={!response.coverage.properties.available} />
+            <CoverageItem label="Reportes" value={response.coverage.reports.available ? `${response.coverage.reports.total} entregas recientes` : 'No disponible'} detail={response.coverage.reports.available ? `${response.coverage.reports.sent} enviadas/escaladas · ${response.coverage.reports.failed} fallidas · ${response.coverage.reports.queued} en cola` : 'El rol o la fuente no exponen telemetría de entregas'} unavailable={!response.coverage.reports.available} />
           </div>
         </div> : null}
 
