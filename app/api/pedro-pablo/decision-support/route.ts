@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profile'
 
 type Evidence = {
   label: string
@@ -79,10 +80,10 @@ function evidenceForDomain(evidence: Evidence[], domain: ProposalDomain) {
 }
 
 function proposalReason(response: BaseResponse, domain: ProposalDomain) {
-  if (domain === 'valuations') return 'Existe contexto de valorización que requiere revisión dentro del alcance autorizado.'
-  if (domain === 'properties') return 'La cartera contiene señales de identidad o vigencia que deben verificarse antes de decidir.'
-  if (domain === 'management') return 'La lectura operativa detectó prioridades, tareas o brechas de gestión que requieren revisión humana.'
-  return 'La recomendación deriva de evidencia autorizada y de la política visible de priorización.'
+  if (domain === 'valuations') return 'Hay un caso de valorización visible que requiere revisión dentro del alcance autorizado.'
+  if (domain === 'properties') return 'La evidencia visible muestra identidad o vigencia pendiente de verificación.'
+  if (domain === 'management') return 'La evidencia visible muestra una prioridad, tarea o brecha de gestión que requiere revisión.'
+  return 'La propuesta deriva de evidencia autorizada y de la política de priorización vigente.'
 }
 
 function proposalId(response: BaseResponse, action: LegacyAction, domain: ProposalDomain) {
@@ -145,6 +146,14 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     ...response,
     proposals,
+    assistantProfile: {
+      id: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
+      purpose: PEDRO_PABLO_EXECUTIVE_PROFILE.purpose,
+      tone: PEDRO_PABLO_EXECUTIVE_PROFILE.communication.tone,
+      answerOrder: PEDRO_PABLO_EXECUTIVE_PROFILE.preferredAnswerOrder,
+      opinionPolicy: 'evidence-only-no-personal-opinion',
+      missingDataPolicy: 'state-unavailable-do-not-infer',
+    },
     proposalPolicy: 'pedro-pablo-proposal-contract-v2-content-addressed',
     executionPolicy: 'human-confirmation-required',
     executableWrites: 0,
