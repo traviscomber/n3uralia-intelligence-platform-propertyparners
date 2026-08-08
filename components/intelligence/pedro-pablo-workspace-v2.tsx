@@ -33,6 +33,15 @@ type ActionProposal = {
   evidence: Evidence[]
 }
 
+type AssistantProfile = {
+  id: string
+  purpose: string
+  tone: string
+  answerOrder: readonly string[]
+  opinionPolicy: 'evidence-only-no-personal-opinion'
+  missingDataPolicy: 'state-unavailable-do-not-infer'
+}
+
 type AssistantResponse = {
   title: string
   answer: string
@@ -46,6 +55,7 @@ type AssistantResponse = {
   writesPerformed: number
   generatedAt: string
   proposals: ActionProposal[]
+  assistantProfile: AssistantProfile
   proposalPolicy: string
   executionPolicy: string
   executableWrites: number
@@ -135,31 +145,31 @@ export function PedroPabloWorkspaceV2() {
     <header className="border-b border-[var(--n3-line)] pb-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
-          <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--n3-teal-soft)]"><Sparkles aria-hidden="true" size={14} /> Operating intelligence</div>
+          <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--n3-teal-soft)]"><Sparkles aria-hidden="true" size={14} /> Asistente ejecutivo objetivo</div>
           <h1 id="pedro-pablo-title" className="font-[var(--font-rajdhani)] text-3xl font-semibold tracking-[-0.02em] text-[var(--n3-text-light)] md:text-4xl">Pedro Pablo</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Analiza gestión, tareas, valorizaciones y cartera dentro de tu ámbito autorizado. Cada recomendación conserva evidencia, prioridad y una propuesta de acción verificable.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Entrega primero la conclusión operativa que necesita Pedro Pablo, luego la evidencia, el siguiente paso y cualquier dato faltante. No emite opiniones ni completa vacíos con supuestos.</p>
         </div>
-        <div className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><ShieldCheck aria-hidden="true" size={14} /> Sin ejecución automática</div>
+        <div className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><ShieldCheck aria-hidden="true" size={14} /> Evidencia · neutralidad · control humano</div>
       </div>
     </header>
 
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,.75fr)]">
       <div className="min-w-0 border border-[var(--n3-line)] bg-[var(--n3-deep)]">
         <div className="border-b border-[var(--n3-line)] px-5 py-4">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Consulta operacional</div>
-          <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, cartera, tareas, valorizaciones, cumplimiento o una entidad visible.</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Consulta ejecutiva</div>
+          <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, cartera, tareas, valorizaciones, cumplimiento o una entidad visible. La respuesta se limita a hechos verificables.</div>
         </div>
 
         <div className="min-h-[430px] p-5 md:p-6">
           {!response && !loading ? <div className="flex min-h-[370px] flex-col justify-between gap-8">
             <div>
-              <div className="max-w-xl text-xl font-medium leading-8 text-[var(--n3-text-light)]">¿Qué necesitas entender antes de decidir?</div>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--n3-text-muted)]">Pedro Pablo separa hechos, cobertura, reglas y propuestas. Ninguna propuesta equivale a una acción ejecutada.</p>
+              <div className="max-w-xl text-xl font-medium leading-8 text-[var(--n3-text-light)]">¿Qué necesitas decidir?</div>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--n3-text-muted)]">Pedro Pablo resume situación, prioridad, evidencia y siguiente acción. Si la evidencia no alcanza, lo indica y no concluye.</p>
             </div>
             <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">{starters.map((starter) => <button key={starter} type="button" onClick={() => void ask(starter)} className="min-h-24 border border-[var(--n3-line)] px-4 py-3 text-left text-sm leading-5 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{starter}</button>)}</div>
           </div> : null}
 
-          {loading ? <div className="flex min-h-[370px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">Componiendo evidencia y propuestas autorizadas…</div> : null}
+          {loading ? <div className="flex min-h-[370px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">Componiendo evidencia autorizada…</div> : null}
 
           {response && !loading ? <article aria-live="polite">
             {lastQuery ? <div className="mb-4 border-l-2 border-[var(--primary)] pl-3 text-xs leading-5 text-[var(--n3-text-muted)]">Consulta: <span className="text-[var(--n3-text-light)]">{lastQuery}</span></div> : null}
@@ -168,16 +178,16 @@ export function PedroPabloWorkspaceV2() {
             <div className="mt-4 whitespace-pre-line text-sm leading-7 text-[var(--n3-text-light)]">{response.answer}</div>
 
             {proposals.length ? <section className="mt-7 border-t border-[var(--n3-line)] pt-5" aria-labelledby="pedro-pablo-proposals-title">
-              <div className="flex items-center gap-2"><Target aria-hidden="true" size={15} className="text-[var(--n3-teal-soft)]" /><h3 id="pedro-pablo-proposals-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Propuestas de acción</h3></div>
-              <p className="mt-2 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">Contrato de decisión: propuesta → revisión humana → eventual ejecución validada. Esta versión no realiza escrituras.</p>
+              <div className="flex items-center gap-2"><Target aria-hidden="true" size={15} className="text-[var(--n3-teal-soft)]" /><h3 id="pedro-pablo-proposals-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Siguientes acciones verificables</h3></div>
+              <p className="mt-2 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">Cada acción deriva de evidencia visible. No representa una opinión del asistente y no se considera ejecutada hasta completar la validación correspondiente.</p>
               <div className="mt-4 grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] md:grid-cols-2">
                 {proposals.map((proposal, index) => <div key={proposal.id} className="bg-[var(--n3-black)] p-4">
-                  <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.14em]"><span className="text-[var(--n3-text-muted)]">Propuesta {index + 1} · {proposal.domain}</span><span className={priorityClass(proposal.priority)}>{priorityLabel(proposal.priority)}</span></div>
+                  <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.14em]"><span className="text-[var(--n3-text-muted)]">Acción {index + 1} · {proposal.domain}</span><span className={priorityClass(proposal.priority)}>{priorityLabel(proposal.priority)}</span></div>
                   <div className="mt-2 text-sm font-medium text-[var(--n3-text-light)]">{proposal.action}</div>
                   <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Objeto: {proposal.objectLabel}</div>
                   <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{proposal.reason}</p>
                   <div className="mt-3 text-[10px] uppercase tracking-[0.12em] text-[var(--chart-4)]">Requiere confirmación humana · no ejecutada</div>
-                  <Link href={proposal.href} className="mt-4 inline-flex min-h-9 items-center gap-2 border border-[var(--primary)] px-3 text-xs font-semibold text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">Revisar contexto <ArrowRight aria-hidden="true" size={14} /></Link>
+                  <Link href={proposal.href} className="mt-4 inline-flex min-h-9 items-center gap-2 border border-[var(--primary)] px-3 text-xs font-semibold text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">Revisar evidencia <ArrowRight aria-hidden="true" size={14} /></Link>
                 </div>)}
               </div>
             </section> : null}
@@ -208,7 +218,7 @@ export function PedroPabloWorkspaceV2() {
 
         <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Database aria-hidden="true" size={14} /> Evidencia</div>{response ? <div className="mt-4 space-y-4">{evidence.length ? evidence.map((item, index) => <div key={`${item.label}-${index}`} className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0"><div className="flex items-start justify-between gap-3"><div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div>{item.domain ? <span className="text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{item.domain}</span> : null}</div><div className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{item.source}</div>{item.reference ? <div className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{item.reference}</div> : null}{item.cutoff ? <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Corte {item.cutoff}</div> : null}</div>) : <div className="mt-4 text-sm text-[var(--n3-text-muted)]">Sin evidencia adicional disponible.</div>}</div> : <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La procedencia aparecerá junto a cada lectura evaluable.</p>}</div>
 
-        <div className="border border-[var(--n3-line)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Scale aria-hidden="true" size={14} /> Gobernanza</div><div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]"><div><span className="text-[var(--n3-text-light)]">Ámbito:</span> usuario autenticado + capabilities + RLS.</div><div><span className="text-[var(--n3-text-light)]">Escrituras:</span> {response?.executableWrites ?? 0} ejecutables desde Pedro Pablo.</div><div><span className="text-[var(--n3-text-light)]">Propuestas:</span> requieren confirmación humana y permanecen en estado propuesto.</div><div><span className="text-[var(--n3-text-light)]">Vacíos:</span> no se completan ni estiman.</div>{response ? <><div><span className="text-[var(--n3-text-light)]">Contrato:</span> {response.proposalPolicy}</div><div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {response.decisionPolicy}</div></> : null}</div></div>
+        <div className="border border-[var(--n3-line)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Scale aria-hidden="true" size={14} /> Criterio del asistente</div><div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]"><div><span className="text-[var(--n3-text-light)]">Objetivo:</span> apoyar decisiones rápidas con evidencia autorizada.</div><div><span className="text-[var(--n3-text-light)]">Opiniones:</span> no emite opiniones personales ni juicios de valor.</div><div><span className="text-[var(--n3-text-light)]">Orden:</span> situación → prioridad → evidencia → siguiente acción → dato faltante.</div><div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se declaran; no se completan ni estiman.</div><div><span className="text-[var(--n3-text-light)]">Ámbito:</span> usuario autenticado + capabilities + RLS.</div><div><span className="text-[var(--n3-text-light)]">Ejecución:</span> toda acción consecuencial requiere validación humana.</div>{response ? <><div><span className="text-[var(--n3-text-light)]">Perfil:</span> {response.assistantProfile.id}</div><div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {response.decisionPolicy}</div></> : null}</div></div>
       </aside>
     </div>
   </section>
