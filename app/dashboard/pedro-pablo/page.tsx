@@ -1,5 +1,5 @@
-import { PedroPabloWorkspace } from '@/components/intelligence/pedro-pablo-workspace'
+import { PedroPabloWorkspaceV2 } from '@/components/intelligence/pedro-pablo-workspace-v2'
 
 export default function PedroPabloPage() {
-  return <PedroPabloWorkspace />
+  return <PedroPabloWorkspaceV2 />
 }
