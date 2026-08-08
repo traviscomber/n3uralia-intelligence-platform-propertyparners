@@ -9,13 +9,14 @@ type Evidence = {
   source: string
   reference?: string | null
   cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations'
+  domain?: 'management' | 'tasks' | 'valuations' | 'properties'
 }
 
 type Coverage = {
   management: { available: boolean; entities: number; alerts: number }
   tasks: { available: boolean; total: number; active: number; overdue: number }
   valuations: { available: boolean; total: number; review: number; drafts: number; approved: number }
+  properties: { available: boolean; total: number; pendingIdentity: number; stale: number; attention: number }
 }
 
 type AssistantResponse = {
@@ -40,7 +41,7 @@ type HistoryItem = {
 
 const starters = [
   '¿Qué requiere mi atención hoy?',
-  '¿Qué debería hacer ahora?',
+  '¿Qué propiedades necesitan revisión?',
   '¿Qué tareas están pendientes o vencidas?',
   '¿Cómo están las valorizaciones?',
 ]
@@ -121,7 +122,7 @@ export function PedroPabloWorkspace() {
               Pedro Pablo
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">
-              Prioriza gestión, tareas y valorizaciones dentro de tu ámbito autorizado. Cada respuesta conserva procedencia, corte, cobertura y una siguiente acción verificable.
+              Prioriza gestión, tareas, valorizaciones y cartera dentro de tu ámbito autorizado. Cada respuesta conserva procedencia, corte, cobertura y una siguiente acción verificable.
             </p>
           </div>
           <div className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
@@ -135,7 +136,7 @@ export function PedroPabloWorkspace() {
         <div className="min-w-0 border border-[var(--n3-line)] bg-[var(--n3-deep)]">
           <div className="border-b border-[var(--n3-line)] px-5 py-4">
             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Consulta operacional</div>
-            <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, tareas, valorizaciones, cumplimiento o una entidad visible para tu rol.</div>
+            <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, tareas, valorizaciones, propiedades, cumplimiento o una entidad visible para tu rol.</div>
           </div>
 
           <div className="min-h-[420px] p-5 md:p-6">
@@ -264,6 +265,12 @@ export function PedroPabloWorkspace() {
                   value={response.coverage.valuations.available ? `${response.coverage.valuations.total} casos` : 'No disponible'}
                   detail={response.coverage.valuations.available ? `${response.coverage.valuations.review} revisión · ${response.coverage.valuations.drafts} borrador · ${response.coverage.valuations.approved} aprobadas/emitidas` : 'El rol no expone este módulo'}
                   unavailable={!response.coverage.valuations.available}
+                />
+                <CoverageItem
+                  label="Propiedades"
+                  value={response.coverage.properties.available ? `${response.coverage.properties.total} asignadas` : 'No disponible'}
+                  detail={response.coverage.properties.available ? `${response.coverage.properties.attention} requieren atención · ${response.coverage.properties.pendingIdentity} identidad pendiente · ${response.coverage.properties.stale} sin vigencia reciente` : 'El rol no expone este módulo'}
+                  unavailable={!response.coverage.properties.available}
                 />
               </div>
             </div>
