@@ -19,6 +19,7 @@ export const CEO_NAVIGATION: NavigationSection[] = [
     label: 'Gestión ejecutiva',
     items: [
       { label: 'Vista CEO', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
+      { label: 'Pedro Pablo', href: '/dashboard/pedro-pablo', anyCapabilities: ['dashboard.global.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
       { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
@@ -44,6 +45,7 @@ export const DEFAULT_NAVIGATION: NavigationSection[] = [
     label: 'Operación',
     items: [
       { label: 'Resumen', href: '/dashboard', exact: true },
+      { label: 'Pedro Pablo', href: '/dashboard/pedro-pablo', anyCapabilities: ['management.global.read', 'management.office.read', 'management.self.read'] },
       { label: 'Vista CEO', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
       { label: 'Vista director', href: '/dashboard/director', anyCapabilities: ['dashboard.office.read'] },
       { label: 'Mi desempeño', href: '/dashboard/partner', anyCapabilities: ['dashboard.self.read'] },
