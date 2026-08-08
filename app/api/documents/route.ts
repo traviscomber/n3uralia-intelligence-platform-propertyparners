@@ -9,12 +9,19 @@ function getSupabaseClient() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    await requireCopilotRole(['ceo', 'director'])
+function parseLimit(raw: string | null) {
+  const parsed = Number.parseInt(raw ?? '50', 10)
+  if (!Number.isFinite(parsed)) return 50
+  return Math.min(Math.max(parsed, 1), 100)
+}
 
+export async function GET(request: NextRequest) {
+  const access = await requireCopilotRole(['ceo', 'director'])
+  if (!access.ok) return access.response
+
+  try {
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = parseLimit(searchParams.get('limit'))
 
     const { data: documents, error } = await getSupabaseClient()
       .from('documents')
@@ -26,23 +33,23 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ documents })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unauthorized'
-    const statusCode = error instanceof Error && message === 'Unauthorized' ? 401 : 500
-    return NextResponse.json({ error: message }, { status: statusCode })
+    console.error('Documents GET failed:', error instanceof Error ? error.name : 'unknown_error')
+    return NextResponse.json({ error: 'No fue posible cargar los documentos.' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    await requireCopilotRole(['ceo', 'director'])
+  const access = await requireCopilotRole(['ceo', 'director'])
+  if (!access.ok) return access.response
 
+  try {
     const body = await request.json()
     const { title, description, file_url, file_type } = body
 
     if (!title || !file_url || !file_type) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, file_url, file_type' },
-        { status: 400 }
+        { error: 'Faltan campos requeridos: title, file_url, file_type.' },
+        { status: 400 },
       )
     }
 
@@ -53,6 +60,7 @@ export async function POST(request: NextRequest) {
         description,
         file_url,
         file_type,
+        created_by: access.value.userId,
       })
       .select()
       .single()
@@ -61,10 +69,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ document }, { status: 201 })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Server error'
-    return NextResponse.json(
-      { error: message },
-      { status: error instanceof Error && message === 'Unauthorized' ? 401 : 500 }
-    )
+    console.error('Documents POST failed:', error instanceof Error ? error.name : 'unknown_error')
+    return NextResponse.json({ error: 'No fue posible crear el documento.' }, { status: 500 })
   }
 }
