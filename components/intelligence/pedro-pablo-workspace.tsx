@@ -1,0 +1,219 @@
+'use client'
+
+import Link from 'next/link'
+import { FormEvent, useMemo, useState } from 'react'
+import { ArrowRight, CircleAlert, Database, Send, ShieldCheck, Sparkles } from 'lucide-react'
+
+type Evidence = {
+  label: string
+  source: string
+  reference?: string | null
+  cutoff?: string | null
+}
+
+type AssistantResponse = {
+  title: string
+  answer: string
+  scopeLabel: string
+  periodLabel: string
+  confidence: 'high' | 'medium'
+  evidence: Evidence[]
+  actions: Array<{ label: string; href: string }>
+  mode: string
+  writesPerformed: number
+  generatedAt: string
+}
+
+const starters = [
+  '¿Qué requiere mi atención hoy?',
+  '¿Cómo vamos en desempeño y cumplimiento?',
+  '¿Dónde están las principales brechas?',
+]
+
+export function PedroPabloWorkspace() {
+  const [prompt, setPrompt] = useState('')
+  const [response, setResponse] = useState<AssistantResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const evidence = useMemo(() => response?.evidence.slice(0, 6) ?? [], [response])
+
+  async function ask(value: string) {
+    const query = value.trim()
+    if (!query || loading) return
+
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await fetch('/api/pedro-pablo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: query }),
+      })
+      const payload = await result.json()
+      if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Pedro Pablo.')
+      setResponse(payload as AssistantResponse)
+      setPrompt('')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No fue posible consultar Pedro Pablo.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    void ask(prompt)
+  }
+
+  return (
+    <section className="space-y-6" aria-labelledby="pedro-pablo-title">
+      <header className="border-b border-[var(--n3-line)] pb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-3xl">
+            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--n3-teal-soft)]">
+              <Sparkles aria-hidden="true" size={14} strokeWidth={1.6} />
+              Intelligence assistant
+            </div>
+            <h1 id="pedro-pablo-title" className="font-[var(--font-rajdhani)] text-3xl font-semibold tracking-[-0.02em] text-[var(--n3-text-light)] md:text-4xl">
+              Pedro Pablo
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">
+              Consulta prioridades, desempeño y evidencia dentro de tu ámbito autorizado. Las respuestas usan datos canónicos disponibles y no completan vacíos con supuestos.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
+            <ShieldCheck aria-hidden="true" size={14} />
+            Solo lectura
+          </div>
+        </div>
+      </header>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,.75fr)]">
+        <div className="min-w-0 border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+          <div className="border-b border-[var(--n3-line)] px-5 py-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-light)]">Consulta operacional</div>
+            <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Pregunta por prioridades, cumplimiento o una entidad visible para tu rol.</div>
+          </div>
+
+          <div className="min-h-[360px] p-5 md:p-6">
+            {!response && !loading ? (
+              <div className="flex min-h-[300px] flex-col justify-between gap-8">
+                <div>
+                  <div className="max-w-xl text-xl font-medium leading-8 text-[var(--n3-text-light)]">¿Qué necesitas entender antes de decidir?</div>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--n3-text-muted)]">
+                    Pedro Pablo prioriza información disponible, muestra su procedencia y mantiene separadas las reglas operativas de los hechos documentales.
+                  </p>
+                </div>
+                <div className="grid gap-2 md:grid-cols-3">
+                  {starters.map((starter) => (
+                    <button
+                      key={starter}
+                      type="button"
+                      onClick={() => void ask(starter)}
+                      className="min-h-24 border border-[var(--n3-line)] px-4 py-3 text-left text-sm leading-5 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                    >
+                      {starter}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {loading ? (
+              <div className="flex min-h-[300px] items-center justify-center text-sm text-[var(--n3-text-muted)]" role="status">
+                Consultando inteligencia autorizada…
+              </div>
+            ) : null}
+
+            {response && !loading ? (
+              <article aria-live="polite">
+                <div className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
+                  <span>{response.scopeLabel}</span>
+                  <span aria-hidden="true">/</span>
+                  <span>{response.periodLabel}</span>
+                </div>
+                <h2 className="text-xl font-semibold text-[var(--n3-text-light)]">{response.title}</h2>
+                <div className="mt-4 whitespace-pre-line text-sm leading-7 text-[var(--n3-text-light)]">{response.answer}</div>
+
+                {response.actions.length ? (
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {response.actions.map((action) => (
+                      <Link key={`${action.href}-${action.label}`} href={action.href} className="inline-flex min-h-10 items-center gap-2 border border-[var(--primary)] px-3 text-xs font-semibold text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">
+                        {action.label}
+                        <ArrowRight aria-hidden="true" size={14} />
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ) : null}
+
+            {error ? (
+              <div className="flex min-h-[300px] items-center gap-3 text-sm text-[var(--destructive)]" role="alert">
+                <CircleAlert aria-hidden="true" size={18} />
+                {error}
+              </div>
+            ) : null}
+          </div>
+
+          <form onSubmit={submit} className="border-t border-[var(--n3-line)] p-4">
+            <label htmlFor="pedro-pablo-query" className="sr-only">Pregunta a Pedro Pablo</label>
+            <div className="flex gap-2">
+              <textarea
+                id="pedro-pablo-query"
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                rows={2}
+                maxLength={800}
+                placeholder="Pregunta a Pedro Pablo…"
+                className="min-h-12 flex-1 resize-none border border-[var(--n3-line)] bg-[var(--n3-black)] px-3 py-3 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus:border-[var(--primary)]"
+              />
+              <button
+                type="submit"
+                disabled={loading || !prompt.trim()}
+                aria-label="Enviar consulta"
+                className="flex w-12 items-center justify-center border border-[var(--primary)] text-[var(--n3-text-light)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+              >
+                <Send aria-hidden="true" size={16} />
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <aside className="space-y-4">
+          <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">
+              <Database aria-hidden="true" size={14} />
+              Evidencia
+            </div>
+            {response ? (
+              <div className="mt-4 space-y-4">
+                {evidence.length ? evidence.map((item, index) => (
+                  <div key={`${item.label}-${index}`} className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0">
+                    <div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div>
+                    <div className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{item.source}</div>
+                    {item.reference ? <div className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{item.reference}</div> : null}
+                    {item.cutoff ? <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Corte {item.cutoff}</div> : null}
+                  </div>
+                )) : <div className="mt-4 text-sm text-[var(--n3-text-muted)]">Sin evidencia adicional disponible.</div>}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La procedencia y el corte aparecerán junto a cada respuesta evaluable.</p>
+            )}
+          </div>
+
+          <div className="border border-[var(--n3-line)] p-5">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Gobernanza</div>
+            <div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]">
+              <div><span className="text-[var(--n3-text-light)]">Ámbito:</span> heredado del usuario autenticado.</div>
+              <div><span className="text-[var(--n3-text-light)]">Escrituras:</span> desactivadas en esta versión.</div>
+              <div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se muestran como no evaluables; no se estiman.</div>
+              <div><span className="text-[var(--n3-text-light)]">Modo:</span> inteligencia canónica gobernada.</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  )
+}
