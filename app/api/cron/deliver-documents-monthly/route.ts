@@ -14,10 +14,7 @@ async function handleCron(request: Request) {
   const cronSecret = process.env.CRON_SECRET
   const authFailure = getCronAuthorizationFailure(authHeader, cronSecret)
   if (authFailure) {
-    return new NextResponse(JSON.stringify({ error: 'Unauthorized', details: authFailure }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -44,7 +41,10 @@ async function handleCron(request: Request) {
           )
         }
       } catch (error) {
-        console.error(`[Document Delivery] Error processing schedule ${schedule.id}:`, error)
+        console.error(
+          `[Document Delivery] Monthly schedule ${schedule.id} failed:`,
+          error instanceof Error ? error.name : 'unknown_error',
+        )
       }
     }
 
@@ -55,10 +55,11 @@ async function handleCron(request: Request) {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    const errorDetails = error instanceof Error ? error.stack : JSON.stringify(error)
-    console.error('[Document Delivery] Cron error:', errorMessage, errorDetails)
-    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 })
+    console.error(
+      '[Document Delivery] Monthly cron failed:',
+      error instanceof Error ? error.name : 'unknown_error',
+    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
