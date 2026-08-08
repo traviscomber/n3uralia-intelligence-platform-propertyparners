@@ -4,11 +4,11 @@ Enterprise operating system for real-estate intelligence, property valuation and
 
 **Powered by N3uralia.**
 
-This repository is not a generic dashboard and not a chatbot wrapper. The product is designed around one operating principle:
+This repository is not a generic dashboard and not a chatbot wrapper. The product is built around one operating principle:
 
 > **Evidence → Decision → Action → Traceability**
 
-Every meaningful surface must answer five questions:
+Every meaningful surface should answer five questions:
 
 1. What is happening?
 2. How reliable and current is the information?
@@ -20,23 +20,24 @@ Every meaningful surface must answer five questions:
 
 ## 1. Product thesis
 
-Property Partners Intelligence Platform converts fragmented commercial, market and valuation information into a governed operating layer for CEO, directors, subdirectors and partners.
+Property Partners Intelligence Platform converts fragmented commercial, market, property and valuation information into a governed operating layer for CEO, directors, subdirectors and partners.
 
 The system deliberately separates:
 
-- **canonical facts** from assumptions;
-- **approved values** from documentary fallback;
-- **deterministic business rules** from AI reasoning;
-- **authorized scope** from global information;
-- **recommendations** from executable actions;
-- **missing information** from zero;
-- **evidence** from presentation.
+- canonical facts from assumptions;
+- approved values from documentary fallback;
+- deterministic business rules from AI reasoning;
+- authorized scope from global information;
+- proposed actions from executed actions;
+- missing information from zero;
+- evidence from presentation;
+- AI assistance from operational authority.
 
 The application must never invent values, silently fill missing data, expose privileged internals or imply certainty that the evidence does not support.
 
 ---
 
-## 2. Contractual scope currently in force
+## 2. Contractual core and product intelligence
 
 The productive contractual core remains organized around three interoperable modules:
 
@@ -46,25 +47,13 @@ The productive contractual core remains organized around three interoperable mod
 
 Historical copilots, experimental multi-agent systems, executive graphs, ML Lab, experimental corporate memory and other legacy Version 2 capabilities were retired from runtime. Applied migrations and historical traceability were preserved to avoid altering database state.
 
-### Product intelligence layer in development
+### Product intelligence layer
 
-A new governed intelligence layer is now being developed on top of the audited contractual core. It does **not** revive the retired legacy Copilot.
+A new governed intelligence layer is being built on top of the audited contractual core. It does **not** revive the retired legacy Copilot.
 
-The first active capability is **Pedro Pablo**, the Property Partners Intelligence Assistant.
+Its active interface is **Pedro Pablo**, the Property Partners executive assistant.
 
-Pedro Pablo is currently:
-
-- read-only;
-- role-aware;
-- scope-aware;
-- grounded in authorized canonical and operational data;
-- explicit about missing information;
-- capable of combining management, task and valuation context;
-- unable to write directly to Supabase;
-- unable to bypass RLS or server authorization;
-- designed to propose actions before any future execution capability is enabled.
-
-This layer must not be interpreted as a contractual acceptance item unless it is explicitly incorporated into the corresponding contractual scope and acceptance evidence.
+This layer must not be interpreted as a contractual acceptance item unless it is explicitly incorporated into contractual scope and acceptance evidence.
 
 ---
 
@@ -72,7 +61,7 @@ This layer must not be interpreted as a contractual acceptance item unless it is
 
 ### 3.1 Decision Trace
 
-Important signals are designed to expose their reasoning chain instead of appearing as unexplained scores.
+Material signals are designed to expose their reasoning chain instead of appearing as unexplained scores.
 
 A decision trace can include:
 
@@ -87,13 +76,11 @@ A decision trace can include:
 - available action;
 - evidence count.
 
-The goal is not to make the interface look intelligent. The goal is to make each important decision **auditable**.
+The objective is not to make the interface look intelligent. The objective is to make important decisions **auditable**.
 
 ### 3.2 Canonical data before AI
 
 AI is not the source of truth.
-
-The operating hierarchy is:
 
 ```text
 Canonical sources
@@ -106,12 +93,16 @@ Decision Trace
       ↓
 Role-specific product surface
       ↓
-Pedro Pablo / reasoning layer
+Pedro Pablo
       ↓
-Human-approved action
+Structured proposed action
+      ↓
+Human confirmation
+      ↓
+Server-validated execution
 ```
 
-AI may explain, summarize, compare and formulate recommendations. It must not create missing facts or silently change canonical data.
+AI may explain, summarize, compare and structure a next action. It must not create missing facts or silently change canonical data.
 
 ### 3.3 Honest uncertainty
 
@@ -137,7 +128,7 @@ The same database does not produce the same product for every user.
 - company-wide operational status;
 - cross-office comparison;
 - exceptions requiring intervention;
-- source quality and data freshness;
+- source quality and freshness;
 - governance and reporting;
 - global valuation and property visibility according to capability.
 
@@ -163,31 +154,73 @@ Restricted destinations are normally hidden instead of displayed as unusable con
 
 ---
 
-## 4. Pedro Pablo — governed operating intelligence
+## 4. Pedro Pablo — objective executive assistant
+
+Primary surface:
 
 `/dashboard/pedro-pablo`
 
-Pedro Pablo is being designed as an **operating intelligence layer**, not as a generic chat interface.
+Pedro Pablo is an **objective executive assistant over governed operating intelligence**. It is not a personality simulator and does not provide personal opinions.
+
+Its purpose is to help the decision-maker understand what matters, what evidence supports it, what is missing and what should be reviewed next.
+
+### Executive operating profile
+
+The assistant uses a versioned executive profile with the following decision lens:
+
+1. What changed or requires attention?
+2. What operational impact does it have inside the authorized scope?
+3. What evidence supports the reading and what is its cutoff?
+4. What information is missing or non-evaluable?
+5. What is the next verifiable action and who should review it?
+
+Communication rules:
+
+- executive, factual, direct and neutral;
+- conclusion first;
+- evidence and next action second;
+- short operational Spanish;
+- no rhetorical or decorative language;
+- no personal opinions or value judgments;
+- no emotional or persuasive language;
+- no unsupported recommendations.
+
+If evidence is insufficient, Pedro Pablo must state that explicitly and stop the conclusion instead of filling the gap.
+
+### Active context domains
+
+Pedro Pablo currently composes authorized context from four operating domains:
+
+- **Management** — metrics, compliance and alerts.
+- **Tasks** — active, overdue and urgent operational work.
+- **Valuations** — visible cases and workflow state.
+- **Properties** — authorized portfolio assignments, identity status and freshness signals.
+
+The assistant degrades honestly when a domain is unavailable for the current role.
 
 ### Current capabilities
 
 Pedro Pablo can currently:
 
-- answer what requires attention;
+- answer what requires attention today;
 - summarize performance and compliance;
 - analyze an authorized management entity by name;
-- combine management alerts with operational tasks;
 - identify active, overdue and urgent tasks;
 - include visible valuation cases and their workflow state;
 - surface cases in draft, review, approved or issued states;
+- identify property assignments requiring identity review;
+- identify portfolio records requiring freshness review;
 - expose data coverage by domain;
 - expose source and cutoff alongside evaluable answers;
-- degrade honestly when a domain is unavailable for the current role;
-- suggest safe navigation to the relevant operational surface.
+- generate structured action proposals;
+- assign priority and domain to each proposal;
+- preserve evidence references inside proposals;
+- distinguish proposal, preview and executed states;
+- avoid direct database writes from the reasoning layer.
 
-### Current decision policy
+### Decision policy
 
-The assistant uses a deterministic operating order before any model reasoning:
+Pedro Pablo applies deterministic prioritization before any future model reasoning:
 
 ```text
 Authorized evidence
@@ -196,14 +229,80 @@ Overdue / urgent tasks
       ↓
 Valuations requiring review
       ↓
-Management alerts
+Property identity / freshness attention
       ↓
-Compliance gaps
+Management alerts and compliance gaps
 ```
 
-This policy is visible in the product and can evolve through versioned rules.
+The policy is visible and versionable.
 
-### Current safety boundary
+### Proposal contract
+
+Decision Support converts navigation-oriented recommendations into structured proposals.
+
+Current proposal fields include:
+
+```ts
+{
+  id: string
+  kind: 'review' | 'follow_up' | 'verify' | 'prepare'
+  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'cross-domain'
+  action: string
+  objectLabel: string
+  reason: string
+  priority: 'critical' | 'high' | 'medium' | 'low'
+  href: string
+  requiresConfirmation: true
+  executionStatus: 'proposed'
+  evidence: Evidence[]
+}
+```
+
+Proposal identifiers are content-addressed so the server can regenerate and verify that a proposal still matches current authorized context before execution.
+
+### Action Gateway
+
+A first controlled Action Gateway is implemented server-side:
+
+`/api/pedro-pablo/action-gateway`
+
+Current supported consequential action:
+
+- convert a current Pedro Pablo proposal into an operational task.
+
+The gateway does **not** trust a task payload supplied by the browser.
+
+```text
+prompt + proposalId
+        ↓
+Regenerate current proposal server-side
+        ↓
+Capability check
+        ↓
+Preview generated task
+        ↓
+Explicit human confirmation
+        ↓
+Existing management task API
+        ↓
+RLS / scope validation
+        ↓
+Persisted operational task
+```
+
+Rules:
+
+- requires `tasks.global.manage` or `tasks.office.manage`;
+- rejects stale or forged proposals;
+- regenerates the task draft server-side;
+- requires `confirm: true` before execution;
+- preserves proposal origin and evidence in the task detail;
+- does not give Pedro Pablo unrestricted database credentials;
+- does not allow arbitrary inserts through the gateway.
+
+The current Pedro Pablo workspace displays proposals but **does not yet expose the execution/confirmation CTA**. Server-side execution exists and remains intentionally separated until the UI confirmation flow is completed and verified.
+
+### Core safety boundary
 
 ```text
 User
@@ -214,42 +313,18 @@ Role + capability + RLS scope
   ↓
 Authorized context APIs
   ↓
-Pedro Pablo
+Pedro Pablo reasoning / decision support
   ↓
-Explanation / recommendation
+Structured proposal
+  ↓
+Optional Action Gateway
+  ↓
+Explicit human confirmation
+  ↓
+Validated server action
 ```
 
-Current invariant:
-
-```text
-writesPerformed = 0
-```
-
-Pedro Pablo does not receive direct unrestricted database access and does not decide what the user is allowed to see.
-
-### Planned operating-agent evolution
-
-The intended evolution is:
-
-```text
-Observation
-   ↓
-Cause
-   ↓
-Recommended action
-   ↓
-Human confirmation
-   ↓
-Server-side validated execution
-   ↓
-Audit event
-   ↓
-Measured result
-   ↓
-Learning from real outcomes
-```
-
-Consequential actions must remain behind explicit authorization, server validation and auditability.
+Pedro Pablo itself never decides authorization and never writes directly to Supabase.
 
 ---
 
@@ -260,10 +335,15 @@ Consequential actions must remain behind explicit authorization, server validati
 Primary surfaces:
 
 - `/dashboard/market`
-- property intelligence views;
+- `/dashboard/properties`
+
+Capabilities include:
+
+- property intelligence;
 - market identity and evidence;
 - source governance;
 - comparable evidence;
+- operational portfolio assignments;
 - controlled imports and exports.
 
 The market layer separates raw observations, canonical property identity and operational intelligence.
@@ -324,7 +404,7 @@ The reporting layer supports canonical snapshots, PDF generation, governed deliv
 
 ---
 
-## 6. Management data model and provenance
+## 6. Canonical data and provenance
 
 `/api/management/summary` is a major trust boundary.
 
@@ -359,15 +439,16 @@ Tasks can preserve:
 - comments;
 - lifecycle events;
 - resolution note;
-- source context such as a valuation case.
+- source context such as a valuation case;
+- Pedro Pablo proposal origin and evidence when created through the Action Gateway.
 
-Task visibility is restricted by capability and scope.
+Task visibility and mutation are restricted by capability and scope.
 
 A completed task requires a recorded result instead of disappearing without trace.
 
 ---
 
-## 8. Report automation
+## 8. Reporting and automation
 
 Vercel executes protected report workflows.
 
@@ -386,7 +467,7 @@ CEO and authorized administration can recover report execution through governed 
 
 Email delivery requires `RESEND_API_KEY`.
 
-The default sender is:
+Default sender:
 
 `Property Partners Intelligence <reportes@ppartnersgroup.app>`
 
@@ -435,7 +516,9 @@ Security practices include:
 - fixed `search_path` for privileged functions;
 - explicit grants;
 - no anonymous access to contractual views;
-- no raw provider/database exception messages returned to users.
+- no raw provider/database exception messages returned to users;
+- proposal regeneration before AI-originated task execution;
+- explicit human confirmation for consequential Pedro Pablo writes.
 
 Legacy compatibility surfaces are progressively hardened or retired rather than silently reused.
 
@@ -496,7 +579,7 @@ Canonical principles:
 - PDF / DOCX / XLSX generation
 - Resend for authorized email delivery
 
-The architecture intentionally keeps deterministic product logic independent from any future LLM provider.
+Deterministic product logic is intentionally independent from any future LLM provider.
 
 ---
 
@@ -508,7 +591,7 @@ The architecture intentionally keeps deterministic product logic independent fro
                ┌────────────────┴────────────────┐
                │                                 │
          Role-specific UI                 Pedro Pablo
-               │                          Intelligence
+               │                         Executive Assistant
                │                                 │
                └────────────────┬────────────────┘
                                 │
@@ -516,17 +599,21 @@ The architecture intentionally keeps deterministic product logic independent fro
                                 │
         ┌───────────────────────┼────────────────────────┐
         │                       │                        │
- Management Intelligence   Valuation Engine       Market Intelligence
+ Management Intelligence   Valuation Engine       Market / Properties
         │                       │                        │
         └───────────────────────┼────────────────────────┘
                                 │
                          Decision Trace
                                 │
-                         Operational Tasks
+                       Structured Proposal
                                 │
-                      Human-approved actions
+                      Human Confirmation
                                 │
-                             Audit
+                         Action Gateway
+                                │
+                         Operational Task
+                                │
+                              Audit
                                 │
                          Canonical Postgres
 ```
@@ -536,7 +623,7 @@ The architecture intentionally keeps deterministic product logic independent fro
 ## 13. Main routes
 
 - `/dashboard` — role-aware operational entry point.
-- `/dashboard/pedro-pablo` — governed operating intelligence.
+- `/dashboard/pedro-pablo` — objective executive assistant and decision support.
 - `/dashboard/market` — market intelligence.
 - `/dashboard/properties` — operational property portfolio.
 - `/dashboard/valuation` — create a valuation.
@@ -550,11 +637,24 @@ The architecture intentionally keeps deterministic product logic independent fro
 - `/dashboard/reportes/autonomos` — authorized operational reports.
 - `/dashboard/reportes/operacion` — report generation and delivery operations.
 
-Legacy `/dashboard/copilot`, `/dashboard/copilot/chat` and `/dashboard/agente` routes remain compatibility redirects and are not the active intelligence architecture.
+Legacy `/dashboard/copilot`, `/dashboard/copilot/chat` and `/dashboard/agente` remain compatibility redirects and are not the active intelligence architecture.
 
 ---
 
-## 14. Development
+## 14. Pedro Pablo APIs
+
+Current server surfaces:
+
+- `POST /api/pedro-pablo` — canonical multi-domain operating context and deterministic responses.
+- `GET /api/pedro-pablo/properties` — governed property context for the current capability/scope.
+- `POST /api/pedro-pablo/decision-support` — structured content-addressed proposals.
+- `POST /api/pedro-pablo/action-gateway` — preview and human-confirmed task execution.
+
+No endpoint grants the assistant unrestricted database access.
+
+---
+
+## 15. Development
 
 ```bash
 corepack enable
@@ -569,7 +669,7 @@ Open:
 
 ---
 
-## 15. Validation gates
+## 16. Validation gates
 
 The repository includes automated checks across security, contractual delivery, provenance, management, market, valuation and reporting.
 
@@ -611,9 +711,7 @@ Scripts requiring private datasets or credentials must run only in authorized en
 
 ---
 
-## 16. Engineering invariants
-
-The following rules are treated as product invariants:
+## 17. Engineering invariants
 
 1. Never invent canonical data.
 2. Never convert missing values to zero for presentation convenience.
@@ -627,18 +725,24 @@ The following rules are treated as product invariants:
 10. Preserve source, cutoff, methodology and audit trail for material decisions.
 11. Multi-step operational writes should be transactional or have a proven equivalent safeguard.
 12. Product intelligence must degrade safely when a source or provider is unavailable.
+13. Pedro Pablo must remain factual, neutral and evidence-bound.
+14. Pedro Pablo must not issue personal opinions or unsupported recommendations.
+15. A proposal is not an execution.
+16. A preview is not an execution.
+17. AI memory must never become canonical truth without validated source evidence.
 
 ---
 
-## 17. Documentation
+## 18. Documentation
 
 Key documentation:
 
 - `DESIGN.md`
 - `docs/CONTRACTUAL_SCOPE_MATRIX.md`
+- `docs/architecture/OPERATING_INTELLIGENCE.md`
+- `docs/architecture/DATA_MODEL_AND_DICTIONARY.md`
 - `docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md`
 - `docs/operations/REPORT_DELIVERY.md`
-- `docs/architecture/DATA_MODEL_AND_DICTIONARY.md`
 - `docs/manuals/ROLE_USER_MANUAL.md`
 - `docs/manuals/ADMINISTRATION_MANUAL.md`
 - `docs/transfer/TRANSFER_ACCEPTANCE_PACKAGE.md`
@@ -647,53 +751,40 @@ The existence of documentation does not replace clean reconstruction testing, au
 
 ---
 
-## 18. Traceability and change discipline
+## 19. Product north star
 
-Every material functional change should be attributable to:
+The target experience is not:
 
-- a requirement or product decision;
-- a source or canonical dataset;
-- an authorized role;
-- an operational surface;
-- a test or verification path;
-- a deployment;
-- a rollback path where appropriate.
+> “Ask AI anything.”
 
-The contractual scope matrix remains in `docs/CONTRACTUAL_SCOPE_MATRIX.md`.
+It is:
 
----
+> **“Show me what matters, why it matters, what evidence supports it, what I can do next, and what happened after we acted.”**
 
-## 19. Confidentiality
+The differentiator is not the language model.
 
-Do not commit:
-
-- secrets;
-- credentials;
-- private contractual documents;
-- personal data;
-- production datasets;
-- proprietary N3uralia prompts, heuristics, scoring logic or orchestration internals that are not intended for client transfer.
-
-Production data remains in private services under role-based access.
-
----
-
-## 20. Product direction
-
-The target is not a larger dashboard.
-
-The target is a closed operational loop:
+It is the operating graph connecting:
 
 ```text
-Observe
-  → understand
-  → trace evidence
-  → decide
-  → propose action
-  → approve
-  → execute
-  → measure result
-  → learn from real outcomes
+Canonical evidence
+        ↓
+Deterministic rules
+        ↓
+Decision Trace
+        ↓
+Role-specific intelligence
+        ↓
+Pedro Pablo
+        ↓
+Structured action proposal
+        ↓
+Human confirmation
+        ↓
+Validated execution
+        ↓
+Audit
+        ↓
+Measured outcome
 ```
 
-That loop — grounded in canonical data, explicit uncertainty, role scope and auditable execution — is the core of the Property Partners Intelligence Platform.
+That is the governed operating intelligence standard for Property Partners powered by N3uralia.
