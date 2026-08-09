@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "generatedAt": "2026-08-09",
-  "commit": "ccfc4ec03ec0d9144626a8f1c8cd02495919a265",
+  "commit": "3a9785427b2b9bf5322c3341ceb8ec8e89466ef6",
   "deployment": "https://ppartnersgroup.app",
   "contractStatus": "in-progress",
   "productionReadiness": "in-review",
@@ -10,7 +10,7 @@
   "training": "not-scheduled",
   "deliveryPackage": "assembled",
   "clientDependenciesOpen": 8,
-  "clientQuestionsOpen": 21,
+  "clientQuestionsOpen": 20,
   "criticalFindingsOpen": 0,
   "highFindingsOpen": 0,
   "evidence": [
@@ -21,9 +21,9 @@
     "config/client-dependencies-status.json",
     "config/client-dependency-requests.json",
     "docs/CLIENT_INFORMATION_REQUEST_PEDRO_PABLO.md",
-    "GitHub issue #91 tracks the 21 canonical client questions",
-    "GitHub issues #56, #61 and #63 now distinguish technical evidence from client-dependent acceptance",
-    "Vercel production deployment verified for commit ccfc4ec03ec0d9144626a8f1c8cd02495919a265 on 2026-08-09",
+    "PP-USR-02 role hierarchy resolved on 2026-08-09: admin is N3uralia technical administration outside Property Partners hierarchy; CEO -> account directors -> executives is canonical organization model",
+    "GitHub issue #91 tracks the remaining canonical client questions",
+    "Vercel production deployment verified for commit 91dcd94b40f9ef879cbd8b4fb41221b5d4d521d6 on 2026-08-09",
     "Vercel production management-delivery cron: 24/24 HTTP 200 in the verified 24h window on 2026-08-09",
     "Supabase production: 2 sent report distributions with provider_message_id and sent_at verified on 2026-08-09"
   ]
