@@ -94,12 +94,16 @@ Si existe, ¿nos puedes entregar el archivo final y confirmar cuál es la versi�
 **Formato sugerido:** Nombre | Email | Rol | Oficina/Partner | Activo Sí/No.  
 **Bloquea:** UAT autenticado y capacitación final.
 
-### PP-USR-02 — Roles finales
+### Roles finales — RESUELTO 9 de agosto de 2026
 
-¿Confirman que los roles finales son CEO, dirección, subdirección y partner, o existe alguna capacidad adicional que deba quedar formalmente asignada?
+El modelo canónico confirmado es:
 
-**Necesitamos:** aprobación o corrección explícita.  
-**Bloquea:** cierre contractual de matriz de permisos.
+- **Admin:** Travis / N3uralia. Es administración técnica del sitio y no forma parte de la jerarquía organizacional de Property Partners.
+- **CEO:** Pedro Pablo.
+- **Directores:** directores de cuenta.
+- **Ejecutivos:** usuarios operativos/comerciales dependientes de su alcance correspondiente.
+
+La implementación técnica mantiene la equivalencia `admin -> ceo -> director -> seller/executive`. La antigua pregunta `PP-USR-02` queda cerrada y ya no requiere respuesta de Pedro Pablo.
 
 ## 4. Informes automáticos
 
@@ -130,7 +134,7 @@ Si existe, ¿nos puedes entregar el archivo final y confirmar cuál es la versi�
 
 ¿Quién será el responsable de aceptación UAT por parte de Property Partners y qué usuarios participarán por cada rol?
 
-**Necesitamos:** responsable principal y participantes CEO/dirección/subdirección/partner.  
+**Necesitamos:** responsable principal y participantes CEO/director/ejecutivo.  
 **Bloquea:** aceptación funcional formal.
 
 ### PP-UAT-02 — Fecha UAT
