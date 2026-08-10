@@ -8,8 +8,9 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 const DATASETS: PortalDatasetKind[] = ['portal_apartments', 'portal_houses', 'portal_projects']
-const MAX_LISTINGS_PER_DATASET = 24
+const MAX_LISTINGS_PER_DATASET = 12
 const WAIT_MS = 600
+const SOFT_RUNTIME_BUDGET_MS = 240_000
 
 function authorized(request: Request) {
   const secret = process.env.CRON_SECRET
@@ -34,13 +35,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
+  const startedAt = Date.now()
   const supabase = getServiceClient()
   const results: Array<Record<string, unknown>> = []
   let totalAccepted = 0
   let totalRejected = 0
   let totalFailures = 0
+  let skippedForRuntimeBudget = 0
 
   for (const datasetKind of DATASETS) {
+    if (Date.now() - startedAt >= SOFT_RUNTIME_BUDGET_MS) {
+      skippedForRuntimeBudget += 1
+      results.push({ datasetKind, status: 'skipped_runtime_budget' })
+      continue
+    }
+
     try {
       const collection = await collectPortalVitacura({
         datasetKind,
@@ -134,15 +143,20 @@ export async function GET(request: Request) {
     totalAccepted,
     totalRejected,
     totalFailures,
+    skippedForRuntimeBudget,
+    runtimeMs: Date.now() - startedAt,
   })
 
   return NextResponse.json(
     {
       ok,
       fullSnapshot: false,
+      maxListingsPerDataset: MAX_LISTINGS_PER_DATASET,
       totalAccepted,
       totalRejected,
       totalFailures,
+      skippedForRuntimeBudget,
+      runtimeMs: Date.now() - startedAt,
       results,
     },
     {
