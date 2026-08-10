@@ -22,7 +22,7 @@
     },
     {
       "path": "/api/cron/market-refresh",
-      "schedule": "55 2 * * *"
+      "schedule": "15 3 * * *"
     }
   ]
 }
