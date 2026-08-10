@@ -1,4 +1,5 @@
-import puppeteer, { type Browser, type Page } from 'puppeteer'
+import path from 'node:path'
+import type { Browser, Page } from 'puppeteer'
 import { parse } from 'node-html-parser'
 import type { MarketImportInputRow } from '@/lib/market-import'
 import type { PortalDatasetKind } from '@/lib/market-source-import'
@@ -263,7 +264,12 @@ async function configurePage(page: Page) {
 }
 
 async function createBrowser() {
+  process.env.PUPPETEER_CACHE_DIR = path.join(process.cwd(), 'node_modules', '.puppeteer_cache')
+  const { default: puppeteer } = await import('puppeteer')
+  const executablePath = await puppeteer.executablePath()
+
   return puppeteer.launch({
+    executablePath,
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
   })
