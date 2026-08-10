@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import type { Browser } from 'puppeteer-core'
 import { requireExecutiveAccess } from '@/lib/api-access'
+import { launchServerlessBrowser } from '@/lib/serverless-browser'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -33,13 +34,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Activa la confirmación de fuente viva antes de capturar.' }, { status: 428 })
   }
 
-  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null
+  let browser: Browser | null = null
 
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    })
+    browser = await launchServerlessBrowser()
 
     const observed = []
     for (const search of searches) {
