@@ -1,0 +1,50 @@
+name: Sync serverless browser lock
+
+on:
+  push:
+    branches:
+      - agent/use-serverless-chromium
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: ${{ !contains(github.event.head_commit.message, 'chore: sync serverless browser dependencies') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/use-serverless-chromium
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Update browser dependencies and lockfile
+        run: |
+          pnpm remove puppeteer
+          pnpm add --save-exact puppeteer-core@25.1.0 @sparticuz/chromium@149.0.0
+          node - <<'NODE'
+          const fs = require('node:fs')
+          const path = 'package.json'
+          const pkg = JSON.parse(fs.readFileSync(path, 'utf8'))
+          if (pkg.pnpm?.onlyBuiltDependencies) {
+            pkg.pnpm.onlyBuiltDependencies = pkg.pnpm.onlyBuiltDependencies.filter((name) => name !== 'puppeteer')
+          }
+          fs.writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`)
+          NODE
+          pnpm install --lockfile-only
+      - name: Commit synchronized dependency state
+        run: |
+          git config user.name 'n3uralia-dependency-bot'
+          git config user.email 'n3uralia-dependency-bot@users.noreply.github.com'
+          git add package.json pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'chore: sync serverless browser dependencies'
+          git push origin HEAD:agent/use-serverless-chromium
