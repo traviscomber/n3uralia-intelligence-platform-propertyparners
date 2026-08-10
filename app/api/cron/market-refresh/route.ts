@@ -26,6 +26,48 @@ function getServiceClient() {
   })
 }
 
+function classifyCollectorFailure(cause: unknown) {
+  const message = cause instanceof Error ? cause.message.toLowerCase() : ''
+  if (message.includes('could not find chrome') || message.includes('browser was not found') || message.includes('executable') && message.includes('not found')) {
+    return 'COLLECTOR_BROWSER_EXECUTABLE_MISSING'
+  }
+  if (message.includes('failed to launch') || message.includes('browser launch')) return 'COLLECTOR_BROWSER_LAUNCH_FAILED'
+  if (message.includes('http 403')) return 'COLLECTOR_SOURCE_FORBIDDEN'
+  if (message.includes('http 429')) return 'COLLECTOR_SOURCE_RATE_LIMITED'
+  if (message.includes('timeout') || message.includes('timed out')) return 'COLLECTOR_SOURCE_TIMEOUT'
+  if (message.includes('net::') || message.includes('network')) return 'COLLECTOR_NETWORK_FAILURE'
+  return 'COLLECTOR_UNKNOWN_FAILURE'
+}
+
+async function recordCollectionFailure(
+  supabase: ReturnType<typeof getServiceClient>,
+  datasetKind: PortalDatasetKind,
+  failureCode: string,
+  counts?: { discovered?: number; parsed?: number; collectionFailures?: number },
+) {
+  const recordedAt = new Date().toISOString()
+  await supabase.from('market_ingestion_runs').insert({
+    source_system: 'portal_inmobiliario',
+    dataset_kind: datasetKind,
+    source_file: `portal-cron-collection-${datasetKind}-${recordedAt}.json`,
+    expected_rows: null,
+    received_rows: 0,
+    accepted_rows: 0,
+    rejected_rows: 0,
+    status: 'failed',
+    completed_at: recordedAt,
+    error_message: failureCode,
+    metadata: {
+      pipeline: 'portal_collection_v2',
+      stage: 'collection',
+      failure_code: failureCode,
+      discovered: counts?.discovered ?? null,
+      parsed: counts?.parsed ?? null,
+      collection_failures: counts?.collectionFailures ?? null,
+    },
+  })
+}
+
 export async function GET(request: Request) {
   if (!authorized(request)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -63,7 +105,13 @@ export async function GET(request: Request) {
       const validRows = normalized.filter((row) => row.source_listing_id && row.url)
 
       if (!validRows.length) {
+        const failureCode = 'COLLECTOR_NO_VALID_ROWS'
         totalFailures += 1
+        await recordCollectionFailure(supabase, datasetKind, failureCode, {
+          discovered: collection.listingUrls.length,
+          parsed: collection.rows.length,
+          collectionFailures: collection.failures.length,
+        })
         results.push({
           datasetKind,
           observedAt: collection.observedAt,
@@ -72,6 +120,7 @@ export async function GET(request: Request) {
           valid: 0,
           collectionFailures: collection.failures.length,
           status: 'no_valid_rows',
+          failureCode,
         })
         continue
       }
@@ -141,9 +190,11 @@ export async function GET(request: Request) {
         removed: Number(pipelineResult?.removed ?? 0),
         runId: pipelineResult?.run_id ?? null,
       })
-    } catch {
+    } catch (cause) {
+      const failureCode = classifyCollectorFailure(cause)
       totalFailures += 1
-      results.push({ datasetKind, status: 'failed' })
+      await recordCollectionFailure(supabase, datasetKind, failureCode).catch(() => undefined)
+      results.push({ datasetKind, status: 'failed', failureCode })
     }
   }
 
