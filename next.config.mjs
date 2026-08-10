@@ -6,6 +6,7 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/cron/market-refresh': ['./node_modules/@sparticuz/chromium/bin/**/*'],
     '/api/market/scrape-portal': ['./node_modules/@sparticuz/chromium/bin/**/*'],
+    '/api/scrape/portal-inmobiliario': ['./node_modules/@sparticuz/chromium/bin/**/*'],
   },
   images: {
     unoptimized: true,
