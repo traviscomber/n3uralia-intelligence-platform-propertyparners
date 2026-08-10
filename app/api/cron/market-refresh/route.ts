@@ -40,8 +40,11 @@ export async function GET(request: Request) {
   const results: Array<Record<string, unknown>> = []
   let totalAccepted = 0
   let totalRejected = 0
+  let totalLinked = 0
+  let totalUnlinked = 0
   let totalFailures = 0
   let skippedForRuntimeBudget = 0
+  let skippedForLock = 0
 
   for (const datasetKind of DATASETS) {
     if (Date.now() - startedAt >= SOFT_RUNTIME_BUDGET_MS) {
@@ -77,7 +80,7 @@ export async function GET(request: Request) {
         continue
       }
 
-      const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot', {
+      const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot_v2', {
         p_source_label: 'portal_inmobiliario_vitacura',
         p_source_file: `portal-cron-${datasetKind}-${collection.observedAt}.json`,
         p_dataset_kind: datasetKind,
@@ -105,10 +108,28 @@ export async function GET(request: Request) {
         continue
       }
 
+      if (pipelineResult?.skipped) {
+        skippedForLock += 1
+        results.push({
+          datasetKind,
+          observedAt: collection.observedAt,
+          discovered: collection.listingUrls.length,
+          parsed: collection.rows.length,
+          valid: validRows.length,
+          collectionFailures: collection.failures.length,
+          status: 'skipped_ingestion_lock',
+        })
+        continue
+      }
+
       const accepted = Number(pipelineResult?.accepted ?? 0)
       const rejected = Number(pipelineResult?.rejected ?? 0)
+      const linked = Number(pipelineResult?.linked ?? 0)
+      const unlinked = Number(pipelineResult?.unlinked ?? 0)
       totalAccepted += accepted
       totalRejected += rejected
+      totalLinked += linked
+      totalUnlinked += unlinked
 
       results.push({
         datasetKind,
@@ -120,6 +141,8 @@ export async function GET(request: Request) {
         status: 'completed',
         accepted,
         rejected,
+        linked,
+        unlinked,
         new: Number(pipelineResult?.new ?? 0),
         updated: Number(pipelineResult?.updated ?? 0),
         unchanged: Number(pipelineResult?.unchanged ?? 0),
@@ -142,8 +165,11 @@ export async function GET(request: Request) {
     datasets: DATASETS.length,
     totalAccepted,
     totalRejected,
+    totalLinked,
+    totalUnlinked,
     totalFailures,
     skippedForRuntimeBudget,
+    skippedForLock,
     runtimeMs: Date.now() - startedAt,
   })
 
@@ -151,11 +177,15 @@ export async function GET(request: Request) {
     {
       ok,
       fullSnapshot: false,
+      canonicalCreation: false,
       maxListingsPerDataset: MAX_LISTINGS_PER_DATASET,
       totalAccepted,
       totalRejected,
+      totalLinked,
+      totalUnlinked,
       totalFailures,
       skippedForRuntimeBudget,
+      skippedForLock,
       runtimeMs: Date.now() - startedAt,
       results,
     },
