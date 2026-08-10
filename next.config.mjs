@@ -2,6 +2,11 @@
 const nextConfig = {
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
+  outputFileTracingIncludes: {
+    '/api/cron/market-refresh': ['./node_modules/@sparticuz/chromium/bin/**/*'],
+    '/api/market/scrape-portal': ['./node_modules/@sparticuz/chromium/bin/**/*'],
+  },
   images: {
     unoptimized: true,
   },
