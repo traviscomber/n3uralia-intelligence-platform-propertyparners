@@ -2,10 +2,6 @@
 const nextConfig = {
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
-  outputFileTracingIncludes: {
-    '/api/cron/market-refresh': ['./node_modules/.puppeteer_cache/**/*'],
-    '/api/market/scrape-portal': ['./node_modules/.puppeteer_cache/**/*'],
-  },
   images: {
     unoptimized: true,
   },
