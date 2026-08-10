@@ -28,10 +28,6 @@ function getServiceClient() {
 
 export async function GET(request: Request) {
   if (!authorized(request)) {
-    console.warn('[market-refresh] unauthorized cron request', {
-      authorizationPresent: Boolean(request.headers.get('authorization')),
-      cronSecretConfigured: Boolean(process.env.CRON_SECRET),
-    })
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
@@ -91,10 +87,6 @@ export async function GET(request: Request) {
 
       if (pipelineError || pipelineResult?.failed) {
         totalFailures += 1
-        console.error('[market-refresh] dataset ingestion failed', {
-          datasetKind,
-          code: pipelineError?.code ?? 'PIPELINE_FAILED',
-        })
         results.push({
           datasetKind,
           observedAt: collection.observedAt,
@@ -149,29 +141,13 @@ export async function GET(request: Request) {
         removed: Number(pipelineResult?.removed ?? 0),
         runId: pipelineResult?.run_id ?? null,
       })
-    } catch (cause) {
+    } catch {
       totalFailures += 1
-      console.error('[market-refresh] dataset failed', {
-        datasetKind,
-        message: cause instanceof Error ? cause.message : 'UNKNOWN',
-      })
       results.push({ datasetKind, status: 'failed' })
     }
   }
 
   const ok = totalAccepted > 0 && totalFailures < DATASETS.length
-  console.info('[market-refresh] cron completed', {
-    ok,
-    datasets: DATASETS.length,
-    totalAccepted,
-    totalRejected,
-    totalLinked,
-    totalUnlinked,
-    totalFailures,
-    skippedForRuntimeBudget,
-    skippedForLock,
-    runtimeMs: Date.now() - startedAt,
-  })
 
   return NextResponse.json(
     {
