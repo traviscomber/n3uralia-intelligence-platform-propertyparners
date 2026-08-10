@@ -10,21 +10,31 @@ permissions:
 
 jobs:
   sync:
-    if: ${{ !contains(github.event.head_commit.message, 'chore: sync serverless browser dependencies') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/use-serverless-chromium
+      - name: Stop after generated dependency commit
+        id: guard
+        run: |
+          if [ "$(git log -1 --pretty=%s)" = "chore: sync serverless browser dependencies" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: pnpm/action-setup@v4
+        if: steps.guard.outputs.skip == 'false'
         with:
           version: 10.17.1
           run_install: false
       - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip == 'false'
         with:
           node-version: '22'
           cache: pnpm
       - name: Update browser dependencies and lockfile
+        if: steps.guard.outputs.skip == 'false'
         run: |
           pnpm remove puppeteer
           pnpm add --save-exact puppeteer-core@25.1.0 @sparticuz/chromium@149.0.0
@@ -39,6 +49,7 @@ jobs:
           NODE
           pnpm install --lockfile-only
       - name: Commit synchronized dependency state
+        if: steps.guard.outputs.skip == 'false'
         run: |
           git config user.name 'n3uralia-dependency-bot'
           git config user.email 'n3uralia-dependency-bot@users.noreply.github.com'
