@@ -1,10 +1,11 @@
 import Link from 'next/link'
-import { AlertTriangle, Download, FileText, RefreshCw, Settings2 } from 'lucide-react'
+import { AlertTriangle, Download, FileText, MapPinned, RefreshCw, Settings2 } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
+import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
 
 function number(value: number | null) {
   return value === null ? '—' : value.toLocaleString('es-CL')
@@ -29,10 +30,17 @@ function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
 }
 
 export default async function MarketPage() {
-  const [market, scope] = await Promise.all([getOperationalMarketSnapshot(), requireUserScope()])
+  const [market, scope, territory] = await Promise.all([
+    getOperationalMarketSnapshot(),
+    requireUserScope(),
+    getVitacuraNeighborhoodSnapshot(),
+  ])
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
   const territorialCoverage = market.canonicalProperties && market.missingNeighborhoods !== null
     ? (market.canonicalProperties - market.missingNeighborhoods) / market.canonicalProperties
+    : null
+  const kmlCoverage = market.canonicalProperties
+    ? territory.assignedProperties / market.canonicalProperties
     : null
   const confirmedCoverage = market.canonicalProperties && market.confirmedProperties !== null
     ? market.confirmedProperties / market.canonicalProperties
@@ -64,6 +72,7 @@ export default async function MarketPage() {
       />
 
       {market.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar toda la información de mercado." /></div> : null}
+      {territory.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la capa territorial de barrios." /></div> : null}
 
       <MetricStrip items={[
         { label: 'Oferta', value: number(market.activeInventory) },
@@ -90,9 +99,10 @@ export default async function MarketPage() {
 
       <section className="mt-6">
         <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Calidad</h2>
-        <div className="mt-2 grid border-y border-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-2 grid border-y border-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-5">
           {[
             ['Cobertura territorial', percent(territorialCoverage)],
+            ['Cobertura KML exacta', percent(kmlCoverage)],
             ['Identidad confirmada', percent(confirmedCoverage)],
             ['Velocidad', market.medianDaysOnMarket === null ? '—' : `${number(market.medianDaysOnMarket)} días`],
             ['Absorción', percent(market.absorptionRate)],
@@ -105,10 +115,40 @@ export default async function MarketPage() {
         </div>
       </section>
 
+      <section className="mt-7">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--n3-line)] pb-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <MapPinned size={15} className="text-[var(--n3-accent)]" />
+              <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Barrios Property Partners</h2>
+            </div>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Clasificación geográfica exacta desde {territory.sourceFile ?? 'KML'}.</p>
+          </div>
+          <span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{territory.polygons} zonas · {number(territory.assignedProperties)} propiedades</span>
+        </div>
+
+        <div className="divide-y divide-[var(--n3-line)]">
+          {territory.neighborhoods.map((row) => (
+            <div key={row.name} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-[var(--n3-text-light)]">{row.name}</p>
+                <p className="mt-0.5 truncate text-xs text-[var(--n3-text-muted)]">
+                  {row.partners.length ? row.partners.join(' · ') : 'Sin partner asignado en la fuente'}
+                </p>
+              </div>
+              <div className="text-left sm:text-right">
+                <p className="text-sm font-semibold tabular-nums">{number(row.properties)}</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">propiedades</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <DataStatusBar
         cutoff={date(market.latestObservedAt)}
         coverage={`${number(market.confirmedProperties)} de ${number(market.canonicalProperties)} propiedades confirmadas`}
-        issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0)}
+        issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (territory.error ? 1 : 0)}
         status={dataStatus}
       />
 
@@ -116,6 +156,7 @@ export default async function MarketPage() {
         <span>Ingestión {date(market.latestIngestionAt)}</span>
         <span>{market.latestIngestionAccepted ?? 0} aceptadas</span>
         <span>{market.latestIngestionRejected ?? 0} rechazadas</span>
+        <span>Barrios KML {date(territory.importedAt)}</span>
         {market.freshnessStatus === 'stale' ? <span className="ml-auto inline-flex items-center gap-2 text-[#ff8d87]"><AlertTriangle size={14} /> Corte desactualizado</span> : null}
       </section>
     </WorkspaceShell>
