@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 
@@ -38,6 +39,20 @@ type ListingRow = {
   market_properties: PropertyRow[]
 }
 
+type CbrsRow = {
+  id: string
+  event_key: string
+  transaction_date: string
+  address: string | null
+  rol: string | null
+  price_uf: number | string | null
+  built_area_m2: number | string | null
+  land_area_m2: number | string | null
+  latitude: number | string | null
+  longitude: number | string | null
+  neighborhood: string | null
+}
+
 const num = (value: unknown) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
@@ -58,7 +73,7 @@ function relativeSimilarity(subject: number, candidate: number) {
   return Math.max(0, 1 - Math.min(delta, 1))
 }
 
-function scoreCandidate(payload: SuggestPayload, property: PropertyRow) {
+function scoreListing(payload: SuggestPayload, property: PropertyRow) {
   const subjectArea = payload.propertyType === 'Departamento'
     ? num(payload.usefulAreaM2)
     : num(payload.builtAreaM2 || payload.usefulAreaM2)
@@ -78,6 +93,28 @@ function scoreCandidate(payload: SuggestPayload, property: PropertyRow) {
     const distance = haversineMeters(lat1, lon1, lat2, lon2)
     score += Math.max(0, 1 - Math.min(distance / 3000, 1)) * 0.1
   } else score += 0.05
+  return Math.min(1, score)
+}
+
+function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
+  const subjectArea = payload.propertyType === 'Departamento' ? num(payload.usefulAreaM2) : num(payload.builtAreaM2)
+  const candidateArea = num(row.built_area_m2)
+  let score = relativeSimilarity(subjectArea, candidateArea) * 0.75
+
+  const lat1 = num(payload.latitude)
+  const lon1 = num(payload.longitude)
+  const lat2 = num(row.latitude)
+  const lon2 = num(row.longitude)
+  if (lat1 && lon1 && lat2 && lon2) {
+    const distance = haversineMeters(lat1, lon1, lat2, lon2)
+    score += Math.max(0, 1 - Math.min(distance / 3000, 1)) * 0.1
+  } else score += 0.05
+
+  const timestamp = new Date(row.transaction_date).getTime()
+  if (Number.isFinite(timestamp)) {
+    const ageDays = Math.max(0, (Date.now() - timestamp) / 86400000)
+    score += Math.max(0, 1 - Math.min(ageDays / (365 * 10), 1)) * 0.15
+  }
   return Math.min(1, score)
 }
 
@@ -117,7 +154,7 @@ export async function POST(request: Request) {
       if (!unique.has(key)) unique.set(key, item)
     }
 
-    const suggestions = [...unique.values()]
+    const portalSuggestions = [...unique.values()]
       .map((item) => {
         const property = item.market_properties[0]
         if (!property) return null
@@ -152,7 +189,7 @@ export async function POST(request: Request) {
           parkingSpaces: property.parking_spaces ?? undefined,
           priceUf: price,
           priceUfM2: Number((price / canonicalArea).toFixed(2)),
-          similarityScore: Number(scoreCandidate(payload, property).toFixed(4)),
+          similarityScore: Number(scoreListing(payload, property).toFixed(4)),
           selected: false,
           adjustmentPct: 0,
           adjustmentNotes: incompleteHouseArea
@@ -167,9 +204,62 @@ export async function POST(request: Request) {
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
       .sort((a, b) => b.similarityScore - a.similarityScore)
-      .slice(0, 12)
+      .slice(0, 8)
 
-    const { data: cbrs } = await supabase
+    const admin = createAdminClient()
+    const { data: cbrsRows, error: cbrsError } = await admin
+      .from('market_cbrs_reference_transactions')
+      .select('id,event_key,transaction_date,address,rol,price_uf,built_area_m2,land_area_m2,latitude,longitude,neighborhood')
+      .eq('property_type', payload.propertyType)
+      .ilike('neighborhood', neighborhood.name)
+      .not('price_uf', 'is', null)
+      .gt('price_uf', 0)
+      .not('built_area_m2', 'is', null)
+      .gt('built_area_m2', 0)
+      .order('transaction_date', { ascending: false })
+      .limit(150)
+
+    if (cbrsError) console.error('VALUATION_CBRS_SUGGESTIONS_FAILED', { code: cbrsError.code ?? 'UNKNOWN' })
+
+    const cbrsSuggestions = ((cbrsRows ?? []) as unknown as CbrsRow[])
+      .map((row) => {
+        const built = num(row.built_area_m2)
+        const land = num(row.land_area_m2)
+        const price = num(row.price_uf)
+        const weightedArea = payload.propertyType === 'Casa' ? built + land / 4 : built
+        if (price <= 0 || weightedArea <= 0) return null
+        const latitude = num(row.latitude) || undefined
+        const longitude = num(row.longitude) || undefined
+        const distanceMeters = payload.latitude && payload.longitude && latitude && longitude
+          ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude))
+          : undefined
+        return {
+          id: `cbrs-${row.id}`,
+          sourceType: 'CBRS' as const,
+          sourceReference: `CBRS ${row.event_key}${row.rol ? ` · ROL ${row.rol}` : ''}`,
+          address: row.address || 'Venta registrada CBRS',
+          neighborhood: row.neighborhood || neighborhood.name,
+          propertyType: payload.propertyType,
+          totalAreaM2: payload.propertyType === 'Departamento' ? built : undefined,
+          usefulAreaM2: payload.propertyType === 'Departamento' ? built : undefined,
+          builtAreaM2: built,
+          landAreaM2: land || undefined,
+          priceUf: price,
+          priceUfM2: Number((price / weightedArea).toFixed(2)),
+          similarityScore: Number(scoreCbrs(payload, row).toFixed(4)),
+          selected: false,
+          adjustmentPct: 0,
+          adjustmentNotes: 'Venta efectiva CBRS consolidada por inscripción; fuente canónica Property Partners.',
+          distanceMeters,
+          transactionDate: row.transaction_date,
+          quality: 'canonical',
+        }
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item))
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, 8)
+
+    const { data: cbrsBenchmark } = await admin
       .from('market_cbrs_reference_metrics')
       .select('transactions,priced_transactions,median_price_uf,median_area_m2,median_uf_m2,observed_at')
       .eq('scope', 'neighborhood')
@@ -181,13 +271,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       neighborhood: neighborhood.name,
-      suggestions,
-      cbrsBenchmark: cbrs ?? null,
+      suggestions: [...portalSuggestions, ...cbrsSuggestions],
+      suggestionCounts: { portal: portalSuggestions.length, cbrs: cbrsSuggestions.length },
+      cbrsBenchmark: cbrsBenchmark ?? null,
       methodologyVersion: 'valuation-pp-canonical-v2',
       notes: [
-        'Las sugerencias Portal son propuestas revisables y nunca se seleccionan automáticamente.',
-        'Cuando faltan metros de terraza/terreno, el sistema lo declara y no inventa superficies.',
-        'CBRS se presenta como benchmark territorial hasta completar la materialización fila-a-fila de ventas canónicas.',
+        'Portal representa oferta publicada; CBRS representa ventas registradas. Se muestran como fuentes distintas.',
+        'Todas las sugerencias son revisables y nunca se seleccionan automáticamente.',
+        cbrsSuggestions.length
+          ? 'Las ventas CBRS individuales se ordenan por similitud de superficie, proximidad y recencia.'
+          : 'Aún no hay ventas CBRS individuales cargadas para este barrio/tipo; se mantiene el benchmark agregado.',
+        'Cuando faltan metros de terraza o terreno, el sistema lo declara y no inventa superficies.',
       ],
     })
   } catch (error) {
