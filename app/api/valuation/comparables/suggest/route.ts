@@ -146,7 +146,7 @@ export async function POST(request: Request) {
       .gt('price_uf', 0)
       .limit(80)
 
-    if (listingError) return NextResponse.json({ error: 'No fue posible consultar comparables de mercado.' }, { status: 422 })
+    if (listingError) console.error('VALUATION_PORTAL_SUGGESTIONS_UNAVAILABLE', { code: listingError.code ?? 'UNKNOWN' })
 
     const unique = new Map<string, ListingRow>()
     for (const item of (listings ?? []) as unknown as ListingRow[]) {
@@ -278,9 +278,10 @@ export async function POST(request: Request) {
       notes: [
         'Portal representa oferta publicada; CBRS representa ventas registradas. Se muestran como fuentes distintas.',
         'Todas las sugerencias son revisables y nunca se seleccionan automáticamente.',
+        listingError ? 'Portal no estuvo disponible para esta consulta; la sugerencia continúa con CBRS canónico.' : 'Portal disponible para esta consulta.',
         cbrsSuggestions.length
           ? 'Las ventas CBRS individuales se ordenan por similitud de superficie, proximidad y recencia.'
-          : 'Aún no hay ventas CBRS individuales cargadas para este barrio/tipo; se mantiene el benchmark agregado.',
+          : 'No hay ventas CBRS individuales suficientes para este barrio/tipo; se mantiene el benchmark agregado.',
         'Cuando faltan metros de terraza o terreno, el sistema lo declara y no inventa superficies.',
       ],
     })
