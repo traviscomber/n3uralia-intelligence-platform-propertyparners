@@ -1,6 +1,7 @@
 'use client'
 
-import { LogOut } from 'lucide-react'
+import Link from 'next/link'
+import { KeyRound, LogOut } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
@@ -84,6 +85,14 @@ export default function Topbar({ profile }: { user: User; profile: Profile | nul
           <span aria-hidden="true" className="inline-block h-1.5 w-1.5 shrink-0 border border-current bg-current" />
           <span className="truncate">{provenance.label}</span>
         </div>
+        <Link
+          href="/dashboard/cuenta"
+          className="flex shrink-0 items-center gap-1.5 border border-[var(--n3-line)] px-2.5 py-1.5 text-xs text-[var(--n3-text-light)] transition-colors hover:bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+          title="Cambiar contraseña"
+        >
+          <KeyRound aria-hidden="true" size={12} strokeWidth={1.6} />
+          <span className="hidden sm:inline">Contraseña</span>
+        </Link>
         <button
           onClick={handleLogout}
           className="flex shrink-0 items-center gap-1.5 border border-[var(--n3-line)] px-2.5 py-1.5 text-xs text-[var(--n3-text-light)] transition-colors hover:bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] sm:px-3"
