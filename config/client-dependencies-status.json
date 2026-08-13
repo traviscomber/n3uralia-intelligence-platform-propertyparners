@@ -1,33 +1,33 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-08-09",
+  "asOf": "2026-08-12",
   "allowedStatuses": ["pending", "received", "approved", "waived"],
   "dependencies": [
     {
       "id": "market-cbr-sales",
       "label": "Base histórica CBR y ventas recientes",
       "owner": "Client",
-      "status": "pending",
+      "status": "received",
       "requestedFrom": "Pedro Pablo",
       "requiredFor": ["market-intelligence", "uat-and-acceptance"],
-      "evidence": [],
-      "questions": [
-        {"id":"PP-MKT-01","text":"¿Cuál es la fuente oficial que debemos usar para las compraventas históricas y ventas recientes: archivo CBR/CBRS, proveedor externo, planilla interna u otra fuente?","responseType":"text","whyNeeded":"Define la fuente canónica que puede alimentar transacciones confirmadas y comparables vendidos."},
-        {"id":"PP-MKT-02","text":"¿Nos puedes entregar el archivo o acceso autorizado a esa fuente, indicando desde qué fecha debe cubrir datos y con qué periodicidad se actualizará?","responseType":"file","whyNeeded":"Permite activar el pipeline real y validar cobertura histórica, frescura y conciliación."}
-      ]
+      "evidence": [
+        "Pedro Pablo confirmed the Vitacura market scope and delivered the canonical CBRS Vitacura workbook; the source has been audited and integrated into market intelligence.",
+        "Canonical response record: docs/client-response-pedro-pablo-2026-08-12.md"
+      ],
+      "questions": []
     },
     {
       "id": "market-kml",
       "label": "KML oficial",
       "owner": "Client",
-      "status": "pending",
+      "status": "received",
       "requestedFrom": "Pedro Pablo",
       "requiredFor": ["market-intelligence"],
-      "evidence": [],
-      "questions": [
-        {"id":"PP-MKT-03","text":"¿Existe un KML/KMZ oficial de barrios, microbarrios o zonas comerciales que Property Partners quiera usar como delimitación canónica?","responseType":"yes_no","whyNeeded":"Evita inventar geometrías o usar límites territoriales no aprobados."},
-        {"id":"PP-MKT-04","text":"Si existe, ¿nos puedes entregar el archivo final y confirmar cuál es la versión vigente?","responseType":"file","whyNeeded":"Permite versionar y asignar propiedades a zonas con evidencia reproducible."}
-      ]
+      "evidence": [
+        "Property Partners delivered the Vitacura neighborhood KML; 19 valid neighborhood polygons were audited and integrated as the canonical territorial layer.",
+        "Canonical response record: docs/client-response-pedro-pablo-2026-08-12.md"
+      ],
+      "questions": []
     },
     {
       "id": "kpi-dictionary",
@@ -50,16 +50,15 @@
       "id": "users-and-roles",
       "label": "Directorio final de usuarios, roles y capacidades",
       "owner": "Client",
-      "status": "pending",
+      "status": "received",
       "requestedFrom": "Pedro Pablo",
       "requiredFor": ["uat-and-acceptance", "training-and-handover"],
       "evidence": [
         "Role hierarchy confirmed by project owner on 2026-08-09: admin is Travis/N3uralia technical site administrator and is outside Property Partners organizational hierarchy; Property Partners hierarchy is CEO Pedro Pablo -> account directors -> executives.",
-        "Runtime role mapping remains admin -> ceo -> director -> seller/executive."
+        "Pedro Pablo confirmed no existing user must be removed and identified the final additional users: María Luz Barbosa (director, Santa María), Claudia Stark (subdirector, Santa María), and Daniela Nasi (subdirector; office label remains editable and must be normalized from source evidence).",
+        "Canonical response record: docs/client-response-pedro-pablo-2026-08-12.md"
       ],
-      "questions": [
-        {"id":"PP-USR-01","text":"¿Nos puedes entregar el listado final de usuarios que participarán en la plataforma con nombre, email, rol y oficina/partner asociado?","responseType":"list","whyNeeded":"Permite ejecutar UAT real y comprobar aislamiento por rol con las cuentas finales."}
-      ]
+      "questions": []
     },
     {
       "id": "reporting-approval",
@@ -68,7 +67,9 @@
       "status": "pending",
       "requestedFrom": "Pedro Pablo",
       "requiredFor": ["automation-and-reporting"],
-      "evidence": [],
+      "evidence": [
+        "Pedro Pablo requested monthly automation to download specific CRM reports at month-end or the following day. Exact CRM report identities still require system evidence before automation."
+      ],
       "questions": [
         {"id":"PP-RPT-01","text":"¿Qué informes deben enviarse automáticamente, con qué frecuencia y en qué día/hora?","responseType":"structured","whyNeeded":"Activa schedules productivos sin inventar un calendario comercial."},
         {"id":"PP-RPT-02","text":"¿Quiénes son los destinatarios autorizados de cada informe y qué alcance debe recibir cada uno: global, oficina o personal?","responseType":"list","whyNeeded":"Permite configurar la distribución respetando alcance y confidencialidad."},
