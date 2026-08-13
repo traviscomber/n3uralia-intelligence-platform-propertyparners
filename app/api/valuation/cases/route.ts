@@ -176,8 +176,8 @@ export async function POST(request: Request) {
     let result
     try {
       result = calculateContractualValuation(payload.subject, submittedComparables, payload.qualitativeFactors)
-    } catch (error) {
-      return NextResponse.json({ error: error instanceof Error ? error.message : 'No fue posible calcular la valorización con los datos enviados.' }, { status: 400 })
+    } catch {
+      return NextResponse.json({ error: 'Los datos no cumplen los requisitos de la metodología canónica de valorización.' }, { status: 400 })
     }
 
     const conditionResult = payload.conditionAssessment
