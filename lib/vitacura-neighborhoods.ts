@@ -2,10 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 
 const KML_SOURCE_CODE = 'kml_vitacura_barrios_2026_08_12'
 
+export type VitacuraGeoJsonMultiPolygon = {
+  type: 'MultiPolygon'
+  coordinates: number[][][][]
+}
+
 export type VitacuraNeighborhoodCoverageRow = {
   name: string
   partners: string[]
   properties: number
+  geometry: VitacuraGeoJsonMultiPolygon | null
 }
 
 export type VitacuraNeighborhoodSnapshot = {
@@ -42,6 +48,22 @@ function normalizePartners(value: unknown): string[] {
   return [...new Set(normalized)]
 }
 
+function normalizeGeometry(value: unknown): VitacuraGeoJsonMultiPolygon | null {
+  if (!value || typeof value !== 'object') return null
+  const candidate = value as { type?: unknown; coordinates?: unknown }
+  if (!Array.isArray(candidate.coordinates)) return null
+
+  if (candidate.type === 'MultiPolygon') {
+    return { type: 'MultiPolygon', coordinates: candidate.coordinates as number[][][][] }
+  }
+
+  if (candidate.type === 'Polygon') {
+    return { type: 'MultiPolygon', coordinates: [candidate.coordinates as number[][][]] }
+  }
+
+  return null
+}
+
 export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighborhoodSnapshot> {
   try {
     const supabase = await createClient()
@@ -62,7 +84,7 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
         .eq('version', '2026-08-12'),
       supabase
         .from('market_neighborhoods')
-        .select('id,name,micro_neighborhood')
+        .select('id,name,micro_neighborhood,geometry')
         .eq('geometry_source_id', source.data.id),
     ])
 
@@ -102,6 +124,7 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
           name: row.micro_neighborhood || row.name,
           partners: normalizePartners(territory?.raw_properties),
           properties: countByNeighborhood.get(row.id) ?? 0,
+          geometry: normalizeGeometry(row.geometry),
         }
       })
       .sort((a, b) => b.properties - a.properties || a.name.localeCompare(b.name, 'es'))
@@ -111,7 +134,7 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
       sourceFile: source.data.file_name,
       sourceHash: source.data.file_hash,
       importedAt: source.data.imported_at,
-      polygons: neighborhoods.length,
+      polygons: neighborhoods.filter((row) => row.geometry).length,
       assignedProperties: neighborhoods.reduce((total, row) => total + row.properties, 0),
       neighborhoods,
     }
