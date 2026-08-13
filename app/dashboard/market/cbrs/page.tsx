@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Upload } from 'lucide-react'
 import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { getCbrsReferenceSnapshot } from '@/lib/cbrs-reference-intelligence'
@@ -19,7 +19,10 @@ export default async function CbrsMarketPage() {
         eyebrow="Mercado · CBRS"
         title="Ventas registradas Vitacura"
         meta="Fuente canónica Property Partners · 2014–2026"
-        actions={[{ label: 'Volver', href: '/dashboard/market', icon: <ArrowLeft size={15} /> }]}
+        actions={[
+          { label: 'Cargar ventas detalladas', href: '/dashboard/market/import-cbrs', icon: <Upload size={15} /> },
+          { label: 'Volver', href: '/dashboard/market', icon: <ArrowLeft size={15} /> },
+        ]}
       />
 
       {snapshot.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la referencia CBRS." /></div> : null}
@@ -62,7 +65,10 @@ export default async function CbrsMarketPage() {
         </div>
       </section>
 
-      <div className="mt-8 text-xs text-[var(--n3-text-muted)]"><Link className="text-[var(--n3-accent)]" href="/dashboard/market">Volver a Inteligencia de Mercado</Link></div>
+      <div className="mt-8 flex flex-wrap items-center gap-6 text-xs text-[var(--n3-text-muted)]">
+        <Link className="text-[var(--n3-accent)]" href="/dashboard/market/import-cbrs">Cargar workbook CBRS canónico</Link>
+        <Link className="text-[var(--n3-accent)]" href="/dashboard/market">Volver a Inteligencia de Mercado</Link>
+      </div>
     </WorkspaceShell>
   )
 }
