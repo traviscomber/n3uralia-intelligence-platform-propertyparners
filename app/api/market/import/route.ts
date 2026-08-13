@@ -90,6 +90,7 @@ async function readJsonBody(req: NextRequest) {
     observed_at?: string
     dataset_kind?: string
     full_snapshot?: boolean | string | number
+    canonical_reference?: boolean | string | number
     mode?: string
     kind?: string
   }
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
     let observedAt = new Date().toISOString()
     let portalDatasetKind = parsePortalDatasetKind(url.searchParams.get('dataset_kind'))
     let fullSnapshot = parseBoolean(url.searchParams.get('full_snapshot'))
+    let canonicalReference = parseBoolean(url.searchParams.get('canonical_reference'))
     let inputRows: MarketImportInputRow[] = []
     let fileName = 'import.csv'
 
@@ -134,6 +136,7 @@ export async function POST(req: NextRequest) {
       snapshotDate = rawSnapshotDate || snapshotDate
       observedAt = rawObservedAt || observedAt
       fullSnapshot = parseBoolean(formData.get('full_snapshot'))
+      canonicalReference = parseBoolean(formData.get('canonical_reference'))
 
       if (!(file instanceof File)) {
         return NextResponse.json({ error: 'Debes subir un archivo .csv, .xls o .xlsx.' }, { status: 400 })
@@ -153,6 +156,7 @@ export async function POST(req: NextRequest) {
       observedAt = body.observed_at || observedAt
       portalDatasetKind = parsePortalDatasetKind(body.dataset_kind || null)
       fullSnapshot = parseBoolean(body.full_snapshot)
+      canonicalReference = parseBoolean(body.canonical_reference)
       inputRows = Array.isArray(body.rows) ? body.rows : Array.isArray(body.records) ? body.records : []
       fileName = 'payload.json'
     }
@@ -160,26 +164,28 @@ export async function POST(req: NextRequest) {
     if (!inputRows.length) return NextResponse.json({ error: 'No encontramos filas para importar.' }, { status: 400 })
 
     if (kind === 'portal_listings') {
-      const normalized = normalizePortalListingRows(inputRows)
-      const validRows = normalized.filter((row) => row.source_listing_id)
+      const normalized = normalizePortalListingRows(inputRows, portalDatasetKind).map((row) => canonicalReference
+        ? { ...row, status: 'observed', canonical_reference: true }
+        : row)
+      const validRows = normalized.filter((row) => row.source_listing_id && row.url)
       const skipped = normalized.length - validRows.length
       const preview = normalized.slice(0, 12)
-      const summary = { rows: normalized.length, valid: validRows.length, skipped, datasetKind: portalDatasetKind, fullSnapshot }
+      const summary = { rows: normalized.length, valid: validRows.length, skipped, datasetKind: portalDatasetKind, fullSnapshot, canonicalReference }
 
       if (mode === 'preview') {
-        return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem: 'portal_inmobiliario', observedAt, summary, preview, message: 'Vista previa de Portal lista. Las filas sin identificador de publicación serán rechazadas.' })
+        return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem: 'portal_inmobiliario', observedAt, summary, preview, message: canonicalReference ? 'Vista previa canónica de Portal lista. Se guardará como evidencia observada, no como inventario activo.' : 'Vista previa de Portal lista. Las filas sin identificador o URL serán rechazadas.' })
       }
 
-      if (!validRows.length) return NextResponse.json({ error: 'Ninguna fila de Portal contiene un identificador de publicación válido.' }, { status: 422 })
+      if (!validRows.length) return NextResponse.json({ error: 'Ninguna fila de Portal contiene identificador y URL válidos.' }, { status: 422 })
 
       const supabase = getServiceClient()
-      const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot', {
+      const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot_v2', {
         p_source_label: sourceLabel,
         p_source_file: fileName,
         p_dataset_kind: portalDatasetKind,
         p_observed_at: observedAt,
         p_rows: normalized,
-        p_full_snapshot: fullSnapshot,
+        p_full_snapshot: canonicalReference ? false : fullSnapshot,
       })
       if (pipelineError) throw pipelineError
       const persistedFailure = persistedPipelineFailure(pipelineResult as PipelineResult | null)
@@ -201,6 +207,8 @@ export async function POST(req: NextRequest) {
           updated: Number(pipelineResult?.updated ?? 0),
           unchanged: Number(pipelineResult?.unchanged ?? 0),
           removed: Number(pipelineResult?.removed ?? 0),
+          linked: Number(pipelineResult?.linked ?? 0),
+          unlinked: Number(pipelineResult?.unlinked ?? 0),
           runId: pipelineResult?.run_id ?? null,
           sourceId: pipelineResult?.source_id ?? null,
         },
