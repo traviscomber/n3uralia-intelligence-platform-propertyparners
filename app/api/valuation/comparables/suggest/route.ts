@@ -14,6 +14,19 @@ type SuggestPayload = {
   longitude?: number
 }
 
+type PropertyRow = {
+  property_type: string | null
+  useful_area_m2: number | string | null
+  built_area_m2: number | string | null
+  land_area_m2: number | string | null
+  bedrooms: number | null
+  bathrooms: number | null
+  parking_spaces: number | null
+  latitude: number | string | null
+  longitude: number | string | null
+  market_neighborhoods: Array<{ name: string | null }>
+}
+
 type ListingRow = {
   id: string
   source_listing_id: string
@@ -22,18 +35,7 @@ type ListingRow = {
   normalized_address: string | null
   price_uf: number | string | null
   observed_at: string | null
-  market_properties: {
-    property_type: string | null
-    useful_area_m2: number | string | null
-    built_area_m2: number | string | null
-    land_area_m2: number | string | null
-    bedrooms: number | null
-    bathrooms: number | null
-    parking_spaces: number | null
-    latitude: number | string | null
-    longitude: number | string | null
-    market_neighborhoods: { name: string | null } | null
-  } | null
+  market_properties: PropertyRow[]
 }
 
 const num = (value: unknown) => {
@@ -56,9 +58,7 @@ function relativeSimilarity(subject: number, candidate: number) {
   return Math.max(0, 1 - Math.min(delta, 1))
 }
 
-function scoreCandidate(payload: SuggestPayload, row: ListingRow) {
-  const property = row.market_properties
-  if (!property) return 0
+function scoreCandidate(payload: SuggestPayload, property: PropertyRow) {
   const subjectArea = payload.propertyType === 'Departamento'
     ? num(payload.usefulAreaM2)
     : num(payload.builtAreaM2 || payload.usefulAreaM2)
@@ -112,14 +112,14 @@ export async function POST(request: Request) {
     if (listingError) return NextResponse.json({ error: 'No fue posible consultar comparables de mercado.' }, { status: 422 })
 
     const unique = new Map<string, ListingRow>()
-    for (const item of (listings ?? []) as ListingRow[]) {
+    for (const item of (listings ?? []) as unknown as ListingRow[]) {
       const key = item.source_listing_id || item.url || item.id
       if (!unique.has(key)) unique.set(key, item)
     }
 
     const suggestions = [...unique.values()]
       .map((item) => {
-        const property = item.market_properties
+        const property = item.market_properties[0]
         if (!property) return null
         const useful = num(property.useful_area_m2)
         const built = num(property.built_area_m2)
@@ -141,7 +141,7 @@ export async function POST(request: Request) {
           sourceType: 'Portal' as const,
           sourceReference: item.url || item.source_listing_id,
           address: item.normalized_address || item.title || 'Comparable Portal',
-          neighborhood: property.market_neighborhoods?.name || neighborhood.name,
+          neighborhood: property.market_neighborhoods[0]?.name || neighborhood.name,
           propertyType: payload.propertyType,
           totalAreaM2: payload.propertyType === 'Departamento' ? useful || undefined : undefined,
           usefulAreaM2: useful || undefined,
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
           parkingSpaces: property.parking_spaces ?? undefined,
           priceUf: price,
           priceUfM2: Number((price / canonicalArea).toFixed(2)),
-          similarityScore: Number(scoreCandidate(payload, item).toFixed(4)),
+          similarityScore: Number(scoreCandidate(payload, property).toFixed(4)),
           selected: false,
           adjustmentPct: 0,
           adjustmentNotes: incompleteHouseArea
