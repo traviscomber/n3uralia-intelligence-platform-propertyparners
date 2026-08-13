@@ -5,10 +5,15 @@ import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/c
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
+import { getPortalReferenceSnapshot } from '@/lib/portal-reference-intelligence'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
 
 function number(value: number | null) {
   return value === null ? '—' : value.toLocaleString('es-CL')
+}
+
+function decimal(value: number | null, digits = 1) {
+  return value === null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
 }
 
 function percent(value: number | null) {
@@ -29,11 +34,18 @@ function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
   return '—'
 }
 
+const portalLabels = {
+  portal_apartments: 'Departamentos',
+  portal_houses: 'Casas',
+  portal_projects: 'Proyectos',
+} as const
+
 export default async function MarketPage() {
-  const [market, scope, territory] = await Promise.all([
+  const [market, scope, territory, portalReference] = await Promise.all([
     getOperationalMarketSnapshot(),
     requireUserScope(),
     getVitacuraNeighborhoodSnapshot(),
+    getPortalReferenceSnapshot(),
   ])
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
   const territorialCoverage = market.canonicalProperties && market.missingNeighborhoods !== null
@@ -73,6 +85,7 @@ export default async function MarketPage() {
 
       {market.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar toda la información de mercado." /></div> : null}
       {territory.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la capa territorial de barrios." /></div> : null}
+      {portalReference.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la referencia canónica de Portal Inmobiliario." /></div> : null}
 
       <MetricStrip items={[
         { label: 'Oferta', value: number(market.activeInventory) },
@@ -80,6 +93,49 @@ export default async function MarketPage() {
         { label: 'Confirmadas', value: number(market.confirmedProperties), tone: confirmedCoverage !== null && confirmedCoverage < 0.5 ? 'danger' : 'default' },
         { label: 'Ventas', value: number(market.confirmedSales), tone: market.confirmedSales === 0 ? 'warning' : 'default' },
       ]} />
+
+      {portalReference.datasets.length ? (
+        <section className="mt-7">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--n3-line)] pb-2">
+            <div>
+              <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Portal Inmobiliario · referencia canónica</h2>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Snapshot entregado por Property Partners · marzo 2026. Referencia histórica, no inventario vivo.</p>
+            </div>
+            <Link href="/dashboard/market/import-portal" className="text-xs font-medium text-[var(--n3-accent)]">Administrar referencia</Link>
+          </div>
+          <div className="divide-y divide-[var(--n3-line)]">
+            {portalReference.datasets.map((reference) => {
+              const live = portalReference.liveDatasets.find((row) => row.datasetKind === reference.datasetKind)
+              const coverage = reference.listingCount > 0 ? (live?.listingCount ?? 0) / reference.listingCount : null
+              return (
+                <div key={reference.datasetKind} className="grid gap-4 py-4 lg:grid-cols-[minmax(150px,0.8fr)_repeat(4,minmax(110px,1fr))] lg:items-end">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--n3-text-light)]">{portalLabels[reference.datasetKind]}</p>
+                    <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Cobertura live {percent(coverage)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Listings</p>
+                    <p className="mt-1 text-lg font-semibold tabular-nums">{number(live?.listingCount ?? 0)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {number(reference.listingCount)}</span></p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana UF</p>
+                    <p className="mt-1 text-lg font-semibold tabular-nums">{decimal(live?.medianPriceUf ?? null, 0)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {decimal(reference.medianPriceUf, 0)}</span></p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">UF/m²</p>
+                    <p className="mt-1 text-lg font-semibold tabular-nums">{decimal(live?.medianUfM2 ?? null, 1)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {decimal(reference.medianUfM2, 1)}</span></p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Superficie mediana</p>
+                    <p className="mt-1 text-lg font-semibold tabular-nums">{decimal(live?.medianAreaM2 ?? null, 0)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {decimal(reference.medianAreaM2, 0)} m²</span></p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-2 text-[10px] text-[var(--n3-text-muted)]">Formato: live actual / referencia canónica.</p>
+        </section>
+      ) : null}
 
       <section className="mt-6">
         <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
@@ -148,7 +204,7 @@ export default async function MarketPage() {
       <DataStatusBar
         cutoff={date(market.latestObservedAt)}
         coverage={`${number(market.confirmedProperties)} de ${number(market.canonicalProperties)} propiedades confirmadas`}
-        issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (territory.error ? 1 : 0)}
+        issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (territory.error ? 1 : 0) + (portalReference.error ? 1 : 0)}
         status={dataStatus}
       />
 
