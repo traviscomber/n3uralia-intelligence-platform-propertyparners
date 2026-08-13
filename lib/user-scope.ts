@@ -118,9 +118,12 @@ export async function getUserScope(): Promise<UserScope> {
   }
 
   const office = officeFromEntity(entity, parent)
+  // Global roles are never row-filtered by management entity IDs. Keeping this
+  // dependency out of their scope construction also prevents an auxiliary RPC
+  // drift from taking down unrelated global workflows such as valuation reads.
   const [visibleProfileIds, visibleEntityIds] = await Promise.all([
     resolveVisibleProfileIds(),
-    resolveVisibleEntityIds(),
+    access.scope === 'global' ? Promise.resolve([]) : resolveVisibleEntityIds(),
   ])
 
   return {
