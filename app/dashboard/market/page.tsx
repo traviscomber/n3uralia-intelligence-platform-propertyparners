@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AlertTriangle, Download, FileText, MapPinned, RefreshCw, Settings2 } from 'lucide-react'
+import { AlertTriangle, Download, FileText, MapPinned, RefreshCw, Settings2, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
@@ -76,8 +76,9 @@ export default async function MarketPage() {
         title="Vitacura"
         meta={`Corte ${date(market.latestObservedAt)} · ${freshness(market.freshnessStatus, market.observationAgeDays)}`}
         actions={[
+          { label: 'Oferta vs ventas', href: '/dashboard/market/inteligencia', primary: true, icon: <TrendingUp size={15} /> },
           { label: '', href: '/dashboard/market', ariaLabel: 'Actualizar mercado', icon: <RefreshCw size={15} /> },
-          { label: 'Informe', href: '/dashboard/market/export', primary: true, icon: <FileText size={15} /> },
+          { label: 'Informe', href: '/dashboard/market/export', icon: <FileText size={15} /> },
           { label: 'Exportar', href: '/api/market/export?dataset=listings&format=xlsx', icon: <Download size={15} /> },
           ...(canManage ? [{ label: '', href: '/dashboard/market/fuentes', ariaLabel: 'Administrar fuentes', icon: <Settings2 size={15} /> }] : []),
         ]}
@@ -101,7 +102,10 @@ export default async function MarketPage() {
               <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Portal Inmobiliario · referencia canónica</h2>
               <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Snapshot entregado por Property Partners · marzo 2026. Referencia histórica, no inventario vivo.</p>
             </div>
-            <Link href="/dashboard/market/import-portal" className="text-xs font-medium text-[var(--n3-accent)]">Administrar referencia</Link>
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard/market/inteligencia" className="text-xs font-medium text-[var(--n3-accent)]">Cruzar con ventas CBRS</Link>
+              <Link href="/dashboard/market/import-portal" className="text-xs font-medium text-[var(--n3-accent)]">Administrar referencia</Link>
+            </div>
           </div>
           <div className="divide-y divide-[var(--n3-line)]">
             {portalReference.datasets.map((reference) => {
