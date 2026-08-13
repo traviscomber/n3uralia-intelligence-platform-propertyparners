@@ -24,6 +24,15 @@ export type NormalizedPortalListingRow = {
   parking_spaces: number | null
   construction_year: number | null
   published_at: string | null
+  source_bucket?: string | null
+  seller_name?: string | null
+  photos_count?: number | null
+  photo_urls?: string[]
+  raw_price?: unknown
+  raw_useful_area?: unknown
+  raw_total_area?: unknown
+  normalization_flags?: string[]
+  canonical_reference?: boolean
 }
 
 export type NormalizedCbrsTransactionRow = {
@@ -77,9 +86,12 @@ function number(value: unknown) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
   const input = String(value).trim().replace(/\s+/g, '').replace(/\$/g, '').replace(/UF|CLP/gi, '')
   if (!input) return null
-  const normalized = input.includes(',') && input.includes('.')
-    ? input.replace(/\./g, '').replace(',', '.')
-    : input.replace(',', '.')
+  const thousandsOnly = /^\d{1,3}(?:\.\d{3})+$/.test(input)
+  const normalized = thousandsOnly
+    ? input.replace(/\./g, '')
+    : input.includes(',') && input.includes('.')
+      ? input.replace(/\./g, '').replace(',', '.')
+      : input.replace(',', '.')
   const parsed = Number.parseFloat(normalized)
   return Number.isFinite(parsed) ? parsed : null
 }
@@ -87,6 +99,12 @@ function number(value: unknown) {
 function integer(value: unknown) {
   const parsed = number(value)
   return parsed == null ? null : Math.round(parsed)
+}
+
+function boundedNumber(value: unknown, min: number, max: number) {
+  const parsed = number(value)
+  if (parsed == null || parsed < min || parsed > max) return null
+  return parsed
 }
 
 function isoDate(value: unknown) {
@@ -111,30 +129,103 @@ function isoDateTime(value: unknown) {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
 }
 
-export function normalizePortalListingRows(rows: MarketImportInputRow[]): NormalizedPortalListingRow[] {
-  return rows.map((row) => ({
-    source_listing_id: text(pick(row, ['source_listing_id', 'listing_id', 'mlc_id', 'id', 'codigo', 'codigo_publicacion'])) || '',
-    property_type: text(pick(row, ['property_type', 'tipo_propiedad', 'tipo'])) || '',
-    operation: text(pick(row, ['operation', 'operacion', 'tipo_operacion'])) || 'Venta',
-    status: text(pick(row, ['status', 'estado'])) || 'active',
-    url: text(pick(row, ['url', 'source_url', 'link', 'enlace'])),
-    title: text(pick(row, ['title', 'titulo', 'nombre'])),
-    address: text(pick(row, ['address', 'direccion', 'ubicacion'])),
-    normalized_address: text(pick(row, ['normalized_address', 'direccion_normalizada'])),
-    latitude: number(pick(row, ['latitude', 'latitud', 'lat'])),
-    longitude: number(pick(row, ['longitude', 'longitud', 'lng', 'lon'])),
-    price_clp: number(pick(row, ['price_clp', 'precio_clp', 'precio_pesos'])),
-    price_uf: number(pick(row, ['price_uf', 'precio_uf', 'uf'])),
-    price_uf_m2: number(pick(row, ['price_uf_m2', 'precio_uf_m2', 'uf_m2'])),
-    land_area_m2: number(pick(row, ['land_area_m2', 'superficie_terreno', 'terreno_m2'])),
-    built_area_m2: number(pick(row, ['built_area_m2', 'superficie_construida', 'construidos_m2'])),
-    useful_area_m2: number(pick(row, ['useful_area_m2', 'superficie_util', 'utiles_m2'])),
-    bedrooms: integer(pick(row, ['bedrooms', 'dormitorios', 'habitaciones'])),
-    bathrooms: integer(pick(row, ['bathrooms', 'banos'])),
-    parking_spaces: integer(pick(row, ['parking_spaces', 'estacionamientos', 'parking'])),
-    construction_year: integer(pick(row, ['construction_year', 'ano_construccion', 'year_built'])),
-    published_at: isoDateTime(pick(row, ['published_at', 'fecha_publicacion', 'publicado_el'])),
-  }))
+function sourceListingId(row: MarketImportInputRow) {
+  const explicit = text(pick(row, ['source_listing_id', 'listing_id', 'mlc_id', 'id', 'codigo', 'codigo_publicacion']))
+  if (explicit) return explicit.replace(/^MLC-?/i, '')
+  const url = text(pick(row, ['url', 'source_url', 'link', 'enlace']))
+  const match = url?.match(/MLC-?(\d+)/i)
+  return match?.[1] ?? ''
+}
+
+function portalPhotos(value: unknown) {
+  const raw = text(value)
+  if (!raw) return []
+  const seen = new Set<string>()
+  const output: string[] = []
+  for (const candidate of raw.split('|').map((item) => item.trim()).filter(Boolean)) {
+    if (!candidate.includes('D_NQ_NP_')) continue
+    if (seen.has(candidate)) continue
+    seen.add(candidate)
+    output.push(candidate)
+  }
+  return output
+}
+
+function canonicalPortalPrice(row: MarketImportInputRow) {
+  const explicitUf = number(pick(row, ['price_uf', 'precio_uf', 'uf']))
+  const explicitClp = number(pick(row, ['price_clp', 'precio_clp', 'precio_pesos']))
+  const raw = pick(row, ['precio', 'price'])
+  const generic = number(raw)
+  const flags: string[] = []
+
+  if (explicitUf != null || explicitClp != null) return { priceUf: explicitUf, priceClp: explicitClp, raw, flags }
+  if (generic == null || generic <= 0) return { priceUf: null, priceClp: null, raw, flags: ['missing_or_invalid_price'] }
+  if (generic > 100_000) return { priceUf: null, priceClp: generic, raw, flags: ['price_interpreted_clp_by_magnitude'] }
+  return { priceUf: generic, priceClp: null, raw, flags }
+}
+
+export function normalizePortalListingRows(rows: MarketImportInputRow[], datasetKind: PortalDatasetKind = 'portal_apartments'): NormalizedPortalListingRow[] {
+  return rows.map((row) => {
+    const price = canonicalPortalPrice(row)
+    const rawUsefulArea = pick(row, ['useful_area_m2', 'superficie_util', 'utiles_m2', 'm2_util', 'm2_util_card'])
+    const rawTotalArea = pick(row, ['built_area_m2', 'superficie_construida', 'construidos_m2', 'm2_total'])
+    const areaCeiling = datasetKind === 'portal_projects' ? 500 : datasetKind === 'portal_houses' ? 2500 : 1000
+    const usefulArea = boundedNumber(rawUsefulArea, 15, areaCeiling)
+    const rawBuilt = number(rawTotalArea)
+    const builtArea = datasetKind === 'portal_projects'
+      ? null
+      : rawBuilt != null && rawBuilt >= 15 && rawBuilt <= 2500
+        ? rawBuilt
+        : null
+    const flags = [...price.flags]
+    if (number(rawUsefulArea) != null && usefulArea == null) flags.push('useful_area_out_of_range')
+    if (datasetKind === 'portal_projects' && rawBuilt != null) flags.push('project_total_area_field_not_trusted')
+
+    const rawLat = number(pick(row, ['latitude', 'latitud', 'lat']))
+    const rawLon = number(pick(row, ['longitude', 'longitud', 'lng', 'lon']))
+    const latitude = rawLat != null && rawLat > -34 && rawLat < -32 ? rawLat : null
+    const longitude = rawLon != null && rawLon > -72 && rawLon < -69 ? rawLon : null
+    if (rawLat != null && latitude == null) flags.push('latitude_outside_santiago')
+    if (rawLon != null && longitude == null) flags.push('longitude_outside_santiago')
+
+    const url = text(pick(row, ['url', 'source_url', 'link', 'enlace']))
+    const explicitType = text(pick(row, ['property_type', 'tipo_propiedad', 'tipo']))
+    const propertyType = explicitType || (datasetKind === 'portal_houses' ? 'Casa' : datasetKind === 'portal_projects' ? 'Proyecto' : 'Departamento')
+    const photos = portalPhotos(pick(row, ['fotos_urls', 'photo_urls', 'photos']))
+
+    return {
+      source_listing_id: sourceListingId(row),
+      property_type: propertyType,
+      operation: text(pick(row, ['operation', 'operacion', 'tipo_operacion'])) || 'Venta',
+      status: text(pick(row, ['status', 'estado'])) || 'active',
+      url,
+      title: text(pick(row, ['title', 'titulo', 'nombre'])),
+      address: text(pick(row, ['address', 'direccion', 'ubicacion'])),
+      normalized_address: text(pick(row, ['normalized_address', 'direccion_normalizada'])),
+      latitude,
+      longitude,
+      price_clp: price.priceClp,
+      price_uf: price.priceUf,
+      price_uf_m2: price.priceUf != null && usefulArea != null && usefulArea > 0 ? price.priceUf / usefulArea : number(pick(row, ['price_uf_m2', 'precio_uf_m2', 'uf_m2'])),
+      land_area_m2: number(pick(row, ['land_area_m2', 'superficie_terreno', 'terreno_m2'])),
+      built_area_m2: builtArea,
+      useful_area_m2: usefulArea,
+      bedrooms: integer(pick(row, ['bedrooms', 'dormitorios', 'habitaciones', 'dorm', 'dorm_card'])),
+      bathrooms: integer(pick(row, ['bathrooms', 'banos', 'banos_card'])),
+      parking_spaces: integer(pick(row, ['parking_spaces', 'estacionamientos', 'parking'])),
+      construction_year: integer(pick(row, ['construction_year', 'ano_construccion', 'year_built'])),
+      published_at: isoDateTime(pick(row, ['published_at', 'fecha_publicacion', 'publicado_el'])),
+      source_bucket: text(pick(row, ['bucket'])),
+      seller_name: text(pick(row, ['seller_name', 'seller', 'vendedor'])),
+      photos_count: integer(pick(row, ['fotos_count', 'photos_count'])),
+      photo_urls: photos,
+      raw_price: price.raw,
+      raw_useful_area: rawUsefulArea,
+      raw_total_area: rawTotalArea,
+      normalization_flags: flags,
+      canonical_reference: false,
+    }
+  })
 }
 
 export function normalizeCbrsTransactionRows(rows: MarketImportInputRow[]): NormalizedCbrsTransactionRow[] {
