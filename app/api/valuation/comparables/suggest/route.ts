@@ -120,7 +120,7 @@ function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
 
 export async function POST(request: Request) {
   try {
-    await requireAnyCapability(['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'])
+    await requireAnyCapability(['valuations.global.read', 'valuations.self.create', 'valuations.office.review', 'valuations.global.approve'])
     const payload = await request.json() as SuggestPayload
     if (!payload || !['Casa', 'Departamento'].includes(payload.propertyType) || !payload.neighborhood?.trim()) {
       return NextResponse.json({ error: 'Tipo de propiedad y barrio son obligatorios.' }, { status: 400 })
