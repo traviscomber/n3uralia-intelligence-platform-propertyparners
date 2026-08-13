@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 
 type Payload = { propertyType: 'Casa' | 'Departamento'; neighborhood: string; usefulAreaM2?: number; builtAreaM2?: number; latitude?: number; longitude?: number }
@@ -13,8 +13,8 @@ export async function POST(request:Request){
     await requireAnyCapability(['valuations.self.create','valuations.office.review','valuations.global.approve'])
     const payload=await request.json() as Payload
     if(!payload?.neighborhood||!['Casa','Departamento'].includes(payload.propertyType)) return NextResponse.json({error:'Tipo y barrio son obligatorios.'},{status:400})
-    const supabase=await createClient()
-    const {data,error}=await supabase.from('market_cbrs_reference_transactions').select('id,event_key,transaction_date,address,rol,price_uf,built_area_m2,land_area_m2,latitude,longitude,neighborhood').eq('property_type',payload.propertyType).ilike('neighborhood',payload.neighborhood.trim()).not('price_uf','is',null).gt('price_uf',0).not('built_area_m2','is',null).gt('built_area_m2',0).order('transaction_date',{ascending:false}).limit(150)
+    const admin=createAdminClient()
+    const {data,error}=await admin.from('market_cbrs_reference_transactions').select('id,event_key,transaction_date,address,rol,price_uf,built_area_m2,land_area_m2,latitude,longitude,neighborhood').eq('property_type',payload.propertyType).ilike('neighborhood',payload.neighborhood.trim()).not('price_uf','is',null).gt('price_uf',0).not('built_area_m2','is',null).gt('built_area_m2',0).order('transaction_date',{ascending:false}).limit(150)
     if(error) return NextResponse.json({error:'No fue posible consultar ventas CBRS.'},{status:422})
     const subjectArea=payload.propertyType==='Departamento'?num(payload.usefulAreaM2):num(payload.builtAreaM2)
     const suggestions=((data??[]) as unknown as Row[]).map((row)=>{
