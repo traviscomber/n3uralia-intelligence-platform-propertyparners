@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AlertTriangle, Download, FileText, MapPinned, RefreshCw, Settings2 } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
+import { VitacuraNeighborhoodMap } from '@/components/market/vitacura-neighborhood-map'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
@@ -120,29 +121,14 @@ export default async function MarketPage() {
           <div>
             <div className="flex items-center gap-2">
               <MapPinned size={15} className="text-[var(--n3-accent)]" />
-              <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Barrios Property Partners</h2>
+              <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Mapa territorial Property Partners</h2>
             </div>
-            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Clasificación geográfica exacta desde {territory.sourceFile ?? 'KML'}.</p>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Polígonos reales y clasificación exacta desde {territory.sourceFile ?? 'KML'}.</p>
           </div>
           <span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{territory.polygons} zonas · {number(territory.assignedProperties)} propiedades</span>
         </div>
 
-        <div className="divide-y divide-[var(--n3-line)]">
-          {territory.neighborhoods.map((row) => (
-            <div key={row.name} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-[var(--n3-text-light)]">{row.name}</p>
-                <p className="mt-0.5 truncate text-xs text-[var(--n3-text-muted)]">
-                  {row.partners.length ? row.partners.join(' · ') : 'Sin partner asignado en la fuente'}
-                </p>
-              </div>
-              <div className="text-left sm:text-right">
-                <p className="text-sm font-semibold tabular-nums">{number(row.properties)}</p>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">propiedades</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <VitacuraNeighborhoodMap neighborhoods={territory.neighborhoods} />
       </section>
 
       <DataStatusBar
