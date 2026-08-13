@@ -21,7 +21,6 @@ type ListingRow = {
   title: string | null
   normalized_address: string | null
   price_uf: number | string | null
-  price_uf_m2: number | string | null
   observed_at: string | null
   market_properties: {
     property_type: string | null
@@ -60,7 +59,6 @@ function relativeSimilarity(subject: number, candidate: number) {
 function scoreCandidate(payload: SuggestPayload, row: ListingRow) {
   const property = row.market_properties
   if (!property) return 0
-
   const subjectArea = payload.propertyType === 'Departamento'
     ? num(payload.usefulAreaM2)
     : num(payload.builtAreaM2 || payload.usefulAreaM2)
@@ -69,10 +67,8 @@ function scoreCandidate(payload: SuggestPayload, row: ListingRow) {
     : num(property.built_area_m2 || property.useful_area_m2)
 
   let score = relativeSimilarity(subjectArea, candidateArea) * 0.6
-  if (payload.bedrooms && property.bedrooms) score += relativeSimilarity(payload.bedrooms, property.bedrooms) * 0.15
-  else score += 0.075
-  if (payload.bathrooms && property.bathrooms) score += relativeSimilarity(payload.bathrooms, property.bathrooms) * 0.15
-  else score += 0.075
+  score += payload.bedrooms && property.bedrooms ? relativeSimilarity(payload.bedrooms, property.bedrooms) * 0.15 : 0.075
+  score += payload.bathrooms && property.bathrooms ? relativeSimilarity(payload.bathrooms, property.bathrooms) * 0.15 : 0.075
 
   const lat1 = num(payload.latitude)
   const lon1 = num(payload.longitude)
@@ -81,9 +77,7 @@ function scoreCandidate(payload: SuggestPayload, row: ListingRow) {
   if (lat1 && lon1 && lat2 && lon2) {
     const distance = haversineMeters(lat1, lon1, lat2, lon2)
     score += Math.max(0, 1 - Math.min(distance / 3000, 1)) * 0.1
-  } else {
-    score += 0.05
-  }
+  } else score += 0.05
   return Math.min(1, score)
 }
 
@@ -108,7 +102,7 @@ export async function POST(request: Request) {
 
     const { data: listings, error: listingError } = await supabase
       .from('market_current_listings')
-      .select('id,source_listing_id,url,title,normalized_address,price_uf,price_uf_m2,observed_at,market_properties!inner(property_type,useful_area_m2,built_area_m2,land_area_m2,bedrooms,bathrooms,parking_spaces,latitude,longitude,market_neighborhoods(name))')
+      .select('id,source_listing_id,url,title,normalized_address,price_uf,observed_at,market_properties!inner(property_type,useful_area_m2,built_area_m2,land_area_m2,bedrooms,bathrooms,parking_spaces,latitude,longitude,market_neighborhoods(name))')
       .eq('status', 'active')
       .eq('market_properties.property_type', payload.propertyType)
       .eq('market_properties.neighborhood_id', neighborhood.id)
@@ -132,15 +126,16 @@ export async function POST(request: Request) {
         const land = num(property.land_area_m2)
         const price = num(item.price_uf)
         if (price <= 0) return null
-        const canonicalArea = payload.propertyType === 'Departamento'
-          ? useful
-          : (built > 0 ? built + land / 4 : useful)
+        const canonicalArea = payload.propertyType === 'Departamento' ? useful : (built > 0 ? built + land / 4 : useful)
         if (canonicalArea <= 0) return null
+
         const latitude = num(property.latitude) || undefined
         const longitude = num(property.longitude) || undefined
         const distanceMeters = payload.latitude && payload.longitude && latitude && longitude
           ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude))
           : undefined
+        const incompleteHouseArea = payload.propertyType === 'Casa' && built <= 0
+
         return {
           id: `auto-${item.id}`,
           sourceType: 'Portal' as const,
@@ -148,6 +143,7 @@ export async function POST(request: Request) {
           address: item.normalized_address || item.title || 'Comparable Portal',
           neighborhood: property.market_neighborhoods?.name || neighborhood.name,
           propertyType: payload.propertyType,
+          totalAreaM2: payload.propertyType === 'Departamento' ? useful || undefined : undefined,
           usefulAreaM2: useful || undefined,
           builtAreaM2: built || undefined,
           landAreaM2: land || undefined,
@@ -159,14 +155,14 @@ export async function POST(request: Request) {
           similarityScore: Number(scoreCandidate(payload, item).toFixed(4)),
           selected: false,
           adjustmentPct: 0,
-          adjustmentNotes: built <= 0 && payload.propertyType === 'Casa'
+          adjustmentNotes: incompleteHouseArea
             ? 'Superficie construida/terreno incompleta en fuente live; revisar antes de seleccionar.'
             : payload.propertyType === 'Departamento'
-              ? 'Terraza/superficie total no disponible en fuente live; UF/m² calculado sobre útil como aproximación conservadora.'
+              ? 'Fuente live sin terraza separada: superficie total igualada a útil para no inventar metros adicionales.'
               : undefined,
           distanceMeters,
           observedAt: item.observed_at,
-          quality: built <= 0 && payload.propertyType === 'Casa' ? 'review' : 'usable',
+          quality: incompleteHouseArea ? 'review' : 'usable',
         }
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
@@ -189,7 +185,8 @@ export async function POST(request: Request) {
       cbrsBenchmark: cbrs ?? null,
       methodologyVersion: 'valuation-pp-canonical-v2',
       notes: [
-        'Las sugerencias Portal son propuestas revisables; no se seleccionan automáticamente.',
+        'Las sugerencias Portal son propuestas revisables y nunca se seleccionan automáticamente.',
+        'Cuando faltan metros de terraza/terreno, el sistema lo declara y no inventa superficies.',
         'CBRS se presenta como benchmark territorial hasta completar la materialización fila-a-fila de ventas canónicas.',
       ],
     })
