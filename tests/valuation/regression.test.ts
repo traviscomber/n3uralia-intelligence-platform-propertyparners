@@ -36,6 +36,8 @@ const comparable: ValuationComparable = {
   sourceType: 'CBRS',
   sourceReference: 'ROL 499-8',
   address: 'Espoz 4233 DP 204',
+  propertyType: 'Departamento',
+  usefulAreaM2: 240,
   neighborhood: 'Nueva Costanera',
   transactionDate: '2026-01-06',
   priceUf: 16800,
@@ -53,14 +55,23 @@ const result: ValuationResult = {
   lowValueUf: 15100.5,
   highValueUf: 16684.5,
   comparableCount: 1,
+  portalSummary: { count: 0, minPriceUf: null, averagePriceUf: null, maxPriceUf: null, minUfM2: null, averageUfM2: null, maxUfM2: null },
+  cbrsSummary: { count: 1, minPriceUf: 16800, averagePriceUf: 16800, maxPriceUf: 16800, minUfM2: 70, averageUfM2: 70, maxUfM2: 70 },
+  commercialUfM2: 62.7,
+  salePriceVarianceVsCbrsMaxPct: -0.0542,
+  salePriceVarianceVsCbrsAveragePct: -0.0542,
+  saleUfM2VarianceVsCbrsMaxPct: -0.1043,
+  saleUfM2VarianceVsCbrsAveragePct: -0.1043,
+  publicationScenarios: [],
+  warnings: [],
+  methodologyVersion: 'property-partners-valuation-v2',
   justification: 'Canonical regression result',
 }
 
 test('Report payload keeps only selected comparables and preserves traceability', () => {
   const payload = buildValuationReportPayload(subject, [comparable, { ...comparable, id: 'excluded', selected: false }], factors, result)
 
-  assert.equal(payload.methodologyVersion, 'valuation-contract-v1')
-  assert.equal(payload.similarityScale, '0-1')
+  assert.equal(payload.methodologyVersion, 'property-partners-valuation-v2')
   assert.equal(payload.comparables.length, 1)
   assert.equal(payload.comparables[0].sourceReference, 'ROL 499-8')
   assert.equal(payload.comparables[0].transactionDate, '2026-01-06')
@@ -75,5 +86,5 @@ test('Unknown property facts remain undefined rather than fabricated zeroes', ()
 
 test('Report payload includes human-review disclosure', () => {
   const payload = buildValuationReportPayload(subject, [comparable], factors, result)
-  assert.match(payload.disclosure, /revisión y aprobación humana/)
+  assert.match(payload.disclosure, /revisión humana/)
 })

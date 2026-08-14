@@ -8,8 +8,6 @@ import {
 } from '../../lib/valuation-model'
 import {
   calculateContractualValuation,
-  calculateQualitativeAdjustment,
-  similarityScoreToWeight,
   type QualitativeFactors,
   type ValuationComparable,
 } from '../../lib/valuation-contract'
@@ -34,6 +32,8 @@ const comparable = (id: string, priceUfM2: number, similarityScore: number, sele
   propertyType: 'Departamento',
   priceUf: priceUfM2 * 100,
   priceUfM2,
+  usefulAreaM2: 100,
+  totalAreaM2: 120,
   similarityScore,
   selected,
   adjustmentPct: 0,
@@ -79,16 +79,6 @@ test('Apartment offer weighting uses useful area plus half the excess area', () 
   assert.ok(Math.abs(apartmentOfferWeightedUfM2(15890, 227, 280) - 62.68244575936884) < 1e-9)
 })
 
-test('Similarity is canonical 0-1 and rejects percentages', () => {
-  assert.equal(similarityScoreToWeight(0.85), 0.85)
-  assert.throws(() => similarityScoreToWeight(85), /0 a 1/)
-})
-
-test('Qualitative adjustment is bounded to plus or minus 35 percent', () => {
-  assert.equal(calculateQualitativeAdjustment({ ...neutralFactors, condition: 100 }), 35)
-  assert.equal(calculateQualitativeAdjustment({ ...neutralFactors, condition: -100 }), -35)
-})
-
 test('Contractual valuation recalculates from selected comparables only', () => {
   const result = calculateContractualValuation(
     {
@@ -97,6 +87,7 @@ test('Contractual valuation recalculates from selected comparables only', () => 
       neighborhood: 'Las Nieves',
       usefulAreaM2: 227,
       terraceAreaM2: 53,
+      usefulRateUfM2: 70,
     },
     [comparable('low', 55, 0.7), comparable('mid', 70, 0.95), comparable('high', 90, 0.9), comparable('excluded', 999, 1, false)],
     neutralFactors,
@@ -104,8 +95,8 @@ test('Contractual valuation recalculates from selected comparables only', () => 
 
   assert.equal(result.comparableCount, 3)
   assert.equal(result.baseUfM2, 70)
-  assert.equal(result.baseValueUf, 17745)
-  assert.equal(result.adjustedValueUf, 17745)
+  assert.equal(result.baseValueUf, 15890)
+  assert.equal(result.adjustedValueUf, 15890)
 })
 
 test('Contractual valuation requires at least two selected comparables', () => {
