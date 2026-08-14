@@ -1,8 +1,7 @@
 import Link from 'next/link'
-import valuation from '@/data/valuation-intelligence.json'
-import market from '@/data/market-source-intelligence.json'
 import { createClient } from '@/lib/supabase/server'
 import { OperationalState } from '@/components/ui/operational-state'
+import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 
 type AssignedProperty = {
   id: string
@@ -26,22 +25,18 @@ type AssignedProperty = {
 
 function n(value: number) { return value.toLocaleString('es-CL') }
 function formatDate(value: string | null) {
-  if (!value) return 'Sin fecha registrada'
+  if (!value) return '—'
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? 'Fecha inválida' : date.toLocaleString('es-CL')
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('es-CL')
 }
 function assignmentRole(value: string) {
-  if (value === 'owner') return 'Responsable principal'
-  if (value === 'co_broker') return 'Corretaje compartido'
-  if (value === 'support') return 'Apoyo comercial'
+  if (value === 'owner') return 'Principal'
+  if (value === 'co_broker') return 'Compartida'
+  if (value === 'support') return 'Apoyo'
   return value
 }
 
 export default async function PropertiesPage() {
-  const source = valuation.sourceReconciliation
-  const portalRows = market.cross.portal.reduce((sum, file) => sum + file.rows, 0)
-  const missingCoordinates = market.cross.portal.reduce((sum, file) => sum + (file.coordinateQuality.both_missing || 0), 0)
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = user
@@ -61,70 +56,76 @@ export default async function PropertiesPage() {
       : Promise.resolve({ data: [], error: null }),
   ])
 
-  const activeListings = listingResult.count
-  const latestObservation = observationResult.data
-  const operationalError = listingResult.error?.message || observationResult.error?.message || null
-  const assignmentError = assignmentResult.error?.message || null
   const assignments = (assignmentResult.data || []) as AssignedProperty[]
+  const activeListings = listingResult.count
+  const latestObservation = observationResult.data?.observed_at ?? null
+  const confirmedIdentity = assignments.filter((assignment) => assignment.market_properties[0]?.identity_status === 'confirmed').length
+  const pendingIdentity = assignments.length - confirmedIdentity
+  const staleAssignments = assignments.filter((assignment) => {
+    const property = assignment.market_properties[0]
+    if (!property?.last_seen_at) return true
+    const age = Date.now() - new Date(property.last_seen_at).getTime()
+    return age > 7 * 24 * 60 * 60 * 1000
+  }).length
   const role = String(profile?.role || '').toLowerCase()
-  const isSeller = role === 'seller'
+  const canAssign = ['ceo', 'admin', 'director', 'subdirector'].includes(role)
+  const coverage = assignments.length ? confirmedIdentity / assignments.length : null
+  const dataStatus = assignmentResult.error ? 'blocked' : assignments.length && confirmedIdentity === assignments.length ? 'ready' : 'partial'
 
-  return <div className="mx-auto max-w-6xl space-y-8 pb-16">
-    <header className="border-b border-[var(--n3-line)] pb-6">
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#ff766f]">Propiedades · evidencia diferenciada</p>
-      <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">Propiedades y publicaciones</h1>
-      <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Esta sección separa la cartera asignada a una ejecutiva, las publicaciones observadas en la base operativa y el snapshot documental auditado. Ninguna publicación se presenta automáticamente como propiedad propia.</p>
-    </header>
+  return <WorkspaceShell>
+    <WorkspaceHeader
+      eyebrow="Propiedades"
+      title="Cartera y publicaciones"
+      meta={`Corte ${formatDate(latestObservation)}`}
+      actions={[
+        { label: 'Mercado', href: '/dashboard/market' },
+        ...(canAssign ? [{ label: 'Asignar', href: '/dashboard/properties/admin', primary: true }] : []),
+      ]}
+    />
 
-    <section>
-      <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Cartera individual</p><h2 className="mt-2 text-2xl font-semibold">Mis propiedades asignadas</h2></div>
-      {assignmentError ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="La plataforma no pudo recuperar las asignaciones activas de este perfil. No se muestran datos parciales como si fueran completos." detail={assignmentError} /> : assignments.length ? <div className="grid gap-4 lg:grid-cols-2">
-        {assignments.map((assignment) => {
-          const property = assignment.market_properties[0] ?? null
-          return <article key={assignment.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{assignmentRole(assignment.assignment_role)}</p>
-                <h3 className="mt-2 text-lg font-semibold text-[var(--n3-text-light)]">{property?.normalized_address || 'Dirección no normalizada'}</h3>
-                <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Tipo no informado'} · asignada {formatDate(assignment.assigned_at)}</p>
-              </div>
-              <span className="border border-[var(--n3-line)] px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--n3-teal)]">Activa</span>
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-px bg-[var(--n3-line)] text-sm sm:grid-cols-4">
-              <div className="bg-black/30 p-3"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Superficie</p><p className="mt-1 font-semibold">{property?.useful_area_m2 ?? property?.built_area_m2 ?? 'n/d'} m²</p></div>
-              <div className="bg-black/30 p-3"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Dormitorios</p><p className="mt-1 font-semibold">{property?.bedrooms ?? 'n/d'}</p></div>
-              <div className="bg-black/30 p-3"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Baños</p><p className="mt-1 font-semibold">{property?.bathrooms ?? 'n/d'}</p></div>
-              <div className="bg-black/30 p-3"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Estacionamientos</p><p className="mt-1 font-semibold">{property?.parking_spaces ?? 'n/d'}</p></div>
-            </div>
-            <p className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">Identidad: {property?.identity_status || 'sin clasificar'} · última evidencia: {formatDate(property?.last_seen_at ?? null)}</p>
-            {assignment.notes ? <p className="mt-3 border-l-2 border-[var(--n3-teal)] pl-3 text-xs leading-5 text-[var(--n3-text-muted)]">{assignment.notes}</p> : null}
-          </article>
-        })}
-      </div> : <OperationalState kind="empty" title="Sin propiedades asignadas" description="El modelo de cartera está habilitado y auditado, pero este perfil no tiene asignaciones activas. La plataforma no infiere cartera desde nombres, sucursales, publicaciones o actividad histórica." action={isSeller ? undefined : { label: 'Administrar asignaciones', href: '/dashboard/properties/admin' }}>
-        {isSeller ? <p className="text-xs text-[var(--n3-text-muted)]">Perfil activo: {profile?.full_name || 'Ejecutiva'}.</p> : null}
-      </OperationalState>}
+    <MetricStrip items={[
+      { label: 'Asignadas', value: n(assignments.length) },
+      { label: 'Publicaciones', value: activeListings == null ? '—' : n(activeListings) },
+      { label: 'Identidad pendiente', value: n(pendingIdentity), tone: pendingIdentity > 0 ? 'danger' : 'success' },
+      { label: 'Sin vigencia reciente', value: n(staleAssignments), tone: staleAssignments > 0 ? 'warning' : 'success' },
+    ]} />
+
+    {(pendingIdentity > 0 || staleAssignments > 0) ? <section className="mt-5">
+      <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
+        <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Acciones</h2>
+        <span className="text-xs text-[var(--n3-text-muted)]">{Number(pendingIdentity > 0) + Number(staleAssignments > 0)}</span>
+      </div>
+      <div className="divide-y divide-[var(--n3-line)]">
+        {pendingIdentity > 0 ? <Link href="/dashboard/properties/admin/identity" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Revisar identidad y duplicados</span><strong className="text-[#ff8d87]">{pendingIdentity}</strong></Link> : null}
+        {staleAssignments > 0 ? <Link href="/dashboard/market" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Verificar vigencia</span><strong className="text-[#f0c96a]">{staleAssignments}</strong></Link> : null}
+      </div>
+    </section> : null}
+
+    <section className="mt-6">
+      <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold">Cartera asignada</h2><span className="text-xs text-[var(--n3-text-muted)]">{profile?.full_name || 'Usuario'}</span></div>
+      {assignmentResult.error ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="Reintente más tarde." /> : assignments.length ? <div className="overflow-x-auto border-y border-[var(--n3-line)]">
+        <table className="w-full min-w-[760px] text-sm">
+          <thead className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="p-3 text-left">Propiedad</th><th className="p-3 text-left">Rol</th><th className="p-3 text-right">m²</th><th className="p-3 text-right">Dorm.</th><th className="p-3 text-left">Identidad</th><th className="p-3 text-left">Última evidencia</th></tr></thead>
+          <tbody>{assignments.map((assignment) => {
+            const property = assignment.market_properties[0] ?? null
+            return <tr key={assignment.id} className="border-t border-[var(--n3-line)]">
+              <td className="p-3">{property ? <Link href={`/dashboard/properties/${property.id}`} className="group block"><p className="font-medium group-hover:text-[var(--n3-teal-soft)]">{property.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property.property_type || 'Sin tipo'} · Abrir inteligencia →</p></Link> : <><p className="font-medium">Sin dirección</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Sin identidad vinculada</p></>}</td>
+              <td className="p-3">{assignmentRole(assignment.assignment_role)}</td>
+              <td className="p-3 text-right">{property?.useful_area_m2 ?? property?.built_area_m2 ?? '—'}</td>
+              <td className="p-3 text-right">{property?.bedrooms ?? '—'}</td>
+              <td className="p-3">{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</td>
+              <td className="p-3 text-[var(--n3-text-muted)]">{formatDate(property?.last_seen_at ?? null)}</td>
+            </tr>
+          })}</tbody>
+        </table>
+      </div> : <OperationalState kind="empty" title="Sin propiedades asignadas" description="No existen asignaciones activas para este perfil." action={canAssign ? { label: 'Asignar propiedades', href: '/dashboard/properties/admin' } : undefined} />}
     </section>
 
-    <section>
-      <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">02 · Operación observada</p><h2 className="mt-2 text-2xl font-semibold">Publicaciones en Supabase</h2></div>
-      {operationalError ? <OperationalState kind="error" title="Base operativa incompleta" description="No fue posible consultar toda la evidencia operativa. El snapshot documental permanece separado y no se usa para simular datos actuales." detail={operationalError} /> : <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
-        <article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Publicaciones marcadas activas</p><p className="mt-3 text-4xl font-semibold">{n(activeListings ?? 0)}</p><p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">Estado del último corte persistido; no equivale a disponibilidad confirmada hoy.</p></article>
-        <article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Última observación</p><p className="mt-3 text-xl font-semibold sm:text-2xl">{formatDate(latestObservation?.observed_at ?? null)}</p><p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">La fecha de observación determina la vigencia; una ingestión posterior no actualiza por sí sola la publicación.</p></article>
-      </div>}
-      {!operationalError && latestObservation?.observed_at ? <OperationalState compact kind="stale" title="La disponibilidad requiere verificación" description="Las publicaciones reflejan el último corte observado. Antes de contactar a un cliente o usar una propiedad como comparable debe confirmarse su vigencia." /> : null}
-      <div className="mt-4"><Link href="/dashboard/market" className="inline-flex border border-[var(--n3-line)] px-4 py-2 text-xs font-semibold text-[var(--n3-text-light)] hover:border-[var(--n3-teal)]">Abrir inteligencia de mercado</Link></div>
-    </section>
-
-    <section>
-      <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">03 · Snapshot documental</p><h2 className="mt-2 text-2xl font-semibold">Oferta Portal auditada</h2></div>
-      <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">{[
-        ['Publicaciones con ID único', source.currentPortalValidListings],
-        ['Sin señal explícita de arriendo', source.currentPortalSaleEligibleListings],
-        ['Excluidas por señal de arriendo', source.portalListingsQuarantinedByRentIndicator],
-      ].map(([label,value]) => <article key={label as string} className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label as string}</p><p className="mt-3 text-3xl font-semibold sm:text-4xl">{n(value as number)}</p></article>)}</div>
-      <div className="mt-px grid gap-px bg-[var(--n3-line)] sm:grid-cols-2"><article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cobertura geográfica</p><p className="mt-3 text-2xl font-semibold sm:text-3xl">{portalRows > 0 ? ((missingCoordinates / portalRows) * 100).toFixed(1) : 'n/d'}% sin coordenadas</p></article><article className="bg-[#0c1111] p-6"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Vigencia documental</p><p className="mt-3 text-2xl font-semibold sm:text-3xl">Fecha efectiva n/d</p></article></div>
-    </section>
-
-    <footer className="border-l-2 border-[#d7332b] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">Snapshot: {market.sourceInventory.files.filter((file) => file.role === 'published_offer').length} Excel de oferta publicada · IDs únicos entre archivos: {n(market.cross.portalCrossFileListingIds.uniqueAcrossFiles)}. Los IDs representan avisos, no inmuebles físicos confirmados.</footer>
-  </div>
+    <DataStatusBar
+      cutoff={formatDate(latestObservation)}
+      coverage={assignments.length ? `${confirmedIdentity} de ${assignments.length} asignaciones con identidad confirmada (${Math.round((coverage ?? 0) * 100)}%)` : 'Sin asignaciones activas'}
+      issues={(assignmentResult.error ? 1 : 0) + pendingIdentity + staleAssignments}
+      status={dataStatus}
+    />
+  </WorkspaceShell>
 }

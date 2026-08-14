@@ -4,6 +4,9 @@ import { requireExecutiveAccess } from '@/lib/api-access'
 
 export const dynamic = 'force-dynamic'
 
+const ALLOWED_ROLES = new Set(['ceo', 'director', 'seller', 'admin'])
+const MAX_FILTER_LENGTH = 80
+
 type ProfileRow = {
   id: string
   full_name: string | null
@@ -18,21 +21,38 @@ function getServiceClient() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
+    throw new Error('PROFILE_DIRECTORY_CONFIGURATION_MISSING')
   }
 
-  return createClient(supabaseUrl, supabaseKey)
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
+function sanitizeFilter(value: string | null) {
+  if (!value) return null
+  const sanitized = value
+    .normalize('NFKC')
+    .replace(/[^\p{L}\p{N}@._\-\s]/gu, '')
+    .trim()
+    .slice(0, MAX_FILTER_LENGTH)
+
+  return sanitized || null
 }
 
 export async function GET(request: NextRequest) {
   const access = await requireExecutiveAccess()
-  if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+  if (!access.allowed) {
+    return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+  }
+
   try {
     const supabase = getServiceClient()
     const { searchParams } = new URL(request.url)
-    const role = searchParams.get('role')
-    const team = searchParams.get('team')
-    const search = searchParams.get('search')
+    const requestedRole = searchParams.get('role')?.toLowerCase() ?? null
+    const role = requestedRole && ALLOWED_ROLES.has(requestedRole) ? requestedRole : null
+    const team = sanitizeFilter(searchParams.get('team'))
+    const search = sanitizeFilter(searchParams.get('search'))
     const limitParam = Number.parseInt(searchParams.get('limit') || '50', 10)
     const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 200) : 50
 
@@ -49,7 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, error } = await query
-    if (error) throw error
+    if (error) throw new Error('PROFILE_DIRECTORY_QUERY_FAILED')
 
     const profiles = (data || []) as ProfileRow[]
     const summary = {
@@ -66,9 +86,9 @@ export async function GET(request: NextRequest) {
       summary,
       filters: { role, team, search, limit },
     })
-  } catch (err) {
+  } catch {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos cargar los perfiles.' },
+      { error: 'No fue posible cargar el directorio de perfiles.' },
       { status: 500 },
     )
   }

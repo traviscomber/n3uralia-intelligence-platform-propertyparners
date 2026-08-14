@@ -1,9 +1,17 @@
-import { CeoDashboardV2 } from '@/components/management/ceo-dashboard-v2'
-import { DataLayerLegend } from '@/components/management/data-layer-legend'
+import { CeoDashboardCommand } from '@/components/management/ceo-dashboard-command'
+import { CeoIntelligenceGovernance } from '@/components/management/ceo-intelligence-governance'
+import { CeoIntelligencePanel } from '@/components/management/ceo-intelligence-panel'
 
 export default function CeoDashboard() {
-  return <>
-    <DataLayerLegend showProvisionalRules />
-    <CeoDashboardV2 />
-  </>
+  return (
+    <>
+      <div className="mx-auto w-full max-w-[1500px] px-4 pt-6 sm:px-6 lg:px-8">
+        <CeoIntelligencePanel />
+      </div>
+      <CeoDashboardCommand />
+      <div className="mx-auto w-full max-w-[1500px] px-4 pb-16 sm:px-6 lg:px-8">
+        <CeoIntelligenceGovernance />
+      </div>
+    </>
+  )
 }

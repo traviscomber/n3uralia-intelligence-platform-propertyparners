@@ -1,133 +1,71 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Database, Save, Target } from 'lucide-react'
-import { IntelligenceHeader, IntelligencePage, IntelligencePanel, SectionHeading } from '@/components/intelligence/design-system'
+import { ChevronRight, Database, Save, Target } from 'lucide-react'
+import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
+import { OperationalState } from '@/components/ui/operational-state'
+import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { getPublicErrorMessage } from '@/lib/public-error'
 
 type Entity = { id: string; name: string; entity_type: string }
 type Definition = { code: string; label: string; unit: string; methodology: string }
-type Goal = { id: string; entity_id: string; metric_code: string; period_start: string; period_end: string; target_value: number; management_entities?: { name: string }; management_metric_definitions?: { label: string; unit: string } }
-type Rule = { id: string; code: string; label: string; metric_code: string; comparison: string; threshold: number; severity: string; scope_type: string; active: boolean }
-type Alert = { id: string; title: string; detail: string; severity: string; status: string; created_at: string; management_entities?: { name: string } }
-type ImportRun = { id: string; source_name: string; period_start: string; period_end: string; status: string; rows_received: number; rows_inserted: number; rows_updated: number; rows_rejected: number; created_at: string }
-type Payload = { entities: Entity[]; definitions: Definition[]; goals: Goal[]; rules: Rule[]; alerts: Alert[]; imports: ImportRun[] }
+type Goal = { id:string; entity_id:string; metric_code:string; period_start:string; period_end:string; target_value:number; management_entities?:{name:string}; management_metric_definitions?:{label:string;unit:string} }
+type Rule = { id:string; code:string; label:string; metric_code:string; comparison:string; threshold:number; severity:string; scope_type:string; active:boolean }
+type Alert = { id:string; title:string; detail:string; severity:string; status:string; created_at:string; management_entities?:{name:string} }
+type Payload = { entities:Entity[]; definitions:Definition[]; goals:Goal[]; rules:Rule[]; alerts:Alert[] }
+type Feedback = { kind:'success'|'error'; message:string } | null
 
-const monthBounds = (month: string) => {
-  const start = `${month}-01`
-  const date = new Date(`${start}T00:00:00Z`)
-  date.setUTCMonth(date.getUTCMonth() + 1)
-  date.setUTCDate(0)
-  return { start, end: date.toISOString().slice(0, 10) }
-}
+const monthBounds = (month:string) => { const start=`${month}-01`; const date=new Date(`${start}T00:00:00Z`); date.setUTCMonth(date.getUTCMonth()+1); date.setUTCDate(0); return {start,end:date.toISOString().slice(0,10)} }
+const formatMonth = (value:string) => { const [year,month]=value.slice(0,7).split('-').map(Number); return year&&month ? new Intl.DateTimeFormat('es-CL',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(year,month-1,1))) : value }
 
-export default function ManagementAdminPage() {
-  const [data, setData] = useState<Payload | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState<string | null>(null)
-  const currentMonth = new Date().toISOString().slice(0, 7)
-  const [goal, setGoal] = useState({ entityId: '', metricCode: 'sales', month: currentMonth, targetValue: '', sourceName: 'Meta aprobada' })
-  const [metric, setMetric] = useState({ entityId: '', metricCode: 'sales', month: currentMonth, value: '', sourceName: 'Carga administrativa', sourceReference: '', qualityStatus: 'provisional' })
-  const [rule, setRule] = useState({ code: '', label: '', metricCode: 'sales', comparison: 'lt', threshold: '', severity: 'warning', scopeType: 'all', responsibleRole: 'director' })
+export default function ManagementAdminPage(){
+  const currentMonth=new Date().toISOString().slice(0,7)
+  const [data,setData]=useState<Payload|null>(null)
+  const [loading,setLoading]=useState(true)
+  const [saving,setSaving]=useState(false)
+  const [feedback,setFeedback]=useState<Feedback>(null)
+  const [selectedMonth,setSelectedMonth]=useState(currentMonth)
+  const [goal,setGoal]=useState({entityId:'',metricCode:'sales',month:currentMonth,targetValue:'',sourceName:'Meta aprobada'})
+  const [metric,setMetric]=useState({entityId:'',metricCode:'sales',month:currentMonth,value:'',sourceName:'Carga administrativa',sourceReference:'',qualityStatus:'provisional'})
+  const [rule,setRule]=useState({code:'',label:'',metricCode:'sales',comparison:'lt',threshold:'',severity:'warning',scopeType:'all',responsibleRole:'director'})
 
-  async function load() {
-    setLoading(true)
-    const response = await fetch('/api/management/admin', { cache: 'no-store' })
-    const payload = await response.json()
-    if (!response.ok) setMessage(payload.error || 'No fue posible cargar administración.')
-    else {
-      setData(payload)
-      const first = payload.entities?.[0]?.id || ''
-      setGoal((value) => ({ ...value, entityId: value.entityId || first }))
-      setMetric((value) => ({ ...value, entityId: value.entityId || first }))
-    }
-    setLoading(false)
-  }
+  async function load(){ setLoading(true); setFeedback(null); try{ const response=await fetch('/api/management/admin',{cache:'no-store'}); const payload=await response.json() as Payload; if(!response.ok) throw new Error('LOAD_FAILED'); setData(payload); const first=payload.entities?.[0]?.id||''; setGoal(value=>({...value,entityId:value.entityId||first})); setMetric(value=>({...value,entityId:value.entityId||first})) }catch{ setData(null); setFeedback({kind:'error',message:getPublicErrorMessage('DATA_UNAVAILABLE')}) }finally{ setLoading(false) } }
+  useEffect(()=>{void load()},[])
+  useEffect(()=>{setGoal(value=>({...value,month:selectedMonth}));setMetric(value=>({...value,month:selectedMonth}))},[selectedMonth])
 
-  useEffect(() => { void load() }, [])
+  async function post(body:unknown){ setSaving(true);setFeedback(null);try{const response=await fetch('/api/management/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!response.ok)throw new Error('SAVE_FAILED');setFeedback({kind:'success',message:'Cambios guardados.'});await load()}catch{setFeedback({kind:'error',message:getPublicErrorMessage('SAVE_FAILED')})}finally{setSaving(false)} }
+  async function updateAlert(id:string,action:string){const notes=action==='resolve'||action==='dismiss'?window.prompt('Notas')||'':'';setSaving(true);setFeedback(null);try{const response=await fetch('/api/management/admin',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action,notes})});if(!response.ok)throw new Error('ALERT_UPDATE_FAILED');setFeedback({kind:'success',message:'Alerta actualizada.'});await load()}catch{setFeedback({kind:'error',message:getPublicErrorMessage('REQUEST_FAILED')})}finally{setSaving(false)} }
 
-  async function post(body: unknown) {
-    setMessage(null)
-    const response = await fetch('/api/management/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-    const payload = await response.json()
-    if (!response.ok) throw new Error(payload.error || 'No fue posible guardar.')
-    setMessage('Cambios guardados correctamente.')
-    await load()
-  }
+  const goalsForMonth=useMemo(()=>data?.goals.filter(item=>item.period_start.slice(0,7)===selectedMonth)??[],[data,selectedMonth])
+  const openAlerts=useMemo(()=>data?.alerts.filter(alert=>['open','acknowledged'].includes(alert.status))??[],[data])
+  const criticalAlerts=openAlerts.filter(alert=>alert.severity==='critical').length
+  const activeRules=data?.rules.filter(item=>item.active).length??0
+  const coverage=data?.entities.length ? Math.round(goalsForMonth.length/data.entities.length*100) : 0
 
-  async function updateAlert(id: string, action: string) {
-    const notes = action === 'resolve' || action === 'dismiss' ? window.prompt('Notas de resolución') || '' : ''
-    const response = await fetch('/api/management/admin', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action, notes }) })
-    const payload = await response.json()
-    if (!response.ok) setMessage(payload.error || 'No fue posible actualizar la alerta.')
-    else { setMessage('Alerta actualizada.'); await load() }
-  }
+  if(loading)return <WorkspaceShell><OperationalState kind="loading" title="Cargando metas y alertas" description="Consultando metas, reglas y alertas vigentes." /></WorkspaceShell>
+  if(!data)return <WorkspaceShell>{feedback?.kind==='error'?<PublicErrorNotice message={feedback.message}/>:<OperationalState kind="error" title="Sin acceso a metas" description="No fue posible consultar la información."/>}</WorkspaceShell>
 
-  const openAlerts = useMemo(() => data?.alerts.filter((alert) => ['open', 'acknowledged'].includes(alert.status)) ?? [], [data])
+  const dataStatus=goalsForMonth.length===0?'blocked':coverage<100?'partial':'ready'
 
-  return (
-    <IntelligencePage>
-      <IntelligenceHeader eyebrow="Módulo III · Administración" title="Metas, métricas y alertas" description="Configuración contractual, carga controlada y trazabilidad de cambios del control de gestión." actions={[{ label: 'Conciliación', href: '/dashboard/control/reconciliacion' }, { label: 'Volver a control', href: '/dashboard/control', primary: true }]} />
+  return <WorkspaceShell>
+    <WorkspaceHeader eyebrow="Metas y alertas" title={formatMonth(selectedMonth)} controls={<div><label htmlFor="goals-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><input id="goals-period" type="month" value={selectedMonth} onChange={event=>setSelectedMonth(event.target.value)} className="mt-1 block min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold"/></div>} meta={`${goalsForMonth.length} metas · ${openAlerts.length} alertas abiertas`} />
 
-      {message ? <div className="border border-[var(--n3-line)] bg-[#0c1111] p-4 text-sm text-[var(--n3-text-light)]">{message}</div> : null}
-      {loading ? <div className="border border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">Cargando…</div> : null}
+    {feedback?.kind==='error'?<div className="mt-4"><PublicErrorNotice message={feedback.message}/></div>:null}
+    {feedback?.kind==='success'?<div role="status" className="mt-4 border border-[#78d59a]/40 px-4 py-3 text-sm text-[#78d59a]">{feedback.message}</div>:null}
 
-      {!loading && data ? <>
-        <section>
-          <SectionHeading eyebrow="01 · Metas" title="Meta aprobada por entidad y período" />
-          <IntelligencePanel eyebrow="Registro" title="Crear o actualizar meta" description="La combinación entidad, métrica y período se actualiza sin duplicados.">
-            <div className="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-5">
-              <select value={goal.entityId} onChange={(e) => setGoal({ ...goal, entityId: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3"><option value="">Entidad</option>{data.entities.map((entity) => <option key={entity.id} value={entity.id}>{entity.name} · {entity.entity_type}</option>)}</select>
-              <select value={goal.metricCode} onChange={(e) => setGoal({ ...goal, metricCode: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3">{data.definitions.map((definition) => <option key={definition.code} value={definition.code}>{definition.label}</option>)}</select>
-              <input type="month" value={goal.month} onChange={(e) => setGoal({ ...goal, month: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <input type="number" value={goal.targetValue} onChange={(e) => setGoal({ ...goal, targetValue: e.target.value })} placeholder="Valor meta" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <button onClick={() => { const bounds = monthBounds(goal.month); void post({ type: 'goal', ...goal, periodStart: bounds.start, periodEnd: bounds.end }) }} className="flex items-center justify-center gap-2 border border-[#d7332b] p-3"><Save size={15} />Guardar meta</button>
-            </div>
-          </IntelligencePanel>
-          <div className="mt-4 overflow-x-auto border border-[var(--n3-line)]"><table className="min-w-[800px] w-full text-sm"><thead className="bg-[#080d0d]"><tr><th className="p-3 text-left">Entidad</th><th className="p-3 text-left">Métrica</th><th className="p-3 text-left">Período</th><th className="p-3 text-right">Meta</th></tr></thead><tbody>{data.goals.map((item) => <tr key={item.id} className="border-t border-[var(--n3-line)]"><td className="p-3">{item.management_entities?.name ?? item.entity_id}</td><td className="p-3">{item.management_metric_definitions?.label ?? item.metric_code}</td><td className="p-3">{item.period_start} — {item.period_end}</td><td className="p-3 text-right">{Number(item.target_value).toLocaleString('es-CL')}</td></tr>)}</tbody></table></div>
-        </section>
+    <MetricStrip items={[
+      {label:'Metas del período',value:goalsForMonth.length},
+      {label:'Entidades',value:data.entities.length},
+      {label:'Alertas abiertas',value:openAlerts.length,tone:openAlerts.length?'warning':'success'},
+      {label:'Críticas',value:criticalAlerts,tone:criticalAlerts?'danger':'success'},
+    ]}/>
 
-        <section>
-          <SectionHeading eyebrow="02 · Evidencia de fuente" title="Registrar métrica para conciliación" />
-          <IntelligencePanel eyebrow="Dato operativo" title="Carga manual no publicada" description="La carga queda como evidencia independiente. No alimenta dashboards hasta ser comparada con el cálculo canónico y aprobada por CEO.">
-            <div className="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-4">
-              <select value={metric.entityId} onChange={(e) => setMetric({ ...metric, entityId: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3">{data.entities.map((entity) => <option key={entity.id} value={entity.id}>{entity.name}</option>)}</select>
-              <select value={metric.metricCode} onChange={(e) => setMetric({ ...metric, metricCode: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3">{data.definitions.map((definition) => <option key={definition.code} value={definition.code}>{definition.label}</option>)}</select>
-              <input type="month" value={metric.month} onChange={(e) => setMetric({ ...metric, month: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <input type="number" value={metric.value} onChange={(e) => setMetric({ ...metric, value: e.target.value })} placeholder="Valor" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <input value={metric.sourceName} onChange={(e) => setMetric({ ...metric, sourceName: e.target.value })} placeholder="Fuente" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <input value={metric.sourceReference} onChange={(e) => setMetric({ ...metric, sourceReference: e.target.value })} placeholder="Referencia de archivo/corte" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <select value={metric.qualityStatus} onChange={(e) => setMetric({ ...metric, qualityStatus: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3"><option value="provisional">Provisional</option><option value="verified">Fuente verificada</option></select>
-              <button onClick={() => { const bounds = monthBounds(metric.month); void post({ type: 'metric', ...metric, periodStart: bounds.start, periodEnd: bounds.end }) }} className="flex items-center justify-center gap-2 border border-[#d7332b] p-3"><Database size={15} />Registrar evidencia</button>
-            </div>
-          </IntelligencePanel>
-        </section>
+    <section className="mt-6"><div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Nueva meta</h2><span className="text-xs text-[var(--n3-text-muted)]">{activeRules} reglas activas</span></div><div className="grid gap-3 border-b border-[var(--n3-line)] py-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_180px_auto]"><select value={goal.entityId} onChange={event=>setGoal({...goal,entityId:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm">{data.entities.map(entity=><option key={entity.id} value={entity.id}>{entity.name}</option>)}</select><select value={goal.metricCode} onChange={event=>setGoal({...goal,metricCode:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm">{data.definitions.map(definition=><option key={definition.code} value={definition.code}>{definition.label}</option>)}</select><input type="number" value={goal.targetValue} onChange={event=>setGoal({...goal,targetValue:event.target.value})} placeholder="Nueva meta" className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"/><button disabled={saving||!goal.entityId||!goal.targetValue} onClick={()=>{const bounds=monthBounds(selectedMonth);void post({type:'goal',...goal,month:selectedMonth,periodStart:bounds.start,periodEnd:bounds.end})}} className="inline-flex min-h-11 items-center justify-center gap-2 bg-[var(--primary)] px-5 text-sm font-semibold disabled:opacity-40"><Save size={15}/>{saving?'Guardando…':'Guardar'}</button></div><div className="overflow-x-auto"><table className="w-full min-w-[640px] text-left"><thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]"><tr><th className="py-3 pr-4">Entidad</th><th className="px-3 py-3">Métrica</th><th className="px-3 py-3 text-right">Meta</th></tr></thead><tbody>{goalsForMonth.map(item=><tr key={item.id} className="border-b border-[var(--n3-line)] text-sm"><td className="py-3 pr-4 font-medium">{item.management_entities?.name??item.entity_id}</td><td className="px-3 py-3 text-[var(--n3-text-muted)]">{item.management_metric_definitions?.label??item.metric_code}</td><td className="px-3 py-3 text-right font-semibold tabular-nums">{Number(item.target_value).toLocaleString('es-CL')}</td></tr>)}{!goalsForMonth.length?<tr><td colSpan={3} className="py-6 text-sm text-[var(--n3-text-muted)]">Sin metas para este período</td></tr>:null}</tbody></table></div></section>
 
-        <section>
-          <SectionHeading eyebrow="03 · Reglas" title="Reglas de alertas contractuales" />
-          <IntelligencePanel eyebrow="Configuración CEO" title="Crear o actualizar regla" description="El código identifica la regla y permite actualizarla sin perder trazabilidad.">
-            <div className="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-4">
-              <input value={rule.code} onChange={(e) => setRule({ ...rule, code: e.target.value })} placeholder="Código" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <input value={rule.label} onChange={(e) => setRule({ ...rule, label: e.target.value })} placeholder="Nombre de regla" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <select value={rule.metricCode} onChange={(e) => setRule({ ...rule, metricCode: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3">{data.definitions.map((definition) => <option key={definition.code} value={definition.code}>{definition.label}</option>)}</select>
-              <select value={rule.comparison} onChange={(e) => setRule({ ...rule, comparison: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3"><option value="lt">Menor que</option><option value="lte">Menor o igual</option><option value="gt">Mayor que</option><option value="gte">Mayor o igual</option><option value="drop_pct">Caída porcentual</option><option value="increase_pct">Aumento porcentual</option></select>
-              <input type="number" value={rule.threshold} onChange={(e) => setRule({ ...rule, threshold: e.target.value })} placeholder="Umbral" className="border border-[var(--n3-line)] bg-[#080d0d] p-3" />
-              <select value={rule.severity} onChange={(e) => setRule({ ...rule, severity: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3"><option value="info">Informativa</option><option value="warning">Advertencia</option><option value="critical">Crítica</option></select>
-              <select value={rule.scopeType} onChange={(e) => setRule({ ...rule, scopeType: e.target.value })} className="border border-[var(--n3-line)] bg-[#080d0d] p-3"><option value="all">Todos</option><option value="company">Compañía</option><option value="office">Oficina</option><option value="team">Equipo</option><option value="partner">Partner</option><option value="agent">Agente</option></select>
-              <button onClick={() => void post({ type: 'rule', ...rule })} className="flex items-center justify-center gap-2 border border-[#d7332b] p-3"><Target size={15} />Guardar regla</button>
-            </div>
-          </IntelligencePanel>
-        </section>
+    <section className="mt-7"><div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Alertas</h2><span className="text-xs text-[var(--n3-text-muted)]">{openAlerts.length}</span></div><div className="divide-y divide-[var(--n3-line)]">{openAlerts.map(alert=><article key={alert.id} className="grid gap-3 py-4 md:grid-cols-[8px_minmax(0,1fr)_auto] md:items-center"><span className={`h-2 w-2 rounded-full ${alert.severity==='critical'?'bg-[var(--primary)]':'bg-[#f0c96a]'}`}/><div className="min-w-0"><h3 className="text-sm font-medium">{alert.title}</h3><p className="mt-1 truncate text-xs text-[var(--n3-text-muted)]">{alert.management_entities?.name??'Entidad'}{alert.detail?` · ${alert.detail}`:''}</p></div><div className="flex gap-2">{alert.status==='open'?<button disabled={saving} onClick={()=>void updateAlert(alert.id,'acknowledge')} className="border border-[var(--n3-line)] px-3 py-2 text-xs">Revisar</button>:null}<button disabled={saving} onClick={()=>void updateAlert(alert.id,'resolve')} className="border border-[#78d59a]/35 px-3 py-2 text-xs text-[#78d59a]">Resolver</button><button disabled={saving} onClick={()=>void updateAlert(alert.id,'dismiss')} className="border border-[var(--n3-line)] px-3 py-2 text-xs text-[var(--n3-text-muted)]">Descartar</button></div></article>)}{!openAlerts.length?<OperationalState compact kind="success" title="Sin alertas abiertas" description="No existen alertas pendientes de gestión."/>:null}</div></section>
 
-        <section>
-          <SectionHeading eyebrow="04 · Alertas" title="Bandeja de atención y resolución" />
-          <div className="space-y-3">{openAlerts.length ? openAlerts.map((alert) => <div key={alert.id} className={`border p-4 ${alert.severity === 'critical' ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'}`}><div className="flex flex-col justify-between gap-4 md:flex-row"><div className="flex gap-3"><AlertTriangle size={18} className="mt-0.5 text-[#ff766f]" /><div><p className="font-semibold">{alert.title}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{alert.management_entities?.name ?? 'Entidad'} · {alert.severity} · {alert.status}</p><p className="mt-2 text-sm text-[var(--n3-text-muted)]">{alert.detail}</p></div></div><div className="flex gap-2"><button onClick={() => void updateAlert(alert.id, 'acknowledge')} className="border border-[var(--n3-line)] px-3 py-2 text-xs">Reconocer</button><button onClick={() => void updateAlert(alert.id, 'resolve')} className="border border-[var(--n3-line)] px-3 py-2 text-xs">Resolver</button><button onClick={() => void updateAlert(alert.id, 'dismiss')} className="border border-[var(--n3-line)] px-3 py-2 text-xs">Descartar</button></div></div></div>) : <div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No hay alertas abiertas.</div>}</div>
-        </section>
+    <details className="mt-8 border-t border-[var(--n3-line)] pt-4"><summary className="flex cursor-pointer list-none items-center justify-between text-sm text-[var(--n3-text-muted)]"><span>Configuración avanzada</span><ChevronRight size={16}/></summary><div className="mt-5 space-y-7"><section><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Registrar evidencia</h2><div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4"><select value={metric.entityId} onChange={event=>setMetric({...metric,entityId:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm">{data.entities.map(entity=><option key={entity.id} value={entity.id}>{entity.name}</option>)}</select><select value={metric.metricCode} onChange={event=>setMetric({...metric,metricCode:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm">{data.definitions.map(definition=><option key={definition.code} value={definition.code}>{definition.label}</option>)}</select><input type="number" value={metric.value} onChange={event=>setMetric({...metric,value:event.target.value})} placeholder="Valor" className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"/><input value={metric.sourceReference} onChange={event=>setMetric({...metric,sourceReference:event.target.value})} placeholder="Referencia" className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"/><select value={metric.qualityStatus} onChange={event=>setMetric({...metric,qualityStatus:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"><option value="provisional">Provisional</option><option value="verified">Verificada</option></select><button disabled={saving||!metric.value} onClick={()=>{const bounds=monthBounds(selectedMonth);void post({type:'metric',...metric,month:selectedMonth,periodStart:bounds.start,periodEnd:bounds.end})}} className="inline-flex min-h-11 items-center justify-center gap-2 border border-[var(--n3-line)] px-4 text-sm disabled:opacity-40"><Database size={15}/>Registrar</button></div></section><section><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Reglas de alerta</h2><div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4"><input value={rule.code} onChange={event=>setRule({...rule,code:event.target.value})} placeholder="Código" className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"/><input value={rule.label} onChange={event=>setRule({...rule,label:event.target.value})} placeholder="Nombre" className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"/><select value={rule.metricCode} onChange={event=>setRule({...rule,metricCode:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm">{data.definitions.map(definition=><option key={definition.code} value={definition.code}>{definition.label}</option>)}</select><select value={rule.comparison} onChange={event=>setRule({...rule,comparison:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"><option value="lt">Menor que</option><option value="lte">Menor o igual</option><option value="gt">Mayor que</option><option value="gte">Mayor o igual</option><option value="drop_pct">Caída %</option><option value="increase_pct">Aumento %</option></select><input type="number" value={rule.threshold} onChange={event=>setRule({...rule,threshold:event.target.value})} placeholder="Umbral" className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"/><select value={rule.severity} onChange={event=>setRule({...rule,severity:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"><option value="info">Informativa</option><option value="warning">Advertencia</option><option value="critical">Crítica</option></select><select value={rule.scopeType} onChange={event=>setRule({...rule,scopeType:event.target.value})} className="min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm"><option value="all">Todos</option><option value="company">Compañía</option><option value="office">Oficina</option><option value="team">Equipo</option><option value="partner">Partner</option><option value="agent">Agente</option></select><button disabled={saving||!rule.code||!rule.label||!rule.threshold} onClick={()=>void post({type:'rule',...rule})} className="inline-flex min-h-11 items-center justify-center gap-2 border border-[var(--n3-line)] px-4 text-sm disabled:opacity-40"><Target size={15}/>Guardar regla</button></div><div className="mt-4 divide-y divide-[var(--n3-line)] border-t border-[var(--n3-line)]">{data.rules.map(item=><div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 py-3 text-sm"><span className="truncate">{item.label}</span><span className="tabular-nums text-[var(--n3-text-muted)]">{item.threshold}</span><span className={item.active?'text-[#78d59a]':'text-[var(--n3-text-muted)]'}>{item.active?'Activa':'Inactiva'}</span></div>)}</div></section></div></details>
 
-        <section>
-          <SectionHeading eyebrow="05 · Ejecuciones" title="Historial de cargas" />
-          <div className="overflow-x-auto border border-[var(--n3-line)]"><table className="min-w-[850px] w-full text-sm"><thead className="bg-[#080d0d]"><tr><th className="p-3 text-left">Fuente</th><th className="p-3 text-left">Período</th><th className="p-3 text-left">Estado</th><th className="p-3 text-right">Recibidas</th><th className="p-3 text-right">Insertadas</th><th className="p-3 text-right">Actualizadas</th><th className="p-3 text-right">Rechazadas</th></tr></thead><tbody>{data.imports.map((run) => <tr key={run.id} className="border-t border-[var(--n3-line)]"><td className="p-3">{run.source_name}</td><td className="p-3">{run.period_start} — {run.period_end}</td><td className="p-3">{run.status}</td><td className="p-3 text-right">{run.rows_received}</td><td className="p-3 text-right">{run.rows_inserted}</td><td className="p-3 text-right">{run.rows_updated}</td><td className="p-3 text-right">{run.rows_rejected}</td></tr>)}</tbody></table></div>
-        </section>
-      </> : null}
-    </IntelligencePage>
-  )
+    <DataStatusBar cutoff={selectedMonth} coverage={`${goalsForMonth.length} metas para ${data.entities.length} entidades · ${coverage}%`} issues={criticalAlerts} status={dataStatus}/>
+  </WorkspaceShell>
 }

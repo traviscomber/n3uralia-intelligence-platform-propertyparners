@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-07",
+  "status": "assembled",
+  "allowedStatuses": ["draft", "assembled", "verified", "delivered"],
+  "requiredSections": [
+    "code-and-reconstruction",
+    "functional-documentation",
+    "operations",
+    "security-and-custody",
+    "quality-and-acceptance"
+  ],
+  "included": [
+    {"section":"code-and-reconstruction","artifact":"README.md","status":"included"},
+    {"section":"code-and-reconstruction","artifact":"package.json","status":"included"},
+    {"section":"code-and-reconstruction","artifact":"pnpm-lock.yaml","status":"included"},
+    {"section":"code-and-reconstruction","artifact":".env.example","status":"included-names-only"},
+    {"section":"code-and-reconstruction","artifact":"supabase/migrations","status":"included"},
+    {"section":"code-and-reconstruction","artifact":"docs/canonical/DELIVERY_RECONSTRUCTION_CHECKLIST.md","status":"included"},
+    {"section":"code-and-reconstruction","artifact":"docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md","status":"included"},
+    {"section":"functional-documentation","artifact":"docs/CONTRACTUAL_SCOPE_MATRIX.md","status":"included"},
+    {"section":"functional-documentation","artifact":"docs/architecture/DATA_MODEL_AND_DICTIONARY.md","status":"included"},
+    {"section":"functional-documentation","artifact":"docs/manuals/ROLE_USER_MANUAL.md","status":"included"},
+    {"section":"operations","artifact":"docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md","status":"included"},
+    {"section":"operations","artifact":"docs/operations/REPORT_DELIVERY.md","status":"included"},
+    {"section":"operations","artifact":"docs/manuals/ADMINISTRATION_MANUAL.md","status":"included"},
+    {"section":"security-and-custody","artifact":"config/github-delivery-classification.json","status":"included"},
+    {"section":"security-and-custody","artifact":"config/credential-boundaries.json","status":"included"},
+    {"section":"security-and-custody","artifact":"docs/canonical/DELIVERY_PACKAGE_MANIFEST.md","status":"included"},
+    {"section":"quality-and-acceptance","artifact":"docs/canonical/UAT_ACCEPTANCE_PLAN.md","status":"included"},
+    {"section":"quality-and-acceptance","artifact":"config/uat-case-status.json","status":"included"},
+    {"section":"quality-and-acceptance","artifact":"config/client-dependency-status.json","status":"included"},
+    {"section":"quality-and-acceptance","artifact":"config/client-dependency-requests.json","status":"included"}
+  ],
+  "excludedPatterns": [".env", ".env.*", "node_modules", ".next", "*.log", "*.pem", "*.key"],
+  "checksumSha256": null,
+  "cleanReconstruction": {"status":"pending","evidence":["docs/canonical/DELIVERY_RECONSTRUCTION_CHECKLIST.md"]},
+  "deliveryAuthorization": {"status":"pending","evidence":[]}
+}

@@ -3,29 +3,39 @@ import { createClient } from '@/lib/supabase/server'
 import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery'
 
 const reportTypes = new Set(['executive', 'office', 'partner', 'monthly', 'cumulative'])
+const allowedRoles = new Set(['admin', 'ceo', 'director', 'subdirector'])
 
 function validDate(value: unknown) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
-export async function POST(request: Request) {
+async function requireReportAccess() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  if (!user) return { response: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .maybeSingle()
-  if (profileError || !profile) {
-    return NextResponse.json({ error: profileError?.message ?? 'Perfil no configurado' }, { status: 403 })
+
+  if (error) {
+    console.error('[management-reports] profile lookup failed', { code: error.code })
+    return { response: NextResponse.json({ error: 'No fue posible validar el perfil.' }, { status: 500 }) }
   }
+  if (!profile) return { response: NextResponse.json({ error: 'Perfil no configurado.' }, { status: 403 }) }
 
   const role = String(profile.role ?? '').toLowerCase()
-  if (!['admin', 'ceo', 'director', 'subdirector'].includes(role)) {
-    return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
-  }
+  if (!allowedRoles.has(role)) return { response: NextResponse.json({ error: 'Sin permisos' }, { status: 403 }) }
+
+  return { supabase, user }
+}
+
+export async function POST(request: Request) {
+  const access = await requireReportAccess()
+  if ('response' in access) return access.response
+  const { supabase, user } = access
 
   const body = await request.json().catch(() => null)
   const reportType = String(body?.reportType ?? '')
@@ -53,14 +63,17 @@ export async function POST(request: Request) {
     .select('id,report_type,entity_id,period_start,period_end,status,generated_at')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[management-reports] report creation failed', { code: error.code })
+    return NextResponse.json({ error: 'No fue posible generar el reporte.' }, { status: 500 })
+  }
   return NextResponse.json({ report: data }, { status: 201 })
 }
 
 export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  const access = await requireReportAccess()
+  if ('response' in access) return access.response
+  const { supabase } = access
 
   const { data, error } = await supabase
     .from('management_report_runs')
@@ -94,12 +107,17 @@ export async function GET() {
     .order('generated_at', { ascending: false })
     .limit(100)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[management-reports] report listing failed', { code: error.code })
+    return NextResponse.json({ error: 'No fue posible cargar los reportes.' }, { status: 500 })
+  }
+
+  const deliveryConfiguration = getManagementReportDeliveryConfiguration()
   return NextResponse.json({
     reports: data ?? [],
     delivery: {
-      configured: Boolean(getManagementReportDeliveryConfiguration()),
-      provider: getManagementReportDeliveryConfiguration()?.provider ?? null,
+      configured: Boolean(deliveryConfiguration),
+      provider: deliveryConfiguration?.provider ?? null,
     },
   }, { headers: { 'Cache-Control': 'private, no-store, max-age=0' } })
 }

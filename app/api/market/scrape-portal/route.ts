@@ -19,8 +19,10 @@ type PortalScrapeRequest = {
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase credentials')
-  return createSupabaseClient(supabaseUrl, supabaseKey)
+  if (!supabaseUrl || !supabaseKey) throw new Error('MISSING_SUPABASE_CREDENTIALS')
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 function parseDatasetKind(value: unknown): PortalDatasetKind {
@@ -32,6 +34,12 @@ function boundedInteger(value: unknown, fallback: number, min: number, max: numb
   const parsed = Number(value)
   if (!Number.isFinite(parsed)) return fallback
   return Math.min(Math.max(Math.round(parsed), min), max)
+}
+
+function logPortalFailure(stage: string, error: unknown) {
+  console.error(stage, {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -95,7 +103,7 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getServiceClient()
-    const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot', {
+    const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot_v2', {
       p_source_label: 'portal_inmobiliario_vitacura',
       p_source_file: `portal-scrape-${datasetKind}-${collection.observedAt}.json`,
       p_dataset_kind: datasetKind,
@@ -103,17 +111,30 @@ export async function POST(req: NextRequest) {
       p_rows: validRows,
       p_full_snapshot: fullSnapshot,
     })
-    if (pipelineError) throw pipelineError
+    if (pipelineError || pipelineResult?.failed) {
+      logPortalFailure('PORTAL_SCRAPE_IMPORT_FAILED', pipelineError ?? pipelineResult)
+      return NextResponse.json({ error: 'No fue posible guardar las publicaciones recopiladas.' }, { status: 500 })
+    }
+
+    if (pipelineResult?.skipped) {
+      return NextResponse.json(
+        { error: 'Ya existe una ingestión de este dataset en ejecución. Intente nuevamente cuando finalice.' },
+        { status: 409 },
+      )
+    }
 
     return NextResponse.json({
       mode,
       source: 'portal_inmobiliario_vitacura',
       observedAt: collection.observedAt,
+      canonicalCreation: false,
       summary: {
         ...summary,
         received: Number(pipelineResult?.received ?? 0),
         accepted: Number(pipelineResult?.accepted ?? 0),
         rejected: Number(pipelineResult?.rejected ?? 0),
+        linked: Number(pipelineResult?.linked ?? 0),
+        unlinked: Number(pipelineResult?.unlinked ?? 0),
         new: Number(pipelineResult?.new ?? 0),
         updated: Number(pipelineResult?.updated ?? 0),
         unchanged: Number(pipelineResult?.unchanged ?? 0),
@@ -122,12 +143,12 @@ export async function POST(req: NextRequest) {
         sourceId: pipelineResult?.source_id ?? null,
       },
       failures: collection.failures.slice(0, 20),
-      message: `Portal Vitacura procesado: ${Number(pipelineResult?.accepted ?? 0)} aceptadas, ${Number(pipelineResult?.rejected ?? 0)} rechazadas.`,
+      message: `Portal Vitacura procesado: ${Number(pipelineResult?.accepted ?? 0)} aceptadas, ${Number(pipelineResult?.linked ?? 0)} vinculadas a identidad canónica y ${Number(pipelineResult?.unlinked ?? 0)} en cuarentena de identidad.`,
     })
   } catch (error) {
-    console.error('Portal scraping failed', error)
+    logPortalFailure('PORTAL_SCRAPE_FAILED', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'No fue posible ejecutar el scraping de Portal.' },
+      { error: 'No fue posible ejecutar el scraping de Portal.' },
       { status: 500 },
     )
   }

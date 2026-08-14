@@ -47,10 +47,18 @@ function getServiceClient() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
+    throw new Error('MISSING_SUPABASE_CREDENTIALS')
   }
 
-  return createClient(supabaseUrl, supabaseKey)
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
+function logExportFailure(error: unknown) {
+  console.error('REPORT_EXPORT_FAILED', {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
 }
 
 function csvEscape(value: unknown) {
@@ -123,34 +131,12 @@ export async function GET(req: NextRequest) {
       if (error) throw error
 
       const rows = (data || []) as ProfileRow[]
-      const payload = {
-        dataset,
-        filters: {
-          role,
-          team,
-          limit,
-          from,
-          to,
-        },
-        records: rows,
-        count: rows.length,
-        exportedAt: new Date().toISOString(),
-      }
-
-      if (format === 'json') {
-        return NextResponse.json(payload)
-      }
+      const payload = { dataset, filters: { role, team, limit, from, to }, records: rows, count: rows.length, exportedAt: new Date().toISOString() }
+      if (format === 'json') return NextResponse.json(payload)
 
       const csv = toCsv(
         ['id', 'full_name', 'role', 'team', 'avatar_url', 'created_at'],
-        rows.map((row) => ({
-          id: row.id,
-          full_name: row.full_name || '',
-          role: row.role,
-          team: row.team || '',
-          avatar_url: row.avatar_url || '',
-          created_at: row.created_at,
-        })),
+        rows.map((row) => ({ id: row.id, full_name: row.full_name || '', role: row.role, team: row.team || '', avatar_url: row.avatar_url || '', created_at: row.created_at })),
       )
 
       return new NextResponse(csv, {
@@ -187,39 +173,18 @@ export async function GET(req: NextRequest) {
       const rows = (data || []) as WeeklyReportRow[]
       const payload = {
         dataset,
-        filters: {
-          report_scope: reportScope,
-          director_id: directorId,
-          week_start: weekStart,
-          type: reportType,
-          limit,
-          from,
-          to,
-        },
+        filters: { report_scope: reportScope, director_id: directorId, week_start: weekStart, type: reportType, limit, from, to },
         records: rows,
         count: rows.length,
         exportedAt: new Date().toISOString(),
       }
-
-      if (format === 'json') {
-        return NextResponse.json(payload)
-      }
+      if (format === 'json') return NextResponse.json(payload)
 
       const csv = toCsv(
         ['id', 'report_key', 'report_scope', 'week_start', 'week_end', 'director_id', 'sales_count', 'commission_total', 'conversion_rate', 'target_progress', 'velocity_change', 'status', 'generated_at'],
-        rows.map((row) => ({
-          ...row,
-          director_id: row.director_id || '',
-        })),
+        rows.map((row) => ({ ...row, director_id: row.director_id || '' })),
       )
-
-      const fileName = [
-        'weekly_reports',
-        reportScope || 'all',
-        directorId || 'all',
-        weekStart || 'all',
-        reportType || 'all',
-      ].join('_')
+      const fileName = ['weekly_reports', reportScope || 'all', directorId || 'all', weekStart || 'all', reportType || 'all'].join('_')
 
       return new NextResponse(csv, {
         headers: {
@@ -231,7 +196,6 @@ export async function GET(req: NextRequest) {
     }
 
     const reportType = searchParams.get('type')
-
     let query = supabase
       .from('ai_reports')
       .select('id, report_type, title, summary, period_date, generated_by, created_at')
@@ -246,31 +210,12 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     const rows = (data || []) as AiReportRow[]
-    const payload = {
-      dataset,
-      filters: {
-        type: reportType,
-        limit,
-        from,
-        to,
-      },
-      records: rows,
-      count: rows.length,
-      exportedAt: new Date().toISOString(),
-    }
-
-    if (format === 'json') {
-      return NextResponse.json(payload)
-    }
+    const payload = { dataset, filters: { type: reportType, limit, from, to }, records: rows, count: rows.length, exportedAt: new Date().toISOString() }
+    if (format === 'json') return NextResponse.json(payload)
 
     const csv = toCsv(
       ['id', 'report_type', 'title', 'summary', 'period_date', 'generated_by', 'created_at'],
-      rows.map((row) => ({
-        ...row,
-        summary: row.summary || '',
-        period_date: row.period_date || '',
-        generated_by: row.generated_by || '',
-      })),
+      rows.map((row) => ({ ...row, summary: row.summary || '', period_date: row.period_date || '', generated_by: row.generated_by || '' })),
     )
     const fileNameBase = reportType ? `ai_reports_${reportType}` : 'ai_reports_all'
 
@@ -282,9 +227,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos exportar los reportes.' },
-      { status: 500 },
-    )
+    logExportFailure(err)
+    return NextResponse.json({ error: 'No pudimos exportar los reportes.' }, { status: 500 })
   }
 }

@@ -1,69 +1,65 @@
 'use client'
 
 import Link from 'next/link'
+import { ChevronDown, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { PPLogo } from '@/components/brand/pp-logo'
-import { getRoleLabel, hasCapability, type Capability } from '@/lib/access-control'
+import { getRoleLabel, hasCapability } from '@/lib/access-control'
+import { CEO_NAVIGATION, DEFAULT_NAVIGATION, type NavigationSection } from '@/lib/navigation'
 import type { Profile } from '@/lib/types'
 
-type SidebarItem = {
-  label: string
-  href: string
-  capability?: Capability
-  exact?: boolean
-}
-
-type SidebarSection = {
-  label: string
-  items: SidebarItem[]
-}
-
-const sections: SidebarSection[] = [
-  {
-    label: 'Operación',
-    items: [
-      { label: 'Resumen', href: '/dashboard', exact: true },
-      { label: 'Vista CEO', href: '/dashboard/ceo', capability: 'dashboard.global.read' },
-      { label: 'Vista director', href: '/dashboard/director', capability: 'dashboard.office.read' },
-      { label: 'Mi desempeño', href: '/dashboard/partner', capability: 'dashboard.self.read' },
-      { label: 'Inteligencia de mercado', href: '/dashboard/market', capability: 'market.read' },
-      { label: 'Valorizaciones', href: '/dashboard/valuations' },
-      { label: 'Control de gestión', href: '/dashboard/control' },
-      { label: 'Propiedades', href: '/dashboard/properties' },
-      { label: 'Reportes', href: '/dashboard/reportes/autonomos', capability: 'reports.global.read' },
-      { label: 'Reportes de oficina', href: '/dashboard/reportes/autonomos', capability: 'reports.office.read' },
-      { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', capability: 'reports.self.read' },
-    ],
-  },
-  {
-    label: 'Administración',
-    items: [
-      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.global.assign' },
-      { label: 'Asignar propiedades', href: '/dashboard/properties/admin', capability: 'properties.office.assign' },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.global.manage' },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', capability: 'management.office.manage' },
-      { label: 'Fuentes de mercado', href: '/dashboard/market/fuentes', capability: 'market.manage_sources' },
-      { label: 'Importar mercado', href: '/dashboard/market/import', capability: 'market.manage_sources' },
-      { label: 'Fuentes de propiedades', href: '/dashboard/sources', capability: 'settings.manage' },
-      { label: 'Usuarios y configuración', href: '/dashboard/settings', capability: 'users.manage' },
-    ],
-  },
-]
-
-function visibleSections(profile: Profile | null): SidebarSection[] {
-  if (!profile) return []
-
-  return sections
+function filterSections(profile: Profile, source: NavigationSection[]): NavigationSection[] {
+  return source
     .map((section) => ({
       ...section,
-      items: section.items.filter((item) => !item.capability || hasCapability(profile, item.capability)),
+      items: section.items.filter((item) => {
+        const roleAllowed = !item.roles || item.roles.includes(profile.role)
+        const capabilityAllowed = !item.anyCapabilities?.length || item.anyCapabilities.some((capability) => hasCapability(profile, capability))
+        return roleAllowed && capabilityAllowed
+      }),
     }))
     .filter((section) => section.items.length > 0)
+}
+
+function visibleSections(profile: Profile | null): NavigationSection[] {
+  if (!profile) return []
+  return filterSections(profile, profile.role === 'ceo' ? CEO_NAVIGATION : DEFAULT_NAVIGATION)
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const navigationSections = visibleSections(profile)
+
+  function isActive(href: string, exact?: boolean) {
+    return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  function sectionItems(section: NavigationSection) {
+    return (
+      <ul className="flex flex-col gap-0.5">
+        {section.items.map((item) => {
+          const active = isActive(item.href, item.exact)
+          return (
+            <li key={`${item.label}-${item.href}`}>
+              <Link
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className="flex min-h-10 items-center gap-2.5 border-l-2 px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                style={{
+                  color: active ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
+                  background: active ? 'rgba(255,255,255,0.035)' : 'transparent',
+                  borderLeftColor: active ? 'var(--primary)' : 'transparent',
+                }}
+              >
+                <span aria-hidden="true" className="h-2 w-2 border border-current" />
+                <span className="truncate text-[13px]">{item.label}</span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
 
   const navigation = (
     <>
@@ -72,47 +68,43 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
         <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Intelligence Platform</p>
       </div>
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
-        {navigationSections.map((section) => (
-          <div key={section.label} className="mb-5">
-            <div className="mb-1.5 flex items-center gap-2 px-3">
-              <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">{section.label}</span>
-              <div className="h-px flex-1 bg-[var(--n3-line)]" />
+        {navigationSections.map((section, index) => {
+          const sectionActive = section.items.some((item) => isActive(item.href, item.exact))
+          const collapsible = profile?.role === 'ceo' && index > 0
+
+          if (collapsible) {
+            return (
+              <details key={section.label} className="group mb-5" open={sectionActive || undefined}>
+                <summary className="mb-1.5 flex min-h-9 cursor-pointer list-none items-center gap-2 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
+                  <span>{section.label}</span>
+                  <div className="h-px flex-1 bg-[var(--n3-line)]" />
+                  <ChevronDown aria-hidden="true" size={13} className="transition-transform group-open:rotate-180" />
+                </summary>
+                {sectionItems(section)}
+              </details>
+            )
+          }
+
+          return (
+            <div key={section.label} className="mb-5">
+              <div className="mb-1.5 flex items-center gap-2 px-3">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">{section.label}</span>
+                <div className="h-px flex-1 bg-[var(--n3-line)]" />
+              </div>
+              {sectionItems(section)}
             </div>
-            <ul className="flex flex-col gap-0.5">
-              {section.items.map((item) => {
-                const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`)
-                return (
-                  <li key={`${item.label}-${item.href}`}>
-                    <Link
-                      href={item.href}
-                      onClick={(event) => event.currentTarget.closest('details')?.removeAttribute('open')}
-                      className="flex items-center gap-2.5 border-l-2 px-3 py-2.5 text-sm transition-colors"
-                      style={{
-                        color: active ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
-                        background: active ? 'rgba(255,255,255,0.035)' : 'transparent',
-                        borderLeftColor: active ? '#d7332b' : 'transparent',
-                      }}
-                    >
-                      <span aria-hidden="true" className="h-2 w-2 border border-current" />
-                      <span className="truncate text-[13px]">{item.label}</span>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        ))}
+          )
+        })}
       </nav>
       <div className="border-t border-[var(--n3-line)] px-4 py-4">
         {profile ? (
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--n3-line)] text-xs font-semibold text-[#ff766f]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--n3-line)] text-xs font-semibold text-[var(--n3-teal-soft)]">
               {(profile.full_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <div className="truncate text-xs font-medium text-[var(--n3-text-light)]">{profile.full_name || 'Usuario'}</div>
               <div className="text-[10px] text-[var(--n3-text-muted)]">{getRoleLabel(profile.role)}</div>
-              {profile.role === 'ceo' ? <div className="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-[#ff766f]">Máxima autoridad de negocio</div> : null}
             </div>
           </div>
         ) : null}
@@ -126,10 +118,10 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   return (
     <>
       <details className="group fixed left-0 top-0 z-50 md:hidden">
-        <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] [&::-webkit-details-marker]:hidden">
-          <span aria-hidden="true">☰</span>
+        <summary aria-label="Abrir navegación" className="flex h-14 w-14 cursor-pointer list-none items-center justify-center border-b border-r border-[var(--n3-line)] bg-[var(--n3-black)] text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
+          <Menu aria-hidden="true" size={18} strokeWidth={1.6} />
         </summary>
-        <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl">{navigation}</div>
+        <div className="fixed inset-x-0 bottom-0 top-14 flex flex-col border-t border-[var(--n3-line)] bg-[var(--n3-black)]">{navigation}</div>
       </details>
       <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-[var(--n3-line)] bg-[var(--n3-black)] md:flex">{navigation}</aside>
     </>

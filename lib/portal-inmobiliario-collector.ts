@@ -1,4 +1,3 @@
-import puppeteer, { type Browser, type Page } from 'puppeteer'
 import { parse } from 'node-html-parser'
 import type { MarketImportInputRow } from '@/lib/market-import'
 import type { PortalDatasetKind } from '@/lib/market-source-import'
@@ -22,21 +21,24 @@ export type PortalCollectionResult = {
 
 const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
 const DEFAULT_COMMUNE = 'vitacura-metropolitana'
-
-function buildSearchBase(datasetKind: PortalDatasetKind, operation: string, commune: string) {
-  const propertyPath = datasetKind === 'portal_houses'
-    ? 'casas'
-    : datasetKind === 'portal_projects'
-      ? 'proyectos'
-      : 'departamentos'
-
-  return `${PORTAL_ORIGIN}/${operation}/${propertyPath}/${commune}`
+const REQUEST_TIMEOUT_MS = 45_000
+const REQUEST_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 }
 
-function buildSearchUrl(base: string, page: number) {
+function buildSearchBase(datasetKind: PortalDatasetKind, operation: string, commune: string) {
+  if (datasetKind === 'portal_houses') return `${PORTAL_ORIGIN}/${operation}/casa/${commune}`
+  if (datasetKind === 'portal_projects') return `${PORTAL_ORIGIN}/${operation}/departamento/proyectos/${commune}`
+  return `${PORTAL_ORIGIN}/${operation}/departamento/${commune}`
+}
+
+function buildSearchUrl(base: string, page: number, datasetKind: PortalDatasetKind) {
   if (page <= 1) return base
-  const offset = (page - 1) * 48 + 1
-  return `${base}_Desde_${offset}_NoIndex_True`
+  const pageSize = datasetKind === 'portal_projects' ? 20 : 48
+  const offset = (page - 1) * pageSize + 1
+  return `${base}/_Desde_${offset}_NoIndex_True`
 }
 
 function unique<T>(values: T[]) {
@@ -69,19 +71,42 @@ function integer(value: unknown) {
   return parsed == null ? null : Math.round(parsed)
 }
 
-function extractListingId(url: string) {
-  const match = url.match(/MLC-?(\d+)/i) || url.match(/\/p\/(MLC\d+)/i)
-  return match ? match[1].replace(/^MLC/i, '') : null
+function extractListingId(url: string, datasetKind: PortalDatasetKind) {
+  const mlcMatch = url.match(/MLC-?(\d+)/i) || url.match(/\/p\/(MLC\d+)/i)
+  if (mlcMatch) return mlcMatch[1].replace(/^MLC/i, '')
+
+  if (datasetKind === 'portal_projects') {
+    try {
+      const pathname = new URL(url, PORTAL_ORIGIN).pathname
+      const projectMatch = pathname.match(/\/(\d+)-[^/]+-nva\/?$/i)
+      if (projectMatch) return `project-${projectMatch[1]}`
+    } catch {
+      return null
+    }
+  }
+
+  return null
 }
 
 function canonicalListingUrl(rawUrl: string) {
   try {
-    const parsed = new URL(rawUrl, PORTAL_ORIGIN)
-    parsed.search = ''
-    parsed.hash = ''
-    return parsed.toString()
+    const parsedUrl = new URL(rawUrl, PORTAL_ORIGIN)
+    parsedUrl.search = ''
+    parsedUrl.hash = ''
+    return parsedUrl.toString()
   } catch {
     return rawUrl
+  }
+}
+
+function isDatasetListingUrl(rawUrl: string, datasetKind: PortalDatasetKind) {
+  try {
+    const parsedUrl = new URL(rawUrl, PORTAL_ORIGIN)
+    if (parsedUrl.origin !== PORTAL_ORIGIN) return false
+    if (datasetKind === 'portal_projects') return /\/\d+-[^/]+-nva\/?$/i.test(parsedUrl.pathname)
+    return /MLC-?\d+/i.test(parsedUrl.href) || /\/p\/MLC\d+/i.test(parsedUrl.pathname)
+  } catch {
+    return false
   }
 }
 
@@ -196,7 +221,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const jsonLd = flattenJsonLd(collectJsonLd(html))
   const states = extractEmbeddedStates(html)
   const structured: unknown[] = [...jsonLd, ...states]
-  const listingId = extractListingId(url) || text(deepFind(structured, ['id', 'item_id', 'listing_id', 'productID'])) || ''
+  const listingId = extractListingId(url, datasetKind) || text(deepFind(structured, ['id', 'item_id', 'listing_id', 'productID'])) || ''
   const title = text(deepFind(structured, ['name', 'title']))
     || text(root.querySelector('meta[property="og:title"]')?.getAttribute('content'))
     || text(root.querySelector('h1')?.text)
@@ -247,44 +272,38 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   }
 }
 
-async function configurePage(page: Page) {
-  await page.setViewport({ width: 1440, height: 1000 })
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
-  await page.setExtraHTTPHeaders({
-    'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7',
-    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+async function fetchPortalHtml(url: string) {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: REQUEST_HEADERS,
+    redirect: 'follow',
+    cache: 'no-store',
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
-  await page.setRequestInterception(true)
-  page.on('request', (request) => {
-    const resourceType = request.resourceType()
-    if (resourceType === 'image' || resourceType === 'media' || resourceType === 'font') request.abort()
-    else request.continue()
-  })
+
+  if (!response.ok) throw new Error(`Portal returned HTTP ${response.status}`)
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.toLowerCase().includes('text/html')) throw new Error('Portal returned non-HTML content')
+  return response.text()
 }
 
-async function createBrowser() {
-  return puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-  })
-}
-
-async function discoverListingUrls(browser: Browser, searchUrls: string[], waitMs: number) {
+async function discoverListingUrls(searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
   const urls: string[] = []
+
   for (const searchUrl of searchUrls) {
-    const page = await browser.newPage()
-    try {
-      await configurePage(page)
-      const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-      if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
-      await new Promise((resolve) => setTimeout(resolve, waitMs))
-      const found = await page.$$eval('a[href]', (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href))
-      urls.push(...found.filter((href) => /MLC-?\d+/i.test(href)))
-    } finally {
-      await page.close()
-    }
+    const html = await fetchPortalHtml(searchUrl)
+    const root = parse(html)
+    const found = root.querySelectorAll('a[href]')
+      .map((anchor) => anchor.getAttribute('href'))
+      .filter((href): href is string => Boolean(href))
+      .map((href) => canonicalListingUrl(href))
+      .filter((href) => isDatasetListingUrl(href, datasetKind))
+
+    urls.push(...found)
+    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
   }
-  return unique(urls.map(canonicalListingUrl))
+
+  return unique(urls)
 }
 
 export async function collectPortalVitacura(options: PortalCollectorOptions): Promise<PortalCollectionResult> {
@@ -294,40 +313,28 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
   const maxListings = Math.min(Math.max(options.maxListings || 48, 1), 250)
   const waitMs = Math.min(Math.max(options.waitMs || 1_200, 300), 5_000)
   const searchBase = buildSearchBase(options.datasetKind, operation, commune)
-  const searchUrls = Array.from({ length: maxPages }, (_, index) => buildSearchUrl(searchBase, index + 1))
-  const browser = await createBrowser()
+  const searchUrls = Array.from({ length: maxPages }, (_, index) => buildSearchUrl(searchBase, index + 1, options.datasetKind))
+  const listingUrls = (await discoverListingUrls(searchUrls, options.datasetKind, waitMs)).slice(0, maxListings)
+  const rows: MarketImportInputRow[] = []
+  const failures: Array<{ url: string; error: string }> = []
 
-  try {
-    const listingUrls = (await discoverListingUrls(browser, searchUrls, waitMs)).slice(0, maxListings)
-    const rows: MarketImportInputRow[] = []
-    const failures: Array<{ url: string; error: string }> = []
-
-    for (const url of listingUrls) {
-      const page = await browser.newPage()
-      try {
-        await configurePage(page)
-        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-        if (!response?.ok()) throw new Error(`Listing returned HTTP ${response?.status() ?? 'unknown'}`)
-        await new Promise((resolve) => setTimeout(resolve, waitMs))
-        const html = await page.content()
-        const row = parsePortalListing(html, url, options.datasetKind)
-        if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
-        rows.push(row)
-      } catch (error) {
-        failures.push({ url, error: error instanceof Error ? error.message : String(error) })
-      } finally {
-        await page.close()
-      }
+  for (const url of listingUrls) {
+    try {
+      const html = await fetchPortalHtml(url)
+      const row = parsePortalListing(html, url, options.datasetKind)
+      if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
+      rows.push(row)
+    } catch (error) {
+      failures.push({ url, error: error instanceof Error ? error.message : String(error) })
     }
+    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
+  }
 
-    return {
-      searchUrls,
-      listingUrls,
-      rows,
-      failures,
-      observedAt: new Date().toISOString(),
-    }
-  } finally {
-    await browser.close()
+  return {
+    searchUrls,
+    listingUrls,
+    rows,
+    failures,
+    observedAt: new Date().toISOString(),
   }
 }

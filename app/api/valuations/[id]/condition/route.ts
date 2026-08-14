@@ -20,6 +20,12 @@ async function getAccess() {
   return { scope, supabase }
 }
 
+function logDatabaseFailure(stage: string, error: unknown) {
+  console.error(stage, {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
+}
+
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { scope, supabase } = await getAccess()
@@ -30,7 +36,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       .eq('id', id)
       .maybeSingle()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      logDatabaseFailure('VALUATION_CONDITION_LOAD_FAILED', error)
+      return NextResponse.json({ error: 'No pudimos cargar la inspección de la valorización.' }, { status: 500 })
+    }
     if (!data) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
     assertProfileVisible(scope, data.requested_by)
 
@@ -63,7 +72,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       .eq('id', id)
       .maybeSingle()
 
-    if (caseError) return NextResponse.json({ error: caseError.message }, { status: 500 })
+    if (caseError) {
+      logDatabaseFailure('VALUATION_CONDITION_CASE_LOAD_FAILED', caseError)
+      return NextResponse.json({ error: 'No pudimos cargar la valorización.' }, { status: 500 })
+    }
     if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
     assertProfileVisible(scope, valuationCase.requested_by)
 
@@ -97,7 +109,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       .select('id,status,version_number,condition_status,condition_score,condition_version')
       .single()
 
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 409 })
+    if (updateError) {
+      logDatabaseFailure('VALUATION_CONDITION_UPDATE_FAILED', updateError)
+      return NextResponse.json({ error: 'No pudimos actualizar la inspección. Recarga la valorización e inténtalo nuevamente.' }, { status: 409 })
+    }
 
     const { error: versionError } = await supabase.from('valuation_case_versions').insert({
       valuation_case_id: id,
@@ -106,7 +121,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       snapshot: nextReportPayload,
       created_by: scope.profileId,
     })
-    if (versionError) return NextResponse.json({ error: versionError.message }, { status: 422 })
+    if (versionError) {
+      logDatabaseFailure('VALUATION_CONDITION_VERSION_FAILED', versionError)
+      return NextResponse.json({ error: 'La inspección fue actualizada, pero no pudimos registrar su versión.' }, { status: 422 })
+    }
 
     const { error: logError } = await supabase.from('valuation_decision_log').insert({
       valuation_case_id: id,
@@ -124,7 +142,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         blockers: result.blockers,
       },
     })
-    if (logError) return NextResponse.json({ error: logError.message }, { status: 422 })
+    if (logError) {
+      logDatabaseFailure('VALUATION_CONDITION_AUDIT_LOG_FAILED', logError)
+      return NextResponse.json({ error: 'La inspección fue actualizada, pero no pudimos registrar la trazabilidad.' }, { status: 422 })
+    }
 
     return NextResponse.json({ assessment, result, versionNumber: updated.version_number })
   } catch (error) {

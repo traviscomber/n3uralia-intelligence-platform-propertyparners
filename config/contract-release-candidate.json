@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "status": "not-ready",
+  "commit": null,
+  "deploymentUrl": null,
+  "buildVerified": false,
+  "uatAccepted": false,
+  "trainingCompleted": false,
+  "deliveryChecksumSha256": null,
+  "clientAcceptanceRecorded": false,
+  "openCriticalFindings": 0,
+  "openHighFindings": 0,
+  "notes": [
+    "This manifest must remain not-ready until evidence is recorded.",
+    "No secret values or credentials may be added."
+  ]
+}

@@ -21,12 +21,30 @@ export const dynamic = 'force-dynamic'
 type ImportMode = 'preview' | 'import'
 type ImportKind = 'market_data' | 'benchmark_data' | 'portal_listings' | 'cbrs_transactions'
 type SourceSystem = 'portal_inmobiliario' | 'cbrs' | 'client' | 'kml' | 'manual_import'
+type PipelineResult = Record<string, unknown> & { failed?: boolean; error?: string; run_id?: string }
 
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase credentials')
-  return createSupabaseClient(supabaseUrl, supabaseKey)
+  if (!supabaseUrl || !supabaseKey) throw new Error('MISSING_SUPABASE_CREDENTIALS')
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
+function logImportFailure(error: unknown) {
+  console.error('MARKET_IMPORT_FAILED', {
+    code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+  })
+}
+
+function persistedPipelineFailure(result: PipelineResult | null) {
+  if (!result?.failed) return null
+  return NextResponse.json({
+    error: result.error || 'La ingestión falló y quedó registrada para revisión.',
+    runId: result.run_id || null,
+    persisted: true,
+  }, { status: 500 })
 }
 
 function parseMode(value: string | null): ImportMode {
@@ -72,6 +90,7 @@ async function readJsonBody(req: NextRequest) {
     observed_at?: string
     dataset_kind?: string
     full_snapshot?: boolean | string | number
+    canonical_reference?: boolean | string | number
     mode?: string
     kind?: string
   }
@@ -94,6 +113,7 @@ export async function POST(req: NextRequest) {
     let observedAt = new Date().toISOString()
     let portalDatasetKind = parsePortalDatasetKind(url.searchParams.get('dataset_kind'))
     let fullSnapshot = parseBoolean(url.searchParams.get('full_snapshot'))
+    let canonicalReference = parseBoolean(url.searchParams.get('canonical_reference'))
     let inputRows: MarketImportInputRow[] = []
     let fileName = 'import.csv'
 
@@ -116,6 +136,7 @@ export async function POST(req: NextRequest) {
       snapshotDate = rawSnapshotDate || snapshotDate
       observedAt = rawObservedAt || observedAt
       fullSnapshot = parseBoolean(formData.get('full_snapshot'))
+      canonicalReference = parseBoolean(formData.get('canonical_reference'))
 
       if (!(file instanceof File)) {
         return NextResponse.json({ error: 'Debes subir un archivo .csv, .xls o .xlsx.' }, { status: 400 })
@@ -135,6 +156,7 @@ export async function POST(req: NextRequest) {
       observedAt = body.observed_at || observedAt
       portalDatasetKind = parsePortalDatasetKind(body.dataset_kind || null)
       fullSnapshot = parseBoolean(body.full_snapshot)
+      canonicalReference = parseBoolean(body.canonical_reference)
       inputRows = Array.isArray(body.rows) ? body.rows : Array.isArray(body.records) ? body.records : []
       fileName = 'payload.json'
     }
@@ -142,46 +164,32 @@ export async function POST(req: NextRequest) {
     if (!inputRows.length) return NextResponse.json({ error: 'No encontramos filas para importar.' }, { status: 400 })
 
     if (kind === 'portal_listings') {
-      const normalized = normalizePortalListingRows(inputRows)
-      const validRows = normalized.filter((row) => row.source_listing_id)
+      const normalized = normalizePortalListingRows(inputRows, portalDatasetKind).map((row) => canonicalReference
+        ? { ...row, status: 'observed', canonical_reference: true }
+        : row)
+      const validRows = normalized.filter((row) => row.source_listing_id && row.url)
       const skipped = normalized.length - validRows.length
       const preview = normalized.slice(0, 12)
-      const summary = {
-        rows: normalized.length,
-        valid: validRows.length,
-        skipped,
-        datasetKind: portalDatasetKind,
-        fullSnapshot,
-      }
+      const summary = { rows: normalized.length, valid: validRows.length, skipped, datasetKind: portalDatasetKind, fullSnapshot, canonicalReference }
 
       if (mode === 'preview') {
-        return NextResponse.json({
-          kind,
-          mode,
-          fileName,
-          source: sourceLabel,
-          sourceSystem: 'portal_inmobiliario',
-          observedAt,
-          summary,
-          preview,
-          message: 'Vista previa de Portal lista. Las filas sin identificador de publicación serán rechazadas.',
-        })
+        return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem: 'portal_inmobiliario', observedAt, summary, preview, message: canonicalReference ? 'Vista previa canónica de Portal lista. Se guardará como evidencia observada, no como inventario activo.' : 'Vista previa de Portal lista. Las filas sin identificador o URL serán rechazadas.' })
       }
 
-      if (!validRows.length) {
-        return NextResponse.json({ error: 'Ninguna fila de Portal contiene un identificador de publicación válido.' }, { status: 422 })
-      }
+      if (!validRows.length) return NextResponse.json({ error: 'Ninguna fila de Portal contiene identificador y URL válidos.' }, { status: 422 })
 
       const supabase = getServiceClient()
-      const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot', {
+      const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot_v2', {
         p_source_label: sourceLabel,
         p_source_file: fileName,
         p_dataset_kind: portalDatasetKind,
         p_observed_at: observedAt,
         p_rows: normalized,
-        p_full_snapshot: fullSnapshot,
+        p_full_snapshot: canonicalReference ? false : fullSnapshot,
       })
       if (pipelineError) throw pipelineError
+      const persistedFailure = persistedPipelineFailure(pipelineResult as PipelineResult | null)
+      if (persistedFailure) return persistedFailure
 
       return NextResponse.json({
         kind,
@@ -199,6 +207,8 @@ export async function POST(req: NextRequest) {
           updated: Number(pipelineResult?.updated ?? 0),
           unchanged: Number(pipelineResult?.unchanged ?? 0),
           removed: Number(pipelineResult?.removed ?? 0),
+          linked: Number(pipelineResult?.linked ?? 0),
+          unlinked: Number(pipelineResult?.unlinked ?? 0),
           runId: pipelineResult?.run_id ?? null,
           sourceId: pipelineResult?.source_id ?? null,
         },
@@ -215,22 +225,10 @@ export async function POST(req: NextRequest) {
       const summary = { rows: normalized.length, valid: validRows.length, skipped }
 
       if (mode === 'preview') {
-        return NextResponse.json({
-          kind,
-          mode,
-          fileName,
-          source: sourceLabel,
-          sourceSystem: 'cbrs',
-          observedAt,
-          summary,
-          preview,
-          message: 'Vista previa de CBRS lista. Se requiere fecha, precio y una identidad de propiedad mediante rol o dirección.',
-        })
+        return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem: 'cbrs', observedAt, summary, preview, message: 'Vista previa de CBRS lista. Se requiere fecha, precio y una identidad de propiedad mediante rol o dirección.' })
       }
 
-      if (!validRows.length) {
-        return NextResponse.json({ error: 'Ninguna fila CBRS cumple los campos mínimos: fecha, precio y rol o dirección.' }, { status: 422 })
-      }
+      if (!validRows.length) return NextResponse.json({ error: 'Ninguna fila CBRS cumple los campos mínimos: fecha, precio y rol o dirección.' }, { status: 422 })
 
       const supabase = getServiceClient()
       const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_cbrs_transaction_snapshot', {
@@ -240,6 +238,8 @@ export async function POST(req: NextRequest) {
         p_rows: normalized,
       })
       if (pipelineError) throw pipelineError
+      const persistedFailure = persistedPipelineFailure(pipelineResult as PipelineResult | null)
+      if (persistedFailure) return persistedFailure
 
       return NextResponse.json({
         kind,
@@ -267,12 +267,7 @@ export async function POST(req: NextRequest) {
       const normalized = normalizeBenchmarkImportRows(inputRows, sourceLabel)
       const skipped = Math.max(0, inputRows.length - normalized.length)
       const preview = normalized.slice(0, 12)
-      const benchmarkSummary = {
-        rows: normalized.length,
-        sources: new Set(normalized.map((row) => row.source)).size,
-        neighborhoods: new Set(normalized.map((row) => row.neighborhood)).size,
-        skipped,
-      }
+      const benchmarkSummary = { rows: normalized.length, sources: new Set(normalized.map((row) => row.source)).size, neighborhoods: new Set(normalized.map((row) => row.neighborhood)).size, skipped }
       if (mode === 'preview') {
         return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem, snapshotDate, summary: benchmarkSummary, preview, message: 'Vista previa de benchmarks lista. Confirma para guardar en external_market_benchmarks.' })
       }
@@ -310,9 +305,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem, snapshotDate, summary: { ...summary, skipped }, preview, message: 'Vista previa lista. La confirmación creará ejecución, raw records, validaciones y snapshots canónicos.' })
     }
 
-    if (!normalized.length) {
-      return NextResponse.json({ error: 'Todas las filas fueron rechazadas durante la normalización.' }, { status: 422 })
-    }
+    if (!normalized.length) return NextResponse.json({ error: 'Todas las filas fueron rechazadas durante la normalización.' }, { status: 422 })
 
     const supabase = getServiceClient()
     const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_market_aggregate', {
@@ -323,6 +316,8 @@ export async function POST(req: NextRequest) {
       p_rows: normalized,
     })
     if (pipelineError) throw pipelineError
+    const persistedFailure = persistedPipelineFailure(pipelineResult as PipelineResult | null)
+    if (persistedFailure) return persistedFailure
 
     return NextResponse.json({
       kind,
@@ -342,10 +337,8 @@ export async function POST(req: NextRequest) {
       preview,
       message: `Pipeline completado: ${Number(pipelineResult?.accepted ?? 0)} filas aceptadas y ${Number(pipelineResult?.rejected ?? 0)} rechazadas.`,
     })
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos procesar la importación de mercado.' },
-      { status: 500 },
-    )
+  } catch (error) {
+    logImportFailure(error)
+    return NextResponse.json({ error: 'No pudimos procesar la importación de mercado.' }, { status: 500 })
   }
 }

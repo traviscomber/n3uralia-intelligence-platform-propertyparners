@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-07",
+  "overallStatus": "in-progress",
+  "allowedStatuses": [
+    "not-started",
+    "in-progress",
+    "blocked-client-input",
+    "ready-for-uat",
+    "accepted"
+  ],
+  "documents": [
+    "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
+    "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
+    "docs/canonical/TRAINING_AND_HANDOVER_PLAN.md"
+  ],
+  "workstreams": [
+    {
+      "id": "platform-core",
+      "label": "Arquitectura y plataforma",
+      "status": "ready-for-uat",
+      "owner": "N3uralia",
+      "evidence": [
+        "Produccion desplegada en Vercel",
+        "Aplicacion integrada con Supabase",
+        "Controles de acceso, RLS y aislamiento por tenant"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "valuation",
+      "label": "Valorizacion",
+      "status": "ready-for-uat",
+      "owner": "N3uralia",
+      "evidence": [
+        "Flujo de valorizacion implementado",
+        "Comparables, ajustes, rango y justificacion disponibles",
+        "Verificadores de modelo, workflow y condiciones"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "management-intelligence",
+      "label": "CEO, direccion y agentes",
+      "status": "ready-for-uat",
+      "owner": "N3uralia",
+      "evidence": [
+        "Dashboard ejecutivo operativo",
+        "Reportes mensuales con control de periodo cerrado",
+        "Rutas protegidas por capacidades"
+      ],
+      "blockers": []
+    },
+    {
+      "id": "market-intelligence",
+      "label": "Inteligencia de mercado",
+      "status": "blocked-client-input",
+      "owner": "Shared",
+      "evidence": [
+        "Base tecnica, importacion y comparables implementados",
+        "Separacion explicita entre mercado externo, CRM interno e inferencia"
+      ],
+      "blockers": [
+        "Base historica CBR y ventas recientes",
+        "KML oficial",
+        "Definicion final de absorcion, velocidad y oferta versus ventas"
+      ]
+    },
+    {
+      "id": "automation-and-reporting",
+      "label": "Automatizaciones y reportes",
+      "status": "blocked-client-input",
+      "owner": "Shared",
+      "evidence": [
+        "Generacion, previsualizacion y envio protegidos",
+        "Regla de cierre mensual implementada",
+        "Programacion bloqueada en API y UI hasta aprobacion formal de reporting"
+      ],
+      "blockers": [
+        "Calendario definitivo",
+        "Destinatarios aprobados",
+        "Frecuencia y reglas operativas confirmadas"
+      ]
+    },
+    {
+      "id": "uat-and-acceptance",
+      "label": "UAT y aceptacion",
+      "status": "in-progress",
+      "owner": "Shared",
+      "evidence": [
+        "Plan UAT documentado",
+        "UAT-07 seguridad funcional passed",
+        "UAT-08 continuidad operativa passed",
+        "Casos restantes preparados con evidencia tecnica"
+      ],
+      "blockers": [
+        "Usuarios designados por el Cliente",
+        "Ejecucion y aceptacion de casos compartidos",
+        "Acta de aceptacion"
+      ]
+    },
+    {
+      "id": "training-and-handover",
+      "label": "Capacitacion y traspaso",
+      "status": "blocked-client-input",
+      "owner": "Shared",
+      "evidence": [
+        "Plan de capacitacion y traspaso documentado"
+      ],
+      "blockers": [
+        "Fechas y asistentes confirmados",
+        "Sesiones ejecutadas",
+        "Registro de asistencia y cierre"
+      ]
+    },
+    {
+      "id": "final-delivery-package",
+      "label": "Paquete final de entrega",
+      "status": "in-progress",
+      "owner": "N3uralia",
+      "evidence": [
+        "Manifiesto de entrega documentado",
+        "Inventario ensamblado con 20 artefactos clasificados",
+        "Checklist de reconstruccion limpia documentado"
+      ],
+      "blockers": [
+        "Generacion del ZIP final sobre commit aprobado",
+        "Checksum SHA-256 del ZIP final",
+        "Reconstruccion limpia del artefacto final"
+      ]
+    }
+  ],
+  "acceptanceRule": {
+    "finalStatusesRequired": ["accepted"],
+    "requireNoOpenBlockers": true,
+    "requireUatEvidence": true,
+    "requireTrainingEvidence": true,
+    "requireDeliveryChecksum": true,
+    "requireClientAcceptanceRecord": true
+  }
+}

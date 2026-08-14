@@ -11,13 +11,14 @@ export type QualitativeFactors = {
 
 export type ValuationComparable = {
   id: string
-  sourceType: 'CBRS' | 'Portal' | 'Cliente'
+  sourceType: 'CBRS' | 'Portal' | 'TocToc' | 'Cliente'
   sourceReference: string
   address: string
   neighborhood: string
   transactionDate?: string
   distanceMeters?: number
   propertyType: 'Casa' | 'Departamento'
+  totalAreaM2?: number
   usefulAreaM2?: number
   builtAreaM2?: number
   landAreaM2?: number
@@ -25,10 +26,12 @@ export type ValuationComparable = {
   bathrooms?: number
   parkingSpaces?: number
   priceUf: number
+  /** Persisted canonical UF/m2. The calculator derives it from source-specific area rules. */
   priceUfM2: number
-  /** Similarity on the canonical 0-1 scale. */
+  /** Retained as review evidence; methodology v2 does not use it as an economic weight. */
   similarityScore: number
   selected: boolean
+  /** Retained as review evidence; methodology v2 does not auto-apply subjective adjustments. */
   adjustmentPct: number
   adjustmentNotes?: string
 }
@@ -45,6 +48,9 @@ export type ValuationSubject = {
   terraceAreaM2?: number
   builtAreaM2?: number
   landAreaM2?: number
+  usefulRateUfM2?: number
+  builtRateUfM2?: number
+  landRateUfM2?: number
   bedrooms?: number
   bathrooms?: number
   parkingSpaces?: number
@@ -52,7 +58,28 @@ export type ValuationSubject = {
   floorNumber?: number
 }
 
+export type MarketSummary = {
+  count: number
+  minPriceUf: number | null
+  averagePriceUf: number | null
+  maxPriceUf: number | null
+  minUfM2: number | null
+  averageUfM2: number | null
+  maxUfM2: number | null
+}
+
+export type PublicationScenario = {
+  upliftPct: 0 | 5 | 10
+  suggestedPriceUf: number
+  suggestedUfM2: number
+  varianceVsOfferMaxPct: number | null
+  varianceVsOfferAveragePct: number | null
+  varianceUfM2VsOfferMaxPct: number | null
+  varianceUfM2VsOfferAveragePct: number | null
+}
+
 export type ValuationResult = {
+  methodologyVersion: 'property-partners-valuation-v2'
   baseUfM2: number
   baseValueUf: number
   qualitativeAdjustmentPct: number
@@ -60,99 +87,161 @@ export type ValuationResult = {
   lowValueUf: number
   highValueUf: number
   comparableCount: number
+  portalSummary: MarketSummary
+  cbrsSummary: MarketSummary
+  commercialUfM2: number
+  salePriceVarianceVsCbrsMaxPct: number | null
+  salePriceVarianceVsCbrsAveragePct: number | null
+  saleUfM2VarianceVsCbrsMaxPct: number | null
+  saleUfM2VarianceVsCbrsAveragePct: number | null
+  publicationScenarios: PublicationScenario[]
+  warnings: string[]
   justification: string
 }
 
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const round = (value: number, digits = 2) => Number(value.toFixed(digits))
+const positive = (value: number | undefined) => Number.isFinite(value) && Number(value) > 0 ? Number(value) : 0
+const ratioVariance = (value: number, benchmark: number | null) => benchmark && benchmark > 0 ? round(value / benchmark - 1, 4) : null
 
-export function similarityScoreToWeight(similarityScore: number) {
-  if (!Number.isFinite(similarityScore) || similarityScore < 0 || similarityScore > 1) {
-    throw new Error('La similitud debe estar expresada en una escala de 0 a 1.')
+function summarize(values: Array<{ priceUf: number; ufM2: number }>): MarketSummary {
+  if (!values.length) return { count: 0, minPriceUf: null, averagePriceUf: null, maxPriceUf: null, minUfM2: null, averageUfM2: null, maxUfM2: null }
+  const prices = values.map((item) => item.priceUf)
+  const unit = values.map((item) => item.ufM2)
+  return {
+    count: values.length,
+    minPriceUf: round(Math.min(...prices)),
+    averagePriceUf: round(prices.reduce((sum, value) => sum + value, 0) / prices.length),
+    maxPriceUf: round(Math.max(...prices)),
+    minUfM2: round(Math.min(...unit)),
+    averageUfM2: round(unit.reduce((sum, value) => sum + value, 0) / unit.length),
+    maxUfM2: round(Math.max(...unit)),
   }
-  return round(clamp(similarityScore, 0.1, 1), 4)
 }
 
-export function calculateQualitativeAdjustment(factors: QualitativeFactors) {
-  return round(clamp(
-    factors.condition +
-      factors.remodeling +
-      factors.orientation +
-      factors.floor +
-      factors.light +
-      factors.view +
-      factors.noise +
-      factors.commercialPotential,
-    -35,
-    35,
-  ))
+export function calculateCanonicalComparableUfM2(item: ValuationComparable): number {
+  const price = positive(item.priceUf)
+  if (!price) return 0
+
+  if (item.propertyType === 'Casa') {
+    const weightedArea = positive(item.builtAreaM2) + positive(item.landAreaM2) / 4
+    return weightedArea > 0 ? round(price / weightedArea) : 0
+  }
+
+  if (item.sourceType === 'CBRS') {
+    const useful = positive(item.usefulAreaM2)
+    return useful > 0 ? round(price / useful) : 0
+  }
+
+  const useful = positive(item.usefulAreaM2)
+  const total = positive(item.totalAreaM2)
+  const weightedArea = useful > 0 && total >= useful ? useful + (total - useful) / 2 : 0
+  return weightedArea > 0 ? round(price / weightedArea) : 0
 }
 
-function weightedMedian(values: Array<{ value: number; weight: number }>) {
-  const ordered = [...values].sort((a, b) => a.value - b.value)
-  const total = ordered.reduce((sum, item) => sum + item.weight, 0)
-  let accumulated = 0
-  for (const item of ordered) {
-    accumulated += item.weight
-    if (accumulated >= total / 2) return item.value
+function calculateCommercialValue(subject: ValuationSubject) {
+  if (subject.propertyType === 'Departamento') {
+    const useful = positive(subject.usefulAreaM2)
+    const rate = positive(subject.usefulRateUfM2)
+    if (!useful || !rate) throw new Error('Departamento: se requieren m² útiles y UF/m² útil de valorización.')
+    return {
+      valueUf: round(useful * rate),
+      commercialUfM2: round(rate),
+      comparisonAreaM2: useful + positive(subject.terraceAreaM2) / 2,
+    }
   }
-  return ordered.at(-1)?.value ?? 0
+
+  const built = positive(subject.builtAreaM2)
+  const land = positive(subject.landAreaM2)
+  const builtRate = positive(subject.builtRateUfM2)
+  const landRate = positive(subject.landRateUfM2)
+  if ((!built || !builtRate) && (!land || !landRate)) throw new Error('Casa: se requiere al menos una superficie con su UF/m² de valorización.')
+  const valueUf = built * builtRate + land * landRate
+  const comparisonAreaM2 = built + land / 4
+  if (comparisonAreaM2 <= 0) throw new Error('Casa: la superficie ponderada debe ser mayor que cero.')
+  return { valueUf: round(valueUf), commercialUfM2: round(valueUf / comparisonAreaM2), comparisonAreaM2 }
 }
 
 export function calculateContractualValuation(
   subject: ValuationSubject,
   comparables: ValuationComparable[],
-  factors: QualitativeFactors,
+  _factors: QualitativeFactors,
 ): ValuationResult {
-  const selected = comparables.filter((item) => item.selected && item.priceUfM2 > 0)
+  const selected = comparables.filter((item) => item.selected && item.priceUf > 0)
   if (selected.length < 2) throw new Error('Se requieren al menos dos comparables seleccionados.')
 
-  const adjustedComparableValues = selected.map((item) => ({
-    value: item.priceUfM2 * (1 + item.adjustmentPct / 100),
-    weight: similarityScoreToWeight(item.similarityScore),
-  }))
-  const baseUfM2 = round(weightedMedian(adjustedComparableValues))
+  const normalized = selected
+    .map((item) => ({ item, ufM2: calculateCanonicalComparableUfM2(item) }))
+    .filter(({ ufM2 }) => ufM2 > 0)
+  if (normalized.length < 2) throw new Error('Se requieren al menos dos comparables con superficies suficientes para calcular UF/m² canónico.')
 
-  const effectiveArea = subject.propertyType === 'Departamento'
-    ? Number(subject.usefulAreaM2 ?? 0) + Number(subject.terraceAreaM2 ?? 0) * 0.5
-    : Number(subject.builtAreaM2 ?? 0) + Number(subject.landAreaM2 ?? 0) * 0.2
+  const commercial = calculateCommercialValue(subject)
+  const portalValues = normalized
+    .filter(({ item }) => item.sourceType === 'Portal' || item.sourceType === 'TocToc')
+    .map(({ item, ufM2 }) => ({ priceUf: item.priceUf, ufM2 }))
+  const cbrsValues = normalized
+    .filter(({ item }) => item.sourceType === 'CBRS')
+    .map(({ item, ufM2 }) => ({ priceUf: item.priceUf, ufM2 }))
 
-  if (effectiveArea <= 0) throw new Error('La superficie efectiva de la propiedad debe ser mayor que cero.')
+  const portalSummary = summarize(portalValues)
+  const cbrsSummary = summarize(cbrsValues)
+  const publicationScenarios: PublicationScenario[] = ([0, 5, 10] as const).map((upliftPct) => {
+    const suggestedPriceUf = round(commercial.valueUf / (1 - upliftPct / 100))
+    const suggestedUfM2 = commercial.comparisonAreaM2 > 0 ? round(suggestedPriceUf / commercial.comparisonAreaM2) : 0
+    return {
+      upliftPct,
+      suggestedPriceUf,
+      suggestedUfM2,
+      varianceVsOfferMaxPct: ratioVariance(suggestedPriceUf, portalSummary.maxPriceUf),
+      varianceVsOfferAveragePct: ratioVariance(suggestedPriceUf, portalSummary.averagePriceUf),
+      varianceUfM2VsOfferMaxPct: ratioVariance(suggestedUfM2, portalSummary.maxUfM2),
+      varianceUfM2VsOfferAveragePct: ratioVariance(suggestedUfM2, portalSummary.averageUfM2),
+    }
+  })
 
-  const baseValueUf = round(baseUfM2 * effectiveArea)
-  const qualitativeAdjustmentPct = calculateQualitativeAdjustment(factors)
-  const adjustedValueUf = round(baseValueUf * (1 + qualitativeAdjustmentPct / 100))
-  const lowValueUf = round(adjustedValueUf * 0.95)
-  const highValueUf = round(adjustedValueUf * 1.05)
+  const warnings: string[] = []
+  if (!portalSummary.count) warnings.push('Sin comparables de oferta Portal/TocToc seleccionados.')
+  if (!cbrsSummary.count) warnings.push('Sin ventas CBRS seleccionadas para contraste.')
+  if (portalSummary.count < 3) warnings.push('La muestra de oferta tiene menos de tres comparables.')
+  if (cbrsSummary.count < 3) warnings.push('La muestra CBRS tiene menos de tres ventas comparables.')
 
-  const justification = [
-    `Valor base determinado con ${selected.length} comparables seleccionados y mediana ponderada por similitud.`,
-    `Superficie efectiva utilizada: ${round(effectiveArea)} m².`,
-    `Ajuste cualitativo total: ${qualitativeAdjustmentPct}%.`,
-    `Rango sugerido: ${lowValueUf.toLocaleString('es-CL')} a ${highValueUf.toLocaleString('es-CL')} UF.`,
-  ].join(' ')
+  const justification = subject.propertyType === 'Departamento'
+    ? `Metodología canónica Property Partners para departamentos: valor comercial = m² útiles × UF/m² útil definido por el valorizador; oferta comparada con m² útiles + 50% de terraza y CBRS con m² útiles.`
+    : `Metodología canónica Property Partners para casas: valor comercial = m² construidos × UF/m² construido + m² terreno × UF/m² terreno; comparables expresados sobre m² construidos + terreno/4.`
 
   return {
-    baseUfM2,
-    baseValueUf,
-    qualitativeAdjustmentPct,
-    adjustedValueUf,
-    lowValueUf,
-    highValueUf,
-    comparableCount: selected.length,
+    methodologyVersion: 'property-partners-valuation-v2',
+    baseUfM2: commercial.commercialUfM2,
+    baseValueUf: commercial.valueUf,
+    qualitativeAdjustmentPct: 0,
+    adjustedValueUf: commercial.valueUf,
+    lowValueUf: commercial.valueUf,
+    highValueUf: commercial.valueUf,
+    comparableCount: normalized.length,
+    portalSummary,
+    cbrsSummary,
+    commercialUfM2: commercial.commercialUfM2,
+    salePriceVarianceVsCbrsMaxPct: ratioVariance(commercial.valueUf, cbrsSummary.maxPriceUf),
+    salePriceVarianceVsCbrsAveragePct: ratioVariance(commercial.valueUf, cbrsSummary.averagePriceUf),
+    saleUfM2VarianceVsCbrsMaxPct: ratioVariance(commercial.commercialUfM2, cbrsSummary.maxUfM2),
+    saleUfM2VarianceVsCbrsAveragePct: ratioVariance(commercial.commercialUfM2, cbrsSummary.averageUfM2),
+    publicationScenarios,
+    warnings,
     justification,
   }
 }
 
 export function buildValuationReportPayload(subject: ValuationSubject, comparables: ValuationComparable[], factors: QualitativeFactors, result: ValuationResult) {
   return {
-    methodologyVersion: 'valuation-contract-v1',
-    similarityScale: '0-1',
+    methodologyVersion: result.methodologyVersion,
     generatedAt: new Date().toISOString(),
     subject,
-    comparables: comparables.filter((item) => item.selected),
+    comparables: comparables.filter((item) => item.selected).map((item) => ({
+      ...item,
+      canonicalUfM2: calculateCanonicalComparableUfM2(item),
+    })),
     qualitativeFactors: factors,
+    qualitativeFactorsPolicy: 'review_evidence_only_no_automatic_economic_adjustment',
     result,
-    disclosure: 'Resultado orientativo sujeto a revisión y aprobación humana. La plataforma conserva fuentes, ajustes y supuestos utilizados.',
+    disclosure: 'Valorización basada en las plantillas canónicas Property Partners para casas y departamentos. Comparables, fuentes, fórmulas y escenarios quedan trazables y sujetos a revisión humana.',
   }
 }

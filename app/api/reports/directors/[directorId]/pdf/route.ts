@@ -12,10 +12,12 @@ function getServiceClient() {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase credentials')
+    throw new Error('MISSING_SUPABASE_CREDENTIALS')
   }
 
-  return createClient(supabaseUrl, supabaseKey)
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 export async function GET(request: Request, context: { params: Promise<{ directorId: string }> }) {
@@ -50,9 +52,9 @@ export async function GET(request: Request, context: { params: Promise<{ directo
       },
     })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error al generar el PDF.' },
-      { status: 500 },
-    )
+    console.error('DIRECTOR_REPORT_PDF_FAILED', {
+      code: typeof error === 'object' && error && 'code' in error ? String(error.code) : 'UNKNOWN',
+    })
+    return NextResponse.json({ error: 'No pudimos generar el PDF del director.' }, { status: 500 })
   }
 }

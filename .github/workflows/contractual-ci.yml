@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint, models and build
+    name: Lint, contractual gates, models and build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -54,6 +54,39 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Verify contractual closeout model
+        run: pnpm contract:closeout:verify
+
+      - name: Verify contractual evidence
+        run: pnpm contract:closeout:evidence:verify
+
+      - name: Verify client dependencies
+        run: pnpm contract:dependencies:verify
+
+      - name: Verify client dependency requests
+        run: pnpm contract:dependency-requests:verify
+
+      - name: Verify closeout documents
+        run: pnpm contract:documents:verify
+
+      - name: Verify UAT case status
+        run: pnpm contract:uat:verify
+
+      - name: Verify training status
+        run: pnpm contract:training:verify
+
+      - name: Verify delivery package inventory
+        run: pnpm contract:package:verify
+
+      - name: Verify client acceptance status
+        run: pnpm contract:acceptance:verify
+
+      - name: Verify production readiness status
+        run: pnpm contract:production:verify
+
+      - name: Verify closeout snapshot
+        run: pnpm contract:snapshot:verify
 
       - name: Verify market identity
         run: pnpm market:identity:verify

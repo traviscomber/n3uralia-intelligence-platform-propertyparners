@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 4,
+  "policy": "single-vercel-deployment-with-server-only-proprietary-boundaries",
+  "architecture": {
+    "primaryMode": "local-server-only",
+    "singleApplicationDeploymentAllowed": true,
+    "singleVercelProjectAllowed": true,
+    "remoteRuntimeRequired": false,
+    "physicalRepositorySeparationRequiredNow": false
+  },
+  "classes": {
+    "property-partners-core": {
+      "allowed": [
+        "app/**",
+        "components/**",
+        "lib/crm-*",
+        "lib/targets-*",
+        "lib/market-*",
+        "lib/valuation-*",
+        "lib/presentations-*",
+        "docs/canonical/**",
+        "public/**"
+      ],
+      "includes": [
+        "crm-and-commercial-operations",
+        "property-and-contact-workflows",
+        "valuation-and-reporting",
+        "authentication-roles-and-permissions",
+        "client-specific-integrations-and-data",
+        "product-ui-and-client-specific-business-rules"
+      ]
+    },
+    "shared-contract": {
+      "allowed": [
+        "lib/n3uralia-runtime-contract.ts",
+        "lib/n3uralia-runtime-client.ts"
+      ],
+      "restrictions": [
+        "types-and-transport-only",
+        "no-inference-rules",
+        "no-provider-secrets"
+      ],
+      "optionalFutureUse": true
+    },
+    "server-boundary": {
+      "paths": [
+        "lib/n3uralia-intelligence-gateway.ts"
+      ],
+      "restrictions": [
+        "server-only",
+        "must-not-be-imported-by-client-components",
+        "must-not-return-prompts-rules-or-sensitive-traces"
+      ]
+    },
+    "n3uralia-proprietary": {
+      "confirmedPaths": [
+        "lib/n3uralia-intelligence-engine.ts"
+      ],
+      "candidatePatterns": [
+        "lib/agents/**",
+        "lib/ai-*",
+        "lib/intelligence-*",
+        "lib/executive-reasoning*",
+        "lib/intelligence-orchestrator*",
+        "lib/ai-runtime*"
+      ],
+      "protectedContent": [
+        "reusable-inference-heuristics",
+        "proprietary-scoring",
+        "generic-prioritization-rules",
+        "internal-prompts",
+        "reusable-agent-orchestration",
+        "cross-client-methodology"
+      ],
+      "sameRepositoryAllowedWhileN3uraliaControlsAccess": true,
+      "sameVercelDeploymentAllowed": true,
+      "browserBundleAllowed": false,
+      "clientComponentImportAllowed": false,
+      "apiDisclosureAllowed": false,
+      "extractOnlyBeforeRepositoryTransferOrContractualRequirement": true
+    },
+    "client-evidence": {
+      "paths": [
+        "docs/canonical/**",
+        "data/**",
+        "lib/crm-snapshot*",
+        "lib/presentations-2026*",
+        "lib/targets-2026*",
+        "lib/market-snapshot*",
+        "lib/valuation-snapshot*"
+      ],
+      "mayEnterGlobalReusableDataset": false,
+      "tenantIsolationRequired": true
+    }
+  },
+  "controls": {
+    "requireServerOnlyExecution": true,
+    "forbidClientImportsOfProtectedModules": true,
+    "forbidProtectedTermsInApiResponses": true,
+    "requireExposureAuditDuringBuild": true,
+    "requireBundleReviewBeforeExternalRepositoryAccess": true,
+    "requireHistoryReviewBeforeRepositoryTransfer": true,
+    "requireCredentialRotationBeforeRepositoryTransfer": true
+  },
+  "futureOptions": {
+    "allowedModes": [
+      "local",
+      "shadow",
+      "remote"
+    ],
+    "defaultMode": "local",
+    "remoteMigrationPlanned": false,
+    "remoteMigrationRequiresExplicitApproval": true
+  },
+  "verifiedInventoryDocument": "docs/canonical/N3URALIA_PROPRIETARY_MODULE_INVENTORY.md",
+  "gateway": "lib/n3uralia-intelligence-gateway.ts"
+}

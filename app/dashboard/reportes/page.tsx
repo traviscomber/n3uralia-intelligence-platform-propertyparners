@@ -3,8 +3,14 @@ import { getUserScope } from '@/lib/user-scope'
 
 export default async function ReportsPage() {
   const scope = await getUserScope()
-  if (['admin', 'ceo', 'director', 'subdirector'].includes(scope.role)) {
+
+  if (scope.role === 'ceo') {
+    redirect('/dashboard/reportes/canonicos')
+  }
+
+  if (['admin', 'director', 'subdirector'].includes(scope.role)) {
     redirect('/dashboard/reportes/operacion')
   }
+
   redirect('/dashboard/reportes/autonomos')
 }

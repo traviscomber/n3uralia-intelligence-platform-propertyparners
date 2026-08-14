@@ -4,49 +4,47 @@ import {
   getScheduledDocuments,
   createDocumentDistributions,
   getRecipientsForSchedule,
+  updateScheduleNextSendAt,
 } from '@/lib/document-delivery'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: Request) {
-  // Verify CRON_SECRET
+async function handleCron(request: Request) {
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
   const authFailure = getCronAuthorizationFailure(authHeader, cronSecret)
   if (authFailure) {
-    return new NextResponse(JSON.stringify({ error: 'Unauthorized', details: authFailure }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    // Get all active monthly document schedules
     const schedules = await getScheduledDocuments()
-    const monthlySchedules = schedules.filter((s) => s.cadence === 'monthly')
-
+    const monthlySchedules = schedules.filter((schedule) => schedule.cadence === 'monthly')
     let distributionsCreated = 0
 
     for (const schedule of monthlySchedules) {
       try {
-        // Get recipients for this schedule
         const recipients = await getRecipientsForSchedule(schedule.id)
-
         if (recipients.length > 0) {
-          // Create distribution records for each recipient
-          await createDocumentDistributions(
+          const created = await createDocumentDistributions(
             schedule.id,
-            recipients.map((r) => ({
-              email: r.email,
-              role: r.role,
-            }))
+            schedule.next_send_at,
+            recipients.map((recipient) => ({ email: recipient.email, role: recipient.role })),
           )
-
-          distributionsCreated += recipients.length
+          distributionsCreated += created.length
+          await updateScheduleNextSendAt(
+            schedule.id,
+            'monthly',
+            undefined,
+            schedule.day_of_month,
+            schedule.send_time,
+          )
         }
       } catch (error) {
-        console.error(`[Document Delivery] Error processing schedule ${schedule.id}:`, error)
-        continue
+        console.error(
+          `[Document Delivery] Monthly schedule ${schedule.id} failed:`,
+          error instanceof Error ? error.name : 'unknown_error',
+        )
       }
     }
 
@@ -57,12 +55,13 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    const errorDetails = error instanceof Error ? error.stack : JSON.stringify(error)
-    console.error('[Document Delivery] Cron error:', errorMessage, errorDetails)
-    return new NextResponse(JSON.stringify({ error: 'Internal server error', details: errorMessage }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    console.error(
+      '[Document Delivery] Monthly cron failed:',
+      error instanceof Error ? error.name : 'unknown_error',
+    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const GET = handleCron
+export const POST = handleCron

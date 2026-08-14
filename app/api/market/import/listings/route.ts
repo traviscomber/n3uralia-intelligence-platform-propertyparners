@@ -49,8 +49,10 @@ type Body = {
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase credentials')
-  return createSupabaseClient(supabaseUrl, supabaseKey)
+  if (!supabaseUrl || !supabaseKey) throw new Error('SERVICE_CONFIGURATION_MISSING')
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
 }
 
 function parseDatasetKind(value: string | undefined): DatasetKind | null {
@@ -150,7 +152,10 @@ export async function POST(request: NextRequest) {
       p_rows: rows,
       p_full_snapshot: Boolean(body.full_snapshot),
     })
-    if (error) throw error
+    if (error) {
+      console.error('UNIT_LISTING_IMPORT_RPC_FAILED', { code: error.code ?? 'unknown' })
+      return NextResponse.json({ error: 'No fue posible importar las publicaciones unitarias.' }, { status: 500 })
+    }
 
     return NextResponse.json({
       mode: 'import',
@@ -173,9 +178,8 @@ export async function POST(request: NextRequest) {
       message: `Importación unitaria completada: ${Number(data?.accepted ?? 0)} aceptadas, ${Number(data?.rejected ?? 0)} rechazadas y ${Number(data?.removed ?? 0)} retiradas.`,
     })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'No fue posible importar las publicaciones unitarias.' },
-      { status: 500 },
-    )
+    const code = error instanceof Error ? error.message : 'unknown'
+    console.error('UNIT_LISTING_IMPORT_FAILED', { code })
+    return NextResponse.json({ error: 'No fue posible importar las publicaciones unitarias.' }, { status: 500 })
   }
 }

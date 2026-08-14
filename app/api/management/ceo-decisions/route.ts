@@ -1,11 +1,30 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
+import { getN3uraliaIntelligence } from '@/lib/n3uralia-intelligence-gateway'
+
+const PROPERTY_PARTNERS_TENANT_ID = 'property-partners'
+
+function databaseFailure() {
+  return NextResponse.json(
+    { error: 'No fue posible cargar la información ejecutiva.' },
+    { status: 500 },
+  )
+}
 
 export async function GET() {
   try {
     await requireAnyCapability(['management.global.read', 'tasks.global.manage', 'valuations.global.read'])
-    const supabase = await createClient()
+
+    const [supabase, intelligence] = await Promise.all([
+      createClient(),
+      getN3uraliaIntelligence({
+        tenantId: PROPERTY_PARTNERS_TENANT_ID,
+        audience: 'ceo',
+        domains: ['executive', 'crm', 'market', 'valuation'],
+        purpose: 'decision-support',
+      }),
+    ])
 
     const [casesResult, tasksResult] = await Promise.all([
       supabase
@@ -22,8 +41,8 @@ export async function GET() {
         .limit(150),
     ])
 
-    if (casesResult.error) return NextResponse.json({ error: casesResult.error.message }, { status: 500 })
-    if (tasksResult.error) return NextResponse.json({ error: tasksResult.error.message }, { status: 500 })
+    if (casesResult.error) return databaseFailure()
+    if (tasksResult.error) return databaseFailure()
 
     const cases = casesResult.data ?? []
     const tasks = tasksResult.data ?? []
@@ -47,8 +66,8 @@ export async function GET() {
         : Promise.resolve({ data: [], error: null }),
     ])
 
-    if (logsResult.error) return NextResponse.json({ error: logsResult.error.message }, { status: 500 })
-    if (profilesResult.error) return NextResponse.json({ error: profilesResult.error.message }, { status: 500 })
+    if (logsResult.error) return databaseFailure()
+    if (profilesResult.error) return databaseFailure()
 
     const profileMap = Object.fromEntries((profilesResult.data ?? []).map((profile) => [profile.id, profile]))
     const taskByCase = new Map<string, typeof tasks>()
@@ -81,7 +100,24 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ queue, generatedAt: new Date().toISOString() }, { headers: { 'Cache-Control': 'no-store' } })
+    const selectedIntelligence = intelligence.mode === 'remote' && intelligence.remote
+      ? intelligence.remote
+      : intelligence.local
+
+    const intelligencePayload = {
+      signals: selectedIntelligence.signals,
+      risks: selectedIntelligence.risks,
+      actions: selectedIntelligence.actions,
+    }
+
+    return NextResponse.json(
+      {
+        queue,
+        intelligence: intelligencePayload,
+        generatedAt: new Date().toISOString(),
+      },
+      { headers: { 'Cache-Control': 'private, no-store' } },
+    )
   } catch (error) {
     return accessErrorResponse(error)
   }

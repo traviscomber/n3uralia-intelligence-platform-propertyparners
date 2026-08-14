@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'No authenticated user.' }, { status: 401 })
+      return NextResponse.json({ error: 'No hay una sesión autenticada.' }, { status: 401 })
     }
 
     const body = (await req.json().catch(() => ({}))) as ProfileUpdate
@@ -63,7 +63,10 @@ export async function PATCH(req: NextRequest) {
       .eq('id', user.id)
       .maybeSingle()
 
-    if (existingError) throw existingError
+    if (existingError) {
+      console.error('PROFILE_LOOKUP_FAILED', { code: existingError.code ?? 'UNKNOWN' })
+      return NextResponse.json({ error: 'No pudimos verificar el perfil.' }, { status: 500 })
+    }
     if (!existing) {
       return NextResponse.json(
         { error: 'El acceso interno requiere una invitación administrada.' },
@@ -78,12 +81,14 @@ export async function PATCH(req: NextRequest) {
       .select('*')
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('PROFILE_UPDATE_FAILED', { code: error.code ?? 'UNKNOWN' })
+      return NextResponse.json({ error: 'No pudimos actualizar el perfil.' }, { status: 500 })
+    }
+
     return NextResponse.json({ profile: data })
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'No pudimos actualizar el perfil.' },
-      { status: 500 },
-    )
+  } catch {
+    console.error('PROFILE_UPDATE_UNEXPECTED_FAILURE')
+    return NextResponse.json({ error: 'No pudimos actualizar el perfil.' }, { status: 500 })
   }
 }

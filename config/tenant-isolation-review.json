@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "status": "verified-live",
+  "principle": "Static ambiguity is tracked without being treated as proof of exposure. Live Supabase policy and route authorization evidence remain authoritative.",
+  "verifiedAt": "2026-08-07T21:33:15Z",
+  "verifiedProject": "orfncinmhymhhoxbxgjb",
+  "verification": {
+    "method": "Live pg_policies, pg_class RLS flags, role grants, function ACLs and Supabase security advisors were inspected against the production project.",
+    "legacyTables": "Surviving legacy tables were hardened to remove anonymous access and deprecated auth.role()-based policies where applicable.",
+    "retiredTables": "Historical report-delivery, scrape, valuation-quote and PP-learning tables referenced by the listed migrations are not present in the current public schema.",
+    "modernModules": "Market and valuation tables have RLS enabled; valuation case/version/comparable policies are scoped by authenticated user and management scope; market shared-reference tables are read-only through RLS for authenticated users.",
+    "migrationEvidence": [
+      "20260807212835_harden_legacy_public_rls_surface",
+      "20260807213125_remove_anonymous_market_and_valuation_grants",
+      "20260807213315_harden_legacy_market_data_and_geo_rpc"
+    ]
+  },
+  "apiRoutes": [
+    "app/api/management/reports/send-now/route.ts",
+    "app/api/market/import/listings/route.ts",
+    "app/api/market/import/route.ts",
+    "app/api/market/scrape-portal/route.ts",
+    "app/api/prc/sync/route.ts",
+    "app/api/prc/zones/route.ts",
+    "app/api/profiles/route.ts",
+    "app/api/report-deliveries/route.ts",
+    "app/api/report-directory/route.ts",
+    "app/api/reports/export/route.ts",
+    "app/api/reports/weekly/route.ts",
+    "app/api/scrape/portal-inmobiliario/route.ts",
+    "app/api/send-report/route.ts"
+  ],
+  "historicalMigrations": [],
+  "verifiedHistoricalMigrations": [
+    "supabase/migrations/20260710_create_neighborhoods.sql",
+    "supabase/migrations/20260711_create_external_market_benchmarks.sql",
+    "supabase/migrations/20260711_create_neighborhood_market_data.sql",
+    "supabase/migrations/20260711_create_report_deliveries.sql",
+    "supabase/migrations/20260711_create_report_delivery_targets.sql",
+    "supabase/migrations/20260711_create_scrape_health_snapshots.sql",
+    "supabase/migrations/20260711_create_scrape_runs.sql",
+    "supabase/migrations/20260711_create_weekly_reports.sql",
+    "supabase/migrations/20260711_fix_neighborhoods.sql",
+    "supabase/migrations/20260715_create_valuation_quotes.sql",
+    "supabase/migrations/20260715_market_data_import_ready.sql",
+    "supabase/migrations/20260716_create_pp_ai_learning_snapshots.sql",
+    "supabase/migrations/20260716_create_pp_recommendation_feedback.sql",
+    "supabase/migrations/202607290001_market_intelligence_module.sql",
+    "supabase/migrations/202607290004_valuation_contractual_workflow.sql"
+  ],
+  "requiredResolution": {
+    "apiRoutes": "Keep explicit authentication/capability guards on privileged routes and service-role operations.",
+    "historicalMigrations": "Re-run live verification after material schema/RLS changes; historical SQL text alone is not proof of current exposure."
+  }
+}

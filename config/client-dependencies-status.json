@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-08-12",
+  "allowedStatuses": ["pending", "received", "approved", "waived"],
+  "dependencies": [
+    {
+      "id": "market-cbr-sales",
+      "label": "Base histórica CBR y ventas recientes",
+      "owner": "Client",
+      "status": "received",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["market-intelligence", "uat-and-acceptance"],
+      "evidence": [
+        "Pedro Pablo confirmed the Vitacura market scope and delivered the canonical CBRS Vitacura workbook; the source has been audited and integrated into market intelligence.",
+        "Canonical response record: docs/client-response-pedro-pablo-2026-08-12.md"
+      ],
+      "questions": []
+    },
+    {
+      "id": "market-kml",
+      "label": "KML oficial",
+      "owner": "Client",
+      "status": "received",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["market-intelligence"],
+      "evidence": [
+        "Property Partners delivered the Vitacura neighborhood KML; 19 valid neighborhood polygons were audited and integrated as the canonical territorial layer.",
+        "Canonical response record: docs/client-response-pedro-pablo-2026-08-12.md"
+      ],
+      "questions": []
+    },
+    {
+      "id": "kpi-dictionary",
+      "label": "Diccionario oficial de KPI",
+      "owner": "Shared",
+      "status": "pending",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["management-intelligence", "automation-and-reporting"],
+      "evidence": [],
+      "questions": [
+        {"id":"PP-KPI-01","text":"¿Cuál es la definición oficial de captación bruta y cuál es su fuente de datos?","responseType":"structured","whyNeeded":"La plataforma no debe sustituir captaciones por stock ni por variaciones netas."},
+        {"id":"PP-KPI-02","text":"¿Cómo se calcula oficialmente la conversión: numerador, denominador, cohorte, período y universo considerado?","responseType":"structured","whyNeeded":"Permite una fórmula reproducible y comparable entre CEO, oficina y partner."},
+        {"id":"PP-KPI-03","text":"¿Cuál es la fórmula oficial de productividad y qué variables o ponderaciones utiliza?","responseType":"structured","whyNeeded":"Evita publicar un KPI provisional como si fuera oficial."},
+        {"id":"PP-KPI-04","text":"¿Cómo debe construirse el ranking de oficinas y partners, incluyendo desempates y período de vigencia?","responseType":"structured","whyNeeded":"Define el ordenamiento contractual y evita rankings derivados no aprobados."},
+        {"id":"PP-KPI-05","text":"¿Qué alertas comerciales necesitan, cuáles son sus umbrales, severidad, responsable y regla de escalamiento?","responseType":"structured","whyNeeded":"Permite activar reglas versionadas sin hardcodear criterios provisionales."},
+        {"id":"PP-KPI-06","text":"¿Cuáles son las metas oficiales por compañía, oficina y partner para los KPI aplicables, y desde qué período rigen?","responseType":"file","whyNeeded":"Permite calcular cumplimiento y comparaciones sólo contra metas aprobadas."}
+      ]
+    },
+    {
+      "id": "users-and-roles",
+      "label": "Directorio final de usuarios, roles y capacidades",
+      "owner": "Client",
+      "status": "received",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["uat-and-acceptance", "training-and-handover"],
+      "evidence": [
+        "Role hierarchy confirmed by project owner on 2026-08-09: admin is Travis/N3uralia technical site administrator and is outside Property Partners organizational hierarchy; Property Partners hierarchy is CEO Pedro Pablo -> account directors -> executives.",
+        "Pedro Pablo confirmed no existing user must be removed and identified the final additional users: María Luz Barbosa (director, Santa María), Claudia Stark (subdirector, Santa María), and Daniela Nasi (subdirector; office label remains editable and must be normalized from source evidence).",
+        "Canonical response record: docs/client-response-pedro-pablo-2026-08-12.md"
+      ],
+      "questions": []
+    },
+    {
+      "id": "reporting-approval",
+      "label": "Calendario, destinatarios y reglas de reportes",
+      "owner": "Shared",
+      "status": "pending",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["automation-and-reporting"],
+      "evidence": [
+        "Pedro Pablo requested monthly automation to download specific CRM reports at month-end or the following day. Exact CRM report identities still require system evidence before automation."
+      ],
+      "questions": [
+        {"id":"PP-RPT-01","text":"¿Qué informes deben enviarse automáticamente, con qué frecuencia y en qué día/hora?","responseType":"structured","whyNeeded":"Activa schedules productivos sin inventar un calendario comercial."},
+        {"id":"PP-RPT-02","text":"¿Quiénes son los destinatarios autorizados de cada informe y qué alcance debe recibir cada uno: global, oficina o personal?","responseType":"list","whyNeeded":"Permite configurar la distribución respetando alcance y confidencialidad."},
+        {"id":"PP-RPT-03","text":"¿Confirman PDF como formato oficial de entrega y email como canal principal, o requieren además otro formato/canal contractual?","responseType":"approval","whyNeeded":"Cierra la definición operativa de Reportin y evita agregar salidas no requeridas."}
+      ]
+    },
+    {
+      "id": "uat-participants",
+      "label": "Responsables y participantes UAT",
+      "owner": "Client",
+      "status": "pending",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["uat-and-acceptance"],
+      "evidence": [],
+      "questions": [
+        {"id":"PP-UAT-01","text":"¿Quién será el responsable de aceptación UAT por parte de Property Partners y qué usuarios participarán por cada rol?","responseType":"list","whyNeeded":"Permite ejecutar y firmar una aceptación funcional con responsables identificados."},
+        {"id":"PP-UAT-02","text":"¿Qué fecha o ventana proponen para ejecutar la sesión final de UAT?","responseType":"date","whyNeeded":"Permite calendarizar la validación que bloquea la aceptación contractual definitiva."}
+      ]
+    },
+    {
+      "id": "training-participants",
+      "label": "Asistentes y fechas de capacitación",
+      "owner": "Client",
+      "status": "pending",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["training-and-handover"],
+      "evidence": [],
+      "questions": [
+        {"id":"PP-TRN-01","text":"¿Qué personas deben recibir capacitación de usuario y quién quedará como administrador operativo de la plataforma?","responseType":"list","whyNeeded":"Cierra el requisito contractual de capacitación y administración posterior a la entrega."},
+        {"id":"PP-TRN-02","text":"¿Qué fecha o ventana proponen para la capacitación final?","responseType":"date","whyNeeded":"Permite completar evidencia de asistencia y aceptación del traspaso."}
+      ]
+    },
+    {
+      "id": "third-party-ownership",
+      "label": "Titularidad y costos de servicios de terceros",
+      "owner": "Shared",
+      "status": "pending",
+      "requestedFrom": "Pedro Pablo",
+      "requiredFor": ["final-delivery-package"],
+      "evidence": [],
+      "questions": [
+        {"id":"PP-OPS-01","text":"¿A nombre de quién deben quedar finalmente las cuentas y costos recurrentes de Vercel, Supabase, Resend y cualquier proveedor externo de datos?","responseType":"structured","whyNeeded":"Define titularidad, facturación y responsabilidades después de la transferencia."},
+        {"id":"PP-OPS-02","text":"¿Quién será el receptor técnico autorizado para la transferencia de accesos, documentación y prueba de reconstrucción independiente?","responseType":"text","whyNeeded":"Permite ejecutar el clean-room deployment y cerrar la transferencia formal."}
+      ]
+    }
+  ]
+}

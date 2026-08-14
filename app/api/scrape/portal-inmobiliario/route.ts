@@ -17,6 +17,15 @@ function numberFrom(text: string | null, pattern: RegExp) {
   return Number.isFinite(value) ? value : null
 }
 
+function errorCode(error: unknown) {
+  if (typeof error === 'object' && error && 'code' in error) return String(error.code)
+  return 'UNKNOWN'
+}
+
+function logCaptureFailure(error: unknown) {
+  console.error('PORTAL_LIVE_CAPTURE_FAILED', { code: errorCode(error) })
+}
+
 export async function POST(request: Request) {
   const access = await requireExecutiveAccess()
   if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido a CEO y administradores.' }, { status: access.status })
@@ -24,61 +33,71 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Activa la confirmación de fuente viva antes de capturar.' }, { status: 428 })
   }
 
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] })
+  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null
+
   try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    })
+
     const observed = []
     for (const search of searches) {
       const page = await browser.newPage()
-      await page.goto(search.url, { waitUntil: 'domcontentloaded', timeout: 40000 })
-      const cards = await page.evaluate(() => Array.from(document.querySelectorAll('[class*="ui-search-result"]')).slice(0, 50).map((card) => {
-        const link = card.querySelector('a[href]') as HTMLAnchorElement | null
-        return {
-          url: link?.href || null,
-          title: card.querySelector('[class*="title"]')?.textContent?.trim() || null,
-          price: card.querySelector('[class*="price"]')?.textContent?.trim() || null,
-          attributes: Array.from(card.querySelectorAll('[class*="attribute"]')).map((item) => item.textContent?.trim()).filter(Boolean).join(' · ') || null,
-          location: card.querySelector('[class*="location"]')?.textContent?.trim() || null,
+      try {
+        await page.goto(search.url, { waitUntil: 'domcontentloaded', timeout: 40000 })
+        const cards = await page.evaluate(() => Array.from(document.querySelectorAll('[class*="ui-search-result"]')).slice(0, 50).map((card) => {
+          const link = card.querySelector('a[href]') as HTMLAnchorElement | null
+          return {
+            url: link?.href || null,
+            title: card.querySelector('[class*="title"]')?.textContent?.trim() || null,
+            price: card.querySelector('[class*="price"]')?.textContent?.trim() || null,
+            attributes: Array.from(card.querySelectorAll('[class*="attribute"]')).map((item) => item.textContent?.trim()).filter(Boolean).join(' · ') || null,
+            location: card.querySelector('[class*="location"]')?.textContent?.trim() || null,
+          }
+        }))
+        for (const card of cards) {
+          if (!card.url) continue
+          const id = card.url.match(/(?:MLC-?|\/)(\d{6,})/i)?.[1] || null
+          const priceUf = numberFrom(card.price, /UF\s*([\d.,]+)/i)
+          observed.push({
+            source: 'portal_inmobiliario_live',
+            capturedAt: new Date().toISOString(),
+            operation: 'venta',
+            commune: 'Vitacura',
+            propertyType: search.type,
+            listingId: id,
+            sourceUrl: card.url,
+            title: card.title,
+            priceUf,
+            currency: priceUf === null ? null : 'UF',
+            publishedAt: null,
+            updatedAt: null,
+            listingStatus: null,
+            areaM2: null,
+            usefulAreaM2: null,
+            terraceAreaM2: null,
+            builtAreaM2: null,
+            landAreaM2: null,
+            attributesRaw: card.attributes,
+            bedrooms: numberFrom(card.attributes, /(\d+)\s*dorm/i),
+            bathrooms: numberFrom(card.attributes, /(\d+)\s*bañ/i),
+            location: card.location,
+            latitude: null,
+            longitude: null,
+            daysOnMarket: null,
+            geographicQuality: 'missing',
+          })
         }
-      }))
-      for (const card of cards) {
-        if (!card.url) continue
-        const id = card.url.match(/(?:MLC-?|\/)(\d{6,})/i)?.[1] || null
-        const priceUf = numberFrom(card.price, /UF\s*([\d.,]+)/i)
-        observed.push({
-          source: 'portal_inmobiliario_live',
-          capturedAt: new Date().toISOString(),
-          operation: 'venta',
-          commune: 'Vitacura',
-          propertyType: search.type,
-          listingId: id,
-          sourceUrl: card.url,
-          title: card.title,
-          priceUf,
-          currency: priceUf === null ? null : 'UF',
-          publishedAt: null,
-          updatedAt: null,
-          listingStatus: null,
-          areaM2: null,
-          usefulAreaM2: null,
-          terraceAreaM2: null,
-          builtAreaM2: null,
-          landAreaM2: null,
-          attributesRaw: card.attributes,
-          bedrooms: numberFrom(card.attributes, /(\d+)\s*dorm/i),
-          bathrooms: numberFrom(card.attributes, /(\d+)\s*bañ/i),
-          location: card.location,
-          latitude: null,
-          longitude: null,
-          daysOnMarket: null,
-          geographicQuality: 'missing',
-        })
+      } finally {
+        await page.close().catch(() => undefined)
       }
-      await page.close()
     }
 
     const valid = observed.filter((row) => row.listingId && row.sourceUrl)
     return NextResponse.json({
       status: 'validation_sample',
+      sourceStatus: 'available',
       provenance: 'live_unreconciled',
       eligibleForAuditedViews: false,
       writesPerformed: 0,
@@ -89,8 +108,20 @@ export async function POST(request: Request) {
       note: 'Muestra observada sin imputaciones. Debe conciliarse con los archivos enviados antes de aprobarse.',
     })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'No fue posible capturar la fuente viva.', writesPerformed: 0 }, { status: 502 })
+    logCaptureFailure(error)
+    return NextResponse.json({
+      status: 'source_unavailable',
+      sourceStatus: 'error',
+      provenance: 'live_unreconciled',
+      eligibleForAuditedViews: false,
+      writesPerformed: 0,
+      captured: 0,
+      validForReconciliation: 0,
+      rejected: 0,
+      error: 'La captura viva no está disponible en este runtime. No se incorporó información al mercado canónico.',
+      errorCode: errorCode(error),
+    }, { status: 503 })
   } finally {
-    await browser.close()
+    if (browser) await browser.close().catch(() => undefined)
   }
 }

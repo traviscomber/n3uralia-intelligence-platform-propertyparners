@@ -22,24 +22,28 @@ async function main() {
   const accessControl = await read('lib/access-control.ts')
   const creatorPage = await read('app/dashboard/valuation/page.tsx')
   const workspacePage = await read('app/dashboard/valuations/[id]/page.tsx')
+  const reportPage = await read('app/dashboard/valuations/[id]/report/page.tsx')
+  const reportBanner = await read('components/valuation/valuation-report-status-banner.tsx')
 
   assert.match(createRoute, /const status = ['"]draft['"] as const/)
   assert.doesNotMatch(createRoute, /payload\.status/)
   assert.match(createRoute, /action:\s*['"]case_created['"]/)
   assert.match(createRoute, /valuation_case_versions/)
 
-  assert.match(creatorPage, /blankComparable\(3,/)
+  assert.match(creatorPage, /useState<ValuationComparable\[]>\(\[\]\)/)
+  assert.doesNotMatch(creatorPage, /similarityScore:\s*0\.7/)
+  assert.doesNotMatch(creatorPage, /selected:\s*true/)
   assert.match(creatorPage, /router\.push\(`\/dashboard\/valuations\/\$\{payload\.caseId\}`\)/)
   assert.doesNotMatch(creatorPage, /Enviar a revisión/)
 
-  assert.match(workflowRoute, /accepted\.length < 3/)
-  assert.match(workflowRoute, /const canApprove = scope\.capabilities\.includes\(['"]valuations\.global\.approve['"]\)/)
-  assert.doesNotMatch(workflowRoute, /const canApprove =[^\n]*\|\| canReview/)
-  assert.match(workflowRoute, /Solo Dirección puede aprobar/)
-  assert.match(workflowRoute, /Solo Dirección puede emitir/)
-  assert.match(workflowRoute, /Solo dirección de oficina puede devolver el caso a borrador/)
-  assert.match(workflowRoute, /valuation_case_versions/)
-  assert.match(workflowRoute, /valuation_decision_log/)
+  assert.match(workflowRoute, /transition_valuation_case_atomic/)
+  assert.match(workflowRoute, /target_case_id:\s*id/)
+  assert.match(workflowRoute, /target_status:\s*target/)
+  assert.match(workflowRoute, /transition_reason:\s*reason/)
+  assert.match(workflowRoute, /atomic:\s*true/)
+  assert.doesNotMatch(workflowRoute, /from\(['"]valuation_cases['"]\)\.update/)
+  assert.doesNotMatch(workflowRoute, /from\(['"]valuation_case_versions['"]\)\.insert/)
+  assert.doesNotMatch(workflowRoute, /from\(['"]valuation_decision_log['"]\)\.insert/)
 
   const ceoBlock = accessControl.match(/ceo:\s*\[([\s\S]*?)\n\s*\],/)?.[1] ?? ''
   const adminBlock = accessControl.match(/admin:\s*\[([\s\S]*?)\n\s*\],/)?.[1] ?? ''
@@ -65,6 +69,9 @@ async function main() {
 
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/comparables/)
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/workflow/)
+  assert.match(reportPage, /ValuationReportStatusBanner/)
+  assert.match(reportBanner, /PRELIMINAR · NO PUBLICABLE/)
+  assert.match(reportBanner, /VALORIZACIÓN EMITIDA/)
 
   const obsoleteRoutes = [
     'app/api/valuation-cases/[id]/comparables/route.ts',
@@ -77,7 +84,7 @@ async function main() {
     assert.equal(await exists(route), false, `Obsolete valuation route still exists: ${route}`)
   }
 
-  console.log('Valuation workflow verified: CEO-only approval, office-scoped review, evidence rules and audit trail.')
+  console.log('Valuation workflow verified: atomic transitions, CEO-only approval, scoped review and non-publicable preliminary reports.')
 }
 
 main().catch((error) => {

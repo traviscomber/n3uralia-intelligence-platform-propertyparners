@@ -47,76 +47,69 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--n3-black)]">
-      <div className="w-full max-w-sm px-4">
-        <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex w-56 items-center justify-center bg-black px-3 py-2">
-            <PPLogo className="w-full" priority />
-          </div>
-          <p className="text-sm" style={{ color: 'var(--n3-text-muted)' }}>Inteligencia de mercado Vitacura</p>
-        </div>
+    <main className="flex min-h-screen items-center justify-center bg-[var(--n3-black)] px-4 py-10">
+      <div className="w-full max-w-sm">
+        <header className="mb-8 text-center">
+          <PPLogo className="mx-auto w-56" priority />
+          <p className="mt-4 text-sm text-[var(--n3-text-muted)]">Inteligencia de mercado Vitacura</p>
+        </header>
 
-        <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-dark-surface)] p-6 shadow-sm">
-          <h1 className="mb-1 text-base font-semibold text-[var(--n3-text-light)]">Iniciar sesión</h1>
-          <p className="mb-6 text-sm" style={{ color: 'var(--n3-text-muted)' }}>Accede al control de gestión e inteligencia comercial</p>
+        <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-6" aria-labelledby="login-title">
+          <h1 id="login-title" className="mb-1 text-xl font-semibold text-[var(--n3-text-light)]">Iniciar sesión</h1>
+          <p className="mb-6 text-sm leading-6 text-[var(--n3-text-muted)]">Accede al control de gestión e inteligencia comercial.</p>
 
-          {error && (
-            <div className="mb-4 rounded border border-[var(--n3-line)] bg-[rgba(215,51,43,0.1)] p-3 text-sm" style={{ color: 'var(--n3-text-light)' }}>
+          {error ? (
+            <div role="alert" className="mb-4 border border-[#ff766f] bg-[#160d0c] p-3 text-sm text-[var(--n3-text-light)]">
               {error}
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
-                Correo
-              </label>
+              <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-[var(--n3-text-muted)]">Correo</label>
               <input
+                id="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@correo.com"
-                className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
-                style={{ border: '1px solid var(--n3-line)' }}
+                className="w-full border border-[var(--n3-line)] bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none focus:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--n3-black)]"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--n3-text-muted)' }}>
-                Contraseña
-              </label>
+              <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-[var(--n3-text-muted)]">Contraseña</label>
               <input
+                id="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="********"
-                className="w-full rounded bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none"
-                style={{ border: '1px solid var(--n3-line)' }}
+                className="w-full border border-[var(--n3-line)] bg-[var(--n3-black)] px-3 py-2.5 text-sm text-[var(--n3-text-light)] outline-none focus:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--n3-black)]"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded py-2.5 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-60"
-              style={{ background: 'var(--n3-teal)', color: '#ffffff' }}
+              className="min-h-11 w-full bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? 'Ingresando...' : 'Ingresar'}
+              {loading ? 'Ingresando…' : 'Ingresar'}
             </button>
           </form>
 
-          <p className="mt-4 text-center text-xs" style={{ color: 'var(--n3-text-muted)' }}>
-            Acceso administrado internamente.
-          </p>
+          <p className="mt-4 text-center text-xs text-[var(--n3-text-muted)]">Acceso administrado internamente.</p>
 
-          <div className="mt-5 border-t border-[var(--n3-line)] pt-3 text-center text-[11px]" style={{ color: 'var(--n3-text-muted)' }}>
+          <div className="mt-5 border-t border-[var(--n3-line)] pt-3 text-center text-[11px] text-[var(--n3-text-muted)]">
             Powered by{' '}
-            <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium hover:opacity-80" style={{ color: 'var(--n3-teal)' }}>
+            <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium text-[var(--n3-teal-soft)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]">
               N3uralia
             </a>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   )
 }
