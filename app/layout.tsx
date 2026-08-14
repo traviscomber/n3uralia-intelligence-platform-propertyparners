@@ -1,5 +1,4 @@
-﻿import type { Metadata, Viewport } from 'next'
-import { Montserrat, Rajdhani } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -13,23 +12,9 @@ export const viewport: Viewport = {
   themeColor: '#050505',
 }
 
-const rajdhani = Rajdhani({
-  subsets: ['latin'],
-  weight: ['300', '400'],
-  variable: '--font-rajdhani',
-  display: 'swap',
-})
-
-const montserrat = Montserrat({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  variable: '--font-montserrat',
-  display: 'swap',
-})
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${rajdhani.variable} ${montserrat.variable}`}>
+    <html lang="es" className="font-sans">
       <body className="antialiased bg-[var(--background)] text-[var(--foreground)]">
         {children}
       </body>
