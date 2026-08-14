@@ -1,32 +1,36 @@
-import 'server-only'
-
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+// @ts-ignore - Supabase type issues
+import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
-import { generateCeoReportPDFAttachment } from '@/lib/ceo-report-pdf-generator'
 import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery-core'
+import { generateCeoReportPDFAttachment } from '@/lib/ceo-report-pdf-generator'
 
-let supabase: SupabaseClient<any, 'public', any> | null = null
+// Lazy initialization to avoid errors during build
+let supabase: ReturnType<typeof createClient> | null = null
 let resend: Resend | null = null
+let reportConfig: any = null
 
-function getSupabase(): SupabaseClient<any, 'public', any> {
+function getSupabase() {
   if (!supabase) {
-    const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !key) throw new Error('Supabase service configuration is missing')
-    supabase = createClient<any>(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    })
+    supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
   }
   return supabase
 }
 
 function getResend() {
   if (!resend) {
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) throw new Error('RESEND_API_KEY is missing')
-    resend = new Resend(apiKey)
+    resend = new Resend(process.env.RESEND_API_KEY!)
   }
   return resend
+}
+
+function getReportConfig() {
+  if (!reportConfig) {
+    reportConfig = getManagementReportDeliveryConfiguration()
+  }
+  return reportConfig
 }
 
 export const DOCUMENT_MAX_ATTEMPTS = 6
@@ -35,34 +39,38 @@ export const DOCUMENT_RETRY_DELAY_MS = 5000
 export type DocumentDistributionStatus = 'pending' | 'claimed' | 'sent' | 'failed' | 'bounced'
 
 export async function getScheduledDocuments(): Promise<any[]> {
-  const { data, error } = await getSupabase()
+  const now = new Date()
+  
+  const { data: schedules, error } = await (getSupabase() as any)
     .from('document_schedules')
     .select('*')
     .eq('active', true)
-    .lte('next_send_at', new Date().toISOString())
+    .lte('next_send_at', now.toISOString())
+  
   if (error) throw error
-  return data ?? []
+  return (schedules || []) as any[]
 }
 
 export async function getRecipientsForSchedule(scheduleId: string) {
-  const client = getSupabase()
-  const { data: recipients, error } = await client
+  const { data: recipients, error } = await (getSupabase() as any)
     .from('document_recipients')
     .select('recipient_role')
     .eq('schedule_id', scheduleId)
     .eq('active', true)
+  
   if (error) throw error
-
-  const roles = [...new Set((recipients ?? []).map((row: any) => row.recipient_role).filter(Boolean))]
-  if (!roles.length) return []
-
-  const { data: users, error: usersError } = await client
+  
+  // Get users by role
+  const roles = (recipients as any[] || []).map((r) => r.recipient_role)
+  
+  const { data: users, error: usersError } = await (getSupabase() as any)
     .from('profiles')
-    .select('id,email,full_name,copilot_role')
+    .select('id, email, full_name, copilot_role')
     .in('copilot_role', roles)
+  
   if (usersError) throw usersError
-
-  return (users ?? []).map((user: any) => ({
+  
+  return ((users as any[]) || []).map((user) => ({
     id: user.id,
     email: user.email,
     name: user.full_name,
@@ -72,153 +80,216 @@ export async function getRecipientsForSchedule(scheduleId: string) {
 
 export async function createDocumentDistributions(
   scheduleId: string,
-  scheduledFor: string,
   recipients: Array<{ email: string; role: string }>,
 ) {
-  if (!recipients.length) return []
-
-  const client = getSupabase()
-  const nextAttemptAt = new Date().toISOString()
-  const created: any[] = []
-
-  for (const recipient of recipients) {
-    const { data, error } = await client
-      .from('document_distributions')
-      .insert({
-        schedule_id: scheduleId,
-        recipient_email: recipient.email.trim().toLowerCase(),
-        recipient_role: recipient.role,
-        status: 'pending' as DocumentDistributionStatus,
-        attempt_count: 0,
-        next_attempt_at: nextAttemptAt,
-        scheduled_for: scheduledFor,
-      } as any)
-      .select()
-      .single()
-
-    if (error) {
-      if ((error as any).code === '23505') continue
-      throw error
-    }
-
-    if (data) created.push(data)
-  }
-
-  return created
+  const distributions = recipients.map((recipient) => ({
+    schedule_id: scheduleId,
+    recipient_email: recipient.email,
+    recipient_role: recipient.role,
+    status: 'pending',
+    attempt_count: 0,
+  }))
+  
+  const { data, error } = await (getSupabase() as any)
+    .from('document_distributions')
+    .insert(distributions as any)
+    .select()
+  
+  if (error) throw error
+  return data
 }
 
 export async function claimDocumentDistribution(
   distributionId: string,
 ): Promise<{ schedule_id: string; recipient_email: string } | null> {
-  const client = getSupabase()
-  const { data, error } = await client.rpc('claim_document_distribution', {
-    p_distribution_id: distributionId,
-  } as any)
-
-  if (error) throw error
-
-  const claimed = Array.isArray(data) ? data[0] : null
-  if (!claimed) return null
-
-  return {
-    schedule_id: String((claimed as any).schedule_id),
-    recipient_email: String((claimed as any).recipient_email),
-  }
-}
-
-function emailContent(documentTitle: string, periodOverride?: string) {
-  const greeting = 'Hola'
-  const period = periodOverride || documentTitle.match(/\d{4}-\d{2}/)?.[0] || 'Período actual'
-  const html = `
-    <div style="font-family:Calibri,Arial,sans-serif;background:#f1f1f1;padding:24px">
-      <div style="max-width:600px;margin:auto;background:#fff">
-        <div style="background:#000;color:#fff;padding:32px;text-align:center;border-bottom:3px solid #e74c3c">
-          <h1 style="font-size:24px;margin:0 0 10px">${documentTitle}</h1>
-          <div style="font-size:12px;color:#ccc">${period}</div>
-        </div>
-        <div style="padding:36px;color:#333">
-          <p><strong>${greeting},</strong></p>
-          <p>Adjunto encontrarás el reporte integral ejecutivo de Property Partners.</p>
-          <p>El documento fue generado por el sistema de Business Intelligence y se entrega como archivo PDF.</p>
-          <hr style="border:0;border-top:1px solid #ddd;margin:28px 0">
-          <p style="font-size:12px;color:#666">Property Partners Intelligence<br>info@ppartnersgroup.app<br>www.ppartnersgroup.app</p>
-        </div>
-      </div>
-    </div>`
-  const text = `${greeting},\n\nAdjunto encontrarás ${documentTitle}, correspondiente a ${period}.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app`
-  return { html, text }
+  const { data, error } = await (getSupabase() as any)
+    .from('document_distributions')
+    .select('schedule_id, recipient_email')
+    .eq('id', distributionId)
+    .eq('status', 'pending')
+    .single()
+  
+  if (error || !data) return null
+  
+  const updateError = await (getSupabase() as any)
+    .from('document_distributions')
+    .update({
+      status: 'claimed',
+      attempt_count: 1,
+      last_attempted_at: new Date().toISOString(),
+    } as any)
+    .eq('id', distributionId)
+  
+  if (updateError.error) throw updateError.error
+  return data
 }
 
 export async function sendDocumentEmail(
   distributionId: string,
   scheduleId: string,
   documentTitle: string,
-  _documentUrl: string,
+  documentUrl: string,
   recipientEmail: string,
   periodOverride?: string,
 ) {
-  const configuration = getManagementReportDeliveryConfiguration()
-  if (!configuration) throw new Error('Report email configuration is missing')
+  const subject = `Business Intelligence Document: ${documentTitle}`
 
-  const { html, text } = emailContent(documentTitle, periodOverride)
-  const attachments: Array<{ filename: string; content: string; content_type?: string }> = []
-  if (documentTitle.includes('Reporte Integral')) {
-    const reportAttachment = await generateCeoReportPDFAttachment(periodOverride)
-    attachments.push({
-      filename: reportAttachment.filename,
-      content: reportAttachment.content,
-      content_type: reportAttachment.contentType,
-    })
+  // Determine greeting based on time of day in Chile timezone (before 12:00 = Buenos días, after 12:00 = Buenas tardes)
+  const now = new Date()
+  const chileTimeStr = new Intl.DateTimeFormat('es-CL', {
+    timeZone: 'America/Santiago',
+    hour: '2-digit',
+    hour12: false,
+  }).format(now)
+  const chileHour = parseInt(chileTimeStr, 10)
+  const greeting = chileHour < 12 ? 'Buenos días' : 'Buenas tardes'
+
+  // Parse the period (YYYY-MM) out of the title so we can show it once, formatted nicely,
+  // and strip the redundant trailing period/brand text from the displayed title.
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+  ]
+  const periodMatch = documentTitle.match(/(\d{4})-(\d{2})/)
+  let periodLabel = 'Período actual'
+  let cleanTitle = documentTitle
+  if (periodMatch) {
+    const year = periodMatch[1]
+    const monthIndex = parseInt(periodMatch[2], 10) - 1
+    if (monthIndex >= 0 && monthIndex < 12) {
+      periodLabel = `${monthNames[monthIndex]} ${year}`
+    }
+    cleanTitle = documentTitle
+      .replace(/\s*[-–—]\s*Property Partners\s*\d{4}-\d{2}\s*$/i, '')
+      .replace(/\s*\d{4}-\d{2}\s*$/, '')
+      .trim()
   }
 
-  const idempotencyKey = `document-delivery/${distributionId}`
-  const client = getSupabase()
-  const { error: eventError } = await client.from('document_delivery_events').insert({
-    distribution_id: distributionId,
-    event_type: 'send_requested',
-    details: {
-      provider: 'resend',
-      idempotency_key: idempotencyKey,
-      requested_at: new Date().toISOString(),
-    },
-  } as any)
-  if (eventError) throw eventError
+  const html = `<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f0f0; margin: 0; padding: 0;">
+  <tr>
+    <td align="center" style="padding: 20px;">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-collapse: collapse;">
+        <tr>
+          <td style="background-color: #000000; padding: 0; text-align: center; font-size: 0; line-height: 0;">
+            <a href="https://www.ppartnersgroup.app" style="display: block; text-decoration: none;">
+              <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-bcIKL0Aq2V18sQvduTI22Aow5vCOY2.png" alt="Property Partners Vitacura - Click to visit website" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0; cursor: pointer;">
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #E74C3C; font-size: 0; line-height: 0; height: 3px;">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="background-color: #111111; color: white; padding: 36px 40px; text-align: center;">
+            <h2 style="font-family: Calibri, sans-serif; font-size: 25px; line-height: 1.25; margin: 0 0 16px 0; color: white; font-weight: bold;">${cleanTitle}</h2>
+            <span style="display: inline-block; font-family: Calibri, sans-serif; font-size: 11px; letter-spacing: 1px; color: #dddddd; border: 1px solid #444444; border-radius: 20px; padding: 6px 16px;">${periodLabel}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 40px; background-color: white;">
+            <p style="font-family: Calibri, sans-serif; font-size: 15px; font-weight: bold; color: #111; margin: 0 0 16px 0;">${greeting},</p>
+            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 28px 0; line-height: 1.7;">Adjunto encontrarás el reporte integral ejecutivo correspondiente a ${periodLabel}. Este documento contiene el análisis completo de desempeño, inteligencia de mercado y recomendaciones estratégicas.</p>
 
-  const result = await getResend().emails.send({
-    from: configuration.from,
+            <p style="font-family: Calibri, sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #111; margin: 0 0 14px 0;">Contenido del reporte</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 0 0 28px 0;">
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Modelo de scoring con métricas de desempeño</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Tabla de evolución con 6 meses de datos históricos</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Sistema de semáforo (Verde / Amarillo / Rojo)</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0; border-bottom: 1px solid #f0f0f0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Análisis de cumplimiento vs. objetivos</td></tr>
+              <tr><td style="font-family: Calibri, sans-serif; font-size: 13px; color: #444; padding: 7px 0;"><span style="color: #E74C3C; font-weight: bold;">›</span>&nbsp;&nbsp;Indicadores clave de negocio y productividad</td></tr>
+            </table>
+
+            <table width="100%" cellpadding="16" cellspacing="0" style="background-color: #f8f9fb; border-left: 3px solid #111111; margin: 0 0 28px 0; border-collapse: collapse;">
+              <tr>
+                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #444; line-height: 1.6;"><strong style="color:#111;">Documento adjunto.</strong> El reporte completo está adjunto como archivo HTML; puedes abrirlo en cualquier navegador o imprimirlo a PDF.</td>
+              </tr>
+            </table>
+
+            <p style="font-family: Calibri, sans-serif; font-size: 13px; color: #555; margin: 0 0 32px 0; line-height: 1.7;">Quedamos atentos si tienes preguntas sobre los datos o necesitas información adicional.</p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e6e6e6; border-collapse: collapse;">
+              <tr>
+                <td style="font-family: Calibri, sans-serif; font-size: 12px; color: #666; padding-top: 22px;">
+                  <p style="margin: 0 0 6px 0; font-weight: bold; color: #111;">Property Partners Intelligence</p>
+                  <p style="margin: 3px 0;"><a href="mailto:info@ppartnersgroup.app" style="color: #E74C3C; text-decoration: none;">info@ppartnersgroup.app</a></p>
+                  <p style="margin: 3px 0;"><a href="https://www.ppartnersgroup.app" style="color: #E74C3C; text-decoration: none;">www.ppartnersgroup.app</a></p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #111111; padding: 22px; text-align: center; font-family: Calibri, sans-serif; font-size: 10px; color: #999;">
+            <p style="margin: 3px 0;">© ${new Date().getFullYear()} Property Partners Group · Vitacura. Todos los derechos reservados.</p>
+            <p style="margin: 3px 0; color: #666;">Información confidencial destinada exclusivamente a su destinatario.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`
+  
+  const text = `${cleanTitle}\n${periodLabel}\n\n${greeting},\n\nAdjunto encontrarás el reporte integral ejecutivo correspondiente a ${periodLabel}.\n\nCONTENIDO DEL REPORTE:\n- Modelo de scoring con métricas de desempeño\n- Tabla de evolución con 6 meses de datos históricos\n- Sistema de semáforo (Verde/Amarillo/Rojo)\n- Análisis de cumplimiento vs objetivos\n- Indicadores clave de negocio y productividad\n\nEl reporte completo está adjunto como archivo HTML; puedes abrirlo en cualquier navegador.\n\nQuedamos atentos si tienes preguntas sobre los datos o necesitas información adicional.\n\nProperty Partners Intelligence\ninfo@ppartnersgroup.app\nwww.ppartnersgroup.app\n\n© ${new Date().getFullYear()} Property Partners Group · Vitacura. Todos los derechos reservados.`
+  
+  const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
+  
+  // Logo is embedded in the email header via a public image URL (no separate attachment needed)
+  let attachments: any[] = []
+
+  // Generate and attach CEO report if it's a CEO report document
+  if (documentTitle.includes('Reporte Integral')) {
+    try {
+      const reportAttachment = await generateCeoReportPDFAttachment(periodOverride)
+      attachments.push({
+        filename: reportAttachment.filename,
+        content: reportAttachment.content,
+        content_type: reportAttachment.contentType,
+      })
+    } catch (attachmentError) {
+      console.error('[Document Delivery] Failed to generate report attachment:', attachmentError)
+    }
+  }
+  
+  const resendResponse = await getResend().emails.send({
+    from: senderEmail,
     to: recipientEmail,
-    subject: `Business Intelligence Document: ${documentTitle}`,
+    subject,
     html,
     text,
-    attachments: attachments.length ? attachments : undefined,
+    attachments: attachments.length > 0 ? attachments : undefined,
     tags: [
       { name: 'category', value: 'document_delivery' },
       { name: 'schedule_id', value: scheduleId },
-      { name: 'distribution_id', value: distributionId },
     ],
-  }, {
-    idempotencyKey,
   })
-
-  if (result.error) {
-    const errorName = String((result.error as any).name ?? '')
-    const prefix = errorName === 'invalid_idempotent_request' ? 'permanent: ' : ''
-    throw new Error(`${prefix}Resend API error${errorName ? ` (${errorName})` : ''}: ${result.error.message}`)
+  
+  if (resendResponse.error) {
+    throw new Error(`Resend API error: ${resendResponse.error.message}`)
   }
-  return result
+  
+  return resendResponse
 }
 
-export async function markDocumentAsSent(distributionId: string, externalReference: string) {
-  const client = getSupabase()
-  const { data, error } = await client.rpc('mark_document_distribution_sent', {
-    p_distribution_id: distributionId,
-    p_external_reference: externalReference,
-  } as any)
-
+export async function markDocumentAsSent(
+  distributionId: string,
+  externalReference: string,
+) {
+  const { error } = await (getSupabase() as any)
+    .from('document_distributions')
+    .update({
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      external_reference: externalReference,
+    } as any)
+    .eq('id', distributionId)
+  
   if (error) throw error
-  if (data !== true) {
-    throw new Error(`Document distribution ${distributionId} could not be finalized as sent`)
-  }
+  
+  await (getSupabase() as any).from('document_delivery_events').insert({
+    distribution_id: distributionId,
+    event_type: 'sent',
+    details: { sent_at: new Date().toISOString(), external_reference: externalReference },
+  })
 }
 
 export async function markDocumentAsFailed(
@@ -226,27 +297,29 @@ export async function markDocumentAsFailed(
   errorMessage: string,
   attempt: number,
 ) {
-  const client = getSupabase()
   const isPermanent = errorMessage.includes('permanent') || attempt >= DOCUMENT_MAX_ATTEMPTS
-  const delay = isPermanent ? 365 * 24 * 60 * 60 * 1000 : DOCUMENT_RETRY_DELAY_MS
-  const now = new Date()
-  const nextStatus: DocumentDistributionStatus = isPermanent ? 'failed' : 'pending'
-  const { error } = await client
+  const nextAttemptAt = isPermanent
+    ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    : new Date(Date.now() + DOCUMENT_RETRY_DELAY_MS)
+  
+  const { error } = await (getSupabase() as any)
     .from('document_distributions')
     .update({
-      status: nextStatus,
-      error_message: errorMessage.slice(0, 1000),
+      status: 'failed',
+      error_message: errorMessage,
       attempt_count: attempt,
-      last_attempted_at: now.toISOString(),
-      next_attempt_at: new Date(now.getTime() + delay).toISOString(),
+      last_attempted_at: new Date().toISOString(),
+      next_attempt_at: nextAttemptAt.toISOString(),
     } as any)
     .eq('id', distributionId)
+  
   if (error) throw error
-  await client.from('document_delivery_events').insert({
+  
+  await (getSupabase() as any).from('document_delivery_events').insert({
     distribution_id: distributionId,
     event_type: 'failed',
-    details: { error: errorMessage, attempt, isPermanent, next_status: nextStatus },
-  } as any)
+    details: { error: errorMessage, attempt, isPermanent },
+  })
 }
 
 export async function updateScheduleNextSendAt(
@@ -254,50 +327,67 @@ export async function updateScheduleNextSendAt(
   cadence: 'weekly' | 'monthly',
   dayOfWeek?: string,
   dayOfMonth?: number,
-  sendTime = '09:00:00',
+  sendTime: string = '09:00:00',
 ) {
-  const [hours, minutes] = sendTime.split(':').map(Number)
-  const next = new Date()
-  next.setUTCHours(hours || 0, minutes || 0, 0, 0)
-
+  let nextSendAt = new Date()
+  nextSendAt.setUTCHours(parseInt(sendTime.split(':')[0]), parseInt(sendTime.split(':')[1]), 0, 0)
+  
   if (cadence === 'weekly' && dayOfWeek) {
-    const days: Record<string, number> = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 }
-    const target = days[dayOfWeek.toLowerCase()]
-    if (target !== undefined) {
-      let delta = target - next.getUTCDay()
-      if (delta <= 0) delta += 7
-      next.setUTCDate(next.getUTCDate() + delta)
+    const dayMap: { [key: string]: number } = {
+      sunday: 0,
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6,
     }
+    
+    const targetDay = dayMap[dayOfWeek.toLowerCase()]
+    const currentDay = nextSendAt.getUTCDay()
+    let daysAhead = targetDay - currentDay
+    
+    if (daysAhead <= 0) daysAhead += 7
+    nextSendAt.setUTCDate(nextSendAt.getUTCDate() + daysAhead)
   } else if (cadence === 'monthly' && dayOfMonth) {
-    next.setUTCDate(dayOfMonth)
-    if (next <= new Date()) next.setUTCMonth(next.getUTCMonth() + 1)
+    nextSendAt.setUTCDate(dayOfMonth)
+    if (nextSendAt <= new Date()) {
+      nextSendAt.setUTCMonth(nextSendAt.getUTCMonth() + 1)
+      nextSendAt.setUTCDate(dayOfMonth)
+    }
   }
-
-  const { error } = await getSupabase()
+  
+  const { error } = await (getSupabase() as any)
     .from('document_schedules')
-    .update({ last_sent_at: new Date().toISOString(), next_send_at: next.toISOString() } as any)
+    .update({
+      last_sent_at: new Date().toISOString(),
+      next_send_at: nextSendAt.toISOString(),
+    } as any)
     .eq('id', scheduleId)
+  
   if (error) throw error
 }
 
 export async function getPendingDocumentDistributions(limit = 50) {
-  const { data, error } = await getSupabase()
+  const { data, error } = await (getSupabase() as any)
     .from('document_distributions')
     .select('*')
     .eq('status', 'pending')
     .lte('next_attempt_at', new Date().toISOString())
     .order('created_at', { ascending: true })
     .limit(limit)
+  
   if (error) throw error
-  return data ?? []
+  return data
 }
 
 export async function getDocumentDetails(scheduleId: string) {
-  const { data, error } = await getSupabase()
+  const { data, error } = await (getSupabase() as any)
     .from('document_schedules')
-    .select('documents(title,file_url,file_type),*')
+    .select('documents(title, file_url, file_type), *')
     .eq('id', scheduleId)
     .single()
+  
   if (error) throw error
   return data
 }

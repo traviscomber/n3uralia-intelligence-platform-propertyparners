@@ -52,7 +52,7 @@ function blankComparable(index: number, type: ValuationSubject['propertyType'], 
     id: `cmp-${Date.now()}-${index}`, sourceType, sourceReference: '', address: '', neighborhood: '',
     propertyType: type, transactionDate: undefined, distanceMeters: undefined, totalAreaM2: undefined,
     usefulAreaM2: undefined, builtAreaM2: undefined, landAreaM2: undefined, priceUf: 0, priceUfM2: 0,
-    similarityScore: 1, selected: true, adjustmentPct: 0,
+    similarityScore: 0, selected: false, adjustmentPct: 0,
   }
 }
 

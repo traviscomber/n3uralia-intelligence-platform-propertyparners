@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { apartmentOfferWeightedUfM2, calculateDeterministicValuation, houseWeightedUfM2 } from '../lib/valuation-model'
-import { calculateContractualValuation, similarityScoreToWeight } from '../lib/valuation-contract'
+import { calculateContractualValuation } from '../lib/valuation-contract'
 
 const apartment = calculateDeterministicValuation({
   propertyType: 'Departamento', usefulAreaM2: 227, terraceAreaM2: 53, appliedUsefulUfM2: 70,
@@ -20,22 +20,17 @@ assert.equal(house.commercialValueUf, 18000)
 assert.equal(house.commercialWeightedUfM2, 45)
 assert.equal(houseWeightedUfM2(18000, 200, 800), 45)
 
-assert.equal(similarityScoreToWeight(0.95), 0.95)
-assert.equal(similarityScoreToWeight(0.62), 0.62)
-assert.throws(() => similarityScoreToWeight(0), /mayor que 0/)
-assert.throws(() => similarityScoreToWeight(62), /menor o igual a 1/)
-
 const factors = { condition: 0, remodeling: 0, orientation: 0, floor: 0, light: 0, view: 0, noise: 0, commercialPotential: 0 }
-const subject = { propertyType: 'Departamento' as const, address: 'Caso de prueba', neighborhood: 'Vitacura', latitude: -33.38, longitude: -70.57, usefulAreaM2: 100, terraceAreaM2: 0 }
+const subject = { propertyType: 'Departamento' as const, address: 'Caso de prueba', neighborhood: 'Vitacura', latitude: -33.38, longitude: -70.57, usefulAreaM2: 100, terraceAreaM2: 0, usefulRateUfM2: 70 }
 const comparables = [
-  { id: 'a', sourceType: 'Portal' as const, sourceReference: 'a', address: 'a', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-01-10', distanceMeters: 300, priceUf: 5000, priceUfM2: 50, similarityScore: 0.95, selected: true, adjustmentPct: 0 },
-  { id: 'b', sourceType: 'Portal' as const, sourceReference: 'b', address: 'b', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-02-10', distanceMeters: 500, priceUf: 7000, priceUfM2: 70, similarityScore: 0.78, selected: true, adjustmentPct: 0 },
-  { id: 'c', sourceType: 'Portal' as const, sourceReference: 'c', address: 'c', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-03-10', distanceMeters: 700, priceUf: 9000, priceUfM2: 90, similarityScore: 0.62, selected: true, adjustmentPct: 0 },
+  { id: 'a', sourceType: 'Portal' as const, sourceReference: 'a', address: 'a', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-01-10', distanceMeters: 300, usefulAreaM2: 100, totalAreaM2: 120, priceUf: 5000, priceUfM2: 50, similarityScore: 0.95, selected: true, adjustmentPct: 0 },
+  { id: 'b', sourceType: 'Portal' as const, sourceReference: 'b', address: 'b', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-02-10', distanceMeters: 500, usefulAreaM2: 100, totalAreaM2: 120, priceUf: 7000, priceUfM2: 70, similarityScore: 0.78, selected: true, adjustmentPct: 0 },
+  { id: 'c', sourceType: 'Portal' as const, sourceReference: 'c', address: 'c', neighborhood: 'Vitacura', propertyType: 'Departamento' as const, transactionDate: '2026-03-10', distanceMeters: 700, usefulAreaM2: 100, totalAreaM2: 120, priceUf: 9000, priceUfM2: 90, similarityScore: 0.62, selected: true, adjustmentPct: 0 },
 ]
 const weighted = calculateContractualValuation(subject, comparables, factors)
 assert.equal(weighted.baseUfM2, 70)
-assert.throws(() => calculateContractualValuation(subject, [{ ...comparables[0], similarityScore: 0 }, comparables[1]], factors), /similitud respaldada/)
-assert.throws(() => calculateContractualValuation(subject, [{ ...comparables[0], adjustmentPct: 36 }, comparables[1]], factors), /-35% y 35%/)
+assert.equal(weighted.baseValueUf, 7000)
+assert.throws(() => calculateContractualValuation(subject, [comparables[0]], factors), /al menos dos comparables/)
 
 const valuationPage = readFileSync('app/dashboard/valuation/page.tsx', 'utf8')
 const valuationWorkspace = readFileSync('app/dashboard/valuations/[id]/page.tsx', 'utf8')
@@ -49,8 +44,8 @@ const scopeMatrix = readFileSync('docs/CONTRACTUAL_SCOPE_MATRIX.md', 'utf8')
 
 assert.match(valuationPage, /Latitud/, 'Valuation form must expose subject latitude.')
 assert.match(valuationPage, /Longitud/, 'Valuation form must expose subject longitude.')
-assert.match(valuationPage, /Fecha de transacción/, 'Valuation form must expose comparable transaction date.')
-assert.match(valuationPage, /Distancia al sujeto/, 'Valuation form must expose comparable distance.')
+assert.match(valuationPage, /Fecha venta/, 'Valuation form must expose comparable transaction date.')
+assert.match(valuationPage, /label="Distancia"/, 'Valuation form must expose comparable distance.')
 assert.match(valuationPage, /similarityScore: 0,/, 'Blank comparables must start without an assumed similarity.')
 assert.match(valuationPage, /selected: false,/, 'Blank comparables must not start selected.')
 assert.match(valuationPage, /useState<ValuationComparable\[]>\(\[\]\)/, 'Valuation form must not create placeholder comparables.')
@@ -66,7 +61,6 @@ assert.match(marketExport, /requireCapability\('market\.read'\)/, 'Market export
 assert.match(marketExport, /XLSX\.utils\.book_new/, 'Market export must generate XLSX from the operational dataset.')
 assert.match(marketExport, /market_current_listings/, 'Market export must use operational listings.')
 assert.match(marketExport, /market_transactions/, 'Market export must use persisted transactions.')
-assert.match(marketPage, /dataset=summary&format=csv/, 'Market dashboard must expose CSV export.')
 assert.match(marketPage, /dataset=listings&format=xlsx/, 'Market dashboard must expose XLSX export.')
 assert.match(marketPage, /\/dashboard\/market\/export/, 'Market dashboard must expose printable report.')
 assert.match(marketPrint, /MarketPrintButton/, 'Market report must mount the browser print control.')

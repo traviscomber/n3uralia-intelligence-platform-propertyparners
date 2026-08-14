@@ -28,7 +28,6 @@ async function handleCron(request: Request) {
         if (recipients.length > 0) {
           const created = await createDocumentDistributions(
             schedule.id,
-            schedule.next_send_at,
             recipients.map((recipient) => ({ email: recipient.email, role: recipient.role })),
           )
           distributionsCreated += created.length
