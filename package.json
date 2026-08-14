@@ -37,6 +37,8 @@
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
     "valuation:workflow:verify": "node --import tsx scripts/verify-valuation-workflow.ts",
     "valuation:condition:verify": "node --import tsx scripts/verify-valuation-condition.ts",
+    "test:valuation": "node --import tsx --test tests/valuation/*.test.ts",
+    "valuation:gate": "node --import tsx scripts/verify-valuation-production-gate.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
     "test:traceability": "node scripts/test-traceability-validator.mjs",
     "test:e2e": "tsx scripts/test-pipeline-end-to-end.mjs",

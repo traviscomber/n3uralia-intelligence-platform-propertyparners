@@ -41,7 +41,7 @@ export type DocumentDistributionStatus = 'pending' | 'claimed' | 'sent' | 'faile
 export async function getScheduledDocuments(): Promise<any[]> {
   const now = new Date()
   
-  const { data: schedules, error } = await getSupabase()
+  const { data: schedules, error } = await (getSupabase() as any)
     .from('document_schedules')
     .select('*')
     .eq('active', true)
@@ -52,7 +52,7 @@ export async function getScheduledDocuments(): Promise<any[]> {
 }
 
 export async function getRecipientsForSchedule(scheduleId: string) {
-  const { data: recipients, error } = await getSupabase()
+  const { data: recipients, error } = await (getSupabase() as any)
     .from('document_recipients')
     .select('recipient_role')
     .eq('schedule_id', scheduleId)
@@ -63,7 +63,7 @@ export async function getRecipientsForSchedule(scheduleId: string) {
   // Get users by role
   const roles = (recipients as any[] || []).map((r) => r.recipient_role)
   
-  const { data: users, error: usersError } = await getSupabase()
+  const { data: users, error: usersError } = await (getSupabase() as any)
     .from('profiles')
     .select('id, email, full_name, copilot_role')
     .in('copilot_role', roles)
@@ -90,9 +90,9 @@ export async function createDocumentDistributions(
     attempt_count: 0,
   }))
   
-  const { data, error } = await getSupabase()
+  const { data, error } = await (getSupabase() as any)
     .from('document_distributions')
-    .insert(distributions)
+    .insert(distributions as any)
     .select()
   
   if (error) throw error
@@ -102,7 +102,7 @@ export async function createDocumentDistributions(
 export async function claimDocumentDistribution(
   distributionId: string,
 ): Promise<{ schedule_id: string; recipient_email: string } | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (getSupabase() as any)
     .from('document_distributions')
     .select('schedule_id, recipient_email')
     .eq('id', distributionId)
@@ -111,13 +111,13 @@ export async function claimDocumentDistribution(
   
   if (error || !data) return null
   
-  const updateError = await supabase
+  const updateError = await (getSupabase() as any)
     .from('document_distributions')
     .update({
       status: 'claimed',
       attempt_count: 1,
       last_attempted_at: new Date().toISOString(),
-    })
+    } as any)
     .eq('id', distributionId)
   
   if (updateError.error) throw updateError.error
@@ -274,18 +274,18 @@ export async function markDocumentAsSent(
   distributionId: string,
   externalReference: string,
 ) {
-  const { error } = await supabase
+  const { error } = await (getSupabase() as any)
     .from('document_distributions')
     .update({
       status: 'sent',
       sent_at: new Date().toISOString(),
       external_reference: externalReference,
-    })
+    } as any)
     .eq('id', distributionId)
   
   if (error) throw error
   
-  await getSupabase().from('document_delivery_events').insert({
+  await (getSupabase() as any).from('document_delivery_events').insert({
     distribution_id: distributionId,
     event_type: 'sent',
     details: { sent_at: new Date().toISOString(), external_reference: externalReference },
@@ -302,7 +302,7 @@ export async function markDocumentAsFailed(
     ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
     : new Date(Date.now() + DOCUMENT_RETRY_DELAY_MS)
   
-  const { error } = await supabase
+  const { error } = await (getSupabase() as any)
     .from('document_distributions')
     .update({
       status: 'failed',
@@ -310,12 +310,12 @@ export async function markDocumentAsFailed(
       attempt_count: attempt,
       last_attempted_at: new Date().toISOString(),
       next_attempt_at: nextAttemptAt.toISOString(),
-    })
+    } as any)
     .eq('id', distributionId)
   
   if (error) throw error
   
-  await getSupabase().from('document_delivery_events').insert({
+  await (getSupabase() as any).from('document_delivery_events').insert({
     distribution_id: distributionId,
     event_type: 'failed',
     details: { error: errorMessage, attempt, isPermanent },
@@ -357,19 +357,19 @@ export async function updateScheduleNextSendAt(
     }
   }
   
-  const { error } = await supabase
+  const { error } = await (getSupabase() as any)
     .from('document_schedules')
     .update({
       last_sent_at: new Date().toISOString(),
       next_send_at: nextSendAt.toISOString(),
-    })
+    } as any)
     .eq('id', scheduleId)
   
   if (error) throw error
 }
 
 export async function getPendingDocumentDistributions(limit = 50) {
-  const { data, error } = await supabase
+  const { data, error } = await (getSupabase() as any)
     .from('document_distributions')
     .select('*')
     .eq('status', 'pending')
@@ -382,7 +382,7 @@ export async function getPendingDocumentDistributions(limit = 50) {
 }
 
 export async function getDocumentDetails(scheduleId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (getSupabase() as any)
     .from('document_schedules')
     .select('documents(title, file_url, file_type), *')
     .eq('id', scheduleId)
