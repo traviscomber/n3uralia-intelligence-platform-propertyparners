@@ -1,6 +1,8 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -19,7 +21,11 @@ function MfaLoading() {
 }
 
 function MfaContent() {
-  const supabase = createClient()
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const getSupabase = () => {
+    if (!supabaseRef.current) supabaseRef.current = createClient()
+    return supabaseRef.current
+  }
   const router = useRouter()
   const searchParams = useSearchParams()
   const nextPath = searchParams.get('next') || '/dashboard'
@@ -32,7 +38,7 @@ function MfaContent() {
 
   useEffect(() => {
     async function load() {
-      const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      const assurance = await getSupabase().auth.mfa.getAuthenticatorAssuranceLevel()
       if (assurance.error) {
         setMessage('No fue posible verificar el nivel de seguridad de la sesión.')
         setBusy(false)
@@ -43,7 +49,7 @@ function MfaContent() {
         return
       }
 
-      const factors = await supabase.auth.mfa.listFactors()
+      const factors = await getSupabase().auth.mfa.listFactors()
       if (factors.error) {
         setMessage('No fue posible consultar los factores de autenticación.')
         setBusy(false)
@@ -55,11 +61,11 @@ function MfaContent() {
       setBusy(false)
     }
     void load()
-  }, [nextPath, router, supabase.auth.mfa])
+  }, [nextPath, router])
 
   async function enroll() {
     setBusy(true); setMessage('')
-    const result = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Property Partners' })
+    const result = await getSupabase().auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Property Partners' })
     if (result.error) {
       setMessage('No fue posible crear el segundo factor.')
     } else {
@@ -73,13 +79,13 @@ function MfaContent() {
   async function verify() {
     if (!factor || code.trim().length < 6) return
     setBusy(true); setMessage('')
-    const challenge = await supabase.auth.mfa.challenge({ factorId: factor.id })
+    const challenge = await getSupabase().auth.mfa.challenge({ factorId: factor.id })
     if (challenge.error) {
       setMessage('No fue posible iniciar la verificación.')
       setBusy(false)
       return
     }
-    const result = await supabase.auth.mfa.verify({ factorId: factor.id, challengeId: challenge.data.id, code: code.trim() })
+    const result = await getSupabase().auth.mfa.verify({ factorId: factor.id, challengeId: challenge.data.id, code: code.trim() })
     if (result.error) {
       setMessage('Código inválido o vencido.')
       setBusy(false)
