@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process'
 
 const checks = [
-  ['canonical mathematics', ['exec', 'tsx', '--test', 'tests/valuation/canonical-mathematics.test.ts']],
+  ['full valuation regression suite', ['run', 'test:valuation']],
+  ['production closeout guardrails', ['exec', 'tsx', 'scripts/verify-valuation-production-closeout.ts']],
   ['deterministic model', ['run', 'valuation:model:verify']],
   ['valuation intelligence', ['run', 'valuation:verify']],
   ['valuation workflow', ['run', 'valuation:workflow:verify']],

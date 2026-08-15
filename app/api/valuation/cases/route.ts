@@ -20,9 +20,14 @@ type CreateCasePayload = {
   qualitativeFactors: QualitativeFactors
   conditionAssessment?: PropertyConditionAssessment | null
   justification?: string
+  decision?: {
+    rateAnchor?: string | null
+  } | null
   propertyAssignmentId?: string | null
   sourcePropertyId?: string | null
 }
+
+const ALLOWED_RATE_ANCHORS = new Set(['cbrs_median', 'cbrs_average', 'portal_median', 'portal_average', 'manual'])
 
 function logDatabaseFailure(stage: string, error: unknown) {
   console.error(stage, {
@@ -78,6 +83,7 @@ function validatePayload(payload: CreateCasePayload) {
   if (!payload || typeof payload !== 'object') return 'Payload inválido.'
   if (!payload.subject || !Array.isArray(payload.comparables) || !payload.qualitativeFactors) return 'Faltan datos de la valorización.'
   if (!payload.subject.address?.trim() || !payload.subject.neighborhood?.trim()) return 'Dirección y barrio son obligatorios.'
+  if (payload.decision?.rateAnchor && !ALLOWED_RATE_ANCHORS.has(payload.decision.rateAnchor)) return 'Ancla de decisión inválida.'
   const coordinateError = validateCoordinates(payload.subject)
   if (coordinateError) return coordinateError
   const submitted = payload.comparables.filter(comparableHasEvidence)
@@ -183,11 +189,16 @@ export async function POST(request: Request) {
     const conditionResult = payload.conditionAssessment
       ? evaluatePropertyCondition(payload.conditionAssessment)
       : null
+    const decision = {
+      rateAnchor: payload.decision?.rateAnchor ?? null,
+      rateConfirmedByValuer: true,
+    }
     const reportPayload = {
       ...buildValuationReportPayload(payload.subject, submittedComparables, payload.qualitativeFactors, result),
       subjectPropertyId: resolvedSubjectPropertyId,
       conditionAssessment: payload.conditionAssessment ?? null,
       conditionResult,
+      decision,
     }
     const status = 'draft' as const
     const selectedComparables = submittedComparables.filter((item) => item.selected && item.priceUf > 0)
@@ -203,6 +214,7 @@ export async function POST(request: Request) {
       cbrsComparableCount: result.cbrsSummary.count,
       subjectPropertyId: resolvedSubjectPropertyId,
       assignment: assignmentEvidence,
+      rateAnchor: decision.rateAnchor,
       subjectCoordinatesPresent: payload.subject.latitude !== undefined && payload.subject.longitude !== undefined,
       comparableDistanceCoveragePct: Number((distanceCoverage * 100).toFixed(1)),
       comparableTransactionDateCoveragePct: Number((transactionDateCoverage * 100).toFixed(1)),
@@ -213,6 +225,8 @@ export async function POST(request: Request) {
       sourceAssignmentVerified: Boolean(assignmentEvidence),
       subjectPropertyLinked: Boolean(resolvedSubjectPropertyId),
       coordinatesUserSupplied: payload.subject.latitude !== undefined && payload.subject.longitude !== undefined,
+      rateAnchor: decision.rateAnchor,
+      finalRateConfirmedByValuer: true,
       conditionDoesNotApplyAutomaticEconomicAdjustment: true,
       qualitativeFactorsDoNotApplyAutomaticEconomicAdjustment: true,
       canonicalTemplates: ['Plantilla de Valorización Casas.xlsx', 'Plantilla de Valorización Departamentos.xlsx'],
@@ -277,6 +291,9 @@ export async function POST(request: Request) {
 
     const comparableRows = submittedComparables.map((item, index) => {
       const canonicalUfM2 = calculateCanonicalComparableUfM2(item)
+      const isCbrsDepartment = item.sourceType === 'CBRS' && item.propertyType === 'Departamento'
+      const registeredCbrsArea = isCbrsDepartment ? (item.builtAreaM2 ?? item.usefulAreaM2 ?? null) : null
+      const observedAt = (item as ValuationComparable & { observedAt?: string }).observedAt ?? null
       return {
         valuation_case_id: valuationCase.id,
         rank: index + 1,
@@ -288,9 +305,9 @@ export async function POST(request: Request) {
         address: item.address,
         neighborhood: item.neighborhood,
         property_type: item.propertyType,
-        total_area_m2: item.totalAreaM2 ?? null,
-        useful_area_m2: item.usefulAreaM2 ?? null,
-        built_area_m2: item.builtAreaM2 ?? null,
+        total_area_m2: isCbrsDepartment ? null : item.totalAreaM2 ?? null,
+        useful_area_m2: isCbrsDepartment ? null : item.usefulAreaM2 ?? null,
+        built_area_m2: isCbrsDepartment ? registeredCbrsArea : item.builtAreaM2 ?? null,
         land_area_m2: item.landAreaM2 ?? null,
         bedrooms: item.bedrooms ?? null,
         bathrooms: item.bathrooms ?? null,
@@ -308,14 +325,16 @@ export async function POST(request: Request) {
           transactionDate: item.transactionDate ?? null,
           distanceMeters: item.distanceMeters ?? null,
           canonicalUfM2,
+          areaSemantics: isCbrsDepartment ? 'source_registered_area_not_confirmed_as_useful' : 'canonical_source_specific',
         }],
         contradictions: [],
-        match_status: item.selected ? 'accepted' : 'excluded',
-        selection_reason: item.selected ? 'Seleccionado durante la creación del borrador' : null,
-        exclusion_reason: item.selected ? null : 'Excluido durante la creación del borrador',
+        match_status: item.selected ? 'accepted' : 'candidate',
+        exclusion_reason: null,
         selected_at: item.selected ? new Date().toISOString() : null,
         selected_by: item.selected ? scope.profileId : null,
-        source_observed_at: null,
+        excluded_at: null,
+        excluded_by: null,
+        source_observed_at: observedAt,
         source_methodology_version: result.methodologyVersion,
       }
     })
@@ -352,6 +371,7 @@ export async function POST(request: Request) {
         comparableCount: result.comparableCount,
         portalComparableCount: result.portalSummary.count,
         cbrsComparableCount: result.cbrsSummary.count,
+        rateAnchor: decision.rateAnchor,
         subjectPropertyId: valuationCase.subject_property_id,
         assignment: assignmentEvidence,
         subjectCoordinates: payload.subject.latitude !== undefined && payload.subject.longitude !== undefined
@@ -375,6 +395,7 @@ export async function POST(request: Request) {
       conditionResult,
       status,
       assignmentVerified: Boolean(assignmentEvidence),
+      decision,
     }, { status: 201 })
   } catch (error) {
     return accessErrorResponse(error)

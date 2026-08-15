@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 
 type SuggestPayload = {
   propertyType: 'Casa' | 'Departamento'
   neighborhood: string
+  address?: string
+  rol?: string
+  eventKey?: string
   usefulAreaM2?: number
   builtAreaM2?: number
   landAreaM2?: number
@@ -35,7 +37,9 @@ type ListingRow = {
   title: string | null
   normalized_address: string | null
   price_uf: number | string | null
+  price_uf_m2: number | string | null
   observed_at: string | null
+  raw_payload: Record<string, unknown> | null
   market_properties: PropertyRow[]
 }
 
@@ -53,9 +57,31 @@ type CbrsRow = {
   neighborhood: string | null
 }
 
+type PortalBenchmark = {
+  scope: string
+  listing_count: number
+  geocoded_count: number
+  priced_count: number
+  median_price_uf: number | string | null
+  median_uf_m2: number | string | null
+  median_area_m2: number | string | null
+  top_seller: string | null
+  observed_at: string | null
+  metadata: Record<string, unknown> | null
+}
+
 const num = (value: unknown) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
+}
+
+function normalizeText(value: unknown) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
 }
 
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -71,6 +97,37 @@ function relativeSimilarity(subject: number, candidate: number) {
   if (subject <= 0 || candidate <= 0) return 0.5
   const delta = Math.abs(subject - candidate) / subject
   return Math.max(0, 1 - Math.min(delta, 1))
+}
+
+function trustedPortalListing(item: ListingRow, propertyType: SuggestPayload['propertyType']) {
+  const source = String(item.raw_payload?.source ?? '').toLowerCase()
+  const allowed = propertyType === 'Departamento'
+    ? new Set(['portal_inmobiliario', 'portal_inmobiliario_departments'])
+    : new Set(['portal_inmobiliario', 'portal_inmobiliario_houses'])
+  if (!allowed.has(source)) return false
+
+  // The legacy inventory contains some rows from other communes whose historic
+  // coordinates were incorrectly mapped into Vitacura. Until the live collector
+  // is recertified, explicit Vitacura textual evidence is an additional boundary.
+  const addressEvidence = normalizeText(`${item.normalized_address ?? ''} ${item.title ?? ''}`)
+  return addressEvidence.includes('vitacura')
+}
+
+function isSubjectCbrs(payload: SuggestPayload, row: CbrsRow) {
+  if (payload.eventKey && row.event_key === payload.eventKey) return true
+  if (payload.rol && row.rol && normalizeText(payload.rol) === normalizeText(row.rol)) return true
+  if (payload.address && row.address && normalizeText(payload.address) === normalizeText(row.address)) return true
+
+  const subjectLat = num(payload.latitude)
+  const subjectLon = num(payload.longitude)
+  const rowLat = num(row.latitude)
+  const rowLon = num(row.longitude)
+  if (!subjectLat || !subjectLon || !rowLat || !rowLon) return false
+
+  const subjectArea = payload.propertyType === 'Departamento' ? num(payload.usefulAreaM2) : num(payload.builtAreaM2)
+  const rowArea = num(row.built_area_m2)
+  const sameArea = subjectArea > 0 && rowArea > 0 && Math.abs(subjectArea - rowArea) <= 0.5
+  return sameArea && haversineMeters(subjectLat, subjectLon, rowLat, rowLon) <= 2
 }
 
 function scoreListing(payload: SuggestPayload, property: PropertyRow) {
@@ -126,8 +183,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tipo de propiedad y barrio son obligatorios.' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-    const { data: neighborhood, error: neighborhoodError } = await supabase
+    const admin = createAdminClient()
+    const { data: neighborhood, error: neighborhoodError } = await admin
       .from('market_neighborhoods')
       .select('id,name')
       .ilike('name', payload.neighborhood.trim())
@@ -137,19 +194,20 @@ export async function POST(request: Request) {
     if (neighborhoodError) return NextResponse.json({ error: 'No fue posible resolver el barrio.' }, { status: 422 })
     if (!neighborhood) return NextResponse.json({ error: 'El barrio no existe en la capa territorial canónica.' }, { status: 404 })
 
-    const { data: listings, error: listingError } = await supabase
+    const { data: listings, error: listingError } = await admin
       .from('market_current_listings')
-      .select('id,source_listing_id,url,title,normalized_address,price_uf,observed_at,market_properties!inner(property_type,useful_area_m2,built_area_m2,land_area_m2,bedrooms,bathrooms,parking_spaces,latitude,longitude,market_neighborhoods(name))')
+      .select('id,source_listing_id,url,title,normalized_address,price_uf,price_uf_m2,observed_at,raw_payload,market_properties!inner(property_type,useful_area_m2,built_area_m2,land_area_m2,bedrooms,bathrooms,parking_spaces,latitude,longitude,market_neighborhoods(name))')
       .eq('status', 'active')
       .eq('market_properties.property_type', payload.propertyType)
       .eq('market_properties.neighborhood_id', neighborhood.id)
       .gt('price_uf', 0)
-      .limit(80)
+      .limit(250)
 
     if (listingError) console.error('VALUATION_PORTAL_SUGGESTIONS_UNAVAILABLE', { code: listingError.code ?? 'UNKNOWN' })
 
     const unique = new Map<string, ListingRow>()
     for (const item of (listings ?? []) as unknown as ListingRow[]) {
+      if (!trustedPortalListing(item, payload.propertyType)) continue
       const key = item.source_listing_id || item.url || item.id
       if (!unique.has(key)) unique.set(key, item)
     }
@@ -163,15 +221,13 @@ export async function POST(request: Request) {
         const land = num(property.land_area_m2)
         const price = num(item.price_uf)
         if (price <= 0) return null
-        const canonicalArea = payload.propertyType === 'Departamento' ? useful : (built > 0 ? built + land / 4 : useful)
-        if (canonicalArea <= 0) return null
 
         const latitude = num(property.latitude) || undefined
         const longitude = num(property.longitude) || undefined
         const distanceMeters = payload.latitude && payload.longitude && latitude && longitude
           ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude))
           : undefined
-        const incompleteHouseArea = payload.propertyType === 'Casa' && built <= 0
+        const sourceReportedUfM2 = num(item.price_uf_m2) || (useful > 0 ? Number((price / useful).toFixed(2)) : 0)
 
         return {
           id: `auto-${item.id}`,
@@ -180,7 +236,7 @@ export async function POST(request: Request) {
           address: item.normalized_address || item.title || 'Comparable Portal',
           neighborhood: property.market_neighborhoods[0]?.name || neighborhood.name,
           propertyType: payload.propertyType,
-          totalAreaM2: payload.propertyType === 'Departamento' ? useful || undefined : undefined,
+          totalAreaM2: undefined,
           usefulAreaM2: useful || undefined,
           builtAreaM2: built || undefined,
           landAreaM2: land || undefined,
@@ -188,25 +244,21 @@ export async function POST(request: Request) {
           bathrooms: property.bathrooms ?? undefined,
           parkingSpaces: property.parking_spaces ?? undefined,
           priceUf: price,
-          priceUfM2: Number((price / canonicalArea).toFixed(2)),
+          priceUfM2: 0,
+          sourceReportedUfM2: sourceReportedUfM2 || undefined,
           similarityScore: Number(scoreListing(payload, property).toFixed(4)),
           selected: false,
           adjustmentPct: 0,
-          adjustmentNotes: incompleteHouseArea
-            ? 'Superficie construida/terreno incompleta en fuente live; revisar antes de seleccionar.'
-            : payload.propertyType === 'Departamento'
-              ? 'Fuente live sin terraza separada: superficie total igualada a útil para no inventar metros adicionales.'
-              : undefined,
+          adjustmentNotes: 'Oferta Portal real. Referencia visible pero no seleccionable como comparable canónico mientras la fuente live no preserve la superficie total/terraza (departamento) o terreno completo (casa).',
           distanceMeters,
           observedAt: item.observed_at,
-          quality: incompleteHouseArea ? 'review' : 'usable',
+          quality: 'reference_only',
         }
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
       .sort((a, b) => b.similarityScore - a.similarityScore)
       .slice(0, 8)
 
-    const admin = createAdminClient()
     const { data: cbrsRows, error: cbrsError } = await admin
       .from('market_cbrs_reference_transactions')
       .select('id,event_key,transaction_date,address,rol,price_uf,built_area_m2,land_area_m2,latitude,longitude,neighborhood')
@@ -222,6 +274,7 @@ export async function POST(request: Request) {
     if (cbrsError) console.error('VALUATION_CBRS_SUGGESTIONS_FAILED', { code: cbrsError.code ?? 'UNKNOWN' })
 
     const cbrsSuggestions = ((cbrsRows ?? []) as unknown as CbrsRow[])
+      .filter((row) => !isSubjectCbrs(payload, row))
       .map((row) => {
         const built = num(row.built_area_m2)
         const land = num(row.land_area_m2)
@@ -240,8 +293,8 @@ export async function POST(request: Request) {
           address: row.address || 'Venta registrada CBRS',
           neighborhood: row.neighborhood || neighborhood.name,
           propertyType: payload.propertyType,
-          totalAreaM2: payload.propertyType === 'Departamento' ? built : undefined,
-          usefulAreaM2: payload.propertyType === 'Departamento' ? built : undefined,
+          totalAreaM2: undefined,
+          usefulAreaM2: undefined,
           builtAreaM2: built,
           landAreaM2: land || undefined,
           priceUf: price,
@@ -249,10 +302,13 @@ export async function POST(request: Request) {
           similarityScore: Number(scoreCbrs(payload, row).toFixed(4)),
           selected: false,
           adjustmentPct: 0,
-          adjustmentNotes: 'Venta efectiva CBRS consolidada por inscripción; fuente canónica Property Partners.',
+          adjustmentNotes: payload.propertyType === 'Departamento'
+            ? 'Venta efectiva CBRS. UF/m² calculado sobre la superficie registrada en built_area_m2; no se etiqueta como m² útil definitivo hasta cerrar la auditoría semántica de la fuente.'
+            : 'Venta efectiva CBRS consolidada por inscripción; fuente canónica Property Partners.',
           distanceMeters,
           transactionDate: row.transaction_date,
           quality: 'canonical',
+          areaSemantics: payload.propertyType === 'Departamento' ? 'source_registered_area_not_confirmed_as_useful' : 'canonical_house_weighted_area',
         }
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
@@ -269,20 +325,45 @@ export async function POST(request: Request) {
       .limit(1)
       .maybeSingle()
 
+    const portalDatasetKind = payload.propertyType === 'Departamento' ? 'portal_apartments' : 'portal_houses'
+    let portalBenchmark: PortalBenchmark | null = null
+    if (payload.propertyType === 'Departamento') {
+      const { data } = await admin
+        .from('market_portal_reference_metrics')
+        .select('scope,listing_count,geocoded_count,priced_count,median_price_uf,median_uf_m2,median_area_m2,top_seller,observed_at,metadata')
+        .eq('dataset_kind', portalDatasetKind)
+        .eq('scope', 'neighborhood')
+        .eq('neighborhood_id', neighborhood.id)
+        .limit(1)
+        .maybeSingle()
+      portalBenchmark = (data as PortalBenchmark | null) ?? null
+    }
+    if (!portalBenchmark) {
+      const { data } = await admin
+        .from('market_portal_reference_metrics')
+        .select('scope,listing_count,geocoded_count,priced_count,median_price_uf,median_uf_m2,median_area_m2,top_seller,observed_at,metadata')
+        .eq('dataset_kind', portalDatasetKind)
+        .eq('scope', 'global')
+        .limit(1)
+        .maybeSingle()
+      portalBenchmark = (data as PortalBenchmark | null) ?? null
+    }
+
     return NextResponse.json({
       neighborhood: neighborhood.name,
       suggestions: [...portalSuggestions, ...cbrsSuggestions],
-      suggestionCounts: { portal: portalSuggestions.length, cbrs: cbrsSuggestions.length },
+      suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length },
       cbrsBenchmark: cbrsBenchmark ?? null,
-      methodologyVersion: 'valuation-pp-canonical-v2',
+      portalBenchmark,
+      methodologyVersion: 'property-partners-valuation-v2',
       notes: [
         'Portal representa oferta publicada; CBRS representa ventas registradas. Se muestran como fuentes distintas.',
         'Todas las sugerencias son revisables y nunca se seleccionan automáticamente.',
-        listingError ? 'Portal no estuvo disponible para esta consulta; la sugerencia continúa con CBRS canónico.' : 'Portal disponible para esta consulta.',
-        cbrsSuggestions.length
-          ? 'Las ventas CBRS individuales se ordenan por similitud de superficie, proximidad y recencia.'
-          : 'No hay ventas CBRS individuales suficientes para este barrio/tipo; se mantiene el benchmark agregado.',
-        'Cuando faltan metros de terraza o terreno, el sistema lo declara y no inventa superficies.',
+        portalBenchmark ? `Benchmark Portal canónico disponible (${portalBenchmark.scope === 'neighborhood' ? 'barrio' : 'global'}).` : 'Benchmark Portal canónico no disponible para este tipo.',
+        portalSuggestions.length ? 'Las publicaciones live mostradas pasan un filtro estricto de fuente Portal + evidencia textual de Vitacura; permanecen como referencia hasta recuperar superficies canónicas completas.' : 'No hay publicaciones live con evidencia suficiente para mostrarse de forma segura en este caso.',
+        cbrsSuggestions.length ? 'Las ventas CBRS individuales se ordenan por similitud de superficie, proximidad y recencia.' : 'No hay ventas CBRS individuales suficientes para este barrio/tipo; se mantiene el benchmark agregado.',
+        'La propiedad sujeto se excluye de CBRS por event key, ROL, dirección o coincidencia geográfica + superficie cuando esos datos están disponibles.',
+        'Cuando faltan metros de terraza, terreno u otra variable crítica, el sistema lo declara y no inventa superficies.',
       ],
     })
   } catch (error) {
