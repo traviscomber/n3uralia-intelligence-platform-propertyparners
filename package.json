@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "pnpm valuation:gate",
+    "prebuild": "pnpm valuation:gate && pnpm market:portal:smoke",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -33,6 +33,7 @@
     "market:identity:verify": "node --import tsx scripts/verify-market-identity.ts",
     "market:ingestion:verify": "node --import tsx scripts/verify-market-ingestion.ts",
     "market:contract:verify": "node --import tsx scripts/verify-market-contract-import.ts",
+    "market:portal:smoke": "node --import tsx scripts/smoke-portal-collector.ts",
     "valuation:build": "node scripts/build-valuation-intelligence.mjs",
     "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
