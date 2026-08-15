@@ -29,12 +29,15 @@ async function main() {
   assert.doesNotMatch(createRoute, /payload\.status/)
   assert.match(createRoute, /action:\s*['"]case_created['"]/)
   assert.match(createRoute, /valuation_case_versions/)
+  assert.match(createRoute, /rateAnchor/)
+  assert.match(createRoute, /match_status: item\.selected \? 'accepted' : 'candidate'/)
 
   assert.match(creatorPage, /useState<ValuationComparable\[]>\(\[\]\)/)
   assert.doesNotMatch(creatorPage, /similarityScore:\s*0\.7/)
   assert.doesNotMatch(creatorPage, /selected:\s*true/)
   assert.match(creatorPage, /router\.push\(`\/dashboard\/valuations\/\$\{payload\.caseId\}`\)/)
   assert.doesNotMatch(creatorPage, /Enviar a revisión/)
+  assert.match(creatorPage, /reference_only/)
 
   assert.match(workflowRoute, /transition_valuation_case_atomic/)
   assert.match(workflowRoute, /target_case_id:\s*id/)
@@ -57,9 +60,8 @@ async function main() {
   assert.match(subdirectorBlock, /valuations\.office\.review/)
 
   assert.match(comparableRoute, /Motivo de exclusión requerido/)
-  assert.match(comparableRoute, /existingKeys/)
-  assert.match(comparableRoute, /seenKeys/)
-  assert.match(comparableRoute, /duplicatesSkipped/)
+  assert.match(comparableRoute, /LEGACY_VALUATION_CANDIDATE_GENERATOR_DISABLED/)
+  assert.doesNotMatch(comparableRoute, /valuation_candidate_pool/)
   assert.match(comparableRoute, /apply_valuation_comparable_decision/)
   assert.match(comparableRoute, /assertProfileVisible\(scope, valuationCase\.requested_by\)/)
   assert.match(comparableRoute, /scope\.capabilities\.includes\(['"]valuations\.office\.review['"]\)/)
@@ -69,6 +71,7 @@ async function main() {
 
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/comparables/)
   assert.match(workspacePage, /\/api\/valuations\/\$\{id\}\/workflow/)
+  assert.doesNotMatch(workspacePage, /Generar candidatos/)
   assert.match(reportPage, /ValuationReportStatusBanner/)
   assert.match(reportBanner, /PRELIMINAR · NO PUBLICABLE/)
   assert.match(reportBanner, /VALORIZACIÓN EMITIDA/)
@@ -84,7 +87,7 @@ async function main() {
     assert.equal(await exists(route), false, `Obsolete valuation route still exists: ${route}`)
   }
 
-  console.log('Valuation workflow verified: atomic transitions, CEO-only approval, scoped review and non-publicable preliminary reports.')
+  console.log('Valuation workflow verified: atomic transitions, CEO-only approval, scoped review, canonical comparable generation boundary and non-publicable preliminary reports.')
 }
 
 main().catch((error) => {
