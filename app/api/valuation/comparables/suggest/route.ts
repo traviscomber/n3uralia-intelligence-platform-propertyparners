@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 
 type SuggestPayload = {
   propertyType: 'Casa' | 'Departamento'
   neighborhood: string
+  address?: string
+  rol?: string
+  eventKey?: string
   usefulAreaM2?: number
   builtAreaM2?: number
   landAreaM2?: number
@@ -58,6 +60,15 @@ const num = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+function normalizeText(value: unknown) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (value: number) => value * Math.PI / 180
   const earth = 6371000
@@ -71,6 +82,23 @@ function relativeSimilarity(subject: number, candidate: number) {
   if (subject <= 0 || candidate <= 0) return 0.5
   const delta = Math.abs(subject - candidate) / subject
   return Math.max(0, 1 - Math.min(delta, 1))
+}
+
+function isSubjectCbrs(payload: SuggestPayload, row: CbrsRow) {
+  if (payload.eventKey && row.event_key === payload.eventKey) return true
+  if (payload.rol && row.rol && normalizeText(payload.rol) === normalizeText(row.rol)) return true
+  if (payload.address && row.address && normalizeText(payload.address) === normalizeText(row.address)) return true
+
+  const subjectLat = num(payload.latitude)
+  const subjectLon = num(payload.longitude)
+  const rowLat = num(row.latitude)
+  const rowLon = num(row.longitude)
+  if (!subjectLat || !subjectLon || !rowLat || !rowLon) return false
+
+  const subjectArea = payload.propertyType === 'Departamento' ? num(payload.usefulAreaM2) : num(payload.builtAreaM2)
+  const rowArea = num(row.built_area_m2)
+  const sameArea = subjectArea > 0 && rowArea > 0 && Math.abs(subjectArea - rowArea) <= 0.5
+  return sameArea && haversineMeters(subjectLat, subjectLon, rowLat, rowLon) <= 2
 }
 
 function scoreListing(payload: SuggestPayload, property: PropertyRow) {
@@ -126,8 +154,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tipo de propiedad y barrio son obligatorios.' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-    const { data: neighborhood, error: neighborhoodError } = await supabase
+    // Capability is checked above. Market evidence remains server-only and is read
+    // with the service-role client so browser RLS cannot take down the valuation flow.
+    const admin = createAdminClient()
+    const { data: neighborhood, error: neighborhoodError } = await admin
       .from('market_neighborhoods')
       .select('id,name')
       .ilike('name', payload.neighborhood.trim())
@@ -137,7 +167,7 @@ export async function POST(request: Request) {
     if (neighborhoodError) return NextResponse.json({ error: 'No fue posible resolver el barrio.' }, { status: 422 })
     if (!neighborhood) return NextResponse.json({ error: 'El barrio no existe en la capa territorial canónica.' }, { status: 404 })
 
-    const { data: listings, error: listingError } = await supabase
+    const { data: listings, error: listingError } = await admin
       .from('market_current_listings')
       .select('id,source_listing_id,url,title,normalized_address,price_uf,observed_at,market_properties!inner(property_type,useful_area_m2,built_area_m2,land_area_m2,bedrooms,bathrooms,parking_spaces,latitude,longitude,market_neighborhoods(name))')
       .eq('status', 'active')
@@ -206,7 +236,6 @@ export async function POST(request: Request) {
       .sort((a, b) => b.similarityScore - a.similarityScore)
       .slice(0, 8)
 
-    const admin = createAdminClient()
     const { data: cbrsRows, error: cbrsError } = await admin
       .from('market_cbrs_reference_transactions')
       .select('id,event_key,transaction_date,address,rol,price_uf,built_area_m2,land_area_m2,latitude,longitude,neighborhood')
@@ -222,6 +251,7 @@ export async function POST(request: Request) {
     if (cbrsError) console.error('VALUATION_CBRS_SUGGESTIONS_FAILED', { code: cbrsError.code ?? 'UNKNOWN' })
 
     const cbrsSuggestions = ((cbrsRows ?? []) as unknown as CbrsRow[])
+      .filter((row) => !isSubjectCbrs(payload, row))
       .map((row) => {
         const built = num(row.built_area_m2)
         const land = num(row.land_area_m2)
@@ -249,7 +279,9 @@ export async function POST(request: Request) {
           similarityScore: Number(scoreCbrs(payload, row).toFixed(4)),
           selected: false,
           adjustmentPct: 0,
-          adjustmentNotes: 'Venta efectiva CBRS consolidada por inscripción; fuente canónica Property Partners.',
+          adjustmentNotes: payload.propertyType === 'Departamento'
+            ? 'Venta efectiva CBRS. UF/m² calculado sobre la superficie registrada en built_area_m2; no se etiqueta como m² útil definitivo hasta cerrar la auditoría semántica de la fuente.'
+            : 'Venta efectiva CBRS consolidada por inscripción; fuente canónica Property Partners.',
           distanceMeters,
           transactionDate: row.transaction_date,
           quality: 'canonical',
@@ -282,6 +314,7 @@ export async function POST(request: Request) {
         cbrsSuggestions.length
           ? 'Las ventas CBRS individuales se ordenan por similitud de superficie, proximidad y recencia.'
           : 'No hay ventas CBRS individuales suficientes para este barrio/tipo; se mantiene el benchmark agregado.',
+        'La propiedad sujeto se excluye de CBRS por event key, ROL, dirección o coincidencia geográfica + superficie cuando esos datos están disponibles.',
         'Cuando faltan metros de terraza o terreno, el sistema lo declara y no inventa superficies.',
       ],
     })
