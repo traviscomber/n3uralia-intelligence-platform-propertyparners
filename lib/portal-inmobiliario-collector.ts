@@ -1,6 +1,8 @@
+import type { Browser, Page } from 'puppeteer-core'
 import { parse } from 'node-html-parser'
 import type { MarketImportInputRow } from '@/lib/market-import'
 import type { PortalDatasetKind } from '@/lib/market-source-import'
+import { launchServerlessBrowser } from '@/lib/serverless-browser'
 
 export type PortalCollectorOptions = {
   datasetKind: PortalDatasetKind
@@ -21,12 +23,6 @@ export type PortalCollectionResult = {
 
 const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
 const DEFAULT_COMMUNE = 'vitacura-metropolitana'
-const REQUEST_TIMEOUT_MS = 45_000
-const REQUEST_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-  'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7',
-  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-}
 
 function buildSearchBase(datasetKind: PortalDatasetKind, operation: string, commune: string) {
   if (datasetKind === 'portal_houses') return `${PORTAL_ORIGIN}/${operation}/casa/${commune}`
@@ -272,35 +268,36 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   }
 }
 
-async function fetchPortalHtml(url: string) {
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: REQUEST_HEADERS,
-    redirect: 'follow',
-    cache: 'no-store',
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+async function configurePage(page: Page) {
+  await page.setViewport({ width: 1440, height: 1000 })
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+  await page.setExtraHTTPHeaders({
+    'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7',
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
   })
-
-  if (!response.ok) throw new Error(`Portal returned HTTP ${response.status}`)
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.toLowerCase().includes('text/html')) throw new Error('Portal returned non-HTML content')
-  return response.text()
+  await page.setRequestInterception(true)
+  page.on('request', (request) => {
+    const resourceType = request.resourceType()
+    if (resourceType === 'image' || resourceType === 'media' || resourceType === 'font') request.abort()
+    else request.continue()
+  })
 }
 
-async function discoverListingUrls(searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
+async function discoverListingUrls(browser: Browser, searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
   const urls: string[] = []
 
   for (const searchUrl of searchUrls) {
-    const html = await fetchPortalHtml(searchUrl)
-    const root = parse(html)
-    const found = root.querySelectorAll('a[href]')
-      .map((anchor) => anchor.getAttribute('href'))
-      .filter((href): href is string => Boolean(href))
-      .map((href) => canonicalListingUrl(href))
-      .filter((href) => isDatasetListingUrl(href, datasetKind))
-
-    urls.push(...found)
-    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
+    const page = await browser.newPage()
+    try {
+      await configurePage(page)
+      const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+      if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
+      if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
+      const found = await page.$$eval('a[href]', (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href))
+      urls.push(...found.map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind)))
+    } finally {
+      await page.close()
+    }
   }
 
   return unique(urls)
@@ -314,27 +311,39 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
   const waitMs = Math.min(Math.max(options.waitMs || 1_200, 300), 5_000)
   const searchBase = buildSearchBase(options.datasetKind, operation, commune)
   const searchUrls = Array.from({ length: maxPages }, (_, index) => buildSearchUrl(searchBase, index + 1, options.datasetKind))
-  const listingUrls = (await discoverListingUrls(searchUrls, options.datasetKind, waitMs)).slice(0, maxListings)
-  const rows: MarketImportInputRow[] = []
-  const failures: Array<{ url: string; error: string }> = []
+  const browser = await launchServerlessBrowser()
 
-  for (const url of listingUrls) {
-    try {
-      const html = await fetchPortalHtml(url)
-      const row = parsePortalListing(html, url, options.datasetKind)
-      if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
-      rows.push(row)
-    } catch (error) {
-      failures.push({ url, error: error instanceof Error ? error.message : String(error) })
+  try {
+    const listingUrls = (await discoverListingUrls(browser, searchUrls, options.datasetKind, waitMs)).slice(0, maxListings)
+    const rows: MarketImportInputRow[] = []
+    const failures: Array<{ url: string; error: string }> = []
+
+    for (const url of listingUrls) {
+      const page = await browser.newPage()
+      try {
+        await configurePage(page)
+        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+        if (!response?.ok()) throw new Error(`Listing returned HTTP ${response?.status() ?? 'unknown'}`)
+        if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
+        const html = await page.content()
+        const row = parsePortalListing(html, url, options.datasetKind)
+        if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
+        rows.push(row)
+      } catch (error) {
+        failures.push({ url, error: error instanceof Error ? error.message : String(error) })
+      } finally {
+        await page.close()
+      }
     }
-    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
-  }
 
-  return {
-    searchUrls,
-    listingUrls,
-    rows,
-    failures,
-    observedAt: new Date().toISOString(),
+    return {
+      searchUrls,
+      listingUrls,
+      rows,
+      failures,
+      observedAt: new Date().toISOString(),
+    }
+  } finally {
+    await browser.close()
   }
 }
