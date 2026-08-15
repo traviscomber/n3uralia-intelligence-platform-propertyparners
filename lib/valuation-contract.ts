@@ -62,9 +62,11 @@ export type MarketSummary = {
   count: number
   minPriceUf: number | null
   averagePriceUf: number | null
+  medianPriceUf: number | null
   maxPriceUf: number | null
   minUfM2: number | null
   averageUfM2: number | null
+  medianUfM2: number | null
   maxUfM2: number | null
 }
 
@@ -103,17 +105,38 @@ const round = (value: number, digits = 2) => Number(value.toFixed(digits))
 const positive = (value: number | undefined) => Number.isFinite(value) && Number(value) > 0 ? Number(value) : 0
 const ratioVariance = (value: number, benchmark: number | null) => benchmark && benchmark > 0 ? round(value / benchmark - 1, 4) : null
 
+function median(values: number[]) {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle]
+}
+
 function summarize(values: Array<{ priceUf: number; ufM2: number }>): MarketSummary {
-  if (!values.length) return { count: 0, minPriceUf: null, averagePriceUf: null, maxPriceUf: null, minUfM2: null, averageUfM2: null, maxUfM2: null }
+  if (!values.length) {
+    return {
+      count: 0,
+      minPriceUf: null,
+      averagePriceUf: null,
+      medianPriceUf: null,
+      maxPriceUf: null,
+      minUfM2: null,
+      averageUfM2: null,
+      medianUfM2: null,
+      maxUfM2: null,
+    }
+  }
   const prices = values.map((item) => item.priceUf)
   const unit = values.map((item) => item.ufM2)
   return {
     count: values.length,
     minPriceUf: round(Math.min(...prices)),
     averagePriceUf: round(prices.reduce((sum, value) => sum + value, 0) / prices.length),
+    medianPriceUf: round(median(prices) ?? 0),
     maxPriceUf: round(Math.max(...prices)),
     minUfM2: round(Math.min(...unit)),
     averageUfM2: round(unit.reduce((sum, value) => sum + value, 0) / unit.length),
+    medianUfM2: round(median(unit) ?? 0),
     maxUfM2: round(Math.max(...unit)),
   }
 }
@@ -128,8 +151,11 @@ export function calculateCanonicalComparableUfM2(item: ValuationComparable): num
   }
 
   if (item.sourceType === 'CBRS') {
-    const useful = positive(item.usefulAreaM2)
-    return useful > 0 ? round(price / useful) : 0
+    // Some imported CBRS department records expose their source area through
+    // built_area_m2. Until the source semantics are audited, use the available
+    // registered area for arithmetic without relabeling it as definitively useful.
+    const registeredArea = positive(item.usefulAreaM2) || positive(item.builtAreaM2)
+    return registeredArea > 0 ? round(price / registeredArea) : 0
   }
 
   const useful = positive(item.usefulAreaM2)
@@ -205,7 +231,7 @@ export function calculateContractualValuation(
   if (cbrsSummary.count < 3) warnings.push('La muestra CBRS tiene menos de tres ventas comparables.')
 
   const justification = subject.propertyType === 'Departamento'
-    ? `Metodología canónica Property Partners para departamentos: valor comercial = m² útiles × UF/m² útil definido por el valorizador; oferta comparada con m² útiles + 50% de terraza y CBRS con m² útiles.`
+    ? `Metodología canónica Property Partners para departamentos: valor comercial = m² útiles × UF/m² útil definido por el valorizador; oferta comparada con m² útiles + 50% de terraza y CBRS con la superficie registrada en la fuente canónica.`
     : `Metodología canónica Property Partners para casas: valor comercial = m² construidos × UF/m² construido + m² terreno × UF/m² terreno; comparables expresados sobre m² construidos + terreno/4.`
 
   return {
