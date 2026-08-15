@@ -87,6 +87,7 @@ function extractListingId(url: string, datasetKind: PortalDatasetKind) {
 function canonicalListingUrl(rawUrl: string) {
   try {
     const parsedUrl = new URL(rawUrl, PORTAL_ORIGIN)
+    if (parsedUrl.hostname.toLowerCase() === 'portalinmobiliario.com') parsedUrl.hostname = 'www.portalinmobiliario.com'
     parsedUrl.search = ''
     parsedUrl.hash = ''
     return parsedUrl.toString()
@@ -98,12 +99,41 @@ function canonicalListingUrl(rawUrl: string) {
 function isDatasetListingUrl(rawUrl: string, datasetKind: PortalDatasetKind) {
   try {
     const parsedUrl = new URL(rawUrl, PORTAL_ORIGIN)
-    if (parsedUrl.origin !== PORTAL_ORIGIN) return false
+    const hostname = parsedUrl.hostname.toLowerCase()
+    if (hostname !== 'www.portalinmobiliario.com' && hostname !== 'portalinmobiliario.com') return false
     if (datasetKind === 'portal_projects') return /\/\d+-[^/]+-nva\/?$/i.test(parsedUrl.pathname)
     return /MLC-?\d+/i.test(parsedUrl.href) || /\/p\/MLC\d+/i.test(parsedUrl.pathname)
   } catch {
     return false
   }
+}
+
+function decodeEmbeddedMarkup(html: string) {
+  return html
+    .replace(/\\u002F/gi, '/')
+    .replace(/\\u003A/gi, ':')
+    .replace(/\\u0026/gi, '&')
+    .replace(/\\u003D/gi, '=')
+    .replace(/\\u003F/gi, '?')
+    .replace(/\\\//g, '/')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+}
+
+function extractEmbeddedListingUrls(html: string, datasetKind: PortalDatasetKind) {
+  const decoded = decodeEmbeddedMarkup(html)
+  const candidates: string[] = []
+
+  if (datasetKind === 'portal_projects') {
+    const absoluteProjects = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/[^"'<>\\\s]+-nva\/?/gi) ?? []
+    candidates.push(...absoluteProjects)
+  } else {
+    const absoluteListings = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
+    const relativeListings = decoded.match(/\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
+    candidates.push(...absoluteListings, ...relativeListings.map((value) => new URL(value, PORTAL_ORIGIN).toString()))
+  }
+
+  return unique(candidates.map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind)))
 }
 
 function collectJsonLd(html: string) {
@@ -293,8 +323,10 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
       if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
       if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
-      const found = await page.$$eval('a[href]', (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href))
-      urls.push(...found.map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind)))
+      const anchorUrls = await page.$$eval('a[href]', (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href))
+      const html = await page.content()
+      const embeddedUrls = extractEmbeddedListingUrls(html, datasetKind)
+      urls.push(...[...anchorUrls, ...embeddedUrls].map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind)))
     } finally {
       await page.close()
     }
