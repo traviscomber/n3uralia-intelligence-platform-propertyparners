@@ -25,9 +25,9 @@ const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
 const DEFAULT_COMMUNE = 'vitacura-metropolitana'
 
 function buildSearchBase(datasetKind: PortalDatasetKind, operation: string, commune: string) {
-  if (datasetKind === 'portal_houses') return `${PORTAL_ORIGIN}/${operation}/casa/${commune}`
+  if (datasetKind === 'portal_houses') return `${PORTAL_ORIGIN}/${operation}/casa/propiedades-usadas/${commune}`
   if (datasetKind === 'portal_projects') return `${PORTAL_ORIGIN}/${operation}/departamento/proyectos/${commune}`
-  return `${PORTAL_ORIGIN}/${operation}/departamento/${commune}`
+  return `${PORTAL_ORIGIN}/${operation}/departamento/propiedades-usadas/${commune}`
 }
 
 function buildSearchUrl(base: string, page: number, datasetKind: PortalDatasetKind) {
@@ -369,7 +369,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
 
 async function configurePage(page: Page) {
   await page.setViewport({ width: 1440, height: 1000 })
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
   await page.setExtraHTTPHeaders({
     'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7',
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
