@@ -62,9 +62,35 @@ function numeric(value: unknown) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function localizedNumeric(value: unknown) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  const raw = text(value)
+  if (!raw) return null
+  const cleaned = raw
+    .replace(/\s+/g, '')
+    .replace(/\$/g, '')
+    .replace(/UF|CLP|m²|m2/gi, '')
+    .replace(/[^0-9,.-]/g, '')
+  if (!cleaned) return null
+
+  const thousands = /^-?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/
+  const normalized = thousands.test(cleaned)
+    ? cleaned.replace(/\./g, '').replace(',', '.')
+    : cleaned.includes(',') && cleaned.includes('.')
+      ? cleaned.replace(/\./g, '').replace(',', '.')
+      : cleaned.replace(',', '.')
+  const parsed = Number.parseFloat(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 function integer(value: unknown) {
   const parsed = numeric(value)
   return parsed == null ? null : Math.round(parsed)
+}
+
+function boundedInteger(value: unknown, min: number, max: number) {
+  const parsed = integer(value)
+  return parsed != null && parsed >= min && parsed <= max ? parsed : null
 }
 
 function extractListingId(url: string, datasetKind: PortalDatasetKind) {
@@ -202,29 +228,67 @@ function extractEmbeddedStates(html: string) {
   return states
 }
 
+function bodyText(html: string) {
+  return parse(html).text.replace(/\s+/g, ' ')
+}
+
 function parsePrice(html: string, structured: unknown[]) {
+  const plain = bodyText(html)
+  const ufMatch = plain.match(/UF\s*([\d.]+(?:,\d+)?)/i)
+  if (ufMatch) {
+    const amount = localizedNumeric(ufMatch[1])
+    if (amount != null && amount > 0) return { price_uf: amount, price_clp: null }
+  }
+
+  const clpMatch = plain.match(/\$\s*([\d.]+)/)
+  if (clpMatch) {
+    const amount = localizedNumeric(clpMatch[1])
+    if (amount != null && amount > 0) return { price_uf: null, price_clp: amount }
+  }
+
   const priceCurrency = text(deepFind(structured, ['priceCurrency', 'currency_id', 'currency']))?.toUpperCase()
   const amount = numeric(deepFind(structured, ['price', 'amount', 'price_amount', 'priceAmount']))
-
-  if (amount != null && priceCurrency === 'UF') return { price_uf: amount, price_clp: null }
-  if (amount != null && (priceCurrency === 'CLP' || priceCurrency === '$')) return { price_uf: null, price_clp: amount }
-
-  const plain = parse(html).text.replace(/\s+/g, ' ')
-  const ufMatch = plain.match(/UF\s*([\d.]+(?:,\d+)?)/i)
-  if (ufMatch) return { price_uf: numeric(ufMatch[1]), price_clp: null }
-  const clpMatch = plain.match(/\$\s*([\d.]+)/)
-  return { price_uf: null, price_clp: clpMatch ? numeric(clpMatch[1]) : null }
+  if (amount != null && amount > 0 && priceCurrency === 'UF') return { price_uf: amount, price_clp: null }
+  if (amount != null && amount > 0 && (priceCurrency === 'CLP' || priceCurrency === '$')) return { price_uf: null, price_clp: amount }
+  return { price_uf: null, price_clp: null }
 }
 
 function valueNearLabel(html: string, labels: string[]) {
-  const root = parse(html)
-  const bodyText = root.text.replace(/\s+/g, ' ')
+  const plain = bodyText(html)
   for (const label of labels) {
-    const pattern = new RegExp(`${label}\\s*[:]?\\s*([\\d.,]+)`, 'i')
-    const match = bodyText.match(pattern)
-    if (match) return numeric(match[1])
+    const after = plain.match(new RegExp(`${label}\\s*[:]?\\s*([\\d.,]+)\\s*(?:m²|m2)?`, 'i'))
+    if (after) {
+      const value = localizedNumeric(after[1])
+      if (value != null) return value
+    }
+    const before = plain.match(new RegExp(`([\\d.,]+)\\s*(?:m²|m2)?\\s*${label}`, 'i'))
+    if (before) {
+      const value = localizedNumeric(before[1])
+      if (value != null) return value
+    }
   }
   return null
+}
+
+function integerNearLabel(html: string, labels: string[], max = 20) {
+  const plain = bodyText(html)
+  for (const label of labels) {
+    const before = plain.match(new RegExp(`(\\d+)\\s*${label}`, 'i'))
+    if (before) {
+      const value = boundedInteger(before[1], 0, max)
+      if (value != null) return value
+    }
+    const after = plain.match(new RegExp(`${label}\\s*[:]?\\s*(\\d+)`, 'i'))
+    if (after) {
+      const value = boundedInteger(after[1], 0, max)
+      if (value != null) return value
+    }
+  }
+  return null
+}
+
+function plausibleArea(value: number | null) {
+  return value != null && value > 5 && value < 10_000 ? value : null
 }
 
 function normalizeAddress(value: string | null) {
@@ -247,10 +311,10 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const jsonLd = flattenJsonLd(collectJsonLd(html))
   const states = extractEmbeddedStates(html)
   const structured: unknown[] = [...jsonLd, ...states]
-  const listingId = extractListingId(url, datasetKind) || text(deepFind(structured, ['id', 'item_id', 'listing_id', 'productID'])) || ''
-  const title = text(deepFind(structured, ['name', 'title']))
-    || text(root.querySelector('meta[property="og:title"]')?.getAttribute('content'))
+  const listingId = extractListingId(url, datasetKind) || text(deepFind(structured, ['item_id', 'listing_id', 'productID', 'id'])) || ''
+  const title = text(root.querySelector('meta[property="og:title"]')?.getAttribute('content'))
     || text(root.querySelector('h1')?.text)
+    || text(deepFind(structured, ['title', 'name']))
   const addressObject = deepFind(structured, ['address'])
   const address = typeof addressObject === 'object' && addressObject
     ? text(deepFind(addressObject, ['streetAddress', 'addressLocality', 'name']))
@@ -259,18 +323,23 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const latitude = numeric(deepFind(structured, ['latitude', 'lat']))
   const longitude = numeric(deepFind(structured, ['longitude', 'lng', 'lon']))
   const price = parsePrice(html, structured)
-  const usefulArea = numeric(deepFind(structured, ['floorSize', 'usable_area', 'useful_area', 'covered_area']))
-    || valueNearLabel(html, ['Superficie útil', 'Superficie total'])
-  const builtArea = numeric(deepFind(structured, ['built_area', 'covered_area', 'total_area']))
-    || valueNearLabel(html, ['Superficie construida', 'Superficie total'])
-  const landArea = numeric(deepFind(structured, ['land_area', 'plot_area']))
-    || valueNearLabel(html, ['Superficie de terreno', 'Terreno'])
-  const bedrooms = integer(deepFind(structured, ['numberOfBedrooms', 'bedrooms', 'bedroom_count']))
-    || integer(valueNearLabel(html, ['Dormitorios', 'Habitaciones']))
-  const bathrooms = integer(deepFind(structured, ['numberOfBathroomsTotal', 'bathrooms', 'bathroom_count']))
-    || integer(valueNearLabel(html, ['Baños', 'Banos']))
-  const parkingSpaces = integer(deepFind(structured, ['parking_spaces', 'parking', 'garage_count']))
-    || integer(valueNearLabel(html, ['Estacionamientos', 'Cocheras']))
+
+  const visibleUseful = valueNearLabel(html, ['Superficie útil', 'Superficie util', 'Superficie cubierta'])
+  const visibleTotal = valueNearLabel(html, ['Superficie total', 'Superficie construida'])
+  const visibleLand = valueNearLabel(html, ['Superficie de terreno', 'Superficie terreno', 'Terreno'])
+  const structuredUseful = numeric(deepFind(structured, ['usable_area', 'useful_area', 'covered_area']))
+  const structuredBuilt = numeric(deepFind(structured, ['built_area', 'total_area']))
+  const structuredLand = numeric(deepFind(structured, ['land_area', 'plot_area']))
+  const usefulArea = plausibleArea(visibleUseful) ?? plausibleArea(structuredUseful)
+  const builtArea = plausibleArea(visibleTotal) ?? plausibleArea(structuredBuilt)
+  const landArea = plausibleArea(visibleLand) ?? plausibleArea(structuredLand)
+
+  const bedrooms = integerNearLabel(html, ['dormitorios?', 'dorm\\.?', 'habitaciones?'], 15)
+    ?? boundedInteger(deepFind(structured, ['numberOfBedrooms', 'bedrooms', 'bedroom_count']), 0, 15)
+  const bathrooms = integerNearLabel(html, ['baños?', 'banos?'], 15)
+    ?? boundedInteger(deepFind(structured, ['numberOfBathroomsTotal', 'bathrooms', 'bathroom_count']), 0, 15)
+  const parkingSpaces = integerNearLabel(html, ['estacionamientos?', 'cocheras?'], 20)
+    ?? boundedInteger(deepFind(structured, ['parking_spaces', 'parking', 'garage_count']), 0, 20)
   const publishedAt = text(deepFind(structured, ['datePosted', 'datePublished', 'start_time', 'published_at']))
 
   return {
@@ -293,7 +362,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
     bedrooms,
     bathrooms,
     parking_spaces: parkingSpaces,
-    construction_year: integer(deepFind(structured, ['yearBuilt', 'construction_year'])),
+    construction_year: boundedInteger(deepFind(structured, ['yearBuilt', 'construction_year']), 1800, new Date().getFullYear()),
     published_at: publishedAt,
   }
 }
@@ -360,6 +429,7 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         const html = await page.content()
         const row = parsePortalListing(html, url, options.datasetKind)
         if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
+        if (row.price_uf != null && row.price_uf > 0 && row.price_uf < 100) throw new Error('Implausible UF price after normalization')
         rows.push(row)
       } catch (error) {
         failures.push({ url, error: error instanceof Error ? error.message : String(error) })
