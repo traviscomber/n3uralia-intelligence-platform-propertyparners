@@ -373,6 +373,14 @@ async function configurePage(page: Page) {
   })
 }
 
+async function waitForPrimaryDetail(page: Page, waitMs: number) {
+  await Promise.allSettled([
+    page.waitForSelector('.andes-money-amount', { timeout: 4_000 }),
+    page.waitForSelector('.andes-table__row', { timeout: 4_000 }),
+  ])
+  if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, Math.max(waitMs, 250)))
+}
+
 async function discoverListingUrls(browser: Browser, searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
   const urls: string[] = []
 
@@ -416,7 +424,7 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         await configurePage(page)
         const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
         if (!response?.ok()) throw new Error(`Listing returned HTTP ${response?.status() ?? 'unknown'}`)
-        if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
+        await waitForPrimaryDetail(page, waitMs)
         const html = await page.content()
         const row = parsePortalListing(html, url, options.datasetKind)
         if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
