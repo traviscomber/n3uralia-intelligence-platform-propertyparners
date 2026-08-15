@@ -7,7 +7,7 @@ async function diagnoseSearch() {
   try {
     const page = await browser.newPage()
     await page.setViewport({ width: 1440, height: 1000 })
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7' })
     const response = await page.goto('https://www.portalinmobiliario.com/venta/departamento/vitacura-metropolitana', { waitUntil: 'domcontentloaded', timeout: 45_000 })
     await new Promise((resolve) => setTimeout(resolve, 1_500))
@@ -16,6 +16,9 @@ async function diagnoseSearch() {
       finalUrl: location.href,
       anchorCount: document.querySelectorAll('a[href]').length,
       hrefSample: Array.from(document.querySelectorAll('a[href]')).slice(0, 12).map((a) => (a as HTMLAnchorElement).href),
+      modalityLinks: Array.from(document.querySelectorAll('a[href]'))
+        .map((a) => ({ text: a.textContent?.replace(/\s+/g, ' ').trim() || '', href: (a as HTMLAnchorElement).href }))
+        .filter((item) => /propiedades usadas|proyectos/i.test(item.text)),
       text: document.body?.innerText?.replace(/\s+/g, ' ').slice(0, 700) || '',
       htmlHasMlc: /MLC-?\d+/i.test(document.documentElement.innerHTML),
       htmlHasResults: /resultados/i.test(document.body?.innerText || ''),
