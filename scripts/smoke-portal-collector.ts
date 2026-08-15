@@ -1,7 +1,35 @@
 import assert from 'node:assert/strict'
+import { launchServerlessBrowser } from '../lib/serverless-browser'
 import { collectPortalVitacura } from '../lib/portal-inmobiliario-collector'
 
+async function diagnoseSearch() {
+  const browser = await launchServerlessBrowser()
+  try {
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1440, height: 1000 })
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7' })
+    const response = await page.goto('https://www.portalinmobiliario.com/venta/departamento/vitacura-metropolitana', { waitUntil: 'domcontentloaded', timeout: 45_000 })
+    await new Promise((resolve) => setTimeout(resolve, 1_500))
+    const diagnostics = await page.evaluate(() => ({
+      title: document.title,
+      finalUrl: location.href,
+      anchorCount: document.querySelectorAll('a[href]').length,
+      hrefSample: Array.from(document.querySelectorAll('a[href]')).slice(0, 12).map((a) => (a as HTMLAnchorElement).href),
+      text: document.body?.innerText?.replace(/\s+/g, ' ').slice(0, 700) || '',
+      htmlHasMlc: /MLC-?\d+/i.test(document.documentElement.innerHTML),
+      htmlHasResults: /resultados/i.test(document.body?.innerText || ''),
+    }))
+    console.log('[portal-diagnostic] status', response?.status() ?? null)
+    console.log('[portal-diagnostic]', diagnostics)
+  } finally {
+    await browser.close()
+  }
+}
+
 async function main() {
+  await diagnoseSearch()
+
   const result = await collectPortalVitacura({
     datasetKind: 'portal_apartments',
     commune: 'vitacura-metropolitana',
