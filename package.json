@@ -33,6 +33,7 @@
     "market:identity:verify": "node --import tsx scripts/verify-market-identity.ts",
     "market:ingestion:verify": "node --import tsx scripts/verify-market-ingestion.ts",
     "market:contract:verify": "node --import tsx scripts/verify-market-contract-import.ts",
+    "market:portal:smoke": "node --import tsx scripts/smoke-portal-collector.ts",
     "valuation:build": "node scripts/build-valuation-intelligence.mjs",
     "valuation:verify": "node scripts/verify-valuation-intelligence.mjs",
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
@@ -50,13 +51,13 @@
     "onlyBuiltDependencies": [
       "core-js",
       "esbuild",
-      "puppeteer",
       "sharp",
       "unrs-resolver"
     ]
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@sparticuz/chromium": "149.0.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.2",
     "@types/leaflet": "^1.9.21",
@@ -77,7 +78,7 @@
     "pdfkit": "^0.19.1",
     "plotly": "^1.0.6",
     "postgres": "^3.4.9",
-    "puppeteer": "^25.3.0",
+    "puppeteer-core": "25.1.0",
     "react": "^19",
     "react-dom": "^19",
     "react-leaflet": "^5.0.0",

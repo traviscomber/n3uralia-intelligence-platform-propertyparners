@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import type { Browser } from 'puppeteer-core'
 import { requireExecutiveAccess } from '@/lib/api-access'
+import { launchServerlessBrowser } from '@/lib/serverless-browser'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -33,19 +34,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Activa la confirmación de fuente viva antes de capturar.' }, { status: 428 })
   }
 
-  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null
+  let browser: Browser | null = null
 
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    })
+    browser = await launchServerlessBrowser()
 
     const observed = []
     for (const search of searches) {
       const page = await browser.newPage()
       try {
+        await page.setViewport({ width: 1440, height: 1000 })
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+        await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7' })
+        await page.setRequestInterception(true)
+        page.on('request', (pending) => {
+          const kind = pending.resourceType()
+          if (kind === 'image' || kind === 'media' || kind === 'font') pending.abort()
+          else pending.continue()
+        })
         await page.goto(search.url, { waitUntil: 'domcontentloaded', timeout: 40000 })
+        await new Promise((resolve) => setTimeout(resolve, 800))
         const cards = await page.evaluate(() => Array.from(document.querySelectorAll('[class*="ui-search-result"]')).slice(0, 50).map((card) => {
           const link = card.querySelector('a[href]') as HTMLAnchorElement | null
           return {
