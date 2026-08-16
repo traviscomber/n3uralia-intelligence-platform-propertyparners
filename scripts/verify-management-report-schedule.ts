@@ -59,13 +59,21 @@ assert.doesNotMatch(sendRoute, /error:\s*String\(error\)/)
 assert.match(sendRoute, /Cierre \$\{monthName\} \$\{year\}/)
 
 const reportingApproval = dependencies.dependencies.find((item: { id:string }) => item.id === 'reporting-approval')
+const kpiDictionary = dependencies.dependencies.find((item: { id:string }) => item.id === 'kpi-dictionary')
 assert.ok(reportingApproval, 'reporting-approval dependency must exist')
-assert.match(schedulesRoute, /reporting-approval/)
-assert.match(schedulesRoute, /APPROVED_DEPENDENCY_STATUSES/)
+assert.ok(kpiDictionary, 'kpi-dictionary dependency must exist')
+assert.match(schedulesRoute, /dependencyReadiness\('reporting-approval'/)
+assert.match(schedulesRoute, /dependencyReadiness\('kpi-dictionary'/)
+assert.match(schedulesRoute, /reportingApproval\.ready && kpiDictionary\.ready/)
 assert.match(schedulesRoute, /status:\s*409/)
-assert.match(schedulesPage, /Configuración bloqueada por aprobación del Cliente/)
-if (reportingApproval.status === 'pending') {
-  assert.match(schedulesRoute, /La programación está bloqueada hasta contar con calendario, destinatarios y reglas de reporting aprobados por el Cliente/)
+assert.match(schedulesRoute, /recipients\.length === 0/)
+assert.match(schedulesRoute, /EMAIL_PATTERN/)
+assert.match(schedulesPage, /Configuración bloqueada por gobierno de datos del Cliente/)
+assert.match(schedulesPage, /Diccionario oficial de KPI/)
+assert.match(schedulesPage, /Calendario, destinatarios y reglas de reportes/)
+
+if (reportingApproval.status === 'pending' || kpiDictionary.status === 'pending') {
+  assert.match(schedulesRoute, /La programación está bloqueada hasta contar con definiciones KPI y reglas de reporting aprobadas o formalmente eximidas/)
 }
 
 const now = new Date('2026-08-01T09:00:00.000Z')
@@ -75,4 +83,4 @@ assert.equal(advanceSchedule('2024-08-01T09:00:00.000Z', 'yearly', now), '2027-0
 assert.throws(() => advanceSchedule('invalid', 'monthly', now), /next_run_at inválido/)
 assert.throws(() => advanceSchedule('2026-08-01T09:00:00.000Z', 'weekly', now), /Cadencia no soportada/)
 
-console.log('Management report scheduling, route closure, client approval gate and authorization rules verified.')
+console.log('Management report scheduling, KPI/reporting dependency gates, recipient validation and authorization rules verified.')
