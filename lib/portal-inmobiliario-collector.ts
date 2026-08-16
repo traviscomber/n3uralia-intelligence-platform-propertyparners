@@ -400,7 +400,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const price = parsePrimaryPrice(root, primaryPriceTitle(root, title), jsonLd)
   const listingId = extractListingId(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
   const geo = extractPrimaryGeo(jsonLd)
-  const address = cleanAddress(extractPrimaryAddress(jsonLd) || visible.address || extractVisibleLocation(root))
+  const address = cleanAddress(extractPrimaryAddress(jsonLd) || extractVisibleLocation(root) || visible.address)
   const totalArea = specArea(specs, 'Superficie total', 'Superficie construida') || visible.totalArea
   const usefulArea = specArea(specs, 'Superficie útil', 'Superficie util', 'Superficie cubierta') || visible.usefulArea
   const landArea = specArea(specs, 'Superficie de terreno', 'Superficie terreno', 'Terreno') || visible.landArea
