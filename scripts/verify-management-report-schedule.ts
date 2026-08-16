@@ -9,6 +9,7 @@ import {
   isClosedMonthlyPeriod,
   previousMonthBounds,
 } from '../lib/management-report-schedule'
+import { getManagementAutomationReadiness } from '../lib/management-automation-readiness'
 
 assert.equal(getCronAuthorizationFailure(null, undefined), 'missing_secret')
 assert.equal(getCronAuthorizationFailure(null, 'secret'), 'missing_authorization')
@@ -43,6 +44,8 @@ const previewRoute = readFileSync(resolve(process.cwd(), 'app/api/management/rep
 const sendRoute = readFileSync(resolve(process.cwd(), 'app/api/cron/send-ceo-report-brandbook/route.ts'), 'utf8')
 const schedulesRoute = readFileSync(resolve(process.cwd(), 'app/api/management/schedules/route.ts'), 'utf8')
 const schedulesPage = readFileSync(resolve(process.cwd(), 'app/dashboard/control/schedules/page.tsx'), 'utf8')
+const monthlyReport = readFileSync(resolve(process.cwd(), 'lib/management-monthly-report.ts'), 'utf8')
+const readinessSource = readFileSync(resolve(process.cwd(), 'lib/management-automation-readiness.ts'), 'utf8')
 const dependencies = JSON.parse(readFileSync(resolve(process.cwd(), 'config/client-dependencies-status.json'), 'utf8'))
 
 assert.match(previewRoute, /requireCapability\('management\.global\.read'\)/)
@@ -62,17 +65,27 @@ const reportingApproval = dependencies.dependencies.find((item: { id:string }) =
 const kpiDictionary = dependencies.dependencies.find((item: { id:string }) => item.id === 'kpi-dictionary')
 assert.ok(reportingApproval, 'reporting-approval dependency must exist')
 assert.ok(kpiDictionary, 'kpi-dictionary dependency must exist')
-assert.match(schedulesRoute, /dependencyReadiness\('reporting-approval'/)
-assert.match(schedulesRoute, /dependencyReadiness\('kpi-dictionary'/)
-assert.match(schedulesRoute, /reportingApproval\.ready && kpiDictionary\.ready/)
+
+const readiness = getManagementAutomationReadiness()
+assert.equal(readiness.reportingApproval.status, reportingApproval.status)
+assert.equal(readiness.kpiDictionary.status, kpiDictionary.status)
+assert.equal(readiness.ready, readiness.reportingApproval.ready && readiness.kpiDictionary.ready)
+assert.match(readinessSource, /'reporting-approval'/)
+assert.match(readinessSource, /'kpi-dictionary'/)
+assert.match(schedulesRoute, /getManagementAutomationReadiness/)
 assert.match(schedulesRoute, /status:\s*409/)
 assert.match(schedulesRoute, /recipients\.length === 0/)
 assert.match(schedulesRoute, /EMAIL_PATTERN/)
 assert.match(schedulesPage, /Configuración bloqueada por gobierno de datos del Cliente/)
 assert.match(schedulesPage, /Diccionario oficial de KPI/)
 assert.match(schedulesPage, /Calendario, destinatarios y reglas de reportes/)
+assert.match(monthlyReport, /getManagementAutomationReadiness/)
+assert.match(monthlyReport, /if \(!readiness\.ready\)/)
+assert.match(monthlyReport, /blocked:\s*true/)
+assert.match(monthlyReport, /schedulesDue:\s*0/)
 
 if (reportingApproval.status === 'pending' || kpiDictionary.status === 'pending') {
+  assert.equal(readiness.ready, false)
   assert.match(schedulesRoute, /La programación está bloqueada hasta contar con definiciones KPI y reglas de reporting aprobadas o formalmente eximidas/)
 }
 
@@ -83,4 +96,4 @@ assert.equal(advanceSchedule('2024-08-01T09:00:00.000Z', 'yearly', now), '2027-0
 assert.throws(() => advanceSchedule('invalid', 'monthly', now), /next_run_at inválido/)
 assert.throws(() => advanceSchedule('2026-08-01T09:00:00.000Z', 'weekly', now), /Cadencia no soportada/)
 
-console.log('Management report scheduling, KPI/reporting dependency gates, recipient validation and authorization rules verified.')
+console.log('Management report scheduling, runtime KPI/reporting gates, recipient validation and authorization rules verified.')
