@@ -1,4 +1,5 @@
-import { readFileSync, createHash } from 'node:fs'
+import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 
 const content = readFileSync('pnpm-lock.yaml')
 const encoded = content.toString('base64')
