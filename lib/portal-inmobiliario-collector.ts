@@ -259,6 +259,74 @@ function specInteger(specs: Map<string, string>, max: number, ...labels: string[
   return boundedInteger(specValue(specs, ...labels), 0, max)
 }
 
+function normalizedBodyText(root: HTMLElement) {
+  return text(root.querySelector('body')?.textContent || root.textContent) || ''
+}
+
+function primaryListingText(root: HTMLElement, title: string | null) {
+  const body = normalizedBodyText(root)
+  const start = title ? body.indexOf(title) : -1
+  const fromTitle = start >= 0 ? body.slice(start + title!.length) : body
+  const end = fromTitle.search(/Características del inmueble|Caracteristicas del inmueble/i)
+  return end >= 0 ? fromTitle.slice(0, end) : fromTitle.slice(0, 2_500)
+}
+
+function regexArea(source: string, patterns: RegExp[]) {
+  for (const pattern of patterns) {
+    const match = source.match(pattern)
+    const value = match?.[1] ? plausibleArea(match[1]) : null
+    if (value != null) return value
+  }
+  return null
+}
+
+function regexInteger(source: string, max: number, patterns: RegExp[]) {
+  for (const pattern of patterns) {
+    const match = source.match(pattern)
+    const value = match?.[1] ? boundedInteger(match[1], 0, max) : null
+    if (value != null) return value
+  }
+  return null
+}
+
+function extractVisiblePrimaryFacts(root: HTMLElement, title: string | null) {
+  const body = normalizedBodyText(root)
+  const primary = primaryListingText(root, title)
+
+  const usefulArea = regexArea(body, [
+    /Superficie útil\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
+    /Superficie util\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
+    /Superficie cubierta\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
+  ]) || regexArea(primary, [/([\d.,]+)\s*m(?:²|2)\s*útiles/i, /([\d.,]+)\s*m(?:²|2)\s*utiles/i])
+
+  const totalArea = regexArea(body, [
+    /Superficie total\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
+    /Superficie construida\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
+  ]) || regexArea(primary, [/([\d.,]+)\s*m(?:²|2)\s*totales/i, /([\d.,]+)\s*m(?:²|2)\s*total/i])
+
+  const landArea = regexArea(body, [
+    /Superficie de terreno\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
+    /Superficie terreno\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
+  ])
+
+  const bedrooms = regexInteger(primary, 15, [/(\d+)\s*dorm(?:\.|itorios?|itorio)?/i, /(\d+)\s*habitaciones?/i])
+  const bathrooms = regexInteger(primary, 15, [/(\d+)\s*bañ(?:os?|o)?/i, /(\d+)\s*ban(?:os?|o)?/i])
+  const parkingSpaces = regexInteger(body, 20, [/Estacionamientos?\s*[:|]?\s*(\d+)/i])
+
+  let address: string | null = null
+  if (title) {
+    const titleIndex = body.indexOf(title)
+    if (titleIndex >= 0) {
+      const afterTitle = body.slice(titleIndex + title.length, titleIndex + title.length + 600)
+      const priceIndex = afterTitle.search(/(?:^|\s)(?:UF\s*[\d.]|\$\s*[\d.])/i)
+      const candidate = text(priceIndex >= 0 ? afterTitle.slice(0, priceIndex) : '')
+      if (candidate && candidate.length >= 4 && candidate.length <= 260) address = candidate
+    }
+  }
+
+  return { usefulArea, totalArea, landArea, bedrooms, bathrooms, parkingSpaces, address }
+}
+
 function parsePrimaryPrice(root: HTMLElement, title: string | null, jsonLd: unknown[]) {
   const titleUf = title?.match(/(?:^|[-·|])\s*UF\s*([\d.]+(?:,\d+)?)/i) || title?.match(/UF\s*([\d.]+(?:,\d+)?)/i)
   if (titleUf) {
@@ -319,17 +387,18 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const jsonLd = flattenJsonLd(collectJsonLd(html))
   const title = firstPrimaryTitle(root)
   const specs = extractPrimarySpecs(root)
+  const visible = extractVisiblePrimaryFacts(root, title)
   const price = parsePrimaryPrice(root, title, jsonLd)
   const listingId = extractListingId(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
   const geo = extractPrimaryGeo(jsonLd)
-  const address = extractPrimaryAddress(jsonLd)
+  const address = extractPrimaryAddress(jsonLd) || visible.address
 
-  const totalArea = specArea(specs, 'Superficie total', 'Superficie construida')
-  const usefulArea = specArea(specs, 'Superficie útil', 'Superficie util', 'Superficie cubierta')
-  const landArea = specArea(specs, 'Superficie de terreno', 'Superficie terreno', 'Terreno')
-  const bedrooms = specInteger(specs, 15, 'Dormitorios', 'Dormitorio', 'Habitaciones', 'Habitación')
-  const bathrooms = specInteger(specs, 15, 'Baños', 'Banos', 'Baño', 'Bano')
-  const parkingSpaces = specInteger(specs, 20, 'Estacionamientos', 'Estacionamiento', 'Cocheras', 'Cochera')
+  const totalArea = specArea(specs, 'Superficie total', 'Superficie construida') || visible.totalArea
+  const usefulArea = specArea(specs, 'Superficie útil', 'Superficie util', 'Superficie cubierta') || visible.usefulArea
+  const landArea = specArea(specs, 'Superficie de terreno', 'Superficie terreno', 'Terreno') || visible.landArea
+  const bedrooms = specInteger(specs, 15, 'Dormitorios', 'Dormitorio', 'Habitaciones', 'Habitación') ?? visible.bedrooms
+  const bathrooms = specInteger(specs, 15, 'Baños', 'Banos', 'Baño', 'Bano') ?? visible.bathrooms
+  const parkingSpaces = specInteger(specs, 20, 'Estacionamientos', 'Estacionamiento', 'Cocheras', 'Cochera') ?? visible.parkingSpaces
   const constructionYear = boundedInteger(specValue(specs, 'Año de construcción', 'Ano de construccion'), 1800, new Date().getFullYear())
   const publishedAt = text(deepFind(jsonLd, ['datePosted', 'datePublished']))
 
@@ -360,7 +429,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
 
 async function configurePage(page: Page) {
   await page.setViewport({ width: 1440, height: 1000 })
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
   await page.setExtraHTTPHeaders({
     'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7',
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -376,7 +445,7 @@ async function configurePage(page: Page) {
 async function waitForPrimaryDetail(page: Page, waitMs: number) {
   await Promise.allSettled([
     page.waitForSelector('.andes-money-amount', { timeout: 4_000 }),
-    page.waitForSelector('.andes-table__row', { timeout: 4_000 }),
+    page.waitForSelector('h1', { timeout: 4_000 }),
   ])
   if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, Math.max(waitMs, 250)))
 }
