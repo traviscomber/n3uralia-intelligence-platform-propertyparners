@@ -131,13 +131,19 @@ function canonicalListingUrl(rawUrl: string) {
   }
 }
 
+function isMlcListingUrl(parsedUrl: URL) {
+  return /MLC-?\d+/i.test(parsedUrl.href) || /\/p\/MLC\d+/i.test(parsedUrl.pathname)
+}
+
 function isDatasetListingUrl(rawUrl: string, datasetKind: PortalDatasetKind) {
   try {
     const parsedUrl = new URL(rawUrl, PORTAL_ORIGIN)
     const hostname = parsedUrl.hostname.toLowerCase()
     if (hostname !== 'www.portalinmobiliario.com' && hostname !== 'portalinmobiliario.com') return false
-    if (datasetKind === 'portal_projects') return /\/\d+-[^/]+-nva\/?$/i.test(parsedUrl.pathname)
-    return /MLC-?\d+/i.test(parsedUrl.href) || /\/p\/MLC\d+/i.test(parsedUrl.pathname)
+    if (datasetKind === 'portal_projects') {
+      return isMlcListingUrl(parsedUrl) || /\/\d+-[^/]+-nva\/?$/i.test(parsedUrl.pathname)
+    }
+    return isMlcListingUrl(parsedUrl)
   } catch {
     return false
   }
@@ -159,7 +165,10 @@ function extractEmbeddedListingUrls(html: string, datasetKind: PortalDatasetKind
   const decoded = decodeEmbeddedMarkup(html)
   const candidates: string[] = []
   if (datasetKind === 'portal_projects') {
-    candidates.push(...(decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/[^"'<>\\\s]+-nva\/?/gi) ?? []))
+    const legacyProjects = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/[^"'<>\\\s]+-nva\/?/gi) ?? []
+    const absoluteMlc = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
+    const relativeMlc = decoded.match(/\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
+    candidates.push(...legacyProjects, ...absoluteMlc, ...relativeMlc.map((value) => new URL(value, PORTAL_ORIGIN).toString()))
   } else {
     const absoluteListings = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
     const relativeListings = decoded.match(/\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
@@ -354,6 +363,19 @@ function extractPrimaryAddress(jsonLd: unknown[]) {
   return cleanAddress(text(deepFind(addressObject, ['streetAddress'])) || text(deepFind(addressObject, ['name'])))
 }
 
+function extractVisibleLocation(root: HTMLElement) {
+  const selectors = [
+    '.ui-vip-location__subtitle .ui-pdp-media__title',
+    '.ui-vip-location__subtitle',
+    '.ui-pdp-seller-validated__title',
+  ]
+  for (const selector of selectors) {
+    const value = cleanAddress(text(root.querySelector(selector)?.textContent))
+    if (value && /vitacura|metropolitana/i.test(value)) return value
+  }
+  return null
+}
+
 function normalizeAddress(value: string | null) {
   return value
     ?.normalize('NFD')
@@ -378,7 +400,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const price = parsePrimaryPrice(root, primaryPriceTitle(root, title), jsonLd)
   const listingId = extractListingId(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
   const geo = extractPrimaryGeo(jsonLd)
-  const address = cleanAddress(extractPrimaryAddress(jsonLd) || visible.address)
+  const address = cleanAddress(extractPrimaryAddress(jsonLd) || extractVisibleLocation(root) || visible.address)
   const totalArea = specArea(specs, 'Superficie total', 'Superficie construida') || visible.totalArea
   const usefulArea = specArea(specs, 'Superficie útil', 'Superficie util', 'Superficie cubierta') || visible.usefulArea
   const landArea = specArea(specs, 'Superficie de terreno', 'Superficie terreno', 'Terreno') || visible.landArea
