@@ -198,7 +198,11 @@ export async function GET(request: Request) {
     }
   }
 
-  const ok = totalAccepted > 0 && totalFailures < DATASETS.length
+  const completedDatasets = results.filter((result) => result.status === 'completed').length
+  const ok = completedDatasets === DATASETS.length
+    && totalFailures === 0
+    && skippedForRuntimeBudget === 0
+    && skippedForLock === 0
 
   return NextResponse.json(
     {
@@ -206,6 +210,8 @@ export async function GET(request: Request) {
       fullSnapshot: false,
       canonicalCreation: false,
       maxListingsPerDataset: MAX_LISTINGS_PER_DATASET,
+      completedDatasets,
+      expectedDatasets: DATASETS.length,
       totalAccepted,
       totalRejected,
       totalLinked,
