@@ -14,14 +14,20 @@ type Color = ReturnType<typeof rgb>
 const W = 595.28
 const H = 841.89
 const M = 42
-const BG = rgb(0.984, 0.984, 0.980) // #fbfbfa
-const INK = rgb(0.090, 0.212, 0.204) // #173634
-const TEAL = rgb(0.561, 0.698, 0.667) // #8fb2aa
-const TAN = rgb(0.722, 0.604, 0.494) // #b89a7e
-const MUTED = rgb(0.333, 0.353, 0.337) // #555a56
-const LINE = rgb(0.847, 0.898, 0.886) // #d8e5e2
-const WHITE = rgb(1, 1, 1)
-const WARN = rgb(0.78, 0.48, 0.12)
+
+// Property Partners corporate system from app/globals.css
+const PP_BLACK = rgb(5 / 255, 8 / 255, 7 / 255) // #050807
+const PP_SURFACE = rgb(12 / 255, 17 / 255, 17 / 255) // #0c1111
+const PP_RED = rgb(215 / 255, 51 / 255, 43 / 255) // #d7332b
+const PP_RED_SOFT = rgb(255 / 255, 118 / 255, 111 / 255) // #ff766f
+const PP_TEXT = rgb(237 / 255, 244 / 255, 243 / 255) // #edf4f3
+const PP_MUTED_DARK = rgb(182 / 255, 193 / 255, 191 / 255) // #b6c1bf
+const PAPER = rgb(1, 1, 1)
+const PAPER_SOFT = rgb(247 / 255, 248 / 255, 248 / 255)
+const INK = rgb(17 / 255, 24 / 255, 39 / 255)
+const MUTED = rgb(75 / 255, 85 / 255, 99 / 255)
+const LINE = rgb(224 / 255, 226 / 255, 228 / 255)
+const WARNING = rgb(180 / 255, 95 / 255, 20 / 255)
 
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -83,15 +89,10 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const offices = array(snapshot.offices)
   const periodRecord = record(snapshot.period)
   const period = periodRecord ? text(periodRecord.label, monthName(report.period_start)) : text(snapshot.period, monthName(report.period_start))
+  const operational = completeness.operationalReportReady === true
+  const fullScore = completeness.fullManagementScoreReady === true
 
-  function pageBase(page: PDFPage, indexLabel?: string) {
-    page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: BG })
-    page.drawText('PROPERTY PARTNERS', { x: M, y: 806, size: 8.5, font: bold, color: TEAL })
-    page.drawText('N3uralia Intelligence', { x: W - M - 92, y: 806, size: 7.5, font: regular, color: MUTED })
-    page.drawLine({ start: { x: M, y: 792 }, end: { x: W - M, y: 792 }, thickness: 0.8, color: LINE })
-    if (indexLabel) page.drawText(indexLabel, { x: W - M - 18, y: 24, size: 7, font: regular, color: MUTED })
-  }
-  function drawWrapped(page: PDFPage, value: string, x: number, y: number, width: number, options: { size?: number; font?: PDFFont; color?: Color; leading?: number } = {}) {
+  function wrapped(page: PDFPage, value: string, x: number, y: number, width: number, options: { size?: number; font?: PDFFont; color?: Color; leading?: number } = {}) {
     const size = options.size ?? 9
     const font = options.font ?? regular
     const leading = options.leading ?? size + 3
@@ -102,159 +103,147 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     }
     return yy
   }
-  function sectionLabel(page: PDFPage, label: string, y: number) {
-    page.drawText(label.toUpperCase(), { x: M, y, size: 8, font: bold, color: TEAL })
-    return y - 24
+  function footer(page: PDFPage, number: string, dark = false) {
+    page.drawText('Property Partners · powered by N3uralia Intelligence', { x: M, y: 24, size: 7, font: regular, color: dark ? PP_MUTED_DARK : MUTED })
+    page.drawText(number, { x: W - M - 18, y: 24, size: 7, font: regular, color: dark ? PP_MUTED_DARK : MUTED })
   }
-  function metricCard(page: PDFPage, x: number, y: number, width: number, label: string, value: string, tone: Color = INK, sub?: string) {
-    page.drawRectangle({ x, y, width, height: 78, color: WHITE, borderColor: LINE, borderWidth: 0.8 })
-    page.drawText(label.toUpperCase(), { x: x + 14, y: y + 56, size: 7.5, font: bold, color: MUTED })
-    page.drawText(value, { x: x + 14, y: y + 27, size: 20, font: bold, color: tone })
-    if (sub) page.drawText(sub, { x: x + 14, y: y + 11, size: 7.5, font: regular, color: MUTED })
+  function metricCard(page: PDFPage, x: number, y: number, width: number, label: string, value: string, highlight = false) {
+    page.drawRectangle({ x, y, width, height: 76, color: PAPER, borderColor: LINE, borderWidth: 0.7 })
+    page.drawRectangle({ x, y, width: 4, height: 76, color: highlight ? PP_RED : rgb(210 / 255, 214 / 255, 216 / 255) })
+    page.drawText(label.toUpperCase(), { x: x + 14, y: y + 53, size: 7.2, font: bold, color: MUTED })
+    page.drawText(value, { x: x + 14, y: y + 23, size: 20, font: bold, color: highlight ? PP_RED : INK })
   }
-  function statusPill(page: PDFPage, x: number, y: number, label: string, positive: boolean) {
-    const fill = positive ? TEAL : rgb(0.96, 0.91, 0.83)
-    const ink = positive ? WHITE : WARN
-    const width = Math.max(74, bold.widthOfTextAtSize(label, 7.5) + 20)
-    page.drawRectangle({ x, y, width, height: 22, color: fill })
-    page.drawText(label, { x: x + 10, y: y + 7, size: 7.5, font: bold, color: ink })
-    return width
-  }
-  function horizontalBar(page: PDFPage, x: number, y: number, width: number, label: string, value: number | null, max: number, color: Color) {
+  function bar(page: PDFPage, x: number, y: number, width: number, label: string, value: number | null, max: number, highlight = false) {
     page.drawText(label, { x, y: y + 14, size: 8.5, font: bold, color: INK })
     page.drawText(value == null ? 'n/d' : value.toLocaleString('es-CL', { maximumFractionDigits: 1 }), { x: x + width - 36, y: y + 14, size: 8.5, font: bold, color: INK })
     page.drawRectangle({ x, y, width, height: 7, color: LINE })
-    if (value != null && max > 0) page.drawRectangle({ x, y, width: Math.max(2, width * Math.min(1, value / max)), height: 7, color })
+    if (value != null && max > 0) page.drawRectangle({ x, y, width: Math.max(2, width * Math.min(1, value / max)), height: 7, color: highlight ? PP_RED : PP_SURFACE })
   }
 
-  // PAGE 1 - executive overview
+  // PAGE 1 - executive cover and KPI summary
   const p1 = pdf.addPage([W, H])
-  p1.drawRectangle({ x: 0, y: 0, width: W, height: H, color: BG })
-  p1.drawRectangle({ x: 0, y: 574, width: W, height: 268, color: INK })
-  p1.drawRectangle({ x: 0, y: 574, width: 10, height: 268, color: TEAL })
-  p1.drawText('PROPERTY PARTNERS', { x: M, y: 790, size: 9, font: bold, color: TEAL })
-  p1.drawText(reportTypeLabel(report.report_type), { x: M, y: 730, size: 31, font: bold, color: WHITE })
-  p1.drawText(period, { x: M, y: 692, size: 17, font: bold, color: rgb(0.86, 0.92, 0.90) })
-  drawWrapped(p1, 'Lectura ejecutiva basada exclusivamente en el snapshot canónico persistido. Los datos no disponibles o no aprobados permanecen explícitamente bloqueados.', M, 655, 430, { size: 9.5, color: rgb(0.80, 0.86, 0.84), leading: 13 })
-  p1.drawText(`ID ${report.id}`, { x: M, y: 595, size: 7.2, font: regular, color: rgb(0.66, 0.74, 0.72) })
+  p1.drawRectangle({ x: 0, y: 0, width: W, height: H, color: PAPER_SOFT })
+  p1.drawRectangle({ x: 0, y: 535, width: W, height: 307, color: PP_BLACK })
+  p1.drawRectangle({ x: 0, y: 535, width: 12, height: 307, color: PP_RED })
+  p1.drawText('PROPERTY PARTNERS', { x: M, y: 790, size: 10, font: bold, color: PP_RED_SOFT })
+  p1.drawText(reportTypeLabel(report.report_type), { x: M, y: 720, size: 31, font: bold, color: PP_TEXT })
+  p1.drawText(period, { x: M, y: 680, size: 18, font: bold, color: PP_TEXT })
+  wrapped(p1, 'Informe ejecutivo mensual basado exclusivamente en evidencia canónica persistida. Las métricas no disponibles o no aprobadas permanecen explícitamente bloqueadas.', M, 640, 430, { size: 9.5, color: PP_MUTED_DARK, leading: 13 })
+  p1.drawText(`ID ${report.id}`, { x: M, y: 566, size: 7.2, font: regular, color: PP_MUTED_DARK })
 
-  p1.drawText('RESUMEN EJECUTIVO', { x: M, y: 538, size: 8, font: bold, color: TEAL })
+  p1.drawText('RESUMEN EJECUTIVO', { x: M, y: 500, size: 8, font: bold, color: PP_RED })
   const gap = 10
-  const cardW = (W - (M * 2) - (gap * 2)) / 3
-  metricCard(p1, M, 438, cardW, 'Cartera', format(company.cartera), INK, 'propiedades activas')
-  metricCard(p1, M + cardW + gap, 438, cardW, 'Captaciones', format(company.captaciones), INK, 'del período')
-  metricCard(p1, M + (cardW + gap) * 2, 438, cardW, 'Leads nuevos', format(company.leadsNuevos), INK, 'actividad comercial')
-  metricCard(p1, M, 348, cardW, 'Cierres', format(company.cierresAcreditados), TEAL, 'acreditados')
-  metricCard(p1, M + cardW + gap, 348, cardW, 'Volumen', format(company.volumenUfBruto, ' UF'), TAN, 'acreditado')
-  metricCard(p1, M + (cardW + gap) * 2, 348, cardW, 'Cumplimiento visitas', format(company.cumplimientoVisitas, '%'), INK, 'realizadas / agendadas')
+  const cw = (W - M * 2 - gap * 2) / 3
+  metricCard(p1, M, 402, cw, 'Cartera', format(company.cartera))
+  metricCard(p1, M + cw + gap, 402, cw, 'Captaciones', format(company.captaciones))
+  metricCard(p1, M + (cw + gap) * 2, 402, cw, 'Leads nuevos', format(company.leadsNuevos))
+  metricCard(p1, M, 314, cw, 'Cierres', format(company.cierresAcreditados), true)
+  metricCard(p1, M + cw + gap, 314, cw, 'Volumen', format(company.volumenUfBruto, ' UF'), true)
+  metricCard(p1, M + (cw + gap) * 2, 314, cw, 'Cumplimiento visitas', format(company.cumplimientoVisitas, '%'))
 
-  p1.drawText('ESTADO DEL REPORTE', { x: M, y: 307, size: 8, font: bold, color: TEAL })
-  const operational = completeness.operationalReportReady === true
-  const fullScore = completeness.fullManagementScoreReady === true
-  let pillX = M
-  pillX += statusPill(p1, pillX, 267, operational ? 'OPERACIONAL LISTO' : 'OPERACIONAL NO LISTO', operational) + 8
-  statusPill(p1, pillX, 267, fullScore ? 'SCORE INTEGRAL LISTO' : 'SCORE INTEGRAL BLOQUEADO', fullScore)
-  drawWrapped(p1, fullScore ? 'El score integral del período está evaluable con definiciones aprobadas.' : `${blocked.length} dimensiones permanecen bloqueadas por falta de definición o evidencia aprobada. El reporte operativo sí puede utilizarse.`, M, 235, W - M * 2, { size: 9, color: MUTED, leading: 13 })
+  p1.drawText('ESTADO DEL REPORTE', { x: M, y: 274, size: 8, font: bold, color: PP_RED })
+  const statusText = operational ? 'OPERACIONAL LISTO' : 'OPERACIONAL NO LISTO'
+  p1.drawRectangle({ x: M, y: 230, width: 130, height: 25, color: operational ? PP_SURFACE : PP_RED })
+  p1.drawText(statusText, { x: M + 10, y: 238, size: 7.6, font: bold, color: PP_TEXT })
+  p1.drawRectangle({ x: M + 140, y: 230, width: 162, height: 25, color: fullScore ? PP_SURFACE : rgb(244 / 255, 228 / 255, 226 / 255) })
+  p1.drawText(fullScore ? 'SCORE INTEGRAL LISTO' : 'SCORE INTEGRAL BLOQUEADO', { x: M + 150, y: 238, size: 7.6, font: bold, color: fullScore ? PP_TEXT : PP_RED })
+  wrapped(p1, fullScore ? 'El score integral es evaluable bajo las definiciones aprobadas.' : `${blocked.length} dimensiones siguen bloqueadas por falta de definición o evidencia aprobada. El reporte operativo sí puede utilizarse.`, M, 199, W - M * 2, { size: 9, color: MUTED, leading: 13 })
 
-  p1.drawLine({ start: { x: M, y: 154 }, end: { x: W - M, y: 154 }, thickness: 0.8, color: LINE })
-  p1.drawText('ACTIVIDAD DEL PERÍODO', { x: M, y: 132, size: 8, font: bold, color: TEAL })
-  p1.drawText(`Requerimientos ${format(company.requerimientos)}  ·  Visitas agendadas ${format(company.visitasAgendadas)}  ·  Visitas realizadas ${format(company.visitasRealizadas)}  ·  Suspendidas ${format(company.suspendidas)}`, { x: M, y: 106, size: 9.3, font: bold, color: INK })
-  p1.drawText('Documento ejecutivo · datos canónicos · sin proyecciones ni relleno de faltantes', { x: M, y: 57, size: 7.5, font: regular, color: MUTED })
-  p1.drawText('1/3', { x: W - M - 18, y: 24, size: 7, font: regular, color: MUTED })
+  p1.drawLine({ start: { x: M, y: 132 }, end: { x: W - M, y: 132 }, thickness: 0.8, color: LINE })
+  p1.drawText('ACTIVIDAD DEL PERÍODO', { x: M, y: 110, size: 8, font: bold, color: PP_RED })
+  p1.drawText(`Requerimientos ${format(company.requerimientos)}  ·  Visitas agendadas ${format(company.visitasAgendadas)}  ·  Visitas realizadas ${format(company.visitasRealizadas)}  ·  Suspendidas ${format(company.suspendidas)}`, { x: M, y: 84, size: 9.1, font: bold, color: INK })
+  footer(p1, '1/3')
 
-  // PAGE 2 - performance / visual analysis
+  // PAGE 2 - visual performance
   const p2 = pdf.addPage([W, H])
-  pageBase(p2, '2/3')
-  p2.drawText('Actividad comercial', { x: M, y: 748, size: 24, font: bold, color: INK })
-  p2.drawText('Una lectura visual del mes, sin sustituir los valores canónicos del snapshot.', { x: M, y: 724, size: 9, font: regular, color: MUTED })
-
-  let y = sectionLabel(p2, 'Volumen de actividad', 680)
+  p2.drawRectangle({ x: 0, y: 0, width: W, height: H, color: PAPER })
+  p2.drawRectangle({ x: 0, y: 774, width: W, height: 68, color: PP_BLACK })
+  p2.drawText('PROPERTY PARTNERS', { x: M, y: 804, size: 8.5, font: bold, color: PP_RED_SOFT })
+  p2.drawText('Actividad comercial', { x: M, y: 730, size: 25, font: bold, color: INK })
+  p2.drawText('Lectura visual del período seleccionado.', { x: M, y: 706, size: 9, font: regular, color: MUTED })
+  p2.drawText('VOLUMEN DE ACTIVIDAD', { x: M, y: 665, size: 8, font: bold, color: PP_RED })
   const activity = [
-    ['Captaciones', numeric(company.captaciones), TEAL],
-    ['Leads nuevos', numeric(company.leadsNuevos), INK],
-    ['Requerimientos', numeric(company.requerimientos), TAN],
-    ['Visitas agendadas', numeric(company.visitasAgendadas), TEAL],
-    ['Visitas realizadas', numeric(company.visitasRealizadas), INK],
+    ['Captaciones', numeric(company.captaciones), false],
+    ['Leads nuevos', numeric(company.leadsNuevos), true],
+    ['Requerimientos', numeric(company.requerimientos), false],
+    ['Visitas agendadas', numeric(company.visitasAgendadas), false],
+    ['Visitas realizadas', numeric(company.visitasRealizadas), true],
   ] as const
   const max = Math.max(1, ...activity.map(item => item[1] ?? 0))
-  for (const [label, value, color] of activity) {
-    horizontalBar(p2, M, y - 8, 390, label, value, max, color)
+  let y = 618
+  for (const [label, value, highlight] of activity) {
+    bar(p2, M, y, 390, label, value, max, highlight)
     y -= 58
   }
+  p2.drawRectangle({ x: 448, y: 410, width: 105, height: 205, color: PP_SURFACE })
+  p2.drawText('CONVERSIÓN', { x: 462, y: 588, size: 7.5, font: bold, color: PP_MUTED_DARK })
+  p2.drawText(format(company.cumplimientoVisitas, '%'), { x: 462, y: 550, size: 23, font: bold, color: PP_RED_SOFT })
+  wrapped(p2, 'Visitas realizadas sobre visitas agendadas.', 462, 524, 76, { size: 8, color: PP_MUTED_DARK, leading: 11 })
+  p2.drawLine({ start: { x: 462, y: 482 }, end: { x: 539, y: 482 }, thickness: 0.7, color: rgb(55 / 255, 62 / 255, 62 / 255) })
+  p2.drawText('CIERRES', { x: 462, y: 458, size: 7.5, font: bold, color: PP_MUTED_DARK })
+  p2.drawText(format(company.cierresAcreditados), { x: 462, y: 426, size: 23, font: bold, color: PP_TEXT })
 
-  p2.drawRectangle({ x: 448, y: 420, width: 105, height: 202, color: WHITE, borderColor: LINE, borderWidth: 0.8 })
-  p2.drawText('CONVERSIÓN', { x: 462, y: 595, size: 7.5, font: bold, color: MUTED })
-  p2.drawText(format(company.cumplimientoVisitas, '%'), { x: 462, y: 558, size: 24, font: bold, color: TEAL })
-  drawWrapped(p2, 'Visitas realizadas sobre visitas agendadas.', 462, 532, 76, { size: 8, color: MUTED, leading: 11 })
-  p2.drawLine({ start: { x: 462, y: 488 }, end: { x: 539, y: 488 }, thickness: 0.7, color: LINE })
-  p2.drawText('CIERRES', { x: 462, y: 466, size: 7.5, font: bold, color: MUTED })
-  p2.drawText(format(company.cierresAcreditados), { x: 462, y: 433, size: 23, font: bold, color: INK })
-
-  y = 350
-  p2.drawText('Cobertura y disponibilidad', { x: M, y, size: 16, font: bold, color: INK })
-  y -= 28
-  const avail = [
+  p2.drawText('COBERTURA Y DISPONIBILIDAD', { x: M, y: 330, size: 8, font: bold, color: PP_RED })
+  const availability = [
     ['Desglose por oficina', offices.length > 0 ? `${offices.length} oficinas` : 'No disponible'],
     ['Serie de visitas', company.visitasAgendadas != null || company.visitasRealizadas != null ? 'Disponible' : 'No disponible'],
     ['Score integral', fullScore ? 'Evaluable' : 'Bloqueado'],
     ['Reporte operacional', operational ? 'Listo' : 'No listo'],
   ]
-  for (let i = 0; i < avail.length; i++) {
+  for (let i = 0; i < availability.length; i++) {
     const col = i % 2
     const row = Math.floor(i / 2)
     const x = M + col * 258
-    const yy = y - row * 74
-    p2.drawRectangle({ x, y: yy - 48, width: 246, height: 56, color: WHITE, borderColor: LINE, borderWidth: 0.7 })
-    p2.drawText(avail[i][0].toUpperCase(), { x: x + 12, y: yy - 12, size: 7.2, font: bold, color: MUTED })
-    p2.drawText(avail[i][1], { x: x + 12, y: yy - 34, size: 11, font: bold, color: i === 2 && !fullScore ? WARN : INK })
+    const yy = 292 - row * 76
+    p2.drawRectangle({ x, y: yy - 48, width: 246, height: 56, color: PAPER_SOFT, borderColor: LINE, borderWidth: 0.6 })
+    p2.drawText(availability[i][0].toUpperCase(), { x: x + 12, y: yy - 12, size: 7.2, font: bold, color: MUTED })
+    p2.drawText(availability[i][1], { x: x + 12, y: yy - 34, size: 11, font: bold, color: i === 2 && !fullScore ? PP_RED : INK })
   }
-
-  p2.drawText('Lectura ejecutiva', { x: M, y: 142, size: 16, font: bold, color: INK })
+  p2.drawText('LECTURA EJECUTIVA', { x: M, y: 114, size: 8, font: bold, color: PP_RED })
   const visitText = company.visitasAgendadas == null || company.visitasRealizadas == null
     ? 'No existe una serie canónica completa de visitas para este período; el informe mantiene la ausencia como n/d.'
     : `Se registran ${format(company.visitasAgendadas)} visitas agendadas y ${format(company.visitasRealizadas)} realizadas, equivalentes a ${format(company.cumplimientoVisitas, '%')} de cumplimiento.`
-  drawWrapped(p2, visitText, M, 116, W - M * 2, { size: 9.2, color: MUTED, leading: 13 })
+  wrapped(p2, visitText, M, 91, W - M * 2, { size: 9.2, color: MUTED, leading: 13 })
+  footer(p2, '2/3')
 
-  // PAGE 3 - evidence, gaps, methodology
+  // PAGE 3 - evidence and quality
   const p3 = pdf.addPage([W, H])
-  pageBase(p3, '3/3')
-  p3.drawText('Evidencia y calidad', { x: M, y: 748, size: 24, font: bold, color: INK })
-  p3.drawText('Trazabilidad, límites y criterios para interpretar correctamente el informe.', { x: M, y: 724, size: 9, font: regular, color: MUTED })
-
-  y = sectionLabel(p3, 'Dimensiones bloqueadas', 680)
+  p3.drawRectangle({ x: 0, y: 0, width: W, height: H, color: PAPER })
+  p3.drawRectangle({ x: 0, y: 774, width: W, height: 68, color: PP_BLACK })
+  p3.drawText('PROPERTY PARTNERS', { x: M, y: 804, size: 8.5, font: bold, color: PP_RED_SOFT })
+  p3.drawText('Evidencia y calidad', { x: M, y: 730, size: 25, font: bold, color: INK })
+  p3.drawText('Trazabilidad, límites y criterios de interpretación.', { x: M, y: 706, size: 9, font: regular, color: MUTED })
+  p3.drawText('DIMENSIONES BLOQUEADAS', { x: M, y: 665, size: 8, font: bold, color: PP_RED })
+  y = 632
   if (!blocked.length) {
-    drawWrapped(p3, 'No hay dimensiones bloqueadas registradas en el snapshot.', M, y, W - M * 2, { size: 9, color: MUTED })
-    y -= 34
+    wrapped(p3, 'No hay dimensiones bloqueadas registradas en el snapshot.', M, y, W - M * 2, { size: 9, color: MUTED })
+    y -= 40
   } else {
-    for (const block of blocked.slice(0, 9)) {
+    for (const block of blocked.slice(0, 7)) {
       const code = text(block.code, 'dimensión')
       const reason = text(block.reason, 'Pendiente de definición o evidencia aprobada.')
-      p3.drawRectangle({ x: M, y: y - 42, width: W - M * 2, height: 48, color: WHITE, borderColor: LINE, borderWidth: 0.6 })
-      p3.drawText(code.replace(/_/g, ' ').toUpperCase(), { x: M + 12, y: y - 13, size: 7.2, font: bold, color: WARN })
-      drawWrapped(p3, reason, M + 12, y - 27, W - M * 2 - 24, { size: 7.8, color: MUTED, leading: 10 })
+      p3.drawRectangle({ x: M, y: y - 42, width: W - M * 2, height: 48, color: PAPER_SOFT, borderColor: LINE, borderWidth: 0.6 })
+      p3.drawRectangle({ x: M, y: y - 42, width: 4, height: 48, color: PP_RED })
+      p3.drawText(code.replace(/_/g, ' ').toUpperCase(), { x: M + 14, y: y - 13, size: 7.1, font: bold, color: PP_RED })
+      wrapped(p3, reason, M + 14, y - 27, W - M * 2 - 26, { size: 7.8, color: MUTED, leading: 10 })
       y -= 58
-      if (y < 350) break
+      if (y < 325) break
     }
   }
-
-  const notesStart = Math.min(y - 10, 330)
-  p3.drawText('Notas de calidad y reconciliación', { x: M, y: notesStart, size: 15, font: bold, color: INK })
-  y = notesStart - 26
-  for (const note of notes.slice(0, 7)) {
-    p3.drawCircle({ x: M + 3, y: y + 4, size: 2.2, color: TEAL })
-    y = drawWrapped(p3, note, M + 14, y + 7, W - M * 2 - 14, { size: 7.9, color: MUTED, leading: 10.5 }) - 5
-    if (y < 152) break
+  const notesStart = Math.min(y - 8, 300)
+  p3.drawText('NOTAS DE CALIDAD Y RECONCILIACIÓN', { x: M, y: notesStart, size: 8, font: bold, color: PP_RED })
+  y = notesStart - 24
+  for (const note of notes.slice(0, 6)) {
+    p3.drawCircle({ x: M + 3, y: y + 4, size: 2.2, color: PP_RED })
+    y = wrapped(p3, note, M + 14, y + 7, W - M * 2 - 14, { size: 7.9, color: MUTED, leading: 10.5 }) - 5
+    if (y < 145) break
   }
-
-  p3.drawLine({ start: { x: M, y: 128 }, end: { x: W - M, y: 128 }, thickness: 0.8, color: LINE })
-  p3.drawText('FUENTES CANÓNICAS', { x: M, y: 108, size: 7.5, font: bold, color: TEAL })
+  p3.drawLine({ start: { x: M, y: 122 }, end: { x: W - M, y: 122 }, thickness: 0.8, color: LINE })
+  p3.drawText('FUENTES CANÓNICAS', { x: M, y: 103, size: 7.5, font: bold, color: PP_RED })
   const sourceText = sources.length ? sources.join(' · ') : 'Snapshot persistido del sistema de control de gestión.'
-  drawWrapped(p3, sourceText, M, 91, W - M * 2, { size: 6.7, color: MUTED, leading: 9 })
-  p3.drawText('Metodología: documento generado exclusivamente desde el snapshot persistido. No incorpora proyecciones ni datos externos.', { x: M, y: 42, size: 6.7, font: regular, color: MUTED })
+  wrapped(p3, sourceText, M, 86, W - M * 2, { size: 6.7, color: MUTED, leading: 9 })
+  footer(p3, '3/3')
 
   const bytes = await pdf.save()
-  return {
-    bytes,
-    filename: `${filenamePart(reportTypeLabel(report.report_type))}-${report.period_start}-${report.period_end}.pdf`,
-  }
+  return { bytes, filename: `${filenamePart(reportTypeLabel(report.report_type))}-${report.period_start}-${report.period_end}.pdf` }
 }
