@@ -2,12 +2,13 @@ import { readFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
 
 async function main() {
-  const [route, operational, page, migration, refresh] = await Promise.all([
+  const [route, operational, page, migration, refresh, authMigration] = await Promise.all([
     readFile('app/api/market/import/route.ts', 'utf8'),
     readFile('lib/market-operational.ts', 'utf8'),
     readFile('app/dashboard/market/page.tsx', 'utf8'),
     readFile('supabase/migrations/202607300210_canonical_market_aggregate_ingestion_rpc.sql', 'utf8'),
     readFile('app/api/cron/market-refresh/route.ts', 'utf8'),
+    readFile('supabase/migrations/202608162125_portal_ingestion_service_role_grant_authorization.sql', 'utf8'),
   ])
 
   assert.match(route, /rpc\('ingest_market_aggregate'/, 'Market import must call the canonical ingestion RPC.')
@@ -25,6 +26,12 @@ async function main() {
   assert.match(refresh, /totalFailures === 0/, 'Refresh must fail closed when any dataset fails.')
   assert.match(refresh, /skippedForRuntimeBudget === 0/, 'Refresh must not report success after runtime-budget skips.')
   assert.match(refresh, /skippedForLock === 0/, 'Refresh must not report success after ingestion-lock skips.')
+
+  assert.match(authMigration, /revoke all on function public\.ingest_portal_listing_snapshot_v2[\s\S]*from public/i, 'Portal ingestion must not be executable by public.')
+  assert.match(authMigration, /from anon/i, 'Portal ingestion must revoke anon execution.')
+  assert.match(authMigration, /from authenticated/i, 'Portal ingestion must revoke authenticated execution.')
+  assert.match(authMigration, /grant execute on function public\.ingest_portal_listing_snapshot_v2[\s\S]*to service_role/i, 'Portal ingestion must be executable by service_role.')
+  assert.doesNotMatch(authMigration, /raise exception 'Expected legacy service_role JWT guard was not found'/, 'Authorization migration must remain idempotent after production application.')
 
   console.log('Canonical market ingestion verification passed.')
 }
