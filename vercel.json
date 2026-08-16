@@ -1,5 +1,6 @@
 {
   "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm market:portal:smoke && pnpm build",
   "crons": [
     {
       "path": "/api/cron/management-monthly",
