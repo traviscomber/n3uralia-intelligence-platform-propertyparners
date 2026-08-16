@@ -66,8 +66,8 @@ export async function POST(request: Request) {
   const reportType = String(body?.reportType ?? '').trim().toLowerCase()
   const cadence = String(body?.cadence ?? '').trim().toLowerCase()
   const dayOfMonth = Math.min(28, Math.max(1, Number(body?.dayOfMonth ?? 1)))
-  const recipients = Array.isArray(body?.recipients)
-    ? [...new Set(body.recipients.map(String).map((value: string) => value.trim().toLowerCase()).filter(Boolean))].slice(0, 200)
+  const recipients: string[] = Array.isArray(body?.recipients)
+    ? [...new Set(body.recipients.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean))].slice(0, 200)
     : []
 
   if (!name || !REPORT_TYPES.has(reportType) || !CADENCES.has(cadence) || !Number.isInteger(dayOfMonth)) {
