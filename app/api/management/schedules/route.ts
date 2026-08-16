@@ -1,36 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import dependencyStatus from '@/config/client-dependencies-status.json'
+import { getManagementAutomationReadiness } from '@/lib/management-automation-readiness'
 
 const LEADER_ROLES = new Set(['admin', 'ceo', 'director', 'subdirector'])
 const SCHEDULER_ROLES = new Set(['admin', 'ceo'])
 const CADENCES = new Set(['monthly'])
 const REPORT_TYPES = new Set(['management', 'executive', 'director'])
-const APPROVED_DEPENDENCY_STATUSES = new Set(['received', 'approved', 'waived'])
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-type DependencyId = 'reporting-approval' | 'kpi-dictionary'
-
-function dependencyReadiness(id: DependencyId, fallbackLabel: string) {
-  const dependency = dependencyStatus.dependencies.find((item) => item.id === id)
-  const status = dependency?.status ?? 'pending'
-  return {
-    id,
-    status,
-    ready: APPROVED_DEPENDENCY_STATUSES.has(status),
-    label: dependency?.label ?? fallbackLabel,
-  }
-}
-
-function automationReadiness() {
-  const reportingApproval = dependencyReadiness('reporting-approval', 'Calendario, destinatarios y reglas de reportes')
-  const kpiDictionary = dependencyReadiness('kpi-dictionary', 'Diccionario oficial de KPI')
-  return {
-    ready: reportingApproval.ready && kpiDictionary.ready,
-    reportingApproval,
-    kpiDictionary,
-  }
-}
 
 async function context() {
   const supabase = await createClient()
@@ -64,7 +40,7 @@ export async function GET() {
     return NextResponse.json({ error: 'No fue posible cargar la programación de reportes.' }, { status: 500 })
   }
 
-  return NextResponse.json({ schedules: schedules ?? [], entities: entities ?? [], automationReadiness: automationReadiness() })
+  return NextResponse.json({ schedules: schedules ?? [], entities: entities ?? [], automationReadiness: getManagementAutomationReadiness() })
 }
 
 export async function POST(request: Request) {
@@ -74,7 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Solo administración y CEO pueden programar reportes.' }, { status: 403 })
   }
 
-  const readiness = automationReadiness()
+  const readiness = getManagementAutomationReadiness()
   if (!readiness.ready) {
     const pendingDependencies = [readiness.reportingApproval, readiness.kpiDictionary]
       .filter((dependency) => !dependency.ready)
