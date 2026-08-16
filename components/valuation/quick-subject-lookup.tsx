@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Sparkles } from 'lucide-react'
+import { ArrowRight, Search } from 'lucide-react'
 
 type UnitOption = {
   unit: string
@@ -33,12 +33,10 @@ type ResolvedLookup = {
   }
   unit?: string
   registeredAreaM2?: number
-  areaSemantics?: 'cbrs_registered_area_not_confirmed_as_useful' | 'operational_useful_area'
   sourceEventKey: string
   sourceTransactionDate: string
   sourcePriceUf?: number
   history: Array<{ eventKey: string; transactionDate: string; priceUf?: number }>
-  provenance: Record<string, 'CBRS' | 'Identidad canónica'>
 }
 
 type LookupResponse =
@@ -86,11 +84,10 @@ export function QuickSubjectLookup() {
     }
   }
 
-  function useResolvedSubject(autoAnalyze: boolean) {
+  function continueWithSubject() {
     if (!result || result.status !== 'resolved') return
     const params = new URLSearchParams()
     params.set('quickLookup', '1')
-    if (autoAnalyze) params.set('autoAnalyze', '1')
     params.set('propertyType', result.subject.propertyType)
     params.set('address', result.subject.address)
     params.set('neighborhood', result.subject.neighborhood)
@@ -122,8 +119,8 @@ export function QuickSubjectLookup() {
   return <section className="border border-[var(--n3-line)] bg-[#0c1111]">
     <div className="border-b border-[var(--n3-line)] p-5">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d7332b]">Búsqueda rápida</p>
-      <h2 className="mt-1 text-lg font-semibold">Encontrar propiedad por dirección</h2>
-      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Carga automáticamente los antecedentes canónicos disponibles. Para departamentos puedes indicar la unidad o elegirla después.</p>
+      <h2 className="mt-1 text-lg font-semibold">¿Qué propiedad quieres valorizar?</h2>
+      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Con dirección y número de departamento recuperamos los antecedentes que ya existen en la base canónica.</p>
     </div>
     <div className="grid gap-3 p-5 md:grid-cols-[1fr_180px_auto]">
       <label className="block"><span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Dirección</span><input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Las Nieves 3850" className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm outline-none focus:border-[#d7332b]" /></label>
@@ -132,25 +129,25 @@ export function QuickSubjectLookup() {
     </div>
 
     {result?.status === 'units' ? <div className="border-t border-[var(--n3-line)] p-5">
-      <p className="text-sm font-semibold">Unidades encontradas en {result.buildingAddress}</p>
+      <p className="text-sm font-semibold">Elige la unidad</p>
+      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Encontramos varias unidades en {result.buildingAddress}.</p>
       <div className="mt-3 flex flex-wrap gap-2">{result.units.map((item) => <button key={item.unit} type="button" onClick={() => { setUnit(item.unit); void lookup(item.unit) }} className="border border-[var(--n3-line)] px-3 py-2 text-xs hover:border-[#d7332b]">Depto {item.unit}{item.registeredAreaM2 ? ` · ${item.registeredAreaM2} m²` : ''}{item.bedrooms !== undefined ? ` · ${item.bedrooms}D/${item.bathrooms ?? '—'}B` : ''}</button>)}</div>
     </div> : null}
 
     {resolved ? <div className="border-t border-[var(--n3-line)] p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7eb5ad]">Propiedad encontrada</p><h3 className="mt-1 text-base font-semibold">{resolved.subject.address}</h3><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{resolved.subject.neighborhood} · ROL {resolved.subject.rol || 'no disponible'} · fuente sujeto CBRS</p></div>
+        <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7eb5ad]">Propiedad encontrada</p><h3 className="mt-1 text-base font-semibold">{resolved.subject.address}</h3><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{resolved.subject.neighborhood} · ROL {resolved.subject.rol || 'no disponible'}</p></div>
         <div className="text-right text-xs text-[var(--n3-text-muted)]"><div>Última venta registrada</div><strong className="mt-1 block text-sm text-[var(--n3-text-light)]">{formatNumber(resolved.sourcePriceUf, ' UF')}</strong><div>{resolved.sourceTransactionDate}</div></div>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Superficie</span><strong className="mt-1 block text-sm">{resolved.subject.usefulAreaM2 !== undefined ? `${resolved.subject.usefulAreaM2} m² útiles` : resolved.registeredAreaM2 !== undefined ? `${resolved.registeredAreaM2} m² registrados` : '—'}</strong></div>
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Dormitorios</span><strong className="mt-1 block text-sm">{formatNumber(resolved.subject.bedrooms)}</strong></div>
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Baños</span><strong className="mt-1 block text-sm">{formatNumber(resolved.subject.bathrooms)}</strong></div>
-        <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Estacionamientos</span><strong className="mt-1 block text-sm">{formatNumber(resolved.subject.parkingSpaces)}</strong></div>
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Año</span><strong className="mt-1 block text-sm">{formatNumber(resolved.subject.constructionYear)}</strong></div>
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Historial</span><strong className="mt-1 block text-sm">{resolved.history.length} venta{resolved.history.length === 1 ? '' : 's'}</strong></div>
       </div>
-      {needsAreaConfirmation ? <label className="mt-4 flex items-start gap-3 border border-[#806f37] bg-[#15130b] p-3 text-xs"><input type="checkbox" checked={confirmRegisteredArea} onChange={(event) => setConfirmRegisteredArea(event.target.checked)} className="mt-0.5" /><span><strong>Confirmar superficie para valorización.</strong> CBRS registra {resolved.registeredAreaM2} m², pero la semántica útil/construida no está certificada. Márcalo solo si el valorizador confirma que corresponde usar esa superficie como m² útiles.</span></label> : null}
-      <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => useResolvedSubject(false)} className="border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold hover:border-[#d7332b]">Usar ficha</button><button type="button" disabled={needsAreaConfirmation && !confirmRegisteredArea} onClick={() => useResolvedSubject(true)} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Sparkles size={14} />Usar ficha y analizar mercado</button></div>
+      {needsAreaConfirmation ? <label className="mt-4 flex items-start gap-3 border border-[#806f37] bg-[#15130b] p-3 text-xs"><input type="checkbox" checked={confirmRegisteredArea} onChange={(event) => setConfirmRegisteredArea(event.target.checked)} className="mt-0.5" /><span><strong>Confirmar superficie para valorización.</strong> CBRS registra {resolved.registeredAreaM2} m², pero la semántica útil/construida no está certificada. Confirma solo si corresponde usarla como m² útiles.</span></label> : null}
+      <div className="mt-4 flex justify-end"><button type="button" disabled={needsAreaConfirmation && !confirmRegisteredArea} onClick={continueWithSubject} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Continuar con esta propiedad <ArrowRight size={14} /></button></div>
     </div> : null}
 
     {message ? <div role="alert" className="border-t border-[var(--n3-line)] px-5 py-3 text-xs text-[#ff766f]">{message}</div> : null}
