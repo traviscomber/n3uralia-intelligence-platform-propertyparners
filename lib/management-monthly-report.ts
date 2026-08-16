@@ -1,5 +1,6 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getManagementAutomationReadiness } from '@/lib/management-automation-readiness'
 import {
   advanceSchedule,
   previousMonthBounds,
@@ -24,6 +25,22 @@ function snapshotScheduleId(snapshot: ExistingReport['snapshot']) {
 export async function runDueManagementReports(options: RunOptions) {
   const now = options.now ?? new Date()
   const period = previousMonthBounds(now)
+  const readiness = getManagementAutomationReadiness()
+
+  if (!readiness.ready) {
+    return {
+      trigger: options.trigger,
+      period,
+      blocked: true,
+      readiness,
+      evaluation: null,
+      schedulesDue: 0,
+      schedulesProcessed: 0,
+      schedulesFailed: 0,
+      results: [],
+    }
+  }
+
   const supabase = createAdminClient()
 
   const [entitiesResult, definitionsResult, metricsResult, alertsResult, schedulesResult] = await Promise.all([
@@ -161,6 +178,8 @@ export async function runDueManagementReports(options: RunOptions) {
   return {
     trigger: options.trigger,
     period,
+    blocked: false,
+    readiness,
     evaluation: evaluation.data,
     schedulesDue: schedules.length,
     schedulesProcessed: results.filter((result) => result.status !== 'failed').length,
