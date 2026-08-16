@@ -1,26 +1,38 @@
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { execFileSync } from 'node:child_process'
+import { createClient } from '@supabase/supabase-js'
 
 const content = readFileSync('pnpm-lock.yaml')
+const encoded = content.toString('base64')
 const sha256 = createHash('sha256').update(content).digest('hex')
-console.log(`LOCKFILE_META bytes=${content.length} sha256=${sha256}`)
+const exportId = `pnpm-lock-${sha256}`
+const chunkSize = 4000
+const chunks = Array.from({ length: Math.ceil(encoded.length / chunkSize) }, (_, index) => ({
+  export_id: exportId,
+  chunk_index: index,
+  chunk_text: encoded.slice(index * chunkSize, (index + 1) * chunkSize),
+  sha256,
+  total_chunks: Math.ceil(encoded.length / chunkSize),
+}))
 
-try {
-  execFileSync('git', ['add', 'pnpm-lock.yaml'], { stdio: 'inherit' })
-  execFileSync('git', ['diff', '--cached', '--quiet'])
-  console.log('LOCKFILE_ALREADY_CURRENT')
-} catch {
-  try {
-    execFileSync('git', ['config', 'user.name', 'Vercel QA Bot'], { stdio: 'inherit' })
-    execFileSync('git', ['config', 'user.email', 'noreply@vercel.com'], { stdio: 'inherit' })
-    execFileSync('git', ['commit', '-m', 'Regenerate pnpm lockfile for serverless Chromium'], { stdio: 'inherit' })
-    try {
-      execFileSync('git', ['remote', 'add', 'origin', 'https://github.com/traviscomber/n3uralia-intelligence-platform-propertyparners.git'], { stdio: 'inherit' })
-    } catch {}
-    execFileSync('git', ['push', 'origin', 'HEAD:refs/heads/agent/export-regenerated-lockfile'], { stdio: 'inherit' })
-    console.log('LOCKFILE_PUSH_SUCCEEDED')
-  } catch (error) {
-    console.log(`LOCKFILE_PUSH_UNAVAILABLE ${error instanceof Error ? error.message : String(error)}`)
-  }
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!url || !serviceRoleKey) throw new Error('Missing Supabase QA bridge credentials')
+
+const supabase = createClient(url, serviceRoleKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+})
+
+const { error: deleteError } = await supabase
+  .from('qa_lockfile_export_bridge')
+  .delete()
+  .eq('export_id', exportId)
+if (deleteError) throw deleteError
+
+for (let offset = 0; offset < chunks.length; offset += 20) {
+  const batch = chunks.slice(offset, offset + 20)
+  const { error } = await supabase.from('qa_lockfile_export_bridge').insert(batch)
+  if (error) throw error
 }
+
+console.log(`LOCKFILE_BRIDGE_COMPLETE export=${exportId} bytes=${content.length} sha256=${sha256} chunks=${chunks.length}`)
