@@ -1,5 +1,6 @@
 {
   "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "node scripts/export-lockfile.mjs && pnpm build",
   "crons": [
     {
       "path": "/api/cron/management-monthly",
