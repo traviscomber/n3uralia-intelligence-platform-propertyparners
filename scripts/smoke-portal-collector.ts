@@ -9,13 +9,18 @@ const datasets: PortalDatasetKind[] = [
   'portal_projects',
 ]
 
+async function configuredPage(browser: Awaited<ReturnType<typeof launchServerlessBrowser>>) {
+  const page = await browser.newPage()
+  await page.setViewport({ width: 1440, height: 1000 })
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+  await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7' })
+  return page
+}
+
 async function diagnoseLocation(url: string) {
   const browser = await launchServerlessBrowser()
   try {
-    const page = await browser.newPage()
-    await page.setViewport({ width: 1440, height: 1000 })
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7' })
+    const page = await configuredPage(browser)
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
     await new Promise((resolve) => setTimeout(resolve, 900))
     const candidates = await page.evaluate(() => Array.from(document.querySelectorAll('body *'))
@@ -28,6 +33,27 @@ async function diagnoseLocation(url: string) {
       .filter((item) => item.text.length <= 320)
       .slice(0, 30))
     console.log('[portal-location-diagnostic]', candidates)
+  } finally {
+    await browser.close()
+  }
+}
+
+async function diagnoseEmptySearch(url: string) {
+  const browser = await launchServerlessBrowser()
+  try {
+    const page = await configuredPage(browser)
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+    const diagnostic = await page.evaluate(() => ({
+      title: document.title,
+      canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null,
+      body: (document.body.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 3000),
+      anchors: Array.from(document.querySelectorAll('a[href]'))
+        .map((anchor) => ({ text: (anchor.textContent || '').replace(/\s+/g, ' ').trim(), href: (anchor as HTMLAnchorElement).href }))
+        .filter((item) => /proyecto|departamento|vitacura|nva/i.test(`${item.text} ${item.href}`))
+        .slice(0, 80),
+    }))
+    console.log('[portal-empty-search-diagnostic]', { status: response?.status(), ...diagnostic })
   } finally {
     await browser.close()
   }
@@ -73,7 +99,8 @@ async function smoke(datasetKind: PortalDatasetKind) {
     })
   }
 
-  if (!usableRows.length && result.listingUrls[0]) await diagnoseLocation(result.listingUrls[0])
+  if (!result.listingUrls.length && result.searchUrls[0]) await diagnoseEmptySearch(result.searchUrls[0])
+  else if (!usableRows.length && result.listingUrls[0]) await diagnoseLocation(result.listingUrls[0])
 
   assert.ok(result.listingUrls.length > 0, `${datasetKind}: Portal search returned zero listing URLs`)
   assert.ok(result.rows.length > 0, `${datasetKind}: Portal detail parser returned zero rows`)
