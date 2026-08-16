@@ -66,9 +66,11 @@ export async function POST(request: Request) {
   const reportType = String(body?.reportType ?? '').trim().toLowerCase()
   const cadence = String(body?.cadence ?? '').trim().toLowerCase()
   const dayOfMonth = Math.min(28, Math.max(1, Number(body?.dayOfMonth ?? 1)))
-  const recipients: string[] = Array.isArray(body?.recipients)
-    ? [...new Set(body.recipients.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean))].slice(0, 200)
-    : []
+  const rawRecipients: unknown[] = Array.isArray(body?.recipients) ? body.recipients : []
+  const normalizedRecipients = rawRecipients
+    .map((value) => String(value).trim().toLowerCase())
+    .filter((value): value is string => value.length > 0)
+  const recipients: string[] = Array.from(new Set<string>(normalizedRecipients)).slice(0, 200)
 
   if (!name || !REPORT_TYPES.has(reportType) || !CADENCES.has(cadence) || !Number.isInteger(dayOfMonth)) {
     return NextResponse.json({ error: 'La configuración del reporte es inválida.' }, { status: 400 })
