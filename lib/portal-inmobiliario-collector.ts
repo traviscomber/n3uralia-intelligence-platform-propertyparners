@@ -60,10 +60,7 @@ function numeric(value: unknown) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
   const raw = text(value)
   if (!raw) return null
-  const cleaned = raw
-    .replace(/\s+/g, '')
-    .replace(/\$/g, '')
-    .replace(/UF|CLP|m²|m2/gi, '')
+  const cleaned = raw.replace(/\s+/g, '').replace(/\$/g, '').replace(/UF|CLP|m²|m2/gi, '')
   const normalized = cleaned.includes(',') && cleaned.includes('.')
     ? cleaned.replace(/\./g, '').replace(',', '.')
     : cleaned.replace(',', '.')
@@ -110,7 +107,6 @@ function plausibleArea(value: unknown) {
 function extractListingId(url: string, datasetKind: PortalDatasetKind) {
   const mlcMatch = url.match(/MLC-?(\d+)/i) || url.match(/\/p\/(MLC\d+)/i)
   if (mlcMatch) return mlcMatch[1].replace(/^MLC/i, '')
-
   if (datasetKind === 'portal_projects') {
     try {
       const pathname = new URL(url, PORTAL_ORIGIN).pathname
@@ -120,7 +116,6 @@ function extractListingId(url: string, datasetKind: PortalDatasetKind) {
       return null
     }
   }
-
   return null
 }
 
@@ -163,16 +158,13 @@ function decodeEmbeddedMarkup(html: string) {
 function extractEmbeddedListingUrls(html: string, datasetKind: PortalDatasetKind) {
   const decoded = decodeEmbeddedMarkup(html)
   const candidates: string[] = []
-
   if (datasetKind === 'portal_projects') {
-    const absoluteProjects = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/[^"'<>\\\s]+-nva\/?/gi) ?? []
-    candidates.push(...absoluteProjects)
+    candidates.push(...(decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/[^"'<>\\\s]+-nva\/?/gi) ?? []))
   } else {
     const absoluteListings = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
     const relativeListings = decoded.match(/\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
     candidates.push(...absoluteListings, ...relativeListings.map((value) => new URL(value, PORTAL_ORIGIN).toString()))
   }
-
   return unique(candidates.map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind)))
 }
 
@@ -180,11 +172,7 @@ function collectJsonLd(html: string) {
   const root = parse(html)
   return root.querySelectorAll('script[type="application/ld+json"]')
     .map((script) => {
-      try {
-        return JSON.parse(script.textContent)
-      } catch {
-        return null
-      }
+      try { return JSON.parse(script.textContent) } catch { return null }
     })
     .filter(Boolean)
 }
@@ -192,10 +180,7 @@ function collectJsonLd(html: string) {
 function flattenJsonLd(values: unknown[]): Record<string, unknown>[] {
   const output: Record<string, unknown>[] = []
   const visit = (value: unknown) => {
-    if (Array.isArray(value)) {
-      value.forEach(visit)
-      return
-    }
+    if (Array.isArray(value)) { value.forEach(visit); return }
     if (!value || typeof value !== 'object') return
     const record = value as Record<string, unknown>
     output.push(record)
@@ -212,7 +197,6 @@ function deepFind(source: unknown, keys: string[]): unknown {
   const wanted = new Set(keys.map((key) => key.toLowerCase()))
   const queue: unknown[] = [source]
   const seen = new Set<unknown>()
-
   while (queue.length) {
     const current = queue.shift()
     if (!current || typeof current !== 'object' || seen.has(current)) continue
@@ -241,8 +225,7 @@ function extractPrimarySpecs(root: HTMLElement) {
     if (columns.length < 2) continue
     const label = normalizeLabel(columns[0].textContent)
     const value = text(columns[1].textContent)
-    if (!label || !value || specs.has(label)) continue
-    specs.set(label, value)
+    if (label && value && !specs.has(label)) specs.set(label, value)
   }
   return specs
 }
@@ -293,26 +276,31 @@ function regexInteger(source: string, max: number, patterns: RegExp[]) {
   return null
 }
 
+function cleanAddress(value: string | null) {
+  if (!value) return null
+  const cleaned = value
+    .split(/(?:UF\s*[\d.]|\$\s*[\d.]|Gastos comunes)/i)[0]
+    .replace(/[|·-]+\s*$/, '')
+    .trim()
+  return cleaned.length >= 4 && cleaned.length <= 260 ? cleaned : null
+}
+
 function extractVisiblePrimaryFacts(root: HTMLElement, title: string | null) {
   const body = normalizedBodyText(root)
   const primary = primaryListingText(root, title)
-
   const usefulArea = regexArea(body, [
     /Superficie útil\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
     /Superficie util\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
     /Superficie cubierta\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
   ]) || regexArea(primary, [/([\d.,]+)\s*m(?:²|2)\s*útiles/i, /([\d.,]+)\s*m(?:²|2)\s*utiles/i])
-
   const totalArea = regexArea(body, [
     /Superficie total\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
     /Superficie construida\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
   ]) || regexArea(primary, [/([\d.,]+)\s*m(?:²|2)\s*totales/i, /([\d.,]+)\s*m(?:²|2)\s*total/i])
-
   const landArea = regexArea(body, [
     /Superficie de terreno\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
     /Superficie terreno\s*[:|]?\s*([\d.,]+)\s*m(?:²|2)/i,
   ])
-
   const bedrooms = regexInteger(primary, 15, [/(\d+)\s*dorm(?:\.|itorios?|itorio)?/i, /(\d+)\s*habitaciones?/i])
   const bathrooms = regexInteger(primary, 15, [/(\d+)\s*bañ(?:os?|o)?/i, /(\d+)\s*ban(?:os?|o)?/i])
   const parkingSpaces = regexInteger(body, 20, [/Estacionamientos?\s*[:|]?\s*(\d+)/i])
@@ -322,12 +310,10 @@ function extractVisiblePrimaryFacts(root: HTMLElement, title: string | null) {
     const titleIndex = body.indexOf(title)
     if (titleIndex >= 0) {
       const afterTitle = body.slice(titleIndex + title.length, titleIndex + title.length + 600)
-      const priceIndex = afterTitle.search(/(?:^|\s)(?:UF\s*[\d.]|\$\s*[\d.])/i)
-      const candidate = text(priceIndex >= 0 ? afterTitle.slice(0, priceIndex) : '')
-      if (candidate && candidate.length >= 4 && candidate.length <= 260) address = candidate
+      const priceIndex = afterTitle.search(/(?:UF\s*[\d.]|\$\s*[\d.])/i)
+      address = cleanAddress(priceIndex >= 0 ? afterTitle.slice(0, priceIndex) : null)
     }
   }
-
   return { usefulArea, totalArea, landArea, bedrooms, bathrooms, parkingSpaces, address }
 }
 
@@ -337,7 +323,6 @@ function parsePrimaryPrice(root: HTMLElement, title: string | null, jsonLd: unkn
     const amount = localizedNumeric(titleUf[1])
     if (amount != null && amount > 0) return { price_uf: amount, price_clp: null }
   }
-
   const mainMoney = text(root.querySelector('.andes-money-amount')?.textContent)
   const moneyUf = mainMoney?.match(/UF\s*([\d.]+(?:,\d+)?)/i)
   if (moneyUf) {
@@ -349,7 +334,6 @@ function parsePrimaryPrice(root: HTMLElement, title: string | null, jsonLd: unkn
     const amount = localizedNumeric(moneyClp[1])
     if (amount != null && amount > 0) return { price_uf: null, price_clp: amount }
   }
-
   const priceCurrency = text(deepFind(jsonLd, ['priceCurrency']))?.toUpperCase()
   const amount = localizedNumeric(deepFind(jsonLd, ['price']))
   if (amount != null && amount > 0 && priceCurrency === 'UF') return { price_uf: amount, price_clp: null }
@@ -367,8 +351,7 @@ function extractPrimaryGeo(jsonLd: unknown[]) {
 function extractPrimaryAddress(jsonLd: unknown[]) {
   const addressObject = deepFind(jsonLd, ['address'])
   if (!addressObject || typeof addressObject !== 'object') return null
-  return text(deepFind(addressObject, ['streetAddress']))
-    || text(deepFind(addressObject, ['name']))
+  return cleanAddress(text(deepFind(addressObject, ['streetAddress'])) || text(deepFind(addressObject, ['name'])))
 }
 
 function normalizeAddress(value: string | null) {
@@ -395,8 +378,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const price = parsePrimaryPrice(root, primaryPriceTitle(root, title), jsonLd)
   const listingId = extractListingId(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
   const geo = extractPrimaryGeo(jsonLd)
-  const address = extractPrimaryAddress(jsonLd) || visible.address
-
+  const address = cleanAddress(extractPrimaryAddress(jsonLd) || visible.address)
   const totalArea = specArea(specs, 'Superficie total', 'Superficie construida') || visible.totalArea
   const usefulArea = specArea(specs, 'Superficie útil', 'Superficie util', 'Superficie cubierta') || visible.usefulArea
   const landArea = specArea(specs, 'Superficie de terreno', 'Superficie terreno', 'Terreno') || visible.landArea
@@ -456,7 +438,6 @@ async function waitForPrimaryDetail(page: Page, waitMs: number) {
 
 async function discoverListingUrls(browser: Browser, searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
   const urls: string[] = []
-
   for (const searchUrl of searchUrls) {
     const page = await browser.newPage()
     try {
@@ -472,7 +453,6 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       await page.close()
     }
   }
-
   return unique(urls)
 }
 
@@ -490,7 +470,6 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
     const listingUrls = (await discoverListingUrls(browser, searchUrls, options.datasetKind, waitMs)).slice(0, maxListings)
     const rows: MarketImportInputRow[] = []
     const failures: Array<{ url: string; error: string }> = []
-
     for (const url of listingUrls) {
       const page = await browser.newPage()
       try {
@@ -510,14 +489,7 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         await page.close()
       }
     }
-
-    return {
-      searchUrls,
-      listingUrls,
-      rows,
-      failures,
-      observedAt: new Date().toISOString(),
-    }
+    return { searchUrls, listingUrls, rows, failures, observedAt: new Date().toISOString() }
   } finally {
     await browser.close()
   }
