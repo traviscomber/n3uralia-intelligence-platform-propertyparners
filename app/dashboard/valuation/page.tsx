@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Save, Sparkles, Trash2 } from 'lucide-react'
 import {
@@ -19,6 +19,7 @@ import {
   MetricGrid,
   SectionHeading,
 } from '@/components/intelligence/design-system'
+import { QuickSubjectLookup } from '@/components/valuation/quick-subject-lookup'
 
 const emptySubject: ValuationSubject = {
   propertyType: 'Departamento',
@@ -191,6 +192,11 @@ export default function ValuationPage() {
   const searchParams = useSearchParams()
   const assignmentId = searchParams.get('assignmentId')
   const sourcePropertyId = searchParams.get('propertyId')
+  const quickLookup = searchParams.get('quickLookup') === '1'
+  const autoAnalyze = searchParams.get('autoAnalyze') === '1'
+  const autoAnalyzeKey = searchParams.get('eventKey') || searchParams.get('address') || ''
+  const autoAnalyzeStarted = useRef<string | null>(null)
+  const loadedQuickKey = useRef<string | null>(null)
   const [subject, setSubject] = useState<ValuationSubject>(emptySubject)
   const [comparables, setComparables] = useState<ValuationComparable[]>([])
   const [justification, setJustification] = useState('')
@@ -203,22 +209,33 @@ export default function ValuationPage() {
   const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!assignmentId) return
+    if (!assignmentId && !quickLookup) return
     const rawType = searchParams.get('propertyType') || 'Departamento'
     const propertyType: ValuationSubject['propertyType'] = rawType.toLowerCase().includes('casa') ? 'Casa' : 'Departamento'
+    if (quickLookup && autoAnalyzeKey && loadedQuickKey.current !== autoAnalyzeKey) {
+      loadedQuickKey.current = autoAnalyzeKey
+      setComparables([])
+      setCbrsBenchmark(null)
+      setPortalBenchmark(null)
+      setSuggestionNotes([])
+      setRateAnchor(null)
+    }
     setSubject((current) => ({
       ...current, propertyType,
       address: searchParams.get('address') || current.address,
       neighborhood: searchParams.get('neighborhood') || current.neighborhood,
+      rol: searchParams.get('rol') || current.rol,
       latitude: numberParam(searchParams.get('latitude')) ?? current.latitude,
       longitude: numberParam(searchParams.get('longitude')) ?? current.longitude,
       usefulAreaM2: numberParam(searchParams.get('usefulAreaM2')) ?? current.usefulAreaM2,
       builtAreaM2: numberParam(searchParams.get('builtAreaM2')) ?? current.builtAreaM2,
+      landAreaM2: numberParam(searchParams.get('landAreaM2')) ?? current.landAreaM2,
       bedrooms: numberParam(searchParams.get('bedrooms')) ?? current.bedrooms,
       bathrooms: numberParam(searchParams.get('bathrooms')) ?? current.bathrooms,
       parkingSpaces: numberParam(searchParams.get('parkingSpaces')) ?? current.parkingSpaces,
+      constructionYear: numberParam(searchParams.get('constructionYear')) ?? current.constructionYear,
     }))
-  }, [assignmentId, searchParams])
+  }, [assignmentId, quickLookup, autoAnalyzeKey, searchParams])
 
   const result = useMemo(() => {
     try { return calculateContractualValuation(subject, comparables, emptyFactors) } catch { return null }
@@ -252,6 +269,7 @@ export default function ValuationPage() {
           neighborhood: subject.neighborhood,
           address: subject.address,
           rol: subject.rol,
+          eventKey: searchParams.get('eventKey') || undefined,
           usefulAreaM2: subject.usefulAreaM2,
           builtAreaM2: subject.builtAreaM2,
           landAreaM2: subject.landAreaM2,
@@ -274,6 +292,13 @@ export default function ValuationPage() {
       setMessage(error instanceof Error ? error.message : 'No fue posible sugerir comparables.')
     } finally { setSuggesting(false) }
   }
+
+  useEffect(() => {
+    if (!autoAnalyze || !autoAnalyzeKey || !subject.neighborhood.trim()) return
+    if (autoAnalyzeStarted.current === autoAnalyzeKey) return
+    autoAnalyzeStarted.current = autoAnalyzeKey
+    void suggestComparables()
+  }, [autoAnalyze, autoAnalyzeKey, subject.neighborhood])
 
   function validateDraft() {
     if (!subject.address.trim() || !subject.neighborhood.trim()) return 'Dirección y barrio son obligatorios.'
@@ -333,6 +358,8 @@ export default function ValuationPage() {
     <IntelligenceHeader eyebrow="Módulo II · Valorización" title="Valorizador Property Partners" description="Metodología canónica para casas y departamentos, contrastada con oferta Portal y ventas CBRS." actions={[{ label: 'Registro de valorizaciones', href: '/dashboard/valuations' }, { label: 'Inteligencia de mercado', href: '/dashboard/market' }]} meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">property-partners-valuation-v2</div>} />
 
     <MethodologyNote>Casas: valor comercial por m² construidos + terreno y UF/m² definidos por el valorizador; comparables ponderados con terreno/4. Departamentos: valor comercial por m² útiles × UF/m² útil; oferta pondera 50% de terraza. CBRS conserva la superficie registrada en la fuente canónica y no se etiqueta como “útil” cuando esa semántica no está confirmada. Las sugerencias automáticas nunca se seleccionan solas.</MethodologyNote>
+
+    <QuickSubjectLookup />
 
     <section><SectionHeading eyebrow="Estado" title="Cobertura del caso" /><MetricGrid>
       <MetricCard label="Propiedad" value={propertyState} detail="Dirección, barrio, tipo y superficies." />
