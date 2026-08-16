@@ -1,12 +1,37 @@
 import assert from 'node:assert/strict'
 import { collectPortalVitacura } from '../lib/portal-inmobiliario-collector'
 import type { PortalDatasetKind } from '../lib/market-source-import'
+import { launchServerlessBrowser } from '../lib/serverless-browser'
 
 const datasets: PortalDatasetKind[] = [
   'portal_apartments',
   'portal_houses',
   'portal_projects',
 ]
+
+async function diagnoseLocation(url: string) {
+  const browser = await launchServerlessBrowser()
+  try {
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1440, height: 1000 })
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7' })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+    await new Promise((resolve) => setTimeout(resolve, 900))
+    const candidates = await page.evaluate(() => Array.from(document.querySelectorAll('body *'))
+      .map((el) => ({
+        tag: el.tagName,
+        className: typeof (el as HTMLElement).className === 'string' ? (el as HTMLElement).className : '',
+        text: ((el as HTMLElement).innerText || '').replace(/\s+/g, ' ').trim(),
+      }))
+      .filter((item) => item.text && /Vitacura|Región Metropolitana|Metropolitana|ubicación|ubicacion|dirección|direccion/i.test(item.text))
+      .filter((item) => item.text.length <= 320)
+      .slice(0, 30))
+    console.log('[portal-location-diagnostic]', candidates)
+  } finally {
+    await browser.close()
+  }
+}
 
 async function smoke(datasetKind: PortalDatasetKind) {
   const result = await collectPortalVitacura({
@@ -47,6 +72,8 @@ async function smoke(datasetKind: PortalDatasetKind) {
       parking_spaces: row.parking_spaces,
     })
   }
+
+  if (!usableRows.length && result.listingUrls[0]) await diagnoseLocation(result.listingUrls[0])
 
   assert.ok(result.listingUrls.length > 0, `${datasetKind}: Portal search returned zero listing URLs`)
   assert.ok(result.rows.length > 0, `${datasetKind}: Portal detail parser returned zero rows`)
