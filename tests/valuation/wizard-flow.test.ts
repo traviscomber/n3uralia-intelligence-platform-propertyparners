@@ -26,18 +26,18 @@ test('wizard keeps unknown apartment area explicit instead of treating it as zer
   )
 })
 
-test('wizard requires human comparable selection before the decision step', () => {
+test('wizard requires three human-selected comparables before the decision step', () => {
   assert.match(
-    valuationWizardBlockingReason({ step: 3, subject: department, selectedComparableCount: 1, hasResult: false }) ?? '',
-    /dos comparables/,
+    valuationWizardBlockingReason({ step: 3, subject: department, selectedComparableCount: 2, hasResult: false }) ?? '',
+    /tres comparables/,
   )
-  assert.equal(valuationWizardBlockingReason({ step: 3, subject: department, selectedComparableCount: 2, hasResult: false }), null)
+  assert.equal(valuationWizardBlockingReason({ step: 3, subject: department, selectedComparableCount: 3, hasResult: false }), null)
 })
 
 test('wizard requires a deterministic valuation result before final review', () => {
   assert.match(
-    valuationWizardBlockingReason({ step: 4, subject: department, selectedComparableCount: 2, hasResult: false }) ?? '',
+    valuationWizardBlockingReason({ step: 4, subject: department, selectedComparableCount: 3, hasResult: false }) ?? '',
     /tasa de valorización/,
   )
-  assert.equal(valuationWizardBlockingReason({ step: 4, subject: department, selectedComparableCount: 2, hasResult: true }), null)
+  assert.equal(valuationWizardBlockingReason({ step: 4, subject: department, selectedComparableCount: 3, hasResult: true }), null)
 })
