@@ -131,13 +131,19 @@ function canonicalListingUrl(rawUrl: string) {
   }
 }
 
+function isMlcListingUrl(parsedUrl: URL) {
+  return /MLC-?\d+/i.test(parsedUrl.href) || /\/p\/MLC\d+/i.test(parsedUrl.pathname)
+}
+
 function isDatasetListingUrl(rawUrl: string, datasetKind: PortalDatasetKind) {
   try {
     const parsedUrl = new URL(rawUrl, PORTAL_ORIGIN)
     const hostname = parsedUrl.hostname.toLowerCase()
     if (hostname !== 'www.portalinmobiliario.com' && hostname !== 'portalinmobiliario.com') return false
-    if (datasetKind === 'portal_projects') return /\/\d+-[^/]+-nva\/?$/i.test(parsedUrl.pathname)
-    return /MLC-?\d+/i.test(parsedUrl.href) || /\/p\/MLC\d+/i.test(parsedUrl.pathname)
+    if (datasetKind === 'portal_projects') {
+      return isMlcListingUrl(parsedUrl) || /\/\d+-[^/]+-nva\/?$/i.test(parsedUrl.pathname)
+    }
+    return isMlcListingUrl(parsedUrl)
   } catch {
     return false
   }
@@ -159,7 +165,10 @@ function extractEmbeddedListingUrls(html: string, datasetKind: PortalDatasetKind
   const decoded = decodeEmbeddedMarkup(html)
   const candidates: string[] = []
   if (datasetKind === 'portal_projects') {
-    candidates.push(...(decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/[^"'<>\\\s]+-nva\/?/gi) ?? []))
+    const legacyProjects = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/[^"'<>\\\s]+-nva\/?/gi) ?? []
+    const absoluteMlc = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
+    const relativeMlc = decoded.match(/\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
+    candidates.push(...legacyProjects, ...absoluteMlc, ...relativeMlc.map((value) => new URL(value, PORTAL_ORIGIN).toString()))
   } else {
     const absoluteListings = decoded.match(/https?:\/\/(?:www\.)?portalinmobiliario\.com\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
     const relativeListings = decoded.match(/\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
