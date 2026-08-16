@@ -15,10 +15,9 @@ $needle$;
 begin
   select pg_get_functiondef('public.ingest_portal_listing_snapshot_v2(text,text,text,timestamptz,jsonb,boolean)'::regprocedure) into v_def;
   v_new := replace(v_def, v_needle, '');
-  if v_new = v_def then
-    raise exception 'Expected legacy service_role JWT guard was not found';
+  if v_new <> v_def then
+    execute v_new;
   end if;
-  execute v_new;
 end
 $migration$;
 
