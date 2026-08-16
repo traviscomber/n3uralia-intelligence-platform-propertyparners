@@ -71,7 +71,7 @@ export function QuickSubjectLookup() {
       const response = await fetch('/api/valuation/subject/lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: address.trim(), unit: overrideUnit ?? unit.trim() || undefined }),
+        body: JSON.stringify({ address: address.trim(), unit: overrideUnit ?? (unit.trim() || undefined) }),
       })
       const payload = await response.json() as LookupResponse & { error?: string }
       if (!response.ok && payload.status !== 'not_found') throw new Error(payload.error || 'No fue posible buscar la propiedad.')
@@ -150,7 +150,7 @@ export function QuickSubjectLookup() {
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Historial</span><strong className="mt-1 block text-sm">{resolved.history.length} venta{resolved.history.length === 1 ? '' : 's'}</strong></div>
       </div>
       {needsAreaConfirmation ? <label className="mt-4 flex items-start gap-3 border border-[#806f37] bg-[#15130b] p-3 text-xs"><input type="checkbox" checked={confirmRegisteredArea} onChange={(event) => setConfirmRegisteredArea(event.target.checked)} className="mt-0.5" /><span><strong>Confirmar superficie para valorización.</strong> CBRS registra {resolved.registeredAreaM2} m², pero la semántica útil/construida no está certificada. Márcalo solo si el valorizador confirma que corresponde usar esa superficie como m² útiles.</span></label> : null}
-      <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => useResolvedSubject(false)} className="border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold hover:border-[#d7332b]">Usar ficha</button><button type="button" onClick={() => useResolvedSubject(true)} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white"><Sparkles size={14} />Usar ficha y analizar mercado</button></div>
+      <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => useResolvedSubject(false)} className="border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold hover:border-[#d7332b]">Usar ficha</button><button type="button" disabled={needsAreaConfirmation && !confirmRegisteredArea} onClick={() => useResolvedSubject(true)} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"><Sparkles size={14} />Usar ficha y analizar mercado</button></div>
     </div> : null}
 
     {message ? <div role="alert" className="border-t border-[var(--n3-line)] px-5 py-3 text-xs text-[#ff766f]">{message}</div> : null}
