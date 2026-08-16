@@ -24,10 +24,13 @@ async function main() {
   const workspacePage = await read('app/dashboard/valuations/[id]/page.tsx')
   const reportPage = await read('app/dashboard/valuations/[id]/report/page.tsx')
   const reportBanner = await read('components/valuation/valuation-report-status-banner.tsx')
+  const auditActionMigration = await read('supabase/migrations/20260816_allow_valuation_case_created_decision_action.sql')
 
   assert.match(createRoute, /const status = ['"]draft['"] as const/)
   assert.doesNotMatch(createRoute, /payload\.status/)
   assert.match(createRoute, /action:\s*['"]case_created['"]/)
+  assert.match(auditActionMigration, /'case_created'::text/, 'Database decision-log constraint must allow the case_created action used by the valuation API.')
+  assert.match(auditActionMigration, /valuation_decision_log_action_check/, 'Valuation audit-action migration must explicitly replace the decision-log action constraint.')
   assert.match(createRoute, /valuation_case_versions/)
   assert.match(createRoute, /rateAnchor/)
   assert.match(createRoute, /match_status: item\.selected \? 'accepted' : 'candidate'/)
@@ -87,7 +90,7 @@ async function main() {
     assert.equal(await exists(route), false, `Obsolete valuation route still exists: ${route}`)
   }
 
-  console.log('Valuation workflow verified: atomic transitions, CEO-only approval, scoped review, canonical comparable generation boundary and non-publicable preliminary reports.')
+  console.log('Valuation workflow verified: atomic transitions, CEO-only approval, scoped review, canonical comparable generation boundary, audit action compatibility and non-publicable preliminary reports.')
 }
 
 main().catch((error) => {

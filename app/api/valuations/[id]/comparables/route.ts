@@ -16,6 +16,10 @@ async function getAccess() {
   return { supabase, scope }
 }
 
+function record(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
+}
+
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { supabase, scope } = await getAccess()
@@ -25,6 +29,55 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
 
     assertProfileVisible(scope, valuationCase.requested_by)
+
+    if (valuationCase.status === 'issued') {
+      const { data: issuedVersion, error: versionError } = await supabase
+        .from('valuation_case_versions')
+        .select('version_number,snapshot,created_at')
+        .eq('valuation_case_id', id)
+        .eq('status', 'issued')
+        .eq('version_number', valuationCase.version_number)
+        .maybeSingle()
+
+      if (versionError) return NextResponse.json({ error: versionError.message }, { status: 500 })
+      if (!issuedVersion) {
+        return NextResponse.json({
+          error: 'La valorización está emitida, pero falta su snapshot histórico. No se permite reconstruir un informe emitido desde datos vivos.',
+          code: 'ISSUED_SNAPSHOT_MISSING',
+        }, { status: 409 })
+      }
+
+      const snapshot = record(issuedVersion.snapshot)
+      const frozenCase = record(snapshot?.valuationCase)
+      const frozenComparables = Array.isArray(snapshot?.comparables) ? snapshot.comparables : null
+      const frozenDecisions = Array.isArray(snapshot?.decisionHistory) ? snapshot.decisionHistory : null
+
+      if (!snapshot || !frozenCase || !frozenComparables || !frozenDecisions) {
+        return NextResponse.json({
+          error: 'El snapshot emitido no contiene el expediente completo requerido para reproducir el informe.',
+          code: 'ISSUED_SNAPSHOT_INVALID',
+        }, { status: 409 })
+      }
+
+      return NextResponse.json({
+        valuationCase: frozenCase,
+        comparables: frozenComparables,
+        decisions: frozenDecisions,
+        permissions: {
+          canEditComparables: false,
+          canApprove: false,
+          canIssue: false,
+        },
+        documentStatus: 'issued',
+        snapshot: {
+          schemaVersion: snapshot.snapshotSchemaVersion ?? null,
+          capturedAt: snapshot.capturedAt ?? issuedVersion.created_at,
+          sha256: snapshot.snapshotSha256 ?? null,
+          hashAlgorithm: snapshot.snapshotHashAlgorithm ?? null,
+          versionNumber: issuedVersion.version_number,
+        },
+      })
+    }
 
     const [{ data: comparables, error: compError }, { data: decisions, error: logError }] = await Promise.all([
       supabase.from('valuation_comparables').select('*').eq('valuation_case_id', id).order('rank'),
@@ -45,6 +98,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         canApprove,
         canIssue: canApprove,
       },
+      documentStatus: 'preview',
+      snapshot: null,
     })
   } catch (error) {
     return accessErrorResponse(error)
