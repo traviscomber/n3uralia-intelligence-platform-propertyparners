@@ -1,5 +1,6 @@
 {
   "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm management:scoring:verify && pnpm management:reports:verify && pnpm management:persisted:verify && pnpm management:reconciliation:verify && pnpm management:delivery:verify && pnpm build",
   "crons": [
     {
       "path": "/api/cron/management-monthly",
