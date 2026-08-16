@@ -1,5 +1,6 @@
 {
   "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "node --import tsx scripts/smoke-portal-ingestion-service-role.ts && pnpm build",
   "crons": [
     {
       "path": "/api/cron/management-monthly",
