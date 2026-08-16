@@ -39,7 +39,7 @@ export function valuationWizardBlockingReason(args: {
   }
 
   if (step === 3) {
-    if (selectedComparableCount < 2) return 'Selecciona al menos dos comparables válidos antes de continuar.'
+    if (selectedComparableCount < 3) return 'Selecciona al menos tres comparables válidos antes de continuar.'
     return null
   }
 
