@@ -226,8 +226,12 @@ function deepFind(source: unknown, keys: string[]): unknown {
 }
 
 function firstPrimaryTitle(root: HTMLElement) {
-  return text(root.querySelector('meta[property="og:title"]')?.getAttribute('content'))
-    || text(root.querySelector('h1')?.text)
+  return text(root.querySelector('h1')?.text)
+    || text(root.querySelector('meta[property="og:title"]')?.getAttribute('content'))
+}
+
+function primaryPriceTitle(root: HTMLElement, fallback: string | null) {
+  return text(root.querySelector('meta[property="og:title"]')?.getAttribute('content')) || fallback
 }
 
 function extractPrimarySpecs(root: HTMLElement) {
@@ -388,7 +392,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const title = firstPrimaryTitle(root)
   const specs = extractPrimarySpecs(root)
   const visible = extractVisiblePrimaryFacts(root, title)
-  const price = parsePrimaryPrice(root, title, jsonLd)
+  const price = parsePrimaryPrice(root, primaryPriceTitle(root, title), jsonLd)
   const listingId = extractListingId(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
   const geo = extractPrimaryGeo(jsonLd)
   const address = extractPrimaryAddress(jsonLd) || visible.address
