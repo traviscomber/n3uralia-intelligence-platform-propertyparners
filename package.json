@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "pnpm valuation:gate && pnpm management:semantics:verify",
+    "prebuild": "pnpm valuation:gate && pnpm management:gate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -29,6 +29,7 @@
     "management:reconciliation:verify": "node --import tsx scripts/verify-management-metric-reconciliation.ts",
     "management:delivery:verify": "node --import tsx scripts/verify-management-report-delivery.ts",
     "management:semantics:verify": "node --import tsx scripts/verify-management-report-semantics.ts",
+    "management:gate": "pnpm management:scoring:verify && pnpm management:reports:verify && pnpm management:persisted:verify && pnpm management:reconciliation:verify && pnpm management:delivery:verify && pnpm management:semantics:verify",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
     "market:identity:verify": "node --import tsx scripts/verify-market-identity.ts",
