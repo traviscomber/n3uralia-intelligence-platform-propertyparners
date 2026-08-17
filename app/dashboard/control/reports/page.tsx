@@ -113,7 +113,7 @@ export default function ManagementReportArchivePage() {
       leads: metric(report.snapshot, 'leadsNuevos'),
       visitas: metric(report.snapshot, 'visitasRealizadas'),
       cierres: metric(report.snapshot, 'cierresAcreditados'),
-      uf: metric(report.snapshot, 'volumenUfBruto'),
+      uf: metric(report.snapshot, 'volumenUfAcreditado'),
     })), [details, monthlyReports])
 
   const activityData = selected ? [
@@ -154,8 +154,8 @@ export default function ManagementReportArchivePage() {
               ['Cartera', metric(selected.snapshot, 'cartera'), ''],
               ['Captaciones', metric(selected.snapshot, 'captaciones'), ''],
               ['Leads', metric(selected.snapshot, 'leadsNuevos'), ''],
-              ['Cierres', metric(selected.snapshot, 'cierresAcreditados'), ''],
-              ['Volumen', metric(selected.snapshot, 'volumenUfBruto'), ' UF'],
+              ['Cierres acreditados', metric(selected.snapshot, 'cierresAcreditados'), ''],
+              ['Volumen acreditado', metric(selected.snapshot, 'volumenUfAcreditado'), ' UF'],
             ].map(([label, value, suffix]) => <div key={String(label)} className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-2xl font-semibold">{formatNumber(value as number | null, String(suffix))}</p></div>)}
           </div>
         </section>
@@ -174,7 +174,7 @@ export default function ManagementReportArchivePage() {
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--n3-text-muted)', fontSize: 11 }} />
                   <Tooltip contentStyle={{ background: 'var(--n3-deep)', border: '1px solid var(--n3-line)', borderRadius: 0 }} labelStyle={{ color: 'white' }} />
                   <Area type="monotone" dataKey="leads" name="Leads" stroke="var(--primary)" strokeWidth={2.5} fill="url(#leadsFill)" connectNulls />
-                  <Area type="monotone" dataKey="visitas" name="Visitas realizadas" stroke="var(--n3-text-muted)" strokeWidth={1.5} fill="transparent" connectNulls />
+                  <Area type="monotone" dataKey="visitas" name="Visitas realizadas" stroke="var(--n3-text-muted)" strokeWidth={1.5} fill="transparent" connectNulls={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
