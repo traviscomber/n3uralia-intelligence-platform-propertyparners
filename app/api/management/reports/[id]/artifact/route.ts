@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildManagementReportPdf, type ManagementReportRecord } from '@/lib/management-report-artifact'
+import { normalizeManagementReportOutput } from '@/lib/management-report-output'
 
 export const runtime = 'nodejs'
 
@@ -26,7 +27,8 @@ export async function GET(
   if (!data) return NextResponse.json({ error: 'Reporte no encontrado o fuera de alcance.' }, { status: 404 })
 
   try {
-    const artifact = await buildManagementReportPdf(data as ManagementReportRecord)
+    const normalized = normalizeManagementReportOutput(data as ManagementReportRecord)
+    const artifact = await buildManagementReportPdf(normalized)
     return new Response(Buffer.from(artifact.bytes), {
       status: 200,
       headers: {
