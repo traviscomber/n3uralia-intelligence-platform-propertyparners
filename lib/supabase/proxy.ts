@@ -2,6 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { canAccessDashboardPath } from '@/lib/dashboard-access'
 
+function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
+  for (const cookie of request.cookies.getAll()) {
+    if (!cookie.name.startsWith('sb-') || !cookie.name.includes('auth-token')) continue
+    response.cookies.set(cookie.name, '', { path: '/', maxAge: 0 })
+  }
+  return response
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -30,7 +38,22 @@ export async function updateSession(request: NextRequest) {
     // They must reach the route without requiring a browser Supabase session.
     if (isCronPath) return supabaseResponse
 
-    const { data: { user } } = await supabase.auth.getUser()
+    let user = null
+    try {
+      const result = await supabase.auth.getUser()
+      user = result.data.user
+    } catch (error) {
+      // An expired/invalid refresh token is an unauthenticated session, not an
+      // application error. Clear only Supabase auth cookies so the next login is clean.
+      const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
+      if (code === 'refresh_token_not_found' || code === 'refresh_token_already_used') {
+        supabaseResponse = clearSupabaseAuthCookies(request, supabaseResponse)
+        user = null
+      } else {
+        throw error
+      }
+    }
+
     const isAuthPath = pathname.startsWith('/auth')
     const isLandingPage = pathname === '/'
     const isLegacyMarketingPath = pathname === '/es' || pathname.startsWith('/es/')
@@ -39,10 +62,11 @@ export async function updateSession(request: NextRequest) {
     // API consumers must receive a machine-readable authentication error instead
     // of an HTML login page with a misleading 200 response.
     if (!user && isApiPath) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'No autenticado.' },
         { status: 401, headers: { 'Cache-Control': 'no-store' } },
       )
+      return clearSupabaseAuthCookies(request, response)
     }
 
     // This deployment is the private Property Partners portal. Keep legacy
@@ -50,14 +74,15 @@ export async function updateSession(request: NextRequest) {
     if (isLegacyMarketingPath) {
       const url = request.nextUrl.clone()
       url.pathname = user ? '/dashboard' : '/auth/login'
-      return NextResponse.redirect(url)
+      const response = NextResponse.redirect(url)
+      return user ? response : clearSupabaseAuthCookies(request, response)
     }
 
     // Allow public access to landing page and public routes.
     if (!user && !isAuthPath && !isPublicPath) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
-      return NextResponse.redirect(url)
+      return clearSupabaseAuthCookies(request, NextResponse.redirect(url))
     }
 
     if (user && isAuthPath && !pathname.startsWith('/auth/callback') && pathname !== '/auth/error') {
