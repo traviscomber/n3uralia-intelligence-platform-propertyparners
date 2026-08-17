@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { normalizeManagementReportOutput, type ManagementReportRecord } from '../lib/management-report-output'
+import { normalizeManagementReportOutput } from '../lib/management-report-output'
+import type { ManagementReportRecord } from '../lib/management-report-artifact'
 
 function report(snapshot: Record<string, unknown>): ManagementReportRecord {
   return {
