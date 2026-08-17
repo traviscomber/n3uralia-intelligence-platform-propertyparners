@@ -99,12 +99,21 @@ test('Contractual valuation recalculates from selected comparables only', () => 
   assert.equal(result.adjustedValueUf, 15890)
 })
 
-test('Contractual valuation requires at least two selected comparables', () => {
+test('Contractual valuation requires at least three selected comparables', () => {
   assert.throws(() => calculateContractualValuation(
     { propertyType: 'Departamento', address: 'x', neighborhood: 'x', usefulAreaM2: 100, terraceAreaM2: 0 },
-    [comparable('only', 70, 1)],
+    [comparable('one', 65, 1), comparable('two', 70, 1)],
     neutralFactors,
-  ), /al menos dos comparables/)
+  ), /al menos tres comparables/)
+})
+
+test('Contractual valuation requires at least three normalized comparables', () => {
+  const invalidArea = { ...comparable('bad-area', 75, 1), usefulAreaM2: undefined, builtAreaM2: undefined }
+  assert.throws(() => calculateContractualValuation(
+    { propertyType: 'Departamento', address: 'x', neighborhood: 'x', usefulAreaM2: 100, terraceAreaM2: 0 },
+    [comparable('one', 65, 1), comparable('two', 70, 1), invalidArea],
+    neutralFactors,
+  ), /al menos tres comparables con superficies suficientes/)
 })
 
 test('CBRS Espoz 4233 DP 204 canonical evidence remains traceable', () => {
