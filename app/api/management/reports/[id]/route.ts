@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { normalizeManagementReportOutput } from '@/lib/management-report-output'
+import type { ManagementReportRecord } from '@/lib/management-report-artifact'
 
 const LEADER_ROLES = new Set(['admin', 'ceo', 'director', 'subdirector'])
 const CHANNELS = new Set(['manual', 'email', 'whatsapp_web', 'webhook'])
@@ -26,7 +28,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
   if (!report) return NextResponse.json({ error: 'Reporte no encontrado' }, { status: 404 })
 
-  return NextResponse.json({ report, distributions: distributions ?? [] })
+  const normalizedReport = normalizeManagementReportOutput(report as ManagementReportRecord)
+  return NextResponse.json({ report: normalizedReport, distributions: distributions ?? [] })
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
