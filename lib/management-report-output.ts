@@ -36,18 +36,22 @@ export function normalizeManagementReportOutput<T extends ManagementReportRecord
   const completeness = isRecord(sourceSnapshot.completeness) ? { ...sourceSnapshot.completeness } : null
 
   // Client-facing management reports use the credited dimension for fields labelled "acreditado".
-  // Preserve the raw operational dimension explicitly instead of destroying it in normalization.
+  // July has an explicit split. Earlier months have no separate credited dimension, so raw = credited.
   const rawSalesUf = finiteNumber(company.volumenUfBruto) ?? finiteNumber(scope?.grossSalesUf)
-  const creditedSalesUf = finiteNumber(company.volumenUfAcreditado) ?? finiteNumber(scope?.managementCreditedSalesUf)
+  const creditedSalesUf = finiteNumber(company.volumenUfAcreditado)
+    ?? finiteNumber(scope?.managementCreditedSalesUf)
+    ?? rawSalesUf
   if (rawSalesUf != null) company.volumenUfOperacionalBruto = rawSalesUf
   if (creditedSalesUf != null) {
     company.volumenUfAcreditado = creditedSalesUf
-    // Compatibility alias: existing report/UI components still read volumenUfBruto for the management headline.
+    // Compatibility alias for the current PDF renderer.
     company.volumenUfBruto = creditedSalesUf
   }
 
   const rawOperationalClosures = finiteNumber(company.cierresOperacionales) ?? finiteNumber(scope?.rawOperations)
-  const creditedClosures = finiteNumber(company.cierresAcreditados) ?? finiteNumber(scope?.managementCreditedClosures)
+  const creditedClosures = finiteNumber(company.cierresAcreditados)
+    ?? finiteNumber(scope?.managementCreditedClosures)
+    ?? finiteNumber(company.cierresOperacionales)
   if (rawOperationalClosures != null) company.cierresOperacionales = rawOperationalClosures
   if (creditedClosures != null) company.cierresAcreditados = creditedClosures
 
