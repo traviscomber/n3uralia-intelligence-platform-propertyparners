@@ -51,12 +51,19 @@ function canonicalMomClosures(comparisons: Record<string, unknown>) {
   return isRecord(metrics?.closures) ? metrics.closures : null
 }
 
+function deltaValue(container: unknown) {
+  if (!isRecord(container)) return null
+  const delta = isRecord(container.delta) ? container.delta : null
+  return finiteNumber(delta?.value)
+}
+
 function comparisonNarrative(comparisons: Record<string, unknown>) {
   const canonicalTarget = canonicalSalesTarget(comparisons)
   const canonicalYtdValue = canonicalYtd(comparisons)
   const canonicalMom = canonicalMomClosures(comparisons)
   const momContainer = isRecord(comparisons.mom) ? comparisons.mom : null
   const yoy = isRecord(comparisons.yoy) ? comparisons.yoy : null
+  const operationalYoyYtd = isRecord(comparisons.operationalYoyYtd) ? comparisons.operationalYoyYtd : null
   const parts: string[] = []
 
   if (canonicalTarget) {
@@ -68,7 +75,6 @@ function comparisonNarrative(comparisons: Record<string, unknown>) {
       parts.push(`Meta documentada: ${formatNumber(actual)} cierres acreditados vs ${formatNumber(target)}; cumplimiento ${formatNumber(attainment)}%${official ? '' : ' (referencia documental; no scoring oficial)'}.`)
     }
   } else {
-    // Compatibility with snapshots generated during the transition to the canonical comparison contract.
     const legacyTarget = isRecord(comparisons.target) ? comparisons.target : null
     if (legacyTarget?.available === true) {
       const current = finiteNumber(legacyTarget.current)
@@ -81,10 +87,9 @@ function comparisonNarrative(comparisons: Record<string, unknown>) {
   if (canonicalMom) {
     const previous = finiteNumber(canonicalMom.previous)
     const current = finiteNumber(canonicalMom.current)
-    const deltaRecord = isRecord(canonicalMom.delta) ? canonicalMom.delta : null
-    const change = finiteNumber(deltaRecord?.value)
+    const change = deltaValue(canonicalMom)
     const sign = change != null && change > 0 ? '+' : ''
-    parts.push(`Variación MoM: ${formatNumber(previous)} → ${formatNumber(current)} cierres (${sign}${formatNumber(change)}%).`)
+    parts.push(`Variación MoM: ${formatNumber(previous)} → ${formatNumber(current)} cierres acreditados (${sign}${formatNumber(change)}%).`)
   } else {
     const legacyMom = isRecord(comparisons.mom) ? comparisons.mom : null
     if (legacyMom?.available === true) {
@@ -100,7 +105,7 @@ function comparisonNarrative(comparisons: Record<string, unknown>) {
     const current = finiteNumber(canonicalYtdValue.closures)
     const target = finiteNumber(canonicalYtdValue.target)
     const attainment = finiteNumber(canonicalYtdValue.attainmentPct)
-    if (current != null && target != null) parts.push(`Acumulado YTD: ${formatNumber(current)} de ${formatNumber(target)} cierres de referencia (${formatNumber(attainment)}%).`)
+    if (current != null && target != null) parts.push(`Acumulado YTD: ${formatNumber(current)} de ${formatNumber(target)} cierres acreditados de referencia (${formatNumber(attainment)}%).`)
   } else {
     const legacyYtd = isRecord(comparisons.ytd) ? comparisons.ytd : null
     const current = finiteNumber(legacyYtd?.currentClosures)
@@ -109,10 +114,36 @@ function comparisonNarrative(comparisons: Record<string, unknown>) {
     if (current != null && target != null) parts.push(`Acumulado YTD: ${formatNumber(current)} de ${formatNumber(target)} cierres de referencia (${formatNumber(attainment)}%).`)
   }
 
-  if (yoy?.status === 'same_period_not_canonicalized') {
+  if (yoy?.status === 'exact_operational') {
+    const closures = isRecord(yoy.closures) ? yoy.closures : null
+    const salesUf = isRecord(yoy.salesUf) ? yoy.salesUf : null
+    const closureCurrent = finiteNumber(closures?.current)
+    const closurePrevious = finiteNumber(closures?.previous)
+    const closureChange = deltaValue(closures)
+    const ufCurrent = finiteNumber(salesUf?.current)
+    const ufPrevious = finiteNumber(salesUf?.previous)
+    const ufChange = deltaValue(salesUf)
+    const closureSign = closureChange != null && closureChange > 0 ? '+' : ''
+    const ufSign = ufChange != null && ufChange > 0 ? '+' : ''
+    parts.push(`YoY operacional ${String(yoy.period ?? '')}: cierres ${formatNumber(closurePrevious)} → ${formatNumber(closureCurrent)} (${closureSign}${formatNumber(closureChange)}%) y UF ${formatNumber(ufPrevious, 0)} → ${formatNumber(ufCurrent, 0)} (${ufSign}${formatNumber(ufChange)}%). La acreditación de gestión 2025 no está disponible y no se infiere.`)
+  } else if (yoy?.status === 'same_period_not_canonicalized') {
     parts.push(`YoY mensual: ${String(yoy.period ?? 'período equivalente 2025')} aún no está canonicalizado por mes; no se infiere desde el agregado anual.`)
   } else if (yoy?.available !== true && yoy?.annualReferenceAvailable === true) {
     parts.push('YoY mensual: fuente CRM 2025 disponible a nivel anual; pendiente periodización mensual fila-a-fila antes de publicar una comparación equivalente.')
+  }
+
+  if (operationalYoyYtd?.status === 'exact_operational') {
+    const closures = isRecord(operationalYoyYtd.closures) ? operationalYoyYtd.closures : null
+    const salesUf = isRecord(operationalYoyYtd.salesUf) ? operationalYoyYtd.salesUf : null
+    const closureCurrent = finiteNumber(closures?.current)
+    const closurePrevious = finiteNumber(closures?.previous)
+    const closureChange = deltaValue(closures)
+    const ufCurrent = finiteNumber(salesUf?.current)
+    const ufPrevious = finiteNumber(salesUf?.previous)
+    const ufChange = deltaValue(salesUf)
+    const closureSign = closureChange != null && closureChange > 0 ? '+' : ''
+    const ufSign = ufChange != null && ufChange > 0 ? '+' : ''
+    parts.push(`YoY YTD operacional: ${formatNumber(closurePrevious)} → ${formatNumber(closureCurrent)} cierres (${closureSign}${formatNumber(closureChange)}%) y UF ${formatNumber(ufPrevious, 0)} → ${formatNumber(ufCurrent, 0)} (${ufSign}${formatNumber(ufChange)}%).`)
   }
 
   const previousPeriod = typeof momContainer?.previousPeriod === 'string' ? momContainer.previousPeriod : null
@@ -129,8 +160,6 @@ export function normalizeManagementReportOutput<T extends ManagementReportRecord
   const completeness = isRecord(sourceSnapshot.completeness) ? { ...sourceSnapshot.completeness } : null
   const comparisons = isRecord(sourceSnapshot.comparisons) ? { ...sourceSnapshot.comparisons } : null
 
-  // Client-facing management reports use the credited dimension for fields labelled "acreditado".
-  // July has an explicit split. Earlier months have no separate credited dimension, so raw = credited.
   const rawSalesUf = finiteNumber(company.volumenUfBruto) ?? finiteNumber(scope?.grossSalesUf)
   const creditedSalesUf = finiteNumber(company.volumenUfAcreditado)
     ?? finiteNumber(scope?.managementCreditedSalesUf)
@@ -138,7 +167,6 @@ export function normalizeManagementReportOutput<T extends ManagementReportRecord
   if (rawSalesUf != null) company.volumenUfOperacionalBruto = rawSalesUf
   if (creditedSalesUf != null) {
     company.volumenUfAcreditado = creditedSalesUf
-    // Compatibility alias for the current PDF renderer.
     company.volumenUfBruto = creditedSalesUf
   }
 
