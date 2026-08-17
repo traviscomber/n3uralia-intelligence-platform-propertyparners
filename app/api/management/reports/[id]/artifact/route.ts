@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildManagementReportPdf, type ManagementReportRecord } from '@/lib/management-report-artifact'
 import { normalizeManagementReportOutput } from '@/lib/management-report-output'
+import { addCanonicalManagementComparisons } from '@/lib/management-report-context.server'
 
 export const runtime = 'nodejs'
+
+type ReportWithEntity = ManagementReportRecord & { entity_id?: string | null }
 
 export async function GET(
   _request: Request,
@@ -16,7 +19,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('management_report_runs')
-    .select('id,report_type,period_start,period_end,generated_at,snapshot')
+    .select('id,entity_id,report_type,period_start,period_end,generated_at,snapshot')
     .eq('id', id)
     .maybeSingle()
 
@@ -27,7 +30,8 @@ export async function GET(
   if (!data) return NextResponse.json({ error: 'Reporte no encontrado o fuera de alcance.' }, { status: 404 })
 
   try {
-    const normalized = normalizeManagementReportOutput(data as ManagementReportRecord)
+    const enriched = await addCanonicalManagementComparisons(supabase, data as ReportWithEntity)
+    const normalized = normalizeManagementReportOutput(enriched)
     const artifact = await buildManagementReportPdf(normalized)
     return new Response(Buffer.from(artifact.bytes), {
       status: 200,
