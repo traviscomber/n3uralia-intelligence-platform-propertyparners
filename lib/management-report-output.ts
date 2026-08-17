@@ -33,38 +33,90 @@ function formatNumber(value: number | null, digits = 2) {
   return value.toLocaleString('es-CL', { maximumFractionDigits: digits })
 }
 
-function comparisonNarrative(comparisons: Record<string, unknown>) {
-  const target = isRecord(comparisons.target) ? comparisons.target : null
+function canonicalSalesTarget(comparisons: Record<string, unknown>) {
+  const targets = isRecord(comparisons.targets) ? comparisons.targets : null
+  const current = isRecord(targets?.current) ? targets.current : null
+  return isRecord(current?.sales) ? current.sales : null
+}
+
+function canonicalYtd(comparisons: Record<string, unknown>) {
+  const targets = isRecord(comparisons.targets) ? comparisons.targets : null
+  return isRecord(targets?.ytd) ? targets.ytd : null
+}
+
+function canonicalMomClosures(comparisons: Record<string, unknown>) {
   const mom = isRecord(comparisons.mom) ? comparisons.mom : null
-  const ytd = isRecord(comparisons.ytd) ? comparisons.ytd : null
+  if (mom?.status !== 'exact') return null
+  const metrics = isRecord(mom.metrics) ? mom.metrics : null
+  return isRecord(metrics?.closures) ? metrics.closures : null
+}
+
+function comparisonNarrative(comparisons: Record<string, unknown>) {
+  const canonicalTarget = canonicalSalesTarget(comparisons)
+  const canonicalYtdValue = canonicalYtd(comparisons)
+  const canonicalMom = canonicalMomClosures(comparisons)
+  const momContainer = isRecord(comparisons.mom) ? comparisons.mom : null
   const yoy = isRecord(comparisons.yoy) ? comparisons.yoy : null
   const parts: string[] = []
 
-  if (target?.available === true) {
-    const current = finiteNumber(target.current)
-    const value = finiteNumber(target.value)
-    const compliance = finiteNumber(target.compliancePct)
-    parts.push(`Meta documentada: ${formatNumber(current)} cierres acreditados vs ${formatNumber(value)}; cumplimiento ${formatNumber(compliance)}%.`)
+  if (canonicalTarget) {
+    const actual = finiteNumber(canonicalTarget.actual)
+    const target = finiteNumber(canonicalTarget.target)
+    const attainment = finiteNumber(canonicalTarget.attainmentPct)
+    const official = canonicalTarget.officialForScoring === true
+    if (actual != null && target != null) {
+      parts.push(`Meta documentada: ${formatNumber(actual)} cierres acreditados vs ${formatNumber(target)}; cumplimiento ${formatNumber(attainment)}%${official ? '' : ' (referencia documental; no scoring oficial)'}.`)
+    }
+  } else {
+    // Compatibility with snapshots generated during the transition to the canonical comparison contract.
+    const legacyTarget = isRecord(comparisons.target) ? comparisons.target : null
+    if (legacyTarget?.available === true) {
+      const current = finiteNumber(legacyTarget.current)
+      const value = finiteNumber(legacyTarget.value)
+      const compliance = finiteNumber(legacyTarget.compliancePct)
+      parts.push(`Meta documentada: ${formatNumber(current)} cierres acreditados vs ${formatNumber(value)}; cumplimiento ${formatNumber(compliance)}%.`)
+    }
   }
 
-  if (mom?.available === true) {
-    const previous = finiteNumber(mom.previous)
-    const current = finiteNumber(mom.current)
-    const change = finiteNumber(mom.percentChange)
+  if (canonicalMom) {
+    const previous = finiteNumber(canonicalMom.previous)
+    const current = finiteNumber(canonicalMom.current)
+    const deltaRecord = isRecord(canonicalMom.delta) ? canonicalMom.delta : null
+    const change = finiteNumber(deltaRecord?.value)
     const sign = change != null && change > 0 ? '+' : ''
     parts.push(`Variación MoM: ${formatNumber(previous)} → ${formatNumber(current)} cierres (${sign}${formatNumber(change)}%).`)
+  } else {
+    const legacyMom = isRecord(comparisons.mom) ? comparisons.mom : null
+    if (legacyMom?.available === true) {
+      const previous = finiteNumber(legacyMom.previous)
+      const current = finiteNumber(legacyMom.current)
+      const change = finiteNumber(legacyMom.percentChange)
+      const sign = change != null && change > 0 ? '+' : ''
+      parts.push(`Variación MoM: ${formatNumber(previous)} → ${formatNumber(current)} cierres (${sign}${formatNumber(change)}%).`)
+    }
   }
 
-  const ytdCurrent = finiteNumber(ytd?.currentClosures)
-  const ytdTarget = finiteNumber(ytd?.targetClosures)
-  const ytdCompliance = finiteNumber(ytd?.targetCompliancePct)
-  if (ytdCurrent != null && ytdTarget != null) {
-    parts.push(`Acumulado YTD: ${formatNumber(ytdCurrent)} de ${formatNumber(ytdTarget)} cierres objetivo (${formatNumber(ytdCompliance)}%).`)
+  if (canonicalYtdValue) {
+    const current = finiteNumber(canonicalYtdValue.closures)
+    const target = finiteNumber(canonicalYtdValue.target)
+    const attainment = finiteNumber(canonicalYtdValue.attainmentPct)
+    if (current != null && target != null) parts.push(`Acumulado YTD: ${formatNumber(current)} de ${formatNumber(target)} cierres de referencia (${formatNumber(attainment)}%).`)
+  } else {
+    const legacyYtd = isRecord(comparisons.ytd) ? comparisons.ytd : null
+    const current = finiteNumber(legacyYtd?.currentClosures)
+    const target = finiteNumber(legacyYtd?.targetClosures)
+    const attainment = finiteNumber(legacyYtd?.targetCompliancePct)
+    if (current != null && target != null) parts.push(`Acumulado YTD: ${formatNumber(current)} de ${formatNumber(target)} cierres de referencia (${formatNumber(attainment)}%).`)
   }
 
-  if (yoy?.available !== true && yoy?.annualReferenceAvailable === true) {
+  if (yoy?.status === 'same_period_not_canonicalized') {
+    parts.push(`YoY mensual: ${String(yoy.period ?? 'período equivalente 2025')} aún no está canonicalizado por mes; no se infiere desde el agregado anual.`)
+  } else if (yoy?.available !== true && yoy?.annualReferenceAvailable === true) {
     parts.push('YoY mensual: fuente CRM 2025 disponible a nivel anual; pendiente periodización mensual fila-a-fila antes de publicar una comparación equivalente.')
   }
+
+  const previousPeriod = typeof momContainer?.previousPeriod === 'string' ? momContainer.previousPeriod : null
+  if (momContainer?.status === 'no_previous_month' && previousPeriod) parts.push(`MoM: no existe snapshot mensual previo comparable para ${previousPeriod}.`)
 
   return parts.join(' ')
 }
@@ -98,8 +150,11 @@ export function normalizeManagementReportOutput<T extends ManagementReportRecord
   if (creditedClosures != null) company.cierresAcreditados = creditedClosures
 
   if (completeness && Array.isArray(completeness.blocked)) {
-    const targetAvailable = isRecord(comparisons?.target) && comparisons?.target?.available === true
-    const momAvailable = isRecord(comparisons?.mom) && comparisons?.mom?.available === true
+    const salesTarget = comparisons ? canonicalSalesTarget(comparisons) : null
+    const canonicalMom = comparisons ? isRecord(comparisons.mom) ? comparisons.mom : null : null
+    const legacyTarget = comparisons && isRecord(comparisons.target) ? comparisons.target : null
+    const targetAvailable = (salesTarget && finiteNumber(salesTarget.target) != null) || legacyTarget?.available === true
+    const momAvailable = canonicalMom?.status === 'exact' || canonicalMom?.available === true
 
     completeness.blocked = completeness.blocked
       .filter((item) => {
