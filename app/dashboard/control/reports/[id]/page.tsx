@@ -29,11 +29,50 @@ type ReportAlert = {
   severity: string
 }
 
+type Delta = { value?: number | null; unit?: '%' | 'pp' }
+type ComparisonMetric = { current?: number | null; previous?: number | null; delta?: Delta | null }
+type TargetComparison = {
+  actual?: number | null
+  target?: number | null
+  attainmentPct?: number | null
+  gap?: number | null
+  status?: string | null
+  sourceName?: string | null
+  officialForScoring?: boolean
+}
+
+type CanonicalComparisons = {
+  mom?: {
+    status?: string
+    previousPeriod?: string
+    metrics?: { closures?: ComparisonMetric; leads?: ComparisonMetric; creditedUf?: ComparisonMetric } | null
+  }
+  targets?: {
+    current?: { sales?: TargetComparison; leads?: TargetComparison }
+    ytd?: { closures?: number | null; target?: number | null; attainmentPct?: number | null; goalStatus?: string; officialForScoring?: boolean }
+  }
+  yoy?: {
+    status?: string
+    period?: string
+    closures?: ComparisonMetric
+    creditedUf?: ComparisonMetric
+  }
+}
+
 type ReportSnapshot = {
   entities?: ReportEntity[]
   alerts?: ReportAlert[]
-  period?: string
+  period?: string | { label?: string }
   profile?: { role?: string }
+  company?: {
+    cierresAcreditados?: number | null
+    volumenUfAcreditado?: number | null
+    volumenUfBruto?: number | null
+    leadsNuevos?: number | null
+    visitasAgendadas?: number | null
+    visitasRealizadas?: number | null
+  }
+  comparisons?: CanonicalComparisons
 }
 
 type Report = {
@@ -44,6 +83,17 @@ type Report = {
   status: string
   generated_at: string
   snapshot: ReportSnapshot
+}
+
+const number = (value: unknown) => typeof value === 'number' && Number.isFinite(value) ? value : null
+const format = (value: unknown, digits = 1) => {
+  const numeric = number(value)
+  return numeric == null ? 'n/d' : numeric.toLocaleString('es-CL', { maximumFractionDigits: digits })
+}
+const signed = (value: unknown, digits = 1) => {
+  const numeric = number(value)
+  if (numeric == null) return 'n/d'
+  return `${numeric > 0 ? '+' : ''}${numeric.toLocaleString('es-CL', { maximumFractionDigits: digits })}%`
 }
 
 export default function PrintableManagementReportPage() {
@@ -97,6 +147,18 @@ export default function PrintableManagementReportPage() {
     )
   }
 
+  const company = report.snapshot.company ?? {}
+  const comparisons = report.snapshot.comparisons
+  const salesTarget = comparisons?.targets?.current?.sales
+  const ytd = comparisons?.targets?.ytd
+  const momClosures = comparisons?.mom?.metrics?.closures
+  const momDelta = momClosures?.delta?.value
+  const yoyClosures = comparisons?.yoy?.closures
+  const creditedUf = company.volumenUfAcreditado ?? company.volumenUfBruto
+  const periodLabel = typeof report.snapshot.period === 'object'
+    ? report.snapshot.period?.label ?? report.period_start.slice(0, 7)
+    : report.snapshot.period ?? report.period_start.slice(0, 7)
+
   return (
     <main className="mx-auto max-w-6xl bg-white p-8 text-black print:max-w-none print:p-0">
       <div className="mb-8 flex items-start justify-between gap-6 border-b border-black pb-5 print:hidden">
@@ -104,15 +166,16 @@ export default function PrintableManagementReportPage() {
           <p className="text-xs uppercase tracking-[0.18em]">Módulo III · Reporte contractual</p>
           <h1 className="mt-2 text-3xl font-semibold">{report.report_type}</h1>
         </div>
-        <button onClick={() => window.print()} className="border border-black px-4 py-2 text-sm">
-          Imprimir / guardar PDF
-        </button>
+        <div className="flex gap-2">
+          <a href={`/api/management/reports/${report.id}/artifact`} className="bg-black px-4 py-2 text-sm text-white">Descargar PDF</a>
+          <button onClick={() => window.print()} className="border border-black px-4 py-2 text-sm">Imprimir</button>
+        </div>
       </div>
 
       <header className="mb-8 border-b-2 border-black pb-6">
-        <p className="text-xs uppercase tracking-[0.18em]">Property Partners · N3uralia Intelligence Platform</p>
-        <h1 className="mt-3 text-4xl font-semibold capitalize">Reporte {report.report_type}</h1>
-        <div className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7332b]">Property Partners</p>
+        <h1 className="mt-3 font-serif text-5xl">Reporte {report.report_type}</h1>
+        <div className="mt-5 grid gap-2 text-sm sm:grid-cols-3">
           <p><strong>Período:</strong> {report.period_start} — {report.period_end}</p>
           <p><strong>Estado:</strong> {report.status}</p>
           <p><strong>Generado:</strong> {new Date(report.generated_at).toLocaleString('es-CL')}</p>
@@ -120,12 +183,50 @@ export default function PrintableManagementReportPage() {
       </header>
 
       <section className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold">Resumen ejecutivo</h2>
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d7332b]">Lectura ejecutiva</p>
+            <h2 className="mt-1 font-serif text-3xl">{periodLabel}</h2>
+          </div>
+          <p className="max-w-xl text-right text-sm text-neutral-600">La comparación usa cierres acreditados. Operaciones brutas y crédito de gestión se mantienen como dimensiones separadas.</p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="border border-black p-4"><p className="text-xs uppercase">Entidades</p><p className="mt-2 text-3xl font-semibold">{entities.length}</p></div>
+          <div className="border border-black bg-[#050807] p-5 text-white">
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-400">Cierres acreditados</p>
+            <p className="mt-3 font-serif text-4xl">{format(company.cierresAcreditados)}</p>
+            <p className="mt-2 text-xs text-neutral-400">Volumen acreditado: {format(creditedUf, 0)} UF</p>
+          </div>
+          <div className="border border-black p-5">
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Vs. meta documentada</p>
+            <p className="mt-3 font-serif text-4xl">{salesTarget?.attainmentPct == null ? 'n/d' : `${format(salesTarget.attainmentPct)}%`}</p>
+            <p className="mt-2 text-xs text-neutral-600">{format(salesTarget?.actual)} / {format(salesTarget?.target)} cierres</p>
+            {salesTarget?.target != null && !salesTarget.officialForScoring ? <p className="mt-2 text-xs font-medium text-[#a62721]">Referencia documental · no scoring oficial</p> : null}
+          </div>
+          <div className="border border-black p-5">
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Variación MoM</p>
+            <p className="mt-3 font-serif text-4xl">{comparisons?.mom?.status === 'exact' ? signed(momDelta) : 'n/d'}</p>
+            <p className="mt-2 text-xs text-neutral-600">{comparisons?.mom?.status === 'exact' ? `${format(momClosures?.previous)} → ${format(momClosures?.current)} cierres` : 'Sin mes anterior canónico comparable'}</p>
+          </div>
+          <div className="border border-black p-5">
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Acumulado YTD</p>
+            <p className="mt-3 font-serif text-4xl">{ytd?.attainmentPct == null ? 'n/d' : `${format(ytd.attainmentPct)}%`}</p>
+            <p className="mt-2 text-xs text-neutral-600">{format(ytd?.closures)} / {format(ytd?.target)} cierres</p>
+          </div>
+        </div>
+        <div className="mt-3 border-l-4 border-[#d7332b] bg-neutral-100 px-4 py-3 text-sm">
+          {comparisons?.yoy?.status === 'exact'
+            ? <>YoY {comparisons.yoy.period}: <strong>{signed(yoyClosures?.delta?.value)}</strong> en cierres acreditados ({format(yoyClosures?.previous)} → {format(yoyClosures?.current)}).</>
+            : <>YoY mensual: la fuente CRM 2025 está verificada a nivel anual, pero el mes equivalente aún no está canonicalizado fila-a-fila. No se infiere un YoY mensual desde el agregado anual.</>}
+        </div>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-4 text-xl font-semibold">Resumen operacional</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="border border-black p-4"><p className="text-xs uppercase">Leads nuevos</p><p className="mt-2 text-3xl font-semibold">{format(company.leadsNuevos, 0)}</p></div>
+          <div className="border border-black p-4"><p className="text-xs uppercase">Visitas agendadas</p><p className="mt-2 text-3xl font-semibold">{format(company.visitasAgendadas, 0)}</p></div>
+          <div className="border border-black p-4"><p className="text-xs uppercase">Visitas realizadas</p><p className="mt-2 text-3xl font-semibold">{format(company.visitasRealizadas, 0)}</p></div>
           <div className="border border-black p-4"><p className="text-xs uppercase">Alertas abiertas</p><p className="mt-2 text-3xl font-semibold">{alerts.length}</p></div>
-          <div className="border border-black p-4"><p className="text-xs uppercase">Período</p><p className="mt-2 text-lg font-semibold">{report.snapshot.period ?? report.period_start.slice(0, 7)}</p></div>
-          <div className="border border-black p-4"><p className="text-xs uppercase">Rol de generación</p><p className="mt-2 text-lg font-semibold capitalize">{report.snapshot.profile?.role ?? 'n/d'}</p></div>
         </div>
       </section>
 
@@ -167,7 +268,7 @@ export default function PrintableManagementReportPage() {
       </section>
 
       <footer className="mt-12 border-t border-black pt-4 text-xs">
-        <p>Documento generado desde un snapshot inmutable. Los valores sin fuente o calidad validada se muestran como pendientes y no se completan con datos de demostración.</p>
+        <p>Documento generado desde evidencia canónica. Las metas documentadas pueden mostrarse como comparación informativa aunque permanezcan fuera del scoring oficial hasta su aprobación formal.</p>
         <p className="mt-2">Identificador: {report.id}</p>
       </footer>
     </main>
