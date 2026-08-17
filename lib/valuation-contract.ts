@@ -104,6 +104,7 @@ export type ValuationResult = {
 const round = (value: number, digits = 2) => Number(value.toFixed(digits))
 const positive = (value: number | undefined) => Number.isFinite(value) && Number(value) > 0 ? Number(value) : 0
 const ratioVariance = (value: number, benchmark: number | null) => benchmark && benchmark > 0 ? round(value / benchmark - 1, 4) : null
+const MIN_SELECTED_COMPARABLES = 3
 
 function median(values: number[]) {
   if (!values.length) return null
@@ -193,12 +194,12 @@ export function calculateContractualValuation(
   _factors: QualitativeFactors,
 ): ValuationResult {
   const selected = comparables.filter((item) => item.selected && item.priceUf > 0)
-  if (selected.length < 2) throw new Error('Se requieren al menos dos comparables seleccionados.')
+  if (selected.length < MIN_SELECTED_COMPARABLES) throw new Error('Se requieren al menos tres comparables seleccionados.')
 
   const normalized = selected
     .map((item) => ({ item, ufM2: calculateCanonicalComparableUfM2(item) }))
     .filter(({ ufM2 }) => ufM2 > 0)
-  if (normalized.length < 2) throw new Error('Se requieren al menos dos comparables con superficies suficientes para calcular UF/m² canónico.')
+  if (normalized.length < MIN_SELECTED_COMPARABLES) throw new Error('Se requieren al menos tres comparables con superficies suficientes para calcular UF/m² canónico.')
 
   const commercial = calculateCommercialValue(subject)
   const portalValues = normalized
