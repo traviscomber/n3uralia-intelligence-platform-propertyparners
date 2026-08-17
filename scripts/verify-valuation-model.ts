@@ -30,7 +30,7 @@ const comparables = [
 const weighted = calculateContractualValuation(subject, comparables, factors)
 assert.equal(weighted.baseUfM2, 70)
 assert.equal(weighted.baseValueUf, 7000)
-assert.throws(() => calculateContractualValuation(subject, [comparables[0]], factors), /al menos dos comparables/)
+assert.throws(() => calculateContractualValuation(subject, comparables.slice(0, 2), factors), /al menos tres comparables/)
 
 const valuationPage = readFileSync('app/dashboard/valuation/page.tsx', 'utf8')
 const valuationWorkspace = readFileSync('app/dashboard/valuations/[id]/page.tsx', 'utf8')
