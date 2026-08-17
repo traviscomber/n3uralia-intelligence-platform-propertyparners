@@ -1,3 +1,4 @@
+import crm from '@/data/crm-intelligence.json'
 import type { ManagementReportRecord } from '@/lib/management-report-artifact'
 
 type GoalRow = {
@@ -18,6 +19,12 @@ type MetricSpec = {
   label: string
   current: (company: Record<string, unknown>, scope: Record<string, unknown>) => number | null
   deltaMode?: 'percent' | 'points'
+}
+
+type HistoricalSalesMonth = {
+  period: string
+  salesCount: number
+  salesUf: number
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -44,6 +51,37 @@ export const creditedSalesUf = (report: ReportLike) => {
   const company = companyOf(report)
   const scope = scopeOf(report)
   return number(company.volumenUfAcreditado) ?? number(scope.managementCreditedSalesUf) ?? number(company.volumenUfBruto) ?? number(scope.grossSalesUf)
+}
+
+export const operationalClosures = (report: ReportLike) => {
+  const company = companyOf(report)
+  const scope = scopeOf(report)
+  return number(company.cierresOperacionales) ?? number(scope.rawOperations) ?? number(company.cierresAcreditados) ?? number(scope.managementCreditedClosures)
+}
+
+export const operationalSalesUf = (report: ReportLike) => {
+  const company = companyOf(report)
+  const scope = scopeOf(report)
+  return number(company.volumenUfOperacionalBruto) ?? number(scope.grossSalesUf) ?? number(company.volumenUfBruto) ?? number(company.volumenUfAcreditado) ?? number(scope.managementCreditedSalesUf)
+}
+
+const historicalSalesMonths = (((crm as unknown as { baseline2025?: { months?: HistoricalSalesMonth[] } }).baseline2025?.months) ?? [])
+
+function historicalSalesMonth(period: string) {
+  return historicalSalesMonths.find((month) => month.period === period) ?? null
+}
+
+function historicalSalesYtd(endPeriod: string) {
+  const year = endPeriod.slice(0, 4)
+  const months = historicalSalesMonths.filter((month) => month.period.startsWith(year) && month.period <= endPeriod)
+  if (!months.length) return null
+  return {
+    periodStart: `${year}-01`,
+    periodEnd: endPeriod,
+    salesCount: months.reduce((sum, month) => sum + month.salesCount, 0),
+    salesUf: months.reduce((sum, month) => sum + month.salesUf, 0),
+    months: months.length,
+  }
 }
 
 const metrics: MetricSpec[] = [
@@ -124,31 +162,71 @@ export function buildManagementReportComparisons(args: {
     .filter((report) => report.period_start.startsWith(currentYear) && report.period_start <= current.period_start)
     .sort((a, b) => a.period_start.localeCompare(b.period_start))
   const ytdClosures = throughCurrent.reduce((sum, report) => sum + (creditedClosures(report) ?? 0), 0)
+  const ytdOperationalClosures = throughCurrent.reduce((sum, report) => sum + (operationalClosures(report) ?? 0), 0)
+  const ytdOperationalUf = throughCurrent.reduce((sum, report) => sum + (operationalSalesUf(report) ?? 0), 0)
   const ytdSalesGoals = goals.filter((goal) => goal.metric_code === 'sales' && goal.period_start.startsWith(currentYear) && goal.period_start <= current.period_start)
   const ytdSalesTarget = ytdSalesGoals.reduce((sum, goal) => sum + (number(goal.target_value) ?? 0), 0)
 
-  const yoy = samePeriodPriorYear
+  const priorYearPeriod = `${Number(currentYear) - 1}-${current.period_start.slice(5, 7)}`
+  const historicalMonth = historicalSalesMonth(priorYearPeriod)
+  const historicalYtd = historicalSalesYtd(priorYearPeriod)
+
+  const priorOperationalClosures = samePeriodPriorYear ? operationalClosures(samePeriodPriorYear) : historicalMonth?.salesCount ?? null
+  const priorOperationalUf = samePeriodPriorYear ? operationalSalesUf(samePeriodPriorYear) : historicalMonth?.salesUf ?? null
+  const yoySource = samePeriodPriorYear ? 'canonical-monthly-report' : historicalMonth ? 'crm-intelligence.baseline2025' : null
+
+  const yoy = priorOperationalClosures != null || priorOperationalUf != null
     ? {
-        status: 'exact' as const,
-        period: samePeriodPriorYear.period_start.slice(0, 7),
+        status: 'exact_operational' as const,
+        period: priorYearPeriod,
+        source: yoySource,
+        dimension: 'operational_corporate' as const,
         closures: {
-          current: creditedClosures(current),
-          previous: creditedClosures(samePeriodPriorYear),
-          delta: delta(creditedClosures(current), creditedClosures(samePeriodPriorYear)),
+          current: operationalClosures(current),
+          previous: priorOperationalClosures,
+          delta: delta(operationalClosures(current), priorOperationalClosures),
         },
-        creditedUf: {
-          current: creditedSalesUf(current),
-          previous: creditedSalesUf(samePeriodPriorYear),
-          delta: delta(creditedSalesUf(current), creditedSalesUf(samePeriodPriorYear)),
+        salesUf: {
+          current: operationalSalesUf(current),
+          previous: priorOperationalUf,
+          delta: delta(operationalSalesUf(current), priorOperationalUf),
+        },
+        managementCredited: {
+          currentClosures: creditedClosures(current),
+          currentSalesUf: creditedSalesUf(current),
+          previousClosures: null,
+          previousSalesUf: null,
+          status: 'prior_year_credit_dimension_unavailable' as const,
         },
       }
     : {
         status: 'same_period_not_canonicalized' as const,
-        period: `${Number(currentYear) - 1}-${current.period_start.slice(5, 7)}`,
+        period: priorYearPeriod,
       }
 
+  const operationalYoyYtd = historicalYtd
+    ? {
+        status: 'exact_operational' as const,
+        periodStart: historicalYtd.periodStart,
+        periodEnd: historicalYtd.periodEnd,
+        source: 'crm-intelligence.baseline2025' as const,
+        closures: {
+          current: ytdOperationalClosures,
+          previous: historicalYtd.salesCount,
+          delta: delta(ytdOperationalClosures, historicalYtd.salesCount),
+        },
+        salesUf: {
+          current: ytdOperationalUf,
+          previous: historicalYtd.salesUf,
+          delta: delta(ytdOperationalUf, historicalYtd.salesUf),
+        },
+        managementCreditedClosures: ytdClosures,
+        historicalCreditDimensionAvailable: false,
+      }
+    : null
+
   return {
-    generatedFrom: 'canonical-monthly-reports+management-goals',
+    generatedFrom: 'canonical-monthly-reports+management-goals+crm-2025-baseline',
     mom: previous ? { status: 'exact', previousPeriod: previous.period_start.slice(0, 7), metrics: mom } : { status: 'no_previous_month', metrics: null },
     targets: {
       current: currentTargets,
@@ -161,6 +239,7 @@ export function buildManagementReportComparisons(args: {
       },
     },
     yoy,
+    operationalYoyYtd,
   }
 }
 
@@ -187,6 +266,14 @@ export function enrichManagementReportWithComparisons<T extends ReportLike>(repo
   const ytd = comparisons.targets.ytd
   if (ytd.target != null) {
     notes.unshift(`Acumulado año a la fecha: ${ytd.closures.toLocaleString('es-CL')} cierres acreditados / ${ytd.target.toLocaleString('es-CL')} de referencia = ${(ytd.attainmentPct ?? 0).toFixed(1)}%.`)
+  }
+
+  if (comparisons.yoy.status === 'exact_operational') {
+    const closingDelta = comparisons.yoy.closures.delta?.value ?? null
+    const ufDelta = comparisons.yoy.salesUf.delta?.value ?? null
+    if (closingDelta != null && ufDelta != null) {
+      notes.unshift(`YoY operacional exacto vs ${comparisons.yoy.period}: cierres ${closingDelta >= 0 ? '+' : ''}${closingDelta.toFixed(1)}% y volumen UF ${ufDelta >= 0 ? '+' : ''}${ufDelta.toFixed(1)}%. El crédito de gestión se mantiene separado porque 2025 no posee esa dimensión.`)
+    }
   }
 
   snapshot.qualityNotes = [...new Set(notes)]
