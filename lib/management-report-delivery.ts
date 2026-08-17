@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildManagementReportPdf, type ManagementReportRecord } from '@/lib/management-report-artifact'
+import { normalizeManagementReportOutput } from '@/lib/management-report-output'
 import {
   buildManagementReportEmailContent,
   getManagementReportDeliveryConfiguration,
@@ -146,8 +147,9 @@ export async function runManagementReportDelivery(options: DeliveryOptions = {})
       if (distribution.channel !== 'email') throw Object.assign(new Error(`Canal no soportado: ${distribution.channel}`), { permanent: true })
       if (!validRecipient(distribution.recipient)) throw Object.assign(new Error('Destinatario inválido.'), { permanent: true })
 
-      const pdf = await buildManagementReportPdf(report)
-      const delivery = await sendWithResend({ configuration, distribution, report, pdf, fetcher })
+      const normalizedReport = normalizeManagementReportOutput(report)
+      const pdf = await buildManagementReportPdf(normalizedReport)
+      const delivery = await sendWithResend({ configuration, distribution, report: normalizedReport, pdf, fetcher })
       const sentAt = new Date().toISOString()
       const update = await supabase
         .from('management_report_distributions')
