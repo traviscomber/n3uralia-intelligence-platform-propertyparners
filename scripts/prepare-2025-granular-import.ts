@@ -12,7 +12,7 @@ type PreparedRow = {
   source_sha256: string
   source_row_number: number
   source_record_id: string
-  event_date: string
+  event_date: string | null
   amount_uf: number | null
   validation_status: 'accepted' | 'rejected'
   validation_reason: string | null
@@ -41,9 +41,9 @@ function loadMatrix(file: string) {
   const workbook = XLSX.readFile(file, { cellDates: true })
   const sheetName = workbook.SheetNames.includes('Data') ? 'Data' : workbook.SheetNames.at(-1)!
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], { header: 1, defval: null, raw: true })
-  const headers = (matrix[0] ?? []).map((value) => display(value))
+  const headers = (matrix[0] ?? []).map((item) => display(item))
   const indexes = new Map(headers.map((header, index) => [normalize(header), index]).filter(([key]) => key))
-  const rows = matrix.slice(1).filter((row) => row.some((value) => value !== null && value !== ''))
+  const rows = matrix.slice(1).filter((row) => row.some((item) => item !== null && item !== ''))
   return { sheetName, headers, indexes, rows }
 }
 
@@ -84,7 +84,8 @@ function prepareSource(contract: SourceContract) {
   for (let i = 0; i < rows.length; i += 1) {
     const row = rows[i]
     if (!inScope(row, indexes, contract.dataset)) { excluded += 1; continue }
-    if (contract.dataset === 'sale_closed' && normalize(cell(row, indexes, contract.statusColumn)) !== 'vendida') { excluded += 1; continue }
+    const statusColumn = 'statusColumn' in contract ? contract.statusColumn : undefined
+    if (contract.dataset === 'sale_closed' && normalize(cell(row, indexes, statusColumn)) !== 'vendida') { excluded += 1; continue }
     const id = display(cell(row, indexes, contract.idColumn))
     const eventDate = asDate(cell(row, indexes, contract.dateColumn))
     const duplicate = Boolean(id) && seen.has(normalize(id))
@@ -98,7 +99,7 @@ function prepareSource(contract: SourceContract) {
       source_sha256: sha,
       source_row_number: i + 2,
       source_record_id: id,
-      event_date: eventDate ?? '1970-01-01',
+      event_date: eventDate,
       amount_uf: amountUf,
       validation_status: validationReason ? 'rejected' : 'accepted',
       validation_reason: validationReason,
