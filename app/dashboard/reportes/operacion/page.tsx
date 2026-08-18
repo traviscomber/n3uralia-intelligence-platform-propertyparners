@@ -9,14 +9,13 @@ export default async function ReportOperationsPage() {
 
   return <IntelligencePage>
     <IntelligenceHeader
-      eyebrow="Report Operations"
-      title="Centro de generación y entrega"
-      description="Control de reportes generados, PDFs, destinatarios, reintentos y estado del proveedor de correo."
+      eyebrow="Informes"
+      title="Generar y enviar"
+      description="Genera el informe, revisa el PDF y envíalo."
       actions={[
-        { label: 'Reportes ejecutivos', href: '/dashboard/reportes/autonomos', primary: true },
+        { label: 'Ver informes', href: '/dashboard/reportes/canonicos', primary: true },
         { label: 'Programaciones', href: '/dashboard/control/admin' },
       ]}
-      meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Alcance: {scope.role}</div>}
     />
     <ReportDeliveryConsole canOperate={scope.role === 'admin' || scope.role === 'ceo'} />
   </IntelligencePage>
