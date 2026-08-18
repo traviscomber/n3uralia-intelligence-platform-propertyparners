@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "status": "verified_from_authoritative_xlsx",
+  "scope": {
+    "branch": "Vitacura",
+    "operation": "Venta",
+    "propertyTypes": ["Casa", "Departamento"],
+    "leadType": "Compra"
+  },
+  "sources": {
+    "lead_created": {
+      "file": "Datos 2025/raw/leads_2025.xlsx",
+      "sha256": "fa9f808072f5f9a10c5c1413c58a933c5c4d4d2747405c4163337dcfd2448e82",
+      "canonicalRows": 4023
+    },
+    "requirement_created": {
+      "file": "Datos 2025/raw/requerimientos_por_propiedades_2025.xlsx",
+      "sha256": "bcfff5094019f6b511f291467d7c37df698f47d199874f91c06873fa5253b98e",
+      "canonicalRows": 4594
+    },
+    "visit_appointment": {
+      "file": "Datos 2025/raw/visitas_agendadas_2025.xlsx",
+      "sha256": "7ff31054dabedf2bf9518362462c954ca77e8efb356a427662f64d6584af4aa9",
+      "canonicalRows": 3619,
+      "canonicalRealizedRows": 2252,
+      "dedupeKey": "Visita - Id"
+    }
+  },
+  "totals": {
+    "leadsCreated": 4023,
+    "requirementsCreated": 4594,
+    "visitsScheduledUnique": 3619,
+    "visitsRealizedUnique": 2252,
+    "visitRealizationRatePct": 62.23
+  },
+  "months": [
+    {"period":"2025-01","leadsCreated":348,"requirementsCreated":262,"visitsScheduledUnique":330,"visitsRealizedUnique":191,"visitRealizationRatePct":57.88},
+    {"period":"2025-02","leadsCreated":313,"requirementsCreated":226,"visitsScheduledUnique":191,"visitsRealizedUnique":115,"visitRealizationRatePct":60.21},
+    {"period":"2025-03","leadsCreated":390,"requirementsCreated":243,"visitsScheduledUnique":358,"visitsRealizedUnique":215,"visitRealizationRatePct":60.06},
+    {"period":"2025-04","leadsCreated":261,"requirementsCreated":228,"visitsScheduledUnique":275,"visitsRealizedUnique":175,"visitRealizationRatePct":63.64},
+    {"period":"2025-05","leadsCreated":352,"requirementsCreated":389,"visitsScheduledUnique":260,"visitsRealizedUnique":160,"visitRealizationRatePct":61.54},
+    {"period":"2025-06","leadsCreated":429,"requirementsCreated":493,"visitsScheduledUnique":299,"visitsRealizedUnique":175,"visitRealizationRatePct":58.53},
+    {"period":"2025-07","leadsCreated":423,"requirementsCreated":546,"visitsScheduledUnique":386,"visitsRealizedUnique":239,"visitRealizationRatePct":61.92},
+    {"period":"2025-08","leadsCreated":410,"requirementsCreated":526,"visitsScheduledUnique":359,"visitsRealizedUnique":234,"visitRealizationRatePct":65.18},
+    {"period":"2025-09","leadsCreated":266,"requirementsCreated":419,"visitsScheduledUnique":260,"visitsRealizedUnique":167,"visitRealizationRatePct":64.23},
+    {"period":"2025-10","leadsCreated":294,"requirementsCreated":426,"visitsScheduledUnique":344,"visitsRealizedUnique":210,"visitRealizationRatePct":61.05},
+    {"period":"2025-11","leadsCreated":294,"requirementsCreated":427,"visitsScheduledUnique":319,"visitsRealizedUnique":216,"visitRealizationRatePct":67.71},
+    {"period":"2025-12","leadsCreated":243,"requirementsCreated":409,"visitsScheduledUnique":238,"visitsRealizedUnique":155,"visitRealizationRatePct":65.13}
+  ],
+  "publicationRule": "Derived monthly aggregates may be used for management YoY/YTD only when the source SHA matches the authoritative contract. No raw PII is stored in this derived baseline. Sales remain governed by the separate verified sales baseline and are not overwritten by this file."
+}
