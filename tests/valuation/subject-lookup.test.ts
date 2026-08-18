@@ -94,6 +94,15 @@ test('Quick lookup parses a simple Vitacura address', () => {
   })
 })
 
+test('Quick lookup normalizes Paysandú 5952 without losing the street identity', () => {
+  assert.deepEqual(parseAddressLookup('Paysandú 5952'), {
+    streetName: 'PAYSANDU',
+    streetNumber: '5952',
+    buildingAddress: 'PAYSANDU 5952',
+    unit: undefined,
+  })
+})
+
 test('Building lookup lists the known Las Nieves 3850 units', () => {
   assert.deepEqual(listBuildingUnits(rows).map((item) => item.unit), ['101', '202', '204', '301', '402'])
 })
@@ -116,4 +125,32 @@ test('Las Nieves 3850 depto 101 resolves canonical subject facts without fabrica
   assert.equal(result.areaSemantics, 'cbrs_registered_area_not_confirmed_as_useful')
   assert.equal(result.sourceEventKey, '77181|108576|2024-09-02|2024')
   assert.equal(result.sourcePriceUf, 8900)
+})
+
+test('Paysandu 5952 resolves a canonical house row without requiring a unit', () => {
+  const paysanduRows: CbrsSubjectLookupRow[] = [{
+    event_key: 'qa-paysandu-5952',
+    property_type: 'Casa',
+    transaction_date: '2024-01-15',
+    address: 'PAYSANDU 5952',
+    rol: 'QA-ROL',
+    price_uf: 15000,
+    built_area_m2: 240,
+    land_area_m2: 650,
+    bedrooms_bathrooms: '4D/4B',
+    construction_year: 1998,
+    latitude: -33.39,
+    longitude: -70.58,
+    neighborhood: 'Vitacura',
+  }]
+
+  const result = resolveCbrsSubjectRows(paysanduRows)
+  assert.equal(result.status, 'resolved')
+  if (result.status !== 'resolved') return
+
+  assert.equal(result.subject.propertyType, 'Casa')
+  assert.equal(result.subject.address, 'PAYSANDU 5952')
+  assert.equal(result.subject.builtAreaM2, 240)
+  assert.equal(result.subject.landAreaM2, 650)
+  assert.equal(result.unit, undefined)
 })
