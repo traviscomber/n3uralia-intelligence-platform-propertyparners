@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "scope": {
+    "branch": "Vitacura",
+    "operation": "Venta",
+    "propertyTypes": ["Casa", "Departamento"],
+    "leadType": "Compra"
+  },
+  "sources": [
+    {
+      "dataset": "lead_created",
+      "file": "Datos 2025/raw/leads_2025.xlsx",
+      "sha256": "fa9f808072f5f9a10c5c1413c58a933c5c4d4d2747405c4163337dcfd2448e82",
+      "sourceRole": "authoritative",
+      "idColumn": "lead - id",
+      "dateColumn": "lead - fecha de creacion",
+      "expectedCanonicalRows": 4023
+    },
+    {
+      "dataset": "requirement_created",
+      "file": "Datos 2025/raw/requerimientos_por_propiedades_2025.xlsx",
+      "sha256": "bcfff5094019f6b511f291467d7c37df698f47d199874f91c06873fa5253b98e",
+      "sourceRole": "authoritative",
+      "idColumn": "requerimiento - id",
+      "dateColumn": "requerimiento - fecha de creacion",
+      "expectedCanonicalRows": 4594
+    },
+    {
+      "dataset": "visit_appointment",
+      "file": "Datos 2025/raw/visitas_agendadas_2025.xlsx",
+      "sha256": "7ff31054dabedf2bf9518362462c954ca77e8efb356a427662f64d6584af4aa9",
+      "sourceRole": "authoritative",
+      "idColumn": "visita - id",
+      "dateColumn": "visita - fecha programada",
+      "statusColumn": "visita - estado",
+      "expectedCanonicalRows": 3619
+    },
+    {
+      "dataset": "sale_closed",
+      "file": "Datos 2025/raw/ventas_2025_vitacura_con_vendedor.xlsx",
+      "sha256": "2a82646575c7ce6df201caf3d5b64d004f9215e78fda4085008e167d419a5051",
+      "sourceRole": "authoritative",
+      "idColumn": "operacion - id",
+      "dateColumn": "operacion - fecha cierre negocio",
+      "statusColumn": "propiedad - estado",
+      "currencyColumn": "operacion - moneda",
+      "amountColumn": "operacion - precio de cierre",
+      "expectedCanonicalRows": 61,
+      "expectedCanonicalUf": 919970
+    }
+  ],
+  "publicationRule": "Only records from an exact SHA-256 match that pass scope, identity, date and deduplication checks may be promoted to accepted. Reconciliation or annual_context files never substitute authoritative sources."
+}
