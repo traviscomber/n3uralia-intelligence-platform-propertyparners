@@ -59,18 +59,21 @@ function median(values: number[]) {
 export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnapshot> {
   try {
     const supabase = await createClient()
-    const [referenceResult, liveResult] = await Promise.all([
+    const [referenceResult, liveResult, propertyResult] = await Promise.all([
       supabase
         .from('market_portal_reference_metrics')
         .select('dataset_kind,scope,listing_count,geocoded_count,priced_count,median_price_uf,median_uf_m2,median_area_m2,top_seller,top_seller_count,observed_at,neighborhood_id,market_neighborhoods(name,micro_neighborhood)')
         .order('listing_count', { ascending: false }),
       supabase
         .from('market_current_listings')
-        .select('price_uf,price_uf_m2,market_properties(property_type,useful_area_m2)')
+        .select('property_id,price_uf,price_uf_m2')
         .in('status', ['active', 'observed']),
+      supabase
+        .from('market_properties')
+        .select('id,property_type,useful_area_m2'),
     ])
 
-    const error = referenceResult.error || liveResult.error
+    const error = referenceResult.error || liveResult.error || propertyResult.error
     if (error) return { connected: false, datasets: [], liveDatasets: [], apartmentNeighborhoods: [], error: error.message }
 
     const rows = referenceResult.data ?? []
@@ -91,9 +94,10 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
         }]
       })
 
+    const propertiesById = new Map((propertyResult.data ?? []).map((property) => [property.id, property]))
     const grouped = new Map<PortalReferenceDataset['datasetKind'], { prices: number[]; ufm2: number[]; areas: number[]; count: number }>()
     for (const row of liveResult.data ?? []) {
-      const property = Array.isArray(row.market_properties) ? row.market_properties[0] : row.market_properties
+      const property = row.property_id ? propertiesById.get(row.property_id) : undefined
       const kind = liveKind(property?.property_type)
       if (!kind) continue
       const bucket = grouped.get(kind) ?? { prices: [], ufm2: [], areas: [], count: 0 }
