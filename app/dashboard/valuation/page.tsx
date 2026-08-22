@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Check, Plus, Save, Sparkles, Trash2 } from 'lucide-react'
 import {
+  assessValuationEvidence,
   calculateCanonicalComparableUfM2,
   calculateContractualValuation,
   type QualitativeFactors,
@@ -169,12 +170,6 @@ function summarizeEvidence(items: ValuationComparable[]): EvidenceStats {
   }
 }
 
-function evidenceQuality(cbrs: EvidenceStats, portal: EvidenceStats) {
-  if (cbrs.count >= 3 && portal.count >= 2) return { label: 'Alta', reason: `${cbrs.count} ventas + ${portal.count} ofertas seleccionadas` }
-  if (cbrs.count >= 2 || portal.count >= 2) return { label: 'Media', reason: `${cbrs.count} ventas + ${portal.count} ofertas seleccionadas` }
-  return { label: 'Baja', reason: 'Muestra seleccionada insuficiente' }
-}
-
 function formatUfM2(value: number | null | undefined) {
   return value == null ? '—' : `${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²`
 }
@@ -268,7 +263,7 @@ export default function ValuationPage() {
   )
   const cbrsEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'CBRS')), [selectedComparables])
   const portalEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc')), [selectedComparables])
-  const quality = useMemo(() => evidenceQuality(cbrsEvidence, portalEvidence), [cbrsEvidence, portalEvidence])
+  const evidenceAssessment = useMemo(() => assessValuationEvidence(comparables), [comparables])
 
   function updateSubject<K extends keyof ValuationSubject>(key: K, value: ValuationSubject[K]) {
     setSubject((current) => ({ ...current, [key]: value }))
@@ -458,7 +453,7 @@ export default function ValuationPage() {
         <MetricCard label="Ventas CBRS" value={cbrsBenchmark ? cbrsBenchmark.transactions.toLocaleString('es-CL') : '—'} detail={cbrsBenchmark ? `Mediana ${benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
         <MetricCard label="Oferta Portal" value={portalBenchmark ? portalBenchmark.listing_count.toLocaleString('es-CL') : '—'} detail={portalBenchmark ? `Mediana ${benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
         <MetricCard label="Seleccionados" value={selectedComparables.length.toLocaleString('es-CL')} detail="La selección es siempre humana." />
-        <MetricCard label="Calidad actual" value={quality.label} detail={quality.reason} />
+        <MetricCard label="Confianza de evidencia" value={`${evidenceAssessment.grade} · ${evidenceAssessment.score}/100`} detail={evidenceAssessment.summary} />
       </MetricGrid> : null}
 
       {!comparables.length ? <div className="border border-dashed border-[var(--n3-line)] p-8 text-center"><p className="text-sm font-semibold">Todavía no hay comparables</p><p className="mt-2 text-xs text-[var(--n3-text-muted)]">Pulsa “Analizar mercado”. También puedes agregar una referencia manual si es necesario.</p></div> : null}
