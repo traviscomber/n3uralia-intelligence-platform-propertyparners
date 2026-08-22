@@ -92,6 +92,17 @@ export type EvidenceAssessment = {
   risks: string[]
 }
 
+export type CommercialStrategy = {
+  posture: 'Defendible' | 'Cautela' | 'Validar evidencia'
+  objectivePriceUf: number
+  recommendedPublicationUf: number
+  aspirationalPublicationUf: number
+  negotiationMarginUf: number
+  negotiationMarginPct: number
+  rationale: string
+  ownerNarrative: string
+}
+
 export type ValuationResult = {
   methodologyVersion: 'property-partners-valuation-v2'
   baseUfM2: number
@@ -102,6 +113,7 @@ export type ValuationResult = {
   highValueUf: number
   comparableCount: number
   evidenceAssessment: EvidenceAssessment
+  commercialStrategy: CommercialStrategy
   portalSummary: MarketSummary
   cbrsSummary: MarketSummary
   commercialUfM2: number
@@ -255,6 +267,52 @@ export function assessValuationEvidence(comparables: ValuationComparable[]): Evi
   }
 }
 
+export function buildCommercialStrategy(
+  scenarios: PublicationScenario[],
+  evidence: EvidenceAssessment,
+): CommercialStrategy {
+  const objective = scenarios.find((scenario) => scenario.upliftPct === 0)
+  const balanced = scenarios.find((scenario) => scenario.upliftPct === 5)
+  const aspirational = scenarios.find((scenario) => scenario.upliftPct === 10)
+  if (!objective || !balanced || !aspirational) {
+    throw new Error('La estrategia comercial requiere escenarios de publicación 0%, 5% y 10%.')
+  }
+
+  const posture: CommercialStrategy['posture'] = evidence.grade === 'Alta'
+    ? 'Defendible'
+    : evidence.grade === 'Media'
+      ? 'Cautela'
+      : 'Validar evidencia'
+  const recommendedPublicationUf = evidence.grade === 'Baja'
+    ? objective.suggestedPriceUf
+    : balanced.suggestedPriceUf
+  const negotiationMarginUf = round(recommendedPublicationUf - objective.suggestedPriceUf)
+  const negotiationMarginPct = objective.suggestedPriceUf > 0
+    ? round(negotiationMarginUf / objective.suggestedPriceUf * 100, 1)
+    : 0
+
+  const rationale = evidence.grade === 'Alta'
+    ? 'La muestra permite sostener una publicación con margen de negociación controlado.'
+    : evidence.grade === 'Media'
+      ? 'La publicación con margen requiere seguimiento temprano de consultas y visitas.'
+      : 'El valor es preliminar; conviene fortalecer la evidencia antes de abrir un margen de negociación.'
+
+  const ownerNarrative = evidence.grade === 'Baja'
+    ? `La evidencia disponible respalda preliminarmente un valor objetivo de ${Math.round(objective.suggestedPriceUf).toLocaleString('es-CL')} UF. Antes de fijar una publicación superior, recomendamos completar o depurar los comparables.`
+    : `El valor objetivo defendible es ${Math.round(objective.suggestedPriceUf).toLocaleString('es-CL')} UF. Recomendamos publicar en ${Math.round(recommendedPublicationUf).toLocaleString('es-CL')} UF para disponer de ${Math.round(negotiationMarginUf).toLocaleString('es-CL')} UF de negociación, sujeto a la respuesta real del mercado.`
+
+  return {
+    posture,
+    objectivePriceUf: objective.suggestedPriceUf,
+    recommendedPublicationUf,
+    aspirationalPublicationUf: aspirational.suggestedPriceUf,
+    negotiationMarginUf,
+    negotiationMarginPct,
+    rationale,
+    ownerNarrative,
+  }
+}
+
 export function calculateContractualValuation(
   subject: ValuationSubject,
   comparables: ValuationComparable[],
@@ -302,6 +360,9 @@ export function calculateContractualValuation(
     ? `Metodología canónica Property Partners para departamentos: valor comercial = m² útiles × UF/m² útil definido por el valorizador; oferta comparada con m² útiles + 50% de terraza y CBRS con la superficie registrada en la fuente canónica.`
     : `Metodología canónica Property Partners para casas: valor comercial = m² construidos × UF/m² construido + m² terreno × UF/m² terreno; comparables expresados sobre m² construidos + terreno/4.`
 
+  const evidenceAssessment = assessValuationEvidence(comparables)
+  const commercialStrategy = buildCommercialStrategy(publicationScenarios, evidenceAssessment)
+
   return {
     methodologyVersion: 'property-partners-valuation-v2',
     baseUfM2: commercial.commercialUfM2,
@@ -311,7 +372,8 @@ export function calculateContractualValuation(
     lowValueUf: commercial.valueUf,
     highValueUf: commercial.valueUf,
     comparableCount: normalized.length,
-    evidenceAssessment: assessValuationEvidence(comparables),
+    evidenceAssessment,
+    commercialStrategy,
     portalSummary,
     cbrsSummary,
     commercialUfM2: commercial.commercialUfM2,
