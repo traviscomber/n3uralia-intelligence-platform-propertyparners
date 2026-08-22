@@ -80,6 +80,18 @@ export type PublicationScenario = {
   varianceUfM2VsOfferAveragePct: number | null
 }
 
+export type EvidenceAssessment = {
+  grade: 'Alta' | 'Media' | 'Baja'
+  score: number
+  comparableCount: number
+  cbrsCount: number
+  offerCount: number
+  spreadPct: number | null
+  traceabilityPct: number
+  summary: string
+  risks: string[]
+}
+
 export type ValuationResult = {
   methodologyVersion: 'property-partners-valuation-v2'
   baseUfM2: number
@@ -89,6 +101,7 @@ export type ValuationResult = {
   lowValueUf: number
   highValueUf: number
   comparableCount: number
+  evidenceAssessment: EvidenceAssessment
   portalSummary: MarketSummary
   cbrsSummary: MarketSummary
   commercialUfM2: number
@@ -188,6 +201,60 @@ function calculateCommercialValue(subject: ValuationSubject) {
   return { valueUf: round(valueUf), commercialUfM2: round(valueUf / comparisonAreaM2), comparisonAreaM2 }
 }
 
+export function assessValuationEvidence(comparables: ValuationComparable[]): EvidenceAssessment {
+  const normalized = comparables
+    .filter((item) => item.selected && item.priceUf > 0)
+    .map((item) => ({ item, ufM2: calculateCanonicalComparableUfM2(item) }))
+    .filter(({ ufM2 }) => ufM2 > 0)
+
+  const comparableCount = normalized.length
+  const cbrsCount = normalized.filter(({ item }) => item.sourceType === 'CBRS').length
+  const offerCount = normalized.filter(({ item }) => item.sourceType === 'Portal' || item.sourceType === 'TocToc').length
+  const values = normalized.map(({ ufM2 }) => ufM2).sort((a, b) => a - b)
+  const center = median(values)
+  const spreadPct = center && values.length > 1
+    ? round((values[values.length - 1] - values[0]) / center * 100, 1)
+    : null
+  const tracedFields = normalized.reduce((total, { item }) =>
+    total + (item.transactionDate ? 1 : 0) + (positive(item.distanceMeters) ? 1 : 0), 0)
+  const traceabilityPct = comparableCount
+    ? Math.round(tracedFields / (comparableCount * 2) * 100)
+    : 0
+
+  const sampleScore = Math.min(40, comparableCount * 10)
+  const diversityScore = cbrsCount > 0 && offerCount > 0 ? 20 : comparableCount > 0 ? 8 : 0
+  const dispersionScore = spreadPct == null ? 0 : spreadPct <= 25 ? 25 : spreadPct <= 45 ? 15 : 5
+  const traceabilityScore = Math.round(traceabilityPct * 0.15)
+  const score = Math.min(100, sampleScore + diversityScore + dispersionScore + traceabilityScore)
+  const grade: EvidenceAssessment['grade'] = score >= 80 ? 'Alta' : score >= 60 ? 'Media' : 'Baja'
+
+  const risks: string[] = []
+  if (comparableCount < MIN_SELECTED_COMPARABLES) risks.push('La muestra aún no alcanza tres comparables válidos.')
+  if (!cbrsCount) risks.push('Falta contraste con ventas CBRS.')
+  if (!offerCount) risks.push('Falta contraste con oferta publicada.')
+  if (spreadPct != null && spreadPct > 45) risks.push('La dispersión UF/m² supera 45%; revisa outliers y homogeneidad.')
+  if (traceabilityPct < 50) risks.push('Menos de la mitad de la evidencia tiene fecha y distancia completas.')
+
+  const sourceSummary = cbrsCount > 0 && offerCount > 0
+    ? `${cbrsCount} ventas + ${offerCount} ofertas`
+    : cbrsCount > 0
+      ? `${cbrsCount} ventas, sin ofertas`
+      : `${offerCount} ofertas, sin ventas`
+  const dispersionSummary = spreadPct == null ? 'dispersión no calculable' : `dispersión ${spreadPct}%`
+
+  return {
+    grade,
+    score,
+    comparableCount,
+    cbrsCount,
+    offerCount,
+    spreadPct,
+    traceabilityPct,
+    summary: `${sourceSummary} · ${dispersionSummary} · trazabilidad ${traceabilityPct}%`,
+    risks,
+  }
+}
+
 export function calculateContractualValuation(
   subject: ValuationSubject,
   comparables: ValuationComparable[],
@@ -244,6 +311,7 @@ export function calculateContractualValuation(
     lowValueUf: commercial.valueUf,
     highValueUf: commercial.valueUf,
     comparableCount: normalized.length,
+    evidenceAssessment: assessValuationEvidence(comparables),
     portalSummary,
     cbrsSummary,
     commercialUfM2: commercial.commercialUfM2,
