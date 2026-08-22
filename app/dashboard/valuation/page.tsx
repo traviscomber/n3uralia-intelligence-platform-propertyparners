@@ -495,7 +495,7 @@ export default function ValuationPage() {
       <MetricGrid>
         <MetricCard label="Pilar 1 · Oferta" value={portalEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(portalEvidence.medianUfM2)} · benchmark ${portalBenchmark ? benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
         <MetricCard label="Pilar 2 · Ventas" value={cbrsEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(cbrsEvidence.medianUfM2)} · benchmark ${cbrsBenchmark ? benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
-        <MetricCard label="Pilar 3 · Método PP" value={quality.label} detail={subject.propertyType === 'Departamento' ? 'm² útiles × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
+        <MetricCard label="Pilar 3 · Método PP" value={`${evidenceAssessment.grade} · ${evidenceAssessment.score}/100`} detail={subject.propertyType === 'Departamento' ? 'm² útiles × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
         <MetricCard label="Comparables" value={selectedComparables.length.toLocaleString('es-CL')} detail="Confirmados por el valorizador." />
       </MetricGrid>
 
