@@ -11,6 +11,7 @@ import {
   type ValuationComparable,
   type ValuationSubject,
 } from '@/lib/valuation-contract'
+import { buildComparableWorkbench } from '@/lib/valuation-comparable-workbench'
 import {
   VALUATION_WIZARD_STEPS,
   valuationWizardBlockingReason,
@@ -264,6 +265,10 @@ export default function ValuationPage() {
   const cbrsEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'CBRS')), [selectedComparables])
   const portalEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc')), [selectedComparables])
   const evidenceAssessment = useMemo(() => assessValuationEvidence(comparables), [comparables])
+  const comparableSignals = useMemo(
+    () => new Map(buildComparableWorkbench(comparables).map((signal) => [signal.id, signal])),
+    [comparables],
+  )
 
   function updateSubject<K extends keyof ValuationSubject>(key: K, value: ValuationSubject[K]) {
     setSubject((current) => ({ ...current, [key]: value }))
@@ -464,14 +469,20 @@ export default function ValuationPage() {
         const referenceOnly = suggested.quality === 'reference_only'
         const sourceArea = item.propertyType === 'Casa' ? item.builtAreaM2 : (item.builtAreaM2 ?? item.usefulAreaM2)
         const manual = item.id.startsWith('cmp-')
+        const signal = comparableSignals.get(item.id)
         return <div key={item.id} className={`border ${item.selected ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'} bg-[#0c1111]`}>
           <div className="flex flex-wrap items-center gap-4 p-4">
             <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Referencia' : 'Usar'}</label>
+            {signal ? <div className={`border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${signal.isOutlier ? 'border-[#806f37] text-[#d6bd72]' : signal.tier === 'Prioritario' ? 'border-[#376d64] text-[#9fd0c8]' : 'border-[var(--n3-line)] text-[var(--n3-text-muted)]'}`}>{signal.tier} · {signal.score}/100</div> : null}
             <div className="min-w-[220px] flex-1"><p className="text-sm font-semibold">{item.address || 'Comparable sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.sourceType} · {item.transactionDate || (suggested.observedAt ? `observado ${formatObservedAt(suggested.observedAt)}` : 'fecha no disponible')}</p></div>
             <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m²` : ''}</p></div>
             <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />similitud {Math.round(item.similarityScore * 100)}%</div>
           </div>
           {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Oferta visible como referencia, pero no seleccionable hasta contar con superficie canónica completa.</div> : null}
+          {signal && (signal.risks.length > 0 || signal.strengths.length > 0) ? <div className="grid gap-2 border-t border-[var(--n3-line)] px-4 py-3 text-xs md:grid-cols-2">
+            <p className="text-[#9fd0c8]"><strong>Fortalezas:</strong> {signal.strengths.slice(0, 3).join(' · ') || 'Sin fortalezas verificables'}</p>
+            <p className={signal.isOutlier ? 'text-[#d6bd72]' : 'text-[var(--n3-text-muted)]'}><strong>Revisar:</strong> {signal.risks.slice(0, 3).join(' · ') || 'Sin alertas relevantes'}</p>
+          </div> : null}
           <details className="border-t border-[var(--n3-line)]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">{manual ? 'Completar comparable manual' : 'Ver / editar detalles'}</summary><div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-4">
             <label className="block"><FieldLabel>Fuente</FieldLabel><select value={item.sourceType} onChange={(event) => updateComparable(index, { sourceType: event.target.value as ValuationComparable['sourceType'] })} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Portal</option><option>TocToc</option><option>CBRS</option><option>Cliente</option></select></label>
             <TextField label="Referencia / URL" value={item.sourceReference} onChange={(value) => updateComparable(index, { sourceReference: value })} />
@@ -482,6 +493,7 @@ export default function ValuationPage() {
             {item.propertyType === 'Departamento' && item.sourceType !== 'CBRS' ? <><NumberField label="M² útiles" value={item.usefulAreaM2} onChange={(value) => updateComparable(index, { usefulAreaM2: value })} suffix="m²" step={0.1} min={0} /><NumberField label="M² totales" value={item.totalAreaM2} onChange={(value) => updateComparable(index, { totalAreaM2: value })} suffix="m²" step={0.1} min={0} /></> : null}
             {item.propertyType === 'Departamento' && item.sourceType === 'CBRS' ? <NumberField label="Superficie registrada CBRS" value={item.builtAreaM2} onChange={(value) => updateComparable(index, { builtAreaM2: value, usefulAreaM2: undefined, totalAreaM2: undefined })} suffix="m²" step={0.1} min={0} /> : null}
             {item.propertyType === 'Casa' ? <><NumberField label="M² construidos" value={item.builtAreaM2} onChange={(value) => updateComparable(index, { builtAreaM2: value })} suffix="m²" step={0.1} min={0} /><NumberField label="M² terreno" value={item.landAreaM2} onChange={(value) => updateComparable(index, { landAreaM2: value })} suffix="m²" step={0.1} min={0} /></> : null}
+            {!item.selected ? <div className="md:col-span-2 xl:col-span-3"><TextAreaField label="Motivo de exclusión / revisión" value={item.adjustmentNotes ?? ''} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: superficie no comparable, ubicación secundaria, outlier de precio o evidencia incompleta." /></div> : null}
             <button type="button" onClick={() => setComparables((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="inline-flex items-center justify-center gap-2 border border-[var(--n3-line)] px-3 py-3 text-xs hover:border-[#d7332b]"><Trash2 size={14} />Eliminar</button>
           </div></details>
         </div>
