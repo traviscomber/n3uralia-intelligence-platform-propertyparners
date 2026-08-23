@@ -7,7 +7,8 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-const DATASETS: PortalDatasetKind[] = ['portal_apartments', 'portal_houses', 'portal_projects']
+// V1 contractual scope: houses for sale in Vitacura. Apartments and projects remain V2.
+const DATASETS: PortalDatasetKind[] = ['portal_houses']
 const MAX_LISTINGS_PER_DATASET = 12
 const WAIT_MS = 600
 const SOFT_RUNTIME_BUDGET_MS = 240_000
