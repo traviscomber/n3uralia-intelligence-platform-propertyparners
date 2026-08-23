@@ -26,7 +26,7 @@ import {
 import { QuickSubjectLookup } from '@/components/valuation/quick-subject-lookup'
 
 const emptySubject: ValuationSubject = {
-  propertyType: 'Departamento',
+  propertyType: 'Casa',
   address: '',
   neighborhood: '',
   homogeneousArea: '',
@@ -237,7 +237,7 @@ export default function ValuationPage() {
 
   useEffect(() => {
     if (!quickLookup && !assignmentId) return
-    const rawType = searchParams.get('propertyType') || 'Departamento'
+    const rawType = searchParams.get('propertyType') || 'Casa'
     const propertyType: ValuationSubject['propertyType'] = rawType.toLowerCase().includes('casa') ? 'Casa' : 'Departamento'
     setSubject((current) => ({
       ...current,
@@ -415,7 +415,7 @@ export default function ValuationPage() {
       <QuickSubjectLookup />
       <div className="text-center"><button type="button" onClick={() => setManualOpen((value) => !value)} className="text-xs text-[var(--n3-text-muted)] underline underline-offset-4 hover:text-white">{manualOpen ? 'Ocultar ingreso manual' : 'No encuentro la propiedad · ingresar manualmente'}</button></div>
       {manualOpen ? <IntelligencePanel eyebrow="Alternativa" title="Ingreso manual" description="Úsalo solo cuando la propiedad no exista todavía en las fuentes canónicas."><div className="grid gap-4 p-5 md:grid-cols-2">
-        <label className="block"><FieldLabel>Tipo</FieldLabel><select value={subject.propertyType} onChange={(event) => updateSubject('propertyType', event.target.value as ValuationSubject['propertyType'])} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Departamento</option><option>Casa</option></select></label>
+        <label className="block"><FieldLabel>Tipo</FieldLabel><select value={subject.propertyType} onChange={(event) => updateSubject('propertyType', event.target.value as ValuationSubject['propertyType'])} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Casa</option><option>Departamento</option></select></label>
         <TextField label="Dirección" value={subject.address} onChange={(value) => updateSubject('address', value)} placeholder="Calle y número" />
         <TextField label="Barrio / sector" value={subject.neighborhood} onChange={(value) => updateSubject('neighborhood', value)} placeholder="Barrio canónico" />
         <TextField label="ROL si existe" value={subject.rol} onChange={(value) => updateSubject('rol', value)} />
