@@ -525,7 +525,7 @@ export default function ValuationPage() {
         <MetricCard label="Ventas CBRS" value={cbrsBenchmark ? cbrsBenchmark.transactions.toLocaleString('es-CL') : '—'} detail={cbrsBenchmark ? `Mediana ${benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
         <MetricCard label="Oferta Portal" value={portalBenchmark ? portalBenchmark.listing_count.toLocaleString('es-CL') : '—'} detail={portalBenchmark ? `Mediana ${benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
         <MetricCard label="Seleccionados" value={selectedComparables.length.toLocaleString('es-CL')} detail="La selección es siempre humana." />
-        <MetricCard label="Calidad actual" value={quality.label} detail={quality.reason} />
+        <MetricCard label="Cobertura de evidencia" value={quality.label} detail={quality.reason} />
       </MetricGrid> : null}
 
       {selectedComparables.length ? <div className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
@@ -582,7 +582,7 @@ export default function ValuationPage() {
       <MetricGrid>
         <MetricCard label="Pilar 1 · Oferta" value={portalEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(portalEvidence.medianUfM2)} · benchmark ${portalBenchmark ? benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
         <MetricCard label="Pilar 2 · Ventas" value={cbrsEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(cbrsEvidence.medianUfM2)} · benchmark ${cbrsBenchmark ? benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
-        <MetricCard label="Pilar 3 · Método PP" value={quality.label} detail={subject.propertyType === 'Departamento' ? 'm² útiles × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
+        <MetricCard label="Pilar 3 · Método PP" value="Aplicado" detail={subject.propertyType === 'Departamento' ? 'm² útiles × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
         <MetricCard label="Comparables" value={selectedComparables.length.toLocaleString('es-CL')} detail="Confirmados por el valorizador." />
       </MetricGrid>
 
