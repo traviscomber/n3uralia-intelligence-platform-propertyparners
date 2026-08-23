@@ -106,6 +106,12 @@ type EvidenceStats = {
   maxUfM2: number | null
 }
 
+type MethodologySummary = {
+  weightedAverageUfM2: number | null
+  dispersionPct: number | null
+  outlierIds: string[]
+}
+
 function FieldLabel({ children }: { children: ReactNode }) {
   return <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{children}</span>
 }
@@ -169,6 +175,30 @@ function summarizeEvidence(items: ValuationComparable[]): EvidenceStats {
     medianUfM2: median,
     maxUfM2: values[values.length - 1],
   }
+}
+
+function summarizeMethodology(items: ValuationComparable[]): MethodologySummary {
+  const evidence = items
+    .map((item) => ({
+      id: item.id,
+      value: calculateCanonicalComparableUfM2(item),
+      weight: Math.max(item.similarityScore, 0.01),
+    }))
+    .filter((item) => Number.isFinite(item.value) && item.value > 0)
+
+  if (!evidence.length) return { weightedAverageUfM2: null, dispersionPct: null, outlierIds: [] }
+
+  const values = evidence.map((item) => item.value).sort((a, b) => a - b)
+  const middle = Math.floor(values.length / 2)
+  const median = values.length % 2 === 0 ? (values[middle - 1] + values[middle]) / 2 : values[middle]
+  const totalWeight = evidence.reduce((sum, item) => sum + item.weight, 0)
+  const weightedAverageUfM2 = evidence.reduce((sum, item) => sum + item.value * item.weight, 0) / totalWeight
+  const dispersionPct = median > 0 ? ((values[values.length - 1] - values[0]) / median) * 100 : null
+  const outlierIds = median > 0
+    ? evidence.filter((item) => Math.abs(item.value - median) / median > 0.25).map((item) => item.id)
+    : []
+
+  return { weightedAverageUfM2, dispersionPct, outlierIds }
 }
 
 function evidenceQuality(cbrs: EvidenceStats, portal: EvidenceStats) {
@@ -277,6 +307,7 @@ export default function ValuationPage() {
   const cbrsEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'CBRS')), [selectedComparables])
   const portalEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc')), [selectedComparables])
   const quality = useMemo(() => evidenceQuality(cbrsEvidence, portalEvidence), [cbrsEvidence, portalEvidence])
+  const methodologySummary = useMemo(() => summarizeMethodology(selectedComparables), [selectedComparables])
 
   function updateSubject<K extends keyof ValuationSubject>(key: K, value: ValuationSubject[K]) {
     setSubject((current) => ({ ...current, [key]: value }))
@@ -291,6 +322,10 @@ export default function ValuationPage() {
   }
 
   function goNext() {
+    if (step === 3 && selectedComparables.some((item) => !item.adjustmentNotes?.trim())) {
+      setMessage('Explica brevemente por qué usarás cada comparable seleccionado.')
+      return
+    }
     const reason = valuationWizardBlockingReason({ step, subject, selectedComparableCount: selectedComparables.length, hasResult: Boolean(result) })
     if (reason) {
       setMessage(reason)
@@ -460,6 +495,16 @@ export default function ValuationPage() {
         <MetricCard label="Calidad actual" value={quality.label} detail={quality.reason} />
       </MetricGrid> : null}
 
+      {selectedComparables.length ? <div className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <div><FieldLabel>Mediana seleccionada</FieldLabel><strong className="text-lg">{formatUfM2(summarizeEvidence(selectedComparables).medianUfM2)}</strong></div>
+          <div><FieldLabel>Promedio por similitud</FieldLabel><strong className="text-lg">{formatUfM2(methodologySummary.weightedAverageUfM2)}</strong></div>
+          <div><FieldLabel>Rango observado</FieldLabel><strong className="text-lg">{formatUfM2(summarizeEvidence(selectedComparables).minUfM2)} – {formatUfM2(summarizeEvidence(selectedComparables).maxUfM2)}</strong></div>
+          <div><FieldLabel>Dispersión</FieldLabel><strong className="text-lg">{methodologySummary.dispersionPct == null ? '—' : `${methodologySummary.dispersionPct.toLocaleString('es-CL', { maximumFractionDigits: 1 })}%`}</strong></div>
+        </div>
+        <p className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">Referencia transparente. El promedio pondera únicamente la similitud; no reemplaza la tasa ni la decisión del valorizador.</p>
+      </div> : null}
+
       {!comparables.length ? <div className="border border-dashed border-[var(--n3-line)] p-8 text-center"><p className="text-sm font-semibold">Todavía no hay comparables</p><p className="mt-2 text-xs text-[var(--n3-text-muted)]">Pulsa “Analizar mercado”. También puedes agregar una referencia manual si es necesario.</p></div> : null}
 
       <div className="space-y-3">{comparables.map((item, index) => {
@@ -468,6 +513,7 @@ export default function ValuationPage() {
         const referenceOnly = suggested.quality === 'reference_only'
         const sourceArea = item.propertyType === 'Casa' ? item.builtAreaM2 : (item.builtAreaM2 ?? item.usefulAreaM2)
         const manual = item.id.startsWith('cmp-')
+        const isOutlier = methodologySummary.outlierIds.includes(item.id)
         return <div key={item.id} className={`border ${item.selected ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'} bg-[#0c1111]`}>
           <div className="flex flex-wrap items-center gap-4 p-4">
             <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Referencia' : 'Usar'}</label>
@@ -475,7 +521,9 @@ export default function ValuationPage() {
             <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m²` : ''}</p></div>
             <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />similitud {Math.round(item.similarityScore * 100)}%</div>
           </div>
+          {isOutlier ? <div className="border-t border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-xs text-[#e0c87f]">Revisar: este valor se aleja más de 25% de la mediana seleccionada.</div> : null}
           {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Oferta visible como referencia, pero no seleccionable hasta contar con superficie canónica completa.</div> : null}
+          {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona y superficie comparable." /></div> : null}
           <details className="border-t border-[var(--n3-line)]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">{manual ? 'Completar comparable manual' : 'Ver / editar detalles'}</summary><div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-4">
             <label className="block"><FieldLabel>Fuente</FieldLabel><select value={item.sourceType} onChange={(event) => updateComparable(index, { sourceType: event.target.value as ValuationComparable['sourceType'] })} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Portal</option><option>TocToc</option><option>CBRS</option><option>Cliente</option></select></label>
             <TextField label="Referencia / URL" value={item.sourceReference} onChange={(value) => updateComparable(index, { sourceReference: value })} />
