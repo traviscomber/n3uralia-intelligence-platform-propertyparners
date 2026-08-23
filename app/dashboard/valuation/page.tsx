@@ -258,7 +258,7 @@ function SecondOpinionPanel({ opinion }: { opinion: ValuationSecondOpinion }) {
 
   return <aside aria-label="Segunda opinión no vinculante" className="border border-[#5f8f82]/55 bg-[#0b1211]">
     <div className="flex flex-wrap items-start justify-between gap-3 p-5">
-      <div><FieldLabel>Capa consultiva</FieldLabel><h3 className="text-base font-semibold">Segunda opinión</h3><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Observa la evidencia. No interviene en la valorización.</p></div>
+      <div><FieldLabel>No vinculante</FieldLabel><h3 className="text-base font-semibold">Segunda opinión</h3></div>
       <div className="border border-[var(--n3-line)] px-3 py-2 text-right"><FieldLabel>Cobertura</FieldLabel><strong className="text-sm">{opinion.coverage}</strong></div>
     </div>
     <div className="grid gap-2 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
@@ -516,7 +516,7 @@ export default function ValuationPage() {
     </section> : null}
 
     {step === 3 ? <section className="space-y-4">
-      <IntelligencePanel eyebrow="Paso 3 · Mercado" title="Oferta y ventas comparables" description="El sistema propone evidencia; el valorizador decide qué referencias usar."><div className="flex flex-wrap items-center justify-between gap-3 p-5">
+      <IntelligencePanel eyebrow="Paso 3 · Mercado" title="Oferta y ventas comparables" description="El sistema propone. Property Partners decide."><div className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div><p className="text-sm font-semibold">{subject.address}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType}</p></div>
         <button type="button" disabled={suggesting} onClick={() => void suggestComparables()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{suggesting ? 'Analizando…' : comparables.length ? 'Actualizar análisis' : 'Analizar mercado'}</button>
       </div></IntelligencePanel>
@@ -524,7 +524,7 @@ export default function ValuationPage() {
       {(cbrsBenchmark || portalBenchmark) ? <MetricGrid>
         <MetricCard label="Ventas CBRS" value={cbrsBenchmark ? cbrsBenchmark.transactions.toLocaleString('es-CL') : '—'} detail={cbrsBenchmark ? `Mediana ${benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
         <MetricCard label="Oferta Portal" value={portalBenchmark ? portalBenchmark.listing_count.toLocaleString('es-CL') : '—'} detail={portalBenchmark ? `Mediana ${benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
-        <MetricCard label="Seleccionados" value={selectedComparables.length.toLocaleString('es-CL')} detail="La selección es siempre humana." />
+        <MetricCard label="Seleccionados" value={selectedComparables.length.toLocaleString('es-CL')} detail="Selección humana." />
         <MetricCard label="Cobertura de evidencia" value={quality.label} detail={quality.reason} />
       </MetricGrid> : null}
 
@@ -535,7 +535,7 @@ export default function ValuationPage() {
           <div><FieldLabel>Rango observado</FieldLabel><strong className="text-lg">{formatUfM2(summarizeEvidence(selectedComparables).minUfM2)} – {formatUfM2(summarizeEvidence(selectedComparables).maxUfM2)}</strong></div>
           <div><FieldLabel>Dispersión</FieldLabel><strong className="text-lg">{methodologySummary.dispersionPct == null ? '—' : `${methodologySummary.dispersionPct.toLocaleString('es-CL', { maximumFractionDigits: 1 })}%`}</strong></div>
         </div>
-        <p className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">Referencia transparente. El promedio pondera únicamente la similitud; no reemplaza la tasa ni la decisión del valorizador.</p>
+        <p className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">Referencia estadística. No define la tasa.</p>
       </div> : null}
 
       {selectedComparables.length ? <SecondOpinionPanel opinion={secondOpinion} /> : null}
