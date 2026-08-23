@@ -48,6 +48,11 @@ const emptySnapshot: OperationalMarketSnapshot = {
   freshnessStatus: 'unknown',
 }
 
+type CurrentListingSummaryRow = {
+  active_listing_count: number | null
+  latest_observed_at: string | null
+}
+
 function getObservationFreshness(value: string | null | undefined) {
   if (!value) return { ageDays: null, status: 'unknown' as const }
 
@@ -60,15 +65,21 @@ function getObservationFreshness(value: string | null | undefined) {
   return { ageDays, status: 'stale' as const }
 }
 
+function latestTimestamp(values: Array<string | null | undefined>) {
+  return values
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null
+}
+
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [properties, confirmed, missingNeighborhoods, identityCandidates, activeListings, transactions, canonicalCbrsSales, matchCandidates, latestMetric, latestIngestion, ingestionRuns, latestObservedListing] = await Promise.all([
+    const [properties, confirmed, missingNeighborhoods, identityCandidates, currentListings, transactions, canonicalCbrsSales, matchCandidates, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
       supabase.from('market_properties').select('id', { count: 'exact', head: true }),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).eq('identity_status', 'confirmed'),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).is('neighborhood_id', null),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).in('identity_status', ['candidate', 'needs_review']),
-      supabase.from('market_current_listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      supabase.rpc('get_market_current_listing_summary_v1'),
       supabase.from('market_transactions').select('id', { count: 'exact', head: true }),
       supabase.from('market_cbrs_reference_transactions').select('id', { count: 'exact', head: true }),
       supabase.from('market_property_matches').select('id', { count: 'exact', head: true }).in('status', ['candidate_high', 'candidate_medium']),
@@ -87,17 +98,14 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .limit(1)
         .maybeSingle(),
       supabase.from('market_ingestion_runs').select('id', { count: 'exact', head: true }),
-      supabase
-        .from('market_current_listings')
-        .select('observed_at')
-        .order('observed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
     ])
 
     const metric = latestMetric.data
+    const currentRows = (currentListings.error ? [] : currentListings.data ?? []) as CurrentListingSummaryRow[]
+    const currentInventory = currentRows.reduce((total, row) => total + Number(row.active_listing_count ?? 0), 0)
+    const latestObservedAt = latestTimestamp(currentRows.map((row) => row.latest_observed_at))
     const metricInventoryAvailable = !latestMetric.error && metric?.active_inventory != null
-    const listingInventoryAvailable = !activeListings.error
+    const listingInventoryAvailable = !currentListings.error
     const metricSalesAvailable = !latestMetric.error && metric?.confirmed_sales != null
     const transactionSalesAvailable = !transactions.error
     const canonicalSalesAvailable = !canonicalCbrsSales.error
@@ -108,7 +116,6 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     ].filter((message): message is string => Boolean(message))
 
     const ingestion = latestIngestion.data
-    const latestObservedAt = latestObservedListing.data?.observed_at ?? null
     const freshness = getObservationFreshness(latestObservedAt)
 
     return {
@@ -116,9 +123,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       canonicalProperties: properties.error ? null : properties.count ?? 0,
       confirmedProperties: confirmed.error ? null : confirmed.count ?? 0,
       missingNeighborhoods: missingNeighborhoods.error ? null : missingNeighborhoods.count ?? 0,
-      activeInventory: latestMetric.error
-        ? (activeListings.error ? null : activeListings.count ?? 0)
-        : metric?.active_inventory ?? (activeListings.error ? null : activeListings.count ?? 0),
+      activeInventory: metricInventoryAvailable ? metric?.active_inventory ?? null : listingInventoryAvailable ? currentInventory : null,
       confirmedSales: selectCanonicalSales(
         metricSalesAvailable ? metric?.confirmed_sales : null,
         transactionSalesAvailable ? transactions.count ?? 0 : null,
@@ -136,9 +141,9 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestIngestionAccepted: latestIngestion.error ? null : ingestion?.accepted_rows ?? null,
       latestIngestionRejected: latestIngestion.error ? null : ingestion?.rejected_rows ?? null,
       ingestionRuns: ingestionRuns.error ? null : ingestionRuns.count ?? 0,
-      latestObservedAt: latestObservedListing.error ? null : latestObservedAt,
-      observationAgeDays: latestObservedListing.error ? null : freshness.ageDays,
-      freshnessStatus: latestObservedListing.error ? 'unknown' : freshness.status,
+      latestObservedAt: currentListings.error ? null : latestObservedAt,
+      observationAgeDays: currentListings.error ? null : freshness.ageDays,
+      freshnessStatus: currentListings.error ? 'unknown' : freshness.status,
       error: criticalErrors.length ? criticalErrors.join(' · ') : undefined,
     }
   } catch (error) {
