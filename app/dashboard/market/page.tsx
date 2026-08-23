@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AlertTriangle, Download, FileText, MapPinned, RefreshCw, Settings2, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
+import { VitacuraNeighborhoodMap } from '@/components/market/vitacura-neighborhood-map'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
@@ -48,9 +49,7 @@ export default async function MarketPage() {
     getPortalReferenceSnapshot(),
   ])
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
-  const territorialCoverage = market.canonicalProperties && market.missingNeighborhoods !== null
-    ? (market.canonicalProperties - market.missingNeighborhoods) / market.canonicalProperties
-    : null
+  const canonicalUnassigned = Math.max((market.canonicalProperties ?? 0) - territory.assignedProperties, 0)
   const kmlCoverage = market.canonicalProperties
     ? territory.assignedProperties / market.canonicalProperties
     : null
@@ -66,7 +65,7 @@ export default async function MarketPage() {
   const actions = [
     market.freshnessStatus === 'stale' ? { label: 'Actualizar observación', value: freshness(market.freshnessStatus, market.observationAgeDays), href: '/dashboard/market/import', critical: true } : null,
     market.pendingMatches !== null && market.pendingMatches > 0 ? { label: 'Revisar coincidencias', value: number(market.pendingMatches), href: '/dashboard/market/reconciliacion', critical: false } : null,
-    market.missingNeighborhoods !== null && market.missingNeighborhoods > 0 ? { label: 'Completar barrios', value: number(market.missingNeighborhoods), href: '/dashboard/market/reconciliacion', critical: false } : null,
+    canonicalUnassigned > 0 ? { label: 'Revisar barrios', value: number(canonicalUnassigned), href: '/dashboard/market/reconciliacion', critical: false } : null,
   ].filter((item): item is NonNullable<typeof item> => Boolean(item))
 
   return (
@@ -161,8 +160,8 @@ export default async function MarketPage() {
         <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Calidad</h2>
         <div className="mt-2 grid border-y border-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-5">
           {[
-            ['Cobertura territorial', percent(territorialCoverage)],
-            ['Cobertura KML exacta', percent(kmlCoverage)],
+            ['Asignación KML', percent(kmlCoverage)],
+            ['Por revisar', number(canonicalUnassigned)],
             ['Identidad confirmada', percent(confirmedCoverage)],
             ['Velocidad', market.medianDaysOnMarket === null ? '—' : `${number(market.medianDaysOnMarket)} días`],
             ['Absorción', percent(market.absorptionRate)],
@@ -184,25 +183,10 @@ export default async function MarketPage() {
             </div>
             <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Clasificación geográfica exacta desde {territory.sourceFile ?? 'KML'}.</p>
           </div>
-          <span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{territory.polygons} zonas · {number(territory.assignedProperties)} propiedades</span>
+          <span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{territory.polygons} barrios · {number(territory.assignedProperties)} exactas · {number(canonicalUnassigned)} por revisar</span>
         </div>
 
-        <div className="divide-y divide-[var(--n3-line)]">
-          {territory.neighborhoods.map((row) => (
-            <div key={row.name} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-[var(--n3-text-light)]">{row.name}</p>
-                <p className="mt-0.5 truncate text-xs text-[var(--n3-text-muted)]">
-                  {row.partners.length ? row.partners.join(' · ') : 'Sin partner asignado en la fuente'}
-                </p>
-              </div>
-              <div className="text-left sm:text-right">
-                <p className="text-sm font-semibold tabular-nums">{number(row.properties)}</p>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">propiedades</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <VitacuraNeighborhoodMap neighborhoods={territory.neighborhoods} />
       </section>
 
       <DataStatusBar
