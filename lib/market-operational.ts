@@ -1,3 +1,4 @@
+import { selectCanonicalSales } from '@/lib/market-canonical'
 import { createClient } from '@/lib/supabase/server'
 
 export type MarketFreshnessStatus = 'recent' | 'aging' | 'stale' | 'unknown'
@@ -45,14 +46,6 @@ const emptySnapshot: OperationalMarketSnapshot = {
   latestObservedAt: null,
   observationAgeDays: null,
   freshnessStatus: 'unknown',
-}
-
-export function selectCanonicalSales(...values: Array<number | null | undefined>): number | null {
-  const available = values.filter(
-    (value): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0,
-  )
-
-  return available.length ? Math.max(...available) : null
 }
 
 function getObservationFreshness(value: string | null | undefined) {
