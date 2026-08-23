@@ -11,6 +11,10 @@ import {
   type ValuationSubject,
 } from '@/lib/valuation-contract'
 import {
+  buildValuationSecondOpinion,
+  type ValuationSecondOpinion,
+} from '@/lib/valuation-second-opinion'
+import {
   VALUATION_WIZARD_STEPS,
   valuationWizardBlockingReason,
   type ValuationWizardStep,
@@ -245,6 +249,29 @@ function Stepper({ step, onBackTo }: { step: ValuationWizardStep; onBackTo: (ste
   })}</div>
 }
 
+function SecondOpinionPanel({ opinion }: { opinion: ValuationSecondOpinion }) {
+  const toneClass = {
+    attention: 'border-[#c4ae70]/45 bg-[#17140c]',
+    context: 'border-[var(--n3-line)] bg-[#0a1010]',
+    positive: 'border-[#5f8f82]/45 bg-[#0a1210]',
+  }
+
+  return <aside aria-label="Segunda opinión no vinculante" className="border border-[#5f8f82]/55 bg-[#0b1211]">
+    <div className="flex flex-wrap items-start justify-between gap-3 p-5">
+      <div><FieldLabel>Capa consultiva</FieldLabel><h3 className="text-base font-semibold">Segunda opinión</h3><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Observa la evidencia. No interviene en la valorización.</p></div>
+      <div className="border border-[var(--n3-line)] px-3 py-2 text-right"><FieldLabel>Cobertura</FieldLabel><strong className="text-sm">{opinion.coverage}</strong></div>
+    </div>
+    <div className="grid gap-2 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
+      {opinion.findings.map((finding) => <div key={`${finding.title}-${finding.evidence}`} className={`border p-4 ${toneClass[finding.tone]}`}>
+        <strong className="text-sm">{finding.title}</strong>
+        <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{finding.detail}</p>
+        <p className="mt-2 text-[10px] uppercase tracking-[0.08em] text-[#9fd0c8]">{finding.evidence}</p>
+      </div>)}
+    </div>
+    <div className="border-t border-[var(--n3-line)] px-5 py-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">{opinion.disclaimer}</div>
+  </aside>
+}
+
 export default function ValuationPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -308,6 +335,12 @@ export default function ValuationPage() {
   const portalEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc')), [selectedComparables])
   const quality = useMemo(() => evidenceQuality(cbrsEvidence, portalEvidence), [cbrsEvidence, portalEvidence])
   const methodologySummary = useMemo(() => summarizeMethodology(selectedComparables), [selectedComparables])
+  const secondOpinion = useMemo(() => buildValuationSecondOpinion({
+    subject,
+    comparables,
+    result,
+    hasCurrentStateNotes: Boolean(currentStateNotes.trim()),
+  }), [subject, comparables, result, currentStateNotes])
 
   function updateSubject<K extends keyof ValuationSubject>(key: K, value: ValuationSubject[K]) {
     setSubject((current) => ({ ...current, [key]: value }))
@@ -505,6 +538,8 @@ export default function ValuationPage() {
         <p className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">Referencia transparente. El promedio pondera únicamente la similitud; no reemplaza la tasa ni la decisión del valorizador.</p>
       </div> : null}
 
+      {selectedComparables.length ? <SecondOpinionPanel opinion={secondOpinion} /> : null}
+
       {!comparables.length ? <div className="border border-dashed border-[var(--n3-line)] p-8 text-center"><p className="text-sm font-semibold">Todavía no hay comparables</p><p className="mt-2 text-xs text-[var(--n3-text-muted)]">Pulsa “Analizar mercado”. También puedes agregar una referencia manual si es necesario.</p></div> : null}
 
       <div className="space-y-3">{comparables.map((item, index) => {
@@ -551,6 +586,8 @@ export default function ValuationPage() {
         <MetricCard label="Comparables" value={selectedComparables.length.toLocaleString('es-CL')} detail="Confirmados por el valorizador." />
       </MetricGrid>
 
+      <SecondOpinionPanel opinion={secondOpinion} />
+
       <IntelligencePanel eyebrow="Paso 4 · Decisión" title="Confirma la tasa profesional" description="La evidencia orienta la decisión; el sistema no adopta una tasa sin confirmación humana."><div className="p-5">
         {subject.propertyType === 'Departamento' ? <>
           <div className="flex flex-wrap gap-2">
@@ -575,6 +612,7 @@ export default function ValuationPage() {
       </div>
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
+      <SecondOpinionPanel opinion={secondOpinion} />
       <IntelligencePanel eyebrow="Criterio profesional" title="Justificación del valorizador" description="Explica por qué esta evidencia y esta tasa representan correctamente el inmueble."><div className="p-5"><TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables; la remodelación integral y la terraza de uso y goce sustentan una posición en la parte alta del rango observado..." /></div></IntelligencePanel>
       <MethodologyNote>Property Partners decide el método. Portal describe la oferta. CBRS describe las ventas. El valorizador toma la decisión profesional.</MethodologyNote>
     </section> : null}
