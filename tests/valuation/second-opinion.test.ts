@@ -42,10 +42,10 @@ test('second opinion is advisory and identifies dispersion without changing evid
 
   assert.equal(opinion.version, 'property-partners-second-opinion-v1')
   assert.equal(opinion.coverage, 'Media')
-  assert.match(opinion.disclaimer, /No modifica comparables, tasas, cálculos, estados ni la decisión profesional/)
-  assert.ok(opinion.findings.some((finding) => finding.title === 'Rango con dispersión relevante'))
-  assert.ok(opinion.findings.some((finding) => finding.title === 'Comparable fuera del rango central'))
-  assert.ok(opinion.findings.some((finding) => finding.title === 'Lectura basada solo en ventas'))
+  assert.equal(opinion.disclaimer, 'No vinculante. No modifica la valorización.')
+  assert.ok(opinion.findings.some((finding) => finding.title === 'Dispersión alta'))
+  assert.ok(opinion.findings.some((finding) => finding.title === 'Valores atípicos'))
+  assert.ok(opinion.findings.some((finding) => finding.title === 'Solo ventas'))
   assert.deepEqual(comparables, before)
 })
 
