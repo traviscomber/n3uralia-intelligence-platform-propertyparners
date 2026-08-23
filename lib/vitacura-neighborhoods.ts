@@ -1,11 +1,14 @@
+import { normalizeCanonicalMarketGeometry, type CanonicalMarketGeometry } from '@/lib/market-territory'
 import { createClient } from '@/lib/supabase/server'
 
 const KML_SOURCE_CODE = 'kml_vitacura_barrios_2026_08_12'
 
 export type VitacuraNeighborhoodCoverageRow = {
+  id: string
   name: string
   partners: string[]
   properties: number
+  geometry: CanonicalMarketGeometry | null
 }
 
 export type VitacuraNeighborhoodSnapshot = {
@@ -62,7 +65,7 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
         .eq('version', '2026-08-12'),
       supabase
         .from('market_neighborhoods')
-        .select('id,name,micro_neighborhood')
+        .select('id,name,micro_neighborhood,geometry')
         .eq('geometry_source_id', source.data.id),
     ])
 
@@ -99,9 +102,11 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
       .map((row) => {
         const territory = territoryByName.get(row.name)
         return {
+          id: row.id,
           name: row.micro_neighborhood || row.name,
           partners: normalizePartners(territory?.raw_properties),
           properties: countByNeighborhood.get(row.id) ?? 0,
+          geometry: normalizeCanonicalMarketGeometry(row.geometry),
         }
       })
       .sort((a, b) => b.properties - a.properties || a.name.localeCompare(b.name, 'es'))
@@ -111,7 +116,7 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
       sourceFile: source.data.file_name,
       sourceHash: source.data.file_hash,
       importedAt: source.data.imported_at,
-      polygons: neighborhoods.length,
+      polygons: neighborhoods.filter((row) => row.geometry).length,
       assignedProperties: neighborhoods.reduce((total, row) => total + row.properties, 0),
       neighborhoods,
     }
