@@ -28,8 +28,21 @@ export default function ManagementOperationsPage() {
         fetch('/api/management/reports', { cache: 'no-store' }),
       ])
       if (!importsResponse.ok || !reportsResponse.ok) throw new Error('LOAD_FAILED')
-      setRuns((await importsResponse.json()).runs ?? [])
-      setReports((await reportsResponse.json()).reports ?? [])
+      const loadedRuns: ImportRun[] = (await importsResponse.json()).runs ?? []
+      const loadedReports: Report[] = (await reportsResponse.json()).reports ?? []
+      setRuns(loadedRuns)
+      setReports(loadedReports)
+
+      const availablePeriods = [
+        ...loadedRuns.map(run => run.period_start.slice(0, 7)),
+        ...loadedReports.map(report => report.period_start.slice(0, 7)),
+      ].filter(Boolean).sort().reverse()
+
+      setPeriod(current => {
+        const currentHasData = loadedRuns.some(run => run.period_start.startsWith(current))
+          || loadedReports.some(report => report.period_start.startsWith(current))
+        return currentHasData ? current : availablePeriods[0] ?? current
+      })
     } catch { setFailed(true) } finally { setLoading(false) }
   }
   useEffect(() => { void refresh() }, [])
