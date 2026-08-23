@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { canUnlockV2Features } from '@/lib/v2-feature-access'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 import {
   buildValuationReportPayload,
@@ -132,6 +133,16 @@ export async function POST(request: Request) {
 
     const payloadError = validatePayload(payload)
     if (payloadError) return NextResponse.json({ error: payloadError }, { status: 400 })
+
+    if (payload.subject.propertyType === 'Departamento') {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!canUnlockV2Features(user)) {
+        return NextResponse.json(
+          { error: 'La valorización de departamentos estará disponible en la versión 2.' },
+          { status: 403 },
+        )
+      }
+    }
 
     const submittedComparables = payload.comparables.filter(comparableHasEvidence)
     let assignmentEvidence: Record<string, unknown> | null = null
