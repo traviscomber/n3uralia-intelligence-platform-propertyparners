@@ -107,35 +107,38 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestObservedListing.error,
     ].filter(Boolean)
 
-    if (errors.length > 0) {
-      return { ...emptySnapshot, error: errors.map((error) => error?.message).join(' · ') }
-    }
-
     const metric = latestMetric.data
     const ingestion = latestIngestion.data
     const latestObservedAt = latestObservedListing.data?.observed_at ?? null
     const freshness = getObservationFreshness(latestObservedAt)
 
     return {
-      connected: true,
-      canonicalProperties: properties.count ?? 0,
-      confirmedProperties: confirmed.count ?? 0,
-      missingNeighborhoods: missingNeighborhoods.count ?? 0,
-      activeInventory: metric?.active_inventory ?? activeListings.count ?? 0,
-      confirmedSales: metric?.confirmed_sales ?? transactions.count ?? 0,
-      medianDaysOnMarket: metric?.median_days_on_market ?? null,
-      absorptionRate: metric?.absorption_rate ?? null,
-      offerToSalesRatio: metric?.offer_to_sales_ratio ?? null,
-      latestPeriod: metric ? `${metric.period_start} / ${metric.period_end}` : null,
-      pendingMatches: (identityCandidates.count ?? 0) + (matchCandidates.count ?? 0),
-      latestIngestionAt: ingestion?.completed_at ?? ingestion?.started_at ?? null,
-      latestIngestionStatus: ingestion?.status ?? null,
-      latestIngestionAccepted: ingestion?.accepted_rows ?? null,
-      latestIngestionRejected: ingestion?.rejected_rows ?? null,
-      ingestionRuns: ingestionRuns.count ?? 0,
-      latestObservedAt,
-      observationAgeDays: freshness.ageDays,
-      freshnessStatus: freshness.status,
+      connected: errors.length < 11,
+      canonicalProperties: properties.error ? null : properties.count ?? 0,
+      confirmedProperties: confirmed.error ? null : confirmed.count ?? 0,
+      missingNeighborhoods: missingNeighborhoods.error ? null : missingNeighborhoods.count ?? 0,
+      activeInventory: latestMetric.error
+        ? (activeListings.error ? null : activeListings.count ?? 0)
+        : metric?.active_inventory ?? (activeListings.error ? null : activeListings.count ?? 0),
+      confirmedSales: latestMetric.error
+        ? (transactions.error ? null : transactions.count ?? 0)
+        : metric?.confirmed_sales ?? (transactions.error ? null : transactions.count ?? 0),
+      medianDaysOnMarket: latestMetric.error ? null : metric?.median_days_on_market ?? null,
+      absorptionRate: latestMetric.error ? null : metric?.absorption_rate ?? null,
+      offerToSalesRatio: latestMetric.error ? null : metric?.offer_to_sales_ratio ?? null,
+      latestPeriod: !latestMetric.error && metric ? `${metric.period_start} / ${metric.period_end}` : null,
+      pendingMatches: identityCandidates.error || matchCandidates.error
+        ? null
+        : (identityCandidates.count ?? 0) + (matchCandidates.count ?? 0),
+      latestIngestionAt: latestIngestion.error ? null : ingestion?.completed_at ?? ingestion?.started_at ?? null,
+      latestIngestionStatus: latestIngestion.error ? null : ingestion?.status ?? null,
+      latestIngestionAccepted: latestIngestion.error ? null : ingestion?.accepted_rows ?? null,
+      latestIngestionRejected: latestIngestion.error ? null : ingestion?.rejected_rows ?? null,
+      ingestionRuns: ingestionRuns.error ? null : ingestionRuns.count ?? 0,
+      latestObservedAt: latestObservedListing.error ? null : latestObservedAt,
+      observationAgeDays: latestObservedListing.error ? null : freshness.ageDays,
+      freshnessStatus: latestObservedListing.error ? 'unknown' : freshness.status,
+      error: errors.length ? errors.map((error) => error?.message).join(' · ') : undefined,
     }
   } catch (error) {
     return { ...emptySnapshot, error: error instanceof Error ? error.message : 'No fue posible consultar la base operativa.' }
