@@ -120,11 +120,10 @@ export function QuickSubjectLookup() {
     <div className="border-b border-[var(--n3-line)] p-5">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d7332b]">Búsqueda rápida</p>
       <h2 className="mt-1 text-lg font-semibold">¿Qué propiedad quieres valorizar?</h2>
-      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Con dirección y número de departamento recuperamos los antecedentes que ya existen en la base canónica.</p>
+      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Ingresa la dirección de una casa en Vitacura para recuperar sus antecedentes desde la base canónica.</p>
     </div>
-    <div className="grid gap-3 p-5 md:grid-cols-[1fr_180px_auto]">
-      <label className="block"><span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Dirección</span><input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Las Nieves 3850" className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm outline-none focus:border-[#d7332b]" /></label>
-      <label className="block"><span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Depto. opcional</span><input value={unit} onChange={(event) => setUnit(event.target.value)} placeholder="101" className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm outline-none focus:border-[#d7332b]" /></label>
+    <div className="grid gap-3 p-5 md:grid-cols-[1fr_auto]">
+      <label className="block"><span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Dirección de la casa</span><input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Paysandú 5952" className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm outline-none focus:border-[#d7332b]" /></label>
       <button type="button" disabled={loading} onClick={() => void lookup()} className="mt-[22px] inline-flex min-h-11 items-center justify-center gap-2 bg-[#d7332b] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"><Search size={15} />{loading ? 'Buscando…' : 'Buscar propiedad'}</button>
     </div>
 
