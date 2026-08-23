@@ -22,6 +22,14 @@ function getProvenanceState(pathname: string, consultationDate: string): Provena
     }
   }
 
+  if (pathname.startsWith('/dashboard/pedro-pablo')) {
+    return {
+      label: 'Datos Property Partners',
+      detail: 'Opinión N3uralia separada',
+      toneClass: 'text-[var(--chart-3)]',
+    }
+  }
+
   if (pathname.startsWith('/dashboard/sources') || pathname.startsWith('/dashboard/knowledge')) {
     return {
       label: 'Fuente viva · separada',
