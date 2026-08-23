@@ -356,18 +356,9 @@ export default function ValuationPage() {
   }
 
   async function saveDraft() {
-    if (!result) {
-      setMessage('La valorización todavía no tiene un resultado canónico válido.')
+    if (!subject.address.trim() || !subject.neighborhood.trim()) {
+      setMessage('Identifica la dirección y el barrio antes de guardar el borrador.')
       return
-    }
-    if (!professionalJustification.trim()) {
-      setMessage('Agrega una justificación profesional antes de guardar.')
-      return
-    }
-    for (const [index, item] of selectedComparables.entries()) {
-      if (!item.sourceReference.trim()) { setMessage(`El comparable ${index + 1} requiere referencia de fuente.`); return }
-      if (!item.address.trim()) { setMessage(`El comparable ${index + 1} requiere dirección.`); return }
-      if (item.sourceType === 'CBRS' && !item.transactionDate) { setMessage(`El comparable CBRS ${index + 1} requiere fecha de transacción.`); return }
     }
 
     setSaving(true)
@@ -384,7 +375,7 @@ export default function ValuationPage() {
         professionalJustification.trim(),
       ].filter(Boolean).join('\n\n')
 
-      const response = await fetch('/api/valuation/cases', {
+      const response = await fetch('/api/valuation/drafts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -398,11 +389,11 @@ export default function ValuationPage() {
         }),
       })
       const payload = await response.json() as { caseId?: string; error?: string }
-      if (!response.ok) throw new Error(payload.error || 'No fue posible guardar la valorización.')
-      if (!payload.caseId) throw new Error('La API no devolvió el identificador del caso.')
+      if (!response.ok) throw new Error(payload.error || 'No fue posible guardar el borrador.')
+      if (!payload.caseId) throw new Error('La API no devolvió el identificador del borrador.')
       router.push(`/dashboard/valuations/${payload.caseId}`)
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No fue posible guardar la valorización.')
+      setMessage(error instanceof Error ? error.message : 'No fue posible guardar el borrador.')
     } finally {
       setSaving(false)
     }
@@ -546,7 +537,10 @@ export default function ValuationPage() {
       <div className="flex items-center justify-between gap-3">
         <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold disabled:opacity-30"><ArrowLeft size={14} />Anterior</button>
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
-        {step < 5 ? <button type="button" onClick={goNext} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Continuar <ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex items-center gap-2 bg-[#d7332b] px-5 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización trazable'}</button>}
+        <div className="flex items-center gap-2">
+          {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold disabled:opacity-50"><Save size={14} />{saving ? 'Guardando…' : 'Guardar borrador'}</button> : null}
+          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Continuar <ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex items-center gap-2 bg-[#d7332b] px-5 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? 'Guardando…' : 'Guardar borrador'}</button>}
+        </div>
       </div>
     </div>
   </IntelligencePage>
