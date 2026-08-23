@@ -47,6 +47,14 @@ const emptySnapshot: OperationalMarketSnapshot = {
   freshnessStatus: 'unknown',
 }
 
+export function selectCanonicalSales(...values: Array<number | null | undefined>): number | null {
+  const available = values.filter(
+    (value): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0,
+  )
+
+  return available.length ? Math.max(...available) : null
+}
+
 function getObservationFreshness(value: string | null | undefined) {
   if (!value) return { ageDays: null, status: 'unknown' as const }
 
@@ -62,13 +70,14 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [properties, confirmed, missingNeighborhoods, identityCandidates, activeListings, transactions, matchCandidates, latestMetric, latestIngestion, ingestionRuns, latestObservedListing] = await Promise.all([
+    const [properties, confirmed, missingNeighborhoods, identityCandidates, activeListings, transactions, canonicalCbrsSales, matchCandidates, latestMetric, latestIngestion, ingestionRuns, latestObservedListing] = await Promise.all([
       supabase.from('market_properties').select('id', { count: 'exact', head: true }),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).eq('identity_status', 'confirmed'),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).is('neighborhood_id', null),
       supabase.from('market_properties').select('id', { count: 'exact', head: true }).in('identity_status', ['candidate', 'needs_review']),
       supabase.from('market_current_listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('market_transactions').select('id', { count: 'exact', head: true }),
+      supabase.from('market_cbrs_reference_transactions').select('id', { count: 'exact', head: true }),
       supabase.from('market_property_matches').select('id', { count: 'exact', head: true }).in('status', ['candidate_high', 'candidate_medium']),
       supabase
         .from('market_metric_snapshots')
@@ -93,36 +102,35 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .maybeSingle(),
     ])
 
-    const errors = [
-      properties.error,
-      confirmed.error,
-      missingNeighborhoods.error,
-      identityCandidates.error,
-      activeListings.error,
-      transactions.error,
-      matchCandidates.error,
-      latestMetric.error,
-      latestIngestion.error,
-      ingestionRuns.error,
-      latestObservedListing.error,
-    ].filter(Boolean)
-
     const metric = latestMetric.data
+    const metricInventoryAvailable = !latestMetric.error && metric?.active_inventory != null
+    const listingInventoryAvailable = !activeListings.error
+    const metricSalesAvailable = !latestMetric.error && metric?.confirmed_sales != null
+    const transactionSalesAvailable = !transactions.error
+    const canonicalSalesAvailable = !canonicalCbrsSales.error
+    const criticalErrors = [
+      properties.error?.message,
+      !metricInventoryAvailable && !listingInventoryAvailable ? 'Inventario operativo no disponible.' : null,
+      !metricSalesAvailable && !transactionSalesAvailable && !canonicalSalesAvailable ? 'Ventas confirmadas no disponibles.' : null,
+    ].filter((message): message is string => Boolean(message))
+
     const ingestion = latestIngestion.data
     const latestObservedAt = latestObservedListing.data?.observed_at ?? null
     const freshness = getObservationFreshness(latestObservedAt)
 
     return {
-      connected: errors.length < 11,
+      connected: criticalErrors.length === 0,
       canonicalProperties: properties.error ? null : properties.count ?? 0,
       confirmedProperties: confirmed.error ? null : confirmed.count ?? 0,
       missingNeighborhoods: missingNeighborhoods.error ? null : missingNeighborhoods.count ?? 0,
       activeInventory: latestMetric.error
         ? (activeListings.error ? null : activeListings.count ?? 0)
         : metric?.active_inventory ?? (activeListings.error ? null : activeListings.count ?? 0),
-      confirmedSales: latestMetric.error
-        ? (transactions.error ? null : transactions.count ?? 0)
-        : metric?.confirmed_sales ?? (transactions.error ? null : transactions.count ?? 0),
+      confirmedSales: selectCanonicalSales(
+        metricSalesAvailable ? metric?.confirmed_sales : null,
+        transactionSalesAvailable ? transactions.count ?? 0 : null,
+        canonicalSalesAvailable ? canonicalCbrsSales.count ?? 0 : null,
+      ),
       medianDaysOnMarket: latestMetric.error ? null : metric?.median_days_on_market ?? null,
       absorptionRate: latestMetric.error ? null : metric?.absorption_rate ?? null,
       offerToSalesRatio: latestMetric.error ? null : metric?.offer_to_sales_ratio ?? null,
@@ -138,7 +146,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestObservedAt: latestObservedListing.error ? null : latestObservedAt,
       observationAgeDays: latestObservedListing.error ? null : freshness.ageDays,
       freshnessStatus: latestObservedListing.error ? 'unknown' : freshness.status,
-      error: errors.length ? errors.map((error) => error?.message).join(' · ') : undefined,
+      error: criticalErrors.length ? criticalErrors.join(' · ') : undefined,
     }
   } catch (error) {
     return { ...emptySnapshot, error: error instanceof Error ? error.message : 'No fue posible consultar la base operativa.' }
