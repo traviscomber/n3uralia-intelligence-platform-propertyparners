@@ -24,6 +24,8 @@ import {
   MetricGrid,
 } from '@/components/intelligence/design-system'
 import { QuickSubjectLookup } from '@/components/valuation/quick-subject-lookup'
+import { createClient } from '@/lib/supabase/client'
+import { canUnlockV2Features } from '@/lib/v2-feature-access'
 
 const emptySubject: ValuationSubject = {
   propertyType: 'Casa',
@@ -234,6 +236,12 @@ export default function ValuationPage() {
   const [suggesting, setSuggesting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [v2Unlocked, setV2Unlocked] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    void supabase.auth.getUser().then(({ data }) => setV2Unlocked(canUnlockV2Features(data.user)))
+  }, [])
 
   useEffect(() => {
     if (!quickLookup && !assignmentId) return
@@ -415,7 +423,7 @@ export default function ValuationPage() {
       <QuickSubjectLookup />
       <div className="text-center"><button type="button" onClick={() => setManualOpen((value) => !value)} className="text-xs text-[var(--n3-text-muted)] underline underline-offset-4 hover:text-white">{manualOpen ? 'Ocultar ingreso manual' : 'No encuentro la propiedad · ingresar manualmente'}</button></div>
       {manualOpen ? <IntelligencePanel eyebrow="Alternativa" title="Ingreso manual" description="Úsalo solo cuando la propiedad no exista todavía en las fuentes canónicas."><div className="grid gap-4 p-5 md:grid-cols-2">
-        <div className="block"><FieldLabel>Tipo</FieldLabel><div className="grid grid-cols-2 border border-[var(--n3-line)] bg-[#080d0d]" aria-label="Tipo de propiedad"><button type="button" aria-pressed="true" onClick={() => updateSubject('propertyType', 'Casa')} className="bg-[#d7332b] px-3 py-3 text-sm font-semibold text-white">Casa</button><button type="button" disabled aria-disabled="true" title="Disponible en la versión 2" className="cursor-not-allowed border-l border-[var(--n3-line)] px-3 py-3 text-sm text-[var(--n3-text-muted)] opacity-60">Departamento <span className="ml-1 text-[10px] uppercase tracking-[0.12em]">V2</span></button></div></div>
+        <div className="block"><FieldLabel>Tipo</FieldLabel><div className="grid grid-cols-2 border border-[var(--n3-line)] bg-[#080d0d]" aria-label="Tipo de propiedad"><button type="button" aria-pressed={subject.propertyType === 'Casa'} onClick={() => updateSubject('propertyType', 'Casa')} className={`${subject.propertyType === 'Casa' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} px-3 py-3 text-sm font-semibold`}>Casa</button><button type="button" disabled={!v2Unlocked} aria-disabled={!v2Unlocked} aria-pressed={subject.propertyType === 'Departamento'} title={v2Unlocked ? 'Funcionalidad V2 habilitada para N3uralia' : 'Disponible en la versión 2'} onClick={() => v2Unlocked && updateSubject('propertyType', 'Departamento')} className={`${subject.propertyType === 'Departamento' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} ${v2Unlocked ? 'hover:text-white' : 'cursor-not-allowed opacity-60'} border-l border-[var(--n3-line)] px-3 py-3 text-sm`}>Departamento <span className="ml-1 text-[10px] uppercase tracking-[0.12em]">{v2Unlocked ? 'Desbloqueado' : 'V2'}</span></button></div></div>
         <TextField label="Dirección" value={subject.address} onChange={(value) => updateSubject('address', value)} placeholder="Calle y número" />
         <TextField label="Barrio / sector" value={subject.neighborhood} onChange={(value) => updateSubject('neighborhood', value)} placeholder="Barrio canónico" />
         <TextField label="ROL si existe" value={subject.rol} onChange={(value) => updateSubject('rol', value)} />
