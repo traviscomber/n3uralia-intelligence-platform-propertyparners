@@ -119,8 +119,8 @@ export function QuickSubjectLookup() {
   return <section className="border border-[var(--n3-line)] bg-[#0c1111]">
     <div className="border-b border-[var(--n3-line)] p-5">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#d7332b]">Búsqueda rápida</p>
-      <h2 className="mt-1 text-lg font-semibold">¿Qué propiedad quieres valorizar?</h2>
-      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Ingresa la dirección de una casa en Vitacura para recuperar sus antecedentes desde la base canónica.</p>
+      <h2 className="mt-1 text-lg font-semibold">Busca una propiedad</h2>
+      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Casas en Vitacura.</p>
     </div>
     <div className="grid gap-3 p-5 md:grid-cols-[1fr_auto]">
       <label className="block"><span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Dirección de la casa</span><input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Paysandú 5952" className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm outline-none focus:border-[#d7332b]" /></label>
@@ -129,7 +129,7 @@ export function QuickSubjectLookup() {
 
     {result?.status === 'units' ? <div className="border-t border-[var(--n3-line)] p-5">
       <p className="text-sm font-semibold">Elige la unidad</p>
-      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Encontramos varias unidades en {result.buildingAddress}.</p>
+      <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Unidades en {result.buildingAddress}.</p>
       <div className="mt-3 flex flex-wrap gap-2">{result.units.map((item) => <button key={item.unit} type="button" onClick={() => { setUnit(item.unit); void lookup(item.unit) }} className="border border-[var(--n3-line)] px-3 py-2 text-xs hover:border-[#d7332b]">Depto {item.unit}{item.registeredAreaM2 ? ` · ${item.registeredAreaM2} m²` : ''}{item.bedrooms !== undefined ? ` · ${item.bedrooms}D/${item.bathrooms ?? '—'}B` : ''}</button>)}</div>
     </div> : null}
 
@@ -145,7 +145,7 @@ export function QuickSubjectLookup() {
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Año</span><strong className="mt-1 block text-sm">{formatNumber(resolved.subject.constructionYear)}</strong></div>
         <div className="border border-[var(--n3-line)] p-3"><span className="text-[10px] uppercase text-[var(--n3-text-muted)]">Historial</span><strong className="mt-1 block text-sm">{resolved.history.length} venta{resolved.history.length === 1 ? '' : 's'}</strong></div>
       </div>
-      {needsAreaConfirmation ? <label className="mt-4 flex items-start gap-3 border border-[#806f37] bg-[#15130b] p-3 text-xs"><input type="checkbox" checked={confirmRegisteredArea} onChange={(event) => setConfirmRegisteredArea(event.target.checked)} className="mt-0.5" /><span><strong>Confirmar superficie para valorización.</strong> CBRS registra {resolved.registeredAreaM2} m², pero la semántica útil/construida no está certificada. Confirma solo si corresponde usarla como m² útiles.</span></label> : null}
+      {needsAreaConfirmation ? <label className="mt-4 flex items-start gap-3 border border-[#806f37] bg-[#15130b] p-3 text-xs"><input type="checkbox" checked={confirmRegisteredArea} onChange={(event) => setConfirmRegisteredArea(event.target.checked)} className="mt-0.5" /><span><strong>Confirmar superficie.</strong> CBRS registra {resolved.registeredAreaM2} m² sin semántica certificada. Confirma su uso como m² útiles.</span></label> : null}
       <div className="mt-4 flex justify-end"><button type="button" disabled={needsAreaConfirmation && !confirmRegisteredArea} onClick={continueWithSubject} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Continuar con esta propiedad <ArrowRight size={14} /></button></div>
     </div> : null}
 
