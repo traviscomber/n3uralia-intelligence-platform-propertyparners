@@ -46,6 +46,12 @@ type CbrsQuality = {
   geographyConflict?: boolean
   neighborhoodTypeMedianUfM2?: number | null
   ufM2RatioToMedian?: number | null
+  robustScope?: string
+  cohortCount?: number
+  robustMedianUfM2?: number | null
+  iqrOutlier?: boolean
+  cohortRatioOutlier?: boolean
+  rolRatioOutlier?: boolean
 }
 
 type CbrsRow = {
@@ -145,6 +151,21 @@ function recencyScore(date: string) {
 function withinFiveYears(date: string) {
   const timestamp = new Date(date).getTime()
   return Number.isFinite(timestamp) && Date.now() - timestamp <= 365.25 * 5 * 86400000
+}
+
+function weightedMedianRate(items: Array<{ priceUfM2: number; similarityScore: number }>) {
+  const usable = items
+    .filter((item) => item.priceUfM2 > 0 && item.similarityScore > 0)
+    .map((item) => ({ ...item, weight: item.similarityScore ** 2 }))
+    .sort((a, b) => a.priceUfM2 - b.priceUfM2)
+  const totalWeight = usable.reduce((sum, item) => sum + item.weight, 0)
+  if (!usable.length || totalWeight <= 0) return null
+  let cumulative = 0
+  for (const item of usable) {
+    cumulative += item.weight
+    if (cumulative >= totalWeight / 2) return item.priceUfM2
+  }
+  return usable[usable.length - 1]?.priceUfM2 ?? null
 }
 
 function trustedPortalListing(item: PortalRow, propertyType: SuggestPayload['propertyType']) {
@@ -343,6 +364,28 @@ export async function POST(request: Request) {
       .sort((a, b) => b.similarityScore - a.similarityScore)
       .slice(0, 8)
 
+    const houseRecommendation = payload.propertyType === 'Casa' && cbrsSuggestions.length >= 3
+      ? (() => {
+          const sample = cbrsSuggestions.slice(0, 7)
+          const weightedRate = weightedMedianRate(sample)
+          const weightedArea = num(payload.builtAreaM2) + num(payload.landAreaM2) / 4
+          const averageSimilarity = sample.reduce((sum, item) => sum + item.similarityScore, 0) / sample.length
+          if (!weightedRate || weightedArea <= 0) return null
+          const confidence = sample.length >= 5 && averageSimilarity >= 0.72 ? 'high' : sample.length >= 4 && averageSimilarity >= 0.58 ? 'medium' : 'low'
+          return {
+            weightedRateUfM2: Number(weightedRate.toFixed(2)),
+            builtRateUfM2: Number(weightedRate.toFixed(2)),
+            landRateUfM2: Number((weightedRate / 4).toFixed(2)),
+            estimatedValueUf: Math.round(weightedRate * weightedArea),
+            comparableCount: sample.length,
+            averageSimilarity: Number(averageSimilarity.toFixed(3)),
+            confidence,
+            nonBinding: true,
+            method: 'weighted_median_similarity_squared',
+          }
+        })()
+      : null
+
     let cbrsBenchmark = null
     let portalBenchmark: PortalBenchmark | null = null
     if (neighborhood) {
@@ -360,15 +403,17 @@ export async function POST(request: Request) {
       suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length, excludedEconomic, excludedStale },
       cbrsBenchmark,
       portalBenchmark,
-      methodologyVersion: payload.propertyType === 'Casa' ? 'property-partners-valuation-v2-kml-house-micro-v1' : 'property-partners-valuation-v2-kml-first',
+      houseRecommendation,
+      methodologyVersion: payload.propertyType === 'Casa' ? 'property-partners-valuation-v2-kml-house-robust-v2' : 'property-partners-valuation-v2-kml-first',
       notes: [
         `Primer filtro: barrio KML Property Partners = ${canonicalBarrio}. Ningún comparable de otro polígono compite en el ranking.`,
         canonicalBarrio !== payload.neighborhood.trim() ? `El KML corrigió el barrio informado (${payload.neighborhood.trim()} → ${canonicalBarrio}).` : 'El barrio informado coincide con el KML canónico.',
         payload.propertyType === 'Casa'
           ? 'Dentro del barrio, el ranking prioriza micro-ubicación, año de construcción, superficie construida, terreno, programa y recencia. Ventas de más de 5 años no compiten en el top principal.'
           : 'Después del filtro territorial se ordena por superficie, distancia y recencia.',
-        excludedEconomic ? `${excludedEconomic} ventas CBRS con anomalía económica extrema fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas extremas en el conjunto seleccionable.',
+        excludedEconomic ? `${excludedEconomic} ventas CBRS atípicas para su cohorte de tamaño/terreno fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas en la cohorte seleccionable.',
         excludedStale ? `${excludedStale} ventas de casas de más de 5 años quedaron fuera del ranking principal.` : '',
+        houseRecommendation ? `Referencia estadística no vinculante: ${houseRecommendation.weightedRateUfM2.toLocaleString('es-CL')} UF/m² ponderado, equivalente a ~${houseRecommendation.estimatedValueUf.toLocaleString('es-CL')} UF con ${houseRecommendation.comparableCount} ventas limpias. Property Partners confirma la tasa final.` : '',
         'Portal representa oferta y permanece como referencia; CBRS representa ventas registradas. Property Partners decide.',
       ].filter(Boolean),
     })
