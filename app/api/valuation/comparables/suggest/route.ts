@@ -17,20 +17,7 @@ type SuggestPayload = {
   longitude?: number
 }
 
-type PropertyRow = {
-  property_type: string | null
-  useful_area_m2: number | string | null
-  built_area_m2: number | string | null
-  land_area_m2: number | string | null
-  bedrooms: number | null
-  bathrooms: number | null
-  parking_spaces: number | null
-  latitude: number | string | null
-  longitude: number | string | null
-  market_neighborhoods: Array<{ name: string | null }>
-}
-
-type ListingRow = {
+type PortalRow = {
   id: string
   source_listing_id: string
   url: string | null
@@ -40,7 +27,24 @@ type ListingRow = {
   price_uf_m2: number | string | null
   observed_at: string | null
   raw_payload: Record<string, unknown> | null
-  market_properties: PropertyRow[]
+  property_type: string | null
+  useful_area_m2: number | string | null
+  built_area_m2: number | string | null
+  land_area_m2: number | string | null
+  bedrooms: number | null
+  bathrooms: number | null
+  parking_spaces: number | null
+  latitude: number | string | null
+  longitude: number | string | null
+  pp_kml_barrio: string
+}
+
+type CbrsQuality = {
+  priceOutlier?: boolean
+  sameRolPriceConflict?: boolean
+  geographyConflict?: boolean
+  neighborhoodTypeMedianUfM2?: number | null
+  ufM2RatioToMedian?: number | null
 }
 
 type CbrsRow = {
@@ -55,6 +59,8 @@ type CbrsRow = {
   latitude: number | string | null
   longitude: number | string | null
   neighborhood: string | null
+  pp_kml_barrio: string
+  quality: CbrsQuality | null
 }
 
 type PortalBenchmark = {
@@ -95,82 +101,56 @@ function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number)
 
 function relativeSimilarity(subject: number, candidate: number) {
   if (subject <= 0 || candidate <= 0) return 0.5
-  const delta = Math.abs(subject - candidate) / subject
-  return Math.max(0, 1 - Math.min(delta, 1))
+  return Math.max(0, 1 - Math.min(Math.abs(subject - candidate) / subject, 1))
 }
 
-function trustedPortalListing(item: ListingRow, propertyType: SuggestPayload['propertyType']) {
+function trustedPortalListing(item: PortalRow, propertyType: SuggestPayload['propertyType']) {
   const source = String(item.raw_payload?.source ?? '').toLowerCase()
   const allowed = propertyType === 'Departamento'
     ? new Set(['portal_inmobiliario', 'portal_inmobiliario_departments'])
     : new Set(['portal_inmobiliario', 'portal_inmobiliario_houses'])
   if (!allowed.has(source)) return false
-
-  // The legacy inventory contains some rows from other communes whose historic
-  // coordinates were incorrectly mapped into Vitacura. Until the live collector
-  // is recertified, explicit Vitacura textual evidence is an additional boundary.
-  const addressEvidence = normalizeText(`${item.normalized_address ?? ''} ${item.title ?? ''}`)
-  return addressEvidence.includes('vitacura')
+  return normalizeText(`${item.normalized_address ?? ''} ${item.title ?? ''}`).includes('vitacura')
 }
 
 function isSubjectCbrs(payload: SuggestPayload, row: CbrsRow) {
   if (payload.eventKey && row.event_key === payload.eventKey) return true
   if (payload.rol && row.rol && normalizeText(payload.rol) === normalizeText(row.rol)) return true
   if (payload.address && row.address && normalizeText(payload.address) === normalizeText(row.address)) return true
-
-  const subjectLat = num(payload.latitude)
-  const subjectLon = num(payload.longitude)
-  const rowLat = num(row.latitude)
-  const rowLon = num(row.longitude)
-  if (!subjectLat || !subjectLon || !rowLat || !rowLon) return false
-
-  const subjectArea = payload.propertyType === 'Departamento' ? num(payload.usefulAreaM2) : num(payload.builtAreaM2)
-  const rowArea = num(row.built_area_m2)
-  const sameArea = subjectArea > 0 && rowArea > 0 && Math.abs(subjectArea - rowArea) <= 0.5
-  return sameArea && haversineMeters(subjectLat, subjectLon, rowLat, rowLon) <= 2
+  const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
+  if (coords.some((value) => !value)) return false
+  const subjectArea = payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2)
+  const candidateArea = num(row.built_area_m2)
+  return subjectArea > 0 && candidateArea > 0 && Math.abs(subjectArea - candidateArea) <= 0.5 && haversineMeters(coords[0], coords[1], coords[2], coords[3]) <= 2
 }
 
-function scoreListing(payload: SuggestPayload, property: PropertyRow) {
-  const subjectArea = payload.propertyType === 'Departamento'
-    ? num(payload.usefulAreaM2)
-    : num(payload.builtAreaM2 || payload.usefulAreaM2)
-  const candidateArea = payload.propertyType === 'Departamento'
-    ? num(property.useful_area_m2)
-    : num(property.built_area_m2 || property.useful_area_m2)
-
-  let score = relativeSimilarity(subjectArea, candidateArea) * 0.6
-  score += payload.bedrooms && property.bedrooms ? relativeSimilarity(payload.bedrooms, property.bedrooms) * 0.15 : 0.075
-  score += payload.bathrooms && property.bathrooms ? relativeSimilarity(payload.bathrooms, property.bathrooms) * 0.15 : 0.075
-
-  const lat1 = num(payload.latitude)
-  const lon1 = num(payload.longitude)
-  const lat2 = num(property.latitude)
-  const lon2 = num(property.longitude)
-  if (lat1 && lon1 && lat2 && lon2) {
-    const distance = haversineMeters(lat1, lon1, lat2, lon2)
-    score += Math.max(0, 1 - Math.min(distance / 3000, 1)) * 0.1
-  } else score += 0.05
+function scorePortal(payload: SuggestPayload, row: PortalRow) {
+  const areaScore = relativeSimilarity(
+    payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2),
+    payload.propertyType === 'Casa' ? num(row.built_area_m2) : num(row.useful_area_m2 || row.built_area_m2),
+  )
+  const landScore = payload.propertyType === 'Casa' ? relativeSimilarity(num(payload.landAreaM2), num(row.land_area_m2)) : 1
+  let score = payload.propertyType === 'Casa' ? areaScore * 0.4 + landScore * 0.25 : areaScore * 0.65
+  score += payload.bedrooms && row.bedrooms ? relativeSimilarity(payload.bedrooms, row.bedrooms) * 0.1 : 0.05
+  score += payload.bathrooms && row.bathrooms ? relativeSimilarity(payload.bathrooms, row.bathrooms) * 0.1 : 0.05
+  const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
+  score += coords.every(Boolean) ? Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15 : 0.075
   return Math.min(1, score)
 }
 
 function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
-  const subjectArea = payload.propertyType === 'Departamento' ? num(payload.usefulAreaM2) : num(payload.builtAreaM2)
-  const candidateArea = num(row.built_area_m2)
-  let score = relativeSimilarity(subjectArea, candidateArea) * 0.75
-
-  const lat1 = num(payload.latitude)
-  const lon1 = num(payload.longitude)
-  const lat2 = num(row.latitude)
-  const lon2 = num(row.longitude)
-  if (lat1 && lon1 && lat2 && lon2) {
-    const distance = haversineMeters(lat1, lon1, lat2, lon2)
-    score += Math.max(0, 1 - Math.min(distance / 3000, 1)) * 0.1
-  } else score += 0.05
-
+  const areaScore = relativeSimilarity(
+    payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2),
+    num(row.built_area_m2),
+  )
+  const landScore = payload.propertyType === 'Casa' ? relativeSimilarity(num(payload.landAreaM2), num(row.land_area_m2)) : 1
+  let score = payload.propertyType === 'Casa' ? areaScore * 0.4 + landScore * 0.25 : areaScore * 0.65
+  const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
+  score += coords.every(Boolean) ? Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15 : 0.075
   const timestamp = new Date(row.transaction_date).getTime()
   if (Number.isFinite(timestamp)) {
     const ageDays = Math.max(0, (Date.now() - timestamp) / 86400000)
-    score += Math.max(0, 1 - Math.min(ageDays / (365 * 10), 1)) * 0.15
+    score += Math.max(0, 1 - Math.min(ageDays / (365 * 10), 1)) * 0.2
   }
   return Math.min(1, score)
 }
@@ -184,96 +164,73 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
-    const { data: neighborhood, error: neighborhoodError } = await admin
-      .from('market_neighborhoods')
-      .select('id,name')
-      .ilike('name', payload.neighborhood.trim())
-      .limit(1)
-      .maybeSingle()
+    let canonicalBarrio = payload.neighborhood.trim()
+    if (num(payload.latitude) && num(payload.longitude)) {
+      const { data: resolved, error } = await admin.rpc('valuation_pp_kml_barrio_at', { p_lat: payload.latitude, p_lon: payload.longitude })
+      if (error) return NextResponse.json({ error: 'No fue posible resolver el barrio KML Property Partners.' }, { status: 422 })
+      if (!resolved) return NextResponse.json({ error: 'La propiedad no cae dentro de un barrio del KML canónico de Vitacura.' }, { status: 422 })
+      canonicalBarrio = String(resolved)
+    } else {
+      const { data: kmlBarrio } = await admin.from('vitacura_market_neighborhoods').select('barrio_nombre').ilike('barrio_nombre', canonicalBarrio).limit(1).maybeSingle()
+      if (!kmlBarrio) return NextResponse.json({ error: 'El barrio no existe en el KML canónico Property Partners.' }, { status: 404 })
+      canonicalBarrio = kmlBarrio.barrio_nombre
+    }
 
-    if (neighborhoodError) return NextResponse.json({ error: 'No fue posible resolver el barrio.' }, { status: 422 })
-    if (!neighborhood) return NextResponse.json({ error: 'El barrio no existe en la capa territorial canónica.' }, { status: 404 })
+    const { data: neighborhood } = await admin.from('market_neighborhoods').select('id,name').ilike('name', canonicalBarrio).limit(1).maybeSingle()
+    const [{ data: portalRows, error: portalError }, { data: cbrsRows, error: cbrsError }] = await Promise.all([
+      admin.rpc('valuation_portal_pp_kml_candidates', { p_barrio: canonicalBarrio, p_property_type: payload.propertyType, p_limit: 500 }),
+      admin.rpc('valuation_cbrs_pp_kml_candidates', { p_barrio: canonicalBarrio, p_property_type: payload.propertyType, p_limit: 500 }),
+    ])
+    if (portalError) console.error('VALUATION_PORTAL_KML_SUGGESTIONS_FAILED', { code: portalError.code ?? 'UNKNOWN' })
+    if (cbrsError) console.error('VALUATION_CBRS_KML_SUGGESTIONS_FAILED', { code: cbrsError.code ?? 'UNKNOWN' })
 
-    const { data: listings, error: listingError } = await admin
-      .from('market_current_listings')
-      .select('id,source_listing_id,url,title,normalized_address,price_uf,price_uf_m2,observed_at,raw_payload,market_properties!inner(property_type,useful_area_m2,built_area_m2,land_area_m2,bedrooms,bathrooms,parking_spaces,latitude,longitude,market_neighborhoods(name))')
-      .eq('status', 'active')
-      .eq('market_properties.property_type', payload.propertyType)
-      .eq('market_properties.neighborhood_id', neighborhood.id)
-      .gt('price_uf', 0)
-      .limit(250)
-
-    if (listingError) console.error('VALUATION_PORTAL_SUGGESTIONS_UNAVAILABLE', { code: listingError.code ?? 'UNKNOWN' })
-
-    const unique = new Map<string, ListingRow>()
-    for (const item of (listings ?? []) as unknown as ListingRow[]) {
+    const unique = new Map<string, PortalRow>()
+    for (const item of (portalRows ?? []) as PortalRow[]) {
       if (!trustedPortalListing(item, payload.propertyType)) continue
       const key = item.source_listing_id || item.url || item.id
       if (!unique.has(key)) unique.set(key, item)
     }
 
-    const portalSuggestions = [...unique.values()]
-      .map((item) => {
-        const property = item.market_properties[0]
-        if (!property) return null
-        const useful = num(property.useful_area_m2)
-        const built = num(property.built_area_m2)
-        const land = num(property.land_area_m2)
-        const price = num(item.price_uf)
-        if (price <= 0) return null
+    const portalSuggestions = [...unique.values()].map((item) => {
+      const useful = num(item.useful_area_m2)
+      const built = num(item.built_area_m2)
+      const land = num(item.land_area_m2)
+      const price = num(item.price_uf)
+      if (price <= 0) return null
+      const latitude = num(item.latitude) || undefined
+      const longitude = num(item.longitude) || undefined
+      const distanceMeters = payload.latitude && payload.longitude && latitude && longitude ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude)) : undefined
+      const sourceReportedUfM2 = num(item.price_uf_m2) || (useful > 0 ? Number((price / useful).toFixed(2)) : 0)
+      return {
+        id: `auto-${item.id}`,
+        sourceType: 'Portal' as const,
+        sourceReference: item.url || item.source_listing_id,
+        address: item.normalized_address || item.title || 'Comparable Portal',
+        neighborhood: canonicalBarrio,
+        propertyType: payload.propertyType,
+        usefulAreaM2: useful || undefined,
+        builtAreaM2: built || undefined,
+        landAreaM2: land || undefined,
+        bedrooms: item.bedrooms ?? undefined,
+        bathrooms: item.bathrooms ?? undefined,
+        parkingSpaces: item.parking_spaces ?? undefined,
+        priceUf: price,
+        priceUfM2: 0,
+        sourceReportedUfM2: sourceReportedUfM2 || undefined,
+        similarityScore: Number(scorePortal(payload, item).toFixed(4)),
+        selected: false,
+        adjustmentPct: 0,
+        adjustmentNotes: 'Oferta Portal real dentro del mismo barrio KML PP. Se mantiene como referencia hasta certificar todas las superficies canónicas requeridas.',
+        distanceMeters,
+        observedAt: item.observed_at,
+        quality: 'reference_only' as const,
+      }
+    }).filter((item): item is NonNullable<typeof item> => Boolean(item)).sort((a, b) => b.similarityScore - a.similarityScore).slice(0, 8)
 
-        const latitude = num(property.latitude) || undefined
-        const longitude = num(property.longitude) || undefined
-        const distanceMeters = payload.latitude && payload.longitude && latitude && longitude
-          ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude))
-          : undefined
-        const sourceReportedUfM2 = num(item.price_uf_m2) || (useful > 0 ? Number((price / useful).toFixed(2)) : 0)
-
-        return {
-          id: `auto-${item.id}`,
-          sourceType: 'Portal' as const,
-          sourceReference: item.url || item.source_listing_id,
-          address: item.normalized_address || item.title || 'Comparable Portal',
-          neighborhood: property.market_neighborhoods[0]?.name || neighborhood.name,
-          propertyType: payload.propertyType,
-          totalAreaM2: undefined,
-          usefulAreaM2: useful || undefined,
-          builtAreaM2: built || undefined,
-          landAreaM2: land || undefined,
-          bedrooms: property.bedrooms ?? undefined,
-          bathrooms: property.bathrooms ?? undefined,
-          parkingSpaces: property.parking_spaces ?? undefined,
-          priceUf: price,
-          priceUfM2: 0,
-          sourceReportedUfM2: sourceReportedUfM2 || undefined,
-          similarityScore: Number(scoreListing(payload, property).toFixed(4)),
-          selected: false,
-          adjustmentPct: 0,
-          adjustmentNotes: 'Oferta Portal real. Referencia visible pero no seleccionable como comparable canónico mientras la fuente live no preserve la superficie total/terraza (departamento) o terreno completo (casa).',
-          distanceMeters,
-          observedAt: item.observed_at,
-          quality: 'reference_only',
-        }
-      })
-      .filter((item): item is NonNullable<typeof item> => Boolean(item))
-      .sort((a, b) => b.similarityScore - a.similarityScore)
-      .slice(0, 8)
-
-    const { data: cbrsRows, error: cbrsError } = await admin
-      .from('market_cbrs_reference_transactions')
-      .select('id,event_key,transaction_date,address,rol,price_uf,built_area_m2,land_area_m2,latitude,longitude,neighborhood')
-      .eq('property_type', payload.propertyType)
-      .ilike('neighborhood', neighborhood.name)
-      .not('price_uf', 'is', null)
-      .gt('price_uf', 0)
-      .not('built_area_m2', 'is', null)
-      .gt('built_area_m2', 0)
-      .order('transaction_date', { ascending: false })
-      .limit(150)
-
-    if (cbrsError) console.error('VALUATION_CBRS_SUGGESTIONS_FAILED', { code: cbrsError.code ?? 'UNKNOWN' })
-
-    const cbrsSuggestions = ((cbrsRows ?? []) as unknown as CbrsRow[])
+    const rawCbrs = (cbrsRows ?? []) as CbrsRow[]
+    const excludedEconomic = rawCbrs.filter((row) => Boolean(row.quality?.priceOutlier)).length
+    const cbrsSuggestions = rawCbrs
+      .filter((row) => !row.quality?.priceOutlier)
       .filter((row) => !isSubjectCbrs(payload, row))
       .map((row) => {
         const built = num(row.built_area_m2)
@@ -283,18 +240,14 @@ export async function POST(request: Request) {
         if (price <= 0 || weightedArea <= 0) return null
         const latitude = num(row.latitude) || undefined
         const longitude = num(row.longitude) || undefined
-        const distanceMeters = payload.latitude && payload.longitude && latitude && longitude
-          ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude))
-          : undefined
+        const distanceMeters = payload.latitude && payload.longitude && latitude && longitude ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude)) : undefined
         return {
           id: `cbrs-${row.id}`,
           sourceType: 'CBRS' as const,
           sourceReference: `CBRS ${row.event_key}${row.rol ? ` · ROL ${row.rol}` : ''}`,
           address: row.address || 'Venta registrada CBRS',
-          neighborhood: row.neighborhood || neighborhood.name,
+          neighborhood: canonicalBarrio,
           propertyType: payload.propertyType,
-          totalAreaM2: undefined,
-          usefulAreaM2: undefined,
           builtAreaM2: built,
           landAreaM2: land || undefined,
           priceUf: price,
@@ -303,11 +256,11 @@ export async function POST(request: Request) {
           selected: false,
           adjustmentPct: 0,
           adjustmentNotes: payload.propertyType === 'Departamento'
-            ? 'Venta efectiva CBRS. UF/m² calculado sobre la superficie registrada en built_area_m2; no se etiqueta como m² útil definitivo hasta cerrar la auditoría semántica de la fuente.'
-            : 'Venta efectiva CBRS consolidada por inscripción; fuente canónica Property Partners.',
+            ? 'Venta CBRS en el mismo barrio KML PP; superficie registrada por la fuente.'
+            : 'Venta CBRS en el mismo barrio KML PP, con construcción y terreno canónicos.',
           distanceMeters,
           transactionDate: row.transaction_date,
-          quality: 'canonical',
+          quality: 'canonical' as const,
           areaSemantics: payload.propertyType === 'Departamento' ? 'source_registered_area_not_confirmed_as_useful' : 'canonical_house_weighted_area',
         }
       })
@@ -315,55 +268,30 @@ export async function POST(request: Request) {
       .sort((a, b) => b.similarityScore - a.similarityScore)
       .slice(0, 8)
 
-    const { data: cbrsBenchmark } = await admin
-      .from('market_cbrs_reference_metrics')
-      .select('transactions,priced_transactions,median_price_uf,median_area_m2,median_uf_m2,observed_at')
-      .eq('scope', 'neighborhood')
-      .eq('property_type', payload.propertyType)
-      .eq('neighborhood_id', neighborhood.id)
-      .is('year', null)
-      .limit(1)
-      .maybeSingle()
-
-    const portalDatasetKind = payload.propertyType === 'Departamento' ? 'portal_apartments' : 'portal_houses'
+    let cbrsBenchmark = null
     let portalBenchmark: PortalBenchmark | null = null
-    if (payload.propertyType === 'Departamento') {
-      const { data } = await admin
-        .from('market_portal_reference_metrics')
-        .select('scope,listing_count,geocoded_count,priced_count,median_price_uf,median_uf_m2,median_area_m2,top_seller,observed_at,metadata')
-        .eq('dataset_kind', portalDatasetKind)
-        .eq('scope', 'neighborhood')
-        .eq('neighborhood_id', neighborhood.id)
-        .limit(1)
-        .maybeSingle()
-      portalBenchmark = (data as PortalBenchmark | null) ?? null
-    }
-    if (!portalBenchmark) {
-      const { data } = await admin
-        .from('market_portal_reference_metrics')
-        .select('scope,listing_count,geocoded_count,priced_count,median_price_uf,median_uf_m2,median_area_m2,top_seller,observed_at,metadata')
-        .eq('dataset_kind', portalDatasetKind)
-        .eq('scope', 'global')
-        .limit(1)
-        .maybeSingle()
-      portalBenchmark = (data as PortalBenchmark | null) ?? null
+    if (neighborhood) {
+      const [{ data: cbrs }, { data: portal }] = await Promise.all([
+        admin.from('market_cbrs_reference_metrics').select('transactions,priced_transactions,median_price_uf,median_area_m2,median_uf_m2,observed_at').eq('scope', 'neighborhood').eq('property_type', payload.propertyType).eq('neighborhood_id', neighborhood.id).is('year', null).limit(1).maybeSingle(),
+        admin.from('market_portal_reference_metrics').select('scope,listing_count,geocoded_count,priced_count,median_price_uf,median_uf_m2,median_area_m2,top_seller,observed_at,metadata').eq('dataset_kind', payload.propertyType === 'Departamento' ? 'portal_apartments' : 'portal_houses').eq('scope', 'neighborhood').eq('neighborhood_id', neighborhood.id).limit(1).maybeSingle(),
+      ])
+      cbrsBenchmark = cbrs ?? null
+      portalBenchmark = (portal as PortalBenchmark | null) ?? null
     }
 
     return NextResponse.json({
-      neighborhood: neighborhood.name,
+      neighborhood: canonicalBarrio,
       suggestions: [...portalSuggestions, ...cbrsSuggestions],
-      suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length },
-      cbrsBenchmark: cbrsBenchmark ?? null,
+      suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length, excludedEconomic },
+      cbrsBenchmark,
       portalBenchmark,
-      methodologyVersion: 'property-partners-valuation-v2',
+      methodologyVersion: 'property-partners-valuation-v2-kml-first',
       notes: [
-        'Portal representa oferta publicada; CBRS representa ventas registradas. Se muestran como fuentes distintas.',
-        'Todas las sugerencias son revisables y nunca se seleccionan automáticamente.',
-        portalBenchmark ? `Benchmark Portal canónico disponible (${portalBenchmark.scope === 'neighborhood' ? 'barrio' : 'global'}).` : 'Benchmark Portal canónico no disponible para este tipo.',
-        portalSuggestions.length ? 'Las publicaciones live mostradas pasan un filtro estricto de fuente Portal + evidencia textual de Vitacura; permanecen como referencia hasta recuperar superficies canónicas completas.' : 'No hay publicaciones live con evidencia suficiente para mostrarse de forma segura en este caso.',
-        cbrsSuggestions.length ? 'Las ventas CBRS individuales se ordenan por similitud de superficie, proximidad y recencia.' : 'No hay ventas CBRS individuales suficientes para este barrio/tipo; se mantiene el benchmark agregado.',
-        'La propiedad sujeto se excluye de CBRS por event key, ROL, dirección o coincidencia geográfica + superficie cuando esos datos están disponibles.',
-        'Cuando faltan metros de terraza, terreno u otra variable crítica, el sistema lo declara y no inventa superficies.',
+        `Primer filtro: barrio KML Property Partners = ${canonicalBarrio}. Ningún comparable de otro polígono compite en el ranking.`,
+        canonicalBarrio !== payload.neighborhood.trim() ? `El KML corrigió el barrio informado (${payload.neighborhood.trim()} → ${canonicalBarrio}).` : 'El barrio informado coincide con el KML canónico.',
+        'Después del filtro territorial se ordena por superficies, distancia, programa y recencia.',
+        excludedEconomic ? `${excludedEconomic} ventas CBRS con anomalía económica extrema fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas extremas en el conjunto seleccionable.',
+        'Portal representa oferta y permanece como referencia; CBRS representa ventas registradas. Property Partners decide.',
       ],
     })
   } catch (error) {
