@@ -13,6 +13,7 @@ type SuggestPayload = {
   landAreaM2?: number
   bedrooms?: number
   bathrooms?: number
+  constructionYear?: number
   latitude?: number
   longitude?: number
 }
@@ -56,6 +57,8 @@ type CbrsRow = {
   price_uf: number | string | null
   built_area_m2: number | string | null
   land_area_m2: number | string | null
+  construction_year: number | null
+  bedrooms_bathrooms: string | null
   latitude: number | string | null
   longitude: number | string | null
   neighborhood: string | null
@@ -90,6 +93,14 @@ function normalizeText(value: unknown) {
     .trim()
 }
 
+function addressBase(value: unknown) {
+  return normalizeText(String(value ?? '').replace(/\s+(casa|cs|dp|depto)\s*[a-z0-9-]+\s*$/i, ''))
+}
+
+function streetBase(value: unknown) {
+  return normalizeText(String(value ?? '').replace(/\s+[0-9].*$/, ''))
+}
+
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (value: number) => value * Math.PI / 180
   const earth = 6371000
@@ -102,6 +113,38 @@ function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number)
 function relativeSimilarity(subject: number, candidate: number) {
   if (subject <= 0 || candidate <= 0) return 0.5
   return Math.max(0, 1 - Math.min(Math.abs(subject - candidate) / subject, 1))
+}
+
+function parseProgram(value: string | null) {
+  const match = String(value ?? '').match(/^(\d+)D\/(\d+)B$/i)
+  if (!match) return null
+  return { bedrooms: Number(match[1]), bathrooms: Number(match[2]) }
+}
+
+function houseYearScore(subjectYear: number, candidateYear: number) {
+  if (!subjectYear || !candidateYear) return 0.4
+  const delta = Math.abs(subjectYear - candidateYear)
+  if (delta <= 5) return 1
+  if (delta <= 10) return 0.85
+  if (delta <= 20) return 0.6
+  if (delta <= 30) return 0.35
+  return 0.15
+}
+
+function recencyScore(date: string) {
+  const timestamp = new Date(date).getTime()
+  if (!Number.isFinite(timestamp)) return 0.1
+  const ageDays = Math.max(0, (Date.now() - timestamp) / 86400000)
+  if (ageDays <= 365) return 1
+  if (ageDays <= 365 * 2) return 0.8
+  if (ageDays <= 365 * 3) return 0.6
+  if (ageDays <= 365 * 5) return 0.3
+  return 0
+}
+
+function withinFiveYears(date: string) {
+  const timestamp = new Date(date).getTime()
+  return Number.isFinite(timestamp) && Date.now() - timestamp <= 365.25 * 5 * 86400000
 }
 
 function trustedPortalListing(item: PortalRow, propertyType: SuggestPayload['propertyType']) {
@@ -144,15 +187,36 @@ function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
     num(row.built_area_m2),
   )
   const landScore = payload.propertyType === 'Casa' ? relativeSimilarity(num(payload.landAreaM2), num(row.land_area_m2)) : 1
-  let score = payload.propertyType === 'Casa' ? areaScore * 0.4 + landScore * 0.25 : areaScore * 0.65
   const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
-  score += coords.every(Boolean) ? Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15 : 0.075
-  const timestamp = new Date(row.transaction_date).getTime()
-  if (Number.isFinite(timestamp)) {
-    const ageDays = Math.max(0, (Date.now() - timestamp) / 86400000)
-    score += Math.max(0, 1 - Math.min(ageDays / (365 * 10), 1)) * 0.2
+
+  if (payload.propertyType !== 'Casa') {
+    let score = areaScore * 0.65
+    score += coords.every(Boolean) ? Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15 : 0.075
+    score += recencyScore(row.transaction_date) * 0.2
+    return Math.min(1, score)
   }
-  return Math.min(1, score)
+
+  const distance = coords.every(Boolean) ? haversineMeters(coords[0], coords[1], coords[2], coords[3]) : 3000
+  const subjectAddress = payload.address ?? ''
+  const candidateAddress = row.address ?? ''
+  const microScore = addressBase(subjectAddress) && addressBase(subjectAddress) === addressBase(candidateAddress)
+    ? 1
+    : streetBase(subjectAddress) && streetBase(subjectAddress) === streetBase(candidateAddress)
+      ? 0.8
+      : distance <= 250 ? 0.65 : distance <= 500 ? 0.5 : distance <= 1000 ? 0.3 : 0.1
+  const program = parseProgram(row.bedrooms_bathrooms)
+  const bedroomScore = payload.bedrooms && program ? relativeSimilarity(payload.bedrooms, program.bedrooms) : 0.5
+  const bathroomScore = payload.bathrooms && program ? relativeSimilarity(payload.bathrooms, program.bathrooms) : 0.5
+  const programScore = (bedroomScore + bathroomScore) / 2
+
+  return Math.min(1,
+    microScore * 0.25 +
+    houseYearScore(num(payload.constructionYear), num(row.construction_year)) * 0.2 +
+    areaScore * 0.2 +
+    landScore * 0.15 +
+    programScore * 0.1 +
+    recencyScore(row.transaction_date) * 0.1,
+  )
 }
 
 export async function POST(request: Request) {
@@ -174,6 +238,15 @@ export async function POST(request: Request) {
       const { data: kmlBarrio } = await admin.from('vitacura_market_neighborhoods').select('barrio_nombre').ilike('barrio_nombre', canonicalBarrio).limit(1).maybeSingle()
       if (!kmlBarrio) return NextResponse.json({ error: 'El barrio no existe en el KML canónico Property Partners.' }, { status: 404 })
       canonicalBarrio = kmlBarrio.barrio_nombre
+    }
+
+    if (payload.propertyType === 'Casa' && !payload.constructionYear) {
+      let subjectQuery = admin.from('market_cbrs_reference_transactions').select('construction_year').eq('property_type', 'Casa')
+      if (payload.eventKey) subjectQuery = subjectQuery.eq('event_key', payload.eventKey)
+      else if (payload.rol) subjectQuery = subjectQuery.eq('rol', payload.rol)
+      else if (payload.address) subjectQuery = subjectQuery.ilike('address', payload.address)
+      const { data: subjectSource } = await subjectQuery.order('transaction_date', { ascending: false }).limit(1).maybeSingle()
+      if (subjectSource?.construction_year) payload.constructionYear = Number(subjectSource.construction_year)
     }
 
     const { data: neighborhood } = await admin.from('market_neighborhoods').select('id,name').ilike('name', canonicalBarrio).limit(1).maybeSingle()
@@ -229,8 +302,10 @@ export async function POST(request: Request) {
 
     const rawCbrs = (cbrsRows ?? []) as CbrsRow[]
     const excludedEconomic = rawCbrs.filter((row) => Boolean(row.quality?.priceOutlier)).length
+    const excludedStale = payload.propertyType === 'Casa' ? rawCbrs.filter((row) => !withinFiveYears(row.transaction_date)).length : 0
     const cbrsSuggestions = rawCbrs
       .filter((row) => !row.quality?.priceOutlier)
+      .filter((row) => payload.propertyType !== 'Casa' || withinFiveYears(row.transaction_date))
       .filter((row) => !isSubjectCbrs(payload, row))
       .map((row) => {
         const built = num(row.built_area_m2)
@@ -257,7 +332,7 @@ export async function POST(request: Request) {
           adjustmentPct: 0,
           adjustmentNotes: payload.propertyType === 'Departamento'
             ? 'Venta CBRS en el mismo barrio KML PP; superficie registrada por la fuente.'
-            : 'Venta CBRS en el mismo barrio KML PP, con construcción y terreno canónicos.',
+            : `Venta CBRS del mismo barrio KML PP; microcomparabilidad considera ubicación, año, superficies, programa y recencia${row.construction_year ? ` · año ${row.construction_year}` : ''}.`,
           distanceMeters,
           transactionDate: row.transaction_date,
           quality: 'canonical' as const,
@@ -282,17 +357,20 @@ export async function POST(request: Request) {
     return NextResponse.json({
       neighborhood: canonicalBarrio,
       suggestions: [...portalSuggestions, ...cbrsSuggestions],
-      suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length, excludedEconomic },
+      suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length, excludedEconomic, excludedStale },
       cbrsBenchmark,
       portalBenchmark,
-      methodologyVersion: 'property-partners-valuation-v2-kml-first',
+      methodologyVersion: payload.propertyType === 'Casa' ? 'property-partners-valuation-v2-kml-house-micro-v1' : 'property-partners-valuation-v2-kml-first',
       notes: [
         `Primer filtro: barrio KML Property Partners = ${canonicalBarrio}. Ningún comparable de otro polígono compite en el ranking.`,
         canonicalBarrio !== payload.neighborhood.trim() ? `El KML corrigió el barrio informado (${payload.neighborhood.trim()} → ${canonicalBarrio}).` : 'El barrio informado coincide con el KML canónico.',
-        'Después del filtro territorial se ordena por superficies, distancia, programa y recencia.',
+        payload.propertyType === 'Casa'
+          ? 'Dentro del barrio, el ranking prioriza micro-ubicación, año de construcción, superficie construida, terreno, programa y recencia. Ventas de más de 5 años no compiten en el top principal.'
+          : 'Después del filtro territorial se ordena por superficie, distancia y recencia.',
         excludedEconomic ? `${excludedEconomic} ventas CBRS con anomalía económica extrema fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas extremas en el conjunto seleccionable.',
+        excludedStale ? `${excludedStale} ventas de casas de más de 5 años quedaron fuera del ranking principal.` : '',
         'Portal representa oferta y permanece como referencia; CBRS representa ventas registradas. Property Partners decide.',
-      ],
+      ].filter(Boolean),
     })
   } catch (error) {
     return accessErrorResponse(error)
