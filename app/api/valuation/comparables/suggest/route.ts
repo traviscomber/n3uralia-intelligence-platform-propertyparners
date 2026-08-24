@@ -39,6 +39,14 @@ type PortalRow = {
   pp_kml_barrio: string
 }
 
+type CbrsQuality = {
+  priceOutlier?: boolean
+  sameRolPriceConflict?: boolean
+  geographyConflict?: boolean
+  neighborhoodTypeMedianUfM2?: number | null
+  ufM2RatioToMedian?: number | null
+}
+
 type CbrsRow = {
   id: string
   event_key: string
@@ -52,6 +60,7 @@ type CbrsRow = {
   longitude: number | string | null
   neighborhood: string | null
   pp_kml_barrio: string
+  quality: CbrsQuality | null
 }
 
 type PortalBenchmark = {
@@ -108,32 +117,36 @@ function isSubjectCbrs(payload: SuggestPayload, row: CbrsRow) {
   if (payload.eventKey && row.event_key === payload.eventKey) return true
   if (payload.rol && row.rol && normalizeText(payload.rol) === normalizeText(row.rol)) return true
   if (payload.address && row.address && normalizeText(payload.address) === normalizeText(row.address)) return true
-  const a = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
-  if (a.some((value) => !value)) return false
+  const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
+  if (coords.some((value) => !value)) return false
   const subjectArea = payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2)
   const candidateArea = num(row.built_area_m2)
-  return subjectArea > 0 && candidateArea > 0 && Math.abs(subjectArea - candidateArea) <= 0.5 && haversineMeters(a[0], a[1], a[2], a[3]) <= 2
+  return subjectArea > 0 && candidateArea > 0 && Math.abs(subjectArea - candidateArea) <= 0.5 && haversineMeters(coords[0], coords[1], coords[2], coords[3]) <= 2
 }
 
 function scorePortal(payload: SuggestPayload, row: PortalRow) {
-  const builtScore = relativeSimilarity(payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2), payload.propertyType === 'Casa' ? num(row.built_area_m2) : num(row.useful_area_m2 || row.built_area_m2))
+  const areaScore = relativeSimilarity(
+    payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2),
+    payload.propertyType === 'Casa' ? num(row.built_area_m2) : num(row.useful_area_m2 || row.built_area_m2),
+  )
   const landScore = payload.propertyType === 'Casa' ? relativeSimilarity(num(payload.landAreaM2), num(row.land_area_m2)) : 1
-  let score = payload.propertyType === 'Casa' ? builtScore * 0.4 + landScore * 0.25 : builtScore * 0.65
+  let score = payload.propertyType === 'Casa' ? areaScore * 0.4 + landScore * 0.25 : areaScore * 0.65
   score += payload.bedrooms && row.bedrooms ? relativeSimilarity(payload.bedrooms, row.bedrooms) * 0.1 : 0.05
   score += payload.bathrooms && row.bathrooms ? relativeSimilarity(payload.bathrooms, row.bathrooms) * 0.1 : 0.05
   const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
-  if (coords.every(Boolean)) score += Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15
-  else score += 0.075
+  score += coords.every(Boolean) ? Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15 : 0.075
   return Math.min(1, score)
 }
 
 function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
-  const builtScore = relativeSimilarity(payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2), num(row.built_area_m2))
+  const areaScore = relativeSimilarity(
+    payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2),
+    num(row.built_area_m2),
+  )
   const landScore = payload.propertyType === 'Casa' ? relativeSimilarity(num(payload.landAreaM2), num(row.land_area_m2)) : 1
-  let score = payload.propertyType === 'Casa' ? builtScore * 0.4 + landScore * 0.25 : builtScore * 0.65
+  let score = payload.propertyType === 'Casa' ? areaScore * 0.4 + landScore * 0.25 : areaScore * 0.65
   const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
-  if (coords.every(Boolean)) score += Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15
-  else score += 0.075
+  score += coords.every(Boolean) ? Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15 : 0.075
   const timestamp = new Date(row.transaction_date).getTime()
   if (Number.isFinite(timestamp)) {
     const ageDays = Math.max(0, (Date.now() - timestamp) / 86400000)
@@ -164,7 +177,6 @@ export async function POST(request: Request) {
     }
 
     const { data: neighborhood } = await admin.from('market_neighborhoods').select('id,name').ilike('name', canonicalBarrio).limit(1).maybeSingle()
-
     const [{ data: portalRows, error: portalError }, { data: cbrsRows, error: cbrsError }] = await Promise.all([
       admin.rpc('valuation_portal_pp_kml_candidates', { p_barrio: canonicalBarrio, p_property_type: payload.propertyType, p_limit: 500 }),
       admin.rpc('valuation_cbrs_pp_kml_candidates', { p_barrio: canonicalBarrio, p_property_type: payload.propertyType, p_limit: 500 }),
@@ -189,7 +201,6 @@ export async function POST(request: Request) {
       const longitude = num(item.longitude) || undefined
       const distanceMeters = payload.latitude && payload.longitude && latitude && longitude ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude)) : undefined
       const sourceReportedUfM2 = num(item.price_uf_m2) || (useful > 0 ? Number((price / useful).toFixed(2)) : 0)
-      const completeHouse = payload.propertyType === 'Casa' && built > 0 && land > 0
       return {
         id: `auto-${item.id}`,
         sourceType: 'Portal' as const,
@@ -204,19 +215,22 @@ export async function POST(request: Request) {
         bathrooms: item.bathrooms ?? undefined,
         parkingSpaces: item.parking_spaces ?? undefined,
         priceUf: price,
-        priceUfM2: completeHouse ? Number((price / (built + land / 4)).toFixed(2)) : 0,
+        priceUfM2: 0,
         sourceReportedUfM2: sourceReportedUfM2 || undefined,
         similarityScore: Number(scorePortal(payload, item).toFixed(4)),
         selected: false,
         adjustmentPct: 0,
-        adjustmentNotes: completeHouse ? 'Oferta Portal en el mismo barrio KML PP, con construcción y terreno disponibles.' : 'Oferta Portal real en el mismo barrio KML PP; referencia hasta completar superficie canónica requerida.',
+        adjustmentNotes: 'Oferta Portal real dentro del mismo barrio KML PP. Se mantiene como referencia hasta certificar todas las superficies canónicas requeridas.',
         distanceMeters,
         observedAt: item.observed_at,
-        quality: completeHouse ? 'usable' : 'reference_only',
+        quality: 'reference_only' as const,
       }
     }).filter((item): item is NonNullable<typeof item> => Boolean(item)).sort((a, b) => b.similarityScore - a.similarityScore).slice(0, 8)
 
-    const cbrsSuggestions = ((cbrsRows ?? []) as CbrsRow[])
+    const rawCbrs = (cbrsRows ?? []) as CbrsRow[]
+    const excludedEconomic = rawCbrs.filter((row) => Boolean(row.quality?.priceOutlier)).length
+    const cbrsSuggestions = rawCbrs
+      .filter((row) => !row.quality?.priceOutlier)
       .filter((row) => !isSubjectCbrs(payload, row))
       .map((row) => {
         const built = num(row.built_area_m2)
@@ -241,10 +255,12 @@ export async function POST(request: Request) {
           similarityScore: Number(scoreCbrs(payload, row).toFixed(4)),
           selected: false,
           adjustmentPct: 0,
-          adjustmentNotes: payload.propertyType === 'Departamento' ? 'Venta CBRS en el mismo barrio KML PP; superficie registrada por la fuente.' : 'Venta CBRS en el mismo barrio KML PP, con construcción y terreno canónicos.',
+          adjustmentNotes: payload.propertyType === 'Departamento'
+            ? 'Venta CBRS en el mismo barrio KML PP; superficie registrada por la fuente.'
+            : 'Venta CBRS en el mismo barrio KML PP, con construcción y terreno canónicos.',
           distanceMeters,
           transactionDate: row.transaction_date,
-          quality: 'canonical',
+          quality: 'canonical' as const,
           areaSemantics: payload.propertyType === 'Departamento' ? 'source_registered_area_not_confirmed_as_useful' : 'canonical_house_weighted_area',
         }
       })
@@ -266,7 +282,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       neighborhood: canonicalBarrio,
       suggestions: [...portalSuggestions, ...cbrsSuggestions],
-      suggestionCounts: { portal: portalSuggestions.length, cbrs: cbrsSuggestions.length },
+      suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length, excludedEconomic },
       cbrsBenchmark,
       portalBenchmark,
       methodologyVersion: 'property-partners-valuation-v2-kml-first',
@@ -274,7 +290,8 @@ export async function POST(request: Request) {
         `Primer filtro: barrio KML Property Partners = ${canonicalBarrio}. Ningún comparable de otro polígono compite en el ranking.`,
         canonicalBarrio !== payload.neighborhood.trim() ? `El KML corrigió el barrio informado (${payload.neighborhood.trim()} → ${canonicalBarrio}).` : 'El barrio informado coincide con el KML canónico.',
         'Después del filtro territorial se ordena por superficies, distancia, programa y recencia.',
-        'Portal representa oferta; CBRS representa ventas registradas. Property Partners mantiene la decisión final.',
+        excludedEconomic ? `${excludedEconomic} ventas CBRS con anomalía económica extrema fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas extremas en el conjunto seleccionable.',
+        'Portal representa oferta y permanece como referencia; CBRS representa ventas registradas. Property Partners decide.',
       ],
     })
   } catch (error) {
