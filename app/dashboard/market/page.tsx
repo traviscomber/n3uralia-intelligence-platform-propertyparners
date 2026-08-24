@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileText, MapPinned, Settings2, TrendingUp } from 'lucide-react'
+import { Download, FileText, MapPinned, Settings2, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { VitacuraNeighborhoodMap } from '@/components/market/vitacura-neighborhood-map'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
@@ -58,6 +58,7 @@ export default async function MarketPage() {
         actions={[
           { label: 'Inteligencia', href: '/dashboard/market/inteligencia', primary: true, icon: <TrendingUp size={15} /> },
           { label: 'Informe', href: '/dashboard/market/export', icon: <FileText size={15} /> },
+          { label: 'Exportar', href: '/api/market/export?dataset=summary&format=xlsx', icon: <Download size={15} /> },
           ...(canManage ? [{ label: '', href: '/dashboard/market/fuentes', ariaLabel: 'Administrar fuentes', icon: <Settings2 size={15} /> }] : []),
         ]}
       />

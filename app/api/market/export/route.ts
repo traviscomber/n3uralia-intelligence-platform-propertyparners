@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { requireCapability, accessErrorResponse } from '@/lib/access-guards'
-import { createClient } from '@/lib/supabase/server'
-import { getOperationalMarketSnapshot } from '@/lib/market-operational'
+import { getMarketHouseIntelligence } from '@/lib/market-house-intelligence'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-const PAGE_SIZE = 1000
-const MAX_ROWS = 25000
-
-type ExportDataset = 'summary' | 'listings' | 'transactions'
+type ExportDataset = 'summary' | 'neighborhoods'
 type ExportFormat = 'csv' | 'xlsx'
 type ExportRow = Record<string, string | number | boolean | null>
 
 function parseDataset(value: string | null): ExportDataset {
-  if (value === 'listings' || value === 'transactions') return value
-  return 'summary'
+  return value === 'neighborhoods' ? 'neighborhoods' : 'summary'
 }
 
 function parseFormat(value: string | null): ExportFormat {
@@ -40,52 +35,17 @@ function metadataRows(metadata: Record<string, string | number | boolean | null>
   return Object.entries(metadata).map(([field, value]) => ({ field, value }))
 }
 
-async function fetchListings() {
-  const supabase = await createClient()
-  const rows: ExportRow[] = []
-  for (let offset = 0; offset < MAX_ROWS; offset += PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from('market_current_listings')
-      .select('source_listing_id,property_id,operation,status,url,title,raw_address,normalized_address,latitude,longitude,price_clp,price_uf,price_uf_m2,published_at,observed_at,removed_at')
-      .order('observed_at', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1)
-    if (error) throw error
-    const page = (data ?? []) as ExportRow[]
-    rows.push(...page)
-    if (page.length < PAGE_SIZE) break
-  }
-  return { rows, truncated: rows.length >= MAX_ROWS }
-}
-
-async function fetchTransactions() {
-  const supabase = await createClient()
-  const rows: ExportRow[] = []
-  for (let offset = 0; offset < MAX_ROWS; offset += PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from('market_transactions')
-      .select('event_key,property_id,rol,transaction_date,price_clp,price_uf,price_uf_m2,description,tomo,foja,numero,created_at')
-      .order('transaction_date', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1)
-    if (error) throw error
-    const page = (data ?? []) as ExportRow[]
-    rows.push(...page)
-    if (page.length < PAGE_SIZE) break
-  }
-  return { rows, truncated: rows.length >= MAX_ROWS }
-}
-
-function summaryRows(snapshot: Awaited<ReturnType<typeof getOperationalMarketSnapshot>>): ExportRow[] {
+function summaryRows(summary: Awaited<ReturnType<typeof getMarketHouseIntelligence>>['summary']): ExportRow[] {
   return [
-    { metric: 'canonical_properties', label: 'Registros canónicos candidatos', value: snapshot.canonicalProperties, methodology: 'Conteo de market_properties visibles por RLS' },
-    { metric: 'confirmed_properties', label: 'Identidades confirmadas', value: snapshot.confirmedProperties, methodology: 'identity_status = confirmed' },
-    { metric: 'active_inventory', label: 'Publicaciones activas del último corte', value: snapshot.activeInventory, methodology: 'Snapshot canónico o publicaciones activas observadas' },
-    { metric: 'confirmed_sales', label: 'Ventas confirmadas', value: snapshot.confirmedSales, methodology: 'Transacciones persistidas y vinculadas' },
-    { metric: 'pending_matches', label: 'Señales pendientes de revisión', value: snapshot.pendingMatches, methodology: 'Identidades y coincidencias candidatas; no necesariamente propiedades únicas' },
-    { metric: 'missing_neighborhoods', label: 'Registros sin barrio', value: snapshot.missingNeighborhoods, methodology: 'Propiedades sin neighborhood_id' },
-    { metric: 'median_days_on_market', label: 'Mediana de días en mercado', value: snapshot.medianDaysOnMarket, methodology: 'No se calcula sin ventas confirmadas vinculadas' },
-    { metric: 'absorption_rate', label: 'Tasa de absorción', value: snapshot.absorptionRate, methodology: 'Inventario y ventas del mismo período' },
-    { metric: 'offer_to_sales_ratio', label: 'Oferta versus ventas', value: snapshot.offerToSalesRatio, methodology: 'Relación materializada en snapshot canónico' },
-    { metric: 'ingestion_runs', label: 'Ejecuciones registradas', value: snapshot.ingestionRuns, methodology: 'Backfills e importaciones canónicas almacenadas' },
+    { metric: 'portal_active_houses', label: 'Casas activas', value: summary.portalActiveHouses, source: 'Portal Inmobiliario', cutoff: summary.portalAsOf, methodology: 'Último estado observado; operación venta; tipo casa.' },
+    { metric: 'portal_median_price_uf', label: 'Mediana oferta UF', value: summary.portalMedianPriceUf, source: 'Portal Inmobiliario', cutoff: summary.portalAsOf, methodology: 'Mediana de precios UF positivos del corte.' },
+    { metric: 'portal_median_uf_m2', label: 'Mediana oferta UF/m²', value: summary.portalMedianUfM2, source: 'Portal Inmobiliario', cutoff: summary.portalAsOf, methodology: 'Mediana de UF/m² positivos del corte.' },
+    { metric: 'cbrs_house_transactions', label: 'Ventas registradas', value: summary.cbrsHouseTransactions, source: 'CBRS', cutoff: summary.cbrsAsOf, methodology: 'Transacciones canónicas clasificadas como casa.' },
+    { metric: 'cbrs_house_with_neighborhood', label: 'Ventas con barrio', value: summary.cbrsHouseWithNeighborhood, source: 'CBRS + KML Property Partners', cutoff: summary.cbrsAsOf, methodology: 'Transacciones de casas con barrio canónico no vacío.' },
+    { metric: 'canonical_houses', label: 'Casas canónicas', value: summary.canonicalHouses, source: 'Property Partners', cutoff: summary.referenceAsOf, methodology: 'Identidades canónicas clasificadas como casa.' },
+    { metric: 'exact_kml_houses', label: 'Casas con KML exacto', value: summary.exactKmlHouses, source: 'KML Property Partners', cutoff: summary.referenceAsOf, methodology: 'Barrio asignado desde el KML aceptado.' },
+    { metric: 'review_houses', label: 'Casas por revisar', value: summary.reviewHouses, source: 'Property Partners', cutoff: summary.referenceAsOf, methodology: 'Casas sin asignación exacta desde el KML aceptado.' },
+    { metric: 'portal_exact_kml_houses', label: 'Oferta actual con KML exacto', value: summary.portalExactKmlHouses, source: 'Portal + KML Property Partners', cutoff: summary.portalAsOf, methodology: 'Avisos actuales vinculados a una casa con barrio KML exacto.' },
   ]
 }
 
@@ -100,74 +60,62 @@ export async function GET(request: NextRequest) {
     const dataset = parseDataset(request.nextUrl.searchParams.get('dataset'))
     const format = parseFormat(request.nextUrl.searchParams.get('format'))
     const generatedAt = new Date().toISOString()
-    const snapshot = await getOperationalMarketSnapshot()
-    if (snapshot.error) {
-      console.error('MARKET_EXPORT_SNAPSHOT_UNAVAILABLE')
-      return NextResponse.json({ error: 'Los datos de mercado no están disponibles para exportación.' }, { status: 503 })
+    const intelligence = await getMarketHouseIntelligence()
+
+    if (intelligence.error) {
+      console.error('MARKET_HOUSE_EXPORT_UNAVAILABLE')
+      return NextResponse.json({ error: 'La inteligencia de casas no está disponible.' }, { status: 503 })
     }
 
-    let rows: ExportRow[]
-    let truncated = false
-    if (dataset === 'listings') {
-      const result = await fetchListings()
-      rows = result.rows
-      truncated = result.truncated
-    } else if (dataset === 'transactions') {
-      const result = await fetchTransactions()
-      rows = result.rows
-      truncated = result.truncated
-    } else {
-      rows = summaryRows(snapshot)
-    }
+    const rows: ExportRow[] = dataset === 'neighborhoods'
+      ? intelligence.neighborhoods.map((row) => ({
+          barrio: row.neighborhoodName,
+          ventas_cbrs: row.cbrsTransactions,
+          mediana_uf: row.cbrsMedianPriceUf,
+          mediana_uf_m2_construido: row.cbrsMedianUfM2,
+          corte_cbrs: row.cbrsAsOf,
+        }))
+      : summaryRows(intelligence.summary)
 
     const metadata = {
       dataset,
+      property_type: 'Casa',
+      operation: 'Venta',
+      commune: 'Vitacura',
       generated_at: generatedAt,
-      observed_through: snapshot.latestObservedAt,
-      latest_period: snapshot.latestPeriod,
-      freshness_status: snapshot.freshnessStatus,
-      observation_age_days: snapshot.observationAgeDays,
-      source_scope: 'Supabase operational records visible to the authenticated role through RLS',
-      methodology: 'Export uses the same operational sources as /dashboard/market and does not impute missing values',
+      portal_cutoff: intelligence.summary.portalAsOf,
+      cbrs_cutoff: intelligence.summary.cbrsAsOf,
+      source_scope: 'Portal Inmobiliario, CBRS y KML Property Partners',
+      methodology: 'Sin imputaciones. La oferta y las ventas históricas conservan fuentes y cortes separados.',
       row_count: rows.length,
-      truncated,
-      max_rows: MAX_ROWS,
     }
-    const enrichedRows = rows.map((row) => ({
-      export_generated_at: generatedAt,
-      export_observed_through: snapshot.latestObservedAt,
-      export_dataset: dataset,
-      ...row,
-    }))
-    const date = generatedAt.slice(0, 10)
-    const filename = `property_partners_market_${dataset}_${date}.${format}`
+    const enrichedRows = rows.map((row) => ({ export_generated_at: generatedAt, ...row }))
+    const filename = `property_partners_casas_vitacura_${dataset}_${generatedAt.slice(0, 10)}.${format}`
 
     if (format === 'xlsx') {
       const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(metadataRows(metadata)), 'Metadata')
-      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(enrichedRows.length ? enrichedRows : [{ status: 'Sin datos operativos' }]), dataset)
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(metadataRows(metadata)), 'Metodología')
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(enrichedRows), dataset === 'summary' ? 'Resumen' : 'Barrios')
       const binary = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
       return new Response(binary, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="${filename}"`,
           'Cache-Control': 'no-store',
-          'X-Export-Truncated': String(truncated),
         },
       })
     }
 
-    return new Response(toCsv(enrichedRows.length ? enrichedRows : [{ status: 'Sin datos operativos' }]), {
+    return new Response(toCsv(enrichedRows), {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-store',
-        'X-Export-Truncated': String(truncated),
       },
     })
   } catch (error) {
     const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : 'unknown'
-    console.error('MARKET_EXPORT_FAILED', { code })
+    console.error('MARKET_HOUSE_EXPORT_FAILED', { code })
     return NextResponse.json({ error: 'No fue posible generar la exportación.' }, { status: 500 })
   }
 }
