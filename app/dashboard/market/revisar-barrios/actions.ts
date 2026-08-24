@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireCapability, requirePageMfaLevel2 } from '@/lib/access-guards'
+import { requireAnyCapability, requirePageMfaLevel2 } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 
 const REVIEW_PATH = '/dashboard/market/revisar-barrios'
@@ -16,7 +16,7 @@ export async function reviewNeighborhoodAction(formData: FormData) {
     throw new Error('Invalid neighborhood review request')
   }
 
-  const scope = await requireCapability('market.manage_sources')
+  const scope = await requireAnyCapability(['market.manage_sources', 'management.global.read'])
   await requirePageMfaLevel2(REVIEW_PATH)
 
   const supabase = await createClient()
