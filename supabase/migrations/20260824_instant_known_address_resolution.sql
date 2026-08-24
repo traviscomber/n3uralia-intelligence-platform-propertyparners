@@ -39,8 +39,7 @@ with unique_canonical as (
     private.normalize_market_address(mp.normalized_address) as address_key,
     min(mp.id::text)::uuid as property_id,
     min(mp.neighborhood_id::text)::uuid as neighborhood_id,
-    min(mp.normalized_address) as display_address,
-    count(*) as property_count
+    min(mp.normalized_address) as display_address
   from public.market_properties mp
   where mp.neighborhood_id is not null
     and private.normalize_market_address(mp.normalized_address) is not null
@@ -104,7 +103,6 @@ begin
 
   v_property_id := v_listing.property_id;
 
-  -- Reuse an exact unique canonical property if one already exists for this address and barrio.
   if v_property_id is null then
     select m.canonical_property_id into v_property_id
     from private.market_address_resolution_memory m
@@ -235,7 +233,7 @@ declare
   matched_names text[];
   match_count integer;
   combined_text text;
-  address_key text;
+  v_address_key text;
   remembered_property_id uuid;
 begin
   if new.property_id is not null then
@@ -254,13 +252,13 @@ begin
     return new;
   end if;
 
-  address_key := private.normalize_market_address(coalesce(new.normalized_address, new.raw_address));
+  v_address_key := private.normalize_market_address(coalesce(new.normalized_address, new.raw_address));
 
-  if address_key is not null then
+  if v_address_key is not null then
     select m.canonical_property_id into remembered_property_id
     from private.market_address_resolution_memory m
     join public.market_properties mp on mp.id = m.canonical_property_id
-    where m.address_key = address_key
+    where m.address_key = v_address_key
       and m.confidence >= 0.95
       and m.canonical_property_id is not null
       and mp.neighborhood_id = m.neighborhood_id
@@ -272,11 +270,11 @@ begin
       where id = new.id
         and property_id is null;
 
-      update private.market_address_resolution_memory
-      set hit_count = hit_count + 1,
+      update private.market_address_resolution_memory m
+      set hit_count = m.hit_count + 1,
           last_seen_at = now(),
           updated_at = now()
-      where address_key = address_key;
+      where m.address_key = v_address_key;
 
       return new;
     end if;
@@ -308,7 +306,7 @@ begin
       'method', 'auto_exact_name_v1',
       'canonical_write', false,
       'source_code', source_code,
-      'address_memory_checked', address_key is not null,
+      'address_memory_checked', v_address_key is not null,
       'generated_at', now()
     )
   )
