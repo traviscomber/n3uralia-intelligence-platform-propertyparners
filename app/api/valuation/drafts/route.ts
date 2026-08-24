@@ -3,7 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 import { canUnlockV2Features } from '@/lib/v2-feature-access'
 import {
+  buildValuationReportPayload,
   calculateCanonicalComparableUfM2,
+  calculateContractualValuation,
   type QualitativeFactors,
   type ValuationComparable,
   type ValuationSubject,
@@ -19,6 +21,25 @@ type DraftPayload = {
   sourcePropertyId?: string | null
 }
 
+const emptyFactors: QualitativeFactors = {
+  condition: 0,
+  remodeling: 0,
+  orientation: 0,
+  floor: 0,
+  light: 0,
+  view: 0,
+  noise: 0,
+  commercialPotential: 0,
+}
+
+function isFinalizable(subject: ValuationSubject, comparables: ValuationComparable[], justification: string) {
+  const selected = comparables.filter((item) => item.selected && item.priceUf > 0 && calculateCanonicalComparableUfM2(item) > 0)
+  const hasRates = subject.propertyType === 'Casa'
+    ? Boolean(subject.builtRateUfM2 && subject.landRateUfM2)
+    : Boolean(subject.usefulRateUfM2)
+  return selected.length >= 3 && hasRates && Boolean(justification.trim())
+}
+
 export async function POST(request: Request) {
   try {
     const scope = await requireAnyCapability([
@@ -30,45 +51,102 @@ export async function POST(request: Request) {
     const payload = await request.json().catch(() => null) as DraftPayload | null
 
     if (!payload?.subject?.address?.trim() || !payload.subject.neighborhood?.trim()) {
-      return NextResponse.json(
-        { error: 'Para guardar el borrador se requieren dirección y barrio.' },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: 'Para guardar se requieren dirección y barrio.' }, { status: 400 })
     }
 
     if (payload.subject.propertyType === 'Departamento') {
       const { data: { user } } = await supabase.auth.getUser()
       if (!canUnlockV2Features(user)) {
-        return NextResponse.json(
-          { error: 'La valorización de departamentos estará disponible en la versión 2.' },
-          { status: 403 },
-        )
+        return NextResponse.json({ error: 'La valorización de departamentos estará disponible en la versión 2.' }, { status: 403 })
       }
     }
 
     const comparables = Array.isArray(payload.comparables) ? payload.comparables : []
-    const selectedComparableCount = comparables.filter((item) => item.selected).length
-    const snapshot = {
-      draft: true,
-      incomplete: true,
-      methodologyVersion: 'property-partners-valuation-v2',
-      generatedAt: new Date().toISOString(),
-      subject: payload.subject,
-      comparables: comparables.map((item) => ({
-        ...item,
-        canonicalUfM2: calculateCanonicalComparableUfM2(item),
-      })),
-      qualitativeFactors: payload.qualitativeFactors ?? {},
-      justification: payload.justification?.trim() || null,
-      decision: payload.decision ?? null,
-      completion: {
-        selectedComparableCount,
-        hasBuiltRate: Boolean(payload.subject.builtRateUfM2),
-        hasLandRate: Boolean(payload.subject.landRateUfM2),
-        hasUsefulRate: Boolean(payload.subject.usefulRateUfM2),
-        hasProfessionalJustification: Boolean(payload.justification?.trim()),
-      },
+    const qualitativeFactors = payload.qualitativeFactors ?? emptyFactors
+    const selected = comparables.filter((item) => item.selected && item.priceUf > 0 && calculateCanonicalComparableUfM2(item) > 0)
+    const selectedComparableCount = selected.length
+    const justification = payload.justification?.trim() || ''
+    const complete = isFinalizable(payload.subject, comparables, justification)
+
+    let result: ReturnType<typeof calculateContractualValuation> | null = null
+    if (complete) {
+      try {
+        result = calculateContractualValuation(payload.subject, comparables, qualitativeFactors)
+      } catch {
+        return NextResponse.json({ error: 'El expediente parece completo, pero no cumple la metodología canónica.' }, { status: 400 })
+      }
     }
+
+    const rateAnchor = payload.decision?.rateAnchor ?? (complete && payload.subject.propertyType === 'Casa' ? 'manual' : null)
+    const distanceCoverage = selectedComparableCount
+      ? selected.filter((item) => item.distanceMeters !== undefined).length / selectedComparableCount
+      : 0
+    const transactionDateCoverage = selectedComparableCount
+      ? selected.filter((item) => Boolean(item.transactionDate)).length / selectedComparableCount
+      : 0
+
+    const evidence = complete && result ? {
+      comparableCount: result.comparableCount,
+      portalComparableCount: result.portalSummary.count,
+      cbrsComparableCount: result.cbrsSummary.count,
+      selectedComparableCount,
+      subjectPropertyId: payload.sourcePropertyId ?? null,
+      propertyAssignmentId: payload.propertyAssignmentId ?? null,
+      rateAnchor,
+      subjectCoordinatesPresent: payload.subject.latitude !== undefined && payload.subject.longitude !== undefined,
+      comparableDistanceCoveragePct: Number((distanceCoverage * 100).toFixed(1)),
+      comparableTransactionDateCoveragePct: Number((transactionDateCoverage * 100).toFixed(1)),
+      finalWizardComplete: true,
+    } : {
+      draft: true,
+      selectedComparableCount,
+      propertyAssignmentId: payload.propertyAssignmentId ?? null,
+      subjectPropertyId: payload.sourcePropertyId ?? null,
+      finalWizardComplete: false,
+    }
+
+    const assumptions = complete ? {
+      incompleteDraft: false,
+      selectedComparablesOnly: true,
+      finalRateConfirmedByValuer: true,
+      rateAnchor,
+      qualitativeFactorsDoNotApplyAutomaticEconomicAdjustment: true,
+      canonicalTemplates: ['Plantilla de Valorización Casas.xlsx', 'Plantilla de Valorización Departamentos.xlsx'],
+    } : {
+      incompleteDraft: true,
+      noEconomicResultUntilProfessionalRatesAreConfirmed: true,
+    }
+
+    const reportPayload = complete && result
+      ? {
+          ...buildValuationReportPayload(payload.subject, comparables, qualitativeFactors, result),
+          subjectPropertyId: payload.sourcePropertyId ?? null,
+          decision: { rateAnchor, rateConfirmedByValuer: true },
+          evidence,
+          assumptions,
+        }
+      : {
+          draft: true,
+          incomplete: true,
+          methodologyVersion: 'property-partners-valuation-v2',
+          generatedAt: new Date().toISOString(),
+          subject: payload.subject,
+          comparables: comparables.map((item) => ({ ...item, canonicalUfM2: calculateCanonicalComparableUfM2(item) })),
+          qualitativeFactors,
+          justification: justification || null,
+          decision: { rateAnchor },
+          completion: {
+            selectedComparableCount,
+            hasBuiltRate: Boolean(payload.subject.builtRateUfM2),
+            hasLandRate: Boolean(payload.subject.landRateUfM2),
+            hasUsefulRate: Boolean(payload.subject.usefulRateUfM2),
+            hasProfessionalJustification: Boolean(justification),
+          },
+        }
+
+    const warnings = complete && result
+      ? [...result.warnings, ...(!payload.sourcePropertyId ? ['La valorización no está vinculada a una propiedad operacional y no puede alimentar pricing.'] : [])]
+      : ['Borrador incompleto: no publicable ni enviable a revisión.']
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
@@ -96,34 +174,26 @@ export async function POST(request: Request) {
         parking_spaces: payload.subject.parkingSpaces ?? null,
         construction_year: payload.subject.constructionYear ?? null,
         floor_number: payload.subject.floorNumber ?? null,
-        qualitative_factors: payload.qualitativeFactors ?? {},
+        qualitative_factors: qualitativeFactors,
         adjustment_total_pct: 0,
-        base_value_uf: null,
-        estimated_value_uf: null,
-        low_value_uf: null,
-        high_value_uf: null,
-        confidence: 'low',
-        methodology_version: 'property-partners-valuation-v2',
-        evidence: {
-          draft: true,
-          selectedComparableCount,
-          propertyAssignmentId: payload.propertyAssignmentId ?? null,
-          subjectPropertyId: payload.sourcePropertyId ?? null,
-        },
-        assumptions: {
-          incompleteDraft: true,
-          noEconomicResultUntilProfessionalRatesAreConfirmed: true,
-        },
-        warnings: ['Borrador incompleto: no publicable ni enviable a revisión.'],
-        justification: payload.justification?.trim() || null,
-        report_payload: snapshot,
+        base_value_uf: result?.baseValueUf ?? null,
+        estimated_value_uf: result?.adjustedValueUf ?? null,
+        low_value_uf: result?.lowValueUf ?? null,
+        high_value_uf: result?.highValueUf ?? null,
+        confidence: complete && result ? (result.cbrsSummary.count >= 3 && result.portalSummary.count >= 3 ? 'high' : 'medium') : 'low',
+        methodology_version: result?.methodologyVersion ?? 'property-partners-valuation-v2',
+        evidence,
+        assumptions,
+        warnings,
+        justification: justification || (complete ? result?.justification : null),
+        report_payload: reportPayload,
       })
       .select('id,version_number')
       .single()
 
     if (caseError || !valuationCase) {
       console.error('VALUATION_DRAFT_CREATE_FAILED', { code: caseError?.code ?? 'UNKNOWN' })
-      return NextResponse.json({ error: 'No fue posible guardar el borrador.' }, { status: 422 })
+      return NextResponse.json({ error: complete ? 'No fue posible crear la valorización.' : 'No fue posible guardar el borrador.' }, { status: 422 })
     }
 
     if (comparables.length) {
@@ -139,7 +209,7 @@ export async function POST(request: Request) {
         neighborhood: item.neighborhood,
         property_type: item.propertyType,
         total_area_m2: item.totalAreaM2 ?? null,
-        useful_area_m2: item.usefulAreaM2 ?? null,
+        useful_area_m2: item.sourceType === 'CBRS' && item.propertyType === 'Departamento' ? null : item.usefulAreaM2 ?? null,
         built_area_m2: item.builtAreaM2 ?? null,
         land_area_m2: item.landAreaM2 ?? null,
         bedrooms: item.bedrooms ?? null,
@@ -153,21 +223,17 @@ export async function POST(request: Request) {
         base_value_uf: null,
         adjusted_value_uf: null,
         adjustments: [],
-        evidence: [{ draft: true, sourceReference: item.sourceReference }],
+        evidence: [{ draft: !complete, finalWizardComplete: complete, sourceReference: item.sourceReference }],
         contradictions: [],
         match_status: item.selected ? 'accepted' : 'candidate',
         exclusion_reason: null,
         selected_at: item.selected ? new Date().toISOString() : null,
         selected_by: item.selected ? scope.profileId : null,
       }))
-
       const { error: comparableError } = await supabase.from('valuation_comparables').insert(rows)
       if (comparableError) {
         console.error('VALUATION_DRAFT_COMPARABLES_FAILED', { code: comparableError.code ?? 'UNKNOWN' })
-        return NextResponse.json(
-          { error: 'El borrador fue creado, pero no pudimos guardar sus comparables.', caseId: valuationCase.id },
-          { status: 422 },
-        )
+        return NextResponse.json({ error: 'El expediente fue creado, pero no pudimos guardar sus comparables.', caseId: valuationCase.id }, { status: 422 })
       }
     }
 
@@ -175,29 +241,25 @@ export async function POST(request: Request) {
       valuation_case_id: valuationCase.id,
       version_number: valuationCase.version_number,
       status: 'draft',
-      snapshot,
+      snapshot: reportPayload,
       created_by: scope.profileId,
     })
-
     await supabase.from('valuation_decision_log').insert({
       valuation_case_id: valuationCase.id,
       action: 'case_created',
       from_status: null,
       to_status: 'draft',
-      reason: 'Borrador guardado antes de completar la decisión profesional.',
+      reason: complete ? 'Valorización completa creada desde el wizard; pendiente de envío a revisión.' : 'Borrador guardado antes de completar la decisión profesional.',
       actor_id: scope.profileId,
-      metadata: {
-        incompleteDraft: true,
-        selectedComparableCount,
-        methodologyVersion: 'property-partners-valuation-v2',
-      },
+      metadata: { incompleteDraft: !complete, selectedComparableCount, methodologyVersion: result?.methodologyVersion ?? 'property-partners-valuation-v2', rateAnchor },
     })
 
     return NextResponse.json({
       caseId: valuationCase.id,
       status: 'draft',
-      incomplete: true,
+      incomplete: !complete,
       selectedComparableCount,
+      estimatedValueUf: result?.adjustedValueUf ?? null,
     }, { status: 201 })
   } catch (error) {
     return accessErrorResponse(error)

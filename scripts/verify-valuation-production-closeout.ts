@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 
 const form = readFileSync('app/dashboard/valuation/page.tsx', 'utf8')
 const suggest = readFileSync('app/api/valuation/comparables/suggest/route.ts', 'utf8')
+const drafts = readFileSync('app/api/valuation/drafts/route.ts', 'utf8')
 const cases = readFileSync('app/api/valuation/cases/route.ts', 'utf8')
 const workspace = readFileSync('app/dashboard/valuations/[id]/page.tsx', 'utf8')
 const workspaceApi = readFileSync('app/api/valuations/[id]/comparables/route.ts', 'utf8')
@@ -17,11 +18,20 @@ assert.match(form, /reference_only/, 'Incomplete live Portal references must be 
 assert.match(form, /disabled=\{referenceOnly\}/, 'Reference-only Portal evidence must not be selectable.')
 
 assert.match(suggest, /createAdminClient/, 'Market evidence must be read server-side after capability authorization.')
+assert.match(suggest, /valuation_pp_kml_barrio_at/, 'Subject barrio must resolve from the canonical PP KML when coordinates exist.')
+assert.match(suggest, /valuation_cbrs_pp_kml_candidates/, 'CBRS candidates must be filtered by PP KML before ranking.')
+assert.match(suggest, /valuation_portal_pp_kml_candidates/, 'Portal references must be filtered by PP KML before ranking.')
 assert.match(suggest, /isSubjectCbrs/, 'CBRS subject holdout exclusion must remain enabled.')
 assert.match(suggest, /source_registered_area_not_confirmed_as_useful/, 'CBRS department area semantics must remain explicit.')
 assert.match(suggest, /market_portal_reference_metrics/, 'Canonical Portal benchmark must remain part of suggestion evidence.')
 assert.match(suggest, /quality: 'reference_only'/, 'Incomplete live Portal evidence must remain reference-only.')
 assert.doesNotMatch(suggest, /usefulAreaM2:\s*built/, 'CBRS registered area must not be relabeled as useful area.')
+
+assert.match(drafts, /isFinalizable/, 'Final wizard completion must be evaluated explicitly.')
+assert.match(drafts, /calculateContractualValuation/, 'A complete final wizard must persist a canonical economic result.')
+assert.match(drafts, /finalWizardComplete: true/, 'Complete wizard evidence must be traceable in the persisted case.')
+assert.match(drafts, /estimated_value_uf: result\?\.adjustedValueUf/, 'Complete wizard save must persist its estimated value.')
+assert.match(drafts, /incomplete: !complete/, 'Save response must distinguish complete valuation from incomplete draft.')
 
 assert.match(cases, /match_status: item\.selected \? 'accepted' : 'candidate'/, 'Unselected evidence must persist as candidate, not rejected/excluded.')
 assert.doesNotMatch(cases, /selection_reason:/, 'Do not write nonexistent selection_reason column.')
