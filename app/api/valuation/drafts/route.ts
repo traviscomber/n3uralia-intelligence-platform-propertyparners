@@ -21,6 +21,24 @@ type DraftPayload = {
   sourcePropertyId?: string | null
 }
 
+type ChampionComparable = ValuationComparable & {
+  rankingScore?: number
+  strictPhysicalCompatibility?: boolean
+}
+
+type ChampionRecommendation = {
+  recommendedRateUfM2: number
+  recommendedBuiltRateUfM2: number
+  recommendedLandRateUfM2: number
+  recommendedEstimatedValueUf: number
+  comparableCount: number
+  strictComparableCount: number
+  averageSimilarity: number
+  comparableSpread: number
+  evidenceGate: 'strict_6_plus' | 'strict_4_recovery' | 'strict_5_coherent_recovery'
+  recommendationMethod: 'champion_v5_geo50_mean30_median20_similarity_squared'
+}
+
 const emptyFactors: QualitativeFactors = {
   condition: 0,
   remodeling: 0,
@@ -38,6 +56,105 @@ function isFinalizable(subject: ValuationSubject, comparables: ValuationComparab
     ? Boolean(subject.builtRateUfM2 && subject.landRateUfM2)
     : Boolean(subject.usefulRateUfM2)
   return selected.length >= 3 && hasRates && Boolean(justification.trim())
+}
+
+function rankingScore(item: ChampionComparable) {
+  const value = Number(item.rankingScore)
+  return Number.isFinite(value) && value > 0 ? value : 0
+}
+
+function weightedMedianRate(items: ChampionComparable[]) {
+  const usable = items
+    .map((item) => ({ rate: calculateCanonicalComparableUfM2(item), score: rankingScore(item) }))
+    .filter((item) => item.rate > 0 && item.score > 0)
+    .map((item) => ({ ...item, weight: item.score ** 2 }))
+    .sort((a, b) => a.rate - b.rate)
+  const totalWeight = usable.reduce((sum, item) => sum + item.weight, 0)
+  if (!usable.length || totalWeight <= 0) return null
+  let cumulative = 0
+  for (const item of usable) {
+    cumulative += item.weight
+    if (cumulative >= totalWeight / 2) return item.rate
+  }
+  return usable[usable.length - 1]?.rate ?? null
+}
+
+function weightedArithmeticRate(items: ChampionComparable[]) {
+  const usable = items
+    .map((item) => ({ rate: calculateCanonicalComparableUfM2(item), score: rankingScore(item) }))
+    .filter((item) => item.rate > 0 && item.score > 0)
+  const totalWeight = usable.reduce((sum, item) => sum + item.score ** 2, 0)
+  if (!usable.length || totalWeight <= 0) return null
+  return usable.reduce((sum, item) => sum + item.rate * item.score ** 2, 0) / totalWeight
+}
+
+function weightedGeometricRate(items: ChampionComparable[]) {
+  const usable = items
+    .map((item) => ({ rate: calculateCanonicalComparableUfM2(item), score: rankingScore(item) }))
+    .filter((item) => item.rate > 0 && item.score > 0)
+  const totalWeight = usable.reduce((sum, item) => sum + item.score ** 2, 0)
+  if (!usable.length || totalWeight <= 0) return null
+  const weightedLog = usable.reduce((sum, item) => sum + Math.log(item.rate) * item.score ** 2, 0) / totalWeight
+  return Math.exp(weightedLog)
+}
+
+function comparableSpread(items: ChampionComparable[]) {
+  const rates = items.map((item) => calculateCanonicalComparableUfM2(item)).filter((rate) => rate > 0).sort((a, b) => a - b)
+  if (rates.length < 2) return 1
+  const middle = Math.floor(rates.length / 2)
+  const median = rates.length % 2 ? rates[middle] : (rates[middle - 1] + rates[middle]) / 2
+  if (!median) return 1
+  return (rates[rates.length - 1] - rates[0]) / median
+}
+
+function buildChampionHouseRecommendation(subject: ValuationSubject, comparables: ChampionComparable[]): ChampionRecommendation | null {
+  if (subject.propertyType !== 'Casa' || !subject.builtAreaM2 || !subject.landAreaM2) return null
+
+  const strict = comparables
+    .filter((item) => item.sourceType === 'CBRS' && item.strictPhysicalCompatibility === true && rankingScore(item) > 0 && calculateCanonicalComparableUfM2(item) > 0)
+    .sort((a, b) => rankingScore(b) - rankingScore(a))
+    .slice(0, 8)
+
+  let sample: ChampionComparable[] = []
+  let evidenceGate: ChampionRecommendation['evidenceGate'] | null = null
+  if (strict.length >= 6) {
+    sample = strict
+    evidenceGate = 'strict_6_plus'
+  } else if (strict.length === 4) {
+    sample = strict
+    evidenceGate = 'strict_4_recovery'
+  } else if (strict.length === 5) {
+    const averageScore = strict.reduce((sum, item) => sum + rankingScore(item), 0) / strict.length
+    if (averageScore >= 0.75 && comparableSpread(strict) <= 0.5) {
+      sample = strict
+      evidenceGate = 'strict_5_coherent_recovery'
+    }
+  }
+
+  if (!sample.length || !evidenceGate) return null
+
+  const geometricRate = weightedGeometricRate(sample)
+  const arithmeticRate = weightedArithmeticRate(sample)
+  const medianRate = weightedMedianRate(sample)
+  if (!geometricRate || !arithmeticRate || !medianRate) return null
+
+  const recommendedRate = geometricRate * 0.5 + arithmeticRate * 0.3 + medianRate * 0.2
+  const weightedArea = subject.builtAreaM2 + subject.landAreaM2 / 4
+  const averageSimilarity = sample.reduce((sum, item) => sum + rankingScore(item), 0) / sample.length
+  const spread = comparableSpread(sample)
+
+  return {
+    recommendedRateUfM2: Number(recommendedRate.toFixed(2)),
+    recommendedBuiltRateUfM2: Number(recommendedRate.toFixed(2)),
+    recommendedLandRateUfM2: Number((recommendedRate / 4).toFixed(2)),
+    recommendedEstimatedValueUf: Math.round(recommendedRate * weightedArea),
+    comparableCount: sample.length,
+    strictComparableCount: strict.length,
+    averageSimilarity: Number(averageSimilarity.toFixed(3)),
+    comparableSpread: Number(spread.toFixed(3)),
+    evidenceGate,
+    recommendationMethod: 'champion_v5_geo50_mean30_median20_similarity_squared',
+  }
 }
 
 export async function POST(request: Request) {
@@ -62,6 +179,7 @@ export async function POST(request: Request) {
     }
 
     const comparables = Array.isArray(payload.comparables) ? payload.comparables : []
+    const championRecommendation = buildChampionHouseRecommendation(payload.subject, comparables as ChampionComparable[])
     const qualitativeFactors = payload.qualitativeFactors ?? emptyFactors
     const selected = comparables.filter((item) => item.selected && item.priceUf > 0 && calculateCanonicalComparableUfM2(item) > 0)
     const selectedComparableCount = selected.length
@@ -84,6 +202,24 @@ export async function POST(request: Request) {
     const transactionDateCoverage = selectedComparableCount
       ? selected.filter((item) => Boolean(item.transactionDate)).length / selectedComparableCount
       : 0
+    const methodologyVersion = payload.subject.propertyType === 'Casa' && championRecommendation
+      ? 'property-partners-house-champion-v5'
+      : result?.methodologyVersion ?? 'property-partners-valuation-v2'
+
+    const championEvidence = championRecommendation ? {
+      recommendedRateUfM2: championRecommendation.recommendedRateUfM2,
+      recommendedBuiltRateUfM2: championRecommendation.recommendedBuiltRateUfM2,
+      recommendedLandRateUfM2: championRecommendation.recommendedLandRateUfM2,
+      recommendedEstimatedValueUf: championRecommendation.recommendedEstimatedValueUf,
+      comparableCount: championRecommendation.comparableCount,
+      strictComparableCount: championRecommendation.strictComparableCount,
+      averageSimilarity: championRecommendation.averageSimilarity,
+      comparableSpread: championRecommendation.comparableSpread,
+      evidenceGate: championRecommendation.evidenceGate,
+      recommendationMethod: championRecommendation.recommendationMethod,
+      sourceMethodologyVersion: 'property-partners-house-champion-v5',
+      recommendationNonBinding: true,
+    } : {}
 
     const evidence = complete && result ? {
       comparableCount: result.comparableCount,
@@ -97,12 +233,14 @@ export async function POST(request: Request) {
       comparableDistanceCoveragePct: Number((distanceCoverage * 100).toFixed(1)),
       comparableTransactionDateCoveragePct: Number((transactionDateCoverage * 100).toFixed(1)),
       finalWizardComplete: true,
+      ...championEvidence,
     } : {
       draft: true,
       selectedComparableCount,
       propertyAssignmentId: payload.propertyAssignmentId ?? null,
       subjectPropertyId: payload.sourcePropertyId ?? null,
       finalWizardComplete: false,
+      ...championEvidence,
     }
 
     const assumptions = complete ? {
@@ -110,31 +248,39 @@ export async function POST(request: Request) {
       selectedComparablesOnly: true,
       finalRateConfirmedByValuer: true,
       rateAnchor,
+      championRecommendationIsNonBinding: Boolean(championRecommendation),
       qualitativeFactorsDoNotApplyAutomaticEconomicAdjustment: true,
       canonicalTemplates: ['Plantilla de Valorización Casas.xlsx', 'Plantilla de Valorización Departamentos.xlsx'],
     } : {
       incompleteDraft: true,
+      championRecommendationIsNonBinding: Boolean(championRecommendation),
       noEconomicResultUntilProfessionalRatesAreConfirmed: true,
     }
 
     const reportPayload = complete && result
       ? {
           ...buildValuationReportPayload(payload.subject, comparables, qualitativeFactors, result),
+          methodologyVersion,
           subjectPropertyId: payload.sourcePropertyId ?? null,
-          decision: { rateAnchor, rateConfirmedByValuer: true },
+          decision: {
+            rateAnchor,
+            rateConfirmedByValuer: true,
+            championRecommendation: championRecommendation ?? null,
+          },
           evidence,
           assumptions,
         }
       : {
           draft: true,
           incomplete: true,
-          methodologyVersion: 'property-partners-valuation-v2',
+          methodologyVersion,
           generatedAt: new Date().toISOString(),
           subject: payload.subject,
           comparables: comparables.map((item) => ({ ...item, canonicalUfM2: calculateCanonicalComparableUfM2(item) })),
           qualitativeFactors,
           justification: justification || null,
-          decision: { rateAnchor },
+          decision: { rateAnchor, championRecommendation: championRecommendation ?? null },
+          evidence,
           completion: {
             selectedComparableCount,
             hasBuiltRate: Boolean(payload.subject.builtRateUfM2),
@@ -180,8 +326,10 @@ export async function POST(request: Request) {
         estimated_value_uf: result?.adjustedValueUf ?? null,
         low_value_uf: result?.lowValueUf ?? null,
         high_value_uf: result?.highValueUf ?? null,
-        confidence: complete && result ? (result.cbrsSummary.count >= 3 && result.portalSummary.count >= 3 ? 'high' : 'medium') : 'low',
-        methodology_version: result?.methodologyVersion ?? 'property-partners-valuation-v2',
+        confidence: championRecommendation
+          ? (championRecommendation.evidenceGate === 'strict_6_plus' && championRecommendation.comparableSpread <= 0.5 ? 'high' : 'medium')
+          : complete && result ? (result.cbrsSummary.count >= 3 && result.portalSummary.count >= 3 ? 'high' : 'medium') : 'low',
+        methodology_version: methodologyVersion,
         evidence,
         assumptions,
         warnings,
@@ -223,7 +371,13 @@ export async function POST(request: Request) {
         base_value_uf: null,
         adjusted_value_uf: null,
         adjustments: [],
-        evidence: [{ draft: !complete, finalWizardComplete: complete, sourceReference: item.sourceReference }],
+        evidence: [{
+          draft: !complete,
+          finalWizardComplete: complete,
+          sourceReference: item.sourceReference,
+          rankingScore: rankingScore(item as ChampionComparable) || null,
+          strictPhysicalCompatibility: (item as ChampionComparable).strictPhysicalCompatibility ?? null,
+        }],
         contradictions: [],
         match_status: item.selected ? 'accepted' : 'candidate',
         exclusion_reason: null,
@@ -251,7 +405,7 @@ export async function POST(request: Request) {
       to_status: 'draft',
       reason: complete ? 'Valorización completa creada desde el wizard; pendiente de envío a revisión.' : 'Borrador guardado antes de completar la decisión profesional.',
       actor_id: scope.profileId,
-      metadata: { incompleteDraft: !complete, selectedComparableCount, methodologyVersion: result?.methodologyVersion ?? 'property-partners-valuation-v2', rateAnchor },
+      metadata: { incompleteDraft: !complete, selectedComparableCount, methodologyVersion, rateAnchor, championRecommendation: championRecommendation ?? null },
     })
 
     return NextResponse.json({
@@ -260,6 +414,8 @@ export async function POST(request: Request) {
       incomplete: !complete,
       selectedComparableCount,
       estimatedValueUf: result?.adjustedValueUf ?? null,
+      championRecommendation,
+      methodologyVersion,
     }, { status: 201 })
   } catch (error) {
     return accessErrorResponse(error)
