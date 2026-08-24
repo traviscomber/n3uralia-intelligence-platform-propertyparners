@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import {
+  buildMarketHouseSignals,
   getMarketHouseIntelligence,
   hasComparablePortalTerritory,
   missingExactPortalNeighborhoods,
@@ -27,6 +28,7 @@ export default async function MarketIntelligencePage() {
   const summary = intelligence.summary
   const missingPortalNeighborhoods = missingExactPortalNeighborhoods(summary)
   const portalTerritoryReady = hasComparablePortalTerritory(summary)
+  const signals = buildMarketHouseSignals(intelligence.neighborhoods)
 
   return (
     <WorkspaceShell>
@@ -48,13 +50,32 @@ export default async function MarketIntelligencePage() {
 
       <section className="mt-7 border border-[var(--n3-line)] bg-[#0c1111] p-5">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">Lectura N3uralia</p>
-        <h2 className="mt-2 text-xl font-semibold">{portalTerritoryReady ? 'Comparación territorial habilitada' : 'No comparar oferta por barrio'}</h2>
+        <h2 className="mt-2 text-xl font-semibold">{portalTerritoryReady ? 'Comparar oferta por barrio' : 'Primero, completar barrios'}</h2>
         <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
           {portalTerritoryReady
             ? 'La oferta actual tiene cobertura territorial suficiente.'
             : `${number(summary.portalExactKmlHouses)} de ${number(summary.portalCurrentHouses)} avisos tienen barrio KML. Faltan ${number(missingPortalNeighborhoods)}.`}
         </p>
         <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Opinión separada · no modifica datos</p>
+      </section>
+
+      <section className="mt-7">
+        <div className="border-b border-[var(--n3-line)] pb-2">
+          <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Señales CBRS</h2>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Sólo barrios con {number(signals.minimumSample)} o más ventas.</p>
+        </div>
+        <div className="grid border-b border-[var(--n3-line)] sm:grid-cols-2">
+          <div className="py-4 pr-4">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Más ventas</p>
+            <p className="mt-1 text-xl font-semibold">{signals.mostSales?.neighborhoodName ?? '—'}</p>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{signals.mostSales ? `${number(signals.mostSales.cbrsTransactions)} ventas` : 'Sin muestra suficiente'}</p>
+          </div>
+          <div className="border-t border-[var(--n3-line)] py-4 sm:border-l sm:border-t-0 sm:pl-4">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mayor UF/m²</p>
+            <p className="mt-1 text-xl font-semibold">{signals.highestUfM2?.neighborhoodName ?? '—'}</p>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{signals.highestUfM2 ? `${number(signals.highestUfM2.cbrsMedianUfM2, 1)} UF/m² · ${number(signals.highestUfM2.cbrsTransactions)} ventas` : 'Sin muestra suficiente'}</p>
+          </div>
+        </div>
       </section>
 
       <section className="mt-7">

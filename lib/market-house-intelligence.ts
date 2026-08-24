@@ -45,6 +45,14 @@ export type MarketHouseIntelligence = {
   error?: string
 }
 
+export type MarketHouseSignals = {
+  mostSales: MarketHouseNeighborhoodSales | null
+  highestUfM2: MarketHouseNeighborhoodSales | null
+  minimumSample: number
+}
+
+export const MARKET_HOUSE_SIGNAL_MINIMUM_SAMPLE = 30
+
 type SummaryDbRow = {
   portal_active_houses: number | null
   portal_current_houses: number | null
@@ -161,6 +169,26 @@ export function missingExactPortalNeighborhoods(summary: MarketHouseDeliverySumm
 export function hasComparablePortalTerritory(summary: MarketHouseDeliverySummary) {
   if (!summary.portalCurrentHouses || summary.portalExactKmlHouses === null) return false
   return summary.portalExactKmlHouses >= 3 && summary.portalExactKmlHouses / summary.portalCurrentHouses >= 0.8
+}
+
+export function buildMarketHouseSignals(
+  neighborhoods: MarketHouseNeighborhoodSales[],
+  minimumSample = MARKET_HOUSE_SIGNAL_MINIMUM_SAMPLE,
+): MarketHouseSignals {
+  const eligible = neighborhoods.filter((row) => row.cbrsTransactions >= minimumSample)
+  const mostSales = [...eligible].sort((left, right) =>
+    right.cbrsTransactions - left.cbrsTransactions
+      || left.neighborhoodName.localeCompare(right.neighborhoodName, 'es'),
+  )[0] ?? null
+  const highestUfM2 = eligible
+    .filter((row) => row.cbrsMedianUfM2 !== null)
+    .sort((left, right) =>
+      (right.cbrsMedianUfM2 ?? 0) - (left.cbrsMedianUfM2 ?? 0)
+        || right.cbrsTransactions - left.cbrsTransactions
+        || left.neighborhoodName.localeCompare(right.neighborhoodName, 'es'),
+    )[0] ?? null
+
+  return { mostSales, highestUfM2, minimumSample }
 }
 
 export async function getMarketHouseDeliverySummary(): Promise<{ summary: MarketHouseDeliverySummary; error?: string }> {

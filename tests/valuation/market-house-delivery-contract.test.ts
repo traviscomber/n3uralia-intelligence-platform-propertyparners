@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import {
+  buildMarketHouseSignals,
   emptyMarketHouseDeliverySummary,
   hasComparablePortalTerritory,
   missingExactPortalNeighborhoods,
@@ -43,4 +44,25 @@ test('la comparación exige al menos tres avisos y 80% de cobertura', () => {
     portalExactKmlHouses: 8,
   }
   assert.equal(hasComparablePortalTerritory(summary), true)
+})
+
+test('las señales usan datos CBRS y una muestra mínima', () => {
+  const signals = buildMarketHouseSignals([
+    { neighborhoodName: 'Santa María', cbrsTransactions: 586, cbrsMedianPriceUf: 26000, cbrsMedianUfM2: 85.7, cbrsAsOf: '2025-12-30' },
+    { neighborhoodName: 'Nueva Costanera', cbrsTransactions: 191, cbrsMedianPriceUf: 17000, cbrsMedianUfM2: 115.1, cbrsAsOf: '2025-07-29' },
+    { neighborhoodName: 'Muestra pequeña', cbrsTransactions: 4, cbrsMedianPriceUf: 20000, cbrsMedianUfM2: 999, cbrsAsOf: '2025-01-01' },
+  ])
+
+  assert.equal(signals.minimumSample, 30)
+  assert.equal(signals.mostSales?.neighborhoodName, 'Santa María')
+  assert.equal(signals.highestUfM2?.neighborhoodName, 'Nueva Costanera')
+})
+
+test('las señales quedan vacías sin muestra suficiente', () => {
+  const signals = buildMarketHouseSignals([
+    { neighborhoodName: 'Muestra pequeña', cbrsTransactions: 2, cbrsMedianPriceUf: 20000, cbrsMedianUfM2: 150, cbrsAsOf: null },
+  ])
+
+  assert.equal(signals.mostSales, null)
+  assert.equal(signals.highestUfM2, null)
 })
