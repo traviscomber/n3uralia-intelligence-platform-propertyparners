@@ -6,7 +6,6 @@ import {
   buildMarketHouseSignals,
   getMarketHouseIntelligence,
   hasComparablePortalTerritory,
-  missingExactPortalNeighborhoods,
 } from '@/lib/market-house-intelligence'
 
 function number(value: number | null, digits = 0) {
@@ -26,7 +25,6 @@ function date(value: string | null) {
 export default async function MarketIntelligencePage() {
   const intelligence = await getMarketHouseIntelligence()
   const summary = intelligence.summary
-  const missingPortalNeighborhoods = missingExactPortalNeighborhoods(summary)
   const portalTerritoryReady = hasComparablePortalTerritory(summary)
   const signals = buildMarketHouseSignals(intelligence.neighborhoods)
 
@@ -54,7 +52,7 @@ export default async function MarketIntelligencePage() {
         <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
           {portalTerritoryReady
             ? 'La oferta actual tiene cobertura territorial suficiente.'
-            : `${number(summary.portalExactKmlHouses)} de ${number(summary.portalCurrentHouses)} avisos tienen barrio KML. Faltan ${number(missingPortalNeighborhoods)}.`}
+            : `${number(summary.portalExactKmlHouses)} de ${number(summary.portalCurrentHouses)} avisos con barrio. ${number(summary.territorySuggestions)} sugerencias listas para revisar.`}
         </p>
         <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Opinión separada · no modifica datos</p>
       </section>

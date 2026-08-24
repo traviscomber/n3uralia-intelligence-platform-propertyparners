@@ -6,6 +6,11 @@ export type MarketHouseDeliverySummary = {
   portalPricedHouses: number | null
   portalPricedM2Houses: number | null
   portalExactKmlHouses: number | null
+  territorySuggestions: number | null
+  territoryAmbiguous: number | null
+  territoryUnmatched: number | null
+  territoryAcceptedReviews: number | null
+  territoryRejectedReviews: number | null
   portalMedianPriceUf: number | null
   portalMedianUfM2: number | null
   portalAsOf: string | null
@@ -51,6 +56,17 @@ export type MarketHouseSignals = {
   minimumSample: number
 }
 
+export type MarketHouseTerritoryQueueItem = {
+  sourceId: string
+  sourceListingId: string
+  listingUrl: string | null
+  listingAddress: string
+  suggestedNeighborhoodId: string | null
+  suggestedNeighborhoodName: string | null
+  candidateCount: number
+  reviewStatus: 'suggested' | 'ambiguous' | 'unmatched'
+}
+
 export const MARKET_HOUSE_SIGNAL_MINIMUM_SAMPLE = 30
 
 type SummaryDbRow = {
@@ -92,12 +108,38 @@ type NeighborhoodDbRow = {
   cbrs_as_of: string | null
 }
 
+type TerritoryProgressDbRow = {
+  portal_current_houses: number | null
+  exact_kml_houses: number | null
+  pending_unique_suggestions: number | null
+  ambiguous_suggestions: number | null
+  unmatched_houses: number | null
+  accepted_reviews: number | null
+  rejected_reviews: number | null
+}
+
+type TerritoryQueueDbRow = {
+  source_id: string
+  source_listing_id: string
+  listing_url: string | null
+  listing_address: string | null
+  suggested_neighborhood_id: string | null
+  suggested_neighborhood_name: string | null
+  candidate_count: number | null
+  review_status: 'suggested' | 'ambiguous' | 'unmatched'
+}
+
 export const emptyMarketHouseDeliverySummary: MarketHouseDeliverySummary = {
   portalActiveHouses: null,
   portalCurrentHouses: null,
   portalPricedHouses: null,
   portalPricedM2Houses: null,
   portalExactKmlHouses: null,
+  territorySuggestions: null,
+  territoryAmbiguous: null,
+  territoryUnmatched: null,
+  territoryAcceptedReviews: null,
+  territoryRejectedReviews: null,
   portalMedianPriceUf: null,
   portalMedianUfM2: null,
   portalAsOf: null,
@@ -135,6 +177,11 @@ function mapSummary(row: SummaryDbRow | undefined): MarketHouseDeliverySummary {
     portalPricedHouses: numberOrNull(row.portal_priced_houses),
     portalPricedM2Houses: numberOrNull(row.portal_priced_m2_houses),
     portalExactKmlHouses: numberOrNull(row.portal_exact_kml_houses),
+    territorySuggestions: null,
+    territoryAmbiguous: null,
+    territoryUnmatched: null,
+    territoryAcceptedReviews: null,
+    territoryRejectedReviews: null,
     portalMedianPriceUf: numberOrNull(row.portal_median_price_uf),
     portalMedianUfM2: numberOrNull(row.portal_median_uf_m2),
     portalAsOf: row.portal_as_of ?? null,
@@ -158,6 +205,23 @@ function mapSummary(row: SummaryDbRow | undefined): MarketHouseDeliverySummary {
     reviewHouses: numberOrNull(row.review_houses),
     missingNeighborhoodHouses: numberOrNull(row.missing_neighborhood_houses),
     kmlNeighborhoods: numberOrNull(row.kml_neighborhoods),
+  }
+}
+
+function withTerritoryProgress(
+  summary: MarketHouseDeliverySummary,
+  row: TerritoryProgressDbRow | undefined,
+): MarketHouseDeliverySummary {
+  if (!row) return summary
+  return {
+    ...summary,
+    portalCurrentHouses: numberOrNull(row.portal_current_houses) ?? summary.portalCurrentHouses,
+    portalExactKmlHouses: numberOrNull(row.exact_kml_houses),
+    territorySuggestions: numberOrNull(row.pending_unique_suggestions),
+    territoryAmbiguous: numberOrNull(row.ambiguous_suggestions),
+    territoryUnmatched: numberOrNull(row.unmatched_houses),
+    territoryAcceptedReviews: numberOrNull(row.accepted_reviews),
+    territoryRejectedReviews: numberOrNull(row.rejected_reviews),
   }
 }
 
@@ -194,9 +258,22 @@ export function buildMarketHouseSignals(
 export async function getMarketHouseDeliverySummary(): Promise<{ summary: MarketHouseDeliverySummary; error?: string }> {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_market_house_delivery_summary_v1')
-    if (error) return { summary: emptyMarketHouseDeliverySummary, error: error.message }
-    return { summary: mapSummary(((data ?? []) as SummaryDbRow[])[0]) }
+    const [summaryResult, territoryResult] = await Promise.all([
+      supabase.rpc('get_market_house_delivery_summary_v1'),
+      supabase.rpc('get_market_house_territory_progress_v1'),
+    ])
+    const errors = [summaryResult.error?.message, territoryResult.error?.message].filter(
+      (message): message is string => Boolean(message),
+    )
+    const summary = summaryResult.error
+      ? emptyMarketHouseDeliverySummary
+      : mapSummary(((summaryResult.data ?? []) as SummaryDbRow[])[0])
+    return {
+      summary: territoryResult.error
+        ? summary
+        : withTerritoryProgress(summary, ((territoryResult.data ?? []) as TerritoryProgressDbRow[])[0]),
+      error: errors.length ? errors.join(' · ') : undefined,
+    }
   } catch (error) {
     return {
       summary: emptyMarketHouseDeliverySummary,
@@ -208,12 +285,13 @@ export async function getMarketHouseDeliverySummary(): Promise<{ summary: Market
 export async function getMarketHouseIntelligence(): Promise<MarketHouseIntelligence> {
   try {
     const supabase = await createClient()
-    const [summaryResult, neighborhoodsResult] = await Promise.all([
+    const [summaryResult, neighborhoodsResult, territoryResult] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1'),
       supabase.rpc('get_market_house_neighborhood_sales_v1'),
+      supabase.rpc('get_market_house_territory_progress_v1'),
     ])
 
-    const errors = [summaryResult.error?.message, neighborhoodsResult.error?.message].filter(
+    const errors = [summaryResult.error?.message, neighborhoodsResult.error?.message, territoryResult.error?.message].filter(
       (message): message is string => Boolean(message),
     )
 
@@ -227,10 +305,14 @@ export async function getMarketHouseIntelligence(): Promise<MarketHouseIntellige
           cbrsAsOf: row.cbrs_as_of ?? null,
         }))
 
-    return {
-      summary: summaryResult.error
+    const summary = summaryResult.error
         ? emptyMarketHouseDeliverySummary
-        : mapSummary(((summaryResult.data ?? []) as SummaryDbRow[])[0]),
+        : mapSummary(((summaryResult.data ?? []) as SummaryDbRow[])[0])
+
+    return {
+      summary: territoryResult.error
+        ? summary
+        : withTerritoryProgress(summary, ((territoryResult.data ?? []) as TerritoryProgressDbRow[])[0]),
       neighborhoods,
       error: errors.length ? errors.join(' · ') : undefined,
     }
@@ -239,6 +321,34 @@ export async function getMarketHouseIntelligence(): Promise<MarketHouseIntellige
       summary: emptyMarketHouseDeliverySummary,
       neighborhoods: [],
       error: error instanceof Error ? error.message : 'No fue posible consultar la inteligencia de casas.',
+    }
+  }
+}
+
+export async function getMarketHouseTerritoryQueue(): Promise<{
+  rows: MarketHouseTerritoryQueueItem[]
+  error?: string
+}> {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('get_market_house_territory_queue_v1')
+    if (error) return { rows: [], error: error.message }
+    return {
+      rows: ((data ?? []) as TerritoryQueueDbRow[]).map((row) => ({
+        sourceId: row.source_id,
+        sourceListingId: row.source_listing_id,
+        listingUrl: row.listing_url,
+        listingAddress: row.listing_address ?? 'Sin dirección',
+        suggestedNeighborhoodId: row.suggested_neighborhood_id,
+        suggestedNeighborhoodName: row.suggested_neighborhood_name,
+        candidateCount: Number(row.candidate_count ?? 0),
+        reviewStatus: row.review_status,
+      })),
+    }
+  } catch (error) {
+    return {
+      rows: [],
+      error: error instanceof Error ? error.message : 'No fue posible consultar las sugerencias.',
     }
   }
 }

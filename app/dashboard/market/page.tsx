@@ -8,7 +8,6 @@ import { requireUserScope } from '@/lib/access-guards'
 import {
   getMarketHouseIntelligence,
   hasComparablePortalTerritory,
-  missingExactPortalNeighborhoods,
 } from '@/lib/market-house-intelligence'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
 
@@ -38,7 +37,6 @@ export default async function MarketPage() {
   ])
   const summary = intelligence.summary
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
-  const missingPortalNeighborhoods = missingExactPortalNeighborhoods(summary)
   const portalTerritoryReady = hasComparablePortalTerritory(summary)
   const kmlCoverage = summary.canonicalHouses && summary.exactKmlHouses !== null
     ? summary.exactKmlHouses / summary.canonicalHouses
@@ -80,13 +78,13 @@ export default async function MarketPage() {
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">
             {portalTerritoryReady
               ? 'La cobertura permite comparar oferta actual y ventas por barrio.'
-              : `${number(summary.portalExactKmlHouses)} de ${number(summary.portalCurrentHouses)} avisos tienen barrio KML. No se compara oferta por barrio hasta completar la clasificación.`}
+              : `${number(summary.portalExactKmlHouses)} de ${number(summary.portalCurrentHouses)} avisos con barrio. ${number(summary.territorySuggestions)} sugerencias listas para revisar.`}
           </p>
           <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Opinión separada · no modifica datos</p>
         </div>
-        {!portalTerritoryReady && missingPortalNeighborhoods !== null ? (
+        {!portalTerritoryReady && canManage && (summary.territorySuggestions ?? 0) > 0 ? (
           <Link href="/dashboard/market/reconciliacion" className="inline-flex min-h-10 items-center justify-center bg-[var(--primary)] px-4 text-xs font-semibold text-white">
-            Revisar {number(missingPortalNeighborhoods)} avisos
+            Revisar {number(summary.territorySuggestions)} avisos
           </Link>
         ) : null}
       </section>
