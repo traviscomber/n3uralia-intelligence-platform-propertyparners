@@ -231,11 +231,11 @@ function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
   const programScore = (bedroomScore + bathroomScore) / 2
 
   return Math.min(1,
-    microScore * 0.25 +
-    houseYearScore(num(payload.constructionYear), num(row.construction_year)) * 0.2 +
-    areaScore * 0.2 +
+    microScore * 0.3 +
+    houseYearScore(num(payload.constructionYear), num(row.construction_year)) * 0.1 +
+    areaScore * 0.3 +
     landScore * 0.15 +
-    programScore * 0.1 +
+    programScore * 0.05 +
     recencyScore(row.transaction_date) * 0.1,
   )
 }
@@ -366,7 +366,7 @@ export async function POST(request: Request) {
 
     const houseRecommendation = payload.propertyType === 'Casa' && cbrsSuggestions.length >= 3
       ? (() => {
-          const sample = cbrsSuggestions.slice(0, 7)
+          const sample = cbrsSuggestions.slice(0, 8)
           const weightedRate = weightedMedianRate(sample)
           const weightedArea = num(payload.builtAreaM2) + num(payload.landAreaM2) / 4
           const averageSimilarity = sample.reduce((sum, item) => sum + item.similarityScore, 0) / sample.length
@@ -404,12 +404,12 @@ export async function POST(request: Request) {
       cbrsBenchmark,
       portalBenchmark,
       houseRecommendation,
-      methodologyVersion: payload.propertyType === 'Casa' ? 'property-partners-valuation-v2-kml-house-robust-v2' : 'property-partners-valuation-v2-kml-first',
+      methodologyVersion: payload.propertyType === 'Casa' ? 'property-partners-valuation-v2-kml-house-robust-v3' : 'property-partners-valuation-v2-kml-first',
       notes: [
         `Primer filtro: barrio KML Property Partners = ${canonicalBarrio}. Ningún comparable de otro polígono compite en el ranking.`,
         canonicalBarrio !== payload.neighborhood.trim() ? `El KML corrigió el barrio informado (${payload.neighborhood.trim()} → ${canonicalBarrio}).` : 'El barrio informado coincide con el KML canónico.',
         payload.propertyType === 'Casa'
-          ? 'Dentro del barrio, el ranking prioriza micro-ubicación, año de construcción, superficie construida, terreno, programa y recencia. Ventas de más de 5 años no compiten en el top principal.'
+          ? 'Dentro del barrio, el ranking usa pesos validados temporalmente: micro-ubicación 30%, construcción 30%, terreno 15%, año 10%, recencia 10% y programa 5%. Ventas de más de 5 años no compiten en el top principal.'
           : 'Después del filtro territorial se ordena por superficie, distancia y recencia.',
         excludedEconomic ? `${excludedEconomic} ventas CBRS atípicas para su cohorte de tamaño/terreno fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas en la cohorte seleccionable.',
         excludedStale ? `${excludedStale} ventas de casas de más de 5 años quedaron fuera del ranking principal.` : '',
