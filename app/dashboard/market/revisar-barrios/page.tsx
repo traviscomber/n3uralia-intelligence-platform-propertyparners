@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ExternalLink, MapPinned, ShieldCheck } from 'lucide-react'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
-import { requirePageCapability } from '@/lib/access-guards'
+import { requireAnyPageCapability } from '@/lib/access-guards'
 import { getNeighborhoodReviewSnapshot } from '@/lib/neighborhood-review'
 import { createClient } from '@/lib/supabase/server'
 import { reviewNeighborhoodAction } from './actions'
@@ -32,7 +32,7 @@ function percent(value: number | null) {
 }
 
 export default async function NeighborhoodReviewPage() {
-  await requirePageCapability('market.manage_sources')
+  await requireAnyPageCapability(['market.manage_sources', 'management.global.read'])
 
   const supabase = await createClient()
   const [{ data, error }, snapshot] = await Promise.all([

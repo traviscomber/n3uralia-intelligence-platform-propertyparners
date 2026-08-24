@@ -32,7 +32,7 @@ export const CEO_NAVIGATION: NavigationSection[] = [
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
       { label: 'Control de gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Identidad y evidencia', href: '/dashboard/market/identidades', anyCapabilities: ['market.manage_sources', 'properties.global.assign'] },
-      { label: 'Revisar barrios', href: '/dashboard/market/revisar-barrios', anyCapabilities: ['market.manage_sources'] },
+      { label: 'Revisar barrios', href: '/dashboard/market/revisar-barrios', anyCapabilities: ['market.manage_sources', 'management.global.read'] },
       { label: 'Asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.global.assign'] },
       { label: 'Reportes operativos', href: '/dashboard/reportes/autonomos', anyCapabilities: ['reports.global.read'] },
       { label: 'Fuentes', href: '/dashboard/market/fuentes', anyCapabilities: ['market.manage_sources', 'settings.manage'] },
