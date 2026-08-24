@@ -8,6 +8,7 @@ export type MarketIdentityInput = {
   rol?: string | null
   latitude?: number | null
   longitude?: number | null
+  neighborhood?: string | null
   usefulAreaM2?: number | null
   builtAreaM2?: number | null
   bedrooms?: number | null
@@ -54,6 +55,7 @@ export function buildCanonicalPropertyKey(input: MarketIdentityInput): string {
         roundCoordinate(input.latitude),
         roundCoordinate(input.longitude),
         normalizedAddress,
+        normalizeMarketText(input.neighborhood),
         normalizeMarketText(input.propertyType),
       ]
 
@@ -81,7 +83,7 @@ export function scorePropertyMatch(left: MarketIdentityInput, right: MarketIdent
   const rightRol = normalizeRol(right.rol)
 
   if (leftRol && rightRol) {
-    evidence.push({ field: 'rol', left: leftRol, right: rightRol, weight: 0.55, matched: leftRol === rightRol })
+    evidence.push({ field: 'rol', left: leftRol, right: rightRol, weight: 0.5, matched: leftRol === rightRol })
   }
 
   const leftAddress = normalizeMarketText(left.address)
@@ -90,16 +92,22 @@ export function scorePropertyMatch(left: MarketIdentityInput, right: MarketIdent
     evidence.push({ field: 'address', left: leftAddress, right: rightAddress, weight: 0.2, matched: leftAddress === rightAddress })
   }
 
+  const leftNeighborhood = normalizeMarketText(left.neighborhood)
+  const rightNeighborhood = normalizeMarketText(right.neighborhood)
+  if (leftNeighborhood && rightNeighborhood) {
+    evidence.push({ field: 'neighborhood', left: leftNeighborhood, right: rightNeighborhood, weight: 0.15, matched: leftNeighborhood === rightNeighborhood })
+  }
+
   const distance = coordinateDistanceMeters(left, right)
   if (distance !== null) {
-    evidence.push({ field: 'distance_m', left: Math.round(distance), right: 25, weight: 0.15, matched: distance <= 25 })
+    evidence.push({ field: 'distance_m', left: Math.round(distance), right: 25, weight: 0.1, matched: distance <= 25 })
   }
 
   const leftArea = left.usefulAreaM2 ?? left.builtAreaM2
   const rightArea = right.usefulAreaM2 ?? right.builtAreaM2
   const areaDifference = relativeDifference(leftArea, rightArea)
   if (areaDifference !== null) {
-    evidence.push({ field: 'area_difference', left: Number(areaDifference.toFixed(3)), right: 0.08, weight: 0.1, matched: areaDifference <= 0.08 })
+    evidence.push({ field: 'area_difference', left: Number(areaDifference.toFixed(3)), right: 0.08, weight: 0.05, matched: areaDifference <= 0.08 })
   }
 
   const score = evidence.reduce((sum, item) => sum + (item.matched ? item.weight : 0), 0)
