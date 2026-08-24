@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Property Partners Vitacura | Inteligencia de mercado',
-  description: 'Control de gestion e inteligencia de mercado para ventas de casas y departamentos en Vitacura. Powered by N3uralia.',
+  description: 'Inteligencia de mercado, valorización y control de gestión para casas en Vitacura. Powered by N3uralia.',
   generator: 'N3uralia',
 }
 

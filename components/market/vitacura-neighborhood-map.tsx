@@ -252,7 +252,7 @@ export function VitacuraNeighborhoodMap({
         <div className={styles.selected}>
           <p className={styles.micro}>Barrio</p>
           <p className={styles.selectedName}>{selected?.name ?? '—'}</p>
-          <p className={styles.selectedMeta}>{numberFormatter.format(selected?.properties ?? 0)} propiedades exactas</p>
+          <p className={styles.selectedMeta}>{numberFormatter.format(selected?.properties ?? 0)} casas exactas</p>
           <p className={styles.selectedPartners}>{selected?.partners.length ? selected.partners.join(' · ') : 'Sin partner'}</p>
         </div>
 

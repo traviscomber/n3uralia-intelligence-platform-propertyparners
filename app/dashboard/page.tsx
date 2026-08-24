@@ -8,7 +8,7 @@ const modules = [
   {
     number: '01',
     title: 'Inteligencia de Mercado',
-    description: 'Registros de oferta, fuentes, barrios, calidad de datos e indicadores disponibles. Las ventas y métricas derivadas permanecen pendientes hasta cargar transacciones confirmadas.',
+    description: 'Oferta de casas, barrios Property Partners y ventas registradas en CBRS, con fuentes, cortes y cobertura visibles.',
     href: '/dashboard/market',
   },
   {

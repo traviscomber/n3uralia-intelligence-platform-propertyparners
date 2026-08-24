@@ -7,6 +7,10 @@ test('canonical CBRS sales are not hidden by empty operational sources', () => {
   assert.equal(selectCanonicalSales(0, 0, 586), 586)
 })
 
+test('the explicit canonical source wins instead of the largest number', () => {
+  assert.equal(selectCanonicalSales(9999, 12, 586), 586)
+})
+
 test('available direct sales remain a valid fallback', () => {
   assert.equal(selectCanonicalSales(null, 12, null), 12)
 })

@@ -1,15 +1,17 @@
 import Link from 'next/link'
-import { ArrowLeft, TrendingUp } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
-import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
-import { getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
+import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import {
+  getMarketHouseIntelligence,
+  hasComparablePortalTerritory,
+  missingExactPortalNeighborhoods,
+} from '@/lib/market-house-intelligence'
 
 function number(value: number | null, digits = 0) {
-  return value === null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
-}
-
-function percent(value: number | null) {
-  return value === null ? '—' : `${(value * 100).toFixed(1)}%`
+  return value === null
+    ? '—'
+    : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
 }
 
 function date(value: string | null) {
@@ -20,80 +22,71 @@ function date(value: string | null) {
     : new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }).format(parsed)
 }
 
-const signalLabel: Record<string, string> = {
-  asking_well_above_sales: 'Oferta muy sobre ventas',
-  asking_moderately_above_sales: 'Oferta sobre ventas',
-  market_aligned: 'Oferta alineada',
-  asking_below_sales: 'Oferta bajo ventas',
-  thin_sample: 'Muestra limitada',
-  insufficient_data: 'Datos insuficientes',
-}
-
-const confidenceLabel: Record<string, string> = {
-  high: 'alta',
-  medium: 'media',
-  low: 'baja',
-}
-
 export default async function MarketIntelligencePage() {
-  const intelligence = await getSupplySalesIntelligence()
-  const apartments = intelligence.rows.filter((row) => row.propertyType === 'Departamento' && row.neighborhoodName !== 'SIN_BARRIO')
+  const intelligence = await getMarketHouseIntelligence()
+  const summary = intelligence.summary
+  const missingPortalNeighborhoods = missingExactPortalNeighborhoods(summary)
+  const portalTerritoryReady = hasComparablePortalTerritory(summary)
 
   return (
     <WorkspaceShell>
       <WorkspaceHeader
         eyebrow="Mercado"
-        title="Oferta vs ventas"
-        meta={`Oferta Portal · ${date(intelligence.portalAsOf)} · Ventas CBRS · ${date(intelligence.cbrsAsOf)}`}
+        title="Inteligencia de casas"
+        meta={`Oferta Portal · ${date(summary.portalAsOf)} · Ventas CBRS · ${date(summary.cbrsAsOf)}`}
         actions={[{ label: 'Volver', href: '/dashboard/market', icon: <ArrowLeft size={15} /> }]}
       />
 
-      {intelligence.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar oferta y ventas." /></div> : null}
+      {intelligence.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la inteligencia de casas." /></div> : null}
+
+      <MetricStrip items={[
+        { label: 'Oferta actual', value: number(summary.portalCurrentHouses), detail: 'Casas · Portal' },
+        { label: 'Mediana oferta', value: `${number(summary.portalMedianPriceUf)} UF` },
+        { label: 'Oferta UF/m²', value: number(summary.portalMedianUfM2, 1) },
+        { label: 'Ventas registradas', value: number(summary.cbrsHouseTransactions), detail: 'Casas · CBRS' },
+      ]} />
+
+      <section className="mt-7 border border-[var(--n3-line)] bg-[#0c1111] p-5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">Lectura N3uralia</p>
+        <h2 className="mt-2 text-xl font-semibold">{portalTerritoryReady ? 'Comparación territorial habilitada' : 'No comparar oferta por barrio'}</h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
+          {portalTerritoryReady
+            ? 'La oferta actual tiene cobertura territorial suficiente.'
+            : `${number(summary.portalExactKmlHouses)} de ${number(summary.portalCurrentHouses)} avisos tienen barrio KML. Faltan ${number(missingPortalNeighborhoods)}.`}
+        </p>
+        <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Opinión separada · no modifica datos</p>
+      </section>
 
       <section className="mt-7">
         <div className="border-b border-[var(--n3-line)] pb-2">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={15} className="text-[var(--n3-accent)]" />
-            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Departamentos por barrio</h2>
-          </div>
-          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Oferta publicada en Portal y ventas históricas CBRS. Medianas en UF/m².</p>
+          <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Ventas registradas por barrio</h2>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Casas · CBRS · corte {date(summary.cbrsAsOf)}</p>
         </div>
 
         <div className="divide-y divide-[var(--n3-line)]">
-          {apartments.map((row) => (
-            <div key={row.neighborhoodName} className="grid gap-3 py-4 lg:grid-cols-[minmax(180px,1.3fr)_repeat(5,minmax(100px,1fr))] lg:items-center">
+          {intelligence.neighborhoods.map((row) => (
+            <div key={row.neighborhoodName} className="grid gap-3 py-4 sm:grid-cols-[minmax(180px,1.4fr)_repeat(3,minmax(110px,1fr))] sm:items-center">
+              <p className="text-sm font-semibold text-[var(--n3-text-light)]">{row.neighborhoodName}</p>
               <div>
-                <p className="text-sm font-semibold text-[var(--n3-text-light)]">{row.neighborhoodName}</p>
-                <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{signalLabel[row.signal] ?? row.signal} · confianza {confidenceLabel[row.confidence] ?? row.confidence}</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Ventas</p>
+                <p className="mt-1 text-base font-semibold tabular-nums">{number(row.cbrsTransactions)}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Oferta</p>
-                <p className="mt-1 text-base font-semibold tabular-nums">{number(row.portalListings)} avisos</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana UF</p>
+                <p className="mt-1 text-base font-semibold tabular-nums">{number(row.cbrsMedianPriceUf)}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Ventas históricas</p>
-                <p className="mt-1 text-base font-semibold tabular-nums">{number(row.cbrsTransactions)} ventas</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Oferta UF/m²</p>
-                <p className="mt-1 text-base font-semibold tabular-nums">{number(row.portalMedianUfM2, 1)}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Venta UF/m²</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">UF/m² construido</p>
                 <p className="mt-1 text-base font-semibold tabular-nums">{number(row.cbrsMedianUfM2, 1)}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Brecha</p>
-                <p className="mt-1 text-base font-semibold tabular-nums">{percent(row.ufM2GapPct)}</p>
               </div>
             </div>
           ))}
-          {!intelligence.error && apartments.length === 0 ? <div className="py-5 text-sm text-[var(--n3-text-muted)]">Sin datos comparables</div> : null}
+          {!intelligence.error && intelligence.neighborhoods.length === 0 ? <div className="py-5 text-sm text-[var(--n3-text-muted)]">Sin ventas con barrio</div> : null}
         </div>
       </section>
 
       <section className="mt-6 border-t border-[var(--n3-line)] pt-4 text-xs text-[var(--n3-text-muted)]">
-        <p>Casas: sin señal por barrio. Portal no incluye coordenadas confiables.</p>
+        <p>Medianas históricas. No reemplazan una valorización.</p>
         <p className="mt-2"><Link href="/dashboard/market/cbrs" className="text-[var(--n3-accent)]">Ver ventas CBRS</Link></p>
       </section>
     </WorkspaceShell>

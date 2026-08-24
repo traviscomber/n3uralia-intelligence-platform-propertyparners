@@ -77,6 +77,7 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
       ? await supabase
         .from('market_properties')
         .select('id,neighborhood_id')
+        .eq('property_type', 'Casa')
         .in('neighborhood_id', neighborhoodIds)
       : { data: [], error: null }
 
