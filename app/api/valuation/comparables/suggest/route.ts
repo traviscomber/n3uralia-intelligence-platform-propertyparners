@@ -85,6 +85,37 @@ type PortalBenchmark = {
   metadata: Record<string, unknown> | null
 }
 
+type HouseCandidate = {
+  id: string
+  sourceType: 'CBRS'
+  sourceReference: string
+  address: string
+  neighborhood: string
+  propertyType: 'Casa' | 'Departamento'
+  builtAreaM2: number
+  landAreaM2?: number
+  priceUf: number
+  priceUfM2: number
+  similarityScore: number
+  rankingScore: number
+  strictPhysicalCompatibility: boolean
+  selected: boolean
+  adjustmentPct: number
+  adjustmentNotes: string
+  distanceMeters?: number
+  transactionDate: string
+  quality: 'usable' | 'canonical'
+  areaSemantics: string
+}
+
+const HOUSE_PHYSICAL_MIN_RATIO = 0.7
+const HOUSE_PHYSICAL_MAX_RATIO = 1.43
+const LAND_DOMINANT_RATIO = 5
+const LAND_DOMINANT_BONUS = 0.3
+const TIGHT_GUARD_BARRIOS = new Set(['Tabancura', 'El Aromo'])
+const TIGHT_GUARD_MIN = 0.8
+const TIGHT_GUARD_MAX = 1.5
+
 const num = (value: unknown) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
@@ -105,6 +136,20 @@ function addressBase(value: unknown) {
 
 function streetBase(value: unknown) {
   return normalizeText(String(value ?? '').replace(/\s+[0-9].*$/, ''))
+}
+
+function streetNumber(value: unknown) {
+  const matches = String(value ?? '').match(/\b\d{2,5}\b/g)
+  if (!matches?.length) return 0
+  return Number(matches[0]) || 0
+}
+
+function numberSimilarity(subjectAddress: unknown, candidateAddress: unknown) {
+  if (!streetBase(subjectAddress) || streetBase(subjectAddress) !== streetBase(candidateAddress)) return 0
+  const subjectNumber = streetNumber(subjectAddress)
+  const candidateNumber = streetNumber(candidateAddress)
+  if (!subjectNumber || !candidateNumber) return 0
+  return Math.max(0, 1 - Math.min(Math.abs(subjectNumber - candidateNumber) / 1000, 1))
 }
 
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -153,10 +198,30 @@ function withinFiveYears(date: string) {
   return Number.isFinite(timestamp) && Date.now() - timestamp <= 365.25 * 5 * 86400000
 }
 
-function weightedMedianRate(items: Array<{ priceUfM2: number; similarityScore: number }>) {
+function physicalRatio(subject: number, candidate: number) {
+  if (subject <= 0 || candidate <= 0) return 0
+  return candidate / subject
+}
+
+function isStrictPhysicalMatch(payload: SuggestPayload, row: CbrsRow) {
+  if (payload.propertyType !== 'Casa') return true
+  const builtRatio = physicalRatio(num(payload.builtAreaM2), num(row.built_area_m2))
+  const landRatio = physicalRatio(num(payload.landAreaM2), num(row.land_area_m2))
+  return builtRatio >= HOUSE_PHYSICAL_MIN_RATIO && builtRatio <= HOUSE_PHYSICAL_MAX_RATIO &&
+    landRatio >= HOUSE_PHYSICAL_MIN_RATIO && landRatio <= HOUSE_PHYSICAL_MAX_RATIO
+}
+
+function passesBarrioEconomicGuard(canonicalBarrio: string, row: CbrsRow) {
+  if (!TIGHT_GUARD_BARRIOS.has(canonicalBarrio)) return true
+  const ratio = num(row.quality?.ufM2RatioToMedian)
+  if (!ratio) return true
+  return ratio >= TIGHT_GUARD_MIN && ratio <= TIGHT_GUARD_MAX
+}
+
+function weightedMedianRate(items: Array<{ priceUfM2: number; rankingScore: number }>) {
   const usable = items
-    .filter((item) => item.priceUfM2 > 0 && item.similarityScore > 0)
-    .map((item) => ({ ...item, weight: item.similarityScore ** 2 }))
+    .filter((item) => item.priceUfM2 > 0 && item.rankingScore > 0)
+    .map((item) => ({ ...item, weight: item.rankingScore ** 2 }))
     .sort((a, b) => a.priceUfM2 - b.priceUfM2)
   const totalWeight = usable.reduce((sum, item) => sum + item.weight, 0)
   if (!usable.length || totalWeight <= 0) return null
@@ -166,6 +231,30 @@ function weightedMedianRate(items: Array<{ priceUfM2: number; similarityScore: n
     if (cumulative >= totalWeight / 2) return item.priceUfM2
   }
   return usable[usable.length - 1]?.priceUfM2 ?? null
+}
+
+function weightedArithmeticRate(items: Array<{ priceUfM2: number; rankingScore: number }>) {
+  const usable = items.filter((item) => item.priceUfM2 > 0 && item.rankingScore > 0)
+  const totalWeight = usable.reduce((sum, item) => sum + item.rankingScore ** 2, 0)
+  if (!usable.length || totalWeight <= 0) return null
+  return usable.reduce((sum, item) => sum + item.priceUfM2 * item.rankingScore ** 2, 0) / totalWeight
+}
+
+function weightedGeometricRate(items: Array<{ priceUfM2: number; rankingScore: number }>) {
+  const usable = items.filter((item) => item.priceUfM2 > 0 && item.rankingScore > 0)
+  const totalWeight = usable.reduce((sum, item) => sum + item.rankingScore ** 2, 0)
+  if (!usable.length || totalWeight <= 0) return null
+  const weightedLog = usable.reduce((sum, item) => sum + Math.log(item.priceUfM2) * item.rankingScore ** 2, 0) / totalWeight
+  return Math.exp(weightedLog)
+}
+
+function rateSpread(items: Array<{ priceUfM2: number }>) {
+  const rates = items.map((item) => item.priceUfM2).filter((rate) => rate > 0).sort((a, b) => a - b)
+  if (rates.length < 2) return 1
+  const middle = Math.floor(rates.length / 2)
+  const median = rates.length % 2 ? rates[middle] : (rates[middle - 1] + rates[middle]) / 2
+  if (!median) return 1
+  return (rates[rates.length - 1] - rates[0]) / median
 }
 
 function isStrongSiblingEvidence(payload: SuggestPayload, row: CbrsRow) {
@@ -211,7 +300,7 @@ function scorePortal(payload: SuggestPayload, row: PortalRow) {
 }
 
 function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
-  const areaScore = relativeSimilarity(
+  const builtScore = relativeSimilarity(
     payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2),
     num(row.built_area_m2),
   )
@@ -219,33 +308,55 @@ function scoreCbrs(payload: SuggestPayload, row: CbrsRow) {
   const coords = [num(payload.latitude), num(payload.longitude), num(row.latitude), num(row.longitude)]
 
   if (payload.propertyType !== 'Casa') {
-    let score = areaScore * 0.65
+    let score = builtScore * 0.65
     score += coords.every(Boolean) ? Math.max(0, 1 - Math.min(haversineMeters(coords[0], coords[1], coords[2], coords[3]) / 3000, 1)) * 0.15 : 0.075
     score += recencyScore(row.transaction_date) * 0.2
-    return Math.min(1, score)
+    return score
   }
 
-  const distance = coords.every(Boolean) ? haversineMeters(coords[0], coords[1], coords[2], coords[3]) : 3000
-  const subjectAddress = payload.address ?? ''
-  const candidateAddress = row.address ?? ''
-  const microScore = addressBase(subjectAddress) && addressBase(subjectAddress) === addressBase(candidateAddress)
-    ? 1
-    : streetBase(subjectAddress) && streetBase(subjectAddress) === streetBase(candidateAddress)
-      ? 0.8
-      : distance <= 250 ? 0.65 : distance <= 500 ? 0.5 : distance <= 1000 ? 0.3 : 0.1
+  const subjectBuilt = num(payload.builtAreaM2)
+  const subjectLand = num(payload.landAreaM2)
+  const candidateBuilt = num(row.built_area_m2)
+  const candidateLand = num(row.land_area_m2)
+  const subjectEconomicArea = subjectBuilt + subjectLand / 4
+  const candidateEconomicArea = candidateBuilt + candidateLand / 4
+  const economicAreaScore = relativeSimilarity(subjectEconomicArea, candidateEconomicArea)
+  const subjectRatio = subjectBuilt > 0 ? subjectLand / subjectBuilt : 0
+  const candidateRatio = candidateBuilt > 0 ? candidateLand / candidateBuilt : 0
+  const ratioScore = relativeSimilarity(subjectRatio, candidateRatio)
+  const sameStreet = streetBase(payload.address) && streetBase(payload.address) === streetBase(row.address) ? 1 : 0
+  const numberScore = numberSimilarity(payload.address, row.address)
   const program = parseProgram(row.bedrooms_bathrooms)
   const bedroomScore = payload.bedrooms && program ? relativeSimilarity(payload.bedrooms, program.bedrooms) : 0.5
   const bathroomScore = payload.bathrooms && program ? relativeSimilarity(payload.bathrooms, program.bathrooms) : 0.5
   const programScore = (bedroomScore + bathroomScore) / 2
+  const landDominantBonus = subjectRatio >= LAND_DOMINANT_RATIO && candidateRatio >= LAND_DOMINANT_RATIO ? LAND_DOMINANT_BONUS : 0
 
-  return Math.min(1,
-    microScore * 0.3 +
-    houseYearScore(num(payload.constructionYear), num(row.construction_year)) * 0.1 +
-    areaScore * 0.3 +
-    landScore * 0.15 +
+  return (
+    builtScore * 0.22 +
+    landScore * 0.10 +
+    economicAreaScore * 0.22 +
+    ratioScore * 0.06 +
+    houseYearScore(num(payload.constructionYear), num(row.construction_year)) * 0.10 +
     programScore * 0.05 +
-    recencyScore(row.transaction_date) * 0.1,
+    recencyScore(row.transaction_date) * 0.10 +
+    sameStreet * 0.025 +
+    numberScore * 0.025 +
+    (sameStreet * numberScore) * 0.05 +
+    landDominantBonus
   )
+}
+
+function chooseHouseSample(candidates: HouseCandidate[]) {
+  const strict = candidates.filter((candidate) => candidate.strictPhysicalCompatibility).slice(0, 8)
+  if (strict.length >= 6) return { sample: strict, gate: 'strict_6_plus' as const }
+  if (strict.length === 4) return { sample: strict, gate: 'strict_4_recovery' as const }
+  if (strict.length === 5) {
+    const avgScore = strict.reduce((sum, item) => sum + item.rankingScore, 0) / strict.length
+    const spread = rateSpread(strict)
+    if (avgScore >= 0.75 && spread <= 0.5) return { sample: strict, gate: 'strict_5_coherent_recovery' as const }
+  }
+  return { sample: [] as HouseCandidate[], gate: 'review_required' as const }
 }
 
 export async function POST(request: Request) {
@@ -333,9 +444,14 @@ export async function POST(request: Request) {
     const strongSiblingEvidenceCount = rawCbrs.filter((row) => Boolean(row.quality?.priceOutlier) && isStrongSiblingEvidence(payload, row)).length
     const excludedEconomic = rawCbrs.filter((row) => Boolean(row.quality?.priceOutlier) && !isStrongSiblingEvidence(payload, row)).length
     const excludedStale = payload.propertyType === 'Casa' ? rawCbrs.filter((row) => !withinFiveYears(row.transaction_date)).length : 0
-    const cbrsSuggestions = rawCbrs
+    const excludedBarrioGuard = payload.propertyType === 'Casa'
+      ? rawCbrs.filter((row) => !passesBarrioEconomicGuard(canonicalBarrio, row) && !isStrongSiblingEvidence(payload, row)).length
+      : 0
+
+    const allCbrsCandidates = rawCbrs
       .filter((row) => !row.quality?.priceOutlier || isStrongSiblingEvidence(payload, row))
       .filter((row) => payload.propertyType !== 'Casa' || withinFiveYears(row.transaction_date))
+      .filter((row) => payload.propertyType !== 'Casa' || passesBarrioEconomicGuard(canonicalBarrio, row) || isStrongSiblingEvidence(payload, row))
       .filter((row) => !isSubjectCbrs(payload, row))
       .map((row) => {
         const built = num(row.built_area_m2)
@@ -347,6 +463,8 @@ export async function POST(request: Request) {
         const longitude = num(row.longitude) || undefined
         const distanceMeters = payload.latitude && payload.longitude && latitude && longitude ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude)) : undefined
         const strongSibling = isStrongSiblingEvidence(payload, row)
+        const rankingScore = scoreCbrs(payload, row)
+        const strictPhysicalCompatibility = isStrictPhysicalMatch(payload, row)
         return {
           id: `cbrs-${row.id}`,
           sourceType: 'CBRS' as const,
@@ -358,42 +476,63 @@ export async function POST(request: Request) {
           landAreaM2: land || undefined,
           priceUf: price,
           priceUfM2: Number((price / weightedArea).toFixed(2)),
-          similarityScore: Number(scoreCbrs(payload, row).toFixed(4)),
+          similarityScore: Number(Math.min(1, rankingScore).toFixed(4)),
+          rankingScore: Number(rankingScore.toFixed(4)),
+          strictPhysicalCompatibility,
           selected: false,
           adjustmentPct: 0,
           adjustmentNotes: payload.propertyType === 'Departamento'
             ? 'Venta CBRS en el mismo barrio KML PP; superficie registrada por la fuente.'
             : strongSibling
               ? `Venta CBRS en la misma dirección base del sujeto; se conserva como evidencia micro-local aunque sea extrema para la cohorte amplia, sin conflicto IQR/ROL${row.construction_year ? ` · año ${row.construction_year}` : ''}.`
-              : `Venta CBRS del mismo barrio KML PP; microcomparabilidad considera ubicación, año, superficies, programa y recencia${row.construction_year ? ` · año ${row.construction_year}` : ''}.`,
+              : strictPhysicalCompatibility
+                ? `Venta CBRS del mismo barrio KML PP y físicamente compatible (construido/terreno dentro de 0,70×–1,43×); ranking considera superficie económica, estructura suelo/construcción, año, programa, recencia y microdirección${row.construction_year ? ` · año ${row.construction_year}` : ''}.`
+                : `Venta CBRS del mismo barrio KML PP, pero fuera del rango físico estricto 0,70×–1,43×; queda visible como contexto y no entra al cálculo automático.`,
           distanceMeters,
           transactionDate: row.transaction_date,
           quality: strongSibling ? 'usable' as const : 'canonical' as const,
           areaSemantics: payload.propertyType === 'Departamento' ? 'source_registered_area_not_confirmed_as_useful' : 'canonical_house_weighted_area',
-        }
+        } satisfies HouseCandidate
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
-      .sort((a, b) => b.similarityScore - a.similarityScore)
-      .slice(0, 8)
+      .sort((a, b) => b.rankingScore - a.rankingScore)
 
-    const houseRecommendation = payload.propertyType === 'Casa' && cbrsSuggestions.length >= 3
+    const strictPhysicalCount = payload.propertyType === 'Casa'
+      ? allCbrsCandidates.filter((candidate) => candidate.strictPhysicalCompatibility).length
+      : 0
+    const excludedPhysical = payload.propertyType === 'Casa' ? allCbrsCandidates.length - strictPhysicalCount : 0
+    const sampleDecision = payload.propertyType === 'Casa' ? chooseHouseSample(allCbrsCandidates as HouseCandidate[]) : { sample: [] as HouseCandidate[], gate: 'review_required' as const }
+    const cbrsSuggestions = payload.propertyType === 'Casa' && strictPhysicalCount >= 4
+      ? allCbrsCandidates.filter((candidate) => candidate.strictPhysicalCompatibility).slice(0, 8)
+      : allCbrsCandidates.slice(0, 8)
+
+    const houseRecommendation = payload.propertyType === 'Casa' && sampleDecision.sample.length
       ? (() => {
-          const sample = cbrsSuggestions.slice(0, 8)
-          const weightedRate = weightedMedianRate(sample)
+          const sample = sampleDecision.sample
+          const geometricRate = weightedGeometricRate(sample)
+          const arithmeticRate = weightedArithmeticRate(sample)
+          const medianRate = weightedMedianRate(sample)
           const weightedArea = num(payload.builtAreaM2) + num(payload.landAreaM2) / 4
-          const averageSimilarity = sample.reduce((sum, item) => sum + item.similarityScore, 0) / sample.length
-          if (!weightedRate || weightedArea <= 0) return null
-          const confidence = sample.length >= 5 && averageSimilarity >= 0.72 ? 'high' : sample.length >= 4 && averageSimilarity >= 0.58 ? 'medium' : 'low'
+          const averageSimilarity = sample.reduce((sum, item) => sum + item.rankingScore, 0) / sample.length
+          const spread = rateSpread(sample)
+          if (!geometricRate || !arithmeticRate || !medianRate || weightedArea <= 0) return null
+          const championRate = geometricRate * 0.5 + arithmeticRate * 0.3 + medianRate * 0.2
+          const confidence = sample.length >= 6 && averageSimilarity >= 0.75 && spread <= 0.5
+            ? 'high'
+            : sample.length >= 4 && spread <= 0.5 ? 'medium' : 'low'
           return {
-            weightedRateUfM2: Number(weightedRate.toFixed(2)),
-            builtRateUfM2: Number(weightedRate.toFixed(2)),
-            landRateUfM2: Number((weightedRate / 4).toFixed(2)),
-            estimatedValueUf: Math.round(weightedRate * weightedArea),
+            weightedRateUfM2: Number(championRate.toFixed(2)),
+            builtRateUfM2: Number(championRate.toFixed(2)),
+            landRateUfM2: Number((championRate / 4).toFixed(2)),
+            estimatedValueUf: Math.round(championRate * weightedArea),
             comparableCount: sample.length,
+            strictComparableCount: strictPhysicalCount,
             averageSimilarity: Number(averageSimilarity.toFixed(3)),
+            comparableSpread: Number(spread.toFixed(3)),
             confidence,
+            evidenceGate: sampleDecision.gate,
             nonBinding: true,
-            method: 'weighted_median_similarity_squared',
+            method: 'champion_v5_geo50_mean30_median20_similarity_squared',
           }
         })()
       : null
@@ -412,21 +551,39 @@ export async function POST(request: Request) {
     return NextResponse.json({
       neighborhood: canonicalBarrio,
       suggestions: [...portalSuggestions, ...cbrsSuggestions],
-      suggestionCounts: { portalReferenceOnly: portalSuggestions.length, cbrs: cbrsSuggestions.length, excludedEconomic, excludedStale, strongSiblingEvidence: strongSiblingEvidenceCount },
+      suggestionCounts: {
+        portalReferenceOnly: portalSuggestions.length,
+        cbrs: cbrsSuggestions.length,
+        excludedEconomic,
+        excludedStale,
+        excludedBarrioGuard,
+        excludedPhysical,
+        strictPhysical: strictPhysicalCount,
+        strongSiblingEvidence: strongSiblingEvidenceCount,
+      },
       cbrsBenchmark,
       portalBenchmark,
       houseRecommendation,
-      methodologyVersion: payload.propertyType === 'Casa' ? 'property-partners-valuation-v2-kml-house-robust-v4' : 'property-partners-valuation-v2-kml-first',
+      methodologyVersion: payload.propertyType === 'Casa' ? 'property-partners-house-champion-v5' : 'property-partners-valuation-v2-kml-first',
       notes: [
         `Primer filtro: barrio KML Property Partners = ${canonicalBarrio}. Ningún comparable de otro polígono compite en el ranking.`,
         canonicalBarrio !== payload.neighborhood.trim() ? `El KML corrigió el barrio informado (${payload.neighborhood.trim()} → ${canonicalBarrio}).` : 'El barrio informado coincide con el KML canónico.',
         payload.propertyType === 'Casa'
-          ? 'Dentro del barrio, el ranking usa pesos validados temporalmente: micro-ubicación 30%, construcción 30%, terreno 15%, año 10%, recencia 10% y programa 5%. Ventas de más de 5 años no compiten en el top principal.'
+          ? 'Champion v5: construido y terreno compatibles entre 0,70×–1,43×; ranking usa construido 22%, terreno 10%, superficie económica 22%, estructura suelo/construcción 6%, año 10%, programa 5%, recencia 10% y microdirección 10%. Terreno dominante recibe prioridad sólo contra terreno dominante.'
           : 'Después del filtro territorial se ordena por superficie, distancia y recencia.',
-        excludedEconomic ? `${excludedEconomic} ventas CBRS atípicas para su cohorte de tamaño/terreno fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas en la cohorte seleccionable.',
+        TIGHT_GUARD_BARRIOS.has(canonicalBarrio) && payload.propertyType === 'Casa'
+          ? `Guard reforzado ${canonicalBarrio}: sólo ventas entre 0,80× y 1,50× de la mediana robusta de su cohorte compiten automáticamente.`
+          : '',
+        excludedEconomic ? `${excludedEconomic} ventas CBRS atípicas para su cohorte de tamaño/terreno fueron retiradas del conjunto seleccionable.` : 'No se detectaron anomalías económicas generales en la cohorte seleccionable.',
+        excludedBarrioGuard ? `${excludedBarrioGuard} ventas adicionales quedaron fuera por el guard económico reforzado del barrio.` : '',
+        excludedPhysical ? `${excludedPhysical} ventas del mismo KML quedaron sólo como contexto por no ser físicamente equivalentes al sujeto.` : '',
         strongSiblingEvidenceCount ? `${strongSiblingEvidenceCount} venta(s) extrema(s) para la cohorte se conservaron por corresponder a la misma dirección base y no presentar conflicto duro de IQR/ROL.` : '',
         excludedStale ? `${excludedStale} ventas de casas de más de 5 años quedaron fuera del ranking principal.` : '',
-        houseRecommendation ? `Referencia estadística no vinculante: ${houseRecommendation.weightedRateUfM2.toLocaleString('es-CL')} UF/m² ponderado, equivalente a ~${houseRecommendation.estimatedValueUf.toLocaleString('es-CL')} UF con ${houseRecommendation.comparableCount} ventas limpias. Property Partners confirma la tasa final.` : '',
+        houseRecommendation
+          ? `Referencia estadística no vinculante: ${houseRecommendation.weightedRateUfM2.toLocaleString('es-CL')} UF/m² ponderado, equivalente a ~${houseRecommendation.estimatedValueUf.toLocaleString('es-CL')} UF con ${houseRecommendation.comparableCount} ventas físicamente compatibles. Property Partners confirma la tasa final.`
+          : payload.propertyType === 'Casa'
+            ? 'No hay evidencia física suficiente para una recomendación automática robusta. El caso requiere revisión profesional; no se rellena la muestra con comparables débiles.'
+            : '',
         'Portal representa oferta y permanece como referencia; CBRS representa ventas registradas. Property Partners decide.',
       ].filter(Boolean),
     })
