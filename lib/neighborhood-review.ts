@@ -10,14 +10,32 @@ export type NeighborhoodReviewSnapshot = {
   reviewed: number
   reviewedRate: number | null
   acceptanceRate: number | null
+  knownAddresses: number
+  learnedFromReviews: number
+  reuseHits: number
+  approveRecommended: number
+  quickReview: number
+  mandatoryReview: number
   error: string | null
+}
+
+type UatSnapshot = {
+  known_addresses?: number
+  learned_from_reviews?: number
+  reuse_hits?: number
+  approve_recommended?: number
+  quick_review?: number
+  mandatory_review?: number
 }
 
 export async function getNeighborhoodReviewSnapshot(): Promise<NeighborhoodReviewSnapshot> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('market_neighborhood_review_items')
-    .select('classification,decision')
+  const [{ data, error }, { data: uatData, error: uatError }] = await Promise.all([
+    supabase
+      .from('market_neighborhood_review_items')
+      .select('classification,decision'),
+    supabase.rpc('market_neighborhood_uat_snapshot'),
+  ])
 
   if (error) {
     return {
@@ -30,6 +48,12 @@ export async function getNeighborhoodReviewSnapshot(): Promise<NeighborhoodRevie
       reviewed: 0,
       reviewedRate: null,
       acceptanceRate: null,
+      knownAddresses: 0,
+      learnedFromReviews: 0,
+      reuseHits: 0,
+      approveRecommended: 0,
+      quickReview: 0,
+      mandatoryReview: 0,
       error: error.message,
     }
   }
@@ -40,6 +64,7 @@ export async function getNeighborhoodReviewSnapshot(): Promise<NeighborhoodRevie
   const discarded = clearRows.filter((row) => row.decision === 'discarded').length
   const pending = clearRows.filter((row) => row.decision === 'pending').length
   const reviewed = accepted + discarded
+  const uat = (uatData || {}) as UatSnapshot
 
   return {
     clear: clearRows.length,
@@ -51,6 +76,12 @@ export async function getNeighborhoodReviewSnapshot(): Promise<NeighborhoodRevie
     reviewed,
     reviewedRate: clearRows.length > 0 ? reviewed / clearRows.length : null,
     acceptanceRate: reviewed > 0 ? accepted / reviewed : null,
-    error: null,
+    knownAddresses: Number(uat.known_addresses || 0),
+    learnedFromReviews: Number(uat.learned_from_reviews || 0),
+    reuseHits: Number(uat.reuse_hits || 0),
+    approveRecommended: Number(uat.approve_recommended || 0),
+    quickReview: Number(uat.quick_review || 0),
+    mandatoryReview: Number(uat.mandatory_review || 0),
+    error: uatError ? uatError.message : null,
   }
 }
