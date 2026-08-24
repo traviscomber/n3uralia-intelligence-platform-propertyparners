@@ -12,11 +12,8 @@ as $$
     p_source_id::text||':'||coalesce(p_source_listing_id,'')
   );
 $$;
-
 revoke all on function private.market_listing_identity_v1(text,text,uuid) from public,anon,authenticated;
 
--- Rebuild candidate pool from the current implementation, changing only latest-listing identity.
--- Function body is sourced from valuation_candidate_pool_v4_kml.
 create or replace function public.valuation_candidate_pool(p_case_id uuid,p_limit integer default 30)
 returns table(source_type text,source_reference text,comparable_property_id uuid,source_transaction_id uuid,source_listing_id uuid,transaction_date date,observed_at timestamptz,address text,neighborhood text,property_type text,useful_area_m2 numeric,built_area_m2 numeric,land_area_m2 numeric,bedrooms integer,bathrooms integer,parking_spaces integer,price_uf numeric,price_uf_m2 numeric,distance_meters numeric,similarity_score numeric,evidence jsonb)
 language sql stable set search_path to 'public','extensions','private'
@@ -40,11 +37,27 @@ latest_listings as (
   order by private.market_listing_identity_v1(ml.url,ml.source_listing_id,ml.source_id),ml.observed_at desc,ml.created_at desc
 ),
 raw_candidates as (
-  select 'transaction'::text,mt.event_key,mp.id,mt.id,null::uuid,mt.transaction_date,null::timestamptz,mp.normalized_address,
-    coalesce(geo_tx.neighborhood_name,mn.name),mp.property_type,mp.useful_area_m2,mp.built_area_m2,mp.land_area_m2,mp.bedrooms,mp.bathrooms,mp.parking_spaces,mt.price_uf,mt.price_uf_m2,
-    case when s.latitude is not null and s.longitude is not null and mp.latitude is not null and mp.longitude is not null then 111320*sqrt(power((mp.latitude-s.latitude)::numeric,2)+power(((mp.longitude-s.longitude)*cos(radians(s.latitude::double precision)))::numeric,2)) else null end,
-    coalesce(geo_tx.neighborhood_id,mp.neighborhood_id),coalesce(mp.useful_area_m2,mp.built_area_m2),s.comparison_area_m2,s.resolved_neighborhood_id,s.bedrooms,s.bathrooms,
-    jsonb_build_array(jsonb_build_object('marketSourceId',mt.source_id,'eventKey',mt.event_key,'transactionDate',mt.transaction_date,'priceUf',mt.price_uf,'priceUfM2',mt.price_uf_m2,'scopeGuard','canonical_transaction','geographyMethod',case when geo_tx.neighborhood_id is not null then 'property_partners_kml_point_in_polygon' else 'stored_neighborhood' end))
+  select
+    'transaction'::text as source_type,
+    mt.event_key as source_reference,
+    mp.id as comparable_property_id,
+    mt.id as source_transaction_id,
+    null::uuid as source_listing_id,
+    mt.transaction_date,
+    null::timestamptz as observed_at,
+    mp.normalized_address as address,
+    coalesce(geo_tx.neighborhood_name,mn.name) as neighborhood,
+    mp.property_type,
+    mp.useful_area_m2,mp.built_area_m2,mp.land_area_m2,mp.bedrooms,mp.bathrooms,mp.parking_spaces,
+    mt.price_uf,mt.price_uf_m2,
+    case when s.latitude is not null and s.longitude is not null and mp.latitude is not null and mp.longitude is not null then 111320*sqrt(power((mp.latitude-s.latitude)::numeric,2)+power(((mp.longitude-s.longitude)*cos(radians(s.latitude::double precision)))::numeric,2)) else null end as distance_meters,
+    coalesce(geo_tx.neighborhood_id,mp.neighborhood_id) as neighborhood_id,
+    coalesce(mp.useful_area_m2,mp.built_area_m2) as comparison_area_m2,
+    s.comparison_area_m2 as subject_area_m2,
+    s.resolved_neighborhood_id as subject_neighborhood_id,
+    s.bedrooms as subject_bedrooms,
+    s.bathrooms as subject_bathrooms,
+    jsonb_build_array(jsonb_build_object('marketSourceId',mt.source_id,'eventKey',mt.event_key,'transactionDate',mt.transaction_date,'priceUf',mt.price_uf,'priceUfM2',mt.price_uf_m2,'scopeGuard','canonical_transaction','geographyMethod',case when geo_tx.neighborhood_id is not null then 'property_partners_kml_point_in_polygon' else 'stored_neighborhood' end)) as source_evidence
   from subject s join public.market_transactions mt on mt.price_uf is not null join public.market_properties mp on mp.id=mt.property_id
   left join public.market_neighborhoods mn on mn.id=mp.neighborhood_id
   left join lateral (
