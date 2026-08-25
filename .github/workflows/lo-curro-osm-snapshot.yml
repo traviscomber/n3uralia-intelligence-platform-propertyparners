@@ -1,11 +1,13 @@
 name: Lo Curro OSM Snapshot
 
 on:
-  push:
-    branches: [feature/road-hierarchy-structural-v1]
+  pull_request:
+    branches: [main]
     paths:
       - '.github/workflows/lo-curro-osm-snapshot.yml'
-      - 'scripts/fetch-lo-curro-osm.sh'
+      - 'app/api/cron/road-hierarchy-refresh/route.ts'
+      - 'supabase/migrations/20260825_valuation_road_hierarchy_evidence_v1.sql'
+      - 'supabase/migrations/20260825_valuation_topography_road_backtest_lo_curro_v1.sql'
 
 permissions:
   contents: read
