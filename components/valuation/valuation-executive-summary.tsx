@@ -19,6 +19,17 @@ type ValuationCase = {
 
 type Payload = { valuationCase?: ValuationCase; comparables?: Array<{ selected?: boolean; match_status?: string }>; error?: string }
 type PrcZone = { zona?: string; subzona?: string | null; usoSuelo?: string | null }
+type Topography = {
+  available?: boolean
+  elevationM?: number | null
+  slopePct?: number | null
+  slopeDegrees?: number | null
+  aspectDegrees?: number | null
+  sourceName?: string | null
+  sourceVersion?: string | null
+  sourceObservedAt?: string | null
+  status?: string | null
+}
 
 const integer = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
 const decimal = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 })
@@ -43,6 +54,7 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
   const [valuation, setValuation] = useState<ValuationCase | null>(null)
   const [acceptedCount, setAcceptedCount] = useState(0)
   const [prcZones, setPrcZones] = useState<PrcZone[]>([])
+  const [topography, setTopography] = useState<Topography | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -55,9 +67,14 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
       const lat = numberValue(payload.valuationCase.latitude)
       const lon = numberValue(payload.valuationCase.longitude)
       if (lat != null && lon != null) {
-        const prcResponse = await fetch(`/api/market/prc/lookup?lat=${lat}&lon=${lon}`, { cache: 'no-store' })
+        const [prcResponse, topographyResponse] = await Promise.all([
+          fetch(`/api/market/prc/lookup?lat=${lat}&lon=${lon}`, { cache: 'no-store' }),
+          fetch(`/api/market/topography/lookup?lat=${lat}&lon=${lon}`, { cache: 'no-store' }),
+        ])
         const prcPayload = await prcResponse.json().catch(() => null) as { zones?: PrcZone[] } | null
+        const topographyPayload = await topographyResponse.json().catch(() => null) as Topography | null
         if (!cancelled && prcResponse.ok) setPrcZones(prcPayload?.zones ?? [])
+        if (!cancelled && topographyResponse.ok) setTopography(topographyPayload)
       }
     }
     void load()
@@ -87,6 +104,15 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
     ? `UF ${integer.format(Number(valuation.low_value_uf))} — ${integer.format(Number(valuation.high_value_uf))}`
     : 'No disponible'
   const prcLabel = prcZones.length ? prcZones.map((zone) => [zone.zona, zone.subzona].filter(Boolean).join(' · ')).join(' / ') : 'Pendiente de capa PRC'
+  const elevation = numberValue(topography?.elevationM)
+  const slopePct = numberValue(topography?.slopePct)
+  const slopeDegrees = numberValue(topography?.slopeDegrees)
+  const topographyLabel = topography?.available
+    ? [
+        elevation != null ? `${integer.format(elevation)} m s.n.m.` : null,
+        slopePct != null ? `${decimal.format(slopePct)}% pendiente` : slopeDegrees != null ? `${decimal.format(slopeDegrees)}° pendiente` : null,
+      ].filter(Boolean).join(' · ')
+    : 'Pendiente de evidencia versionada'
 
   return (
     <section className="mx-auto max-w-6xl bg-white px-4 pt-6 text-neutral-900 sm:px-8 print:max-w-none print:px-0 print:pt-0">
@@ -107,9 +133,10 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
           <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Evidencia</dt><dd className="mt-2 text-xl font-semibold">{acceptedCount} comparables</dd><p className="mt-1 text-xs text-neutral-500">{summary.strictCount != null ? `${summary.strictCount} físicamente compatibles` : 'Compatibilidad no disponible'}</p></div>
         </dl>
 
-        <div className="mt-5 grid gap-4 text-sm lg:grid-cols-3">
+        <div className="mt-5 grid gap-4 text-sm lg:grid-cols-4">
           <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Selección</div><p className="mt-2 font-semibold">Barrio PP + compatibilidad física</p><p className="mt-1 text-xs leading-5 text-neutral-600">Gate: {summary.gate || 'metodología histórica / no disponible'}.</p></div>
           <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Condición física</div><p className="mt-2 font-semibold">{valuation.condition_status ? `${valuation.condition_status}${valuation.condition_score != null ? ` · ${decimal.format(Number(valuation.condition_score))}/5` : ''}` : 'No evaluada'}</p><p className="mt-1 text-xs leading-5 text-neutral-600">Transformación: {summary.transformationStatus === 'verified' ? 'verificada' : summary.transformationStatus === 'weak_evidence' ? 'requiere revisión' : 'sin evidencia verificada'}.</p></div>
+          <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Topografía</div><p className="mt-2 font-semibold">{topographyLabel}</p><p className="mt-1 text-xs leading-5 text-neutral-600">Variable estructural en observación. No modifica el Champion ni aplica ajustes automáticos.</p>{topography?.available && topography.sourceName ? <p className="mt-2 text-[10px] text-neutral-500">{topography.sourceName}{topography.sourceVersion ? ` · ${topography.sourceVersion}` : ''}</p> : null}</div>
           <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Normativa PRC</div><p className="mt-2 font-semibold">{prcLabel}</p><p className="mt-1 text-xs leading-5 text-neutral-600">La zonificación es evidencia contextual; la información oficial predial corresponde a certificados DOM.</p></div>
         </div>
       </div>
