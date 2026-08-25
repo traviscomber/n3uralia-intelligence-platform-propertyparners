@@ -44,6 +44,7 @@
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
     "valuation:workflow:verify": "node --import tsx scripts/verify-valuation-workflow.ts",
     "valuation:condition:verify": "node --import tsx scripts/verify-valuation-condition.ts",
+    "valuation:prc:snapshot": "node scripts/build-vitacura-prc-snapshot.mjs",
     "test:valuation": "node --import tsx --test tests/valuation/*.test.ts",
     "valuation:gate": "node --import tsx scripts/verify-valuation-production-gate.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
