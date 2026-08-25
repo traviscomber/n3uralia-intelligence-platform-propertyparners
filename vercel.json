@@ -28,6 +28,10 @@
     {
       "path": "/api/cron/valuation-ml-resolve",
       "schedule": "45 4 * * *"
+    },
+    {
+      "path": "/api/cron/road-hierarchy-refresh",
+      "schedule": "20 5 1 * *"
     }
   ]
 }
