@@ -2,13 +2,23 @@ export const VALUATION_CONDITION_VERSION = 'condition-assessment-v1'
 
 export type ConditionLevel = 1 | 2 | 3 | 4 | 5
 export type ConditionStatus = 'critical' | 'deficient' | 'regular' | 'good' | 'excellent' | 'not_evaluable'
-export type EvidenceKind = 'photo' | 'document' | 'inspection_note' | 'technical_report'
+export type EvidenceKind = 'photo' | 'document' | 'inspection_note' | 'technical_report' | 'dom_permit' | 'final_reception' | 'sii_record' | 'listing'
+export type TransformationStatus = 'unknown' | 'no_evidence' | 'weak_evidence' | 'verified'
 
 export type ConditionEvidence = {
   kind: EvidenceKind
   reference: string
   observedAt?: string | null
   note?: string | null
+}
+
+export type TransformationEvidence = {
+  status: TransformationStatus
+  effectiveDate?: string | null
+  builtAreaOverrideM2?: number | null
+  constructionYearOverride?: number | null
+  summary?: string | null
+  sources: ConditionEvidence[]
 }
 
 export type ConditionCriterionCode =
@@ -36,6 +46,7 @@ export type PropertyConditionAssessment = {
   inspectedBy?: string | null
   criteria: ConditionCriterionInput[]
   generalNote?: string | null
+  transformation?: TransformationEvidence
 }
 
 export type ConditionCriterionDefinition = {
@@ -67,6 +78,14 @@ export type PropertyConditionResult = {
   blockers: string[]
   warnings: string[]
   criteria: Array<ConditionCriterionInput & { weight: number; weightedScore: number | null }>
+  transformation: {
+    status: TransformationStatus
+    verified: boolean
+    sourceCount: number
+    effectiveDate: string | null
+    builtAreaOverrideM2: number | null
+    constructionYearOverride: number | null
+  }
   economicAdjustment: {
     status: 'not_calculated'
     reason: 'condition_classification_is_separate_from_economic_adjustment'
@@ -81,6 +100,18 @@ function classify(score: number): Exclude<ConditionStatus, 'not_evaluable'> {
   if (score < 3.4) return 'regular'
   if (score < 4.2) return 'good'
   return 'excellent'
+}
+
+function transformationResult(assessment: PropertyConditionAssessment): PropertyConditionResult['transformation'] {
+  const transformation = assessment.transformation
+  return {
+    status: transformation?.status ?? 'unknown',
+    verified: transformation?.status === 'verified' && (transformation.sources?.length ?? 0) > 0,
+    sourceCount: transformation?.sources?.length ?? 0,
+    effectiveDate: transformation?.effectiveDate ?? null,
+    builtAreaOverrideM2: transformation?.builtAreaOverrideM2 ?? null,
+    constructionYearOverride: transformation?.constructionYearOverride ?? null,
+  }
 }
 
 export function evaluatePropertyCondition(assessment: PropertyConditionAssessment): PropertyConditionResult {
@@ -125,7 +156,9 @@ export function evaluatePropertyCondition(assessment: PropertyConditionAssessmen
 
   const coveragePct = round(evaluatedWeight)
   const evidenceCoveragePct = round(evidencedWeight)
+  const transformation = transformationResult(assessment)
 
+  if (assessment.transformation?.status === 'verified' && !transformation.sourceCount) warnings.push('verified_transformation_without_evidence')
   if (coveragePct < 80) blockers.push('coverage_below_80_pct')
   if (evidenceCoveragePct < 60) blockers.push('evidence_coverage_below_60_pct')
 
@@ -139,6 +172,7 @@ export function evaluatePropertyCondition(assessment: PropertyConditionAssessmen
       blockers,
       warnings,
       criteria,
+      transformation,
       economicAdjustment: { status: 'not_calculated', reason: 'condition_classification_is_separate_from_economic_adjustment' },
     }
   }
@@ -156,6 +190,7 @@ export function evaluatePropertyCondition(assessment: PropertyConditionAssessmen
     blockers,
     warnings,
     criteria,
+    transformation,
     economicAdjustment: { status: 'not_calculated', reason: 'condition_classification_is_separate_from_economic_adjustment' },
   }
 }
