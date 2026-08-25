@@ -12,7 +12,7 @@ Validar con usuarios autorizados de Property Partners que los tres pilares contr
 2. Valorización de Propiedades.
 3. Control de Gestión y Automatización de Reportes.
 
-Este UAT valida resultados de negocio y operación. No reemplaza QA técnico ni autoriza a inventar KPI, destinatarios, calendarios o reglas aún no aprobadas por el Cliente.
+Este UAT valida resultados de negocio y operación dentro del alcance aprobado: ventas de casas en Vitacura. Departamentos y arriendos quedan fuera de los criterios de aceptación. No reemplaza QA técnico ni autoriza a inventar KPI, destinatarios, calendarios o reglas aún no aprobadas por el Cliente.
 
 ## 2. Roles UAT
 
@@ -69,19 +69,19 @@ Salida UAT aceptable: P0 = 0, P1 = 0; P2/P3 documentados y aceptados o con corre
 - inventario vivo y referencia histórica se distinguen claramente;
 - no se presenta dato faltante como cero inventado.
 
-## UAT-MKT-02 — Departamentos, casas y proyectos
+## UAT-MKT-02 — Casas en venta en Vitacura
 
 **Rol:** Director / Ejecutivo.
 
 **Pasos**
-1. Revisar registros Portal de departamentos.
-2. Revisar registros Portal de casas.
-3. Revisar registros Portal de proyectos.
-4. Abrir al menos un registro de cada tipo disponible.
-5. Verificar dirección, precio UF, superficie y programa cuando la fuente los entregue.
+1. Filtrar exclusivamente casas en venta ubicadas en Vitacura.
+2. Abrir al menos tres registros reales disponibles.
+3. Verificar dirección, barrio, precio UF, superficie construida, terreno y programa cuando la fuente los entregue.
+4. Confirmar fuente y fecha de observación.
 
 **Esperado**
-- existen registros actuales para los datasets disponibles;
+- los resultados corresponden a casas en venta en Vitacura;
+- departamentos, proyectos y arriendos no forman parte de este caso de aceptación;
 - los campos desconocidos permanecen N/D o equivalentes;
 - no se mezclan atributos de otra propiedad;
 - la fuente y fecha son trazables.
@@ -138,8 +138,8 @@ Salida UAT aceptable: P0 = 0, P1 = 0; P2/P3 documentados y aceptados o con corre
 
 **Pasos**
 1. Abrir `/dashboard/valuation`.
-2. Buscar una propiedad real conocida por Property Partners.
-3. Confirmar sujeto, dirección, barrio, ROL y atributos disponibles.
+2. Buscar una casa real en venta conocida por Property Partners y ubicada en Vitacura.
+3. Confirmar sujeto, dirección, barrio, ROL, superficie construida, terreno y atributos disponibles.
 4. Corregir únicamente datos actuales que correspondan.
 
 **Esperado**
@@ -348,7 +348,7 @@ Resultado esperado actual: `PASS` si permanece bloqueado.
 
 Preferir datos reales conocidos por Property Partners y evitar contaminar operación.
 
-- Valorización: usar una propiedad real identificable y registrar que el caso corresponde a UAT.
+- Valorización: usar una casa real identificable en Vitacura y registrar que el caso corresponde a UAT; no usar departamentos, arriendos ni fixtures.
 - Mercado: sólo lectura; no modificar fuentes canónicas durante la sesión salvo que el caso UAT sea explícitamente administrativo.
 - Gestión: no crear metas/KPI ficticios para hacer pasar la prueba.
 - Reportes: no enviar a emails no aprobados.
