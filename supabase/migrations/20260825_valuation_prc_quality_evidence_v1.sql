@@ -1,0 +1,175 @@
+create index if not exists vitacura_prc_zones_geometry_gix on public.vitacura_prc_zones using gist (geometry);
+
+create or replace function public.sync_vitacura_prc_zones_v1(p_rows jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  r record;
+  affected integer := 0;
+  g geometry;
+begin
+  if jsonb_typeof(p_rows) <> 'array' then
+    raise exception 'p_rows must be a JSON array';
+  end if;
+
+  for r in
+    select * from jsonb_to_recordset(p_rows) as x(
+      ext_feature_id text,
+      zona_prc text,
+      zona text,
+      subzona text,
+      uso text,
+      uso_suelo text,
+      source_url text,
+      source_version text,
+      raw_properties jsonb,
+      geometry jsonb
+    )
+  loop
+    if coalesce(trim(r.zona), '') = '' or r.geometry is null then
+      continue;
+    end if;
+
+    g := st_multi(st_collectionextract(st_makevalid(st_setsrid(st_geomfromgeojson(r.geometry::text), 4326)), 3));
+    if g is null or st_isempty(g) then
+      continue;
+    end if;
+
+    insert into public.vitacura_prc_zones(
+      ext_feature_id, comuna, zona_prc, subzona, uso, source_url, source_version,
+      raw_properties, geometry, updated_at, zona, uso_suelo, superficie
+    ) values (
+      r.ext_feature_id,
+      'Vitacura',
+      coalesce(nullif(trim(r.zona_prc), ''), trim(r.zona)),
+      coalesce(r.subzona, ''),
+      r.uso,
+      r.source_url,
+      r.source_version,
+      coalesce(r.raw_properties, '{}'::jsonb),
+      g,
+      now(),
+      trim(r.zona),
+      r.uso_suelo,
+      st_area(g::geography)
+    )
+    on conflict (zona, subzona) do update set
+      ext_feature_id = excluded.ext_feature_id,
+      comuna = excluded.comuna,
+      zona_prc = excluded.zona_prc,
+      uso = excluded.uso,
+      source_url = excluded.source_url,
+      source_version = excluded.source_version,
+      raw_properties = excluded.raw_properties,
+      geometry = excluded.geometry,
+      updated_at = now(),
+      uso_suelo = excluded.uso_suelo,
+      superficie = excluded.superficie;
+    affected := affected + 1;
+  end loop;
+
+  return jsonb_build_object('affected', affected, 'syncedAt', now());
+end;
+$$;
+
+revoke all on function public.sync_vitacura_prc_zones_v1(jsonb) from public, anon, authenticated;
+grant execute on function public.sync_vitacura_prc_zones_v1(jsonb) to service_role;
+
+create or replace function public.lookup_vitacura_prc_v1(p_lat double precision, p_lon double precision)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public, extensions
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'zona', z.zona,
+    'subzona', nullif(z.subzona, ''),
+    'zonaPrc', z.zona_prc,
+    'uso', z.uso,
+    'usoSuelo', z.uso_suelo,
+    'sourceUrl', z.source_url,
+    'sourceVersion', z.source_version
+  ) order by z.zona), '[]'::jsonb)
+  from public.vitacura_prc_zones z
+  where z.geometry is not null
+    and st_covers(z.geometry, st_setsrid(st_makepoint(p_lon, p_lat), 4326));
+$$;
+
+grant execute on function public.lookup_vitacura_prc_v1(double precision, double precision) to authenticated, service_role;
+
+create or replace function public.valuation_ml_upsert_transformation_evidence_v1(
+  p_rol text,
+  p_address text,
+  p_evidence_type text,
+  p_source_url text,
+  p_source_observed_at timestamptz,
+  p_effective_date date,
+  p_verified boolean,
+  p_strength smallint,
+  p_built_area_override numeric,
+  p_construction_year_override integer,
+  p_notes text,
+  p_metadata jsonb default '{}'::jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, private
+as $$
+declare
+  target_id uuid;
+  eligible boolean := coalesce(p_verified, false) and coalesce(p_strength, 0) >= 2;
+begin
+  if coalesce(trim(p_rol), '') = '' and coalesce(trim(p_address), '') = '' then
+    raise exception 'rol or address required';
+  end if;
+  if coalesce(trim(p_evidence_type), '') = '' then
+    raise exception 'evidence type required';
+  end if;
+
+  select id into target_id
+  from private.valuation_ml_transformation_evidence
+  where coalesce(rol, '') = coalesce(trim(p_rol), '')
+    and coalesce(address, '') = coalesce(trim(p_address), '')
+    and evidence_type = trim(p_evidence_type)
+    and coalesce(source_url, '') = coalesce(trim(p_source_url), '')
+  order by updated_at desc
+  limit 1;
+
+  if target_id is null then
+    insert into private.valuation_ml_transformation_evidence(
+      rol,address,evidence_type,source_url,source_observed_at,effective_date,verified,
+      eligible_for_shadow_adjustment,strength,built_area_override,construction_year_override,
+      adjustment_cap_pct,notes,metadata
+    ) values (
+      nullif(trim(p_rol), ''), nullif(trim(p_address), ''), trim(p_evidence_type), nullif(trim(p_source_url), ''),
+      coalesce(p_source_observed_at, now()), p_effective_date, coalesce(p_verified,false), eligible,
+      greatest(0, least(coalesce(p_strength,0),3)), p_built_area_override, p_construction_year_override,
+      case when eligible then 20 else 0 end, p_notes, coalesce(p_metadata,'{}'::jsonb)
+    ) returning id into target_id;
+  else
+    update private.valuation_ml_transformation_evidence set
+      source_observed_at = coalesce(p_source_observed_at, source_observed_at),
+      effective_date = p_effective_date,
+      verified = coalesce(p_verified,false),
+      eligible_for_shadow_adjustment = eligible,
+      strength = greatest(0, least(coalesce(p_strength,0),3)),
+      built_area_override = p_built_area_override,
+      construction_year_override = p_construction_year_override,
+      adjustment_cap_pct = case when eligible then 20 else 0 end,
+      notes = p_notes,
+      metadata = coalesce(p_metadata,'{}'::jsonb),
+      updated_at = now()
+    where id = target_id;
+  end if;
+
+  return target_id;
+end;
+$$;
+
+revoke all on function public.valuation_ml_upsert_transformation_evidence_v1(text,text,text,text,timestamptz,date,boolean,smallint,numeric,integer,text,jsonb) from public, anon, authenticated;
+grant execute on function public.valuation_ml_upsert_transformation_evidence_v1(text,text,text,text,timestamptz,date,boolean,smallint,numeric,integer,text,jsonb) to service_role;
