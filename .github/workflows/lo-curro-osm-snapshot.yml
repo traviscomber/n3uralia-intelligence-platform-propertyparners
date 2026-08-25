@@ -12,37 +12,47 @@ on:
 permissions:
   contents: read
 
-env:
-  BBOX: '-33.377,-70.568,-33.359,-70.540'
-
 jobs:
   snapshot:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch OSM road snapshot
+      - name: Fetch OSM map extract
         shell: bash
         run: |
           set -euo pipefail
-          query='[out:json][timeout:60];way[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service)$"]('${BBOX}');out tags center;'
-          for endpoint in https://overpass-api.de/api/interpreter https://overpass.kumi.systems/api/interpreter; do
-            if curl --fail --show-error --silent --retry 3 --retry-all-errors --max-time 90 \
-              -A 'PropertyPartners-Intelligence/1.0' \
-              --data-urlencode "data=${query}" "$endpoint" -o lo-curro-osm.json; then
-              test -s lo-curro-osm.json && break
-            fi
-          done
-          test -s lo-curro-osm.json
+          curl --fail --show-error --silent --retry 4 --retry-all-errors --max-time 120 \
+            -A 'PropertyPartners-Intelligence/1.0' \
+            'https://api.openstreetmap.org/api/0.6/map?bbox=-70.568,-33.377,-70.540,-33.359' \
+            -o lo-curro.osm
+          test -s lo-curro.osm
+
+      - name: Reduce to functional roads
+        shell: bash
+        run: |
           python - <<'PY'
-          import json
-          with open('lo-curro-osm.json', encoding='utf-8') as f:
-              d=json.load(f)
-          els=[e for e in d.get('elements',[]) if e.get('type')=='way' and e.get('center') and e.get('tags',{}).get('highway')]
+          import json, xml.etree.ElementTree as ET
+          allowed={'motorway','trunk','primary','secondary','tertiary','unclassified','residential','living_street','service'}
+          root=ET.parse('lo-curro.osm').getroot()
+          nodes={n.attrib['id']:(float(n.attrib['lat']),float(n.attrib['lon'])) for n in root.findall('node')}
+          out=[]
+          for w in root.findall('way'):
+              tags={t.attrib['k']:t.attrib['v'] for t in w.findall('tag')}
+              highway=tags.get('highway')
+              if highway not in allowed:
+                  continue
+              pts=[nodes[nd.attrib['ref']] for nd in w.findall('nd') if nd.attrib['ref'] in nodes]
+              if len(pts)<2:
+                  continue
+              lat=sum(p[0] for p in pts)/len(pts)
+              lon=sum(p[1] for p in pts)/len(pts)
+              out.append({'type':'way','id':int(w.attrib['id']),'center':{'lat':lat,'lon':lon},'geometry':[{'lat':a,'lon':b} for a,b in pts],'tags':tags})
           with open('lo-curro-roads.json','w',encoding='utf-8') as f:
-              json.dump({'generated_from':'OpenStreetMap Overpass','elements':els},f,separators=(',',':'))
-          print(f'roads={len(els)}')
-          if len(els)<20:
+              json.dump({'generated_from':'OpenStreetMap API 0.6 map','elements':out},f,separators=(',',':'))
+          print(f'roads={len(out)}')
+          if len(out)<20:
               raise SystemExit('insufficient roads')
           PY
+
       - name: Upload snapshot
         uses: actions/upload-artifact@v4
         with:
