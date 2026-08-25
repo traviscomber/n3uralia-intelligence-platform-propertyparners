@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "pnpm valuation:prc:bootstrap && pnpm valuation:gate && pnpm management:gate",
+    "prebuild": "pnpm valuation:gate && pnpm management:gate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -44,7 +44,6 @@
     "valuation:model:verify": "node --import tsx scripts/verify-valuation-model.ts",
     "valuation:workflow:verify": "node --import tsx scripts/verify-valuation-workflow.ts",
     "valuation:condition:verify": "node --import tsx scripts/verify-valuation-condition.ts",
-    "valuation:prc:bootstrap": "node --import tsx scripts/bootstrap-vitacura-prc-preview.ts",
     "test:valuation": "node --import tsx --test tests/valuation/*.test.ts",
     "valuation:gate": "node --import tsx scripts/verify-valuation-production-gate.ts",
     "test:documents": "node scripts/test-document-evidence.mjs",
@@ -54,12 +53,7 @@
     "qa:roles": "node scripts/run-authenticated-role-qa.mjs"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "core-js",
-      "esbuild",
-      "sharp",
-      "unrs-resolver"
-    ]
+    "onlyBuiltDependencies": ["core-js","esbuild","sharp","unrs-resolver"]
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -108,7 +102,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.10",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "postcss": "^8.5",
     "tailwindcss": "^4.2.0",
     "tsx": "^4.23.0",
