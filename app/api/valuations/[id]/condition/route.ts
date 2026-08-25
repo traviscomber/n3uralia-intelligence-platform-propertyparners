@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   accessErrorResponse,
   assertProfileVisible,
@@ -68,7 +69,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
-      .select('id,status,requested_by,version_number,report_payload')
+      .select('id,status,requested_by,version_number,report_payload,rol,address')
       .eq('id', id)
       .maybeSingle()
 
@@ -140,6 +141,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         coveragePct: result.coveragePct,
         evidenceCoveragePct: result.evidenceCoveragePct,
         blockers: result.blockers,
+        transformation: result.transformation,
       },
     })
     if (logError) {
@@ -147,7 +149,30 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json({ error: 'La inspección fue actualizada, pero no pudimos registrar la trazabilidad.' }, { status: 422 })
     }
 
-    return NextResponse.json({ assessment, result, versionNumber: updated.version_number })
+    let transformationEvidenceId: string | null = null
+    const transformation = assessment.transformation
+    const source = transformation?.sources?.find((item) => item.reference?.trim())
+    if (transformation && source && ['weak_evidence', 'verified'].includes(transformation.status)) {
+      const admin = createAdminClient()
+      const { data: evidenceId, error: evidenceError } = await admin.rpc('valuation_ml_upsert_transformation_evidence_v1', {
+        p_rol: valuationCase.rol ?? null,
+        p_address: valuationCase.address ?? null,
+        p_evidence_type: source.kind,
+        p_source_url: source.reference.trim(),
+        p_source_observed_at: source.observedAt || new Date().toISOString(),
+        p_effective_date: transformation.effectiveDate || null,
+        p_verified: transformation.status === 'verified',
+        p_strength: transformation.status === 'verified' ? 3 : 1,
+        p_built_area_override: transformation.builtAreaOverrideM2 ?? null,
+        p_construction_year_override: transformation.constructionYearOverride ?? null,
+        p_notes: transformation.summary || source.note || null,
+        p_metadata: { valuationCaseId: id, source: 'condition_assessment', conditionVersion: updated.condition_version },
+      })
+      if (evidenceError) logDatabaseFailure('VALUATION_TRANSFORMATION_EVIDENCE_SYNC_FAILED', evidenceError)
+      else transformationEvidenceId = typeof evidenceId === 'string' ? evidenceId : null
+    }
+
+    return NextResponse.json({ assessment, result, versionNumber: updated.version_number, transformationEvidenceId })
   } catch (error) {
     return accessErrorResponse(error)
   }
