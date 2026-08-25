@@ -22,11 +22,20 @@ export type PrcRow = {
   geometry: { type: 'MultiPolygon'; coordinates: number[][][][] }
 }
 
-export const VITACURA_PRC_ARCGIS_LAYER = 'https://ideserver.sma.gob.cl/arcgis/rest/services/IDE/PRC/MapServer/312'
-export const VITACURA_PRC_ARCGIS_SOURCE_VERSION = 'minvu-sma-prc-vitacura-2016'
+export const VITACURA_PRC_ARCGIS_LAYER = 'https://services3.arcgis.com/cTnMkBRk4HWkUCRo/arcgis/rest/services/PRC_2022/FeatureServer/41'
+export const VITACURA_PRC_ARCGIS_SOURCE_VERSION = 'minvu-prc-vitacura-20160920'
 
 function clean(value: unknown) {
-  return typeof value === 'string' ? value.trim() : ''
+  if (value == null) return ''
+  return String(value).trim()
+}
+
+function firstAttribute(attributes: Record<string, unknown>, names: string[]) {
+  for (const name of names) {
+    const value = clean(attributes[name])
+    if (value) return value
+  }
+  return ''
 }
 
 function validRing(ring: number[][]) {
@@ -45,16 +54,16 @@ export function parseVitacuraArcgisFeatures(payload: EsriResponse): PrcRow[] {
   const rows: PrcRow[] = []
   for (const feature of payload.features ?? []) {
     const attributes = feature.attributes ?? {}
-    const objectId = String(attributes.OBJECTID ?? '')
-    const zona = clean(attributes.ZONA) || clean(attributes.NOMBRE) || clean(attributes.SECTOR)
-    const subzona = clean(attributes.SECTOR)
+    const objectId = firstAttribute(attributes, ['OBJECTID', 'FID', 'OID'])
+    const zona = firstAttribute(attributes, ['ZONA', 'ZONA_PRC', 'NOMBRE', 'SECTOR', 'ZONE'])
+    const subzona = firstAttribute(attributes, ['SUBZONA', 'SECTOR', 'SUBSECTOR'])
     const rings = (feature.geometry?.rings ?? []).map(validRing).filter((ring): ring is number[][] => Boolean(ring))
     if (!objectId || !zona || !rings.length) continue
 
-    const preferredUse = clean(attributes.UPREF)
-    const allowedUse = clean(attributes.UPERM)
+    const preferredUse = firstAttribute(attributes, ['UPREF', 'USO_PREF', 'USO_PREFERENTE'])
+    const allowedUse = firstAttribute(attributes, ['UPERM', 'USO_PERM', 'USOS_PERMITIDOS'])
     rows.push({
-      ext_feature_id: `arcgis-prc-312:${objectId}`,
+      ext_feature_id: `minvu-prc-2022-41:${objectId}`,
       zona_prc: zona,
       zona,
       subzona,
@@ -63,17 +72,10 @@ export function parseVitacuraArcgisFeatures(payload: EsriResponse): PrcRow[] {
       source_url: VITACURA_PRC_ARCGIS_LAYER,
       source_version: VITACURA_PRC_ARCGIS_SOURCE_VERSION,
       raw_properties: {
-        source: 'IDE/SMA · MINVU',
-        sourceYear: 2016,
+        ...attributes,
+        source: 'MINVU ArcGIS · PRC_2022 layer 41',
+        effectiveLayerName: 'PRC_Vitacura_20160920',
         historicalBacktestOnlyUntilCurrentPrcReconciled: true,
-        region: clean(attributes.REGION) || null,
-        comuna: clean(attributes.COMUNA) || null,
-        sector: subzona || null,
-        nombre: clean(attributes.NOMBRE) || null,
-        usosPermitidos: allowedUse || null,
-        usosProhibidos: clean(attributes.UPROH) || null,
-        usoPreferente: preferredUse || null,
-        capa: clean(attributes.Capa) || null,
       },
       geometry: { type: 'MultiPolygon', coordinates: rings.map((ring) => [ring]) },
     })
@@ -84,7 +86,7 @@ export function parseVitacuraArcgisFeatures(payload: EsriResponse): PrcRow[] {
 export async function fetchVitacuraPrcArcgisRows() {
   const query = new URL(`${VITACURA_PRC_ARCGIS_LAYER}/query`)
   query.searchParams.set('where', '1=1')
-  query.searchParams.set('outFields', 'OBJECTID,REGION,COMUNA,SECTOR,ZONA,NOMBRE,UPERM,UPROH,UPREF,Capa')
+  query.searchParams.set('outFields', '*')
   query.searchParams.set('returnGeometry', 'true')
   query.searchParams.set('outSR', '4326')
   query.searchParams.set('f', 'json')
