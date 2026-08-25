@@ -6,6 +6,7 @@ import {
   PropertyConditionAssessmentForm,
   createEmptyConditionAssessment,
 } from '@/components/valuation/property-condition-assessment'
+import { PropertyTransformationEvidence } from '@/components/valuation/property-transformation-evidence'
 import type { PropertyConditionAssessment } from '@/lib/valuation-condition'
 
 export default function ValuationConditionPage() {
@@ -49,7 +50,7 @@ export default function ValuationConditionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           assessment: { ...assessment, inspectedAt: new Date().toISOString() },
-          reason: 'Ficha de inspección actualizada desde el expediente de valorización',
+          reason: 'Ficha de inspección y transformación física actualizada desde el expediente de valorización',
         }),
       })
       const payload = await response.json()
@@ -71,10 +72,11 @@ export default function ValuationConditionPage() {
         <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Módulo II · Valorización</div>
         <h1 className="mt-2 text-2xl font-semibold">Estado material de la propiedad</h1>
         <p className="mt-2 max-w-3xl text-sm text-[var(--n3-text-muted)]">
-          Evaluación ponderada, versionada y respaldada por evidencia. El resultado clasifica la condición física; no aplica automáticamente un ajuste económico.
+          Evaluación ponderada, versionada y respaldada por evidencia. Separa condición observable de transformaciones físicas verificadas; ninguna aplica automáticamente un ajuste económico.
         </p>
       </header>
 
+      <PropertyTransformationEvidence value={assessment} onChange={setAssessment} readOnly={!canEdit} />
       <PropertyConditionAssessmentForm value={assessment} onChange={setAssessment} readOnly={!canEdit} />
 
       <div className="flex items-center justify-between gap-4 border-t border-[var(--n3-line)] pt-5">
