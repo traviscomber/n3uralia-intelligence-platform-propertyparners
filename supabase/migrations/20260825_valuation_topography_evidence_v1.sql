@@ -47,6 +47,7 @@ set search_path = public, extensions
 as $$
 declare
   r record;
+  target_id uuid;
   affected integer := 0;
 begin
   if jsonb_typeof(p_rows) <> 'array' then
@@ -75,28 +76,40 @@ begin
       continue;
     end if;
 
-    insert into public.valuation_topography_samples(
-      latitude, longitude, elevation_m, slope_pct, slope_degrees, aspect_degrees,
-      sample_radius_m, source_name, source_url, source_version, source_observed_at,
-      methodology, metadata
-    ) values (
-      r.latitude, r.longitude, r.elevation_m, r.slope_pct, r.slope_degrees, r.aspect_degrees,
-      coalesce(r.sample_radius_m, 30), trim(r.source_name), nullif(trim(r.source_url), ''),
-      trim(r.source_version), coalesce(r.source_observed_at, now()),
-      coalesce(nullif(trim(r.methodology), ''), 'terrain_sample'), coalesce(r.metadata, '{}'::jsonb)
-    )
-    on conflict (round(latitude::numeric, 6), round(longitude::numeric, 6), source_name, source_version)
-    do update set
-      elevation_m = excluded.elevation_m,
-      slope_pct = excluded.slope_pct,
-      slope_degrees = excluded.slope_degrees,
-      aspect_degrees = excluded.aspect_degrees,
-      sample_radius_m = excluded.sample_radius_m,
-      source_url = excluded.source_url,
-      source_observed_at = excluded.source_observed_at,
-      methodology = excluded.methodology,
-      metadata = excluded.metadata,
-      updated_at = now();
+    select id into target_id
+    from public.valuation_topography_samples s
+    where round(s.latitude::numeric, 6) = round(r.latitude::numeric, 6)
+      and round(s.longitude::numeric, 6) = round(r.longitude::numeric, 6)
+      and s.source_name = trim(r.source_name)
+      and s.source_version = trim(r.source_version)
+    limit 1;
+
+    if target_id is null then
+      insert into public.valuation_topography_samples(
+        latitude, longitude, elevation_m, slope_pct, slope_degrees, aspect_degrees,
+        sample_radius_m, source_name, source_url, source_version, source_observed_at,
+        methodology, metadata
+      ) values (
+        r.latitude, r.longitude, r.elevation_m, r.slope_pct, r.slope_degrees, r.aspect_degrees,
+        coalesce(r.sample_radius_m, 30), trim(r.source_name), nullif(trim(r.source_url), ''),
+        trim(r.source_version), coalesce(r.source_observed_at, now()),
+        coalesce(nullif(trim(r.methodology), ''), 'terrain_sample'), coalesce(r.metadata, '{}'::jsonb)
+      );
+    else
+      update public.valuation_topography_samples set
+        elevation_m = r.elevation_m,
+        slope_pct = r.slope_pct,
+        slope_degrees = r.slope_degrees,
+        aspect_degrees = r.aspect_degrees,
+        sample_radius_m = coalesce(r.sample_radius_m, sample_radius_m),
+        source_url = nullif(trim(r.source_url), ''),
+        source_observed_at = coalesce(r.source_observed_at, source_observed_at),
+        methodology = coalesce(nullif(trim(r.methodology), ''), methodology),
+        metadata = coalesce(r.metadata, metadata),
+        updated_at = now()
+      where id = target_id;
+    end if;
+    target_id := null;
     affected := affected + 1;
   end loop;
 
