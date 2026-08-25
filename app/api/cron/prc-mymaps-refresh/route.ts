@@ -88,7 +88,7 @@ function parseKml(kml: string, layerType: LayerType, mapId: string, sourceVersio
         source_version: sourceVersion,
         source_observed_at: observedAt,
         raw_properties: { placemarkIndex, polygonIndex, officialViewer: 'https://vitacura.cl/municipalidad/planificacion-urbana/visor-interactivo-prcv/' },
-        geometry: { type: 'MultiPolygon', coordinates: [[[outerRing, ...holes]]] },
+        geometry: { type: 'MultiPolygon', coordinates: [[outerRing, ...holes]] },
       })
     })
   })
