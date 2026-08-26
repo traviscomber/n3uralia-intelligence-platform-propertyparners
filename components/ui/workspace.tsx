@@ -12,7 +12,7 @@ export type WorkspaceAction = {
 }
 
 export function WorkspaceShell({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <main className={`min-h-screen bg-[var(--n3-black)] px-4 py-4 text-[var(--n3-text-light)] sm:px-6 md:px-8 md:py-6 ${className}`}><div className="mx-auto max-w-[1120px]">{children}</div></main>
+  return <div className={`min-h-screen bg-[var(--n3-black)] px-4 py-4 text-[var(--n3-text-light)] sm:px-6 md:px-8 md:py-6 ${className}`}><div className="mx-auto max-w-[1120px]">{children}</div></div>
 }
 
 export function WorkspaceHeader({ eyebrow, title, meta, controls, actions = [] }: { eyebrow?: string; title?: string; meta?: ReactNode; controls?: ReactNode; actions?: WorkspaceAction[] }) {
