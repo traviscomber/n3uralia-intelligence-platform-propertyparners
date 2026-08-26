@@ -33,6 +33,21 @@ export function WorkspaceHeader({ eyebrow, title, meta, controls, actions = [] }
   </header>
 }
 
+export function WorkspaceSurface({ children, className = '', as = 'section' }: { children: ReactNode; className?: string; as?: 'section' | 'div' | 'article' }) {
+  const classes = `border border-[var(--n3-line)] bg-[var(--n3-deep)] ${className}`
+  if (as === 'div') return <div className={classes}>{children}</div>
+  if (as === 'article') return <article className={classes}>{children}</article>
+  return <section className={classes}>{children}</section>
+}
+
+export function WorkspaceField({ className = '', ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...props} className={`min-h-10 border border-[var(--n3-line)] bg-[var(--n3-black)] px-3 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus:border-[var(--n3-teal-soft)] ${className}`} />
+}
+
+export function WorkspaceSelect({ className = '', ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select {...props} className={`min-h-10 border border-[var(--n3-line)] bg-[var(--n3-black)] px-3 text-sm text-[var(--n3-text-light)] outline-none focus:border-[var(--n3-teal-soft)] ${className}`} />
+}
+
 export function MetricStrip({ items }: { items: Array<{ label: string; value: ReactNode; detail?: ReactNode; tone?: 'default' | 'success' | 'warning' | 'danger' }> }) {
   const toneClass = {
     default: 'text-[var(--n3-text-light)]',
