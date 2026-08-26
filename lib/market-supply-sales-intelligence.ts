@@ -16,6 +16,31 @@ export type SupplySalesRow = {
   confidence: string
 }
 
+export type MarketGeometryRow = {
+  neighborhoodName: string
+  geometry: unknown
+}
+
+export type MarketHistoryRow = {
+  periodStart: string
+  periodEnd: string
+  neighborhoodId: string | null
+  neighborhoodName: string | null
+  propertyType: string | null
+  activeInventory: number | null
+  confirmedSales: number | null
+  absorptionRate: number | null
+  offerToSalesRatio: number | null
+  methodologyVersion: string | null
+}
+
+export type MarketIntelligenceContext = {
+  geometries: MarketGeometryRow[]
+  history: MarketHistoryRow[]
+  historyPeriods: string[]
+  error?: string
+}
+
 export async function getSupplySalesIntelligence(): Promise<{ rows: SupplySalesRow[]; error?: string }> {
   try {
     const supabase = await createClient()
@@ -45,5 +70,59 @@ export async function getSupplySalesIntelligence(): Promise<{ rows: SupplySalesR
     }
   } catch (error) {
     return { rows: [], error: error instanceof Error ? error.message : 'No fue posible consultar la inteligencia oferta/ventas.' }
+  }
+}
+
+export async function getMarketIntelligenceContext(): Promise<MarketIntelligenceContext> {
+  try {
+    const supabase = await createClient()
+    const [historyResult, neighborhoodsResult] = await Promise.all([
+      supabase
+        .from('market_metric_snapshots')
+        .select('period_start,period_end,neighborhood_id,property_type,active_inventory,confirmed_sales,absorption_rate,offer_to_sales_ratio,methodology_version')
+        .order('period_start', { ascending: true }),
+      supabase
+        .from('market_neighborhoods')
+        .select('id,name,micro_neighborhood,geometry'),
+    ])
+
+    const firstError = historyResult.error || neighborhoodsResult.error
+    if (firstError) return { geometries: [], history: [], historyPeriods: [], error: firstError.message }
+
+    const nameById = new Map<string, string>()
+    for (const row of neighborhoodsResult.data ?? []) {
+      nameById.set(row.id, row.micro_neighborhood || row.name)
+    }
+
+    const history: MarketHistoryRow[] = (historyResult.data ?? []).map((row) => ({
+      periodStart: row.period_start,
+      periodEnd: row.period_end,
+      neighborhoodId: row.neighborhood_id,
+      neighborhoodName: row.neighborhood_id ? nameById.get(row.neighborhood_id) ?? null : null,
+      propertyType: row.property_type,
+      activeInventory: row.active_inventory == null ? null : Number(row.active_inventory),
+      confirmedSales: row.confirmed_sales == null ? null : Number(row.confirmed_sales),
+      absorptionRate: row.absorption_rate == null ? null : Number(row.absorption_rate),
+      offerToSalesRatio: row.offer_to_sales_ratio == null ? null : Number(row.offer_to_sales_ratio),
+      methodologyVersion: row.methodology_version,
+    }))
+
+    return {
+      geometries: (neighborhoodsResult.data ?? [])
+        .filter((row) => row.geometry)
+        .map((row) => ({
+          neighborhoodName: row.micro_neighborhood || row.name,
+          geometry: row.geometry,
+        })),
+      history,
+      historyPeriods: [...new Set(history.map((row) => row.periodStart))],
+    }
+  } catch (error) {
+    return {
+      geometries: [],
+      history: [],
+      historyPeriods: [],
+      error: error instanceof Error ? error.message : 'No fue posible consultar el contexto territorial e histórico de mercado.',
+    }
   }
 }
