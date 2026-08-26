@@ -103,7 +103,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
-      .select('id,requested_by,property_type,neighborhood')
+      .select('id,requested_by,property_type,neighborhood,status')
       .eq('id', id)
       .maybeSingle()
 
@@ -134,6 +134,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
     return NextResponse.json({
       ...review,
+      caseStatus: valuationCase.status,
       reviewGate: buildReviewGate(review, valuationCase.property_type, reliability),
     })
   } catch (error) {
