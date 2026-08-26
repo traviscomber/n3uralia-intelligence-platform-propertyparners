@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { generateCeoReportHTML, generateCeoReportData } from '@/lib/ceo-report-html-generator'
+import { MONTHLY_EXECUTIVE_REPORT_STANDARD } from '@/lib/reporting/monthly-executive-report-standard'
 
 export async function GET() {
   try {
@@ -10,6 +11,8 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
+        'X-Report-Standard': MONTHLY_EXECUTIVE_REPORT_STANDARD.version,
+        'X-Report-Standard-Document': MONTHLY_EXECUTIVE_REPORT_STANDARD.document,
       },
     })
   } catch (error) {
