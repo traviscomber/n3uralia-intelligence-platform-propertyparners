@@ -1,114 +1,67 @@
 export const MONTHLY_EXECUTIVE_REPORT_RUNTIME_VERSION = '2026.08.25-v1'
 
 type SupabaseLike = any
-
-type MetricRow = {
-  metric_code: string
-  period_start: string
-  period_end: string
-  value: number | string | null
-  source_name: string | null
-  source_reference: string | null
-  quality_status: string | null
-  evaluation_status: string | null
-  formula_version: number | null
-}
-
-type MetricPoint = {
-  value: number | null
-  sourceName: string | null
-  sourceReference: string | null
-  formulaVersion: number | null
-}
+type MetricRow = { metric_code:string; period_start:string; period_end:string; value:number|string|null; source_name:string|null; source_reference:string|null; quality_status:string|null; evaluation_status:string|null; formula_version:number|null }
+type MetricPoint = { value:number|null; sourceName:string|null; sourceReference:string|null; formulaVersion:number|null }
 
 const CORE = ['sales','sales_uf','goal_compliance','requirements','leads','scheduled_visits','realized_visits','listings','stock','suspended_listings'] as const
+const labels: Record<string,string> = { sales:'Ventas', sales_uf:'UF vendidas', goal_compliance:'Cumplimiento meta', requirements:'Requerimientos', leads:'Leads', scheduled_visits:'Visitas agendadas', realized_visits:'Visitas realizadas', listings:'Captaciones', stock:'Cartera publicada', suspended_listings:'Suspendidas' }
 
-const labels: Record<string,string> = {
-  sales: 'Ventas', sales_uf: 'UF vendidas', goal_compliance: 'Cumplimiento meta',
-  requirements: 'Requerimientos', leads: 'Leads', scheduled_visits: 'Visitas agendadas',
-  realized_visits: 'Visitas realizadas', listings: 'Captaciones', stock: 'Cartera publicada',
-  suspended_listings: 'Suspendidas',
-}
+const periodStart = (period:string) => `${period}-01`
+function previousPeriod(period:string){ const [y,m]=period.split('-').map(Number); const d=new Date(Date.UTC(y,m-2,1)); return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}` }
+function yoyPeriod(period:string){ const [y,m]=period.split('-'); return `${Number(y)-1}-${m}` }
+const pct = (current:number|null,base:number|null) => current===null||base===null||base===0 ? null : ((current-base)/base)*100
+const ratio = (num:number|null,den:number|null) => num===null||den===null||den===0 ? null : (num/den)*100
+const fmt = (n:number|null,d=0) => n===null ? 'N/D' : n.toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d})
+const fmtPct = (n:number|null,d=1) => n===null ? 'N/D' : `${n>=0?'+':''}${n.toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d})}%`
+const escapeHtml = (v:string) => v.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c] as string))
 
-function periodStart(period: string) { return `${period}-01` }
-function previousPeriod(period: string) {
-  const [y,m] = period.split('-').map(Number); const d = new Date(Date.UTC(y,m-2,1))
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`
-}
-function yoyPeriod(period: string) { const [y,m] = period.split('-'); return `${Number(y)-1}-${m}` }
-function pct(current: number|null, base: number|null) { return current === null || base === null || base === 0 ? null : ((current-base)/base)*100 }
-function ratio(num: number|null, den: number|null) { return num === null || den === null || den === 0 ? null : (num/den)*100 }
-function fmt(n:number|null,d=0){ return n===null ? 'N/D' : n.toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d}) }
-function fmtPct(n:number|null,d=1){ return n===null ? 'N/D' : `${n>=0?'+':''}${n.toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d})}%` }
-function escapeHtml(v:string){ return v.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c] as string)) }
-
-function chooseMetric(rows: MetricRow[], code:string, start:string): MetricPoint {
-  const matches = rows.filter(r=>r.metric_code===code && r.period_start===start && r.quality_status==='verified' && r.evaluation_status==='evaluable')
-  if (!matches.length) return {value:null,sourceName:null,sourceReference:null,formulaVersion:null}
-  const preferred = matches.find(r=>r.source_name==='CRM historical canonical extraction') ?? matches[0]
-  const n = preferred.value === null ? null : Number(preferred.value)
+function chooseMetric(rows:MetricRow[],code:string,start:string):MetricPoint{
+  const matches=rows.filter(r=>r.metric_code===code&&r.period_start===start&&r.quality_status==='verified'&&r.evaluation_status==='evaluable')
+  if(!matches.length) return {value:null,sourceName:null,sourceReference:null,formulaVersion:null}
+  const preferred=matches.find(r=>r.source_name==='CRM historical canonical extraction')??matches[0]
+  const n=preferred.value===null?null:Number(preferred.value)
   return {value:Number.isFinite(n as number)?n:null,sourceName:preferred.source_name,sourceReference:preferred.source_reference,formulaVersion:preferred.formula_version}
 }
 
-export async function buildMonthlyExecutiveReport(supabase: SupabaseLike, period:string) {
-  const prev = previousPeriod(period), yoy = yoyPeriod(period)
+export async function buildMonthlyExecutiveReport(supabase:SupabaseLike,period:string){
+  const prev=previousPeriod(period), yoy=yoyPeriod(period)
   const {data:entity,error:entityError}=await supabase.from('management_entities').select('id,name,entity_type').eq('entity_type','company').eq('active',true).maybeSingle()
   if(entityError||!entity) throw new Error(entityError?.message||'Company entity not found')
   const starts=[periodStart(period),periodStart(prev),periodStart(yoy)]
-  const {data:rows,error}=await supabase.from('management_metric_values')
-    .select('metric_code,period_start,period_end,value,source_name,source_reference,quality_status,evaluation_status,formula_version')
-    .eq('entity_id',entity.id).in('metric_code',[...CORE]).in('period_start',starts)
+  const {data:rows,error}=await supabase.from('management_metric_values').select('metric_code,period_start,period_end,value,source_name,source_reference,quality_status,evaluation_status,formula_version').eq('entity_id',entity.id).in('metric_code',[...CORE]).in('period_start',starts)
   if(error) throw new Error(error.message)
   const metricRows=(rows??[]) as MetricRow[]
-  const cur:Record<string,MetricPoint>={}, prior:Record<string,MetricPoint>={}, year:Record<string,MetricPoint>={}
+  const cur:Record<string,MetricPoint>={},prior:Record<string,MetricPoint>={},year:Record<string,MetricPoint>={}
   for(const code of CORE){ cur[code]=chooseMetric(metricRows,code,starts[0]); prior[code]=chooseMetric(metricRows,code,starts[1]); year[code]=chooseMetric(metricRows,code,starts[2]) }
-  const {data:goals}=await supabase.from('management_goals').select('metric_code,target_value,period_start,period_end,status,source_name').eq('entity_id',entity.id).eq('metric_code','sales').eq('period_start',starts[0]).maybeSingle()
-  const target = goals?.target_value==null ? null : Number(goals.target_value)
+  const {data:goals}=await supabase.from('management_goals').select('target_value').eq('entity_id',entity.id).eq('metric_code','sales').eq('period_start',starts[0]).maybeSingle()
+  const target=goals?.target_value==null?null:Number(goals.target_value)
   const sales=cur.sales.value, salesUf=cur.sales_uf.value
-  const funnel = [
-    {key:'requirements',label:'Requerimientos',value:cur.requirements.value},
-    {key:'leads',label:'Leads',value:cur.leads.value},
-    {key:'scheduled_visits',label:'Visitas agendadas',value:cur.scheduled_visits.value},
-    {key:'realized_visits',label:'Visitas realizadas',value:cur.realized_visits.value},
-    {key:'sales',label:'Ventas',value:sales},
-  ]
-  const conversions = funnel.slice(1).map((stage,i)=>({from:funnel[i].label,to:stage.label,rate:ratio(stage.value,funnel[i].value)}))
-  const validConversions=conversions.filter(c=>c.rate!==null) as Array<{from:string,to:string,rate:number}>
-  const bottleneck=validConversions.length ? [...validConversions].sort((a,b)=>a.rate-b.rate)[0] : null
-  const comparison = CORE.reduce<Record<string,{mom:number|null,yoy:number|null}>>((a,code)=>{
-    const momCompatible=cur[code].formulaVersion!==null && cur[code].formulaVersion===prior[code].formulaVersion
-    const yoyCompatible=cur[code].formulaVersion!==null && cur[code].formulaVersion===year[code].formulaVersion
-    a[code]={mom:momCompatible?pct(cur[code].value,prior[code].value):null,yoy:yoyCompatible?pct(cur[code].value,year[code].value):null}; return a
-  },{})
+  const funnel=[{label:'Requerimientos',value:cur.requirements.value},{label:'Leads',value:cur.leads.value},{label:'Visitas agendadas',value:cur.scheduled_visits.value},{label:'Visitas realizadas',value:cur.realized_visits.value},{label:'Ventas',value:sales}]
+  const conversions=funnel.slice(1).map((stage,i)=>({from:funnel[i].label,to:stage.label,rate:ratio(stage.value,funnel[i].value)}))
+  const valid=conversions.filter(c=>c.rate!==null) as Array<{from:string;to:string;rate:number}>
+  const bottleneck=valid.length?[...valid].sort((a,b)=>a.rate-b.rate)[0]:null
+  const comparison=CORE.reduce<Record<string,{mom:number|null;yoy:number|null}>>((acc,code)=>{ const momOk=cur[code].formulaVersion!==null&&cur[code].formulaVersion===prior[code].formulaVersion; const yoyOk=cur[code].formulaVersion!==null&&cur[code].formulaVersion===year[code].formulaVersion; acc[code]={mom:momOk?pct(cur[code].value,prior[code].value):null,yoy:yoyOk?pct(cur[code].value,year[code].value):null}; return acc },{})
   const findings:string[]=[]
-  if(cur.goal_compliance.value!==null) findings.push(`Cumplimiento de meta: ${fmt(cur.goal_compliance.value,0)}%.`)
+  if(cur.goal_compliance.value!==null) findings.push(`Cumplimiento de meta: ${fmt(cur.goal_compliance.value)}%.`)
   if(bottleneck) findings.push(`La menor conversión del funnel está entre ${bottleneck.from} y ${bottleneck.to}: ${fmt(bottleneck.rate,1)}%.`)
   if(comparison.suspended_listings.mom!==null) findings.push(`Suspendidas: ${fmt(cur.suspended_listings.value)} (${fmtPct(comparison.suspended_listings.mom)} MoM).`)
-  const actions = [
-    bottleneck ? `Revisar la etapa ${bottleneck.from} → ${bottleneck.to} y monitorear su conversión el próximo mes.` : 'Mantener seguimiento del funnel con la misma metodología.',
-    comparison.suspended_listings.mom!==null && comparison.suspended_listings.mom>0 ? 'Auditar causas de propiedades suspendidas y monitorear su variación MoM.' : 'Monitorear stock, captaciones y suspendidas como bloque de cartera.',
-    target!==null && sales!==null && sales<target ? `Gestionar el gap de ${fmt(target-sales,1)} ventas respecto de la meta mensual.` : 'Mantener control mensual de ventas versus meta asignada.'
-  ].slice(0,3)
+  const actions=[bottleneck?`Revisar la etapa ${bottleneck.from} → ${bottleneck.to} y monitorear su conversión el próximo mes.`:'Mantener seguimiento del funnel con la misma metodología.',comparison.suspended_listings.mom!==null&&comparison.suspended_listings.mom>0?'Auditar causas de propiedades suspendidas y monitorear su variación MoM.':'Monitorear stock, captaciones y suspendidas como bloque de cartera.',target!==null&&sales!==null&&sales<target?`Gestionar el gap de ${fmt(target-sales,1)} ventas respecto de la meta mensual.`:'Mantener control mensual de ventas versus meta asignada.'].slice(0,3)
   return {version:MONTHLY_EXECUTIVE_REPORT_RUNTIME_VERSION,period,previousPeriod:prev,yoyPeriod:yoy,entity,cur,prior,year,target,comparison,funnel,conversions,bottleneck,averageTicketUf:sales&&salesUf!==null?salesUf/sales:null,findings:findings.slice(0,3),actions}
 }
 
-function bars(values:Array<{label:string,value:number|null}>, unit:string){
-  const max=Math.max(1,...values.map(v=>v.value??0))
-  return `<div class="bars">${values.map(v=>`<div class="bar-row"><div class="bar-label">${escapeHtml(v.label)}</div><div class="bar-track"><div class="bar-fill" style="width:${v.value===null?0:(v.value/max)*100}%"></div></div><div class="bar-value">${v.value===null?'N/D':fmt(v.value)} ${unit}</div></div>`).join('')}</div>`
-}
+function bars(values:Array<{label:string;value:number|null}>,unit:string){ const max=Math.max(1,...values.map(v=>v.value??0)); return `<div class="bars">${values.map(v=>`<div class="bar-row"><div class="bar-label">${escapeHtml(v.label)}</div><div class="bar-track"><div class="bar-fill" style="width:${v.value===null?0:(v.value/max)*100}%"></div></div><div class="bar-value">${v.value===null?'N/D':fmt(v.value)} ${unit}</div></div>`).join('')}</div>` }
 
 export function renderMonthlyExecutiveReportHTML(r:any){
-  const c=r.cur, p=r.prior, y=r.year, cmp=r.comparison
+  const c=r.cur,p=r.prior,y=r.year,cmp=r.comparison
   const sourceRows=CORE.map(code=>`<tr><td>${labels[code]}</td><td>${c[code].value===null?'N/D':fmt(c[code].value)}</td><td>v${c[code].formulaVersion??'N/D'}</td><td>${escapeHtml(c[code].sourceName??'N/D')}</td></tr>`).join('')
   const funnelHtml=r.funnel.map((s:any,i:number)=>`<div class="stage"><div class="stage-n">${fmt(s.value)}</div><div class="stage-l">${s.label}</div>${i<r.conversions.length?`<div class="stage-rate">${r.conversions[i].rate===null?'N/D':fmt(r.conversions[i].rate,1)+'%'} →</div>`:''}</div>`).join('')
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Informe Ejecutivo ${r.period}</title><style>
-  @page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:#ececec;color:#202020;font-family:Montserrat,Arial,sans-serif}.page{width:210mm;min-height:297mm;margin:0 auto 8mm;background:#fff;padding:18mm 18mm 16mm;position:relative;page-break-after:always}.page:last-child{page-break-after:auto}.top{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#777}.rule{height:3px;width:42px;background:#c8232a;margin:9px 0 22px}h1{font-size:29px;line-height:1.05;margin:0 0 10px;font-weight:600}h2{font-size:21px;margin:0 0 6px;font-weight:600}h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px}.muted{color:#777}.lead{font-size:15px;line-height:1.45;max-width:150mm}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}.kpi{border-top:1px solid #222;padding-top:10px}.kpi b{display:block;font-size:25px;font-weight:600}.kpi span{font-size:10px;color:#666}.callout{border-left:3px solid #c8232a;padding:10px 14px;margin:20px 0;background:#fafafa}.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{border-top:1px solid #bbb;padding-top:12px}.delta{font-size:13px;margin:7px 0}.bars{margin-top:16px}.bar-row{display:grid;grid-template-columns:32mm 1fr 35mm;gap:7px;align-items:center;margin:11px 0}.bar-label,.bar-value{font-size:10px}.bar-track{height:12px;background:#eee}.bar-fill{height:12px;background:#282828}.funnel{display:flex;align-items:flex-start;gap:4px;margin:28px 0}.stage{flex:1;min-width:0}.stage-n{font-size:21px;font-weight:600;border-top:3px solid #c8232a;padding-top:8px}.stage-l{font-size:9px;color:#555;min-height:24px}.stage-rate{font-size:9px;color:#777;margin-top:9px}.portfolio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:25px 0}.port{padding:16px 0;border-top:1px solid #222}.port b{font-size:26px}.port small{display:block;color:#666}.decision{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;margin-top:20px}.item{border-top:1px solid #bbb;padding:12px 0;font-size:12px;line-height:1.45}.num{color:#c8232a;font-weight:700;margin-right:8px}table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:14px}th,td{padding:6px 5px;border-bottom:1px solid #ddd;text-align:left}th{background:#222;color:#fff;font-weight:500}.footer{position:absolute;bottom:9mm;left:18mm;right:18mm;font-size:8px;color:#888;display:flex;justify-content:space-between}@media print{body{background:#fff}.page{margin:0}}
-  </style></head><body>
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Informe Ejecutivo ${r.period}</title><style>@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:#ececec;color:#202020;font-family:Montserrat,Arial,sans-serif}.page{width:210mm;min-height:297mm;margin:0 auto 8mm;background:#fff;padding:18mm 18mm 16mm;position:relative;page-break-after:always}.page:last-child{page-break-after:auto}.top{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#777}.rule{height:3px;width:42px;background:#c8232a;margin:9px 0 22px}h1{font-size:29px;margin:0 0 10px;font-weight:600}h2{font-size:21px;margin:0 0 6px;font-weight:600}h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em}.muted{color:#777}.lead{font-size:15px;line-height:1.45}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}.kpi{border-top:1px solid #222;padding-top:10px}.kpi b{display:block;font-size:25px}.kpi span{font-size:10px;color:#666}.callout{border-left:3px solid #c8232a;padding:10px 14px;margin:20px 0;background:#fafafa}.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}.bar-row{display:grid;grid-template-columns:32mm 1fr 35mm;gap:7px;align-items:center;margin:11px 0}.bar-track{height:12px;background:#eee}.bar-fill{height:12px;background:#282828}.bar-label,.bar-value{font-size:10px}.funnel{display:flex;gap:4px;margin:28px 0}.stage{flex:1}.stage-n{font-size:21px;font-weight:600;border-top:3px solid #c8232a;padding-top:8px}.stage-l,.stage-rate{font-size:9px;color:#666}.portfolio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:25px 0}.port{padding:16px 0;border-top:1px solid #222}.port b{font-size:26px}.port small{display:block;color:#666}.decision{display:grid;grid-template-columns:1fr 1.2fr;gap:18px}.item{border-top:1px solid #bbb;padding:12px 0;font-size:12px}.num{color:#c8232a;font-weight:700;margin-right:8px}table{width:100%;border-collapse:collapse;font-size:8.5px}th,td{padding:6px 5px;border-bottom:1px solid #ddd;text-align:left}th{background:#222;color:#fff}.footer{position:absolute;bottom:9mm;left:18mm;right:18mm;font-size:8px;color:#888;display:flex;justify-content:space-between}@media print{body{background:#fff}.page{margin:0}}</style></head><body>
   <section class="page"><div class="top">Property Partners · Reportería ejecutiva · ${r.period}</div><div class="rule"></div><h1>Informe ejecutivo mensual</h1><p class="lead">Resultado comercial, conversión y cartera. Fuente exclusiva: capa canónica de gestión.</p><div class="kpis"><div class="kpi"><b>${fmt(c.sales.value)}</b><span>Ventas · ${fmtPct(cmp.sales.mom)} MoM · ${fmtPct(cmp.sales.yoy)} YoY</span></div><div class="kpi"><b>${fmt(c.sales_uf.value)}</b><span>UF vendidas · ${fmtPct(cmp.sales_uf.mom)} MoM · ${fmtPct(cmp.sales_uf.yoy)} YoY</span></div><div class="kpi"><b>${fmt(c.goal_compliance.value)}%</b><span>Cumplimiento meta${r.target!==null?` · meta ${fmt(r.target,1)}`:''}</span></div></div><div class="callout"><h3>Lectura CEO</h3>${r.findings.map((x:string)=>`<div>• ${escapeHtml(x)}</div>`).join('')}</div><div class="footer"><span>${r.entity.name}</span><span>1 / 6</span></div></section>
-  <section class="page"><div class="top">02 · Comparación temporal</div><div class="rule"></div><h2>MoM / YoY</h2><p class="muted">La lectura mensual y anual se muestran por separado para evitar conclusiones ambiguas.</p><div class="compare"><div class="panel"><h3>Ventas</h3>${bars([{label:r.previousPeriod,value:p.sales.value},{label:r.period,value:c.sales.value},{label:r.yoyPeriod,value:y.sales.value}],'')}<div class="delta">MoM <b>${fmtPct(cmp.sales.mom)}</b> · YoY <b>${fmtPct(cmp.sales.yoy)}</b></div></div><div class="panel"><h3>UF vendidas</h3>${bars([{label:r.previousPeriod,value:p.sales_uf.value},{label:r.period,value:c.sales_uf.value},{label:r.yoyPeriod,value:y.sales_uf.value}],'UF')}<div class="delta">MoM <b>${fmtPct(cmp.sales_uf.mom)}</b> · YoY <b>${fmtPct(cmp.sales_uf.yoy)}</b></div></div></div><div class="callout">Ticket medio del mes: <b>${r.averageTicketUf===null?'N/D':fmt(r.averageTicketUf,0)+' UF'}</b>. Comparaciones sólo con `formula_version` compatible.</div><div class="footer"><span>Comparabilidad canónica</span><span>2 / 6</span></div></section>
-  <section class="page"><div class="top">03 · Funnel comercial</div><div class="rule"></div><h2>Conversión por etapa</h2><p class="muted">Requerimientos → leads → visitas → cierres.</p><div class="funnel">${funnelHtml}</div>${r.bottleneck?`<div class="callout"><h3>Mayor fricción observada</h3>${escapeHtml(r.bottleneck.from)} → ${escapeHtml(r.bottleneck.to)}: <b>${fmt(r.bottleneck.rate,1)}%</b>.</div>`:''}<div class="footer"><span>Ratios derivados de métricas del mismo período</span><span>3 / 6</span></div></section>
-  <section class="page"><div class="top">04 · Cartera</div><div class="rule"></div><h2>Stock, captación y suspensión</h2><div class="portfolio"><div class="port"><b>${fmt(c.stock.value)}</b><small>Cartera publicada</small><small>${fmtPct(cmp.stock.mom)} MoM</small></div><div class="port"><b>${fmt(c.listings.value)}</b><small>Captaciones</small><small>${fmtPct(cmp.listings.mom)} MoM</small></div><div class="port"><b>${fmt(c.suspended_listings.value)}</b><small>Suspendidas</small><small>${fmtPct(cmp.suspended_listings.mom)} MoM</small></div></div><div class="callout">La cartera se interpreta con variación mensual canónica; no se incorporan listings web ni inteligencia de mercado en este reporte.</div><div class="footer"><span>Gestión de cartera</span><span>4 / 6</span></div></section>
-  <section class="page"><div class="top">05 · Diagnóstico y decisiones</div><div class="rule"></div><h2>Tres decisiones para el próximo ciclo</h2><div class="decision"><div><h3>Hallazgos</h3>${r.findings.map((x:string,i:number)=>`<div class="item"><span class="num">0${i+1}</span>${escapeHtml(x)}</div>`).join('')}</div><div><h3>Acciones</h3>${r.actions.map((x:string,i:number)=>`<div class="item"><span class="num">0${i+1}</span>${escapeHtml(x)}</div>`).join('')}</div></div><div class="footer"><span>Máximo tres acciones · evidencia del mismo reporte</span><span>5 / 6</span></div></section>
-  <section class="page"><div class="top">06 · Fuentes y metodología</div><div class="rule"></div><h2>Cobertura canónica</h2><p class="muted">Período ${r.period} · Entidad ${escapeHtml(r.entity.name)} · Estándar ${r.version}</p><table><thead><tr><th>Métrica</th><th>Valor</th><th>Fórmula</th><th>Fuente</th></tr></thead><tbody>${sourceRows}</tbody></table><div class="callout">Los valores ausentes se muestran como N/D. No se usan `weekly_reports`, inteligencia de mercado, valorizaciones, scrapers, mocks ni hardcodes para completar KPIs mensuales. Desglose oficina/partner sólo si existe cobertura canónica para el período.</div><div class="footer"><span>Fuente: management_metric_values / management_goals</span><span>6 / 6</span></div></section>
+  <section class="page"><div class="top">02 · Comparación temporal</div><div class="rule"></div><h2>MoM / YoY</h2><div class="compare"><div><h3>Ventas</h3>${bars([{label:r.previousPeriod,value:p.sales.value},{label:r.period,value:c.sales.value},{label:r.yoyPeriod,value:y.sales.value}],'')}<div>MoM <b>${fmtPct(cmp.sales.mom)}</b> · YoY <b>${fmtPct(cmp.sales.yoy)}</b></div></div><div><h3>UF vendidas</h3>${bars([{label:r.previousPeriod,value:p.sales_uf.value},{label:r.period,value:c.sales_uf.value},{label:r.yoyPeriod,value:y.sales_uf.value}],'UF')}<div>MoM <b>${fmtPct(cmp.sales_uf.mom)}</b> · YoY <b>${fmtPct(cmp.sales_uf.yoy)}</b></div></div></div><div class="callout">Ticket medio del mes: <b>${r.averageTicketUf===null?'N/D':fmt(r.averageTicketUf)+' UF'}</b>. Comparaciones sólo con formula_version compatible.</div><div class="footer"><span>Comparabilidad canónica</span><span>2 / 6</span></div></section>
+  <section class="page"><div class="top">03 · Funnel comercial</div><div class="rule"></div><h2>Conversión por etapa</h2><div class="funnel">${funnelHtml}</div>${r.bottleneck?`<div class="callout"><h3>Mayor fricción observada</h3>${escapeHtml(r.bottleneck.from)} → ${escapeHtml(r.bottleneck.to)}: <b>${fmt(r.bottleneck.rate,1)}%</b>.</div>`:''}<div class="footer"><span>Ratios derivados del mismo período</span><span>3 / 6</span></div></section>
+  <section class="page"><div class="top">04 · Cartera</div><div class="rule"></div><h2>Stock, captación y suspensión</h2><div class="portfolio"><div class="port"><b>${fmt(c.stock.value)}</b><small>Cartera publicada</small><small>${fmtPct(cmp.stock.mom)} MoM</small></div><div class="port"><b>${fmt(c.listings.value)}</b><small>Captaciones</small><small>${fmtPct(cmp.listings.mom)} MoM</small></div><div class="port"><b>${fmt(c.suspended_listings.value)}</b><small>Suspendidas</small><small>${fmtPct(cmp.suspended_listings.mom)} MoM</small></div></div><div class="footer"><span>Gestión de cartera</span><span>4 / 6</span></div></section>
+  <section class="page"><div class="top">05 · Diagnóstico y decisiones</div><div class="rule"></div><h2>Tres decisiones para el próximo ciclo</h2><div class="decision"><div><h3>Hallazgos</h3>${r.findings.map((x:string,i:number)=>`<div class="item"><span class="num">0${i+1}</span>${escapeHtml(x)}</div>`).join('')}</div><div><h3>Acciones</h3>${r.actions.map((x:string,i:number)=>`<div class="item"><span class="num">0${i+1}</span>${escapeHtml(x)}</div>`).join('')}</div></div><div class="footer"><span>Máximo tres acciones</span><span>5 / 6</span></div></section>
+  <section class="page"><div class="top">06 · Fuentes y metodología</div><div class="rule"></div><h2>Cobertura canónica</h2><p class="muted">Período ${r.period} · Entidad ${escapeHtml(r.entity.name)} · Estándar ${r.version}</p><table><thead><tr><th>Métrica</th><th>Valor</th><th>Fórmula</th><th>Fuente</th></tr></thead><tbody>${sourceRows}</tbody></table><div class="callout">Los valores ausentes se muestran como N/D. No se usan weekly_reports, inteligencia de mercado, valorizaciones, scrapers, mocks ni hardcodes para completar KPIs mensuales.</div><div class="footer"><span>Fuente: management_metric_values / management_goals</span><span>6 / 6</span></div></section>
   </body></html>`
 }
