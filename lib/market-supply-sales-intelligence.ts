@@ -63,7 +63,7 @@ export async function getSupplySalesIntelligence(): Promise<{ rows: SupplySalesR
         portalMedianUfM2: row.portal_median_uf_m2 == null ? null : Number(row.portal_median_uf_m2),
         cbrsMedianUfM2: row.cbrs_median_uf_m2 == null ? null : Number(row.cbrs_median_uf_m2),
         ufM2GapPct: row.uf_m2_gap_pct == null ? null : Number(row.uf_m2_gap_pct),
-        supplyDepthRatio: row.supply_depth_ratio == null ? null : Number(row.supplyDepthRatio ?? row.supply_depth_ratio),
+        supplyDepthRatio: row.supply_depth_ratio == null ? null : Number(row.supply_depth_ratio),
         signal: row.signal,
         confidence: row.confidence,
       })),
@@ -76,22 +76,17 @@ export async function getSupplySalesIntelligence(): Promise<{ rows: SupplySalesR
 export async function getMarketIntelligenceContext(): Promise<MarketIntelligenceContext> {
   try {
     const supabase = await createClient()
-    const [geometryResult, historyResult, neighborhoodsResult] = await Promise.all([
-      supabase
-        .from('vitacura_market_neighborhoods')
-        .select('barrio_nombre,geometry')
-        .eq('fuente', 'Property Partners')
-        .eq('version', '2026-08-12'),
+    const [historyResult, neighborhoodsResult] = await Promise.all([
       supabase
         .from('market_metric_snapshots')
         .select('period_start,period_end,neighborhood_id,property_type,active_inventory,confirmed_sales,absorption_rate,offer_to_sales_ratio,methodology_version')
         .order('period_start', { ascending: true }),
       supabase
         .from('market_neighborhoods')
-        .select('id,name,micro_neighborhood'),
+        .select('id,name,micro_neighborhood,geometry'),
     ])
 
-    const firstError = geometryResult.error || historyResult.error || neighborhoodsResult.error
+    const firstError = historyResult.error || neighborhoodsResult.error
     if (firstError) return { geometries: [], history: [], historyPeriods: [], error: firstError.message }
 
     const nameById = new Map<string, string>()
@@ -113,10 +108,12 @@ export async function getMarketIntelligenceContext(): Promise<MarketIntelligence
     }))
 
     return {
-      geometries: (geometryResult.data ?? []).map((row) => ({
-        neighborhoodName: row.barrio_nombre,
-        geometry: row.geometry,
-      })),
+      geometries: (neighborhoodsResult.data ?? [])
+        .filter((row) => row.geometry)
+        .map((row) => ({
+          neighborhoodName: row.micro_neighborhood || row.name,
+          geometry: row.geometry,
+        })),
       history,
       historyPeriods: [...new Set(history.map((row) => row.periodStart))],
     }
