@@ -144,5 +144,5 @@ select jsonb_build_object(
 ) from a;
 $$;
 
-revoke all on function public.valuation_road_hierarchy_backtest_lo_curro_v2() from public,anon;
-grant execute on function public.valuation_road_hierarchy_backtest_lo_curro_v2() to authenticated,service_role;
+revoke all on function public.valuation_road_hierarchy_backtest_lo_curro_v2() from public,anon,authenticated;
+grant execute on function public.valuation_road_hierarchy_backtest_lo_curro_v2() to service_role;
