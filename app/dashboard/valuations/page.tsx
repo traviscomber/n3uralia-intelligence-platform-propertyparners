@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Plus, RefreshCw } from 'lucide-react'
 import { MetricStrip, WorkspaceField, WorkspaceHeader, WorkspaceSelect, WorkspaceShell } from '@/components/ui/workspace'
+import { OperationalState } from '@/components/ui/operational-state'
 
 type ValuationCase = {
   id: string
@@ -61,6 +62,14 @@ export default function ValuationRegistryPage() {
   const nextDraft = cases.find((item) => item.status === 'draft')
   const actionCount = counts.review + counts.draft
 
+  if (loading && cases.length === 0) {
+    return <WorkspaceShell><OperationalState kind="loading" title="Cargando valorizaciones" description="Consultando expedientes, estados y valores autorizados." /></WorkspaceShell>
+  }
+
+  if (error && cases.length === 0) {
+    return <WorkspaceShell><OperationalState kind="error" title="No fue posible consultar valorizaciones" description={error}><button type="button" onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm font-semibold"><RefreshCw className="h-4 w-4" />Reintentar</button></OperationalState></WorkspaceShell>
+  }
+
   return (
     <WorkspaceShell>
       <WorkspaceHeader
@@ -73,7 +82,7 @@ export default function ValuationRegistryPage() {
         ]}
       />
 
-      {error ? <div className="mt-4 border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">{error}</div> : null}
+      {error ? <div role="alert" className="mt-4 border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">No se pudo actualizar. Se mantienen los últimos datos visibles. {error}</div> : null}
 
       <MetricStrip items={[
         { label: 'En revisión', value: counts.review, tone: counts.review ? 'warning' : 'default' },
@@ -88,18 +97,18 @@ export default function ValuationRegistryPage() {
         </div>
         <div className="divide-y divide-[var(--n3-line)]">
           {nextReview ? (
-            <Link href={`/dashboard/valuations/${nextReview.id}`} className="grid min-h-20 grid-cols-[1fr_auto] items-center gap-4 py-4 hover:bg-white/[0.02]">
-              <div>
+            <Link href={`/dashboard/valuations/${nextReview.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-semibold">Revisar valorización</p>
-                <p className="mt-1 text-sm text-[var(--n3-text-muted)]">{nextReview.address || 'Propiedad sin dirección'}{nextReview.neighborhood ? ` · ${nextReview.neighborhood}` : ''}</p>
+                <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextReview.address || 'Propiedad sin dirección'}{nextReview.neighborhood ? ` · ${nextReview.neighborhood}` : ''}</p>
               </div>
               <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar ahora</span>
             </Link>
           ) : nextDraft ? (
-            <Link href={`/dashboard/valuations/${nextDraft.id}`} className="grid min-h-20 grid-cols-[1fr_auto] items-center gap-4 py-4 hover:bg-white/[0.02]">
-              <div>
+            <Link href={`/dashboard/valuations/${nextDraft.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-semibold">Completar borrador</p>
-                <p className="mt-1 text-sm text-[var(--n3-text-muted)]">{nextDraft.address || 'Propiedad sin dirección'}{nextDraft.neighborhood ? ` · ${nextDraft.neighborhood}` : ''}</p>
+                <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextDraft.address || 'Propiedad sin dirección'}{nextDraft.neighborhood ? ` · ${nextDraft.neighborhood}` : ''}</p>
               </div>
               <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Continuar</span>
             </Link>
@@ -110,7 +119,7 @@ export default function ValuationRegistryPage() {
       </section>
 
       <details className="mt-9 border-t border-[var(--n3-line)] pt-4">
-        <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+        <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
           Ver todas las valorizaciones ({cases.length})
         </summary>
         <div className="mt-5">
@@ -129,8 +138,8 @@ export default function ValuationRegistryPage() {
             {filtered.map((item) => (
               <Link key={item.id} href={`/dashboard/valuations/${item.id}`} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{item.address || 'Sin dirección'}</p>
-                  <p className="mt-1 truncate text-xs text-[var(--n3-text-muted)]">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}</p>
+                  <p className="break-words text-sm font-medium sm:truncate">{item.address || 'Sin dirección'}</p>
+                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}</p>
                 </div>
                 <span className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{statusLabels[item.status] || item.status}</span>
                 <span className="text-sm font-medium tabular-nums">{item.estimated_value_uf == null ? '—' : `${money.format(item.estimated_value_uf)} UF`}</span>
