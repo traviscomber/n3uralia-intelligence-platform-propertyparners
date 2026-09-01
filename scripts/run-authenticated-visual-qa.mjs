@@ -26,12 +26,17 @@ for (const profile of profiles) {
   if (!profile.password) throw new Error(`Missing password for QA profile ${profile.key}.`)
 }
 
+let browserRuntime = null
 async function launchBrowser() {
-  const [{ default: puppeteer }, { default: chromium }] = await Promise.all([
-    import('puppeteer-core'),
-    import('@sparticuz/chromium'),
-  ])
-  chromium.setGraphicsMode = false
+  if (!browserRuntime) {
+    const [{ default: puppeteer }, { default: chromium }] = await Promise.all([
+      import('puppeteer-core'),
+      import('@sparticuz/chromium'),
+    ])
+    chromium.setGraphicsMode = false
+    browserRuntime = { puppeteer, chromium }
+  }
+  const { puppeteer, chromium } = browserRuntime
   const args = await puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' })
   return puppeteer.launch({
     args,
@@ -98,76 +103,71 @@ async function collectAccessibilitySignals(page) {
 }
 
 await fs.mkdir(outputRoot, { recursive: true })
-const browser = await launchBrowser()
 const results = []
 
-try {
-  for (const profile of profiles) {
-    const contextDir = path.join(outputRoot, profile.key)
-    await fs.mkdir(contextDir, { recursive: true })
-    const context = await browser.createBrowserContext()
-    const page = await context.newPage()
-    page.setDefaultTimeout(30000)
-    const browserErrors = []
-    page.on('pageerror', (error) => browserErrors.push(String(error)))
-    page.on('console', (message) => { if (message.type() === 'error') browserErrors.push(message.text()) })
+for (const profile of profiles) {
+  const contextDir = path.join(outputRoot, profile.key)
+  await fs.mkdir(contextDir, { recursive: true })
+  const browser = await launchBrowser()
+  const page = await browser.newPage()
+  page.setDefaultTimeout(30000)
+  const browserErrors = []
+  page.on('pageerror', (error) => browserErrors.push(String(error)))
+  page.on('console', (message) => { if (message.type() === 'error') browserErrors.push(message.text()) })
 
-    try {
-      await login(page, profile.email, profile.password)
-      await page.goto(`${baseUrl}${profile.start}`, { waitUntil: 'networkidle2' })
-      if (page.url().includes('/auth/')) throw new Error(`Protected route redirected to ${page.url()}.`)
+  try {
+    await login(page, profile.email, profile.password)
+    await page.goto(`${baseUrl}${profile.start}`, { waitUntil: 'networkidle2' })
+    if (page.url().includes('/auth/')) throw new Error(`Protected route redirected to ${page.url()}.`)
 
-      for (const viewport of viewports) {
-        await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1 })
-        await page.reload({ waitUntil: 'networkidle2' })
-        const screenshotPath = path.join(contextDir, `${viewport.key}.png`)
-        await page.screenshot({ path: screenshotPath, fullPage: true })
-        const signals = await collectAccessibilitySignals(page)
-        results.push({
-          profile: profile.key,
-          viewport: viewport.key,
-          url: page.url(),
-          status: signals.horizontalOverflow || signals.unnamedFocusableCount > 0 || signals.h1Count !== 1 ? 'review' : 'captured',
-          screenshot: path.relative(outputRoot, screenshotPath),
-          ...signals,
-        })
-      }
-
-      await page.setViewport({ width: 1440, height: 1000, deviceScaleFactor: 1 })
-      await page.goto(`${baseUrl}${profile.start}`, { waitUntil: 'networkidle2' })
-      const focusTrail = []
-      for (let index = 0; index < 12; index += 1) {
-        await page.keyboard.press('Tab')
-        focusTrail.push(await page.evaluate(() => ({
-          tag: document.activeElement?.tagName || null,
-          text: (document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent || '').trim().slice(0, 120),
-        })))
-      }
-      results.push({ profile: profile.key, check: 'keyboard', status: focusTrail.some((item) => item.tag) ? 'observed' : 'failed', focusTrail })
-
-      const reportLink = await page.$('a[href*="/report"]')
-      if (reportLink) {
-        const href = await page.evaluate((element) => element.getAttribute('href'), reportLink)
-        if (href) {
-          await page.goto(new URL(href, baseUrl).toString(), { waitUntil: 'networkidle2' })
-          const pdfPath = path.join(contextDir, 'valuation-report.pdf')
-          await page.pdf({ path: pdfPath, format: 'A4', printBackground: true })
-          const stat = await fs.stat(pdfPath)
-          results.push({ profile: profile.key, check: 'pdf', status: stat.size > 1000 ? 'generated' : 'failed', bytes: stat.size, file: path.relative(outputRoot, pdfPath), url: page.url() })
-        }
-      } else {
-        results.push({ profile: profile.key, check: 'pdf', status: 'not-available-on-start-page' })
-      }
-      results.push({ profile: profile.key, check: 'browser-errors', status: browserErrors.length ? 'review' : 'clean', errors: browserErrors.slice(0, 20) })
-    } catch (error) {
-      results.push({ profile: profile.key, status: 'failed', error: error instanceof Error ? error.message : String(error), url: page.url() })
-    } finally {
-      await page.close()
-      await context.close()
+    for (const viewport of viewports) {
+      await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1 })
+      await page.reload({ waitUntil: 'networkidle2' })
+      const screenshotPath = path.join(contextDir, `${viewport.key}.png`)
+      await page.screenshot({ path: screenshotPath, fullPage: true })
+      const signals = await collectAccessibilitySignals(page)
+      results.push({
+        profile: profile.key,
+        viewport: viewport.key,
+        url: page.url(),
+        status: signals.horizontalOverflow || signals.unnamedFocusableCount > 0 || signals.h1Count !== 1 ? 'review' : 'captured',
+        screenshot: path.relative(outputRoot, screenshotPath),
+        ...signals,
+      })
     }
+
+    await page.setViewport({ width: 1440, height: 1000, deviceScaleFactor: 1 })
+    await page.goto(`${baseUrl}${profile.start}`, { waitUntil: 'networkidle2' })
+    const focusTrail = []
+    for (let index = 0; index < 12; index += 1) {
+      await page.keyboard.press('Tab')
+      focusTrail.push(await page.evaluate(() => ({
+        tag: document.activeElement?.tagName || null,
+        text: (document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent || '').trim().slice(0, 120),
+      })))
+    }
+    results.push({ profile: profile.key, check: 'keyboard', status: focusTrail.some((item) => item.tag) ? 'observed' : 'failed', focusTrail })
+
+    const reportLink = await page.$('a[href*="/report"]')
+    if (reportLink) {
+      const href = await page.evaluate((element) => element.getAttribute('href'), reportLink)
+      if (href) {
+        await page.goto(new URL(href, baseUrl).toString(), { waitUntil: 'networkidle2' })
+        const pdfPath = path.join(contextDir, 'valuation-report.pdf')
+        await page.pdf({ path: pdfPath, format: 'A4', printBackground: true })
+        const stat = await fs.stat(pdfPath)
+        results.push({ profile: profile.key, check: 'pdf', status: stat.size > 1000 ? 'generated' : 'failed', bytes: stat.size, file: path.relative(outputRoot, pdfPath), url: page.url() })
+      }
+    } else {
+      results.push({ profile: profile.key, check: 'pdf', status: 'not-available-on-start-page' })
+    }
+    results.push({ profile: profile.key, check: 'browser-errors', status: browserErrors.length ? 'review' : 'clean', errors: browserErrors.slice(0, 20) })
+  } catch (error) {
+    results.push({ profile: profile.key, status: 'failed', error: error instanceof Error ? error.message : String(error), url: page.url() })
+  } finally {
+    await page.close().catch(() => null)
+    await browser.close().catch(() => null)
   }
-} finally {
-  await browser.close()
 }
 
 const manifest = {
