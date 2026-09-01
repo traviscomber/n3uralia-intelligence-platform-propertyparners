@@ -29,6 +29,8 @@ export type OperationalMarketSnapshot = {
   unmatchedTerritoryHouses: number | null
   acceptedTerritoryReviews: number | null
   rejectedTerritoryReviews: number | null
+  cbrsHouseTransactions: number | null
+  latestCbrsHouseSaleDate: string | null
   error?: string
 }
 
@@ -77,6 +79,8 @@ const emptySnapshot: OperationalMarketSnapshot = {
   unmatchedTerritoryHouses: null,
   acceptedTerritoryReviews: null,
   rejectedTerritoryReviews: null,
+  cbrsHouseTransactions: null,
+  latestCbrsHouseSaleDate: null,
 }
 
 function getObservationFreshness(value: string | null | undefined) {
@@ -94,7 +98,7 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [houseSummaryResult, territoryProgressResult, identityCandidates, confirmedSalesResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityCandidates, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase
@@ -106,6 +110,13 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .from('market_transactions')
         .select('id,market_properties!inner(property_type)', { count: 'exact', head: true })
         .eq('market_properties.property_type', 'Casa'),
+      supabase
+        .from('market_cbrs_reference_transactions')
+        .select('transaction_date', { count: 'exact' })
+        .eq('property_type', 'Casa')
+        .order('transaction_date', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
       supabase
         .from('market_metric_snapshots')
         .select('period_start,period_end,active_inventory,confirmed_sales,median_days_on_market,absorption_rate,offer_to_sales_ratio')
@@ -132,6 +143,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       territoryProgressResult.error,
       identityCandidates.error,
       confirmedSalesResult.error,
+      cbrsHouseReferenceResult.error,
       latestMetric.error,
       latestIngestion.error,
       ingestionRuns.error,
@@ -143,6 +155,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const ingestion = latestIngestion.data
     const latestObservedAt = house?.portal_as_of ?? null
     const freshness = getObservationFreshness(latestObservedAt)
+    const operationalHouseSales = confirmedSalesResult.error ? null : confirmedSalesResult.count ?? 0
 
     return {
       connected: errors.length === 0,
@@ -153,8 +166,12 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         ? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0)
         : metric?.active_inventory ?? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0),
       confirmedSales: latestMetric.error
-        ? (confirmedSalesResult.error ? null : confirmedSalesResult.count ?? 0)
-        : metric?.confirmed_sales ?? (confirmedSalesResult.error ? null : confirmedSalesResult.count ?? 0),
+        ? (operationalHouseSales && operationalHouseSales > 0 ? operationalHouseSales : null)
+        : metric
+          ? metric.confirmed_sales
+          : operationalHouseSales && operationalHouseSales > 0
+            ? operationalHouseSales
+            : null,
       medianDaysOnMarket: latestMetric.error ? null : metric?.median_days_on_market ?? null,
       absorptionRate: latestMetric.error ? null : metric?.absorption_rate ?? null,
       offerToSalesRatio: latestMetric.error ? null : metric?.offer_to_sales_ratio ?? null,
@@ -175,6 +192,8 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       unmatchedTerritoryHouses: territoryProgressResult.error ? null : territoryProgress?.unmatched_houses ?? 0,
       acceptedTerritoryReviews: territoryProgressResult.error ? null : territoryProgress?.accepted_reviews ?? 0,
       rejectedTerritoryReviews: territoryProgressResult.error ? null : territoryProgress?.rejected_reviews ?? 0,
+      cbrsHouseTransactions: cbrsHouseReferenceResult.error ? null : cbrsHouseReferenceResult.count ?? 0,
+      latestCbrsHouseSaleDate: cbrsHouseReferenceResult.error ? null : cbrsHouseReferenceResult.data?.transaction_date ?? null,
       error: errors.length ? errors.map((error) => error?.message).join(' · ') : undefined,
     }
   } catch (error) {
