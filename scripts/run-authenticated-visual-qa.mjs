@@ -15,6 +15,8 @@ const profiles = [
   { key: 'santa-maria', email: process.env.QA_SANTA_MARIA_EMAIL, password: process.env.QA_SANTA_MARIA_PASSWORD || sharedPassword, start: '/dashboard/partner' },
 ].filter((item) => item.email)
 
+const protectedVisualRoutes = ['/dashboard/valuations']
+
 const viewports = [
   { key: 'desktop', width: 1440, height: 1000 },
   { key: 'tablet', width: 820, height: 1180 },
@@ -102,6 +104,10 @@ async function collectAccessibilitySignals(page) {
   })
 }
 
+function routeKey(route) {
+  return route.replace(/^\/+/, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'root'
+}
+
 await fs.mkdir(outputRoot, { recursive: true })
 const results = []
 
@@ -117,23 +123,28 @@ for (const profile of profiles) {
 
   try {
     await login(page, profile.email, profile.password)
-    await page.goto(`${baseUrl}${profile.start}`, { waitUntil: 'networkidle2' })
-    if (page.url().includes('/auth/')) throw new Error(`Protected route redirected to ${page.url()}.`)
 
-    for (const viewport of viewports) {
-      await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1 })
-      await page.reload({ waitUntil: 'networkidle2' })
-      const screenshotPath = path.join(contextDir, `${viewport.key}.png`)
-      await page.screenshot({ path: screenshotPath, fullPage: true })
-      const signals = await collectAccessibilitySignals(page)
-      results.push({
-        profile: profile.key,
-        viewport: viewport.key,
-        url: page.url(),
-        status: signals.horizontalOverflow || signals.unnamedFocusableCount > 0 || signals.h1Count !== 1 ? 'review' : 'captured',
-        screenshot: path.relative(outputRoot, screenshotPath),
-        ...signals,
-      })
+    const routes = [profile.start, ...protectedVisualRoutes]
+    for (const route of routes) {
+      await page.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle2' })
+      if (page.url().includes('/auth/')) throw new Error(`Protected route ${route} redirected to ${page.url()}.`)
+
+      for (const viewport of viewports) {
+        await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1 })
+        await page.reload({ waitUntil: 'networkidle2' })
+        const screenshotPath = path.join(contextDir, `${routeKey(route)}-${viewport.key}.png`)
+        await page.screenshot({ path: screenshotPath, fullPage: true })
+        const signals = await collectAccessibilitySignals(page)
+        results.push({
+          profile: profile.key,
+          route,
+          viewport: viewport.key,
+          url: page.url(),
+          status: signals.horizontalOverflow || signals.unnamedFocusableCount > 0 || signals.h1Count !== 1 ? 'review' : 'captured',
+          screenshot: path.relative(outputRoot, screenshotPath),
+          ...signals,
+        })
+      }
     }
 
     await page.setViewport({ width: 1440, height: 1000, deviceScaleFactor: 1 })
@@ -146,7 +157,7 @@ for (const profile of profiles) {
         text: (document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent || '').trim().slice(0, 120),
       })))
     }
-    results.push({ profile: profile.key, check: 'keyboard', status: focusTrail.some((item) => item.tag) ? 'observed' : 'failed', focusTrail })
+    results.push({ profile: profile.key, route: profile.start, check: 'keyboard', status: focusTrail.some((item) => item.tag) ? 'observed' : 'failed', focusTrail })
 
     const reportLink = await page.$('a[href*="/report"]')
     if (reportLink) {
@@ -156,10 +167,10 @@ for (const profile of profiles) {
         const pdfPath = path.join(contextDir, 'valuation-report.pdf')
         await page.pdf({ path: pdfPath, format: 'A4', printBackground: true })
         const stat = await fs.stat(pdfPath)
-        results.push({ profile: profile.key, check: 'pdf', status: stat.size > 1000 ? 'generated' : 'failed', bytes: stat.size, file: path.relative(outputRoot, pdfPath), url: page.url() })
+        results.push({ profile: profile.key, route: profile.start, check: 'pdf', status: stat.size > 1000 ? 'generated' : 'failed', bytes: stat.size, file: path.relative(outputRoot, pdfPath), url: page.url() })
       }
     } else {
-      results.push({ profile: profile.key, check: 'pdf', status: 'not-available-on-start-page' })
+      results.push({ profile: profile.key, route: profile.start, check: 'pdf', status: 'not-available-on-start-page' })
     }
     results.push({ profile: profile.key, check: 'browser-errors', status: browserErrors.length ? 'review' : 'clean', errors: browserErrors.slice(0, 20) })
   } catch (error) {
@@ -174,7 +185,7 @@ const manifest = {
   generatedAt: new Date().toISOString(),
   baseUrl,
   note: 'Automated evidence only. Manual screen-reader, contrast review and business acceptance remain separate.',
-  profiles: profiles.map(({ key, start }) => ({ key, start })),
+  profiles: profiles.map(({ key, start }) => ({ key, start, protectedVisualRoutes })),
   results,
 }
 await fs.writeFile(path.join(outputRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
