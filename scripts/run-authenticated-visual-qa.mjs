@@ -9,6 +9,7 @@ const sharedPassword = process.env.QA_PASSWORD || null
 const profiles = [
   { key: 'ceo', email: process.env.QA_CEO_EMAIL, password: process.env.QA_CEO_PASSWORD || sharedPassword, start: '/dashboard/ceo' },
   { key: 'director', email: process.env.QA_DIRECTOR_EMAIL, password: process.env.QA_DIRECTOR_PASSWORD || sharedPassword, start: '/dashboard/director' },
+  { key: 'subdirector', email: process.env.QA_SUBDIRECTOR_EMAIL, password: process.env.QA_SUBDIRECTOR_PASSWORD || sharedPassword, start: '/dashboard/director' },
   { key: 'lo-beltran', email: process.env.QA_LO_BELTRAN_EMAIL, password: process.env.QA_LO_BELTRAN_PASSWORD || sharedPassword, start: '/dashboard/partner' },
   { key: 'nueva-costanera', email: process.env.QA_NUEVA_COSTANERA_EMAIL, password: process.env.QA_NUEVA_COSTANERA_PASSWORD || sharedPassword, start: '/dashboard/partner' },
   { key: 'santa-maria', email: process.env.QA_SANTA_MARIA_EMAIL, password: process.env.QA_SANTA_MARIA_PASSWORD || sharedPassword, start: '/dashboard/partner' },
@@ -104,7 +105,8 @@ try {
   for (const profile of profiles) {
     const contextDir = path.join(outputRoot, profile.key)
     await fs.mkdir(contextDir, { recursive: true })
-    const page = await browser.newPage()
+    const context = await browser.createBrowserContext()
+    const page = await context.newPage()
     page.setDefaultTimeout(30000)
     const browserErrors = []
     page.on('pageerror', (error) => browserErrors.push(String(error)))
@@ -161,6 +163,7 @@ try {
       results.push({ profile: profile.key, status: 'failed', error: error instanceof Error ? error.message : String(error), url: page.url() })
     } finally {
       await page.close()
+      await context.close()
     }
   }
 } finally {
