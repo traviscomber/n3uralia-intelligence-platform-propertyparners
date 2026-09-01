@@ -65,7 +65,7 @@ export function OperationalState({
       {action ? (
         <Link
           href={action.href}
-          className="mt-5 inline-flex min-h-10 items-center border border-[var(--n3-line)] px-4 py-2 text-sm font-semibold text-[var(--n3-text-light)] transition-colors hover:border-[var(--n3-teal)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]"
+          className="mt-5 inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 py-2 text-sm font-semibold text-[var(--n3-text-light)] transition-colors hover:border-[var(--n3-teal)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]"
         >
           {action.label}
         </Link>
