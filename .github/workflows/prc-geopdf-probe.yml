@@ -11,50 +11,72 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Install PDF inspection tools
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
-          python -m pip install --quiet pymupdf
+          python -m pip install --quiet pymupdf numpy opencv-python-headless
       - name: Download official consolidated plans
         run: |
           curl -L --fail --retry 3 -o edification.pdf 'https://vitacura.cl/descargas/plano_regulador/pdf/2021/01_prc-v__plano_de_edificacion_vigente_2021.pdf'
           curl -L --fail --retry 3 -o land-use.pdf 'https://vitacura.cl/descargas/plano_regulador/pdf/2021/02_prc-v__plano_de_usos_de_suelo_vigente_2021.pdf'
-      - name: Match legend labels to vector fill colors
+      - name: Validate affine calibration and zoning masks
         run: |
           python - <<'PY'
-          import pymupdf as fitz, re, math
-          for filename, pattern in (
-              ('edification.pdf', r'^E-(?:Ab|Am|Ae|Ee|e)[A-Za-z0-9.-]*$'),
-              ('land-use.pdf', r'^U-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$'),
-          ):
-              doc=fitz.open(filename); page=doc[0]
-              drawings=[d for d in page.get_drawings() if d.get('fill') is not None]
-              spans=[]
-              for block in page.get_text('dict').get('blocks',[]):
-                  for line in block.get('lines',[]):
-                      for span in line.get('spans',[]):
-                          text=span.get('text','').strip()
-                          if re.match(pattern,text,re.I): spans.append((text,fitz.Rect(span['bbox'])))
-              print(f'=== {filename} ===')
-              for text,b in spans:
-                  cy=(b.y0+b.y1)/2
-                  candidates=[]
-                  for d in drawings:
-                      r=d['rect']
-                      if r.x1 > b.x0 or r.x0 < b.x0-180: continue
-                      if r.get_area() < 20 or r.get_area() > 5000: continue
-                      ry=(r.y0+r.y1)/2
-                      if abs(ry-cy)>18: continue
-                      dist=max(0,b.x0-r.x1)+abs(ry-cy)*2
-                      candidates.append((dist,d))
-                  candidates.sort(key=lambda x:x[0])
-                  if not candidates:
-                      print(text,'NO_SWATCH',tuple(round(v,2) for v in b))
-                      continue
-                  d=candidates[0][1]
-                  color=tuple(round(float(x),4) for x in d['fill'])
-                  print(text,'fill',color,'rect',tuple(round(v,2) for v in d['rect']),'label',tuple(round(v,2) for v in b))
+          import pymupdf as fitz, re, numpy as np, cv2
+
+          LEGENDS={
+            'edification.pdf': {
+              'E-Ab1':(0.949,0.949,0.949),'E-Ab2':(0.851,0.851,0.851),'E-Ab3':(0.7294,0.7294,0.7294),'E-Ab4':(0.5686,0.5686,0.5686),
+              'E-Am1':(1.0,0.9804,0.9216),'E-Am2':(1.0,0.9216,0.6784),'E-Am3':(1.0,0.749,0.502),'E-Am4':(0.9961,0.8314,0.0039),'E-Am5':(1.0,0.549,0.102),'E-Am6':(0.7372,0.5255,0.2863),
+              'E-e2':(0.2588,0.5216,0.2392),'E-e3':(0.3647,0.7216,0.3176),'E-e4':(0.5569,0.7882,0.4941),
+              'E-Ae1':(0.9569,0.902,0.9255),'E-Ae2':(0.749,0.8745,0.9412),'E-Ae3':(0.9098,0.7843,0.7372),'E-Ae4':(0.8588,0.7608,0.8078),'E-Ae5':(0.5255,0.7294,0.8274),'E-Ae6':(0.4235,0.6274,0.7255),'E-Ae7':(0.5725,0.4157,0.4549),'E-Ae8':(0.3372,0.2118,0.251),'E-Ae9':(0.7059,0.5647,0.5961),'E-Ae10':(0.7725,0.6706,0.6902),
+            },
+            'land-use.pdf': {
+              'U-V':(0.9216,0.949,0.9608),'U-PVEV':(0.6941,0.8,0.8471),'U-PVO':(0.4431,0.6353,0.7372),'U-POC':(0.2157,0.3647,0.4627),'U-PC':(0.0902,0.1294,0.1686),
+              'U-Ee1':(0.9843,0.851,0.6941),'U-Ee2':(0.2588,0.5216,0.2392),'U-Ee3':(0.3647,0.7216,0.3176),'U-Ee4':(0.5569,0.7882,0.4941),'U-AV':(0.5882,0.7686,0.451),
+            }
+          }
+
+          def spans(page):
+            out=[]
+            for block in page.get_text('dict').get('blocks',[]):
+              for line in block.get('lines',[]):
+                for span in line.get('spans',[]):
+                  out.append((span.get('text','').strip(), fitz.Rect(span['bbox'])))
+            return out
+
+          def fit_axis(items, axis):
+            pts=[]
+            rx = re.compile(r'^E\s+(\d{6})$') if axis=='E' else re.compile(r'^N\s+(\d{7})$')
+            for text,b in items:
+              m=rx.match(text)
+              if not m: continue
+              x=(b.x0+b.x1)/2; y=(b.y0+b.y1)/2
+              pts.append((x,y,float(m.group(1))))
+            A=np.array([[x,y,1] for x,y,_ in pts],float); z=np.array([v for _,_,v in pts],float)
+            coef,*_=np.linalg.lstsq(A,z,rcond=None)
+            pred=A@coef; err=pred-z
+            return coef,pts,float(np.sqrt(np.mean(err**2))),float(np.max(np.abs(err)))
+
+          for filename in ('edification.pdf','land-use.pdf'):
+            doc=fitz.open(filename); page=doc[0]; txt=spans(page)
+            ce,epts,ermse,emax=fit_axis(txt,'E'); cn,npts,nrmse,nmax=fit_axis(txt,'N')
+            print('===',filename,'===')
+            print('E_COEF',ce.tolist(),'samples',len(epts),'rmse_m',round(ermse,3),'max_m',round(emax,3))
+            print('N_COEF',cn.tolist(),'samples',len(npts),'rmse_m',round(nrmse,3),'max_m',round(nmax,3))
+            pix=page.get_pixmap(matrix=fitz.Matrix(1,1),alpha=False)
+            img=np.frombuffer(pix.samples,dtype=np.uint8).reshape(pix.height,pix.width,pix.n)[:,:,:3]
+            # exclude legend/title block and white page margins; zoning map occupies the first ~3800 PDF points.
+            crop=img[:, :3800, :]
+            for zone,color in LEGENDS[filename].items():
+              rgb=np.array([round(c*255) for c in color],dtype=np.int16)
+              diff=np.max(np.abs(crop.astype(np.int16)-rgb),axis=2)
+              mask=(diff<=2).astype(np.uint8)
+              count,labels,stats,cent=cv2.connectedComponentsWithStats(mask,8)
+              areas=sorted((int(stats[i,cv2.CC_STAT_AREA]) for i in range(1,count)),reverse=True)
+              significant=[a for a in areas if a>=25]
+              print(zone,'rgb',rgb.tolist(),'pixels',int(mask.sum()),'components>=25',len(significant),'largest',significant[:8])
           PY
