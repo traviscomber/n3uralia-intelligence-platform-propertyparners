@@ -67,14 +67,62 @@ export default async function MarketPage() {
       : 'partial'
 
   const actions = [
-    market.freshnessStatus === 'stale' ? { label: 'Actualizar mercado', value: freshness(market.freshnessStatus, market.observationAgeDays), href: '/dashboard/market/import', critical: true } : null,
-    market.confirmedSales === null && market.latestCbrsHouseSaleDate ? { label: 'Actualizar ventas registrales de casas', value: `CBRS ${shortDate(market.latestCbrsHouseSaleDate)}`, href: '/dashboard/market/import', critical: true } : null,
-    market.identityCollisions !== null && market.identityCollisions > 0 ? { label: 'Resolver colisión de identidad externa', value: number(market.identityCollisions), href: '/dashboard/market/reconciliacion', critical: true } : null,
-    market.highConfidenceIdentityCandidates !== null && market.highConfidenceIdentityCandidates > 0 ? { label: 'Validar candidato fuerte de identidad', value: number(market.highConfidenceIdentityCandidates), href: '/dashboard/market/reconciliacion', critical: false } : null,
-    market.newLiveIdentityCases !== null && market.newLiveIdentityCases > 0 ? { label: 'Resolver avisos live sin identidad previa', value: number(market.newLiveIdentityCases), href: '/dashboard/market/reconciliacion', critical: false } : null,
-    market.pendingUniqueTerritorySuggestions !== null && market.pendingUniqueTerritorySuggestions > 0 ? { label: 'Validar barrios sugeridos', value: number(market.pendingUniqueTerritorySuggestions), href: '/dashboard/market/revisar-barrios', critical: false } : null,
-    territoryExceptions > 0 ? { label: 'Resolver territorio sin evidencia suficiente', value: number(territoryExceptions), href: '/dashboard/market/revisar-barrios', critical: false } : null,
-    market.missingNeighborhoods !== null && market.missingNeighborhoods > 0 ? { label: 'Completar barrios canónicos V1', value: number(market.missingNeighborhoods), href: '/dashboard/market/reconciliacion', critical: false } : null,
+    market.freshnessStatus === 'stale' ? {
+      label: 'Actualizar mercado',
+      value: freshness(market.freshnessStatus, market.observationAgeDays),
+      reason: 'La oferta observada superó el umbral de vigencia y puede dejar de representar el mercado actual.',
+      href: '/dashboard/market/import',
+      critical: true,
+    } : null,
+    market.confirmedSales === null && market.latestCbrsHouseSaleDate ? {
+      label: 'Actualizar ventas registrales de casas',
+      value: `CBRS ${shortDate(market.latestCbrsHouseSaleDate)}`,
+      reason: 'No existe una fuente de ventas confirmadas posterior al último corte registral; por eso no se publican métricas recientes de venta y absorción.',
+      href: '/dashboard/market/import',
+      critical: true,
+    } : null,
+    market.identityCollisions !== null && market.identityCollisions > 0 ? {
+      label: 'Resolver colisión de identidad externa',
+      value: number(market.identityCollisions),
+      reason: 'Un mismo identificador externo apunta a más de una identidad posible y el sistema no debe vincularlas automáticamente.',
+      href: '/dashboard/market/reconciliacion',
+      critical: true,
+    } : null,
+    market.highConfidenceIdentityCandidates !== null && market.highConfidenceIdentityCandidates > 0 ? {
+      label: 'Validar candidato fuerte de identidad',
+      value: number(market.highConfidenceIdentityCandidates),
+      reason: 'Existe evidencia suficiente para proponer una vinculación, pero la identidad canónica aún requiere confirmación explícita.',
+      href: '/dashboard/market/reconciliacion',
+      critical: false,
+    } : null,
+    market.newLiveIdentityCases !== null && market.newLiveIdentityCases > 0 ? {
+      label: 'Resolver avisos live sin identidad previa',
+      value: number(market.newLiveIdentityCases),
+      reason: 'Son avisos activos que todavía no pueden relacionarse con una propiedad canónica conocida.',
+      href: '/dashboard/market/reconciliacion',
+      critical: false,
+    } : null,
+    market.pendingUniqueTerritorySuggestions !== null && market.pendingUniqueTerritorySuggestions > 0 ? {
+      label: 'Revisar territorio sugerido',
+      value: number(market.pendingUniqueTerritorySuggestions),
+      reason: 'El resolver encontró una señal territorial única, pero el caso permanece abierto porque aún no cumple las condiciones automáticas de publicación.',
+      href: '/dashboard/market/revisar-barrios',
+      critical: false,
+    } : null,
+    territoryExceptions > 0 ? {
+      label: 'Resolver territorio sin evidencia suficiente',
+      value: number(territoryExceptions),
+      reason: 'Las fuentes territoriales disponibles no convergen; el sistema mantiene estos casos abiertos para evitar asignaciones forzadas.',
+      href: '/dashboard/market/revisar-barrios',
+      critical: false,
+    } : null,
+    market.missingNeighborhoods !== null && market.missingNeighborhoods > 0 ? {
+      label: 'Completar barrios canónicos V1',
+      value: number(market.missingNeighborhoods),
+      reason: 'Existen propiedades canónicas V1 sin barrio publicado y deben reconciliarse con evidencia territorial antes de usarlas en análisis por zona.',
+      href: '/dashboard/market/reconciliacion',
+      critical: false,
+    } : null,
   ].filter((item): item is NonNullable<typeof item> => Boolean(item))
 
   const houseReference = portalReference.datasets.find((item) => item.datasetKind === 'portal_houses')
@@ -101,20 +149,25 @@ export default async function MarketPage() {
         { label: 'Absorción', value: percent(market.absorptionRate) },
       ]} />
 
-      <section className="mt-8 max-w-5xl">
-        <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
-          <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Qué requiere atención</h2>
-          <span className="text-xs text-[var(--n3-text-muted)]">{actions.length}</span>
-        </div>
-        <div className="divide-y divide-[var(--n3-line)]">
-          {actions.length ? actions.map((item) => (
-            <Link key={item.label} href={item.href} className="grid min-h-16 gap-2 py-3 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
-              <span className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</span>
-              <span className={`text-sm font-semibold ${item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}`}>{item.value}</span>
-            </Link>
-          )) : <div className="py-7 text-sm text-[var(--n3-text-muted)]">Sin acciones pendientes con la evidencia disponible.</div>}
-        </div>
-      </section>
+      {actions.length > 0 ? (
+        <section className="mt-8 max-w-5xl">
+          <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
+            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Qué requiere atención</h2>
+            <span className="text-xs text-[var(--n3-text-muted)]">{actions.length}</span>
+          </div>
+          <div className="divide-y divide-[var(--n3-line)]">
+            {actions.map((item) => (
+              <Link key={item.label} href={item.href} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</p>
+                  <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">{item.reason}</p>
+                </div>
+                <span className={`text-sm font-semibold ${item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}`}>{item.value}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <details className="mt-10 border-t border-[var(--n3-line)] pt-4">
         <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
@@ -209,7 +262,7 @@ export default async function MarketPage() {
             <a href="/api/market/export?dataset=listings&format=xlsx" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Exportar XLSX</a>
             {canManage ? <Link href="/dashboard/market/fuentes" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Administrar fuentes</Link> : null}
             {canManage ? <Link href="/dashboard/market/reconciliacion" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Reconciliación</Link> : null}
-            {canManage ? <Link href="/dashboard/market/revisar-barrios" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Revisar barrios</Link> : null}
+            {canManage && ((market.pendingUniqueTerritorySuggestions ?? 0) > 0 || territoryExceptions > 0) ? <Link href="/dashboard/market/revisar-barrios" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Resolver territorio</Link> : null}
           </div>
         </div>
       </details>
