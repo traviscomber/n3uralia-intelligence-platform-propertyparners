@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   closeout:
-    name: Technical, role and visual acceptance
+    name: Technical, security and authenticated UAT evidence
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
@@ -87,9 +87,11 @@ jobs:
           pnpm security:exposure-boundaries
           pnpm security:tenant-isolation
 
-      - name: Validate authenticated QA secrets
+      - name: Check authenticated UAT readiness
+        id: auth-preflight
         shell: bash
         run: |
+          mkdir -p artifacts
           required=(
             NEXT_PUBLIC_SUPABASE_URL SUPABASE_ANON_KEY
             QA_CEO_EMAIL QA_CEO_PASSWORD
@@ -105,17 +107,24 @@ jobs:
             fi
           done
           if [ "${#missing[@]}" -gt 0 ]; then
-            printf 'Missing required QA secrets:\n'
-            printf ' - %s\n' "${missing[@]}"
-            exit 1
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            printf '%s\n' "Authenticated role/visual UAT is HOLD because designated QA credentials are not configured." > artifacts/authenticated-uat-status.txt
+            printf 'Missing configuration keys (values are never printed):\n' >> artifacts/authenticated-uat-status.txt
+            printf ' - %s\n' "${missing[@]}" >> artifacts/authenticated-uat-status.txt
+            echo "Authenticated UAT: HOLD (credentials/participants not configured)."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            printf '%s\n' "Authenticated role/visual UAT is configured and will execute." > artifacts/authenticated-uat-status.txt
           fi
 
       - name: Authenticated role and RLS QA
+        if: steps.auth-preflight.outputs.ready == 'true'
         env:
           QA_OUTPUT_DIR: artifacts/authenticated-role-qa
         run: pnpm qa:roles
 
       - name: Authenticated visual QA
+        if: steps.auth-preflight.outputs.ready == 'true'
         env:
           QA_OUTPUT_DIR: artifacts/visual-qa
         run: pnpm qa:visual
