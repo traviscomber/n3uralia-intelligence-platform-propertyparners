@@ -66,6 +66,12 @@ export default function ValuationRegistryPage() {
   const nextReview = cases.find((item) => item.status === 'review')
   const nextDraft = cases.find((item) => item.status === 'draft')
   const actionCount = counts.review + counts.draft
+  const actionMetrics = [
+    ...(counts.review > 0 ? [{ label: 'En revisión', value: counts.review, tone: 'warning' as const }] : []),
+    ...(counts.draft > 0 ? [{ label: 'Borradores', value: counts.draft }] : []),
+    { label: 'Aprobadas', value: counts.approved },
+    { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' as const : 'default' as const },
+  ]
 
   if (loading && cases.length === 0) {
     return <WorkspaceShell><OperationalState kind="loading" title="Cargando valorizaciones" description="Consultando expedientes, estados y valores autorizados." /></WorkspaceShell>
@@ -80,7 +86,7 @@ export default function ValuationRegistryPage() {
       <WorkspaceHeader
         eyebrow="Valorizaciones · Casas V1"
         title="Qué necesita avanzar"
-        meta={`${actionCount} requieren acción`}
+        meta={actionCount > 0 ? `${actionCount} requieren acción` : undefined}
         actions={[
           { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
           { label: 'Nueva', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> },
@@ -89,39 +95,34 @@ export default function ValuationRegistryPage() {
 
       {error ? <div role="alert" className="mt-4 border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">No se pudo actualizar. Se mantienen los últimos datos visibles. {error}</div> : null}
 
-      <MetricStrip items={[
-        { label: 'En revisión', value: counts.review, tone: counts.review ? 'warning' : 'default' },
-        { label: 'Borradores', value: counts.draft },
-        { label: 'Aprobadas', value: counts.approved },
-        { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' : 'default' },
-      ]} />
+      <MetricStrip items={actionMetrics} />
 
-      <section className="mt-7 max-w-5xl">
-        <div className="border-b border-[var(--n3-line)] pb-2">
-          <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Siguiente acción</h2>
-        </div>
-        <div className="divide-y divide-[var(--n3-line)]">
-          {nextReview ? (
-            <Link href={`/dashboard/valuations/${nextReview.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">Revisar valorización</p>
-                <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextReview.address || 'Propiedad sin dirección'}{nextReview.neighborhood ? ` · ${nextReview.neighborhood}` : ''}</p>
-              </div>
-              <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar ahora</span>
-            </Link>
-          ) : nextDraft ? (
-            <Link href={`/dashboard/valuations/${nextDraft.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">Completar borrador</p>
-                <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextDraft.address || 'Propiedad sin dirección'}{nextDraft.neighborhood ? ` · ${nextDraft.neighborhood}` : ''}</p>
-              </div>
-              <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Continuar</span>
-            </Link>
-          ) : (
-            <div className="py-8 text-sm text-[var(--n3-text-muted)]">No hay valorizaciones pendientes.</div>
-          )}
-        </div>
-      </section>
+      {nextReview || nextDraft ? (
+        <section className="mt-7 max-w-5xl">
+          <div className="border-b border-[var(--n3-line)] pb-2">
+            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Siguiente acción</h2>
+          </div>
+          <div className="divide-y divide-[var(--n3-line)]">
+            {nextReview ? (
+              <Link href={`/dashboard/valuations/${nextReview.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Revisar valorización</p>
+                  <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextReview.address || 'Propiedad sin dirección'}{nextReview.neighborhood ? ` · ${nextReview.neighborhood}` : ''}</p>
+                </div>
+                <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar ahora</span>
+              </Link>
+            ) : nextDraft ? (
+              <Link href={`/dashboard/valuations/${nextDraft.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Completar borrador</p>
+                  <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextDraft.address || 'Propiedad sin dirección'}{nextDraft.neighborhood ? ` · ${nextDraft.neighborhood}` : ''}</p>
+                </div>
+                <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Continuar</span>
+              </Link>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <details className="mt-9 border-t border-[var(--n3-line)] pt-4">
         <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
