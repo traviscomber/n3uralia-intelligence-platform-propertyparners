@@ -53,8 +53,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate complete QA configuration
+        id: preflight
         shell: bash
         run: |
+          mkdir -p "$QA_OUTPUT_DIR"
           required=(
             NEXT_PUBLIC_SUPABASE_URL SUPABASE_ANON_KEY
             QA_CEO_EMAIL QA_DIRECTOR_EMAIL QA_SUBDIRECTOR_EMAIL
@@ -79,13 +81,27 @@ jobs:
             done
           fi
 
-          if [ "${#missing[@]}" -gt 0 ]; then
+          if [ "${#missing[@]}" -eq 0 ]; then
+            complete=true
+          else
+            complete=false
+          fi
+
+          printf '{\n  "generatedAt": "%s",\n  "commitSha": "%s",\n  "complete": %s,\n  "missing": [' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$GITHUB_SHA" "$complete" > "$QA_OUTPUT_DIR/preflight.json"
+          for i in "${!missing[@]}"; do
+            [ "$i" -gt 0 ] && printf ', ' >> "$QA_OUTPUT_DIR/preflight.json"
+            printf '"%s"' "${missing[$i]}" >> "$QA_OUTPUT_DIR/preflight.json"
+          done
+          printf ']\n}\n' >> "$QA_OUTPUT_DIR/preflight.json"
+          echo "complete=$complete" >> "$GITHUB_OUTPUT"
+
+          if [ "$complete" != true ]; then
             printf 'Authenticated role QA configuration is incomplete:\n'
             printf ' - %s\n' "${missing[@]}"
-            exit 1
           fi
 
       - name: Run authenticated role and RLS QA
+        if: steps.preflight.outputs.complete == 'true'
         run: pnpm qa:roles
 
       - name: Upload QA evidence
@@ -93,6 +109,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: authenticated-role-qa-${{ github.run_id }}
-          path: artifacts/authenticated-role-qa/manifest.json
+          path: artifacts/authenticated-role-qa
           if-no-files-found: error
           retention-days: 30
+
+      - name: Fail when QA configuration is incomplete
+        if: steps.preflight.outputs.complete != 'true'
+        shell: bash
+        run: |
+          echo "Authenticated role QA was not executed because required secrets are incomplete."
+          exit 1
