@@ -26,16 +26,24 @@ export type CanonicalMarketReconciliation = {
     missingNeighborhoods: number | null
     ingestionRuns: number | null
     latestObservedAt: string | null
+    liveHouses: number | null
+    liveLinkedHouses: number | null
+    liveUnlinkedHouses: number | null
+    identityCollisions: number | null
+    highConfidenceIdentityCandidates: number | null
+    historicalIdentityCandidates: number | null
   }
   coverage: {
     portalMaterializedRate: number | null
     territorialCoverageRate: number | null
+    liveIdentityCoverageRate: number | null
   }
   gaps: {
     portalListingsNotMaterialized: number | null
     cbrsRowsNotMaterialized: number | null
     neighborhoodsMissing: number | null
     identitiesUnconfirmed: number | null
+    liveIdentityUnlinked: number | null
   }
   notes: string[]
   error?: string
@@ -58,6 +66,9 @@ export async function getCanonicalMarketReconciliation(): Promise<CanonicalMarke
   const territorialCoverageRate = operationalProperties !== null && operationalProperties > 0 && missingNeighborhoods !== null
     ? (operationalProperties - missingNeighborhoods) / operationalProperties
     : null
+  const liveIdentityCoverageRate = operational.liveHouseCount !== null && operational.liveHouseCount > 0 && operational.liveLinkedHouses !== null
+    ? operational.liveLinkedHouses / operational.liveHouseCount
+    : null
 
   return {
     generatedAt: market.generatedAt,
@@ -78,23 +89,31 @@ export async function getCanonicalMarketReconciliation(): Promise<CanonicalMarke
       missingNeighborhoods,
       ingestionRuns: operational.ingestionRuns,
       latestObservedAt: operational.latestObservedAt,
+      liveHouses: operational.liveHouseCount,
+      liveLinkedHouses: operational.liveLinkedHouses,
+      liveUnlinkedHouses: operational.pendingMatches,
+      identityCollisions: operational.identityCollisions,
+      highConfidenceIdentityCandidates: operational.highConfidenceIdentityCandidates,
+      historicalIdentityCandidates: operational.historicalIdentityCandidates,
     },
     coverage: {
       portalMaterializedRate,
       territorialCoverageRate,
+      liveIdentityCoverageRate,
     },
     gaps: {
       portalListingsNotMaterialized: operationalProperties === null ? null : Math.max(0, portalValidListings - operationalProperties),
       cbrsRowsNotMaterialized: operational.confirmedSales === null ? null : Math.max(0, cbrsRows - operational.confirmedSales),
       neighborhoodsMissing: missingNeighborhoods,
-      identitiesUnconfirmed: operationalProperties === null || operational.confirmedProperties === null
-        ? null
-        : Math.max(0, operationalProperties - operational.confirmedProperties),
+      identitiesUnconfirmed: operational.historicalIdentityCandidates,
+      liveIdentityUnlinked: operational.pendingMatches,
     },
     notes: [
       'Una publicación Portal no equivale automáticamente a una propiedad única.',
+      'La cola live y el backlog legacy se reportan por separado: el riesgo operativo actual no se infiere desde todas las filas históricas candidatas.',
+      'Un candidato de identidad fuerte sigue requiriendo una decisión revisada; el generador no escribe property_id ni fusiona propiedades.',
+      'Una colisión de identidad externa se bloquea y se muestra explícitamente en vez de elegir un survivor automáticamente.',
       'Una fila CBRS no equivale automáticamente a una venta residencial comparable.',
-      'La identidad sólo puede confirmarse con evidencia suficiente y revisión humana.',
       'Los retiros de publicaciones no se clasifican automáticamente como ventas.',
     ],
     error: operational.error,
