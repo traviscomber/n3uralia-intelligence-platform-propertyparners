@@ -22,6 +22,13 @@ export type OperationalMarketSnapshot = {
   latestObservedAt: string | null
   observationAgeDays: number | null
   freshnessStatus: MarketFreshnessStatus
+  liveHouseCount: number | null
+  exactKmlLiveHouses: number | null
+  pendingUniqueTerritorySuggestions: number | null
+  ambiguousTerritorySuggestions: number | null
+  unmatchedTerritoryHouses: number | null
+  acceptedTerritoryReviews: number | null
+  rejectedTerritoryReviews: number | null
   error?: string
 }
 
@@ -31,6 +38,16 @@ type HouseDeliverySummary = {
   canonical_houses: number | null
   confirmed_houses: number | null
   missing_neighborhood_houses: number | null
+}
+
+type HouseTerritoryProgress = {
+  portal_current_houses: number | null
+  exact_kml_houses: number | null
+  pending_unique_suggestions: number | null
+  ambiguous_suggestions: number | null
+  unmatched_houses: number | null
+  accepted_reviews: number | null
+  rejected_reviews: number | null
 }
 
 const emptySnapshot: OperationalMarketSnapshot = {
@@ -53,6 +70,13 @@ const emptySnapshot: OperationalMarketSnapshot = {
   latestObservedAt: null,
   observationAgeDays: null,
   freshnessStatus: 'unknown',
+  liveHouseCount: null,
+  exactKmlLiveHouses: null,
+  pendingUniqueTerritorySuggestions: null,
+  ambiguousTerritorySuggestions: null,
+  unmatchedTerritoryHouses: null,
+  acceptedTerritoryReviews: null,
+  rejectedTerritoryReviews: null,
 }
 
 function getObservationFreshness(value: string | null | undefined) {
@@ -70,8 +94,9 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [houseSummaryResult, identityCandidates, confirmedSalesResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityCandidates, confirmedSalesResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
+      supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase
         .from('market_properties')
         .select('id', { count: 'exact', head: true })
@@ -104,6 +129,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
 
     const errors = [
       houseSummaryResult.error,
+      territoryProgressResult.error,
       identityCandidates.error,
       confirmedSalesResult.error,
       latestMetric.error,
@@ -112,6 +138,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     ].filter(Boolean)
 
     const house = houseSummaryResult.data as HouseDeliverySummary | null
+    const territoryProgress = territoryProgressResult.data as HouseTerritoryProgress | null
     const metric = latestMetric.data
     const ingestion = latestIngestion.data
     const latestObservedAt = house?.portal_as_of ?? null
@@ -141,6 +168,13 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestObservedAt: houseSummaryResult.error ? null : latestObservedAt,
       observationAgeDays: houseSummaryResult.error ? null : freshness.ageDays,
       freshnessStatus: houseSummaryResult.error ? 'unknown' : freshness.status,
+      liveHouseCount: territoryProgressResult.error ? null : territoryProgress?.portal_current_houses ?? 0,
+      exactKmlLiveHouses: territoryProgressResult.error ? null : territoryProgress?.exact_kml_houses ?? 0,
+      pendingUniqueTerritorySuggestions: territoryProgressResult.error ? null : territoryProgress?.pending_unique_suggestions ?? 0,
+      ambiguousTerritorySuggestions: territoryProgressResult.error ? null : territoryProgress?.ambiguous_suggestions ?? 0,
+      unmatchedTerritoryHouses: territoryProgressResult.error ? null : territoryProgress?.unmatched_houses ?? 0,
+      acceptedTerritoryReviews: territoryProgressResult.error ? null : territoryProgress?.accepted_reviews ?? 0,
+      rejectedTerritoryReviews: territoryProgressResult.error ? null : territoryProgress?.rejected_reviews ?? 0,
       error: errors.length ? errors.map((error) => error?.message).join(' · ') : undefined,
     }
   } catch (error) {
