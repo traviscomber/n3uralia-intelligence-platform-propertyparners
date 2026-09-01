@@ -158,13 +158,12 @@ export default async function MarketPage() {
             status={dataStatus}
           />
 
-          {canManage ? (
-            <div className="flex flex-wrap gap-5 text-xs">
-              <Link href="/dashboard/market/fuentes" className="text-[var(--n3-teal-soft)]">Administrar fuentes</Link>
-              <Link href="/dashboard/market/reconciliacion" className="text-[var(--n3-teal-soft)]">Reconciliación</Link>
-              <Link href="/dashboard/market/revisar-barrios" className="text-[var(--n3-teal-soft)]">Revisar barrios</Link>
-            </div>
-          ) : null}
+          <div className="flex flex-wrap gap-5 text-xs">
+            <a href="/api/market/export?dataset=listings&format=xlsx" className="text-[var(--n3-teal-soft)]">Exportar XLSX</a>
+            {canManage ? <Link href="/dashboard/market/fuentes" className="text-[var(--n3-teal-soft)]">Administrar fuentes</Link> : null}
+            {canManage ? <Link href="/dashboard/market/reconciliacion" className="text-[var(--n3-teal-soft)]">Reconciliación</Link> : null}
+            {canManage ? <Link href="/dashboard/market/revisar-barrios" className="text-[var(--n3-teal-soft)]">Revisar barrios</Link> : null}
+          </div>
         </div>
       </details>
     </WorkspaceShell>
