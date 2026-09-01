@@ -9,6 +9,10 @@ function validDate(value: unknown) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
+function monthOf(value: string) {
+  return value.slice(0, 7)
+}
+
 async function requireReportAccess() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -42,11 +46,25 @@ export async function POST(request: Request) {
   if (!reportTypes.has(reportType) || !validDate(body?.periodStart) || !validDate(body?.periodEnd)) {
     return NextResponse.json({ error: 'Tipo o período de reporte inválido.' }, { status: 400 })
   }
+  if (body.periodEnd < body.periodStart || monthOf(body.periodStart) !== monthOf(body.periodEnd)) {
+    return NextResponse.json({ error: 'El reporte mensual debe corresponder a un único período calendario.' }, { status: 400 })
+  }
   if (!body?.snapshot || typeof body.snapshot !== 'object' || Array.isArray(body.snapshot)) {
     return NextResponse.json({ error: 'El snapshot debe ser un objeto.' }, { status: 400 })
   }
   if (JSON.stringify(body.snapshot).length > 2_000_000) {
     return NextResponse.json({ error: 'El snapshot supera el límite de 2 MB.' }, { status: 413 })
+  }
+
+  if (reportType === 'monthly') {
+    const requestedMonth = monthOf(body.periodStart)
+    const approvedPeriodEnd = body.snapshot?.dataLayers?.latestApprovedPeriodEnd
+    if (typeof approvedPeriodEnd !== 'string' || monthOf(approvedPeriodEnd) !== requestedMonth) {
+      return NextResponse.json(
+        { error: 'El snapshot no corresponde al período aprobado solicitado. Actualice o seleccione un período con datos aprobados.' },
+        { status: 409 },
+      )
+    }
   }
 
   const { data, error } = await supabase
