@@ -31,7 +31,7 @@ export default async function CanonicalMarketReconciliationPage() {
       <IntelligenceHeader
         eyebrow="Mercado · Reconciliación canónica"
         title="Cobertura entre fuentes auditadas y base operativa"
-        description="Compara el universo documental canónico con los registros materializados en Supabase. Las diferencias se presentan como brechas de procesamiento, no como datos faltantes inventados."
+        description="Separa el riesgo live de la deuda histórica. Las coincidencias fuertes son candidatos revisables; nunca se convierten automáticamente en identidad canónica."
         actions={[
           { label: 'Volver a Mercado', href: '/dashboard/market' },
           { label: 'Ver trazabilidad', href: '/dashboard/market/fuentes', primary: true },
@@ -57,27 +57,37 @@ export default async function CanonicalMarketReconciliationPage() {
       </section>
 
       <section>
-        <SectionHeading eyebrow="02 · Materialización operativa" title="Registros actualmente disponibles en Supabase" description="Estos son los registros que hoy pueden ser consultados operativamente con trazabilidad de ingestión." />
+        <SectionHeading eyebrow="02 · Operación live" title="Identidad que afecta decisiones hoy" description="Sólo publicaciones de casas activas del corte live. Esta cola no se mezcla con todas las propiedades legacy candidatas." />
         <MetricGrid>
-          <MetricCard label="Registros candidatos" value={n(reconciliation.operational.properties)} detail={`${n(reconciliation.operational.confirmedProperties)} identidades confirmadas`} />
-          <MetricCard label="Publicaciones observadas activas" value={n(reconciliation.operational.activeListings)} detail="Estado de la última observación por fuente y publicación" />
-          <MetricCard label="Ventas confirmadas" value={n(reconciliation.operational.confirmedSales)} detail="Sólo transacciones vinculadas y persistidas" />
+          <MetricCard label="Casas live" value={n(reconciliation.operational.liveHouses)} detail={`${n(reconciliation.operational.liveLinkedHouses)} ya vinculadas`} />
+          <MetricCard label="Sin vínculo canónico" value={n(reconciliation.operational.liveUnlinkedHouses)} detail="Requieren evidencia o revisión" />
+          <MetricCard label="Candidatos fuertes" value={n(reconciliation.operational.highConfidenceIdentityCandidates)} detail="Únicos por título específico + atributos compatibles; no autoaprobados" />
+          <MetricCard label="Colisiones externas" value={n(reconciliation.operational.identityCollisions)} detail="Más de una propiedad legacy reclama el mismo ID externo" />
+        </MetricGrid>
+      </section>
+
+      <section>
+        <SectionHeading eyebrow="03 · Cobertura" title="Avance real de reconciliación" description="La cobertura live mide riesgo operativo actual; el backlog legacy se mantiene separado como deuda histórica." />
+        <MetricGrid>
+          <MetricCard label="Identidad live vinculada" value={pct(reconciliation.coverage.liveIdentityCoverageRate)} detail={`${n(reconciliation.operational.liveLinkedHouses)} de ${n(reconciliation.operational.liveHouses)} casas live`} />
+          <MetricCard label="Cobertura territorial operativa" value={pct(reconciliation.coverage.territorialCoverageRate)} detail={`${n(reconciliation.gaps.neighborhoodsMissing)} registros todavía sin barrio`} />
+          <MetricCard label="Backlog legacy de identidad" value={n(reconciliation.operational.historicalIdentityCandidates)} detail="Candidatos históricos; no equivalen a excepciones live" />
+          <MetricCard label="Portal materializado" value={pct(reconciliation.coverage.portalMaterializedRate)} detail={`${n(reconciliation.operational.properties)} registros operativos / ${n(reconciliation.canonical.portalValidListings)} publicaciones fuente`} />
+        </MetricGrid>
+      </section>
+
+      <section>
+        <SectionHeading eyebrow="04 · Materialización" title="Registros disponibles en Supabase" description="Estado materializado con trazabilidad de ingestión. Los ceros no sustituyen datos ausentes." />
+        <MetricGrid>
+          <MetricCard label="Propiedades operativas" value={n(reconciliation.operational.properties)} detail={`${n(reconciliation.operational.confirmedProperties)} con identity_status confirmado`} />
+          <MetricCard label="Publicaciones activas" value={n(reconciliation.operational.activeListings)} detail="Última observación por fuente y publicación" />
+          <MetricCard label="Ventas publicables" value={n(reconciliation.operational.confirmedSales)} detail="Sólo transacciones recientes vinculadas y persistidas" />
           <MetricCard label="Ejecuciones de ingestión" value={n(reconciliation.operational.ingestionRuns)} detail="Procesamientos registrados en Supabase" />
         </MetricGrid>
       </section>
 
       <section>
-        <SectionHeading eyebrow="03 · Cobertura" title="Avance real de reconciliación" description="La cobertura Portal se expresa contra publicaciones con identificador válido. No debe interpretarse como cobertura de propiedades únicas." />
-        <MetricGrid>
-          <MetricCard label="Portal materializado" value={pct(reconciliation.coverage.portalMaterializedRate)} detail={`${n(reconciliation.operational.properties)} registros operativos / ${n(reconciliation.canonical.portalValidListings)} publicaciones fuente`} />
-          <MetricCard label="Cobertura territorial operativa" value={pct(reconciliation.coverage.territorialCoverageRate)} detail={`${n(reconciliation.gaps.neighborhoodsMissing)} registros todavía sin barrio`} />
-          <MetricCard label="Publicaciones aún no materializadas" value={n(reconciliation.gaps.portalListingsNotMaterialized)} detail="Diferencia documental; requiere ingestión y validación" />
-          <MetricCard label="Identidades sin confirmar" value={n(reconciliation.gaps.identitiesUnconfirmed)} detail="No se confirman por similitud o score únicamente" />
-        </MetricGrid>
-      </section>
-
-      <section>
-        <SectionHeading eyebrow="04 · Cuarentena y restricciones" title="Datos que no deben mezclarse" />
+        <SectionHeading eyebrow="05 · Cuarentena y restricciones" title="Datos que no deben mezclarse" />
         <div className="grid gap-5 xl:grid-cols-2">
           <IntelligencePanel eyebrow="Portal" title={`${n(reconciliation.canonical.portalRentQuarantine)} publicaciones aisladas por señal de arriendo`} description="Se excluyen del universo elegible para venta y no se convierten en inventario comercial de venta.">
             <div className="p-5"><MethodologyNote>La ausencia de una señal explícita de arriendo no confirma por sí sola que una publicación corresponda a venta. El sistema conserva esa limitación.</MethodologyNote></div>
