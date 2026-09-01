@@ -33,9 +33,10 @@ async function createAssignment(formData: FormData) {
   if (!propertyId || !assignedTo || !ASSIGNMENT_ROLES.has(assignmentRole)) throw new Error('Datos de asignación inválidos')
   assertProfileVisible(scope, assignedTo)
 
-  const { data: property, error: propertyError } = await supabase.from('market_properties').select('id').eq('id', propertyId).maybeSingle()
+  const { data: property, error: propertyError } = await supabase.from('market_properties').select('id,property_type').eq('id', propertyId).maybeSingle()
   if (propertyError) throw new Error(propertyError.message)
   if (!property) throw new Error('Propiedad no encontrada o fuera del alcance autorizado')
+  if (property.property_type !== 'Casa') throw new Error('La versión 1 sólo permite asignar casas.')
 
   const { error } = await supabase.from('property_assignments').insert({
     property_id: propertyId,
@@ -90,7 +91,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
       : Promise.resolve({ data: [], error: null }),
   ])
 
-  let propertiesQuery = supabase.from('market_properties').select('id,normalized_address,property_type,bedrooms,bathrooms,useful_area_m2,identity_status,last_seen_at').order('last_seen_at', { ascending: false }).limit(30)
+  let propertiesQuery = supabase.from('market_properties').select('id,normalized_address,property_type,bedrooms,bathrooms,useful_area_m2,identity_status,last_seen_at').eq('property_type', 'Casa').order('last_seen_at', { ascending: false }).limit(30)
   if (query) propertiesQuery = propertiesQuery.ilike('normalized_address', `%${query}%`)
   const propertiesResult = await propertiesQuery
 
@@ -113,14 +114,14 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
     <header className="border-b border-[var(--n3-line)] pb-6">
       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">Administración · cartera</p>
       <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Asignación de propiedades</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">La vista y cada escritura se limitan al alcance {scope.scope === 'global' ? 'global' : 'de oficina'} resuelto por la matriz central.</p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">La vista y cada escritura se limitan al alcance {scope.scope === 'global' ? 'global' : 'de oficina'} resuelto por la matriz central. En V1 sólo se asignan casas.</p>
     </header>
     {error ? <div role="alert" className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible cargar toda la administración de cartera. Las secciones afectadas no se interpretan como vacías: {error}</div> : null}
 
     <section className="space-y-4" aria-labelledby="available-properties-title">
-      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Propiedades disponibles para asignación</h2></div>
+      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Casas disponibles para asignación</h2></div>
       <form className="flex flex-col gap-2 sm:flex-row">
-        <label className="sr-only" htmlFor="property-search">Buscar propiedad por dirección</label>
+        <label className="sr-only" htmlFor="property-search">Buscar casa por dirección</label>
         <input id="property-search" name="q" defaultValue={query} placeholder="Buscar por dirección normalizada" className="min-h-11 min-w-0 flex-1 border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]" />
         <button className="min-h-11 border border-[var(--n3-line)] px-5 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]">Buscar</button>
       </form>
@@ -137,7 +138,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
           </form> : <div className="mt-5 border border-[var(--n3-line)] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">No hay ejecutivas visibles dentro del alcance autorizado para crear una asignación.</div>}
         </article>)}
       </div>
-      {!propertiesUnavailable && !properties.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No se encontraron propiedades para la búsqueda ingresada.</div> : null}
+      {!propertiesUnavailable && !properties.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No se encontraron casas para la búsqueda ingresada.</div> : null}
     </section>
 
     <section className="space-y-4" aria-labelledby="assignments-title">
