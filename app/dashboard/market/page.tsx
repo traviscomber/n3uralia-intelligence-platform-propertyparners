@@ -167,6 +167,19 @@ export default async function MarketPage() {
           </section>
 
           <section>
+            <div className="border-b border-[var(--n3-line)] pb-2">
+              <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">CRM Property Partners · señales recientes</h2>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Evidencia cliente a nivel propiedad. Se conserva separada de CBRS y de transacciones confirmadas.</p>
+            </div>
+            <div className="grid gap-4 py-4 sm:grid-cols-3">
+              <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Casas observadas Vendida</p><p className="mt-1 text-lg font-semibold">{number(market.clientSaleSignals)}</p></div>
+              <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Corte fuente</p><p className="mt-1 text-lg font-semibold">{shortDate(market.latestClientSaleSourcePeriodEnd)}</p></div>
+              <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Archivos trazados</p><p className="mt-1 text-lg font-semibold">{number(market.clientSaleSignalSourceFiles)}</p></div>
+            </div>
+            <p className="text-xs leading-5 text-[var(--n3-text-muted)]">Estas señales prueban que el CRM observó propiedades en estado Vendida durante el corte, pero no aportan fecha de cierre. Por diseño no alimentan ventas confirmadas, velocidad de venta ni absorción.</p>
+          </section>
+
+          <section>
             <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
               <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Barrios Property Partners</h2>
               <span className="text-xs text-[var(--n3-text-muted)]">{territory.polygons} zonas</span>
