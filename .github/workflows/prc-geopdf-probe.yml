@@ -1,4 +1,4 @@
-name: Vitacura PRC My Maps pageData probe
+name: Vitacura PRC My Maps model probe
 
 on:
   pull_request:
@@ -13,22 +13,65 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Inspect My Maps pageData serialization
+      - name: Parse My Maps pageData model
         run: |
           python - <<'PY'
-          import urllib.request, re
+          import urllib.request, re, json
+
+          def walk(v):
+            if isinstance(v,list):
+              yield v
+              for x in v: yield from walk(x)
+            elif isinstance(v,dict):
+              for x in v.values(): yield from walk(x)
+
+          def strings(v):
+            if isinstance(v,str): yield v
+            elif isinstance(v,list):
+              for x in v: yield from strings(x)
+            elif isinstance(v,dict):
+              for x in v.values(): yield from strings(x)
+
           for name,mid in (
             ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT'),
             ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB'),
           ):
             req=urllib.request.Request(f'https://www.google.com/maps/d/embed?mid={mid}',headers={'User-Agent':'Mozilla/5.0'})
             text=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
-            p=text.find('_pageData')
-            print(f'=== {name} bytes={len(text)} pageData_at={p} ===')
-            print('PAGEDATA_CONTEXT',text[max(0,p-500):p+1800].replace('\n',' ')[:2300])
-            scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',text,re.I)
-            big=max(scripts,key=len)
-            print('BIG_SCRIPT_HEAD',big[:1600].replace('\n',' '))
-            print('BIG_SCRIPT_TAIL',big[-1200:].replace('\n',' '))
-            print('big_len',len(big),'backslash_u',big.count('\\u'),'backslash_x',big.count('\\x'),'base64ish_runs',len(re.findall(r'[A-Za-z0-9+/]{200,}={0,2}',big)))
+            m=re.search(r'var\s+_pageData\s*=\s*("(?:\\.|[^"\\])*")\s*;',text)
+            if not m: raise SystemExit('pageData assignment not found')
+            inner=json.loads(m.group(1))
+            data=json.loads(inner)
+            maps=[a for a in walk(data) if a and a[0]=='mf.map']
+            if len(maps)!=1: raise SystemExit(f'{name}: mf.map count {len(maps)}')
+            mp=maps[0]
+            print(f'=== {name} top={type(data).__name__} map_len={len(mp)} ===')
+            for i,x in enumerate(mp[:16]):
+              if isinstance(x,(str,int,float,bool)) or x is None: print('map_field',i,repr(x))
+              elif isinstance(x,list): print('map_field',i,'LIST len',len(x),'head',repr(x[:4])[:500])
+              else: print('map_field',i,type(x).__name__)
+
+            # Candidate layer containers: arrays whose child arrays begin with null + id + human title.
+            layerish=[]
+            for a in walk(mp):
+              if len(a)>=4 and a[0] is None and isinstance(a[1],str) and isinstance(a[2],str) and len(a[1])>=5:
+                if any(k in a[2].lower() for k in ('edific','suelo','vivienda','equip','parque','área','area','aislada','pareada','continua')):
+                  layerish.append(a)
+            print('layerish_count',len(layerish))
+            for a in layerish[:80]:
+              print('LAYERISH',repr(a[:8])[:1600])
+
+            ss=list(strings(mp))
+            interesting=sorted(set(s for s in ss if re.search(r'(edific|suelo|vivienda|equip|parque|aislad|paread|continu|subzona|zona|E-|U-)',s,re.I)),key=lambda x:(len(x),x.lower()))
+            print('interesting_strings_count',len(interesting))
+            for s in interesting[:160]: print('STR',repr(s)[:1000])
+
+            coords=[]
+            def findcoords(v):
+              if isinstance(v,list):
+                if len(v)>=2 and isinstance(v[0],(int,float)) and isinstance(v[1],(int,float)) and -71<v[0]<-70 and -34<v[1]<-33:
+                  coords.append((v[0],v[1],len(v)))
+                for x in v: findcoords(x)
+            findcoords(mp)
+            print('coordinate_pairs',len(coords),'sample',coords[:12])
           PY
