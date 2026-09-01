@@ -1,4 +1,4 @@
-name: Vitacura PRC My Maps geometry probe
+name: Vitacura PRC My Maps geometry path probe
 
 on:
   pull_request:
@@ -13,73 +13,53 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Inspect My Maps polygon geometry paths
+      - name: Pin My Maps geometry path
         run: |
           python - <<'PY'
           import urllib.request, re, json
-
+          cases=[
+            ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT','311AD7C3B3000002'),
+            ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB','31236BDA50000001'),
+          ]
           def load(mid):
             req=urllib.request.Request(f'https://www.google.com/maps/d/embed?mid={mid}',headers={'User-Agent':'Mozilla/5.0'})
             text=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
             m=re.search(r'var\s+_pageData\s*=\s*("(?:\\.|[^"\\])*")\s*;',text)
-            inner=json.loads(m.group(1)); data=json.loads(inner)
+            data=json.loads(json.loads(m.group(1)))
             found=[]
             def walk(v):
               if isinstance(v,list):
                 if v and v[0]=='mf.map': found.append(v)
                 for x in v: walk(x)
-              elif isinstance(v,dict):
-                for x in v.values(): walk(x)
-            walk(data)
-            return found[0]
-
-          def summarize(v,depth=0,maxdepth=4):
-            if depth>=maxdepth:
-              if isinstance(v,list): return f'LIST(len={len(v)})'
-              return repr(v)[:120]
+            walk(data); return found[0]
+          def find_feature(v,fid):
             if isinstance(v,list):
-              return [summarize(x,depth+1,maxdepth) for x in v[:16]] + ([f'...+{len(v)-16}'] if len(v)>16 else [])
-            if isinstance(v,dict): return {k:summarize(x,depth+1,maxdepth) for k,x in list(v.items())[:12]}
-            return v
-
-          def paths_to(v,predicate,path=()):
-            out=[]
-            if predicate(v): out.append(path)
+              if len(v)>=8 and v[0]==fid and isinstance(v[3],list) and isinstance(v[5],list): return v
+              for x in v:
+                r=find_feature(x,fid)
+                if r is not None: return r
+          def dims(v,depth=0):
+            if not isinstance(v,list): return type(v).__name__
+            return [len(v)] + ([dims(v[0],depth+1)] if v and depth<8 else [])
+          def pairs(v,out):
             if isinstance(v,list):
-              for i,x in enumerate(v): out += paths_to(x,predicate,path+(i,))
-            elif isinstance(v,dict):
-              for k,x in v.items(): out += paths_to(x,predicate,path+(k,))
-            return out
-
-          def get(v,path):
-            for p in path: v=v[p]
-            return v
-
-          def is_lonlat_pair(x):
-            return isinstance(x,list) and len(x)>=2 and isinstance(x[0],(int,float)) and isinstance(x[1],(int,float)) and -71<x[0]<-70 and -34<x[1]<-33
-
-          def is_long_lonlat_array(x):
-            return isinstance(x,list) and len(x)>=4 and sum(1 for p in x if is_lonlat_pair(p))>=4
-
-          cases=[
-            ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT','311AD7C3B3000002'),
-            ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB','31236BDA50000001'),
-          ]
-          for name,mid,feature_id in cases:
-            mp=load(mid)
+              if len(v)==2 and all(isinstance(x,(int,float)) for x in v): out.append(v)
+              else:
+                for x in v: pairs(x,out)
+          for name,mid,fid in cases:
+            f=find_feature(load(mid),fid)
             print('===',name,'===')
-            idpaths=paths_to(mp,lambda x:x==feature_id)
-            print('feature_id_paths',idpaths[:20])
-            for path in idpaths[:3]:
-              print('FEATURE_PARENT_PATH',path[:-1])
-              print('FEATURE_PARENT',json.dumps(summarize(get(mp,path[:-1]),0,7),ensure_ascii=False)[:9000])
-              for up in (2,3,4,5):
-                if len(path)>=up:
-                  parent_path=path[:-up]
-                  print('ANCESTOR',up,'path',parent_path,'summary',json.dumps(summarize(get(mp,parent_path),0,5),ensure_ascii=False)[:5000])
-            longpaths=paths_to(mp,is_long_lonlat_array)
-            print('long_lonlat_arrays',len(longpaths))
-            for path in longpaths[:30]:
-              arr=get(mp,path); pts=[p for p in arr if is_lonlat_pair(p)]
-              print('COORD_ARRAY path',path,'len',len(arr),'pts',len(pts),'first',pts[:3],'last',pts[-3:])
+            print('feature_len',len(f),'geometry_dims',dims(f[3]))
+            print('feature_scalar_fields',[(i,x) for i,x in enumerate(f) if not isinstance(x,list)])
+            print('attrs',f[5])
+            out=[]; pairs(f[3],out)
+            print('geometry_pairs',len(out),'first',out[:8],'last',out[-8:])
+            # Print nested path candidates whose direct children are coordinate pairs.
+            def visit(v,path=()):
+              if isinstance(v,list):
+                if len(v)>=4 and all(isinstance(p,list) and len(p)==2 and all(isinstance(x,(int,float)) for x in p) for p in v):
+                  print('RING',path,'len',len(v),'first',v[:3],'last',v[-3:])
+                else:
+                  for i,x in enumerate(v): visit(x,path+(i,))
+            visit(f[3])
           PY
