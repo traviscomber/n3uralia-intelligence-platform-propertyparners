@@ -1,4 +1,4 @@
-name: Vitacura PRC public map payload probe
+name: Vitacura PRC public map network probe
 
 on:
   pull_request:
@@ -22,7 +22,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
-      - name: Intercept public My Maps feature payloads
+      - name: Inspect public My Maps network data endpoints
         run: |
           node <<'JS'
           const puppeteer = require('puppeteer-core')
@@ -30,40 +30,39 @@ jobs:
           const candidates = ['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser']
           const executablePath = candidates.find(p => fs.existsSync(p))
           if (!executablePath) throw new Error('No Chromium executable on runner')
-
           const maps = [
-            {name:'edification', mid:'1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT', tokens:['E-Ab1','E-Am3sz','E-Ae3sz']},
-            {name:'land_use', mid:'1HvsC09ycddCXYMDVJMasi5c_HQliaBKB', tokens:['U-PVOsz','U-POCsz','U-PCsz']},
+            {name:'edification', mid:'1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT'},
+            {name:'land_use', mid:'1HvsC09ycddCXYMDVJMasi5c_HQliaBKB'},
           ]
-
           ;(async () => {
             const browser = await puppeteer.launch({headless:true, executablePath, args:['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage']})
             try {
               for (const map of maps) {
                 const page = await browser.newPage()
-                const matches = []
+                const seen = []
                 page.on('response', async response => {
                   try {
                     const url = response.url()
                     const headers = response.headers()
                     const ct = headers['content-type'] || ''
-                    if (!/(json|javascript|text|protobuf|octet-stream)/i.test(ct) && !/(maps|mapdata|mymaps|rpc|preview)/i.test(url)) return
-                    const len = Number(headers['content-length'] || 0)
-                    if (len > 12_000_000) return
-                    const buf = await response.buffer()
-                    if (buf.length > 12_000_000) return
-                    const body = buf.toString('utf8')
-                    const found = map.tokens.filter(t => body.includes(t))
-                    if (!found.length) return
-                    const first = Math.min(...found.map(t => body.indexOf(t)).filter(i => i >= 0))
-                    matches.push({url,status:response.status(),contentType:ct,bytes:buf.length,tokens:found,snippet:body.slice(Math.max(0,first-220), first+520).replace(/\s+/g,' ')})
+                    if (/image|font|css/i.test(ct)) return
+                    if (!/(google|maps|gstatic)/i.test(url)) return
+                    let bytes = Number(headers['content-length'] || 0)
+                    if (!bytes && /(json|javascript|text|protobuf|octet-stream)/i.test(ct)) {
+                      try { bytes = (await response.buffer()).length } catch {}
+                    }
+                    seen.push({status:response.status(),contentType:ct,bytes,url})
                   } catch {}
                 })
-                await page.goto(`https://www.google.com/maps/d/embed?mid=${map.mid}`, {waitUntil:'networkidle2', timeout:60000})
-                await new Promise(r => setTimeout(r,7000))
-                console.log(`=== ${map.name} ===`)
-                console.log(JSON.stringify(matches.slice(0,20), null, 2))
-                if (!matches.length) throw new Error(`No feature payload found for ${map.name}`)
+                await page.goto(`https://www.google.com/maps/d/embed?mid=${map.mid}`, {waitUntil:'domcontentloaded', timeout:45000})
+                await new Promise(r => setTimeout(r,12000))
+                const uniq = [...new Map(seen.map(x => [x.url,x])).values()]
+                  .sort((a,b) => b.bytes-a.bytes)
+                  .slice(0,80)
+                console.log(`=== ${map.name} responses ===`)
+                console.log(JSON.stringify(uniq,null,2))
+                const html = await page.content()
+                console.log(`DOM bytes=${Buffer.byteLength(html)} title=${JSON.stringify(await page.title())}`)
                 await page.close()
               }
             } finally { await browser.close() }
