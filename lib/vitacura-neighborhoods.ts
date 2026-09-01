@@ -19,6 +19,11 @@ export type VitacuraNeighborhoodSnapshot = {
   error?: string
 }
 
+type NeighborhoodPropertyCount = {
+  neighborhood_id: string
+  property_count: number
+}
+
 const emptySnapshot: VitacuraNeighborhoodSnapshot = {
   sourceCode: KML_SOURCE_CODE,
   sourceFile: null,
@@ -54,7 +59,7 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
     if (source.error) return { ...emptySnapshot, error: source.error.message }
     if (!source.data) return emptySnapshot
 
-    const [territories, canonicalNeighborhoods] = await Promise.all([
+    const [territories, canonicalNeighborhoods, propertyCounts] = await Promise.all([
       supabase
         .from('vitacura_market_neighborhoods')
         .select('barrio_nombre,raw_properties')
@@ -64,28 +69,15 @@ export async function getVitacuraNeighborhoodSnapshot(): Promise<VitacuraNeighbo
         .from('market_neighborhoods')
         .select('id,name,micro_neighborhood')
         .eq('geometry_source_id', source.data.id),
+      supabase.rpc('get_vitacura_neighborhood_property_counts_v1'),
     ])
 
-    const firstError = territories.error || canonicalNeighborhoods.error
+    const firstError = territories.error || canonicalNeighborhoods.error || propertyCounts.error
     if (firstError) return { ...emptySnapshot, error: firstError.message }
 
-    const neighborhoodIds = (canonicalNeighborhoods.data ?? []).map((row) => row.id)
-    const properties = neighborhoodIds.length
-      ? await supabase
-        .from('market_properties')
-        .select('id,neighborhood_id')
-        .in('neighborhood_id', neighborhoodIds)
-      : { data: [], error: null }
-
-    if (properties.error) return { ...emptySnapshot, error: properties.error.message }
-
     const countByNeighborhood = new Map<string, number>()
-    for (const property of properties.data ?? []) {
-      if (!property.neighborhood_id) continue
-      countByNeighborhood.set(
-        property.neighborhood_id,
-        (countByNeighborhood.get(property.neighborhood_id) ?? 0) + 1,
-      )
+    for (const row of (propertyCounts.data ?? []) as NeighborhoodPropertyCount[]) {
+      countByNeighborhood.set(row.neighborhood_id, Number(row.property_count ?? 0))
     }
 
     const territoryByName = new Map(

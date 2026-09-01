@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export type PortalReferenceDataset = {
   datasetKind: 'portal_apartments' | 'portal_houses' | 'portal_projects'
+  scope: string
   listingCount: number
   geocodedCount: number
   pricedCount: number
@@ -56,6 +57,15 @@ function median(values: number[]) {
   return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle]
 }
 
+function numericPayload(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
 export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnapshot> {
   try {
     const supabase = await createClient()
@@ -66,7 +76,7 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
         .order('listing_count', { ascending: false }),
       supabase
         .from('market_current_listings')
-        .select('price_uf,price_uf_m2,market_properties(property_type,useful_area_m2)')
+        .select('price_uf,price_uf_m2,raw_payload,market_sources(metadata),market_properties(property_type,useful_area_m2)')
         .in('status', ['active', 'observed']),
     ])
 
@@ -81,6 +91,7 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
         if (!kind) return []
         return [{
           datasetKind: kind,
+          scope: row.scope,
           listingCount: Number(row.listing_count ?? 0),
           geocodedCount: Number(row.geocoded_count ?? 0),
           pricedCount: Number(row.priced_count ?? 0),
@@ -94,13 +105,22 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
     const grouped = new Map<PortalReferenceDataset['datasetKind'], { prices: number[]; ufm2: number[]; areas: number[]; count: number }>()
     for (const row of liveResult.data ?? []) {
       const property = Array.isArray(row.market_properties) ? row.market_properties[0] : row.market_properties
-      const kind = liveKind(property?.property_type)
+      const source = Array.isArray(row.market_sources) ? row.market_sources[0] : row.market_sources
+      const sourceMetadata = source?.metadata && typeof source.metadata === 'object' ? source.metadata as Record<string, unknown> : null
+      const sourceDatasetKind = typeof sourceMetadata?.dataset_kind === 'string' ? datasetKind(sourceMetadata.dataset_kind) : null
+      const kind = sourceDatasetKind ?? liveKind(property?.property_type)
       if (!kind) continue
+
+      const rawPayload = row.raw_payload && typeof row.raw_payload === 'object' ? row.raw_payload as Record<string, unknown> : null
+      const payloadArea = numericPayload(rawPayload?.useful_area_m2)
+      const canonicalArea = property?.useful_area_m2 == null ? null : Number(property.useful_area_m2)
+      const area = canonicalArea ?? payloadArea
+
       const bucket = grouped.get(kind) ?? { prices: [], ufm2: [], areas: [], count: 0 }
       bucket.count += 1
       if (row.price_uf != null) bucket.prices.push(Number(row.price_uf))
       if (row.price_uf_m2 != null) bucket.ufm2.push(Number(row.price_uf_m2))
-      if (property?.useful_area_m2 != null) bucket.areas.push(Number(property.useful_area_m2))
+      if (area != null && Number.isFinite(area)) bucket.areas.push(area)
       grouped.set(kind, bucket)
     }
 

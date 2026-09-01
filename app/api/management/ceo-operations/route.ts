@@ -3,6 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 
 const normalize = (value: string | null | undefined) => String(value ?? '').trim().toLowerCase()
 
+type TerritoryProgress = {
+  portal_current_houses: number | null
+  exact_kml_houses: number | null
+}
+
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -17,23 +22,33 @@ export async function GET() {
   if (profileError || !profile) return NextResponse.json({ error: profileError?.message ?? 'Perfil no configurado' }, { status: 403 })
   if (!['ceo', 'admin'].includes(normalize(profile.role))) return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 })
 
-  const [valuations, assignments, properties, tasks, profiles] = await Promise.all([
-    supabase.from('valuation_cases').select('id,status,updated_at'),
+  const [valuations, assignments, properties, tasks, profiles, neighborhoodQueue, territoryProgress] = await Promise.all([
+    supabase.from('valuation_cases').select('id,status,updated_at').eq('property_type', 'Casa'),
     supabase.from('property_assignments').select('id,status,assigned_to,updated_at'),
-    supabase.from('market_properties').select('id,identity_status,last_seen_at'),
+    supabase.from('market_properties').select('id,identity_status,last_seen_at').eq('property_type', 'Casa'),
     supabase.from('management_tasks').select('id,status,priority,due_date,office,assigned_to,updated_at'),
     supabase.from('profiles').select('id,role,team'),
+    supabase.rpc('get_ceo_market_neighborhood_queue_v1'),
+    supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
   ])
 
-  const errors = [valuations.error, assignments.error, properties.error, tasks.error, profiles.error]
-    .map((error) => error?.message)
-    .filter((message): message is string => Boolean(message))
+  const errors = [
+    valuations.error,
+    assignments.error,
+    properties.error,
+    tasks.error,
+    profiles.error,
+    neighborhoodQueue.error,
+    territoryProgress.error,
+  ].map((error) => error?.message).filter((message): message is string => Boolean(message))
 
   const valuationRows = valuations.data ?? []
   const assignmentRows = assignments.data ?? []
   const propertyRows = properties.data ?? []
   const taskRows = tasks.data ?? []
   const profileRows = profiles.data ?? []
+  const neighborhoodExceptions = (neighborhoodQueue.data ?? []).length
+  const territory = territoryProgress.data as TerritoryProgress | null
   const today = new Date().toISOString().slice(0, 10)
   const countStatus = (rows: Array<{ status: string | null }>, status: string) => rows.filter((row) => row.status === status).length
   const openTasks = taskRows.filter((task) => ['open', 'in_progress'].includes(String(task.status)))
@@ -55,6 +70,9 @@ export async function GET() {
       properties: propertyRows.length,
       confirmed: propertyRows.filter((property) => property.identity_status === 'confirmed').length,
       pendingIdentity: propertyRows.filter((property) => property.identity_status !== 'confirmed').length,
+      neighborhoodTotal: Number(territory?.portal_current_houses ?? 0),
+      neighborhoodResolved: Number(territory?.exact_kml_houses ?? 0),
+      neighborhoodExceptions,
     },
     tasks: {
       total: taskRows.length,

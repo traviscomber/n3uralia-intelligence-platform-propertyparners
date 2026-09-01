@@ -1,6 +1,7 @@
 # Training execution pack — Property Partners Intelligence Platform
 
 **Cutoff:** 2026-09-01  
+**UX sync:** PR #173 decision-first V1 surfaces  
 **Current status:** NOT SCHEDULED / CLIENT HOLD
 
 This document prepares the training closeout without claiming attendance or acceptance before it occurs.
@@ -13,8 +14,10 @@ This document prepares the training closeout without claiming attendance or acce
 Coverage:
 - V1 scope and exclusions;
 - three product pillars: Market Intelligence, Valuation, Management Control;
+- decision-first UX principle: situation → priority → action → evidence;
 - evidence vs inference vs approved KPI;
-- roles and authorization boundaries;
+- role-specific primary navigation;
+- authorization boundaries;
 - support and escalation process.
 
 Required client participants:
@@ -34,11 +37,14 @@ Evidence required for completion:
 **Status:** not scheduled
 
 Coverage:
-- CEO and Director dashboards;
-- office/team scope;
+- CEO **Hoy** view: business status, KPI strip and priorities;
+- Director **Hoy** view: office/team summary before operational detail;
+- role-specific five-item primary navigation;
+- progressive disclosure for methodology/governance;
 - approved vs provisional management metrics;
-- report preview, schedules and recipients;
-- interpretation of delivery states;
+- canonical report surface and latest-deliverable workflow;
+- report schedules and authorized recipients;
+- interpretation of generation and delivery states;
 - pending KPI/reporting decisions.
 
 Required client participants:
@@ -52,9 +58,12 @@ Required client participants:
 **Status:** not scheduled
 
 Coverage:
-- seller/executive scope;
-- tasks and assignments;
+- seller/executive **Hoy** view and personal performance;
+- seller primary navigation: Hoy, Mercado, Valorizaciones, Propiedades, Mi reporte;
+- property portfolio and attention states;
+- valuation cases and next action;
 - role boundaries;
+- mobile navigation and portfolio use;
 - incident reporting for wrong-scope visibility;
 - user provisioning/offboarding responsibilities.
 
@@ -70,8 +79,11 @@ Required client participants:
 
 Coverage:
 - V1 market scope: houses for sale in Vitacura;
-- Portal, CBRS and territorial KML evidence;
+- four primary market decision metrics: active supply, confirmed sales, days on market, absorption;
+- exceptions before methodology/detail;
+- Portal, CBRS and territorial KML evidence under Data and methodology;
 - identity/reconciliation rules;
+- valuation registry **Qué necesita avanzar**;
 - valuation creation and review;
 - minimum three accepted comparables;
 - seller → review → return/correction → CEO approval/issuance;
@@ -88,16 +100,25 @@ Acceptance objective:
 
 Do not create a fictitious production valuation solely to satisfy UAT.
 
-## Session 5 — Administration, continuity and handover
+## Session 5 — Management administration, continuity and handover
 
 **Planned duration:** 60 min  
 **Status:** not scheduled
 
 Coverage:
+- **Metas y alertas**: Qué requiere decisión, critical/open alerts, Review → Resolve/Dismiss;
+- goal coverage and goal editing as secondary work;
+- advanced evidence/rule configuration under disclosure;
+- **Cierre del período**: Qué falta para cerrar;
+- rejected rows → reconciliation before closeout;
+- no period data → no monthly report;
+- valid data → evaluate exceptions → generate monthly report;
+- technical ingestion/JSON under Operación técnica de datos;
 - environments and deployments;
 - GitHub/Vercel/Supabase responsibilities;
 - environment-variable names without secret values;
 - release/rollback procedure;
+- documentation-freeze rule after final accepted `main` commit;
 - role QA and isolation checks;
 - report delivery monitoring;
 - incident management;
@@ -121,6 +142,8 @@ Required client participants:
 - UAT execution record;
 - client dependency register;
 - acceptance record template.
+
+The copies used in training must correspond to the release commit under UAT. If PR #173 or another delivery PR changes visible workflows before acceptance, regenerate/freeze the manuals against that accepted commit.
 
 ## Completion rule
 

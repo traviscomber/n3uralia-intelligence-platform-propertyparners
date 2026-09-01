@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { canAccessDashboardPath } from '../lib/dashboard-access'
+import { ADMIN_NAVIGATION, CEO_NAVIGATION, DIRECTOR_NAVIGATION, SELLER_NAVIGATION } from '../lib/navigation'
 
 for (const role of ['ceo', 'admin']) {
   assert.equal(canAccessDashboardPath(role, '/dashboard/ceo'), true)
@@ -40,4 +41,29 @@ assert.equal(canAccessDashboardPath('seller', '/dashboard/metas'), false)
 assert.equal(canAccessDashboardPath('unauthorized', '/dashboard'), false)
 assert.equal(canAccessDashboardPath('', '/dashboard/properties'), false)
 
-console.log('Dashboard access verified for CEO, admin, director, subdirector and seller route boundaries, including management reports and schedules.')
+const navigationByRole = {
+  ceo: CEO_NAVIGATION,
+  admin: ADMIN_NAVIGATION,
+  director: DIRECTOR_NAVIGATION,
+  subdirector: DIRECTOR_NAVIGATION,
+  seller: SELLER_NAVIGATION,
+} as const
+
+for (const [role, sections] of Object.entries(navigationByRole)) {
+  for (const section of sections) {
+    for (const item of section.items) {
+      assert.equal(
+        canAccessDashboardPath(role, item.href),
+        true,
+        `${role} navigation item ${item.label} points to forbidden route ${item.href}`,
+      )
+    }
+  }
+}
+
+assert.equal(CEO_NAVIGATION[0]?.items.length, 5)
+assert.equal(ADMIN_NAVIGATION[0]?.items.length, 5)
+assert.equal(DIRECTOR_NAVIGATION[0]?.items.length, 5)
+assert.equal(SELLER_NAVIGATION[0]?.items.length, 5)
+
+console.log('Dashboard access and simplified role navigation verified for CEO, admin, director, subdirector and seller.')

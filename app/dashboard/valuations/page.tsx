@@ -1,33 +1,160 @@
 'use client'
 
-import { useEffect,useMemo,useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Plus,RefreshCw } from 'lucide-react'
-import { DataStatusBar,MetricStrip,WorkspaceField,WorkspaceHeader,WorkspaceSelect,WorkspaceShell,WorkspaceSurface } from '@/components/ui/workspace'
+import { Plus, RefreshCw } from 'lucide-react'
+import { MetricStrip, WorkspaceField, WorkspaceHeader, WorkspaceSelect, WorkspaceShell } from '@/components/ui/workspace'
+import { OperationalState } from '@/components/ui/operational-state'
 
-type ValuationCase={id:string;status:string;valuation_date:string|null;address:string|null;neighborhood:string|null;property_type:string|null;estimated_value_uf:number|null;low_value_uf:number|null;high_value_uf:number|null;confidence:string|null;version_number:number|null;created_at:string;updated_at:string}
-type Payload={cases:ValuationCase[];error?:string}
-const money=new Intl.NumberFormat('es-CL',{maximumFractionDigits:0})
-const statusLabels:Record<string,string>={draft:'Borrador',review:'En revisión',approved:'Aprobada',issued:'Emitida'}
-const confidenceLabels:Record<string,string>={low:'Baja',medium:'Media',high:'Alta'}
-export default function ValuationRegistryPage(){
- const[cases,setCases]=useState<ValuationCase[]>([]);const[loading,setLoading]=useState(true);const[error,setError]=useState<string|null>(null);const[query,setQuery]=useState('');const[status,setStatus]=useState('all')
- async function load(){setLoading(true);setError(null);try{const response=await fetch('/api/valuation/cases',{cache:'no-store'});const payload=await response.json() as Payload;if(!response.ok)throw new Error(payload.error||'No fue posible cargar las valorizaciones');setCases(payload.cases||[])}catch(err){setError(err instanceof Error?err.message:'Error de carga')}finally{setLoading(false)}}
- useEffect(()=>{void load()},[])
- const filtered=useMemo(()=>cases.filter(item=>{const text=`${item.address||''} ${item.neighborhood||''} ${item.property_type||''} ${item.id}`.toLowerCase();return(status==='all'||item.status===status)&&text.includes(query.trim().toLowerCase())}),[cases,query,status])
- const counts=useMemo(()=>({total:cases.length,draft:cases.filter(i=>i.status==='draft').length,review:cases.filter(i=>i.status==='review').length,approved:cases.filter(i=>i.status==='approved').length,issued:cases.filter(i=>i.status==='issued').length}),[cases])
- const actionCount=counts.draft+counts.review
- const latest=cases.reduce<string|null>((acc,item)=>!acc||new Date(item.updated_at)>new Date(acc)?item.updated_at:acc,null)
- const methodologicalReady=cases.filter(item=>item.confidence&&item.confidence!=='low'&&item.estimated_value_uf!=null).length
- const dataStatus=error?'blocked':cases.length===0?'blocked':methodologicalReady<cases.length?'partial':'ready'
- const cutoff=latest?new Date(latest).toLocaleString('es-CL'):'—'
- return <WorkspaceShell>
-  <WorkspaceHeader eyebrow="Valorizaciones" title="Registro" meta={`${actionCount} requieren acción`} actions={[{label:'Actualizar',onClick:()=>void load(),disabled:loading,icon:<RefreshCw className={`h-4 w-4 ${loading?'animate-spin':''}`}/>,ariaLabel:'Actualizar'},{label:'Nueva',href:'/dashboard/valuation',primary:true,icon:<Plus className="h-4 w-4"/>}]} />
-  {error?<div className="mt-4 border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">{error}</div>:null}
-  <MetricStrip items={[{label:'Total',value:counts.total},{label:'Borradores',value:counts.draft},{label:'En revisión',value:counts.review,tone:counts.review?'warning':'default'},{label:'Aprobadas / emitidas',value:counts.approved+counts.issued}]} />
-  {actionCount>0?<WorkspaceSurface className="mt-5"><div className="border-b border-[var(--n3-line)] px-4 py-3"><h2 className="text-sm font-semibold">Acciones</h2></div><div className="divide-y divide-[var(--n3-line)]">{counts.review>0?<button onClick={()=>setStatus('review')} className="flex w-full items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-[var(--n3-black)]"><span>Revisar valorizaciones</span><strong>{counts.review}</strong></button>:null}{counts.draft>0?<button onClick={()=>setStatus('draft')} className="flex w-full items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-[var(--n3-black)]"><span>Completar borradores</span><strong>{counts.draft}</strong></button>:null}</div></WorkspaceSurface>:null}
-  <WorkspaceSurface className="mt-5 flex flex-col gap-3 p-3 md:flex-row"><WorkspaceField value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar dirección, barrio, tipo o ID" aria-label="Buscar valorizaciones" className="min-w-0 flex-1"/><WorkspaceSelect value={status} onChange={e=>setStatus(e.target.value)} aria-label="Filtrar por estado"><option value="all">Todos</option><option value="draft">Borrador</option><option value="review">En revisión</option><option value="approved">Aprobada</option><option value="issued">Emitida</option></WorkspaceSelect></WorkspaceSurface>
-  <section className="mt-5 overflow-x-auto border border-[var(--n3-line)]"><table className="min-w-[820px] w-full text-left text-sm"><thead className="bg-[var(--n3-deep)] text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="px-4 py-3">Propiedad</th><th className="px-4 py-3">Estado</th><th className="px-4 py-3 text-right">Valor UF</th><th className="px-4 py-3">Confianza</th><th className="px-4 py-3">Versión</th><th className="px-4 py-3">Actualización</th><th className="px-4 py-3"></th></tr></thead><tbody>{filtered.map(item=><tr key={item.id} className="border-t border-[var(--n3-line)] transition-colors hover:bg-[var(--n3-deep)]"><td className="px-4 py-3"><p className="font-medium">{item.address||'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.neighborhood||'Sin barrio'} · {item.property_type||'Sin tipo'}</p></td><td className="px-4 py-3 text-xs uppercase tracking-wide">{statusLabels[item.status]||item.status}</td><td className="px-4 py-3 text-right font-medium">{item.estimated_value_uf==null?'—':money.format(item.estimated_value_uf)}</td><td className="px-4 py-3 text-[var(--n3-text-muted)]">{confidenceLabels[item.confidence||'']||'—'}</td><td className="px-4 py-3">v{item.version_number||1}</td><td className="px-4 py-3 text-[var(--n3-text-muted)]">{new Date(item.updated_at).toLocaleDateString('es-CL')}</td><td className="px-4 py-3"><Link href={`/dashboard/valuations/${item.id}`} className="text-sm font-medium text-[var(--n3-teal-soft)]">Abrir</Link></td></tr>)}{!loading&&!filtered.length?<tr><td colSpan={7} className="px-4 py-10 text-center text-[var(--n3-text-muted)]">Sin valorizaciones reales registradas</td></tr>:null}</tbody></table></section>
-  <DataStatusBar cutoff={cutoff} coverage={cases.length?`${methodologicalReady}/${cases.length} con evidencia metodológica suficiente`:'Sin expedientes reales'} issues={error?1:Math.max(0,cases.length-methodologicalReady)} status={dataStatus}/>
- </WorkspaceShell>
+type ValuationCase = {
+  id: string
+  status: string
+  address: string | null
+  neighborhood: string | null
+  property_type: string | null
+  estimated_value_uf: number | null
+  confidence: string | null
+  updated_at: string
+}
+
+type Payload = { cases: ValuationCase[]; error?: string }
+
+const money = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
+const statusLabels: Record<string, string> = { draft: 'Borrador', review: 'En revisión', approved: 'Aprobada', issued: 'Emitida' }
+const allowedStatuses = new Set(['all', 'draft', 'review', 'approved', 'issued'])
+
+export default function ValuationRegistryPage() {
+  const [cases, setCases] = useState<ValuationCase[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [status, setStatus] = useState('all')
+
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/valuation/cases', { cache: 'no-store' })
+      const payload = await response.json() as Payload
+      if (!response.ok) throw new Error(payload.error || 'No fue posible cargar las valorizaciones')
+      setCases(payload.cases || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error de carga')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('status')
+    if (requested && allowedStatuses.has(requested)) setStatus(requested)
+    void load()
+  }, [])
+
+  const counts = useMemo(() => ({
+    draft: cases.filter((item) => item.status === 'draft').length,
+    review: cases.filter((item) => item.status === 'review').length,
+    approved: cases.filter((item) => item.status === 'approved').length,
+    issued: cases.filter((item) => item.status === 'issued').length,
+  }), [cases])
+
+  const filtered = useMemo(() => cases.filter((item) => {
+    const text = `${item.address || ''} ${item.neighborhood || ''} ${item.property_type || ''} ${item.id}`.toLowerCase()
+    return (status === 'all' || item.status === status) && text.includes(query.trim().toLowerCase())
+  }), [cases, query, status])
+
+  const nextReview = cases.find((item) => item.status === 'review')
+  const nextDraft = cases.find((item) => item.status === 'draft')
+  const actionCount = counts.review + counts.draft
+
+  if (loading && cases.length === 0) {
+    return <WorkspaceShell><OperationalState kind="loading" title="Cargando valorizaciones" description="Consultando expedientes, estados y valores autorizados." /></WorkspaceShell>
+  }
+
+  if (error && cases.length === 0) {
+    return <WorkspaceShell><OperationalState kind="error" title="No fue posible consultar valorizaciones" description={error}><button type="button" onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm font-semibold"><RefreshCw className="h-4 w-4" />Reintentar</button></OperationalState></WorkspaceShell>
+  }
+
+  return (
+    <WorkspaceShell>
+      <WorkspaceHeader
+        eyebrow="Valorizaciones · Casas V1"
+        title="Qué necesita avanzar"
+        meta={`${actionCount} requieren acción`}
+        actions={[
+          { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
+          { label: 'Nueva', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> },
+        ]}
+      />
+
+      {error ? <div role="alert" className="mt-4 border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">No se pudo actualizar. Se mantienen los últimos datos visibles. {error}</div> : null}
+
+      <MetricStrip items={[
+        { label: 'En revisión', value: counts.review, tone: counts.review ? 'warning' : 'default' },
+        { label: 'Borradores', value: counts.draft },
+        { label: 'Aprobadas', value: counts.approved },
+        { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' : 'default' },
+      ]} />
+
+      <section className="mt-7 max-w-5xl">
+        <div className="border-b border-[var(--n3-line)] pb-2">
+          <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Siguiente acción</h2>
+        </div>
+        <div className="divide-y divide-[var(--n3-line)]">
+          {nextReview ? (
+            <Link href={`/dashboard/valuations/${nextReview.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">Revisar valorización</p>
+                <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextReview.address || 'Propiedad sin dirección'}{nextReview.neighborhood ? ` · ${nextReview.neighborhood}` : ''}</p>
+              </div>
+              <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar ahora</span>
+            </Link>
+          ) : nextDraft ? (
+            <Link href={`/dashboard/valuations/${nextDraft.id}`} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">Completar borrador</p>
+                <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextDraft.address || 'Propiedad sin dirección'}{nextDraft.neighborhood ? ` · ${nextDraft.neighborhood}` : ''}</p>
+              </div>
+              <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Continuar</span>
+            </Link>
+          ) : (
+            <div className="py-8 text-sm text-[var(--n3-text-muted)]">No hay valorizaciones pendientes.</div>
+          )}
+        </div>
+      </section>
+
+      <details className="mt-9 border-t border-[var(--n3-line)] pt-4">
+        <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+          Ver todas las valorizaciones ({cases.length})
+        </summary>
+        <div className="mt-5">
+          <div className="flex flex-col gap-3 border-y border-[var(--n3-line)] py-3 md:flex-row">
+            <WorkspaceField value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar dirección o barrio" aria-label="Buscar valorizaciones" className="min-w-0 flex-1" />
+            <WorkspaceSelect value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filtrar por estado">
+              <option value="all">Todos los estados</option>
+              <option value="draft">Borrador</option>
+              <option value="review">En revisión</option>
+              <option value="approved">Aprobada</option>
+              <option value="issued">Emitida</option>
+            </WorkspaceSelect>
+          </div>
+
+          <div className="divide-y divide-[var(--n3-line)]">
+            {filtered.map((item) => (
+              <Link key={item.id} href={`/dashboard/valuations/${item.id}`} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-medium sm:truncate">{item.address || 'Sin dirección'}</p>
+                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}</p>
+                </div>
+                <span className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{statusLabels[item.status] || item.status}</span>
+                <span className="text-sm font-medium tabular-nums">{item.estimated_value_uf == null ? '—' : `${money.format(item.estimated_value_uf)} UF`}</span>
+                <span className="text-xs text-[var(--n3-text-muted)]">{new Date(item.updated_at).toLocaleDateString('es-CL')}</span>
+              </Link>
+            ))}
+            {!loading && !filtered.length ? <div className="py-8 text-sm text-[var(--n3-text-muted)]">Sin valorizaciones para este filtro.</div> : null}
+          </div>
+        </div>
+      </details>
+    </WorkspaceShell>
+  )
 }

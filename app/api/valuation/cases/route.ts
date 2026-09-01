@@ -102,6 +102,7 @@ export async function GET() {
     let query = supabase
       .from('valuation_cases')
       .select('id,status,valuation_date,subject_property_id,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,condition_status,condition_score,condition_version,version_number,created_at,updated_at')
+      .eq('property_type', 'Casa')
       .order('updated_at', { ascending: false })
       .limit(50)
 

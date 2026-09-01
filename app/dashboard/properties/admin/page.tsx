@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache'
+import { PendingSubmitButton } from '@/components/ui/pending-submit-button'
 import { createClient } from '@/lib/supabase/server'
 import { assertProfileVisible, requireAnyPageCapability } from '@/lib/access-guards'
 
@@ -32,9 +33,10 @@ async function createAssignment(formData: FormData) {
   if (!propertyId || !assignedTo || !ASSIGNMENT_ROLES.has(assignmentRole)) throw new Error('Datos de asignación inválidos')
   assertProfileVisible(scope, assignedTo)
 
-  const { data: property, error: propertyError } = await supabase.from('market_properties').select('id').eq('id', propertyId).maybeSingle()
+  const { data: property, error: propertyError } = await supabase.from('market_properties').select('id,property_type').eq('id', propertyId).maybeSingle()
   if (propertyError) throw new Error(propertyError.message)
   if (!property) throw new Error('Propiedad no encontrada o fuera del alcance autorizado')
+  if (property.property_type !== 'Casa') throw new Error('La versión 1 sólo permite asignar casas.')
 
   const { error } = await supabase.from('property_assignments').insert({
     property_id: propertyId,
@@ -89,7 +91,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
       : Promise.resolve({ data: [], error: null }),
   ])
 
-  let propertiesQuery = supabase.from('market_properties').select('id,normalized_address,property_type,bedrooms,bathrooms,useful_area_m2,identity_status,last_seen_at').order('last_seen_at', { ascending: false }).limit(30)
+  let propertiesQuery = supabase.from('market_properties').select('id,normalized_address,property_type,bedrooms,bathrooms,useful_area_m2,identity_status,last_seen_at').eq('property_type', 'Casa').order('last_seen_at', { ascending: false }).limit(30)
   if (query) propertiesQuery = propertiesQuery.ilike('normalized_address', `%${query}%`)
   const propertiesResult = await propertiesQuery
 
@@ -103,20 +105,23 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
   const properties = propertiesResult.data ?? []
   const profileById = new Map(profiles.map((item) => [item.id, item]))
   const propertyById = new Map((assignedPropertiesResult.data ?? []).map((item) => [item.id, item]))
+  const profilesUnavailable = Boolean(profilesResult.error)
+  const propertiesUnavailable = Boolean(propertiesResult.error)
+  const assignmentsUnavailable = Boolean(assignmentsResult.error)
   const error = profilesResult.error?.message || assignmentsResult.error?.message || propertiesResult.error?.message || assignedPropertiesResult.error?.message || null
 
   return <main className="mx-auto max-w-7xl space-y-8 pb-16">
     <header className="border-b border-[var(--n3-line)] pb-6">
       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">Administración · cartera</p>
       <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Asignación de propiedades</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">La vista y cada escritura se limitan al alcance {scope.scope === 'global' ? 'global' : 'de oficina'} resuelto por la matriz central.</p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">La vista y cada escritura se limitan al alcance {scope.scope === 'global' ? 'global' : 'de oficina'} resuelto por la matriz central. En V1 sólo se asignan casas.</p>
     </header>
-    {error ? <div role="alert" className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible cargar toda la administración de cartera: {error}</div> : null}
+    {error ? <div role="alert" className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible cargar toda la administración de cartera. Las secciones afectadas no se interpretan como vacías: {error}</div> : null}
 
     <section className="space-y-4" aria-labelledby="available-properties-title">
-      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Propiedades disponibles para asignación</h2></div>
+      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Casas disponibles para asignación</h2></div>
       <form className="flex flex-col gap-2 sm:flex-row">
-        <label className="sr-only" htmlFor="property-search">Buscar propiedad por dirección</label>
+        <label className="sr-only" htmlFor="property-search">Buscar casa por dirección</label>
         <input id="property-search" name="q" defaultValue={query} placeholder="Buscar por dirección normalizada" className="min-h-11 min-w-0 flex-1 border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]" />
         <button className="min-h-11 border border-[var(--n3-line)] px-5 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]">Buscar</button>
       </form>
@@ -124,16 +129,16 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
         {properties.map((property) => <article key={property.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold">{property.normalized_address || 'Dirección no disponible'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property.property_type || 'Tipología n/d'} · {property.useful_area_m2 ?? 'n/d'} m² · {property.bedrooms ?? 'n/d'} dorm. · {property.bathrooms ?? 'n/d'} baños</p></div><span className="text-[10px] uppercase tracking-wider text-[var(--n3-text-muted)]">{property.identity_status || 'sin estado'}</span></div>
           <p className="mt-3 text-[10px] text-[var(--n3-text-muted)]">Última evidencia: {formatDate(property.last_seen_at)}</p>
-          <form action={createAssignment} className="mt-5 grid gap-3 sm:grid-cols-2">
+          {profilesUnavailable ? <div className="mt-5 border border-[#a77a22] p-4 text-xs leading-5 text-[#f6c453]">No se puede crear una asignación hasta recuperar la lista autorizada de ejecutivas.</div> : profiles.length ? <form action={createAssignment} className="mt-5 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="property_id" value={property.id} />
             <label className="text-xs text-[var(--n3-text-muted)]">Ejecutiva<select name="assigned_to" required className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="">Seleccionar</option>{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.full_name} · {profile.team || 'sin sucursal'}</option>)}</select></label>
             <label className="text-xs text-[var(--n3-text-muted)]">Rol<select name="assignment_role" defaultValue="owner" className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="owner">Responsable principal</option><option value="co_broker">Corretaje compartido</option><option value="support">Apoyo comercial</option></select></label>
             <label className="text-xs text-[var(--n3-text-muted)] sm:col-span-2">Nota auditada<input name="notes" maxLength={500} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]" placeholder="Motivo o alcance de la asignación" /></label>
-            <button className="min-h-11 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white focus-visible:ring-2 focus-visible:ring-white sm:col-span-2">Asignar propiedad</button>
-          </form>
+            <PendingSubmitButton idleLabel="Asignar propiedad" pendingLabel="Asignando…" className="min-h-11 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white focus-visible:ring-2 focus-visible:ring-white sm:col-span-2" />
+          </form> : <div className="mt-5 border border-[var(--n3-line)] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">No hay ejecutivas visibles dentro del alcance autorizado para crear una asignación.</div>}
         </article>)}
       </div>
-      {!properties.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No se encontraron propiedades para la búsqueda ingresada.</div> : null}
+      {!propertiesUnavailable && !properties.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No se encontraron casas para la búsqueda ingresada.</div> : null}
     </section>
 
     <section className="space-y-4" aria-labelledby="assignments-title">
@@ -149,12 +154,12 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
               <label className="text-xs text-[var(--n3-text-muted)]">Rol<select name="assignment_role" defaultValue={assignment.assignment_role} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="owner">Responsable principal</option><option value="co_broker">Corretaje compartido</option><option value="support">Apoyo comercial</option></select></label>
               <label className="text-xs text-[var(--n3-text-muted)]">Estado<select name="status" defaultValue={assignment.status} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="active">Activa</option><option value="paused">Pausada</option><option value="closed">Cerrada</option></select></label>
               <label className="text-xs text-[var(--n3-text-muted)]">Nota<input name="notes" defaultValue={assignment.notes ?? ''} maxLength={500} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]" /></label>
-              <button className="min-h-11 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]">Guardar</button>
+              <PendingSubmitButton idleLabel="Guardar" pendingLabel="Guardando…" className="min-h-11 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]" />
             </form>
           </article>
         })}
       </div>
-      {!assignments.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No existen asignaciones registradas dentro del alcance autorizado.</div> : null}
+      {!assignmentsUnavailable && !assignments.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No existen asignaciones registradas dentro del alcance autorizado.</div> : null}
     </section>
   </main>
 }
