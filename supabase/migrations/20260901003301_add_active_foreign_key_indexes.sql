@@ -1,0 +1,8 @@
+create index if not exists market_address_resolution_memory_canonical_property_id_idx on private.market_address_resolution_memory (canonical_property_id);
+create index if not exists market_address_resolution_memory_neighborhood_id_idx on private.market_address_resolution_memory (neighborhood_id);
+create index if not exists market_neighborhood_review_items_suggested_neighborhood_id_idx on public.market_neighborhood_review_items (suggested_neighborhood_id);
+create index if not exists market_cbrs_reference_metrics_neighborhood_lookup_idx on public.market_cbrs_reference_metrics (neighborhood_id, scope, property_type, year);
+create index if not exists market_portal_reference_metrics_neighborhood_lookup_idx on public.market_portal_reference_metrics (neighborhood_id, dataset_kind, scope);
+create index if not exists management_source_records_import_run_id_idx on public.management_source_records (import_run_id);
+create index if not exists market_supply_sales_intelligence_neighborhood_id_idx on public.market_supply_sales_intelligence (neighborhood_id);
+create index if not exists document_schedules_document_id_idx on public.document_schedules (document_id);
