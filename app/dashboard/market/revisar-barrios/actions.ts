@@ -5,14 +5,36 @@ import { requireAnyCapability, requirePageMfaLevel2 } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 
 const REVIEW_PATH = '/dashboard/market/revisar-barrios'
-const KML_SOURCE_CODE = 'kml_vitacura_barrios_2026_08_12'
 const REVIEW_DECISIONS = new Set(['accepted', 'discarded'])
+const BATCH_KINDS = new Set(['direct_kml', 'unique_kml_candidate', 'territorial_evidence'])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 type QueueRow = {
   review_id: string | null
   proposed_neighborhood_id: string | null
   can_decide: boolean
+}
+
+function revalidateNeighborhoodViews() {
+  revalidatePath(REVIEW_PATH)
+  revalidatePath('/dashboard/market')
+  revalidatePath('/dashboard/ceo')
+}
+
+export async function reviewNeighborhoodBatchAction(formData: FormData) {
+  const resolutionKind = String(formData.get('resolutionKind') || '')
+  if (!BATCH_KINDS.has(resolutionKind)) throw new Error('Invalid neighborhood batch')
+
+  await requireAnyCapability(['market.manage_sources', 'management.global.read'])
+  await requirePageMfaLevel2(REVIEW_PATH)
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('approve_ceo_market_neighborhood_batch_v1', {
+    p_resolution_kind: resolutionKind,
+  })
+  if (error) throw new Error(`Unable to approve neighborhood batch: ${error.message}`)
+
+  revalidateNeighborhoodViews()
 }
 
 export async function reviewNeighborhoodAction(formData: FormData) {
@@ -72,7 +94,5 @@ export async function reviewNeighborhoodAction(formData: FormData) {
   if (updateError) throw new Error(`Unable to save neighborhood review: ${updateError.message}`)
   if (!updated) throw new Error('Neighborhood review changed before the decision could be saved')
 
-  revalidatePath(REVIEW_PATH)
-  revalidatePath('/dashboard/market')
-  revalidatePath('/dashboard/ceo')
+  revalidateNeighborhoodViews()
 }
