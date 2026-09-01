@@ -37,26 +37,62 @@ export const CEO_NAVIGATION: NavigationSection[] = [
   },
 ]
 
-export const DEFAULT_NAVIGATION: NavigationSection[] = [
+export const ADMIN_NAVIGATION: NavigationSection[] = [
   {
     label: 'Principal',
     items: [
-      { label: 'Hoy', href: '/dashboard', exact: true },
+      { label: 'Hoy', href: '/dashboard', exact: true, anyCapabilities: ['dashboard.global.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read', 'valuations.office.read', 'valuations.self.read'] },
-      { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.global.read', 'properties.office.read', 'properties.self.read'] },
+      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
+      { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
-      { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', anyCapabilities: ['reports.self.read'] },
     ],
   },
   {
     label: 'Administración',
     items: [
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read', 'management.office.read'] },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.global.manage', 'management.office.manage'] },
+      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
+      { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.global.manage'] },
       { label: 'Datos y metodología', href: '/dashboard/market/fuentes', anyCapabilities: ['market.manage_sources', 'settings.manage'] },
-      { label: 'Asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.global.assign', 'properties.office.assign'] },
+      { label: 'Asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.global.assign'] },
       { label: 'Usuarios y configuración', href: '/dashboard/settings', anyCapabilities: ['users.manage', 'settings.manage'] },
     ],
   },
 ]
+
+export const DIRECTOR_NAVIGATION: NavigationSection[] = [
+  {
+    label: 'Principal',
+    items: [
+      { label: 'Hoy', href: '/dashboard/director', anyCapabilities: ['dashboard.office.read'] },
+      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.office.read'] },
+      { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.office.read'] },
+      { label: 'Informes', href: '/dashboard/reportes/autonomos', anyCapabilities: ['reports.office.read'] },
+    ],
+  },
+  {
+    label: 'Administración',
+    items: [
+      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.office.read'] },
+      { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.office.manage'] },
+      { label: 'Asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.office.assign'] },
+    ],
+  },
+]
+
+export const SELLER_NAVIGATION: NavigationSection[] = [
+  {
+    label: 'Principal',
+    items: [
+      { label: 'Hoy', href: '/dashboard/partner', anyCapabilities: ['dashboard.self.read'] },
+      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.self.read'] },
+      { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.self.read'] },
+      { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', anyCapabilities: ['reports.self.read'] },
+    ],
+  },
+]
+
+// Kept for compatibility with existing imports; non-CEO default is the technical admin profile.
+export const DEFAULT_NAVIGATION = ADMIN_NAVIGATION
