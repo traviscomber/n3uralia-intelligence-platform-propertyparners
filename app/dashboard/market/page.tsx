@@ -48,6 +48,10 @@ export default async function MarketPage() {
     ? (market.canonicalProperties - market.missingNeighborhoods) / market.canonicalProperties
     : null
   const kmlCoverage = market.canonicalProperties ? territory.assignedProperties / market.canonicalProperties : null
+  const liveTerritorialCoverage = market.liveHouseCount && market.exactKmlLiveHouses !== null
+    ? market.exactKmlLiveHouses / market.liveHouseCount
+    : null
+  const territoryExceptions = (market.ambiguousTerritorySuggestions ?? 0) + (market.unmatchedTerritoryHouses ?? 0)
   const dataStatus = market.error || market.freshnessStatus === 'stale'
     ? 'blocked'
     : confirmedCoverage !== null && confirmedCoverage >= 0.8
@@ -56,8 +60,10 @@ export default async function MarketPage() {
 
   const actions = [
     market.freshnessStatus === 'stale' ? { label: 'Actualizar mercado', value: freshness(market.freshnessStatus, market.observationAgeDays), href: '/dashboard/market/import', critical: true } : null,
-    market.pendingMatches !== null && market.pendingMatches > 0 ? { label: 'Revisar coincidencias', value: number(market.pendingMatches), href: '/dashboard/market/reconciliacion', critical: false } : null,
-    market.missingNeighborhoods !== null && market.missingNeighborhoods > 0 ? { label: 'Completar barrios', value: number(market.missingNeighborhoods), href: '/dashboard/market/reconciliacion', critical: false } : null,
+    market.pendingUniqueTerritorySuggestions !== null && market.pendingUniqueTerritorySuggestions > 0 ? { label: 'Validar barrios sugeridos', value: number(market.pendingUniqueTerritorySuggestions), href: '/dashboard/market/revisar-barrios', critical: false } : null,
+    territoryExceptions > 0 ? { label: 'Resolver territorio sin evidencia suficiente', value: number(territoryExceptions), href: '/dashboard/market/revisar-barrios', critical: false } : null,
+    market.pendingMatches !== null && market.pendingMatches > 0 ? { label: 'Revisar identidad canónica', value: number(market.pendingMatches), href: '/dashboard/market/reconciliacion', critical: false } : null,
+    market.missingNeighborhoods !== null && market.missingNeighborhoods > 0 ? { label: 'Completar barrios canónicos', value: number(market.missingNeighborhoods), href: '/dashboard/market/reconciliacion', critical: false } : null,
   ].filter((item): item is NonNullable<typeof item> => Boolean(item))
 
   const houseReference = portalReference.datasets.find((item) => item.datasetKind === 'portal_houses')
@@ -107,18 +113,23 @@ export default async function MarketPage() {
         <div className="mt-6 space-y-8">
           <section>
             <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Calidad de evidencia</h2>
-            <div className="mt-2 grid border-y border-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-2 grid border-y border-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
               {[
-                ['Cobertura territorial', percent(territorialCoverage)],
-                ['Cobertura KML', percent(kmlCoverage)],
-                ['Identidad confirmada', percent(confirmedCoverage)],
-              ].map(([label, value], index) => (
+                ['Territorio canónico', percent(territorialCoverage), `${number((market.canonicalProperties ?? 0) - (market.missingNeighborhoods ?? 0))} de ${number(market.canonicalProperties)}`],
+                ['Territorio live validado', percent(liveTerritorialCoverage), `${number(market.exactKmlLiveHouses)} de ${number(market.liveHouseCount)}`],
+                ['Barrios sugeridos', number(market.pendingUniqueTerritorySuggestions), 'Pendientes de validación humana'],
+                ['Identidad confirmada', percent(confirmedCoverage), `${number(market.confirmedProperties)} de ${number(market.canonicalProperties)}`],
+              ].map(([label, value, detail], index) => (
                 <div key={label} className={`py-4 ${index > 0 ? 'sm:border-l sm:border-[var(--n3-line)] sm:px-4' : 'pr-4'}`}>
                   <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
                   <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
+                  <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{detail}</p>
                 </div>
               ))}
             </div>
+            <p className="mt-3 max-w-4xl text-xs leading-5 text-[var(--n3-text-muted)]">
+              Las sugerencias territoriales no se publican como barrio canónico hasta una decisión auditada. Los casos ambiguos o sin match permanecen bloqueados en vez de recibir una ubicación inferida.
+            </p>
           </section>
 
           {houseReference ? (
@@ -153,8 +164,8 @@ export default async function MarketPage() {
 
           <DataStatusBar
             cutoff={date(market.latestObservedAt)}
-            coverage={`${number(market.confirmedProperties)} de ${number(market.canonicalProperties)} propiedades confirmadas`}
-            issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (territory.error ? 1 : 0) + (portalReference.error ? 1 : 0)}
+            coverage={`${number(market.confirmedProperties)} de ${number(market.canonicalProperties)} con identidad confirmada · ${number((market.canonicalProperties ?? 0) - (market.missingNeighborhoods ?? 0))} con barrio canónico`}
+            issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (territory.error ? 1 : 0) + (portalReference.error ? 1 : 0) + territoryExceptions}
             status={dataStatus}
           />
 
