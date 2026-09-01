@@ -21,6 +21,7 @@ type Payload = { cases: ValuationCase[]; error?: string }
 
 const money = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
 const statusLabels: Record<string, string> = { draft: 'Borrador', review: 'En revisión', approved: 'Aprobada', issued: 'Emitida' }
+const allowedStatuses = new Set(['all', 'draft', 'review', 'approved', 'issued'])
 
 export default function ValuationRegistryPage() {
   const [cases, setCases] = useState<ValuationCase[]>([])
@@ -44,7 +45,11 @@ export default function ValuationRegistryPage() {
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('status')
+    if (requested && allowedStatuses.has(requested)) setStatus(requested)
+    void load()
+  }, [])
 
   const counts = useMemo(() => ({
     draft: cases.filter((item) => item.status === 'draft').length,
@@ -73,7 +78,7 @@ export default function ValuationRegistryPage() {
   return (
     <WorkspaceShell>
       <WorkspaceHeader
-        eyebrow="Valorizaciones"
+        eyebrow="Valorizaciones · Casas V1"
         title="Qué necesita avanzar"
         meta={`${actionCount} requieren acción`}
         actions={[
