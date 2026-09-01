@@ -68,7 +68,7 @@ export const DIRECTOR_NAVIGATION: NavigationSection[] = [
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.office.read'] },
       { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.office.read'] },
-      { label: 'Informes', href: '/dashboard/reportes/autonomos', anyCapabilities: ['reports.office.read'] },
+      { label: 'Informes', href: '/dashboard/director/reporte', anyCapabilities: ['reports.office.read'] },
     ],
   },
   {
