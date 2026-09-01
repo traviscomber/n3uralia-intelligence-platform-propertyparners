@@ -150,7 +150,7 @@ export async function fetchVitacuraPrcRows() {
   const batches: Array<{ layer: PrcLayer; mid: string; rows: ParsedPrcRow[]; status: number; bytes: number }> = []
 
   for (const source of SOURCES) {
-    const url = `https://www.google.com/maps/d/kml?mid=${source.mid}&forcekml=1`
+    const url = `https://www.google.com/maps/d/u/1/kml?mid=${source.mid}&forcekml=1`
     const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(20000) })
     const text = await response.text()
     if (!response.ok) throw new Error(`PRC ${source.layer} source failed with ${response.status}`)
