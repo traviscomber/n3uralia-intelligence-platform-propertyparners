@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Download, ExternalLink, FileText, Send } from 'lucide-react'
 import { requirePageCapability } from '@/lib/access-guards'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { DataStatusBar, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 
 type CanonicalDocumentRow = { id:string; title:string; content:string; tags:string[]|null; created_at:string }
 type ReportRecord = { id:string; title:string; period:string; status:string; createdAt:string; pdfUrl:string|null; downloadUrl:string|null; sourceCount:number; model:string|null; promptVersion:string|null; costUsd:number|null }
@@ -40,11 +40,44 @@ export default async function CanonicalClientReportsPage(){
   const current=reports[0]??null;const history=reports.slice(1);const missingArtifacts=reports.filter(r=>!r.pdfUrl&&!r.downloadUrl).length
   const status=error?'blocked':reports.length===0?'blocked':missingArtifacts>0?'partial':'ready'
   const cutoff=current?formatDate(current.createdAt):'—'
+
   return <WorkspaceShell>
-    <WorkspaceHeader eyebrow="Informes" title="Informes canónicos" actions={[{label:'Generar y entregar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
-    <MetricStrip items={[{label:'Registrados',value:reports.length},{label:'Vigente',value:current?current.status:'—'},{label:'Con PDF',value:reports.length-missingArtifacts},{label:'Historial',value:history.length}]} />
-    <section className="mt-6"><div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Vigente</h2><span className="text-xs text-[var(--n3-text-muted)]">{current?current.status:'Sin informe'}</span></div>{current?<article className="grid gap-5 border-b border-[var(--n3-line)] py-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"><div><p className="text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{current.period}</p><h2 className="mt-2 text-xl font-semibold">{current.title}</h2><p className="mt-2 text-xs text-[var(--n3-text-muted)]">Generado {formatDate(current.createdAt)}</p><p className="mt-2 text-[11px] text-[var(--n3-text-muted)]">Evidencia: {current.sourceCount||'—'} fuentes · Modelo: {current.model||'—'} · Prompt: {current.promptVersion||'—'} · Costo: {current.costUsd==null?'—':`US$ ${current.costUsd.toFixed(4)}`}</p></div><div className="flex flex-wrap gap-2">{current.pdfUrl?<Link href={current.pdfUrl} target="_blank" className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs"><ExternalLink size={14}/>Abrir</Link>:null}{current.downloadUrl?<Link href={current.downloadUrl} className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs"><Download size={14}/>Descargar PDF</Link>:null}{!current.pdfUrl&&!current.downloadUrl?<span className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs text-[var(--n3-text-muted)]"><FileText size={14}/>PDF no vinculado</span>:null}</div></article>:<div className="border-b border-[var(--n3-line)] py-8 text-sm text-[var(--n3-text-muted)]">No hay informes registrados.</div>}</section>
-    <section className="mt-7"><div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Historial</h2><span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{history.length}</span></div>{history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=><article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_100px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="truncate text-sm font-medium">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{formatDate(report.createdAt)} · {report.sourceCount||'—'} fuentes · {report.model||'—'}</p></div><span className="text-xs text-[var(--n3-text-muted)]">{report.status}</span><div className="flex justify-end gap-2">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-9 w-9 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-9 w-9 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}</div></article>)}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}</section>
-    <DataStatusBar cutoff={cutoff} coverage={reports.length?`${reports.length-missingArtifacts}/${reports.length} con artefacto PDF`:'Sin informes canónicos'} issues={error?1:missingArtifacts} status={status}/>
+    <WorkspaceHeader eyebrow="Informes" title="Último informe" meta={current?`${current.status} · ${current.period}`:'Sin informe vigente'} actions={[{label:'Generar y entregar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+
+    <section className="mt-6 max-w-5xl">
+      {current?<article className="grid gap-6 border-y border-[var(--n3-line)] py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div>
+          <p className="text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{current.period}</p>
+          <h2 className="mt-2 text-xl font-semibold">{current.title}</h2>
+          <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Generado {formatDate(current.createdAt)}</p>
+          <p className="mt-1 text-sm text-[var(--n3-text-muted)]">Estado: {current.status}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {current.pdfUrl?<Link href={current.pdfUrl} target="_blank" className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs"><ExternalLink size={14}/>Abrir</Link>:null}
+          {current.downloadUrl?<Link href={current.downloadUrl} className="inline-flex min-h-10 items-center gap-2 bg-[var(--primary)] px-4 text-xs font-semibold text-white"><Download size={14}/>Descargar PDF</Link>:null}
+          {!current.pdfUrl&&!current.downloadUrl?<span className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs text-[var(--n3-text-muted)]"><FileText size={14}/>PDF no vinculado</span>:null}
+        </div>
+      </article>:<div className="border-y border-[var(--n3-line)] py-10 text-sm text-[var(--n3-text-muted)]">No hay informes registrados.</div>}
+    </section>
+
+    {current?<details className="mt-5 max-w-5xl border-b border-[var(--n3-line)] pb-5">
+      <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver trazabilidad</summary>
+      <div className="mt-4 grid gap-4 text-xs text-[var(--n3-text-muted)] sm:grid-cols-2 lg:grid-cols-4">
+        <div><p className="uppercase tracking-[0.12em]">Fuentes</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.sourceCount||'—'}</p></div>
+        <div><p className="uppercase tracking-[0.12em]">Modelo</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.model||'—'}</p></div>
+        <div><p className="uppercase tracking-[0.12em]">Versión</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.promptVersion||'—'}</p></div>
+        <div><p className="uppercase tracking-[0.12em]">Costo técnico</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.costUsd==null?'—':`US$ ${current.costUsd.toFixed(4)}`}</p></div>
+      </div>
+    </details>:null}
+
+    <section className="mt-8 max-w-5xl">
+      <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Anteriores</h2><span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{history.length}</span></div>
+      {history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=><article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_100px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="truncate text-sm font-medium">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{formatDate(report.createdAt)}</p></div><span className="text-xs text-[var(--n3-text-muted)]">{report.status}</span><div className="flex justify-end gap-2">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-9 w-9 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-9 w-9 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}</div></article>)}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}
+    </section>
+
+    <details className="mt-8 max-w-5xl">
+      <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Estado de datos</summary>
+      <DataStatusBar cutoff={cutoff} coverage={reports.length?`${reports.length-missingArtifacts}/${reports.length} con artefacto PDF`:'Sin informes'} issues={error?1:missingArtifacts} status={status}/>
+    </details>
   </WorkspaceShell>
 }
