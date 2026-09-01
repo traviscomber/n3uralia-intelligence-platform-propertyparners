@@ -54,8 +54,17 @@ export function OperationalState({
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">
         {labels[kind]}
       </p>
-      <h3 className="mt-2 text-lg font-semibold text-[var(--n3-text-light)]">{title}</h3>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">{description}</p>
+
+      <div className="mt-3 max-w-3xl">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Qué ocurre</p>
+        <h3 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">{title}</h3>
+      </div>
+
+      <div className="mt-4 max-w-3xl">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Por qué lo ves</p>
+        <p className="mt-1 text-sm leading-6 text-[var(--n3-text-muted)]">{description}</p>
+      </div>
+
       {reference ? (
         <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">
           Referencia del incidente: {reference}
