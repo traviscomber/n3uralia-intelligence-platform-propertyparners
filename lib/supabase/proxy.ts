@@ -11,6 +11,13 @@ function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) 
 }
 
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Release identity is intentionally public so CI can verify that the exact
+  // Git commit reached production before authenticated browser QA starts.
+  // The route exposes only deployment SHA/environment and no business data.
+  if (pathname === '/api/release') return NextResponse.next({ request })
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -30,7 +37,6 @@ export async function updateSession(request: NextRequest) {
 
   // Skip auth enforcement in development for faster iteration.
   if (process.env.NODE_ENV !== 'development') {
-    const pathname = request.nextUrl.pathname
     const isApiPath = pathname.startsWith('/api/')
     const isCronPath = pathname.startsWith('/api/cron/')
 
