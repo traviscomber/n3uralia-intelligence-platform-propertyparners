@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Probe source through Vercel preview runtime
         run: |
-          curl --retry 6 --retry-all-errors --retry-delay 10 --fail-with-body \
+          curl -L --retry 6 --retry-all-errors --retry-delay 10 --fail-with-body \
             https://n3uralia-intelligence-platf-git-790588-travis-projects-c14a785a.vercel.app/api/internal/prc-source-probe \
             -o prc-probe.json
           node -e "const r=require('./prc-probe.json'); if(!r.ok) throw new Error(r.error||'PRC probe failed'); if(!Array.isArray(r.diagnostics)||r.diagnostics.length!==2) throw new Error('Expected 2 PRC diagnostics'); if(r.diagnostics.some(x=>!x.rows)) throw new Error('A PRC layer returned no rows'); console.log(JSON.stringify(r,null,2))"
