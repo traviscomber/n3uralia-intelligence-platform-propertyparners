@@ -18,6 +18,7 @@ type Summary = { entities: Entity[]; generatedAt?: string }
 type Operations = {
   valuations: { review: number }
   assignments: { paused: number }
+  market: { neighborhoodApprovals: number }
   tasks: { overdue: number; urgent: number }
   generatedAt: string
 }
@@ -65,6 +66,7 @@ export function CeoToday() {
 
   const priorities = useMemo<Priority[]>(() => {
     const items: Priority[] = []
+    if (operations?.market.neighborhoodApprovals) items.push({ label: 'Aprobar barrios', detail: `${n(operations.market.neighborhoodApprovals)} recomendaciones listas para aprobar o rechazar`, href: '/dashboard/market/revisar-barrios' })
     if (operations?.tasks.overdue) items.push({ label: 'Tareas vencidas', detail: `${n(operations.tasks.overdue)} requieren resolución`, href: '/dashboard/control/operations', critical: true })
     if (gap != null && gap < 0) items.push({ label: 'Meta comercial', detail: `Brecha de ${n(Math.abs(gap), 1)} operaciones`, href: '/dashboard/control/admin', critical: true })
     if (stale != null && stale > 0 && staleRatio != null && staleRatio >= 20) items.push({ label: 'Leads antiguos', detail: `${n(stale)} leads superan 90 días`, href: '/dashboard/control/operations' })
@@ -98,7 +100,7 @@ export function CeoToday() {
         { label: 'Ventas', value: n(latest?.sales, 1) },
         { label: 'Meta', value: n(latest?.salesTarget, 1) },
         { label: 'Cumplimiento', value: compliance == null ? '—' : `${n(compliance, 0)}%`, tone: compliance == null ? 'default' : compliance >= 100 ? 'success' : compliance >= 80 ? 'warning' : 'danger' },
-        { label: 'Por revisar', value: operations.valuations.review, tone: operations.valuations.review ? 'warning' : 'default' },
+        { label: 'Por revisar', value: operations.valuations.review + operations.market.neighborhoodApprovals, tone: operations.valuations.review + operations.market.neighborhoodApprovals ? 'warning' : 'default' },
       ]} />
 
       <section className="mt-8 max-w-5xl">
