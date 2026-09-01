@@ -107,13 +107,19 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       .eq('id', id)
       .maybeSingle()
 
-    if (caseError) return NextResponse.json({ error: caseError.message }, { status: 500 })
+    if (caseError) {
+      console.error('[valuation-professional-review] failed to load case', { caseId: id, error: caseError })
+      return NextResponse.json({ error: 'No fue posible consultar la valorización.' }, { status: 500 })
+    }
     if (!valuationCase) return NextResponse.json({ error: 'Valorización no encontrada' }, { status: 404 })
 
     assertProfileVisible(scope, valuationCase.requested_by)
 
     const { data, error } = await supabase.rpc('valuation_professional_review_v1', { p_case_id: id })
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('[valuation-professional-review] review RPC failed', { caseId: id, error })
+      return NextResponse.json({ error: 'No fue posible generar la revisión profesional.' }, { status: 500 })
+    }
 
     const review = (data ?? {}) as ProfessionalReview
     let reliability: ReliabilityRow | null = null
