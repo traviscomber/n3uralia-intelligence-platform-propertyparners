@@ -76,9 +76,12 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (options: { background?: boolean } = {}) => {
+    const background = options.background === true
+    if (!background) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const response = await fetch('/api/management/reports', { cache: 'no-store' })
       const payload = await response.json() as ReportsResponse
@@ -86,16 +89,19 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
       setReports(payload.reports ?? [])
       setDelivery(payload.delivery ?? { configured: false, provider: null })
       setHasLoaded(true)
+      return true
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No fue posible cargar los reportes.')
+      if (!background) setError(cause instanceof Error ? cause.message : 'No fue posible cargar los reportes.')
+      return false
     } finally {
-      setLoading(false)
+      if (!background) setLoading(false)
     }
   }, [])
 
   useEffect(() => { void load() }, [load])
 
   async function execute(endpoint: string, name: string) {
+    if (action || loading) return
     setAction(name)
     setMessage(null)
     setError(null)
@@ -114,7 +120,8 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
       } else {
         setMessage(`Programaciones procesadas: ${payload.schedulesProcessed ?? 0}; fallidas: ${payload.schedulesFailed ?? 0}.`)
       }
-      await load()
+      const refreshed = await load({ background: true })
+      if (!refreshed) setError('La operación se completó, pero no fue posible actualizar la vista. Usa Actualizar antes de continuar.')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'La operación falló.')
     } finally {
@@ -168,6 +175,8 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
           <button
             type="button"
             disabled={Boolean(action) || loading || !delivery.configured}
+            aria-disabled={!delivery.configured || undefined}
+            title={!delivery.configured ? 'Configura el proveedor antes de procesar entregas.' : undefined}
             onClick={() => void execute('/api/management/reports/deliver', 'deliver')}
             className="inline-flex min-h-11 items-center gap-2 border border-[#d7332b] px-4 py-2 text-sm text-[#ff766f] disabled:opacity-50"
           >
@@ -179,7 +188,7 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
         </button>
       </div>
       {message ? <p role="status" className="border-t border-[var(--n3-line)] p-5 text-sm text-[#65c780]">{message}</p> : null}
-      {error ? <p role="alert" className="border-t border-[var(--n3-line)] p-5 text-sm text-[#ff766f]">No se pudo completar la última operación. Se mantienen los últimos datos válidos visibles. {error}</p> : null}
+      {error ? <p role="alert" className="border-t border-[var(--n3-line)] p-5 text-sm text-[#ff766f]">{error}</p> : null}
     </IntelligencePanel>
 
     <section>
