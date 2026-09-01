@@ -5,7 +5,13 @@ import { ChevronDown, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { PPLogo } from '@/components/brand/pp-logo'
 import { getRoleLabel, hasCapability } from '@/lib/access-control'
-import { CEO_NAVIGATION, DEFAULT_NAVIGATION, type NavigationSection } from '@/lib/navigation'
+import {
+  ADMIN_NAVIGATION,
+  CEO_NAVIGATION,
+  DIRECTOR_NAVIGATION,
+  SELLER_NAVIGATION,
+  type NavigationSection,
+} from '@/lib/navigation'
 import type { Profile } from '@/lib/types'
 
 function filterSections(profile: Profile, source: NavigationSection[]): NavigationSection[] {
@@ -21,9 +27,16 @@ function filterSections(profile: Profile, source: NavigationSection[]): Navigati
     .filter((section) => section.items.length > 0)
 }
 
+function sourceForRole(profile: Profile): NavigationSection[] {
+  if (profile.role === 'ceo') return CEO_NAVIGATION
+  if (profile.role === 'admin') return ADMIN_NAVIGATION
+  if (profile.role === 'director' || profile.role === 'subdirector') return DIRECTOR_NAVIGATION
+  return SELLER_NAVIGATION
+}
+
 function visibleSections(profile: Profile | null): NavigationSection[] {
   if (!profile) return []
-  return filterSections(profile, profile.role === 'ceo' ? CEO_NAVIGATION : DEFAULT_NAVIGATION)
+  return filterSections(profile, sourceForRole(profile))
 }
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
@@ -70,7 +83,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
         {navigationSections.map((section, index) => {
           const sectionActive = section.items.some((item) => isActive(item.href, item.exact))
-          const collapsible = profile?.role === 'ceo' && index > 0
+          const collapsible = index > 0
 
           if (collapsible) {
             return (
