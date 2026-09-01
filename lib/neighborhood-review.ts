@@ -16,7 +16,14 @@ export type NeighborhoodReviewSnapshot = {
   approveRecommended: number
   quickReview: number
   mandatoryReview: number
+  unassessed: number
   error: string | null
+}
+
+type ReviewRow = {
+  classification: string
+  decision: string
+  assessment: { review_item_id: string } | null
 }
 
 type UatSnapshot = {
@@ -33,7 +40,7 @@ export async function getNeighborhoodReviewSnapshot(): Promise<NeighborhoodRevie
   const [{ data, error }, { data: uatData, error: uatError }] = await Promise.all([
     supabase
       .from('market_neighborhood_review_items')
-      .select('classification,decision'),
+      .select('classification,decision,assessment:market_neighborhood_review_assessments(review_item_id)'),
     supabase.rpc('market_neighborhood_uat_snapshot'),
   ])
 
@@ -54,16 +61,18 @@ export async function getNeighborhoodReviewSnapshot(): Promise<NeighborhoodRevie
       approveRecommended: 0,
       quickReview: 0,
       mandatoryReview: 0,
+      unassessed: 0,
       error: error.message,
     }
   }
 
-  const rows = data || []
+  const rows = (data || []) as unknown as ReviewRow[]
   const clearRows = rows.filter((row) => row.classification === 'clear')
   const accepted = clearRows.filter((row) => row.decision === 'accepted').length
   const discarded = clearRows.filter((row) => row.decision === 'discarded').length
   const pending = clearRows.filter((row) => row.decision === 'pending').length
   const reviewed = accepted + discarded
+  const unassessed = rows.filter((row) => row.decision === 'pending' && !row.assessment).length
   const uat = (uatData || {}) as UatSnapshot
 
   return {
@@ -82,6 +91,7 @@ export async function getNeighborhoodReviewSnapshot(): Promise<NeighborhoodRevie
     approveRecommended: Number(uat.approve_recommended || 0),
     quickReview: Number(uat.quick_review || 0),
     mandatoryReview: Number(uat.mandatory_review || 0),
+    unassessed,
     error: uatError ? uatError.message : null,
   }
 }
