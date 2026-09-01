@@ -54,12 +54,12 @@ const phases = [
   },
 ]
 
-function n(value: number) {
-  return value.toLocaleString('es-CL')
+function n(value: number | null) {
+  return value === null ? '—' : value.toLocaleString('es-CL')
 }
 
-function pct(value: number) {
-  return `${(value * 100).toFixed(1)}%`
+function pct(value: number | null) {
+  return value === null ? '—' : `${(value * 100).toFixed(1)}%`
 }
 
 export default async function MarketRoadmapPage() {
@@ -76,6 +76,8 @@ export default async function MarketRoadmapPage() {
           { label: 'Volver a Mercado', href: '/dashboard/market' },
         ]}
       />
+
+      {reconciliation.error ? <div role="alert" className="border border-[#a77a22] bg-[#0c1111] p-4 text-sm text-[#f6c453]">La base operativa no está completamente disponible. Los valores desconocidos se muestran como “—”; el universo canónico permanece visible.</div> : null}
 
       <section>
         <SectionHeading eyebrow="Estado base" title="Universo y cobertura actuales" description="Estos valores determinan el orden de trabajo; no representan equivalencias automáticas entre publicaciones, propiedades y ventas." />
