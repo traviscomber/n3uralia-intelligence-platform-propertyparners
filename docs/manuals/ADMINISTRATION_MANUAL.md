@@ -1,211 +1,191 @@
-# Manual de administración
+# Administration manual
 
-Fecha: 1 de agosto de 2026.
+Date: September 1, 2026.
 
-## 1. Responsabilidades
+## 1. Administrative responsibilities
 
-La administración técnica y funcional debe mantener:
+Technical and functional administration must keep the following aligned with production:
 
-- usuarios y roles correctos;
-- alcance de oficina y perfil;
-- fuentes autorizadas;
-- trazabilidad de importaciones;
-- métricas, metas y reglas aprobadas;
-- reportes y destinatarios;
-- secretos, respaldos, logs e incidentes;
-- documentación alineada con producción.
+- users, roles and office scope;
+- authorized sources and ingestion status;
+- import and reconciliation traceability;
+- approved metrics, goals and rules;
+- report schedules and recipients;
+- secrets, backups, logs and incident records;
+- release and rollback evidence;
+- delivery documentation.
 
-## 2. Alta y modificación de usuarios
+## 2. User provisioning and changes
 
-1. Crear la cuenta en Supabase Auth mediante un canal autorizado.
-2. Crear o verificar `profiles` con el mismo UUID.
-3. Asignar uno de los roles vigentes: `admin`, `ceo`, `director`, `subdirector`, `seller`.
-4. Para dirección/subdirección, registrar `team` exactamente como la oficina canónica.
-5. Para partner, vincular `management_entities.profile_id`.
-6. Confirmar la jerarquía `office → partner` mediante `parent_id`.
-7. Ejecutar QA de aislamiento antes de entregar credenciales.
+1. Create the account in Supabase Auth through an authorized channel.
+2. Create or verify the corresponding `profiles` row with the same UUID.
+3. Assign one current application role: `admin`, `ceo`, `director`, `subdirector`, `seller`.
+4. For director/subdirector, assign the canonical office/team scope.
+5. For seller, link the applicable management entity/profile relationship.
+6. Confirm the `office → partner` hierarchy.
+7. Run role/isolation QA before credentials are handed over.
 
-No reutilizar cuentas entre personas.
+Do not share accounts between people.
 
-## 3. Baja de usuarios
+## 3. User offboarding
 
-1. Deshabilitar o eliminar la sesión en Auth según política.
-2. Desactivar asignaciones organizacionales.
-3. Reasignar tareas, propiedades y casos pendientes.
-4. Conservar logs y decisiones históricas.
-5. No borrar expedientes emitidos ni evidencia de auditoría.
+1. Disable access in Auth according to policy.
+2. Disable active organizational assignments.
+3. Reassign open tasks, properties and valuation cases.
+4. Preserve audit history and issued valuation evidence.
+5. Never delete an issued valuation snapshot simply to remove a user.
 
-## 4. Gestión de entidades
+## 4. Organizational entities
 
-`management_entities` representa compañía, oficinas, equipos y partners.
+`management_entities` represents company, offices, teams and partners.
 
-Controles:
+Controls:
 
-- nombres de oficina únicos y consistentes;
-- partner con `profile_id` inequívoco;
-- `parent_id` hacia la oficina correcta;
-- `active=false` para entidades retiradas;
-- metadata sin secretos ni datos personales innecesarios.
+- unique and consistent office names;
+- unambiguous profile linkage;
+- correct parent hierarchy;
+- inactive entities marked `active=false`;
+- metadata free of secrets and unnecessary personal data.
 
-Después de cambios jerárquicos, ejecutar `Authenticated role QA`.
+After hierarchy changes, run authenticated role/isolation QA.
 
-## 5. Fuentes de mercado
+## 5. Market Intelligence V1
 
-Antes de cargar:
+The operational acceptance scope is **houses for sale in Vitacura**.
 
-- confirmar autorización legal y contractual;
-- identificar sistema y dataset;
-- registrar nombre, archivo, hash y período;
-- validar campos obligatorios;
-- usar una muestra de staging cuando la fuente sea nueva.
+Canonical V1 evidence includes:
 
-Compatibilidades:
+- Portal Inmobiliario house listings through the active market-refresh pipeline;
+- CBRS reference transactions;
+- Property Partners territorial KML / canonical neighborhood polygons.
 
-| Fuente | Dataset |
-|---|---|
-| Portal Inmobiliario | `portal_apartments`, `portal_houses`, `portal_projects` |
-| CBRS | `registered_sales` |
-| Cliente | `client_sales` |
-| KML | `kml_neighborhoods` |
+Apartment and project refreshes are outside the operational V1 acceptance scope and must not be represented as required V1 coverage.
 
-La captura viva de Portal es una muestra no reconciliada y no escribe en producción. No evadir CAPTCHA, bloqueos o términos del proveedor.
+Before importing or enabling a source:
 
-## 6. Métricas de gestión
+- confirm contractual/legal authorization;
+- identify system and dataset;
+- record source, period and lineage;
+- validate required fields and reconciliation rules;
+- fail closed on invalid or partial ingestion.
 
-### Importación
+Do not bypass CAPTCHA, access controls or provider terms.
 
-Usar `/api/management/import` con:
+## 6. Valuation administration
 
-- entidad existente y visible;
-- código activo;
-- período común;
-- fuente y referencia;
-- valor o estado explícito no evaluable;
-- versión de fórmula;
-- evidencia.
+The Valuation module requires:
 
-### Publicación
+- traceable subject evidence;
+- a minimum of three human-selected accepted comparables;
+- documented review decisions;
+- authorized workflow transitions;
+- CEO final approval/issuance where required by the current workflow;
+- immutable issued snapshots.
 
-El dashboard no debe sustituir datos documentales con cualquier fila importada. Sólo usa `management_approved_metric_values`, que exige:
+Never rewrite historical `issued` evidence from live data.
 
-- cálculo canónico;
-- calidad verificada;
-- conciliación exacta o dentro de tolerancia;
-- aprobación y autorización de publicación.
+## 7. Management metrics
 
-### Metas
+The dashboard must not promote any imported row to an official KPI automatically.
 
-Una meta sólo se usa cuando está aprobada o tiene aprobación registrada. Mantener entidad, métrica, período y versión alineados con el valor.
+Official publication requires the appropriate approved/persisted metric path and supporting evidence. Keep entity, metric, period, formula version and source aligned.
 
-## 7. Reglas y alertas
+Provisional thresholds must not be treated as formal employee evaluation rules until Property Partners approves the KPI dictionary.
 
-- Crear reglas únicamente con umbrales aprobados.
-- Definir severidad, alcance y responsable.
-- Probar períodos sin datos y denominadores cero.
-- Evitar alertas duplicadas abiertas.
-- Documentar reconocimiento, resolución o descarte.
+## 8. Reports and schedules
 
-No convertir reglas provisionales en evaluación laboral oficial sin aprobación del Cliente.
+Only authorized executive roles may create or modify recurring schedules.
 
-## 8. Reportes
+Validate:
 
-### Programaciones
+- report type;
+- scope/entity;
+- cadence;
+- authorized recipients;
+- next execution date;
+- delivery channel;
+- approval state.
 
-Sólo CEO/admin crea o modifica schedules.
+### Management delivery
 
-Validar:
+Primary management delivery processing is protected by `CRON_SECRET` and uses the configured report provider. A successful cron invocation and a successful email delivery are separate facts.
 
-- tipo de reporte;
-- entidad o alcance global;
-- cadencia;
-- día 1–28;
-- destinatarios autorizados;
-- `next_run_at` futuro.
+### Document delivery
 
-### Cron
+Weekly/monthly document schedules resolve recipient roles against current application profiles and Supabase Auth. The `profiles` table is the role/scope source; user email is resolved from Auth, not from removed legacy profile columns.
 
-- Ruta: `/api/cron/management-monthly`.
-- Protección: `Authorization: Bearer CRON_SECRET`.
-- Vercel debe contener el mismo secreto en Production.
-- No registrar el valor en logs.
+A schedule must advance its `next_send_at` only after the applicable scheduling action has completed safely. Failed delivery attempts remain observable and must not be silently reclassified as sent.
 
-### Recuperación manual
+## 9. Secrets and credentials
 
-CEO/admin puede ejecutar `POST /api/management/reports/run`. Procesa sólo programaciones vencidas y conserva idempotencia normal por schedule/período.
+- Keep secrets in Vercel, GitHub Actions or an approved secret manager.
+- Use environment-specific values.
+- Restrict administrative access.
+- Rotate credentials during control transfer when required.
+- Never expose `SUPABASE_SERVICE_ROLE_KEY` or equivalent privileged secrets to the browser.
+- Do not copy secrets into documentation, logs, tickets or screenshots.
 
-### Distribución
+## 10. Backups and recovery
 
-El sistema registra destinatarios y estado. Mientras no exista proveedor de correo validado:
+- Verify the actual backup capability of the contracted Supabase plan.
+- Record backup/retention evidence before claiming a contractual backup SLA.
+- Test restoration in an isolated environment where feasible.
+- Record agreed RPO/RTO when approved.
+- Create an appropriate recovery point before high-risk migrations.
+- Never restore over production without explicit authorization.
 
-- `pending` significa pendiente/manual;
-- `sent` requiere referencia externa;
-- `failed` requiere error;
-- `acknowledged` requiere confirmación.
+Architecture or documentation alone does not prove historical backup retention or successful restore testing.
 
-## 9. Secretos
+## 11. Monitoring
 
-- Mantener secretos en Vercel, GitHub Actions o gestor aprobado.
-- Usar valores distintos por entorno.
-- Limitar acceso administrativo.
-- Rotar al transferir control.
-- Revisar logs tras una exposición.
-- Nunca copiar `service_role` al frontend.
-
-## 10. Backups y recuperación
-
-- Confirmar plan de backups contratado en Supabase.
-- Probar restauración en un entorno aislado.
-- Registrar RPO/RTO acordados.
-- Antes de una migración de riesgo, generar punto de recuperación.
-- No restaurar sobre producción sin aprobación explícita.
-
-## 11. Monitoreo
-
-Revisar:
+Review:
 
 - GitHub Actions;
-- deployments y build logs de Vercel;
-- errores y warnings de runtime;
-- logs de cron;
-- importaciones fallidas;
-- alertas de seguridad Supabase;
-- crecimiento de tablas de raw records y observaciones.
+- Vercel deployment/build status;
+- production runtime errors and 5xx;
+- cron execution and delivery failures;
+- ingestion failures and stale sources;
+- Supabase security findings;
+- growth and error states in operational tables.
 
-## 12. Procedimiento de release
+Escalate repeated cron failures even if the HTTP route returns 200, because per-item failures can otherwise be hidden inside a successful scheduler invocation.
 
-1. Crear branch desde `main`.
-2. Auditar archivos y esquema afectados.
-3. Implementar commits pequeños.
-4. Añadir pruebas.
-5. Abrir PR.
-6. Exigir CI exitoso y Preview `READY`.
-7. Verificar logs de Preview.
-8. Fusionar a `main`.
-9. Confirmar Production `READY`.
-10. Revisar errores de runtime.
-11. Actualizar matriz y documentación.
+## 12. Release procedure
 
-## 13. QA por rol
+1. Branch from `main`.
+2. Audit affected code/schema and contract impact.
+3. Implement a narrow change.
+4. Add or update deterministic verification.
+5. Open a PR.
+6. Require contractual CI and security/IP checks to pass.
+7. Require Vercel Preview `READY`.
+8. Review relevant runtime/build evidence.
+9. Merge to `main`.
+10. Confirm Production `READY`.
+11. Verify the affected production route or workflow.
+12. Review runtime errors after deployment.
+13. Update delivery evidence when the change affects acceptance scope.
 
-El workflow manual `Authenticated role QA` requiere secretos `QA_*` en GitHub.
+## 13. QA by role
 
-Criterios mínimos:
+Minimum role expectations:
 
-- CEO/admin: alcance global.
-- Director/subdirector: oficina raíz y partners propios, sin compañía ni oficinas ajenas.
-- Seller: única entidad vinculada a su perfil.
-- Métricas, metas y alertas con `entity_id` dentro del conjunto visible.
-- Valorizaciones y asignaciones dentro del alcance del perfil.
+- CEO/admin: authorized global scope;
+- director/subdirector: assigned office and own team only;
+- seller: own authorized entity/cases/tasks;
+- no cross-office or cross-user data exposure;
+- valuation transitions restricted to their current workflow permissions.
 
-Conservar el artefacto JSON del workflow como evidencia.
+Authenticated UAT requires designated test participants/credentials. Do not use uncontrolled real accounts to manufacture acceptance evidence.
 
-## 14. Gestión de incidentes
+## 14. Incident management
 
-1. Clasificar integridad, disponibilidad, confidencialidad o proveedor.
-2. Contener sin borrar evidencia.
-3. Rotar secretos si aplica.
-4. Restaurar servicio estable.
-5. Identificar causa raíz.
-6. Registrar acciones y responsables.
-7. Notificar conforme al contrato y política vigente.
-8. Añadir una prueba que evite la regresión.
+1. Classify integrity, availability, confidentiality or third-party impact.
+2. Preserve evidence without exposing secrets.
+3. Contain the issue.
+4. Restore a stable service.
+5. Determine root cause.
+6. Apply the smallest safe correction with rollback available.
+7. Add regression coverage.
+8. Verify deployment and production behavior.
+9. Record closure and responsible parties.
