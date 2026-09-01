@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, RefreshCw } from 'lucide-react'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { OperationalState } from '@/components/ui/operational-state'
 
 type Point = {
   period: string
@@ -73,9 +74,9 @@ export function CeoToday() {
     return items.slice(0, 3)
   }, [gap, operations, stale, staleRatio, visitRate])
 
-  if (loading) return <WorkspaceShell><div className="py-12 text-sm text-[var(--n3-text-muted)]">Preparando prioridades de hoy…</div></WorkspaceShell>
+  if (loading) return <WorkspaceShell><OperationalState kind="loading" title="Preparando prioridades" description="Consultando desempeño, tareas y excepciones ejecutivas del período." /></WorkspaceShell>
 
-  if (failed || !summary || !operations) return <WorkspaceShell><button onClick={() => void load()} className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><RefreshCw size={15} /> Reintentar</button></WorkspaceShell>
+  if (failed || !summary || !operations) return <WorkspaceShell><OperationalState kind="error" title="No fue posible preparar las prioridades" description="La información ejecutiva no pudo consultarse. No se muestran métricas parciales como si fueran completas."><button type="button" onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm font-semibold"><RefreshCw size={15} />Reintentar</button></OperationalState></WorkspaceShell>
 
   const statusText = compliance == null
     ? 'No hay evidencia suficiente para resumir el avance del período.'
@@ -107,12 +108,12 @@ export function CeoToday() {
         </div>
         <div className="divide-y divide-[var(--n3-line)]">
           {priorities.length ? priorities.map((item, index) => (
-            <Link key={`${item.label}-${index}`} href={item.href} className="group grid min-h-20 grid-cols-[1fr_auto] items-center gap-4 py-4 hover:bg-white/[0.02]">
-              <div>
+            <Link key={`${item.label}-${index}`} href={item.href} className="group grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-[var(--n3-text-light)]">{item.label}</p>
-                <p className={`mt-1 text-sm ${item.critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{item.detail}</p>
+                <p className={`mt-1 break-words text-sm ${item.critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{item.detail}</p>
               </div>
-              <span className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar <ArrowRight size={14} /></span>
+              <span className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar <ArrowRight size={14} /></span>
             </Link>
           )) : (
             <div className="py-8 text-sm text-[var(--n3-text-muted)]">No hay excepciones prioritarias con la evidencia disponible.</div>
