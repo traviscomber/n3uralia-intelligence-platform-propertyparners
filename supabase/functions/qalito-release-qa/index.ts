@@ -3,9 +3,11 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4"
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@6.1.0"
 
 const REPOSITORY = "traviscomber/n3uralia-intelligence-platform-propertyparners"
+const REPOSITORY_ID = "1296831410"
 const AUDIENCE = "qalito-release-qa"
 const ISSUER = "https://token.actions.githubusercontent.com"
 const MAIN_REF = "refs/heads/main"
+const STALE_QA_MAX_AGE_MS = 2 * 60 * 60 * 1000
 const ALLOWED_WORKFLOWS = new Set([
   `${REPOSITORY}/.github/workflows/authenticated-role-qa.yml@${MAIN_REF}`,
   `${REPOSITORY}/.github/workflows/authenticated-visual-qa.yml@${MAIN_REF}`,
@@ -46,6 +48,7 @@ async function authorize(req: Request, body: Record<string, unknown>) {
   const { payload } = await jwtVerify(token, JWKS, { issuer: ISSUER, audience: AUDIENCE })
 
   if (payload.repository !== REPOSITORY) throw new Error("repository_not_allowed")
+  if (String(payload.repository_id || "") !== REPOSITORY_ID) throw new Error("repository_id_not_allowed")
   if (payload.repository_owner !== "traviscomber") throw new Error("owner_not_allowed")
   if (payload.ref !== MAIN_REF) throw new Error("ref_not_allowed")
   if (!ALLOWED_WORKFLOWS.has(String(payload.workflow_ref || ""))) throw new Error("workflow_not_allowed")
@@ -69,19 +72,26 @@ function adminClient() {
   })
 }
 
-async function findQaUserIds(client: ReturnType<typeof adminClient>, runId: string) {
-  const ids = new Set<string>()
+async function listQaUsers(client: ReturnType<typeof adminClient>) {
+  const users = []
   let page = 1
   while (page <= 10) {
     const { data, error } = await client.auth.admin.listUsers({ page, perPage: 1000 })
     if (error) throw error
     for (const user of data.users) {
-      if (String(user.user_metadata?.qa_run_id || "") === runId && user.user_metadata?.qa === true) ids.add(user.id)
+      if (user.user_metadata?.qa === true && String(user.user_metadata?.qa_run_id || "")) users.push(user)
     }
     if (data.users.length < 1000) break
     page += 1
   }
-  return [...ids]
+  return users
+}
+
+async function findQaUserIds(client: ReturnType<typeof adminClient>, runId: string) {
+  const users = await listQaUsers(client)
+  return users
+    .filter((user) => String(user.user_metadata?.qa_run_id || "") === runId)
+    .map((user) => user.id)
 }
 
 async function cleanupRun(client: ReturnType<typeof adminClient>, runId: string) {
@@ -104,7 +114,21 @@ async function cleanupRun(client: ReturnType<typeof adminClient>, runId: string)
   return userIds.length
 }
 
+async function purgeStaleQaRuns(client: ReturnType<typeof adminClient>, currentRunId: string) {
+  const cutoff = Date.now() - STALE_QA_MAX_AGE_MS
+  const staleRunIds = new Set<string>()
+  for (const user of await listQaUsers(client)) {
+    const runId = String(user.user_metadata?.qa_run_id || "")
+    const createdAt = Date.parse(user.created_at || "")
+    if (runId && runId !== currentRunId && Number.isFinite(createdAt) && createdAt < cutoff) staleRunIds.add(runId)
+  }
+  let deletedUsers = 0
+  for (const runId of staleRunIds) deletedUsers += await cleanupRun(client, runId)
+  return { staleRuns: staleRunIds.size, deletedUsers }
+}
+
 async function provisionRun(client: ReturnType<typeof adminClient>, runId: string, sha: string) {
+  await purgeStaleQaRuns(client, runId)
   await cleanupRun(client, runId)
 
   const { data: offices, error: officeError } = await client
@@ -134,12 +158,12 @@ async function provisionRun(client: ReturnType<typeof adminClient>, runId: strin
       })
       if (userError || !data.user) throw userError || new Error(`user_not_created:${spec.key}`)
 
-      const { error: profileError } = await client.from("profiles").insert({
+      const { error: profileError } = await client.from("profiles").upsert({
         id: data.user.id,
         full_name: `[QA ${runId}] ${spec.label}`,
         role: spec.role,
         team: spec.team,
-      })
+      }, { onConflict: "id" })
       if (profileError) throw profileError
 
       if (spec.role === "seller") {
