@@ -1,4 +1,4 @@
-name: Vitacura PRC public map network probe
+name: Vitacura PRC embedded map document probe
 
 on:
   pull_request:
@@ -11,60 +11,40 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 6
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.17.1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --no-frozen-lockfile
-      - name: Inspect public My Maps network data endpoints
+      - name: Inspect embedded My Maps document payload
         run: |
-          node <<'JS'
-          const puppeteer = require('puppeteer-core')
-          const fs = require('fs')
-          const candidates = ['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser']
-          const executablePath = candidates.find(p => fs.existsSync(p))
-          if (!executablePath) throw new Error('No Chromium executable on runner')
-          const maps = [
-            {name:'edification', mid:'1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT'},
-            {name:'land_use', mid:'1HvsC09ycddCXYMDVJMasi5c_HQliaBKB'},
+          python - <<'PY'
+          import urllib.request, re, html as htmlmod
+          maps=[
+            ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT',['E-Ab1','E-Am3sz','E-Ae3sz']),
+            ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB',['U-PVOsz','U-POCsz','U-PCsz']),
           ]
-          ;(async () => {
-            const browser = await puppeteer.launch({headless:true, executablePath, args:['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage']})
-            try {
-              for (const map of maps) {
-                const page = await browser.newPage()
-                const seen = []
-                page.on('response', async response => {
-                  try {
-                    const url = response.url()
-                    const headers = response.headers()
-                    const ct = headers['content-type'] || ''
-                    if (/image|font|css/i.test(ct)) return
-                    if (!/(google|maps|gstatic)/i.test(url)) return
-                    let bytes = Number(headers['content-length'] || 0)
-                    if (!bytes && /(json|javascript|text|protobuf|octet-stream)/i.test(ct)) {
-                      try { bytes = (await response.buffer()).length } catch {}
-                    }
-                    seen.push({status:response.status(),contentType:ct,bytes,url})
-                  } catch {}
-                })
-                await page.goto(`https://www.google.com/maps/d/embed?mid=${map.mid}`, {waitUntil:'domcontentloaded', timeout:45000})
-                await new Promise(r => setTimeout(r,12000))
-                const uniq = [...new Map(seen.map(x => [x.url,x])).values()]
-                  .sort((a,b) => b.bytes-a.bytes)
-                  .slice(0,80)
-                console.log(`=== ${map.name} responses ===`)
-                console.log(JSON.stringify(uniq,null,2))
-                const html = await page.content()
-                console.log(`DOM bytes=${Buffer.byteLength(html)} title=${JSON.stringify(await page.title())}`)
-                await page.close()
+          for name,mid,tokens in maps:
+            req=urllib.request.Request(f'https://www.google.com/maps/d/embed?mid={mid}',headers={'User-Agent':'Mozilla/5.0'})
+            raw=urllib.request.urlopen(req,timeout=30).read()
+            text=raw.decode('utf-8','replace')
+            decoded=htmlmod.unescape(text)
+            print(f'=== {name} status bytes={len(raw)} ===')
+            for token in tokens:
+              forms={
+                'literal':token,
+                'json_unicode':token.replace('-','\\u002d'),
+                'js_hex':token.replace('-','\\x2d'),
+                'url':token.replace('-','%2D'),
               }
-            } finally { await browser.close() }
-          })().catch(err => { console.error(err); process.exit(1) })
-          JS
+              hits={k: text.lower().count(v.lower()) for k,v in forms.items()}
+              hits['html_decoded']=decoded.lower().count(token.lower())
+              print(token,hits)
+              positions=[]
+              for hay in (text,decoded):
+                p=hay.lower().find(token.lower())
+                if p>=0: positions.append(hay[max(0,p-260):p+700].replace('\n',' ')[:960])
+              for snippet in positions[:2]: print('SNIPPET',snippet)
+            for marker in ('_pageData','mapData','feature','geometry','layer','E-Ab','U-PVO'):
+              print('marker',marker,'count',text.lower().count(marker.lower()))
+            scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',text,re.I)
+            ranked=sorted(((len(s),i,('E-Ab' in s or 'U-PVO' in s)) for i,s in enumerate(scripts)),reverse=True)[:10]
+            print('largest_scripts',ranked)
+          PY
