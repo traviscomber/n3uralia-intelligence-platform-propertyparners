@@ -18,6 +18,7 @@ export type OperationalMarketSnapshot = {
   liveLinkedHouses: number | null
   identityCollisions: number | null
   newLiveIdentityCases: number | null
+  highConfidenceIdentityCandidates: number | null
   latestIngestionAt: string | null
   latestIngestionStatus: string | null
   latestIngestionAccepted: number | null
@@ -80,6 +81,7 @@ const emptySnapshot: OperationalMarketSnapshot = {
   liveLinkedHouses: null,
   identityCollisions: null,
   newLiveIdentityCases: null,
+  highConfidenceIdentityCandidates: null,
   latestIngestionAt: null,
   latestIngestionStatus: null,
   latestIngestionAccepted: null,
@@ -114,7 +116,7 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [houseSummaryResult, territoryProgressResult, identityProgressResult, historicalIdentityCandidates, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityProgressResult, historicalIdentityCandidates, highIdentityCandidates, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase.rpc('get_market_house_identity_progress_v1').maybeSingle(),
@@ -123,6 +125,12 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .select('id', { count: 'exact', head: true })
         .eq('property_type', 'Casa')
         .in('identity_status', ['candidate', 'needs_review']),
+      supabase
+        .from('market_property_matches')
+        .select('id', { count: 'exact', head: true })
+        .eq('left_entity_type', 'listing')
+        .eq('right_entity_type', 'property')
+        .eq('status', 'candidate_high'),
       supabase
         .from('market_transactions')
         .select('id,market_properties!inner(property_type)', { count: 'exact', head: true })
@@ -160,6 +168,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       territoryProgressResult.error,
       identityProgressResult.error,
       historicalIdentityCandidates.error,
+      highIdentityCandidates.error,
       confirmedSalesResult.error,
       cbrsHouseReferenceResult.error,
       latestMetric.error,
@@ -200,6 +209,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       liveLinkedHouses: identityProgressResult.error ? null : identityProgress?.linked_houses ?? 0,
       identityCollisions: identityProgressResult.error ? null : identityProgress?.external_identity_collisions ?? 0,
       newLiveIdentityCases: identityProgressResult.error ? null : identityProgress?.unlinked_without_existing_external_identity ?? 0,
+      highConfidenceIdentityCandidates: highIdentityCandidates.error ? null : highIdentityCandidates.count ?? 0,
       latestIngestionAt: latestIngestion.error ? null : ingestion?.completed_at ?? ingestion?.started_at ?? null,
       latestIngestionStatus: latestIngestion.error ? null : ingestion?.status ?? null,
       latestIngestionAccepted: latestIngestion.error ? null : ingestion?.accepted_rows ?? null,
