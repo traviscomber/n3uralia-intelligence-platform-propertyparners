@@ -93,45 +93,48 @@ export function CeoToday() {
   const statusText = compliance == null
     ? 'No hay evidencia suficiente para resumir el avance del período.'
     : compliance >= 100
-      ? 'El negocio está cumpliendo la meta del período.'
+      ? null
       : compliance >= 80
         ? 'El negocio está cerca de la meta; conviene concentrarse en las excepciones.'
         : 'El negocio está bajo la meta y requiere atención en las prioridades señaladas.'
+  const reviewCount = operations.valuations.review + operations.market.neighborhoodExceptions
 
   return (
     <WorkspaceShell>
       <WorkspaceHeader eyebrow="Hoy" title="Prioridades ejecutivas" meta={latest?.period ?? 'Sin período'} />
 
-      <div className="mt-6 max-w-4xl">
-        <p className="text-xl leading-8 text-[var(--n3-text-light)] sm:text-2xl">{statusText}</p>
-      </div>
+      {statusText ? (
+        <div className="mt-6 max-w-4xl">
+          <p className="text-xl leading-8 text-[var(--n3-text-light)] sm:text-2xl">{statusText}</p>
+        </div>
+      ) : null}
 
       <MetricStrip items={[
         { label: 'Ventas', value: n(latest?.sales, 1) },
         { label: 'Meta', value: n(latest?.salesTarget, 1) },
         { label: 'Cumplimiento', value: compliance == null ? '—' : `${n(compliance, 0)}%`, tone: compliance == null ? 'default' : compliance >= 100 ? 'success' : compliance >= 80 ? 'warning' : 'danger' },
-        { label: 'Por revisar', value: operations.valuations.review + operations.market.neighborhoodExceptions, tone: operations.valuations.review + operations.market.neighborhoodExceptions ? 'warning' : 'default' },
+        ...(reviewCount > 0 ? [{ label: 'Por revisar', value: reviewCount.toLocaleString('es-CL'), tone: 'warning' as const }] : []),
       ]} />
 
-      <section className="mt-8 max-w-5xl">
-        <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
-          <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Qué requiere atención</h2>
-          <span className="text-xs text-[var(--n3-text-muted)]">{priorities.length}</span>
-        </div>
-        <div className="divide-y divide-[var(--n3-line)]">
-          {priorities.length ? priorities.map((item, index) => (
-            <Link key={`${item.label}-${index}`} href={item.href} className="group grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[var(--n3-text-light)]">{item.label}</p>
-                <p className={`mt-1 break-words text-sm ${item.critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{item.detail}</p>
-              </div>
-              <span className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar <ArrowRight size={14} /></span>
-            </Link>
-          )) : (
-            <div className="py-8 text-sm text-[var(--n3-text-muted)]">No hay excepciones prioritarias con la evidencia disponible.</div>
-          )}
-        </div>
-      </section>
+      {priorities.length ? (
+        <section className="mt-8 max-w-5xl">
+          <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
+            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Qué requiere atención</h2>
+            <span className="text-xs text-[var(--n3-text-muted)]">{priorities.length}</span>
+          </div>
+          <div className="divide-y divide-[var(--n3-line)]">
+            {priorities.map((item, index) => (
+              <Link key={`${item.label}-${index}`} href={item.href} className="group grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--n3-text-light)]">{item.label}</p>
+                  <p className={`mt-1 break-words text-sm ${item.critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{item.detail}</p>
+                </div>
+                <span className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar <ArrowRight size={14} /></span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </WorkspaceShell>
   )
 }
