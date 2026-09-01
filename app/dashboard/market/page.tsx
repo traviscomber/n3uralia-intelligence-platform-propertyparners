@@ -26,6 +26,12 @@ function date(value: string | null) {
   return Number.isNaN(parsed.getTime()) ? '—' : new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(parsed)
 }
 
+function shortDate(value: string | null) {
+  if (!value) return '—'
+  const parsed = new Date(`${value.slice(0, 10)}T12:00:00.000Z`)
+  return Number.isNaN(parsed.getTime()) ? '—' : new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeZone: 'UTC' }).format(parsed)
+}
+
 function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
   if (status === 'recent') return ageDays === 0 ? 'Hoy' : `${ageDays} días`
   if (status === 'aging' || status === 'stale') return `${ageDays ?? '—'} días`
@@ -60,6 +66,7 @@ export default async function MarketPage() {
 
   const actions = [
     market.freshnessStatus === 'stale' ? { label: 'Actualizar mercado', value: freshness(market.freshnessStatus, market.observationAgeDays), href: '/dashboard/market/import', critical: true } : null,
+    market.confirmedSales === null && market.latestCbrsHouseSaleDate ? { label: 'Actualizar ventas registrales de casas', value: `CBRS ${shortDate(market.latestCbrsHouseSaleDate)}`, href: '/dashboard/market/import', critical: true } : null,
     market.pendingUniqueTerritorySuggestions !== null && market.pendingUniqueTerritorySuggestions > 0 ? { label: 'Validar barrios sugeridos', value: number(market.pendingUniqueTerritorySuggestions), href: '/dashboard/market/revisar-barrios', critical: false } : null,
     territoryExceptions > 0 ? { label: 'Resolver territorio sin evidencia suficiente', value: number(territoryExceptions), href: '/dashboard/market/revisar-barrios', critical: false } : null,
     market.pendingMatches !== null && market.pendingMatches > 0 ? { label: 'Revisar identidad canónica', value: number(market.pendingMatches), href: '/dashboard/market/reconciliacion', critical: false } : null,
@@ -85,7 +92,7 @@ export default async function MarketPage() {
 
       <MetricStrip items={[
         { label: 'Oferta activa', value: number(market.activeInventory) },
-        { label: 'Ventas confirmadas', value: number(market.confirmedSales), tone: market.confirmedSales === 0 ? 'warning' : 'default' },
+        { label: 'Ventas confirmadas', value: number(market.confirmedSales), tone: market.confirmedSales === null || market.confirmedSales === 0 ? 'warning' : 'default' },
         { label: 'Días en mercado', value: market.medianDaysOnMarket === null ? '—' : number(market.medianDaysOnMarket) },
         { label: 'Absorción', value: percent(market.absorptionRate) },
       ]} />
@@ -146,6 +153,18 @@ export default async function MarketPage() {
               </div>
             </section>
           ) : null}
+
+          <section>
+            <div className="border-b border-[var(--n3-line)] pb-2">
+              <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">CBRS · casas</h2>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Base registral histórica confirmada. No se usa para fingir actividad reciente fuera de su corte.</p>
+            </div>
+            <div className="grid gap-4 py-4 sm:grid-cols-2">
+              <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Transacciones históricas</p><p className="mt-1 text-lg font-semibold">{number(market.cbrsHouseTransactions)}</p></div>
+              <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Última venta de casa disponible</p><p className="mt-1 text-lg font-semibold">{shortDate(market.latestCbrsHouseSaleDate)}</p></div>
+            </div>
+            {market.confirmedSales === null ? <p className="text-xs leading-5 text-[#f0c96a]">Ventas, días en mercado y absorción permanecen sin publicación actual hasta incorporar una fuente de ventas de casas posterior a este corte.</p> : null}
+          </section>
 
           <section>
             <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
