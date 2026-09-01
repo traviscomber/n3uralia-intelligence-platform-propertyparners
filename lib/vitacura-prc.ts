@@ -106,7 +106,7 @@ function coordinatePair(value: JsonValue): Position | null {
 function countCoordinatePairs(value: JsonValue): number {
   if (coordinatePair(value)) return 1
   if (!Array.isArray(value)) return 0
-  return value.reduce((sum, child) => sum + countCoordinatePairs(child), 0)
+  return value.reduce<number>((sum, child) => sum + countCoordinatePairs(child), 0)
 }
 
 function findFirstCoordinatePair(value: JsonValue): Position | null {
