@@ -77,14 +77,12 @@ export default async function PropertiesPage() {
       eyebrow="Propiedades"
       title="Mi cartera"
       meta={`${attentionCount} requieren atención`}
-      actions={[
-        ...(canAssign ? [{ label: 'Asignar', href: '/dashboard/properties/admin', primary: true }] : []),
-      ]}
+      actions={canAssign ? [{ label: 'Asignar', href: '/dashboard/properties/admin', primary: true }] : []}
     />
 
     <MetricStrip items={[
       { label: 'Asignadas', value: n(assignments.length) },
-      { label: 'Identidad pendiente', value: n(pendingIdentity), tone: pendingIdentity > 0 ? 'warning' : 'success' },
+      ...(canAssign ? [{ label: 'Identidad pendiente', value: n(pendingIdentity), tone: pendingIdentity > 0 ? 'warning' as const : 'success' as const }] : []),
       { label: 'Revisar vigencia', value: n(staleAssignments), tone: staleAssignments > 0 ? 'warning' : 'success' },
     ]} />
 
