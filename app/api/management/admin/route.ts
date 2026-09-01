@@ -267,6 +267,19 @@ export async function PATCH(request: Request) {
   }
   if (!before) return NextResponse.json({ error: 'Alerta no encontrada' }, { status: 404 })
 
+  const currentStatus = String(before.status ?? '')
+  const targetStatus = action === 'acknowledge' ? 'acknowledged' : action === 'resolve' ? 'resolved' : 'dismissed'
+
+  if (currentStatus === targetStatus) {
+    return NextResponse.json({ ...before, idempotent: true })
+  }
+  if (!['open', 'acknowledged'].includes(currentStatus)) {
+    return NextResponse.json({ error: 'La alerta ya fue cerrada y no admite otra transición.' }, { status: 409 })
+  }
+  if (action === 'acknowledge' && currentStatus !== 'open') {
+    return NextResponse.json({ error: 'La alerta ya está en revisión.' }, { status: 409 })
+  }
+
   const now = new Date().toISOString()
   const update = action === 'acknowledge'
     ? { status: 'acknowledged', acknowledged_by: user.id, acknowledged_at: now }
