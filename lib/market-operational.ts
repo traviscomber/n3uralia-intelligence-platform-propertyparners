@@ -25,6 +25,14 @@ export type OperationalMarketSnapshot = {
   error?: string
 }
 
+type HouseDeliverySummary = {
+  portal_active_houses: number | null
+  portal_as_of: string | null
+  canonical_houses: number | null
+  confirmed_houses: number | null
+  missing_neighborhood_houses: number | null
+}
+
 const emptySnapshot: OperationalMarketSnapshot = {
   connected: false,
   canonicalProperties: null,
@@ -62,82 +70,77 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [properties, confirmed, missingNeighborhoods, identityCandidates, activeListings, transactions, matchCandidates, latestMetric, latestIngestion, ingestionRuns, latestObservedListing] = await Promise.all([
-      supabase.from('market_properties').select('id', { count: 'exact', head: true }),
-      supabase.from('market_properties').select('id', { count: 'exact', head: true }).eq('identity_status', 'confirmed'),
-      supabase.from('market_properties').select('id', { count: 'exact', head: true }).is('neighborhood_id', null),
-      supabase.from('market_properties').select('id', { count: 'exact', head: true }).in('identity_status', ['candidate', 'needs_review']),
-      supabase.from('market_current_listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('market_transactions').select('id', { count: 'exact', head: true }),
-      supabase.from('market_property_matches').select('id', { count: 'exact', head: true }).in('status', ['candidate_high', 'candidate_medium']),
+    const [houseSummaryResult, identityCandidates, confirmedSalesResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
+      supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
+      supabase
+        .from('market_properties')
+        .select('id', { count: 'exact', head: true })
+        .eq('property_type', 'Casa')
+        .in('identity_status', ['candidate', 'needs_review']),
+      supabase
+        .from('market_transactions')
+        .select('id,market_properties!inner(property_type)', { count: 'exact', head: true })
+        .eq('market_properties.property_type', 'Casa'),
       supabase
         .from('market_metric_snapshots')
         .select('period_start,period_end,active_inventory,confirmed_sales,median_days_on_market,absorption_rate,offer_to_sales_ratio')
         .is('neighborhood_id', null)
-        .is('property_type', null)
+        .eq('property_type', 'Casa')
         .order('period_end', { ascending: false })
         .limit(1)
         .maybeSingle(),
       supabase
         .from('market_ingestion_runs')
         .select('status,accepted_rows,rejected_rows,completed_at,started_at')
+        .eq('dataset_kind', 'portal_houses')
         .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      supabase.from('market_ingestion_runs').select('id', { count: 'exact', head: true }),
       supabase
-        .from('market_current_listings')
-        .select('observed_at')
-        .order('observed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .from('market_ingestion_runs')
+        .select('id', { count: 'exact', head: true })
+        .eq('dataset_kind', 'portal_houses'),
     ])
 
     const errors = [
-      properties.error,
-      confirmed.error,
-      missingNeighborhoods.error,
+      houseSummaryResult.error,
       identityCandidates.error,
-      activeListings.error,
-      transactions.error,
-      matchCandidates.error,
+      confirmedSalesResult.error,
       latestMetric.error,
       latestIngestion.error,
       ingestionRuns.error,
-      latestObservedListing.error,
     ].filter(Boolean)
 
+    const house = houseSummaryResult.data as HouseDeliverySummary | null
     const metric = latestMetric.data
     const ingestion = latestIngestion.data
-    const latestObservedAt = latestObservedListing.data?.observed_at ?? null
+    const latestObservedAt = house?.portal_as_of ?? null
     const freshness = getObservationFreshness(latestObservedAt)
 
     return {
-      connected: errors.length < 11,
-      canonicalProperties: properties.error ? null : properties.count ?? 0,
-      confirmedProperties: confirmed.error ? null : confirmed.count ?? 0,
-      missingNeighborhoods: missingNeighborhoods.error ? null : missingNeighborhoods.count ?? 0,
+      connected: errors.length === 0,
+      canonicalProperties: houseSummaryResult.error ? null : house?.canonical_houses ?? 0,
+      confirmedProperties: houseSummaryResult.error ? null : house?.confirmed_houses ?? 0,
+      missingNeighborhoods: houseSummaryResult.error ? null : house?.missing_neighborhood_houses ?? 0,
       activeInventory: latestMetric.error
-        ? (activeListings.error ? null : activeListings.count ?? 0)
-        : metric?.active_inventory ?? (activeListings.error ? null : activeListings.count ?? 0),
+        ? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0)
+        : metric?.active_inventory ?? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0),
       confirmedSales: latestMetric.error
-        ? (transactions.error ? null : transactions.count ?? 0)
-        : metric?.confirmed_sales ?? (transactions.error ? null : transactions.count ?? 0),
+        ? (confirmedSalesResult.error ? null : confirmedSalesResult.count ?? 0)
+        : metric?.confirmed_sales ?? (confirmedSalesResult.error ? null : confirmedSalesResult.count ?? 0),
       medianDaysOnMarket: latestMetric.error ? null : metric?.median_days_on_market ?? null,
       absorptionRate: latestMetric.error ? null : metric?.absorption_rate ?? null,
       offerToSalesRatio: latestMetric.error ? null : metric?.offer_to_sales_ratio ?? null,
       latestPeriod: !latestMetric.error && metric ? `${metric.period_start} / ${metric.period_end}` : null,
-      pendingMatches: identityCandidates.error || matchCandidates.error
-        ? null
-        : (identityCandidates.count ?? 0) + (matchCandidates.count ?? 0),
+      pendingMatches: identityCandidates.error ? null : identityCandidates.count ?? 0,
       latestIngestionAt: latestIngestion.error ? null : ingestion?.completed_at ?? ingestion?.started_at ?? null,
       latestIngestionStatus: latestIngestion.error ? null : ingestion?.status ?? null,
       latestIngestionAccepted: latestIngestion.error ? null : ingestion?.accepted_rows ?? null,
       latestIngestionRejected: latestIngestion.error ? null : ingestion?.rejected_rows ?? null,
       ingestionRuns: ingestionRuns.error ? null : ingestionRuns.count ?? 0,
-      latestObservedAt: latestObservedListing.error ? null : latestObservedAt,
-      observationAgeDays: latestObservedListing.error ? null : freshness.ageDays,
-      freshnessStatus: latestObservedListing.error ? 'unknown' : freshness.status,
+      latestObservedAt: houseSummaryResult.error ? null : latestObservedAt,
+      observationAgeDays: houseSummaryResult.error ? null : freshness.ageDays,
+      freshnessStatus: houseSummaryResult.error ? 'unknown' : freshness.status,
       error: errors.length ? errors.map((error) => error?.message).join(' · ') : undefined,
     }
   } catch (error) {
