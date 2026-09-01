@@ -1,4 +1,4 @@
-name: Vitacura PRC embedded map document probe
+name: Vitacura PRC My Maps pageData probe
 
 on:
   pull_request:
@@ -13,38 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Inspect embedded My Maps document payload
+      - name: Inspect My Maps pageData serialization
         run: |
           python - <<'PY'
-          import urllib.request, re, html as htmlmod
-          maps=[
-            ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT',['E-Ab1','E-Am3sz','E-Ae3sz']),
-            ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB',['U-PVOsz','U-POCsz','U-PCsz']),
-          ]
-          for name,mid,tokens in maps:
+          import urllib.request, re
+          for name,mid in (
+            ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT'),
+            ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB'),
+          ):
             req=urllib.request.Request(f'https://www.google.com/maps/d/embed?mid={mid}',headers={'User-Agent':'Mozilla/5.0'})
-            raw=urllib.request.urlopen(req,timeout=30).read()
-            text=raw.decode('utf-8','replace')
-            decoded=htmlmod.unescape(text)
-            print(f'=== {name} status bytes={len(raw)} ===')
-            for token in tokens:
-              forms={
-                'literal':token,
-                'json_unicode':token.replace('-','\\u002d'),
-                'js_hex':token.replace('-','\\x2d'),
-                'url':token.replace('-','%2D'),
-              }
-              hits={k: text.lower().count(v.lower()) for k,v in forms.items()}
-              hits['html_decoded']=decoded.lower().count(token.lower())
-              print(token,hits)
-              positions=[]
-              for hay in (text,decoded):
-                p=hay.lower().find(token.lower())
-                if p>=0: positions.append(hay[max(0,p-260):p+700].replace('\n',' ')[:960])
-              for snippet in positions[:2]: print('SNIPPET',snippet)
-            for marker in ('_pageData','mapData','feature','geometry','layer','E-Ab','U-PVO'):
-              print('marker',marker,'count',text.lower().count(marker.lower()))
+            text=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
+            p=text.find('_pageData')
+            print(f'=== {name} bytes={len(text)} pageData_at={p} ===')
+            print('PAGEDATA_CONTEXT',text[max(0,p-500):p+1800].replace('\n',' ')[:2300])
             scripts=re.findall(r'<script[^>]*>([\s\S]*?)</script>',text,re.I)
-            ranked=sorted(((len(s),i,('E-Ab' in s or 'U-PVO' in s)) for i,s in enumerate(scripts)),reverse=True)[:10]
-            print('largest_scripts',ranked)
+            big=max(scripts,key=len)
+            print('BIG_SCRIPT_HEAD',big[:1600].replace('\n',' '))
+            print('BIG_SCRIPT_TAIL',big[-1200:].replace('\n',' '))
+            print('big_len',len(big),'backslash_u',big.count('\\u'),'backslash_x',big.count('\\x'),'base64ish_runs',len(re.findall(r'[A-Za-z0-9+/]{200,}={0,2}',big)))
           PY
