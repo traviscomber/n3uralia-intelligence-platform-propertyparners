@@ -1,6 +1,7 @@
 type PrcLayer = 'edification' | 'land_use'
+type ValuationLayer = 'edificacion' | 'uso_suelo'
 
-type PrcRow = {
+type ParsedPrcRow = {
   ext_feature_id: string
   zona_prc: string
   zona: string
@@ -13,8 +14,17 @@ type PrcRow = {
   geometry: { type: 'MultiPolygon'; coordinates: number[][][][] }
 }
 
+type PrcRow = ParsedPrcRow & {
+  source_feature_id: string
+  layer_type: ValuationLayer
+  feature_name: string
+  description: string | null
+  source_map_id: string
+  source_observed_at: string
+}
+
 const OFFICIAL_VIEWER = 'https://vitacura.cl/municipalidad/planificacion-urbana/visor-interactivo-prcv/'
-const SOURCE_VERSION = 'vitacura-prcv-current'
+const SOURCE_VERSION_FALLBACK = 'vitacura-prcv-current'
 
 const SOURCES: Array<{ layer: PrcLayer; mid: string }> = [
   { layer: 'edification', mid: '1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT' },
@@ -70,9 +80,30 @@ function coordinateRings(block: string) {
   }).filter((ring): ring is number[][] => Boolean(ring))
 }
 
-export function parseVitacuraPrcKml(kml: string, layer: PrcLayer): PrcRow[] {
+function hex(buffer: ArrayBuffer) {
+  return [...new Uint8Array(buffer)].map((value) => value.toString(16).padStart(2, '0')).join('')
+}
+
+async function versionFor(rows: ParsedPrcRow[]) {
+  const canonical = [...rows]
+    .sort((a, b) => a.ext_feature_id.localeCompare(b.ext_feature_id))
+    .map((row) => ({
+      id: row.ext_feature_id,
+      zona: row.zona,
+      subzona: row.subzona,
+      uso: row.uso,
+      uso_suelo: row.uso_suelo,
+      raw_properties: row.raw_properties,
+      geometry: row.geometry,
+    }))
+  const bytes = new TextEncoder().encode(JSON.stringify(canonical))
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return `vitacura-prcv-${hex(digest).slice(0, 16)}`
+}
+
+export function parseVitacuraPrcKml(kml: string, layer: PrcLayer): ParsedPrcRow[] {
   const placemarks = [...kml.matchAll(/<Placemark(?:\s[^>]*)?>([\s\S]*?)<\/Placemark>/gi)]
-  const grouped = new Map<string, PrcRow>()
+  const grouped = new Map<string, ParsedPrcRow>()
 
   for (const [, block] of placemarks) {
     const name = tag(block, 'name')
@@ -101,7 +132,7 @@ export function parseVitacuraPrcKml(kml: string, layer: PrcLayer): PrcRow[] {
       uso: layer === 'land_use' ? name || description || zona : null,
       uso_suelo: layer === 'land_use' ? name || description || zona : null,
       source_url: OFFICIAL_VIEWER,
-      source_version: SOURCE_VERSION,
+      source_version: SOURCE_VERSION_FALLBACK,
       raw_properties: {
         sourceLayer: layer,
         labels: name ? [name] : [],
@@ -116,8 +147,7 @@ export function parseVitacuraPrcKml(kml: string, layer: PrcLayer): PrcRow[] {
 }
 
 export async function fetchVitacuraPrcRows() {
-  const rows: PrcRow[] = []
-  const diagnostics: Array<{ layer: PrcLayer; status: number; bytes: number; rows: number }> = []
+  const batches: Array<{ layer: PrcLayer; mid: string; rows: ParsedPrcRow[]; status: number; bytes: number }> = []
 
   for (const source of SOURCES) {
     const url = `https://www.google.com/maps/d/kml?mid=${source.mid}&forcekml=1`
@@ -125,10 +155,32 @@ export async function fetchVitacuraPrcRows() {
     const text = await response.text()
     if (!response.ok) throw new Error(`PRC ${source.layer} source failed with ${response.status}`)
     const parsed = parseVitacuraPrcKml(text, source.layer)
-    diagnostics.push({ layer: source.layer, status: response.status, bytes: text.length, rows: parsed.length })
-    rows.push(...parsed)
+    if (!parsed.length) throw new Error(`PRC ${source.layer} source returned no polygon rows`)
+    batches.push({ layer: source.layer, mid: source.mid, rows: parsed, status: response.status, bytes: text.length })
   }
 
-  if (!rows.length) throw new Error('PRC sources returned no polygon rows')
-  return { rows, diagnostics, officialViewer: OFFICIAL_VIEWER, sourceVersion: SOURCE_VERSION }
+  const parsedRows = batches.flatMap((batch) => batch.rows)
+  const sourceVersion = await versionFor(parsedRows)
+  const sourceObservedAt = new Date().toISOString()
+  const rows: PrcRow[] = batches.flatMap((batch) => batch.rows.map((row) => {
+    const description = typeof row.raw_properties.description === 'string' ? row.raw_properties.description : null
+    return {
+      ...row,
+      source_version: sourceVersion,
+      source_feature_id: row.ext_feature_id,
+      layer_type: batch.layer === 'edification' ? 'edificacion' : 'uso_suelo',
+      feature_name: batch.layer === 'land_use' ? row.uso ?? row.zona : row.zona,
+      description,
+      source_map_id: batch.mid,
+      source_observed_at: sourceObservedAt,
+    }
+  }))
+  const diagnostics = batches.map((batch) => ({
+    layer: batch.layer,
+    status: batch.status,
+    bytes: batch.bytes,
+    rows: batch.rows.length,
+  }))
+
+  return { rows, diagnostics, officialViewer: OFFICIAL_VIEWER, sourceVersion, sourceObservedAt }
 }
