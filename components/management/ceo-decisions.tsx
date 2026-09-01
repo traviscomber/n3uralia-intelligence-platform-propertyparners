@@ -134,20 +134,22 @@ export function CeoDecisions(){
   }),[tasks])
   const following=useMemo(()=>tasks.filter((task)=>task.status==='in_progress').sort((a,b)=>(a.due_date??'9999-12-31').localeCompare(b.due_date??'9999-12-31')),[tasks])
   const closed=useMemo(()=>tasks.filter((task)=>task.status==='done'&&task.resolution_note).sort((a,b)=>(b.completed_at??'').localeCompare(a.completed_at??'')).slice(0,12),[tasks])
+  const activeCount=attention.length+following.length
+  const showCounts=activeCount>0||closed.length>0
 
   return <IntelligencePage>
     <Link href="/dashboard/ceo" className="inline-flex min-h-11 items-center gap-2 text-xs text-[var(--n3-text-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"><ArrowLeft size={14}/>Volver al CEO</Link>
-    <IntelligenceHeader eyebrow="CEO · Centro de decisiones" title="Qué requiere atención ahora" description="Una sola vista para decisiones abiertas, seguimiento activo y resultados recientes. Los antecedentes aparecen sólo cuando existe una relación verificable." actions={[{label:'Valorizaciones',href:'/dashboard/valuations',primary:true},{label:'Propiedades',href:'/dashboard/properties/admin'}]}/>
+    <IntelligenceHeader eyebrow="CEO · Centro de decisiones" title={activeCount>0?'Qué requiere atención ahora':'Decisiones'} description={activeCount>0?'Una sola vista para decisiones abiertas, seguimiento activo y resultados recientes. Los antecedentes aparecen sólo cuando existe una relación verificable.':'Historial de resultados verificables y acceso directo a los flujos de decisión.'} actions={[{label:'Valorizaciones',href:'/dashboard/valuations',primary:true},{label:'Propiedades',href:'/dashboard/properties/admin'}]}/>
 
-    {!loading&&!error?<div className="flex flex-wrap gap-x-5 gap-y-2 border-y border-[var(--n3-line)] py-3 text-xs text-[var(--n3-text-muted)]"><span><strong className="font-semibold text-white">{attention.length}</strong> requieren atención</span><span><strong className="font-semibold text-white">{following.length}</strong> en seguimiento</span><span><strong className="font-semibold text-white">{closed.length}</strong> resultados recientes</span></div>:null}
+    {!loading&&!error&&showCounts?<div className="flex flex-wrap gap-x-5 gap-y-2 border-y border-[var(--n3-line)] py-3 text-xs text-[var(--n3-text-muted)]">{attention.length>0?<span><strong className="font-semibold text-white">{attention.length}</strong> requieren atención</span>:null}{following.length>0?<span><strong className="font-semibold text-white">{following.length}</strong> en seguimiento</span>:null}{closed.length>0?<span><strong className="font-semibold text-white">{closed.length}</strong> resultados recientes</span>:null}</div>:null}
 
     {error?<div role="alert" className="border border-[#d7332b] p-5 text-[#ff766f]"><p>{error}</p><button onClick={()=>void load()} className="mt-3 inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"><RefreshCw size={14}/>Reintentar</button></div>:null}
     {loading?<div role="status" aria-live="polite" className="border border-[var(--n3-line)] p-8 text-[var(--n3-text-muted)]">Cargando decisiones…</div>:null}
 
     {!loading&&!error?<>
-      <section>
+      {attention.length>0?<section>
         <SectionHeading eyebrow="01 · Requiere atención" title="Decisiones abiertas" description="Sólo asuntos que todavía necesitan iniciar seguimiento."/>
-        <div className="space-y-3">{attention.length?attention.map((task)=>{
+        <div className="space-y-3">{attention.map((task)=>{
           const valuationId=task.sourceContext?.kind==='valuation'?task.sourceContext.valuationId:valuationIdFromSourceKey(task.source_key)
           return <article key={task.id} className={`border bg-[#0c1111] p-4 ${taskBorder(task,today)}`}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -165,12 +167,12 @@ export function CeoDecisions(){
             </div>
             <RelatedCases task={task} tasks={tasks} expanded={Boolean(expandedRelated[task.id])} onToggle={()=>setExpandedRelated((current)=>({...current,[task.id]:!current[task.id]}))}/>
           </article>
-        }):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen decisiones que requieran atención.</div>}</div>
-      </section>
+        })}</div>
+      </section>:null}
 
-      <section>
+      {following.length>0?<section>
         <SectionHeading eyebrow="02 · En seguimiento" title="Decisiones en curso" description="Aquí sólo permanecen decisiones con una acción activa y todavía sin resultado final."/>
-        <div className="space-y-3">{following.length?following.map((task)=>{
+        <div className="space-y-3">{following.map((task)=>{
           const resultValue=resultDrafts[task.id]??task.resolution_note??''
           const valuationId=task.sourceContext?.kind==='valuation'?task.sourceContext.valuationId:valuationIdFromSourceKey(task.source_key)
           return <article key={task.id} className={`border bg-[#0c1111] p-4 ${taskBorder(task,today)}`}>
@@ -181,16 +183,16 @@ export function CeoDecisions(){
             <RelatedCases task={task} tasks={tasks} expanded={Boolean(expandedRelated[task.id])} onToggle={()=>setExpandedRelated((current)=>({...current,[task.id]:!current[task.id]}))}/>
             <div className="mt-4 border-t border-[var(--n3-line)] pt-4"><label htmlFor={`result-${task.id}`} className="text-xs font-semibold">Resultado</label><textarea id={`result-${task.id}`} rows={3} value={resultValue} onChange={(event)=>setResultDrafts((current)=>({...current,[task.id]:event.target.value}))} placeholder="Registra qué ocurrió y cuál fue el resultado verificable." className="mt-2 w-full border border-[var(--n3-line)] bg-black/20 p-3 text-sm outline-none focus:border-[var(--n3-teal)]"/><div className="mt-3 flex justify-end"><button type="button" disabled={updatingTaskId===task.id||!resultValue.trim()} onClick={()=>void updateTask(task,'done')} className="inline-flex min-h-11 items-center gap-2 border border-[#2f8f4e] px-3 py-2 text-xs text-[#65c780] disabled:opacity-40"><CheckCircle2 size={14}/>Cerrar con resultado</button></div></div>
           </article>
-        }):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen decisiones en seguimiento.</div>}</div>
-      </section>
+        })}</div>
+      </section>:null}
 
-      <section>
+      {closed.length>0?<section>
         <SectionHeading eyebrow="03 · Resultados" title="Resultados recientes" description="Decisiones cerradas cuyo resultado quedó registrado y puede volver a revisarse."/>
-        <div className="space-y-3">{closed.length?closed.map((task)=>{
+        <div className="space-y-3">{closed.map((task)=>{
           const valuationId=task.sourceContext?.kind==='valuation'?task.sourceContext.valuationId:valuationIdFromSourceKey(task.source_key)
           return <article key={task.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-[#65c780]"><CheckCircle2 size={14}/>Cerrada · {formatDate(task.completed_at)}</div><p className="mt-2 font-semibold">{task.title}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{task.office??'Sin oficina'} · {task.assignedProfile?.full_name??'Sin responsable'}</p>{task.sourceContext?.address?<p className="mt-1 text-xs text-[var(--n3-text-muted)]">Propiedad: {task.sourceContext.address}</p>:null}{task.detail?<p className="mt-3 text-sm text-[var(--n3-text-muted)]"><span className="font-semibold text-white/70">Contexto:</span> {task.detail}</p>:null}<p className="mt-2 text-sm"><span className="font-semibold text-white/70">Resultado:</span> {task.resolution_note}</p></div>{valuationId?<Link href={`/dashboard/valuations/${valuationId}`} className="inline-flex min-h-11 shrink-0 items-center gap-2 text-xs text-[var(--n3-teal)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">Ver evidencia<ArrowRight size={13}/></Link>:null}</div></article>
-        }):<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">Todavía no existen decisiones cerradas con resultado registrado.</div>}</div>
-      </section>
+        })}</div>
+      </section>:null}
     </>:null}
   </IntelligencePage>
 }
