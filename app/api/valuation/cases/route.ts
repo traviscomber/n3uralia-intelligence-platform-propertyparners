@@ -280,78 +280,135 @@ export async function POST(request: Request) {
         qualitative_factors: payload.qualitativeFactors,
         condition_assessment: payload.conditionAssessment ?? {},
         condition_result: conditionResult ?? {},
-        condition_status: conditionResult?.status ?? 'not_evaluated',
-        condition_score: conditionResult?.score ?? null,
-        condition_version: conditionResult?.version ?? null,
-        adjustment_total_pct: result.adjustmentTotalPct,
+        adjustment_total_pct: 0,
         base_value_uf: result.baseValueUf,
-        estimated_value_uf: result.estimatedValueUf,
+        estimated_value_uf: result.adjustedValueUf,
         low_value_uf: result.lowValueUf,
         high_value_uf: result.highValueUf,
-        confidence: result.confidence,
+        confidence: result.portalSummary.count >= 3 && result.cbrsSummary.count >= 3 ? 'high' : 'medium',
         methodology_version: result.methodologyVersion,
         evidence,
         assumptions,
         warnings,
-        justification: payload.justification?.trim() || null,
-        report_payload: reportPayload,
+        justification: payload.justification?.trim() || result.justification,
+        report_payload: { ...reportPayload, evidence, assumptions },
       })
-      .select('id,status')
+      .select('id,subject_property_id,version_number,condition_status,condition_score,condition_version')
       .single()
 
-    if (caseError) {
-      logDatabaseFailure('VALUATION_CASE_CREATE_FAILED', caseError)
-      return NextResponse.json({ error: 'No pudimos crear la valorización.' }, { status: 500 })
+    if (caseError || !valuationCase) {
+      if (caseError) logDatabaseFailure('VALUATION_CASE_CREATE_FAILED', caseError)
+      return NextResponse.json({ error: 'No fue posible crear la valorización.' }, { status: 422 })
     }
 
-    const comparableRows = submittedComparables.map((item, index) => ({
-      valuation_case_id: valuationCase.id,
-      rank: index + 1,
-      similarity_score: item.similarityScore,
-      distance_meters: item.distanceMeters ?? null,
-      base_value_uf: item.priceUf,
-      adjusted_value_uf: result.comparables[index]?.adjustedValueUf ?? item.priceUf,
-      adjustments: item.adjustments ?? [],
-      evidence: item.evidence ?? {},
-      contradictions: item.contradictions ?? [],
-      match_status: item.selected ? 'accepted' : 'candidate',
-      source_type: item.sourceType,
-      source_reference: item.sourceReference,
-      transaction_date: item.transactionDate ?? null,
-      address: item.address,
-      neighborhood: item.neighborhood,
-      property_type: item.propertyType,
-      useful_area_m2: item.usefulAreaM2 ?? null,
-      built_area_m2: item.builtAreaM2 ?? null,
-      land_area_m2: item.landAreaM2 ?? null,
-      total_area_m2: item.totalAreaM2 ?? null,
-      bedrooms: item.bedrooms ?? null,
-      bathrooms: item.bathrooms ?? null,
-      parking_spaces: item.parkingSpaces ?? null,
-      price_uf: item.priceUf,
-      price_uf_m2: calculateCanonicalComparableUfM2(item),
-      selected: item.selected,
-      exclusion_reason: item.selected ? null : item.exclusionReason?.trim() || null,
-      adjustment_pct: item.adjustmentPct,
-      adjustment_notes: item.adjustmentNotes?.trim() || null,
-      source_transaction_id: item.sourceTransactionId ?? null,
-      source_listing_id: item.sourceListingId ?? null,
-      source_observed_at: item.sourceObservedAt ?? null,
-      source_methodology_version: item.sourceMethodologyVersion ?? null,
-      selected_by: item.selected ? scope.profileId : null,
-      selected_at: item.selected ? new Date().toISOString() : null,
-    }))
-
-    if (comparableRows.length) {
-      const { error: comparableError } = await supabase.from('valuation_comparables').insert(comparableRows)
-      if (comparableError) {
-        logDatabaseFailure('VALUATION_COMPARABLE_CREATE_FAILED', comparableError)
-        await supabase.from('valuation_cases').delete().eq('id', valuationCase.id).eq('status', 'draft')
-        return NextResponse.json({ error: 'No pudimos guardar la evidencia comparable.' }, { status: 500 })
+    const comparableRows = submittedComparables.map((item, index) => {
+      const canonicalUfM2 = calculateCanonicalComparableUfM2(item)
+      const isCbrsDepartment = item.sourceType === 'CBRS' && item.propertyType === 'Departamento'
+      const registeredCbrsArea = isCbrsDepartment ? (item.builtAreaM2 ?? item.usefulAreaM2 ?? null) : null
+      const observedAt = (item as ValuationComparable & { observedAt?: string }).observedAt ?? null
+      return {
+        valuation_case_id: valuationCase.id,
+        rank: index + 1,
+        similarity_score: item.similarityScore,
+        distance_meters: item.distanceMeters ?? null,
+        source_type: item.sourceType,
+        source_reference: item.sourceReference,
+        transaction_date: item.transactionDate ?? null,
+        address: item.address,
+        neighborhood: item.neighborhood,
+        property_type: item.propertyType,
+        total_area_m2: isCbrsDepartment ? null : item.totalAreaM2 ?? null,
+        useful_area_m2: isCbrsDepartment ? null : item.usefulAreaM2 ?? null,
+        built_area_m2: isCbrsDepartment ? registeredCbrsArea : item.builtAreaM2 ?? null,
+        land_area_m2: item.landAreaM2 ?? null,
+        bedrooms: item.bedrooms ?? null,
+        bathrooms: item.bathrooms ?? null,
+        parking_spaces: item.parkingSpaces ?? null,
+        price_uf: item.priceUf,
+        price_uf_m2: canonicalUfM2,
+        selected: item.selected,
+        adjustment_pct: item.adjustmentPct,
+        adjustment_notes: item.adjustmentNotes?.trim() || null,
+        base_value_uf: item.priceUf,
+        adjusted_value_uf: item.priceUf,
+        adjustments: [{ type: 'review_evidence_only', value: item.adjustmentPct }],
+        evidence: [{
+          sourceReference: item.sourceReference,
+          transactionDate: item.transactionDate ?? null,
+          distanceMeters: item.distanceMeters ?? null,
+          canonicalUfM2,
+          areaSemantics: isCbrsDepartment ? 'source_registered_area_not_confirmed_as_useful' : 'canonical_source_specific',
+        }],
+        contradictions: [],
+        match_status: item.selected ? 'accepted' : 'candidate',
+        exclusion_reason: null,
+        selected_at: item.selected ? new Date().toISOString() : null,
+        selected_by: item.selected ? scope.profileId : null,
+        excluded_at: null,
+        excluded_by: null,
+        source_observed_at: observedAt,
+        source_methodology_version: result.methodologyVersion,
       }
+    })
+
+    const { error: comparableError } = await supabase.from('valuation_comparables').insert(comparableRows)
+    if (comparableError) {
+      logDatabaseFailure('VALUATION_COMPARABLES_CREATE_FAILED', comparableError)
+      return NextResponse.json({ error: 'La valorización fue creada, pero no pudimos registrar sus comparables.', caseId: valuationCase.id }, { status: 422 })
     }
 
-    return NextResponse.json({ case: valuationCase }, { status: 201 })
+    const { error: versionError } = await supabase.from('valuation_case_versions').insert({
+      valuation_case_id: valuationCase.id,
+      version_number: valuationCase.version_number,
+      status,
+      snapshot: { ...reportPayload, evidence, assumptions },
+      created_by: scope.profileId,
+    })
+    if (versionError) {
+      logDatabaseFailure('VALUATION_VERSION_CREATE_FAILED', versionError)
+      return NextResponse.json({ error: 'La valorización fue creada, pero no pudimos registrar su versión.', caseId: valuationCase.id }, { status: 422 })
+    }
+
+    const { error: decisionError } = await supabase.from('valuation_decision_log').insert({
+      valuation_case_id: valuationCase.id,
+      action: 'case_created',
+      from_status: null,
+      to_status: status,
+      reason: assignmentEvidence
+        ? 'Caso creado desde una propiedad asignada y verificada. La revisión debe solicitarse desde el expediente canónico.'
+        : 'Caso creado como borrador. La revisión debe solicitarse desde el expediente canónico.',
+      actor_id: scope.profileId,
+      metadata: {
+        methodologyVersion: result.methodologyVersion,
+        comparableCount: result.comparableCount,
+        portalComparableCount: result.portalSummary.count,
+        cbrsComparableCount: result.cbrsSummary.count,
+        rateAnchor: decision.rateAnchor,
+        subjectPropertyId: valuationCase.subject_property_id,
+        assignment: assignmentEvidence,
+        subjectCoordinates: payload.subject.latitude !== undefined && payload.subject.longitude !== undefined
+          ? { latitude: payload.subject.latitude, longitude: payload.subject.longitude }
+          : null,
+        conditionStatus: valuationCase.condition_status,
+        conditionScore: valuationCase.condition_score,
+        conditionVersion: valuationCase.condition_version,
+      },
+    })
+    if (decisionError) {
+      logDatabaseFailure('VALUATION_DECISION_LOG_CREATE_FAILED', decisionError)
+      return NextResponse.json({ error: 'La valorización fue creada, pero no pudimos registrar su trazabilidad.', caseId: valuationCase.id }, { status: 422 })
+    }
+
+    return NextResponse.json({
+      caseId: valuationCase.id,
+      subjectPropertyId: valuationCase.subject_property_id,
+      propertyLinked: Boolean(valuationCase.subject_property_id),
+      result,
+      conditionResult,
+      status,
+      assignmentVerified: Boolean(assignmentEvidence),
+      decision,
+    }, { status: 201 })
   } catch (error) {
     return accessErrorResponse(error)
   }
