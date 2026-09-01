@@ -7,10 +7,11 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
-  group: authenticated-role-qa-${{ github.ref }}
-  cancel-in-progress: true
+  group: authenticated-role-qa-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   role-rls:
@@ -18,22 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.QA_SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.QA_SUPABASE_ANON_KEY }}
-      QA_PASSWORD: ${{ secrets.QA_PASSWORD }}
-      QA_CEO_EMAIL: ${{ secrets.QA_CEO_EMAIL }}
-      QA_CEO_PASSWORD: ${{ secrets.QA_CEO_PASSWORD }}
-      QA_DIRECTOR_EMAIL: ${{ secrets.QA_DIRECTOR_EMAIL }}
-      QA_DIRECTOR_PASSWORD: ${{ secrets.QA_DIRECTOR_PASSWORD }}
-      QA_SUBDIRECTOR_EMAIL: ${{ secrets.QA_SUBDIRECTOR_EMAIL }}
-      QA_SUBDIRECTOR_PASSWORD: ${{ secrets.QA_SUBDIRECTOR_PASSWORD }}
-      QA_LO_BELTRAN_EMAIL: ${{ secrets.QA_LO_BELTRAN_EMAIL }}
-      QA_LO_BELTRAN_PASSWORD: ${{ secrets.QA_LO_BELTRAN_PASSWORD }}
-      QA_NUEVA_COSTANERA_EMAIL: ${{ secrets.QA_NUEVA_COSTANERA_EMAIL }}
-      QA_NUEVA_COSTANERA_PASSWORD: ${{ secrets.QA_NUEVA_COSTANERA_PASSWORD }}
-      QA_SANTA_MARIA_EMAIL: ${{ secrets.QA_SANTA_MARIA_EMAIL }}
-      QA_SANTA_MARIA_PASSWORD: ${{ secrets.QA_SANTA_MARIA_PASSWORD }}
       QA_OUTPUT_DIR: artifacts/authenticated-role-qa
+      QA_PROVISIONER_URL: https://orfncinmhymhhoxbxgjb.supabase.co/functions/v1/qalito-release-qa
 
     steps:
       - name: Checkout
@@ -52,57 +39,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate complete QA configuration
-        id: preflight
-        shell: bash
-        run: |
-          mkdir -p "$QA_OUTPUT_DIR"
-          required=(
-            NEXT_PUBLIC_SUPABASE_URL SUPABASE_ANON_KEY
-            QA_CEO_EMAIL QA_DIRECTOR_EMAIL QA_SUBDIRECTOR_EMAIL
-            QA_LO_BELTRAN_EMAIL QA_NUEVA_COSTANERA_EMAIL QA_SANTA_MARIA_EMAIL
-          )
-          missing=()
-          for name in "${required[@]}"; do
-            if [ -z "${!name}" ]; then
-              missing+=("$name")
-            fi
-          done
-
-          if [ -z "$QA_PASSWORD" ]; then
-            password_vars=(
-              QA_CEO_PASSWORD QA_DIRECTOR_PASSWORD QA_SUBDIRECTOR_PASSWORD
-              QA_LO_BELTRAN_PASSWORD QA_NUEVA_COSTANERA_PASSWORD QA_SANTA_MARIA_PASSWORD
-            )
-            for name in "${password_vars[@]}"; do
-              if [ -z "${!name}" ]; then
-                missing+=("$name")
-              fi
-            done
-          fi
-
-          if [ "${#missing[@]}" -eq 0 ]; then
-            complete=true
-          else
-            complete=false
-          fi
-
-          printf '{\n  "generatedAt": "%s",\n  "commitSha": "%s",\n  "complete": %s,\n  "missing": [' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$GITHUB_SHA" "$complete" > "$QA_OUTPUT_DIR/preflight.json"
-          for i in "${!missing[@]}"; do
-            [ "$i" -gt 0 ] && printf ', ' >> "$QA_OUTPUT_DIR/preflight.json"
-            printf '"%s"' "${missing[$i]}" >> "$QA_OUTPUT_DIR/preflight.json"
-          done
-          printf ']\n}\n' >> "$QA_OUTPUT_DIR/preflight.json"
-          echo "complete=$complete" >> "$GITHUB_OUTPUT"
-
-          if [ "$complete" != true ]; then
-            printf 'Authenticated role QA configuration is incomplete:\n'
-            printf ' - %s\n' "${missing[@]}"
-          fi
+      - name: Provision ephemeral QA identities
+        run: node scripts/manage-ephemeral-release-qa.mjs provision
 
       - name: Run authenticated role and RLS QA
-        if: steps.preflight.outputs.complete == 'true'
         run: pnpm qa:roles
+
+      - name: Cleanup ephemeral QA identities
+        if: always()
+        run: node scripts/manage-ephemeral-release-qa.mjs cleanup
 
       - name: Upload QA evidence
         if: always()
@@ -112,10 +57,3 @@ jobs:
           path: artifacts/authenticated-role-qa
           if-no-files-found: error
           retention-days: 30
-
-      - name: Fail when QA configuration is incomplete
-        if: steps.preflight.outputs.complete != 'true'
-        shell: bash
-        run: |
-          echo "Authenticated role QA was not executed because required secrets are incomplete."
-          exit 1
