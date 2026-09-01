@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 
 const normalize = (value: string | null | undefined) => String(value ?? '').trim().toLowerCase()
 
-type NeighborhoodQueueRow = { can_decide: boolean }
-type NeighborhoodBatchRow = { eligible_count: number | null; conflict_count: number | null }
-type NeighborhoodConflictRow = { correction_ready: boolean }
+type TerritoryProgress = {
+  portal_current_houses: number | null
+  exact_kml_houses: number | null
+}
 
 export async function GET() {
   const supabase = await createClient()
@@ -21,15 +22,14 @@ export async function GET() {
   if (profileError || !profile) return NextResponse.json({ error: profileError?.message ?? 'Perfil no configurado' }, { status: 403 })
   if (!['ceo', 'admin'].includes(normalize(profile.role))) return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 })
 
-  const [valuations, assignments, properties, tasks, profiles, neighborhoodQueue, neighborhoodBatches, neighborhoodConflicts] = await Promise.all([
+  const [valuations, assignments, properties, tasks, profiles, neighborhoodQueue, territoryProgress] = await Promise.all([
     supabase.from('valuation_cases').select('id,status,updated_at').eq('property_type', 'Casa'),
     supabase.from('property_assignments').select('id,status,assigned_to,updated_at'),
     supabase.from('market_properties').select('id,identity_status,last_seen_at').eq('property_type', 'Casa'),
     supabase.from('management_tasks').select('id,status,priority,due_date,office,assigned_to,updated_at'),
     supabase.from('profiles').select('id,role,team'),
     supabase.rpc('get_ceo_market_neighborhood_queue_v1'),
-    supabase.rpc('get_ceo_market_neighborhood_batch_summary_v1'),
-    supabase.rpc('get_ceo_market_neighborhood_conflicts_v1'),
+    supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
   ])
 
   const errors = [
@@ -39,8 +39,7 @@ export async function GET() {
     tasks.error,
     profiles.error,
     neighborhoodQueue.error,
-    neighborhoodBatches.error,
-    neighborhoodConflicts.error,
+    territoryProgress.error,
   ].map((error) => error?.message).filter((message): message is string => Boolean(message))
 
   const valuationRows = valuations.data ?? []
@@ -48,17 +47,11 @@ export async function GET() {
   const propertyRows = properties.data ?? []
   const taskRows = tasks.data ?? []
   const profileRows = profiles.data ?? []
-  const queueRows = (neighborhoodQueue.data ?? []) as NeighborhoodQueueRow[]
-  const batchRows = (neighborhoodBatches.data ?? []) as NeighborhoodBatchRow[]
-  const conflictRows = (neighborhoodConflicts.data ?? []) as NeighborhoodConflictRow[]
+  const neighborhoodExceptions = (neighborhoodQueue.data ?? []).length
+  const territory = territoryProgress.data as TerritoryProgress | null
   const today = new Date().toISOString().slice(0, 10)
   const countStatus = (rows: Array<{ status: string | null }>, status: string) => rows.filter((row) => row.status === status).length
   const openTasks = taskRows.filter((task) => ['open', 'in_progress'].includes(String(task.status)))
-
-  const neighborhoodRecommendations = batchRows.reduce((sum, row) => sum + Number(row.eligible_count ?? 0), 0)
-  const neighborhoodCorrections = conflictRows.filter((row) => row.correction_ready).length
-  const neighborhoodManual = queueRows.filter((row) => !row.can_decide).length + conflictRows.filter((row) => !row.correction_ready).length
-  const neighborhoodApprovals = (neighborhoodRecommendations > 0 ? 1 : 0) + (neighborhoodCorrections > 0 ? 1 : 0) + neighborhoodManual
 
   return NextResponse.json({
     valuations: {
@@ -77,10 +70,9 @@ export async function GET() {
       properties: propertyRows.length,
       confirmed: propertyRows.filter((property) => property.identity_status === 'confirmed').length,
       pendingIdentity: propertyRows.filter((property) => property.identity_status !== 'confirmed').length,
-      neighborhoodApprovals,
-      neighborhoodRecommendations,
-      neighborhoodCorrections,
-      neighborhoodManual,
+      neighborhoodTotal: Number(territory?.portal_current_houses ?? 0),
+      neighborhoodResolved: Number(territory?.exact_kml_houses ?? 0),
+      neighborhoodExceptions,
     },
     tasks: {
       total: taskRows.length,
