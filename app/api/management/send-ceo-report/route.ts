@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
 import { generateCeoReportData, generateCeoReportHTML } from '@/lib/ceo-report-html-generator'
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // Lazy initialization to avoid errors during build
 let resend: Resend | null = null
@@ -14,18 +17,22 @@ function getResend() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email } = body
+    await requireCapability('management.global.manage')
+  } catch (error) {
+    return accessErrorResponse(error)
+  }
 
-    if (!email) {
-      return NextResponse.json({ error: 'Email required' }, { status: 400 })
+  try {
+    const body = await request.json().catch(() => null)
+    const email = String(body?.email ?? '').trim().toLowerCase()
+
+    if (!EMAIL_PATTERN.test(email)) {
+      return NextResponse.json({ error: 'Email inválido' }, { status: 400 })
     }
 
-    // Generate report data and HTML
     const reportData = generateCeoReportData()
     const reportHTML = generateCeoReportHTML(reportData)
 
-    // Send via Resend
     const response = await getResend().emails.send({
       from: 'onboarding@resend.dev',
       to: email,
@@ -34,43 +41,47 @@ export async function POST(request: NextRequest) {
     })
 
     if (response.error) {
-      const errorDetails = JSON.stringify(response.error)
-      console.error('[Send Report] Resend error:', errorDetails)
-      return NextResponse.json(
-        { error: 'Failed to send email', details: errorDetails },
-        { status: 500 }
-      )
+      console.error('[Send Report] Resend error', {
+        name: response.error.name,
+        message: response.error.message,
+      })
+      return NextResponse.json({ error: 'No fue posible enviar el reporte.' }, { status: 502 })
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: `Reporte enviado a ${email}`,
-        emailId: response.data?.id,
-        period: reportData.period,
-      },
-      { status: 200 }
-    )
+    return NextResponse.json({
+      success: true,
+      message: `Reporte enviado a ${email}`,
+      emailId: response.data?.id,
+      period: reportData.period,
+    })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('[Send Report] Error:', errorMessage)
-    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 })
+    console.error('[Send Report] Unexpected error', {
+      message: error instanceof Error ? error.message : 'unknown',
+    })
+    return NextResponse.json({ error: 'No fue posible enviar el reporte.' }, { status: 500 })
   }
 }
 
 // GET endpoint to preview report HTML
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+  try {
+    await requireCapability('reports.global.read')
+  } catch (error) {
+    return accessErrorResponse(error)
+  }
+
   try {
     const reportData = generateCeoReportData()
     const reportHTML = generateCeoReportHTML(reportData)
 
     return new NextResponse(reportHTML, {
       status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('[Preview Report] Error:', errorMessage)
-    return NextResponse.json({ error: 'Failed to generate report', details: errorMessage }, { status: 500 })
+    console.error('[Preview Report] Unexpected error', {
+      message: error instanceof Error ? error.message : 'unknown',
+    })
+    return NextResponse.json({ error: 'No fue posible generar la vista previa.' }, { status: 500 })
   }
 }
