@@ -19,6 +19,10 @@ export type OperationalMarketSnapshot = {
   identityCollisions: number | null
   newLiveIdentityCases: number | null
   highConfidenceIdentityCandidates: number | null
+  clientSaleSignals: number | null
+  latestClientSaleSignalAt: string | null
+  latestClientSaleSourcePeriodEnd: string | null
+  clientSaleSignalSourceFiles: number | null
   latestIngestionAt: string | null
   latestIngestionStatus: string | null
   latestIngestionAccepted: number | null
@@ -65,6 +69,13 @@ type HouseIdentityProgress = {
   unlinked_without_existing_external_identity: number | null
 }
 
+type ClientSaleSignalSummary = {
+  accepted_house_signals: number | null
+  latest_observed_at: string | null
+  latest_source_period_end: string | null
+  source_files: number | null
+}
+
 const emptySnapshot: OperationalMarketSnapshot = {
   connected: false,
   canonicalProperties: null,
@@ -82,6 +93,10 @@ const emptySnapshot: OperationalMarketSnapshot = {
   identityCollisions: null,
   newLiveIdentityCases: null,
   highConfidenceIdentityCandidates: null,
+  clientSaleSignals: null,
+  latestClientSaleSignalAt: null,
+  latestClientSaleSourcePeriodEnd: null,
+  clientSaleSignalSourceFiles: null,
   latestIngestionAt: null,
   latestIngestionStatus: null,
   latestIngestionAccepted: null,
@@ -116,7 +131,7 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [houseSummaryResult, territoryProgressResult, identityProgressResult, historicalIdentityCandidates, highIdentityCandidates, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityProgressResult, historicalIdentityCandidates, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase.rpc('get_market_house_identity_progress_v1').maybeSingle(),
@@ -131,6 +146,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .eq('left_entity_type', 'listing')
         .eq('right_entity_type', 'property')
         .eq('status', 'candidate_high'),
+      supabase.rpc('get_market_client_sale_signal_summary_v1').maybeSingle(),
       supabase
         .from('market_transactions')
         .select('id,market_properties!inner(property_type)', { count: 'exact', head: true })
@@ -169,6 +185,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       identityProgressResult.error,
       historicalIdentityCandidates.error,
       highIdentityCandidates.error,
+      clientSaleSignalsResult.error,
       confirmedSalesResult.error,
       cbrsHouseReferenceResult.error,
       latestMetric.error,
@@ -179,6 +196,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const house = houseSummaryResult.data as HouseDeliverySummary | null
     const territoryProgress = territoryProgressResult.data as HouseTerritoryProgress | null
     const identityProgress = identityProgressResult.data as HouseIdentityProgress | null
+    const clientSaleSignals = clientSaleSignalsResult.data as ClientSaleSignalSummary | null
     const metric = latestMetric.data
     const ingestion = latestIngestion.data
     const latestObservedAt = house?.portal_as_of ?? null
@@ -210,6 +228,10 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       identityCollisions: identityProgressResult.error ? null : identityProgress?.external_identity_collisions ?? 0,
       newLiveIdentityCases: identityProgressResult.error ? null : identityProgress?.unlinked_without_existing_external_identity ?? 0,
       highConfidenceIdentityCandidates: highIdentityCandidates.error ? null : highIdentityCandidates.count ?? 0,
+      clientSaleSignals: clientSaleSignalsResult.error ? null : clientSaleSignals?.accepted_house_signals ?? 0,
+      latestClientSaleSignalAt: clientSaleSignalsResult.error ? null : clientSaleSignals?.latest_observed_at ?? null,
+      latestClientSaleSourcePeriodEnd: clientSaleSignalsResult.error ? null : clientSaleSignals?.latest_source_period_end ?? null,
+      clientSaleSignalSourceFiles: clientSaleSignalsResult.error ? null : clientSaleSignals?.source_files ?? 0,
       latestIngestionAt: latestIngestion.error ? null : ingestion?.completed_at ?? ingestion?.started_at ?? null,
       latestIngestionStatus: latestIngestion.error ? null : ingestion?.status ?? null,
       latestIngestionAccepted: latestIngestion.error ? null : ingestion?.accepted_rows ?? null,
