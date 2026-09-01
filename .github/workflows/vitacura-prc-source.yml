@@ -1,0 +1,32 @@
+name: Vitacura PRC source
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'lib/vitacura-prc.ts'
+      - 'lib/vitacura-prc-sync.ts'
+      - 'app/api/market/prc/**'
+      - 'app/api/prc/**'
+      - 'app/api/cron/prc-refresh/**'
+      - 'scripts/verify-vitacura-prc-source.ts'
+      - '.github/workflows/vitacura-prc-source.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm exec tsx scripts/verify-vitacura-prc-source.ts
