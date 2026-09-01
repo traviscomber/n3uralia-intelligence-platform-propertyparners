@@ -1,0 +1,49 @@
+name: Yapo source smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/yapo-collector.ts'
+      - 'scripts/smoke-yapo-collector.ts'
+      - 'tests/market/yapo-parser.test.ts'
+      - '.github/workflows/yapo-source-smoke.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yapo-source-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  read-only-source-check:
+    name: Read-only Vitacura house collector
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Explain check
+        run: echo 'Read-only smoke: discover up to 3 Yapo Vitacura house listings and verify public commercial facts. No Supabase writes are performed.'
+
+      - name: Run Yapo source smoke
+        run: node --import tsx scripts/smoke-yapo-collector.ts
