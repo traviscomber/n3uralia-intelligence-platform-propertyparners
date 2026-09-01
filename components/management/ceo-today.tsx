@@ -19,10 +19,9 @@ type Operations = {
   valuations: { review: number }
   assignments: { paused: number }
   market: {
-    neighborhoodApprovals: number
-    neighborhoodRecommendations: number
-    neighborhoodCorrections: number
-    neighborhoodManual: number
+    neighborhoodTotal: number
+    neighborhoodResolved: number
+    neighborhoodExceptions: number
   }
   tasks: { overdue: number; urgent: number }
   generatedAt: string
@@ -71,15 +70,10 @@ export function CeoToday() {
 
   const priorities = useMemo<Priority[]>(() => {
     const items: Priority[] = []
-    if (operations?.market.neighborhoodApprovals) {
-      const parts = [
-        operations.market.neighborhoodRecommendations ? `${n(operations.market.neighborhoodRecommendations)} recomendaciones` : null,
-        operations.market.neighborhoodCorrections ? `${n(operations.market.neighborhoodCorrections)} correcciones verificadas` : null,
-        operations.market.neighborhoodManual ? `${n(operations.market.neighborhoodManual)} excepciones` : null,
-      ].filter(Boolean)
+    if (operations?.market.neighborhoodExceptions) {
       items.push({
-        label: 'Resolver barrios',
-        detail: `${parts.join(' + ')} en ${n(operations.market.neighborhoodApprovals)} decisión${operations.market.neighborhoodApprovals === 1 ? '' : 'es'}`,
+        label: 'Excepciones territoriales',
+        detail: `${n(operations.market.neighborhoodExceptions)} caso${operations.market.neighborhoodExceptions === 1 ? '' : 's'} sin evidencia suficiente para resolución automática`,
         href: '/dashboard/market/revisar-barrios',
       })
     }
@@ -116,7 +110,7 @@ export function CeoToday() {
         { label: 'Ventas', value: n(latest?.sales, 1) },
         { label: 'Meta', value: n(latest?.salesTarget, 1) },
         { label: 'Cumplimiento', value: compliance == null ? '—' : `${n(compliance, 0)}%`, tone: compliance == null ? 'default' : compliance >= 100 ? 'success' : compliance >= 80 ? 'warning' : 'danger' },
-        { label: 'Por revisar', value: operations.valuations.review + operations.market.neighborhoodApprovals, tone: operations.valuations.review + operations.market.neighborhoodApprovals ? 'warning' : 'default' },
+        { label: 'Por revisar', value: operations.valuations.review + operations.market.neighborhoodExceptions, tone: operations.valuations.review + operations.market.neighborhoodExceptions ? 'warning' : 'default' },
       ]} />
 
       <section className="mt-8 max-w-5xl">
