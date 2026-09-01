@@ -150,13 +150,13 @@ export async function fetchVitacuraPrcRows() {
   const batches: Array<{ layer: PrcLayer; mid: string; rows: ParsedPrcRow[]; status: number; bytes: number }> = []
 
   for (const source of SOURCES) {
-    const url = `https://www.google.com/maps/d/u/1/kml?mid=${source.mid}&forcekml=1`
+    const url = `https://www.google.com/maps/d/u/0/kml?mid=${source.mid}&forcekml=1`
     const response = await fetch(url, {
       cache: 'no-store',
       headers: {
         Accept: 'application/vnd.google-earth.kml+xml, application/xml, text/xml, */*',
         Referer: OFFICIAL_VIEWER,
-        'User-Agent': 'Mozilla/5.0 (compatible; PropertyPartners/1.0; +https://ppartnersgroup.app)',
+        'User-Agent': 'PropertyPartners-PRC-Snapshot/1.0',
       },
       signal: AbortSignal.timeout(20000),
     })
