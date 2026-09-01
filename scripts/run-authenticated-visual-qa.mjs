@@ -1,43 +1,17 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
-import puppeteer from 'puppeteer'
 
-const baseUrl = process.env.QA_BASE_URL || 'https://n3uralia-intelligence-platform.vercel.app'
+const baseUrl = process.env.QA_BASE_URL || 'https://ppartnersgroup.app'
 const outputRoot = path.resolve(process.env.QA_OUTPUT_DIR || 'artifacts/visual-qa')
 const sharedPassword = process.env.QA_PASSWORD || null
 
 const profiles = [
-  {
-    key: 'ceo',
-    email: process.env.QA_CEO_EMAIL,
-    password: process.env.QA_CEO_PASSWORD || sharedPassword,
-    start: '/dashboard/ceo',
-  },
-  {
-    key: 'director',
-    email: process.env.QA_DIRECTOR_EMAIL,
-    password: process.env.QA_DIRECTOR_PASSWORD || sharedPassword,
-    start: '/dashboard/director',
-  },
-  {
-    key: 'lo-beltran',
-    email: process.env.QA_LO_BELTRAN_EMAIL,
-    password: process.env.QA_LO_BELTRAN_PASSWORD || sharedPassword,
-    start: '/dashboard/partner',
-  },
-  {
-    key: 'nueva-costanera',
-    email: process.env.QA_NUEVA_COSTANERA_EMAIL,
-    password: process.env.QA_NUEVA_COSTANERA_PASSWORD || sharedPassword,
-    start: '/dashboard/partner',
-  },
-  {
-    key: 'santa-maria',
-    email: process.env.QA_SANTA_MARIA_EMAIL,
-    password: process.env.QA_SANTA_MARIA_PASSWORD || sharedPassword,
-    start: '/dashboard/partner',
-  },
+  { key: 'ceo', email: process.env.QA_CEO_EMAIL, password: process.env.QA_CEO_PASSWORD || sharedPassword, start: '/dashboard/ceo' },
+  { key: 'director', email: process.env.QA_DIRECTOR_EMAIL, password: process.env.QA_DIRECTOR_PASSWORD || sharedPassword, start: '/dashboard/director' },
+  { key: 'lo-beltran', email: process.env.QA_LO_BELTRAN_EMAIL, password: process.env.QA_LO_BELTRAN_PASSWORD || sharedPassword, start: '/dashboard/partner' },
+  { key: 'nueva-costanera', email: process.env.QA_NUEVA_COSTANERA_EMAIL, password: process.env.QA_NUEVA_COSTANERA_PASSWORD || sharedPassword, start: '/dashboard/partner' },
+  { key: 'santa-maria', email: process.env.QA_SANTA_MARIA_EMAIL, password: process.env.QA_SANTA_MARIA_PASSWORD || sharedPassword, start: '/dashboard/partner' },
 ].filter((item) => item.email)
 
 const viewports = [
@@ -51,13 +25,20 @@ for (const profile of profiles) {
   if (!profile.password) throw new Error(`Missing password for QA profile ${profile.key}.`)
 }
 
-await fs.mkdir(outputRoot, { recursive: true })
-
-const browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox'],
-})
-const results = []
+async function launchBrowser() {
+  const [{ default: puppeteer }, { default: chromium }] = await Promise.all([
+    import('puppeteer-core'),
+    import('@sparticuz/chromium'),
+  ])
+  chromium.setGraphicsMode = false
+  const args = await puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' })
+  return puppeteer.launch({
+    args,
+    executablePath: await chromium.executablePath(),
+    headless: 'shell',
+    defaultViewport: { width: 1440, height: 1000 },
+  })
+}
 
 async function waitForAuthenticatedState(page) {
   await Promise.race([
@@ -69,10 +50,7 @@ async function waitForAuthenticatedState(page) {
     pathname: window.location.pathname,
     alert: document.querySelector('[role="alert"]')?.textContent?.trim() || null,
   }))
-
-  if (state.pathname.startsWith('/auth/login')) {
-    throw new Error(state.alert || 'Authentication did not leave the login page.')
-  }
+  if (state.pathname.startsWith('/auth/login')) throw new Error(state.alert || 'Authentication did not leave the login page.')
 }
 
 async function login(page, email, password) {
@@ -80,7 +58,6 @@ async function login(page, email, password) {
   const emailInput = await page.$('input[type="email"], input[name="email"]')
   const passwordInput = await page.$('input[type="password"], input[name="password"]')
   if (!emailInput || !passwordInput) throw new Error('Login form fields were not found.')
-
   await emailInput.click({ clickCount: 3 })
   await emailInput.type(email)
   await passwordInput.click({ clickCount: 3 })
@@ -97,16 +74,15 @@ async function collectAccessibilitySignals(page) {
         return style.visibility !== 'hidden' && style.display !== 'none' && !element.hasAttribute('disabled')
       })
     const unnamed = focusables.filter((element) => {
-      const text = (
+      const label = (
         element.getAttribute('aria-label') ||
         element.getAttribute('title') ||
         element.textContent ||
         element.getAttribute('placeholder') ||
         ''
       ).trim()
-      return !text
+      return !label
     }).length
-
     return {
       title: document.title,
       h1Count: document.querySelectorAll('h1').length,
@@ -120,23 +96,23 @@ async function collectAccessibilitySignals(page) {
   })
 }
 
+await fs.mkdir(outputRoot, { recursive: true })
+const browser = await launchBrowser()
+const results = []
+
 try {
   for (const profile of profiles) {
     const contextDir = path.join(outputRoot, profile.key)
     await fs.mkdir(contextDir, { recursive: true })
     const page = await browser.newPage()
     page.setDefaultTimeout(30000)
-
     const browserErrors = []
     page.on('pageerror', (error) => browserErrors.push(String(error)))
-    page.on('console', (message) => {
-      if (message.type() === 'error') browserErrors.push(message.text())
-    })
+    page.on('console', (message) => { if (message.type() === 'error') browserErrors.push(message.text()) })
 
     try {
       await login(page, profile.email, profile.password)
       await page.goto(`${baseUrl}${profile.start}`, { waitUntil: 'networkidle2' })
-
       if (page.url().includes('/auth/')) throw new Error(`Protected route redirected to ${page.url()}.`)
 
       for (const viewport of viewports) {
@@ -162,19 +138,10 @@ try {
         await page.keyboard.press('Tab')
         focusTrail.push(await page.evaluate(() => ({
           tag: document.activeElement?.tagName || null,
-          text: (
-            document.activeElement?.getAttribute('aria-label') ||
-            document.activeElement?.textContent ||
-            ''
-          ).trim().slice(0, 120),
+          text: (document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent || '').trim().slice(0, 120),
         })))
       }
-      results.push({
-        profile: profile.key,
-        check: 'keyboard',
-        status: focusTrail.some((item) => item.tag) ? 'observed' : 'failed',
-        focusTrail,
-      })
+      results.push({ profile: profile.key, check: 'keyboard', status: focusTrail.some((item) => item.tag) ? 'observed' : 'failed', focusTrail })
 
       const reportLink = await page.$('a[href*="/report"]')
       if (reportLink) {
@@ -184,32 +151,14 @@ try {
           const pdfPath = path.join(contextDir, 'valuation-report.pdf')
           await page.pdf({ path: pdfPath, format: 'A4', printBackground: true })
           const stat = await fs.stat(pdfPath)
-          results.push({
-            profile: profile.key,
-            check: 'pdf',
-            status: stat.size > 1000 ? 'generated' : 'failed',
-            bytes: stat.size,
-            file: path.relative(outputRoot, pdfPath),
-            url: page.url(),
-          })
+          results.push({ profile: profile.key, check: 'pdf', status: stat.size > 1000 ? 'generated' : 'failed', bytes: stat.size, file: path.relative(outputRoot, pdfPath), url: page.url() })
         }
       } else {
         results.push({ profile: profile.key, check: 'pdf', status: 'not-available-on-start-page' })
       }
-
-      results.push({
-        profile: profile.key,
-        check: 'browser-errors',
-        status: browserErrors.length ? 'review' : 'clean',
-        errors: browserErrors.slice(0, 20),
-      })
+      results.push({ profile: profile.key, check: 'browser-errors', status: browserErrors.length ? 'review' : 'clean', errors: browserErrors.slice(0, 20) })
     } catch (error) {
-      results.push({
-        profile: profile.key,
-        status: 'failed',
-        error: error instanceof Error ? error.message : String(error),
-        url: page.url(),
-      })
+      results.push({ profile: profile.key, status: 'failed', error: error instanceof Error ? error.message : String(error), url: page.url() })
     } finally {
       await page.close()
     }
@@ -222,7 +171,7 @@ const manifest = {
   generatedAt: new Date().toISOString(),
   baseUrl,
   note: 'Automated evidence only. Manual screen-reader, contrast review and business acceptance remain separate.',
-  profiles: profiles.map(({ key, email, start }) => ({ key, email, start })),
+  profiles: profiles.map(({ key, start }) => ({ key, start })),
   results,
 }
 await fs.writeFile(path.join(outputRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
