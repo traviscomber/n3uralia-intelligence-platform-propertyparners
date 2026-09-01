@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache'
+import { PendingSubmitButton } from '@/components/ui/pending-submit-button'
 import { createClient } from '@/lib/supabase/server'
 import { assertProfileVisible, requireAnyPageCapability } from '@/lib/access-guards'
 
@@ -132,7 +133,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
             <label className="text-xs text-[var(--n3-text-muted)]">Ejecutiva<select name="assigned_to" required className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="">Seleccionar</option>{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.full_name} · {profile.team || 'sin sucursal'}</option>)}</select></label>
             <label className="text-xs text-[var(--n3-text-muted)]">Rol<select name="assignment_role" defaultValue="owner" className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="owner">Responsable principal</option><option value="co_broker">Corretaje compartido</option><option value="support">Apoyo comercial</option></select></label>
             <label className="text-xs text-[var(--n3-text-muted)] sm:col-span-2">Nota auditada<input name="notes" maxLength={500} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]" placeholder="Motivo o alcance de la asignación" /></label>
-            <button className="min-h-11 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white focus-visible:ring-2 focus-visible:ring-white sm:col-span-2">Asignar propiedad</button>
+            <PendingSubmitButton idleLabel="Asignar propiedad" pendingLabel="Asignando…" className="min-h-11 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white focus-visible:ring-2 focus-visible:ring-white sm:col-span-2" />
           </form> : <div className="mt-5 border border-[var(--n3-line)] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">No hay ejecutivas visibles dentro del alcance autorizado para crear una asignación.</div>}
         </article>)}
       </div>
@@ -152,7 +153,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
               <label className="text-xs text-[var(--n3-text-muted)]">Rol<select name="assignment_role" defaultValue={assignment.assignment_role} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="owner">Responsable principal</option><option value="co_broker">Corretaje compartido</option><option value="support">Apoyo comercial</option></select></label>
               <label className="text-xs text-[var(--n3-text-muted)]">Estado<select name="status" defaultValue={assignment.status} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="active">Activa</option><option value="paused">Pausada</option><option value="closed">Cerrada</option></select></label>
               <label className="text-xs text-[var(--n3-text-muted)]">Nota<input name="notes" defaultValue={assignment.notes ?? ''} maxLength={500} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]" /></label>
-              <button className="min-h-11 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]">Guardar</button>
+              <PendingSubmitButton idleLabel="Guardar" pendingLabel="Guardando…" className="min-h-11 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]" />
             </form>
           </article>
         })}
