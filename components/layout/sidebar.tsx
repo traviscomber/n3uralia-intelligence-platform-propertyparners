@@ -193,7 +193,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            aria-label="Cerrar navegación"
+            aria-hidden="true"
             tabIndex={-1}
             onClick={closeMobileNavigation}
             className="absolute inset-0 bg-black/70"
@@ -203,20 +203,24 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
             ref={mobilePanelRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Navegación"
-            className="absolute bottom-0 left-0 top-14 flex w-[min(86vw,320px)] flex-col border-r border-t border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl"
+            aria-labelledby="mobile-navigation-title"
+            className="absolute bottom-0 left-0 top-14 flex w-[min(86vw,320px)] flex-col border-r border-t border-[var(--n3-line)] bg-[var(--n3-black)]"
           >
-            <button
-              ref={closeButtonRef}
-              type="button"
-              onClick={() => {
-                closeMobileNavigation()
-                menuButtonRef.current?.focus()
-              }}
-              className="sr-only"
-            >
-              Cerrar navegación
-            </button>
+            <div className="flex min-h-12 items-center justify-between border-b border-[var(--n3-line)] px-4">
+              <h2 id="mobile-navigation-title" className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Navegación</h2>
+              <button
+                ref={closeButtonRef}
+                type="button"
+                aria-label="Cerrar navegación"
+                onClick={() => {
+                  closeMobileNavigation()
+                  menuButtonRef.current?.focus()
+                }}
+                className="flex h-11 w-11 items-center justify-center text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+              >
+                <X aria-hidden="true" size={18} strokeWidth={1.6} />
+              </button>
+            </div>
             {navigation}
           </aside>
         </div>
