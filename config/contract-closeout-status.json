@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-08-07",
+  "asOf": "2026-09-01",
   "overallStatus": "in-progress",
   "allowedStatuses": [
     "not-started",
@@ -12,7 +12,8 @@
   "documents": [
     "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
     "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
-    "docs/canonical/TRAINING_AND_HANDOVER_PLAN.md"
+    "docs/canonical/TRAINING_AND_HANDOVER_PLAN.md",
+    "docs/canonical/DELIVERY_REQUIREMENTS_MATRIX_2026-09-01.md"
   ],
   "workstreams": [
     {
@@ -21,50 +22,55 @@
       "status": "ready-for-uat",
       "owner": "N3uralia",
       "evidence": [
-        "Produccion desplegada en Vercel",
-        "Aplicacion integrada con Supabase",
-        "Controles de acceso, RLS y aislamiento por tenant"
+        "Producción dpl_DeEMDDjyGpNEBU2g6cdsaSBYputL verificada READY el 2026-09-01",
+        "Frozen-lockfile install y build de producción pasan en closeout",
+        "Gates de IP, credenciales, exposición y aislamiento tenant pasan",
+        "Ventana runtime auditada sin error/fatal ni 5xx observados"
       ],
       "blockers": []
     },
     {
       "id": "valuation",
-      "label": "Valorizacion",
+      "label": "Valorización",
       "status": "ready-for-uat",
-      "owner": "N3uralia",
+      "owner": "Shared",
       "evidence": [
-        "Flujo de valorizacion implementado",
-        "Comparables, ajustes, rango y justificacion disponibles",
-        "Verificadores de modelo, workflow y condiciones"
+        "Modelo, evidencia canónica, workflow y condición pasan verificación",
+        "Regresión de valorización 25/25",
+        "Mínimo de 3 comparables humanos y aprobación sólo CEO verificados",
+        "Producción contiene 10 casos: 2 draft, 8 review y 0 issued"
       ],
-      "blockers": []
+      "blockers": [
+        "Ejecutar con usuarios autorizados un caso real de UAT hasta issued y registrar aceptación"
+      ]
     },
     {
       "id": "management-intelligence",
-      "label": "CEO, direccion y agentes",
+      "label": "CEO, dirección y agentes",
       "status": "ready-for-uat",
-      "owner": "N3uralia",
+      "owner": "Shared",
       "evidence": [
-        "Dashboard ejecutivo operativo",
-        "Reportes mensuales con control de periodo cerrado",
-        "Rutas protegidas por capacidades"
+        "Scoring, persistencia, reconciliación, comparaciones, fuentes y report delivery pasan gates",
+        "Rutas CEO, director, subdirector y seller verificadas por límites de capacidades",
+        "Producción contiene perfiles de los roles principales"
       ],
-      "blockers": []
+      "blockers": [
+        "Aprobar diccionario oficial de KPI antes de presentar métricas provisionales como oficiales"
+      ]
     },
     {
       "id": "market-intelligence",
-      "label": "Inteligencia de mercado",
-      "status": "blocked-client-input",
+      "label": "Inteligencia de mercado V1",
+      "status": "ready-for-uat",
       "owner": "Shared",
       "evidence": [
-        "Base tecnica, importacion y comparables implementados",
-        "Separacion explicita entre mercado externo, CRM interno e inferencia"
+        "Alcance canónico de aceptación: ventas de casas en Vitacura",
+        "CBRS recibido e integrado: 17.581 transacciones de referencia al corte auditado",
+        "KML recibido e integrado: 19 barrios canónicos",
+        "Refresh Portal V1 reciente completado con 12 aceptadas y 0 rechazadas",
+        "Gates de identidad, ingestión y compatibilidad contractual pasan"
       ],
-      "blockers": [
-        "Base historica CBR y ventas recientes",
-        "KML oficial",
-        "Definicion final de absorcion, velocidad y oferta versus ventas"
-      ]
+      "blockers": []
     },
     {
       "id": "automation-and-reporting",
@@ -72,40 +78,42 @@
       "status": "blocked-client-input",
       "owner": "Shared",
       "evidence": [
-        "Generacion, previsualizacion y envio protegidos",
-        "Regla de cierre mensual implementada",
-        "Programacion bloqueada en API y UI hasta aprobacion formal de reporting"
+        "Generación, previsualización, scheduling y delivery pasan verificadores técnicos",
+        "Regla de cierre mensual y validación de destinatarios implementadas",
+        "Reportin PDF canónico pasa verificación"
       ],
       "blockers": [
         "Calendario definitivo",
         "Destinatarios aprobados",
-        "Frecuencia y reglas operativas confirmadas"
+        "Frecuencia, formato/canal y reglas operativas confirmadas"
       ]
     },
     {
       "id": "uat-and-acceptance",
-      "label": "UAT y aceptacion",
+      "label": "UAT y aceptación",
       "status": "in-progress",
       "owner": "Shared",
       "evidence": [
-        "Plan UAT documentado",
+        "Aceptación técnica 20/20 y build pasan el 2026-09-01",
         "UAT-07 seguridad funcional passed",
         "UAT-08 continuidad operativa passed",
-        "Casos restantes preparados con evidencia tecnica"
+        "UAT de mercado ya no está bloqueado por KML/CBRS",
+        "Authenticated role/visual UAT quedó HOLD por falta de configuración de participantes/credenciales QA, no por un fallo funcional observado"
       ],
       "blockers": [
-        "Usuarios designados por el Cliente",
-        "Ejecucion y aceptacion de casos compartidos",
-        "Acta de aceptacion"
+        "Participantes UAT designados por el Cliente",
+        "Ejecución autenticada y aceptación de los casos compartidos, incluido un Valorizador real hasta issued",
+        "Acta o registro de aceptación"
       ]
     },
     {
       "id": "training-and-handover",
-      "label": "Capacitacion y traspaso",
+      "label": "Capacitación y traspaso",
       "status": "blocked-client-input",
       "owner": "Shared",
       "evidence": [
-        "Plan de capacitacion y traspaso documentado"
+        "Plan de capacitación y traspaso documentado",
+        "Matriz de entrega identifica evidencia operativa que debe quedar explícita en el handover"
       ],
       "blockers": [
         "Fechas y asistentes confirmados",
@@ -117,16 +125,16 @@
       "id": "final-delivery-package",
       "label": "Paquete final de entrega",
       "status": "in-progress",
-      "owner": "N3uralia",
+      "owner": "Shared",
       "evidence": [
         "Manifiesto de entrega documentado",
-        "Inventario ensamblado con 20 artefactos clasificados",
-        "Checklist de reconstruccion limpia documentado"
+        "Matriz requisito -> evidencia -> estado actualizada al 2026-09-01",
+        "Arquitectura, UAT, seguridad, rollback y operación cuentan con documentación canónica"
       ],
       "blockers": [
-        "Generacion del ZIP final sobre commit aprobado",
-        "Checksum SHA-256 del ZIP final",
-        "Reconstruccion limpia del artefacto final"
+        "Consolidar manual ejecutivo y manual administrador/operación",
+        "Definir titularidad y receptor técnico autorizado de servicios de terceros",
+        "Generar artefacto final y checksum sobre el commit aprobado después de UAT/handover"
       ]
     }
   ],

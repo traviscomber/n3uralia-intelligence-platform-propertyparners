@@ -112,9 +112,10 @@ export function scorePropertyMatch(left: MarketIdentityInput, right: MarketIdent
 
   const score = evidence.reduce((sum, item) => sum + (item.matched ? item.weight : 0), 0)
   const contradictions = evidence.filter((item) => !item.matched && item.field === 'rol')
+  const neighborhoodConflict = evidence.some((item) => item.field === 'neighborhood' && !item.matched)
   const status = contradictions.length > 0
     ? 'rejected'
-    : score >= 0.8
+    : score >= 0.8 && !neighborhoodConflict
       ? 'candidate_high'
       : score >= 0.5
         ? 'candidate_medium'
