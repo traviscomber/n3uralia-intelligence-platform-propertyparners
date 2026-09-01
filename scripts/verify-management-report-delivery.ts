@@ -14,6 +14,9 @@ async function main() {
   const recipientResolver = fs.readFileSync('lib/document-recipient-resolution.ts', 'utf8')
   const weeklyRoute = fs.readFileSync('app/api/cron/deliver-documents-weekly/route.ts', 'utf8')
   const monthlyRoute = fs.readFileSync('app/api/cron/deliver-documents-monthly/route.ts', 'utf8')
+  const managementDelivery = fs.readFileSync('lib/management-report-delivery.ts', 'utf8')
+  const legacyCeoDeliveryRoute = fs.readFileSync('app/api/management/send-ceo-report/route.ts', 'utf8')
+  const concurrencyMigration = fs.readFileSync('supabase/migrations/20260901153000_harden_management_concurrency.sql', 'utf8')
 
   assert.match(recipientResolver, /\.select\('id, full_name, role'\)/)
   assert.match(recipientResolver, /\.in\('role', roles\)/)
@@ -21,6 +24,27 @@ async function main() {
   assert.doesNotMatch(recipientResolver, /copilot_role/)
   assert.match(weeklyRoute, /document-recipient-resolution/)
   assert.match(monthlyRoute, /document-recipient-resolution/)
+
+  // Delivery must remain claim-based and provider-idempotent under concurrent workers.
+  assert.match(managementDelivery, /claim_management_report_distributions/)
+  assert.match(managementDelivery, /Idempotency-Key/)
+  assert.match(managementDelivery, /management-report-\$\{input\.distribution\.id\}/)
+  assert.match(managementDelivery, /\.eq\('locked_by', workerId\)/)
+
+  // Legacy report delivery is authenticated by middleware and additionally scoped by capability.
+  assert.match(legacyCeoDeliveryRoute, /requireCapability\('management\.global\.manage'\)/)
+  assert.match(legacyCeoDeliveryRoute, /requireCapability\('reports\.global\.read'\)/)
+  assert.doesNotMatch(legacyCeoDeliveryRoute, /details:\s*error/)
+
+  // Database invariants are authoritative when two evaluator/subscription requests race.
+  assert.match(concurrencyMigration, /create unique index if not exists management_alerts_unresolved_key_uq/i)
+  assert.match(concurrencyMigration, /where status in \('open', 'acknowledged'\)/i)
+  assert.match(concurrencyMigration, /create unique index if not exists report_subscriptions_active_key_uq/i)
+  assert.match(concurrencyMigration, /where active;/i)
+  assert.match(concurrencyMigration, /on conflict do nothing;/i)
+  assert.match(concurrencyMigration, /get diagnostics v_rows = row_count;/i)
+  assert.match(concurrencyMigration, /Duplicate unresolved management alerts exist/i)
+  assert.match(concurrencyMigration, /Duplicate active report subscriptions exist/i)
 
   assert.equal(getManagementReportDeliveryConfiguration({} as NodeJS.ProcessEnv), null)
   assert.equal(extractReportEmailAddress('Business Intelligence Property Partners <info@ppartnersgroup.app>'), 'info@ppartnersgroup.app')
