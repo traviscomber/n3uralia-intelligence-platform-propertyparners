@@ -46,7 +46,10 @@ export async function POST(request: Request) {
   if (!reportTypes.has(reportType) || !validDate(body?.periodStart) || !validDate(body?.periodEnd)) {
     return NextResponse.json({ error: 'Tipo o período de reporte inválido.' }, { status: 400 })
   }
-  if (body.periodEnd < body.periodStart || monthOf(body.periodStart) !== monthOf(body.periodEnd)) {
+  if (body.periodEnd < body.periodStart) {
+    return NextResponse.json({ error: 'El fin del período no puede ser anterior al inicio.' }, { status: 400 })
+  }
+  if (reportType === 'monthly' && monthOf(body.periodStart) !== monthOf(body.periodEnd)) {
     return NextResponse.json({ error: 'El reporte mensual debe corresponder a un único período calendario.' }, { status: 400 })
   }
   if (!body?.snapshot || typeof body.snapshot !== 'object' || Array.isArray(body.snapshot)) {
