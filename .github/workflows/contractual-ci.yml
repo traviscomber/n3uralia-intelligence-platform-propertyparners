@@ -94,6 +94,9 @@ jobs:
       - name: Verify contractual market imports
         run: pnpm market:contract:verify
 
+      - name: Verify Yapo parser contract
+        run: node --import tsx --test tests/market/yapo-parser.test.ts
+
       - name: Verify valuation model
         run: pnpm valuation:model:verify
 
