@@ -9,6 +9,12 @@ const KML_SOURCE_CODE = 'kml_vitacura_barrios_2026_08_12'
 const REVIEW_DECISIONS = new Set(['accepted', 'discarded'])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+type QueueRow = {
+  review_id: string | null
+  proposed_neighborhood_id: string | null
+  can_decide: boolean
+}
+
 export async function reviewNeighborhoodAction(formData: FormData) {
   const reviewId = String(formData.get('reviewId') || '')
   const decision = String(formData.get('decision') || '')
@@ -39,34 +45,19 @@ export async function reviewNeighborhoodAction(formData: FormData) {
   }
 
   if (decision === 'accepted') {
-    if (item.classification === 'clear') {
-      if (!item.suggested_neighborhood_id) throw new Error('Neighborhood review has no canonical neighborhood suggestion')
-    } else if (item.classification === 'ambiguous') {
-      const candidates = Array.isArray(item.candidate_neighborhoods)
-        ? item.candidate_neighborhoods.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-        : []
+    if (item.classification === 'clear' && item.suggested_neighborhood_id) {
+      // Direct KML recommendation: no additional resolution needed.
+    } else {
+      const { data: queueData, error: queueError } = await supabase.rpc('get_ceo_market_neighborhood_queue_v1')
+      if (queueError) throw new Error(`Unable to resolve canonical neighborhood: ${queueError.message}`)
 
-      const { data: source, error: sourceError } = await supabase
-        .from('market_sources')
-        .select('id')
-        .eq('code', KML_SOURCE_CODE)
-        .maybeSingle()
-
-      if (sourceError || !source) throw new Error(sourceError?.message ?? 'Canonical KML source is unavailable')
-
-      const { data: neighborhoods, error: neighborhoodError } = await supabase
-        .from('market_neighborhoods')
-        .select('id,name')
-        .eq('geometry_source_id', source.id)
-        .in('name', candidates)
-
-      if (neighborhoodError) throw new Error(`Unable to resolve canonical neighborhood: ${neighborhoodError.message}`)
-      if ((neighborhoods ?? []).length !== 1) throw new Error('Neighborhood review still requires more evidence')
+      const queueRow = ((queueData ?? []) as QueueRow[]).find((row) => row.review_id === reviewId)
+      if (!queueRow?.can_decide || !queueRow.proposed_neighborhood_id) {
+        throw new Error('Neighborhood review still requires more evidence')
+      }
 
       update.classification = 'clear'
-      update.suggested_neighborhood_id = neighborhoods![0].id
-    } else {
-      throw new Error('Neighborhood review is not eligible for approval')
+      update.suggested_neighborhood_id = queueRow.proposed_neighborhood_id
     }
   }
 
