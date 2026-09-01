@@ -1,202 +1,196 @@
-# Manual de usuario por rol
+# User manual by role
 
-Fecha: 1 de agosto de 2026.
+Date: September 1, 2026.
 
-## 1. Principios comunes
+## 1. Common principles
 
-La plataforma separa tres capas de información:
+The platform separates three information layers:
 
-- **Persistida aprobada**: valor reconciliado y autorizado para publicación.
-- **Documental**: corte proveniente de presentaciones canónicas, identificado con período y fuente.
-- **Operacional**: valorizaciones, asignaciones, tareas y datos de mercado sujetos a RLS.
+- **Approved persisted data**: reconciled value authorized for publication.
+- **Documentary evidence**: canonical source cut identified by period and source.
+- **Operational data**: valuations, assignments, tasks and market data subject to role and RLS controls.
 
-Reglas de interpretación:
+Interpretation rules:
 
-- `n/d` significa que no existe evidencia suficiente; no equivale a cero.
-- Una propiedad candidata no es una identidad confirmada.
-- Una distribución `pending` no prueba que un correo haya sido entregado.
-- Una valorización es orientativa y requiere el workflow de revisión/aprobación.
-- Los rankings y umbrales provisionales no reemplazan una regla aprobada por el Cliente.
+- `n/d` means there is not enough evidence; it does not mean zero.
+- A candidate property is not a confirmed identity.
+- A `pending` distribution does not prove that an email was delivered.
+- A valuation requires professional review and the authorized workflow before it can be issued.
+- Provisional rankings or thresholds do not replace a client-approved KPI rule.
 
-## 2. Acceso
+## 2. V1 delivery scope
 
-1. Abrir la URL productiva autorizada.
-2. Iniciar sesión con la cuenta corporativa asignada.
-3. Verificar que el encabezado corresponda al rol y oficina esperados.
-4. Cerrar sesión al usar un equipo compartido.
+The operational V1 acceptance scope is:
 
-Ante acceso a una oficina, persona o caso ajeno, detener el uso y reportarlo como incidente de autorización.
+- Market Intelligence for houses for sale in Vitacura;
+- Valuation workflow with at least three human-selected comparables;
+- Management Control, dashboards and reporting by authorized role.
 
-## 3. CEO y administración ejecutiva
+Apartment and project market refreshes are not V1 acceptance blockers and remain outside the active operational market-refresh scope.
 
-### Vista principal
+## 3. Access
 
-Ruta: `/dashboard/ceo`.
+1. Open the authorized production URL.
+2. Sign in with the assigned corporate account.
+3. Verify that the visible role, office and scope are correct.
+4. Sign out when using a shared device.
 
-Permite revisar:
+If a user can see an office, person or valuation case outside their authorized scope, stop using that surface and report it as an authorization incident.
 
-- resultado mensual y acumulado;
-- oficinas y partners;
-- metas y cumplimiento;
-- comparación mensual e interanual;
-- riesgos derivados;
-- valorizaciones pendientes;
-- tareas, asignaciones e identidad de mercado.
+## 4. CEO and executive administration
 
-### Lectura de métricas
+### Main view
 
-1. Revisar el período visible.
-2. Abrir la metodología y procedencia.
-3. Confirmar si la métrica es persistida aprobada o documental.
-4. No comparar métricas de períodos diferentes sin revisar `periodStart` y `periodEnd`.
-5. Tratar alertas derivadas de umbrales provisionales como apoyo, no como sanción automática.
+Route: `/dashboard/ceo`.
 
-### Decisiones
+The CEO can review:
 
-- Abrir valorizaciones en revisión.
-- Priorizar tareas vencidas o urgentes.
-- Revisar asignaciones pausadas.
-- Revisar backlog de identidad antes de usar una propiedad como evidencia definitiva.
+- monthly and accumulated performance;
+- offices and partners;
+- goals and compliance;
+- monthly and year-over-year comparisons;
+- derived risks and alerts;
+- valuations awaiting executive action;
+- tasks, assignments and market identity status.
 
-### Reportes
+### Reading metrics
 
-- Consultar reportes en `/dashboard/reportes/autonomos`.
-- Crear programaciones sólo con destinatarios autorizados.
-- La generación manual de reportes vencidos está restringida a CEO/admin.
-- Verificar el estado de distribución; `pending` exige una acción manual o proveedor de correo.
+1. Confirm the visible period.
+2. Open methodology and provenance when available.
+3. Confirm whether the metric is approved persisted data or documentary/provisional evidence.
+4. Do not compare different periods without checking `periodStart` and `periodEnd`.
+5. Treat alerts derived from provisional thresholds as decision support, not automatic sanctions.
 
-## 4. Director y subdirector
+### Valuation authority
 
-### Vista principal
+The CEO is the final authorization role for valuation approval and issuance. An `issued` valuation is frozen as the traceable historical snapshot and must not be replaced by live evidence.
 
-Ruta: `/dashboard/director`.
+### Reports
 
-El alcance debe limitarse a una oficina y sus partners.
+- Review reports in `/dashboard/reportes/autonomos` and related management report surfaces.
+- Create or modify schedules only with authorized recipients.
+- Verify generation and delivery status separately.
+- `pending` means delivery has not yet been proven.
 
-Funciones:
+## 5. Director and subdirector
 
-- revisar desempeño de oficina y equipo;
-- consultar valorizaciones de perfiles bajo alcance;
-- aprobar, devolver o emitir según permisos acordados;
-- gestionar asignaciones y tareas;
-- consultar reportes y mercado.
+### Main view
 
-### Control de aislamiento
+Route: `/dashboard/director`.
 
-Antes de operar:
+Scope must remain limited to the user's office and team.
 
-1. Confirmar el nombre de la oficina en el encabezado.
-2. Confirmar que no aparezcan partners de otra oficina.
-3. Confirmar que valorizaciones y asignaciones pertenezcan al equipo visible.
+Functions include:
 
-Cualquier desviación se considera un fallo de RLS o perfil y debe reportarse.
+- review office and team performance;
+- review valuations under the authorized scope;
+- return a valuation for correction or perform permitted review actions;
+- manage assignments and tasks;
+- consult market and reports allowed by the role.
 
-### Valorizaciones
+A Director or Subdirector must not be treated as the final issuer when the workflow requires CEO approval.
 
-- `draft`: expediente editable por su responsable.
-- `review`: listo para revisión con evidencia suficiente.
-- `approved`: aprobado por rol autorizado.
-- `issued`: versión emitida y congelada para informe.
+### Isolation control
 
-No aprobar si faltan comparables, fuente, fecha, distancia, ajustes o justificación.
+Before operating:
 
-## 5. Partner o agente
+1. Confirm the office shown in the interface.
+2. Confirm that partners from other offices are not visible.
+3. Confirm that valuations and assignments belong to the visible team.
 
-### Vista principal
+Any deviation is an authorization/RLS incident.
 
-Ruta: `/dashboard/partner`.
+### Valuation states
 
-El partner debe ver únicamente:
+- `draft`: editable case under preparation.
+- `review`: case submitted for review.
+- `approved`: approved by the authorized workflow role before issuance, when applicable.
+- `issued`: final frozen version for reporting and audit.
 
-- su ficha y métricas;
-- sus propiedades asignadas;
-- sus valorizaciones;
-- sus tareas;
-- mercado permitido por la aplicación.
+Do not accept a valuation as final if required comparables, source, dates, adjustments or justification are missing.
 
-### Flujo de valorización
+## 6. Seller / executive
 
-1. Abrir `/dashboard/valuation`.
-2. Registrar dirección, tipología, superficies y atributos.
-3. Registrar barrio, área homogénea, ROL y coordenadas cuando estén disponibles.
-4. Incorporar comparables con fuente, fecha, distancia y precio.
-5. Excluir un comparable sólo con motivo.
-6. Guardar como borrador.
-7. Enviar a revisión cuando cumpla los mínimos definidos.
-8. Corregir observaciones sin eliminar el historial previo.
+### Main view
 
-El partner no puede aprobar ni emitir un caso.
+Route: `/dashboard/partner` or the seller route assigned by the application.
 
-### Tareas y asignaciones
+A seller should see only:
 
-- Revisar estado, prioridad y fecha de vencimiento.
-- Registrar avance y resolución con detalle verificable.
-- No modificar asignaciones de otros perfiles.
+- their own profile and metrics;
+- assigned properties;
+- their valuation cases;
+- their tasks;
+- market information permitted by the product.
 
-## 6. Inteligencia de Mercado
+### Valuation flow
 
-Ruta: `/dashboard/market`.
+1. Open the Valuation module.
+2. Register address, property type, surfaces and available attributes.
+3. Confirm neighborhood, ROL and location evidence when available.
+4. Select at least **three accepted human-reviewed comparables**.
+5. Record exclusions and justification where required.
+6. Save as draft.
+7. Submit for review once minimum evidence requirements are met.
+8. Correct returned observations without deleting the historical trail.
 
-### Indicadores
+The seller cannot approve or issue the final valuation.
 
-- Revisar fecha de observación y cobertura.
-- Confirmar si ventas e inventario corresponden al mismo período.
-- No interpretar absorción, velocidad u oferta/ventas cuando se muestran como `n/d`.
+## 7. Market Intelligence
 
-### Exportaciones
+Main route: `/dashboard/market`.
 
-- CSV/XLSX: datos tabulares bajo el alcance del usuario.
-- PDF: vista operacional imprimible.
-- Verificar que filtros, período y conteos coincidan con la pantalla.
+### V1 sources
 
-### Reconciliación
+- Portal Inmobiliario operational refresh for houses for sale in Vitacura;
+- CBRS reference transactions;
+- Property Partners territorial KML / canonical neighborhood polygons.
 
-- `confirmed`: identidad aceptada.
-- `candidate` o pendiente: requiere revisión.
-- `rejected`: no usar como identidad.
+### Interpretation
 
-## 7. Reportes y presentaciones
+- Review observation date and coverage.
+- A candidate identity is not a confirmed identity.
+- ROL contradictions reject identity matching.
+- Neighborhood conflicts reduce match confidence.
+- PRC, road hierarchy and other R&D/context layers are non-binding unless the product explicitly states otherwise.
+- Market context does not automatically change the official valuation model weights.
 
-- El reporte debe conservar tipo, entidad, período, fuentes y fecha de generación.
-- Guardar como PDF desde la vista imprimible cuando corresponda.
-- No editar manualmente un reporte y presentarlo como snapshot generado sin identificar el cambio.
-- PowerPoint o archivo editorial sólo se considera entregado cuando exista archivo generado y verificado.
+## 8. Management Control and reports
 
-## 8. Mensajes de error
+- Use only approved metrics as official KPI.
+- Keep period, entity, source and formula version traceable.
+- Report generation, scheduling and delivery are separate states.
+- Recurring reporting must use an approved calendar and authorized recipients.
+- Do not interpret `pending` as `sent`.
 
-### `401 No autorizado`
+## 9. Error messages
 
-La sesión no existe, expiró o la automatización no presentó su secreto.
+### `401 Unauthorized`
 
-### `403 Sin permisos`
+The session does not exist, expired, or an automation did not provide its required secret.
 
-La cuenta está autenticada, pero la acción está fuera de su rol o alcance.
+### `403 Forbidden`
 
-### `n/d` o falta de datos
+The account is authenticated but the requested action is outside its role or scope.
 
-La fuente o período no está disponible o aprobado. No reintentar cargas sin identificar la causa.
+### `n/d` or missing data
 
-### Error de importación
+The source or period is unavailable, not approved or not sufficiently supported. Do not replace missing evidence with zero.
 
-Revisar:
+### Import error
 
-- sistema y dataset compatibles;
-- autorización de la fuente;
-- campos obligatorios;
-- período común;
-- IDs de entidad y métrica;
-- errores por fila.
+Review source compatibility, authorization, required fields, period, entity identifiers and row-level errors.
 
-## 9. Soporte e incidentes
+## 10. Support and incidents
 
-Al reportar un problema incluir:
+When reporting an issue include:
 
-- fecha y hora;
-- usuario y rol, sin contraseña;
-- URL o ruta;
-- acción realizada;
-- mensaje exacto;
-- captura sin datos personales innecesarios;
-- ID de caso, reporte o importación cuando exista.
+- date and time;
+- user and role, without passwords;
+- route or URL;
+- action performed;
+- exact visible message;
+- case/report/import ID when available;
+- screenshot without unnecessary personal or confidential data.
 
-No enviar claves, tokens ni service role keys por correo o chat.
+Never send passwords, tokens, service-role keys or secrets by email or chat.
