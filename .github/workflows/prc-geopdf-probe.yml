@@ -1,4 +1,4 @@
-name: Vitacura PRC My Maps model probe
+name: Vitacura PRC My Maps geometry probe
 
 on:
   pull_request:
@@ -13,65 +13,73 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Parse My Maps pageData model
+      - name: Inspect My Maps polygon geometry paths
         run: |
           python - <<'PY'
           import urllib.request, re, json
 
-          def walk(v):
-            if isinstance(v,list):
-              yield v
-              for x in v: yield from walk(x)
-            elif isinstance(v,dict):
-              for x in v.values(): yield from walk(x)
-
-          def strings(v):
-            if isinstance(v,str): yield v
-            elif isinstance(v,list):
-              for x in v: yield from strings(x)
-            elif isinstance(v,dict):
-              for x in v.values(): yield from strings(x)
-
-          for name,mid in (
-            ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT'),
-            ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB'),
-          ):
+          def load(mid):
             req=urllib.request.Request(f'https://www.google.com/maps/d/embed?mid={mid}',headers={'User-Agent':'Mozilla/5.0'})
             text=urllib.request.urlopen(req,timeout=30).read().decode('utf-8','replace')
             m=re.search(r'var\s+_pageData\s*=\s*("(?:\\.|[^"\\])*")\s*;',text)
-            if not m: raise SystemExit('pageData assignment not found')
-            inner=json.loads(m.group(1))
-            data=json.loads(inner)
-            maps=[a for a in walk(data) if a and a[0]=='mf.map']
-            if len(maps)!=1: raise SystemExit(f'{name}: mf.map count {len(maps)}')
-            mp=maps[0]
-            print(f'=== {name} top={type(data).__name__} map_len={len(mp)} ===')
-            for i,x in enumerate(mp[:16]):
-              if isinstance(x,(str,int,float,bool)) or x is None: print('map_field',i,repr(x))
-              elif isinstance(x,list): print('map_field',i,'LIST len',len(x),'head',repr(x[:4])[:500])
-              else: print('map_field',i,type(x).__name__)
-
-            # Candidate layer containers: arrays whose child arrays begin with null + id + human title.
-            layerish=[]
-            for a in walk(mp):
-              if len(a)>=4 and a[0] is None and isinstance(a[1],str) and isinstance(a[2],str) and len(a[1])>=5:
-                if any(k in a[2].lower() for k in ('edific','suelo','vivienda','equip','parque','área','area','aislada','pareada','continua')):
-                  layerish.append(a)
-            print('layerish_count',len(layerish))
-            for a in layerish[:80]:
-              print('LAYERISH',repr(a[:8])[:1600])
-
-            ss=list(strings(mp))
-            interesting=sorted(set(s for s in ss if re.search(r'(edific|suelo|vivienda|equip|parque|aislad|paread|continu|subzona|zona|E-|U-)',s,re.I)),key=lambda x:(len(x),x.lower()))
-            print('interesting_strings_count',len(interesting))
-            for s in interesting[:160]: print('STR',repr(s)[:1000])
-
-            coords=[]
-            def findcoords(v):
+            inner=json.loads(m.group(1)); data=json.loads(inner)
+            found=[]
+            def walk(v):
               if isinstance(v,list):
-                if len(v)>=2 and isinstance(v[0],(int,float)) and isinstance(v[1],(int,float)) and -71<v[0]<-70 and -34<v[1]<-33:
-                  coords.append((v[0],v[1],len(v)))
-                for x in v: findcoords(x)
-            findcoords(mp)
-            print('coordinate_pairs',len(coords),'sample',coords[:12])
+                if v and v[0]=='mf.map': found.append(v)
+                for x in v: walk(x)
+              elif isinstance(v,dict):
+                for x in v.values(): walk(x)
+            walk(data)
+            return found[0]
+
+          def summarize(v,depth=0,maxdepth=4):
+            if depth>=maxdepth:
+              if isinstance(v,list): return f'LIST(len={len(v)})'
+              return repr(v)[:120]
+            if isinstance(v,list):
+              return [summarize(x,depth+1,maxdepth) for x in v[:16]] + ([f'...+{len(v)-16}'] if len(v)>16 else [])
+            if isinstance(v,dict): return {k:summarize(x,depth+1,maxdepth) for k,x in list(v.items())[:12]}
+            return v
+
+          def paths_to(v,predicate,path=()):
+            out=[]
+            if predicate(v): out.append(path)
+            if isinstance(v,list):
+              for i,x in enumerate(v): out += paths_to(x,predicate,path+(i,))
+            elif isinstance(v,dict):
+              for k,x in v.items(): out += paths_to(x,predicate,path+(k,))
+            return out
+
+          def get(v,path):
+            for p in path: v=v[p]
+            return v
+
+          def is_lonlat_pair(x):
+            return isinstance(x,list) and len(x)>=2 and isinstance(x[0],(int,float)) and isinstance(x[1],(int,float)) and -71<x[0]<-70 and -34<x[1]<-33
+
+          def is_long_lonlat_array(x):
+            return isinstance(x,list) and len(x)>=4 and sum(1 for p in x if is_lonlat_pair(p))>=4
+
+          cases=[
+            ('edification','1c01sgZ9vUTm7sJVd8oz9cfv9hH3-9kYT','311AD7C3B3000002'),
+            ('land_use','1HvsC09ycddCXYMDVJMasi5c_HQliaBKB','31236BDA50000001'),
+          ]
+          for name,mid,feature_id in cases:
+            mp=load(mid)
+            print('===',name,'===')
+            idpaths=paths_to(mp,lambda x:x==feature_id)
+            print('feature_id_paths',idpaths[:20])
+            for path in idpaths[:3]:
+              print('FEATURE_PARENT_PATH',path[:-1])
+              print('FEATURE_PARENT',json.dumps(summarize(get(mp,path[:-1]),0,7),ensure_ascii=False)[:9000])
+              for up in (2,3,4,5):
+                if len(path)>=up:
+                  parent_path=path[:-up]
+                  print('ANCESTOR',up,'path',parent_path,'summary',json.dumps(summarize(get(mp,parent_path),0,5),ensure_ascii=False)[:5000])
+            longpaths=paths_to(mp,is_long_lonlat_array)
+            print('long_lonlat_arrays',len(longpaths))
+            for path in longpaths[:30]:
+              arr=get(mp,path); pts=[p for p in arr if is_lonlat_pair(p)]
+              print('COORD_ARRAY path',path,'len',len(arr),'pts',len(pts),'first',pts[:3],'last',pts[-3:])
           PY
