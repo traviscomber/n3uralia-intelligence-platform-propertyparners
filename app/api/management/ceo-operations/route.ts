@@ -17,15 +17,19 @@ export async function GET() {
   if (profileError || !profile) return NextResponse.json({ error: profileError?.message ?? 'Perfil no configurado' }, { status: 403 })
   if (!['ceo', 'admin'].includes(normalize(profile.role))) return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 })
 
-  const [valuations, assignments, properties, tasks, profiles] = await Promise.all([
+  const [valuations, assignments, properties, tasks, profiles, neighborhoodReviews] = await Promise.all([
     supabase.from('valuation_cases').select('id,status,updated_at').eq('property_type', 'Casa'),
     supabase.from('property_assignments').select('id,status,assigned_to,updated_at'),
     supabase.from('market_properties').select('id,identity_status,last_seen_at').eq('property_type', 'Casa'),
     supabase.from('management_tasks').select('id,status,priority,due_date,office,assigned_to,updated_at'),
     supabase.from('profiles').select('id,role,team'),
+    supabase
+      .from('market_neighborhood_review_items')
+      .select('id,decision,classification,evidence,assessment:market_neighborhood_review_assessments(review_priority)')
+      .eq('decision', 'pending'),
   ])
 
-  const errors = [valuations.error, assignments.error, properties.error, tasks.error, profiles.error]
+  const errors = [valuations.error, assignments.error, properties.error, tasks.error, profiles.error, neighborhoodReviews.error]
     .map((error) => error?.message)
     .filter((message): message is string => Boolean(message))
 
@@ -34,9 +38,21 @@ export async function GET() {
   const propertyRows = properties.data ?? []
   const taskRows = tasks.data ?? []
   const profileRows = profiles.data ?? []
+  const reviewRows = (neighborhoodReviews.data ?? []) as Array<{
+    decision: string
+    classification: string
+    evidence: { method?: string } | null
+    assessment: { review_priority?: string } | Array<{ review_priority?: string }> | null
+  }>
   const today = new Date().toISOString().slice(0, 10)
   const countStatus = (rows: Array<{ status: string | null }>, status: string) => rows.filter((row) => row.status === status).length
   const openTasks = taskRows.filter((task) => ['open', 'in_progress'].includes(String(task.status)))
+  const neighborhoodApprovals = reviewRows.filter((row) => {
+    const assessment = Array.isArray(row.assessment) ? row.assessment[0] : row.assessment
+    return row.classification === 'clear'
+      && row.evidence?.method === 'linked_property_unique_kml_name_v1'
+      && assessment?.review_priority === 'approve_recommended'
+  }).length
 
   return NextResponse.json({
     valuations: {
@@ -55,6 +71,7 @@ export async function GET() {
       properties: propertyRows.length,
       confirmed: propertyRows.filter((property) => property.identity_status === 'confirmed').length,
       pendingIdentity: propertyRows.filter((property) => property.identity_status !== 'confirmed').length,
+      neighborhoodApprovals,
     },
     tasks: {
       total: taskRows.length,
