@@ -19,23 +19,23 @@ export type CanonicalMarketReconciliation = {
     neighborhoods: number
   }
   operational: {
-    properties: number
-    activeListings: number
-    confirmedProperties: number
-    confirmedSales: number
-    missingNeighborhoods: number
-    ingestionRuns: number
+    properties: number | null
+    activeListings: number | null
+    confirmedProperties: number | null
+    confirmedSales: number | null
+    missingNeighborhoods: number | null
+    ingestionRuns: number | null
     latestObservedAt: string | null
   }
   coverage: {
-    portalMaterializedRate: number
-    territorialCoverageRate: number
+    portalMaterializedRate: number | null
+    territorialCoverageRate: number | null
   }
   gaps: {
-    portalListingsNotMaterialized: number
-    cbrsRowsNotMaterialized: number
-    neighborhoodsMissing: number
-    identitiesUnconfirmed: number
+    portalListingsNotMaterialized: number | null
+    cbrsRowsNotMaterialized: number | null
+    neighborhoodsMissing: number | null
+    identitiesUnconfirmed: number | null
   }
   notes: string[]
   error?: string
@@ -48,9 +48,16 @@ export async function getCanonicalMarketReconciliation(): Promise<CanonicalMarke
   const portalSaleEligibleListings = Number(sourceReconciliation.currentPortalSaleEligibleListings ?? 0)
   const portalRentQuarantine = Number(sourceReconciliation.portalListingsQuarantinedByRentIndicator ?? 0)
   const cbrsRows = Number(sourceReconciliation.currentCbrsRows ?? 0)
-  const operationalProperties = operational.canonicalProperties ?? 0
-  const missingNeighborhoods = operational.missingNeighborhoods ?? 0
+  const operationalProperties = operational.canonicalProperties
+  const missingNeighborhoods = operational.missingNeighborhoods
   const neighborhoods = Number(market.kml.geometryAudit.polygonCount ?? market.kml.counts.placemarks ?? 0)
+
+  const portalMaterializedRate = operationalProperties !== null && portalValidListings > 0
+    ? operationalProperties / portalValidListings
+    : null
+  const territorialCoverageRate = operationalProperties !== null && operationalProperties > 0 && missingNeighborhoods !== null
+    ? (operationalProperties - missingNeighborhoods) / operationalProperties
+    : null
 
   return {
     generatedAt: market.generatedAt,
@@ -65,22 +72,24 @@ export async function getCanonicalMarketReconciliation(): Promise<CanonicalMarke
     },
     operational: {
       properties: operationalProperties,
-      activeListings: operational.activeInventory ?? 0,
-      confirmedProperties: operational.confirmedProperties ?? 0,
-      confirmedSales: operational.confirmedSales ?? 0,
+      activeListings: operational.activeInventory,
+      confirmedProperties: operational.confirmedProperties,
+      confirmedSales: operational.confirmedSales,
       missingNeighborhoods,
-      ingestionRuns: operational.ingestionRuns ?? 0,
+      ingestionRuns: operational.ingestionRuns,
       latestObservedAt: operational.latestObservedAt,
     },
     coverage: {
-      portalMaterializedRate: portalValidListings > 0 ? operationalProperties / portalValidListings : 0,
-      territorialCoverageRate: operationalProperties > 0 ? (operationalProperties - missingNeighborhoods) / operationalProperties : 0,
+      portalMaterializedRate,
+      territorialCoverageRate,
     },
     gaps: {
-      portalListingsNotMaterialized: Math.max(0, portalValidListings - operationalProperties),
-      cbrsRowsNotMaterialized: Math.max(0, cbrsRows - (operational.confirmedSales ?? 0)),
+      portalListingsNotMaterialized: operationalProperties === null ? null : Math.max(0, portalValidListings - operationalProperties),
+      cbrsRowsNotMaterialized: operational.confirmedSales === null ? null : Math.max(0, cbrsRows - operational.confirmedSales),
       neighborhoodsMissing: missingNeighborhoods,
-      identitiesUnconfirmed: Math.max(0, operationalProperties - (operational.confirmedProperties ?? 0)),
+      identitiesUnconfirmed: operationalProperties === null || operational.confirmedProperties === null
+        ? null
+        : Math.max(0, operationalProperties - operational.confirmedProperties),
     },
     notes: [
       'Una publicación Portal no equivale automáticamente a una propiedad única.',
