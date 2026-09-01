@@ -24,15 +24,21 @@ jobs:
         run: |
           set -e
           for pdf in edification.pdf land-use.pdf; do
+            base="${pdf%.pdf}"
             echo "=== $pdf ==="
             pdfinfo "$pdf" | grep -E 'Pages|Page size|File size|PDF version' || true
             echo '-- fonts --'
             pdffonts "$pdf" | tail -n +3 | wc -l
             echo '-- embedded images --'
-            pdfimages -list "$pdf" | tail -n +3 | tee "${pdf%.pdf}-images.txt"
+            pdfimages -list "$pdf" | tail -n +3 | tee "$base-images.txt"
             echo '-- svg vector counts --'
-            pdftocairo -svg "$pdf" "${pdf%.pdf}.svg"
-            printf 'paths='; grep -o '<path' "${pdf%.pdf}.svg" | wc -l
-            printf 'images='; grep -o '<image' "${pdf%.pdf}.svg" | wc -l
-            printf 'svg_bytes='; wc -c < "${pdf%.pdf}.svg"
+            pdftocairo -svg "$pdf" "$base.svg"
+            printf 'paths='; grep -o '<path' "$base.svg" | wc -l
+            printf 'images='; grep -o '<image' "$base.svg" | wc -l
+            printf 'svg_bytes='; wc -c < "$base.svg"
+            echo '-- top fill colors --'
+            grep -oE 'fill:rgb\([^)]*\)' "$base.svg" | sort | uniq -c | sort -nr | head -40 || true
+            echo '-- coordinate and zone text boxes --'
+            pdftotext -bbox-layout "$pdf" "$base.html" 2>/dev/null || true
+            grep -E 'E-Ab|E-Am|E-Ae|E-Ee|U-P|U-Ee|>U-V<|350500|351000|352000|353000|354000|355000|356000|357000|358000|359000|630[0-9]{4}' "$base.html" | head -120 || true
           done
