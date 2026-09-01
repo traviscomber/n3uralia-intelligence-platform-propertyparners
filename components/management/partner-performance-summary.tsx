@@ -45,7 +45,7 @@ export async function PartnerPerformanceSummary() {
   })
 
   if (!rawPartner) {
-    return <section className="mx-auto mt-8 max-w-7xl border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existe una ficha canónica vinculada de forma inequívoca a este perfil. No se presentan métricas inferidas.</section>
+    return <section className="mx-auto mt-8 max-w-7xl border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]"><h1 className="sr-only">Desempeño personal</h1><p>No existe una ficha canónica vinculada de forma inequívoca a este perfil. No se presentan métricas inferidas.</p></section>
   }
 
   const partner = rawPartner as unknown as PartnerMetricView
@@ -83,7 +83,7 @@ export async function PartnerPerformanceSummary() {
   ]
 
   return <section className="mx-auto mt-8 max-w-7xl space-y-5">
-    <div className="border-b border-[var(--n3-line)] pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Lectura contractual personal</p><h2 className="mt-2 text-2xl font-semibold">Metas, evolución y calidad comercial</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Una sola lectura personal con valores, metas, comparaciones y procedencia visibles. No mezcla métricas de otras ejecutivas.</p></div>
+    <div className="border-b border-[var(--n3-line)] pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Lectura contractual personal</p><h1 className="mt-2 text-2xl font-semibold">Metas, evolución y calidad comercial</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Una sola lectura personal con valores, metas, comparaciones y procedencia visibles. No mezcla métricas de otras ejecutivas.</p></div>
     <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-3">{cards.map(([label, value, detail]) => <article key={label} className="bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-2xl font-semibold">{value}</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{detail}</p></article>)}</div>
     <DecisionTrace items={trace} title="Trazabilidad de desempeño personal" />
     <div className="border-l-2 border-[var(--primary)] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">Fuente: {source.deck} · lámina {source.slide} · {source.title}. Período principal: junio de 2026; acumulado enero–junio de 2026. Comparación YoY contra 2025 cuando la tabla canónica contiene base explícita.</div>
