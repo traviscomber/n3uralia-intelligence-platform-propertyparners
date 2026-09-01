@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 
 const REVIEW_PATH = '/dashboard/market/revisar-barrios'
 const REVIEW_DECISIONS = new Set(['accepted', 'discarded'])
-const BATCH_KINDS = new Set(['direct_kml', 'unique_kml_candidate', 'territorial_evidence'])
+const BATCH_KINDS = new Set(['all', 'direct_kml', 'unique_kml_candidate', 'territorial_evidence', 'accepted_memory', 'point_in_kml', 'validated_rule', 'cbrs_street_consensus'])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 type QueueRow = {
@@ -33,6 +33,17 @@ export async function reviewNeighborhoodBatchAction(formData: FormData) {
     p_resolution_kind: resolutionKind,
   })
   if (error) throw new Error(`Unable to approve neighborhood batch: ${error.message}`)
+
+  revalidateNeighborhoodViews()
+}
+
+export async function correctNeighborhoodBatchAction() {
+  await requireAnyCapability(['market.manage_sources', 'management.global.read'])
+  await requirePageMfaLevel2(REVIEW_PATH)
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('correct_ceo_market_neighborhood_conflicts_v1')
+  if (error) throw new Error(`Unable to correct canonical neighborhoods: ${error.message}`)
 
   revalidateNeighborhoodViews()
 }
@@ -68,7 +79,7 @@ export async function reviewNeighborhoodAction(formData: FormData) {
 
   if (decision === 'accepted') {
     if (item.classification === 'clear' && item.suggested_neighborhood_id) {
-      // Direct KML recommendation: no additional resolution needed.
+      // Direct recommendation already has a canonical KML target.
     } else {
       const { data: queueData, error: queueError } = await supabase.rpc('get_ceo_market_neighborhood_queue_v1')
       if (queueError) throw new Error(`Unable to resolve canonical neighborhood: ${queueError.message}`)
