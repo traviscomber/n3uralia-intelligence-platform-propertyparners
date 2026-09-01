@@ -13,19 +13,48 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Install GDAL and PDF tools
+      - name: Install PDF inspection tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq gdal-bin poppler-utils
+          sudo apt-get install -y -qq poppler-utils
+          python -m pip install --quiet pymupdf
       - name: Download official consolidated plans
         run: |
           curl -L --fail --retry 3 -o edification.pdf 'https://vitacura.cl/descargas/plano_regulador/pdf/2021/01_prc-v__plano_de_edificacion_vigente_2021.pdf'
           curl -L --fail --retry 3 -o land-use.pdf 'https://vitacura.cl/descargas/plano_regulador/pdf/2021/02_prc-v__plano_de_usos_de_suelo_vigente_2021.pdf'
-      - name: Inspect geospatial metadata
+      - name: Match legend labels to vector fill colors
         run: |
-          for f in edification.pdf land-use.pdf; do
-            echo "=== $f pdfinfo ==="
-            pdfinfo "$f" | head -80
-            echo "=== $f gdalinfo ==="
-            gdalinfo "$f" 2>&1 | head -160 || true
-          done
+          python - <<'PY'
+          import pymupdf as fitz, re, math
+          for filename, pattern in (
+              ('edification.pdf', r'^E-(?:Ab|Am|Ae|Ee|e)[A-Za-z0-9.-]*$'),
+              ('land-use.pdf', r'^U-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$'),
+          ):
+              doc=fitz.open(filename); page=doc[0]
+              drawings=[d for d in page.get_drawings() if d.get('fill') is not None]
+              spans=[]
+              for block in page.get_text('dict').get('blocks',[]):
+                  for line in block.get('lines',[]):
+                      for span in line.get('spans',[]):
+                          text=span.get('text','').strip()
+                          if re.match(pattern,text,re.I): spans.append((text,fitz.Rect(span['bbox'])))
+              print(f'=== {filename} ===')
+              for text,b in spans:
+                  cy=(b.y0+b.y1)/2
+                  candidates=[]
+                  for d in drawings:
+                      r=d['rect']
+                      if r.x1 > b.x0 or r.x0 < b.x0-180: continue
+                      if r.get_area() < 20 or r.get_area() > 5000: continue
+                      ry=(r.y0+r.y1)/2
+                      if abs(ry-cy)>18: continue
+                      dist=max(0,b.x0-r.x1)+abs(ry-cy)*2
+                      candidates.append((dist,d))
+                  candidates.sort(key=lambda x:x[0])
+                  if not candidates:
+                      print(text,'NO_SWATCH',tuple(round(v,2) for v in b))
+                      continue
+                  d=candidates[0][1]
+                  color=tuple(round(float(x),4) for x in d['fill'])
+                  print(text,'fill',color,'rect',tuple(round(v,2) for v in d['rect']),'label',tuple(round(v,2) for v in b))
+          PY
