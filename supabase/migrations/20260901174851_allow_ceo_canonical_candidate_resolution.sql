@@ -39,7 +39,7 @@ begin
         raise exception 'Canonical neighborhood resolution requires CEO or admin role';
       end if;
 
-      select count(*)::integer, min(mn.id)
+      select count(*)::integer, min(mn.id::text)::uuid
       into v_resolution_count, v_resolution_id
       from pg_catalog.jsonb_array_elements_text(old.candidate_neighborhoods) candidate(name)
       join public.market_neighborhoods mn
