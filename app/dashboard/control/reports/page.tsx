@@ -70,8 +70,12 @@ export default function ManagementReportArchivePage() {
         if (!current || new Date(report.generated_at).getTime() > new Date(current.generated_at).getTime()) latestByPeriod.set(key, report)
       }
       const monthly = [...latestByPeriod.values()].sort((a, b) => b.period_start.localeCompare(a.period_start))
-      if (!monthly.length) return
-      setSelectedId(current => current ?? monthly[0].id)
+      if (!monthly.length) {
+        setDetails({})
+        setSelectedId(null)
+        return
+      }
+      setSelectedId(current => current && monthly.some(report => report.id === current) ? current : monthly[0].id)
 
       const loaded = await Promise.all(monthly.map(async report => {
         const detailResponse = await fetch(`/api/management/reports/${report.id}`, { cache: 'no-store' })
@@ -101,6 +105,7 @@ export default function ManagementReportArchivePage() {
   }, [reports])
 
   const selected = selectedId ? details[selectedId] : null
+  const missingDetailCount = monthlyReports.filter(report => !details[report.id]).length
 
   const trendData = useMemo(() => monthlyReports
     .map(report => details[report.id])
@@ -125,7 +130,7 @@ export default function ManagementReportArchivePage() {
   ].filter(item => item.value != null) : []
 
   if (loading) return <WorkspaceShell><OperationalState kind="loading" title="Cargando reportes ejecutivos" description="Preparando serie histórica y visualizaciones." /></WorkspaceShell>
-  if (failed) return <WorkspaceShell><OperationalState kind="error" title="No fue posible cargar los reportes" description="Reintente la consulta."><button onClick={() => void loadReports()} className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><RefreshCw size={15}/> Reintentar</button></OperationalState></WorkspaceShell>
+  if (failed) return <WorkspaceShell><OperationalState kind="error" title="No fue posible cargar los reportes" description="Reintente la consulta."><button onClick={() => void loadReports()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><RefreshCw size={15}/> Reintentar</button></OperationalState></WorkspaceShell>
 
   return <WorkspaceShell>
     <WorkspaceHeader eyebrow="Control de gestión" title="Reportes ejecutivos" actions={[{ label: 'Volver a operación', href: '/dashboard/control/operations' }]} />
@@ -137,6 +142,8 @@ export default function ManagementReportArchivePage() {
           return <button key={report.id} role="tab" aria-selected={active} onClick={() => setSelectedId(report.id)} className={`min-h-11 shrink-0 border px-4 text-sm capitalize transition ${active ? 'border-[var(--primary)] bg-[var(--primary)] text-white' : 'border-[var(--n3-line)] bg-transparent text-[var(--n3-text-muted)] hover:text-white'}`}>{monthLabel(report.period_start)}</button>
         })}
       </div>
+
+      {missingDetailCount > 0 && selected ? <div className="mt-4"><OperationalState compact kind="info" title="Serie histórica parcial" description={`${missingDetailCount} ${missingDetailCount === 1 ? 'mes no pudo cargarse' : 'meses no pudieron cargarse'} y se excluye temporalmente de los gráficos. Los períodos disponibles mantienen su snapshot persistido.`} /></div> : null}
 
       {selected ? <div className="mt-5 space-y-6">
         <section className="border-y border-[var(--n3-line)] py-6">
@@ -213,7 +220,7 @@ export default function ManagementReportArchivePage() {
             <div className="mt-4 space-y-2">{(selected.snapshot.qualityNotes ?? []).map((note, index) => <p key={index} className="text-xs leading-5 text-[var(--n3-text-muted)]">{note}</p>)}{!(selected.snapshot.qualityNotes ?? []).length ? <p className="text-xs text-[var(--n3-text-muted)]">Sin observaciones adicionales registradas.</p> : null}</div>
           </div>
         </section>
-      </div> : <OperationalState compact kind="loading" title="Cargando mes" description="Preparando el snapshot seleccionado." />}
+      </div> : <div className="mt-5"><OperationalState compact kind="error" title="No fue posible cargar el mes seleccionado" description="El reporte existe en el registro, pero su snapshot de detalle no pudo consultarse. No se muestra un gráfico vacío como si fuera un mes sin actividad."><button type="button" onClick={() => void loadReports()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm font-semibold"><RefreshCw size={15}/>Reintentar</button></OperationalState></div>}
     </>}
   </WorkspaceShell>
 }
