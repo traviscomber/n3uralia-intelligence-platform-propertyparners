@@ -54,9 +54,10 @@ export async function GET() {
       })),
     }, { status: ok ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
+    console.error('[portal-collector-smoke] collection failed', error)
     return NextResponse.json({
       ok: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: 'No fue posible completar la prueba del colector.',
     }, { status: 500, headers: { 'Cache-Control': 'no-store' } })
   }
 }
