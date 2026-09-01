@@ -29,12 +29,63 @@ export default function ManagementAdminPage(){
   const [metric,setMetric]=useState({entityId:'',metricCode:'sales',month:currentMonth,value:'',sourceName:'Carga administrativa',sourceReference:'',qualityStatus:'provisional'})
   const [rule,setRule]=useState({code:'',label:'',metricCode:'sales',comparison:'lt',threshold:'',severity:'warning',scopeType:'all',responsibleRole:'director'})
 
-  async function load(){ setLoading(true); setFeedback(null); try{ const response=await fetch('/api/management/admin',{cache:'no-store'}); const payload=await response.json() as Payload; if(!response.ok) throw new Error('LOAD_FAILED'); setData(payload); const first=payload.entities?.[0]?.id||''; setGoal(value=>({...value,entityId:value.entityId||first})); setMetric(value=>({...value,entityId:value.entityId||first})) }catch{ setData(null); setFeedback({kind:'error',message:getPublicErrorMessage('DATA_UNAVAILABLE')}) }finally{setLoading(false)} }
+  async function load(options:{background?:boolean}={}){
+    const background=options.background===true
+    if(!background){setLoading(true);setFeedback(null)}
+    try{
+      const response=await fetch('/api/management/admin',{cache:'no-store'})
+      const payload=await response.json() as Payload
+      if(!response.ok) throw new Error('LOAD_FAILED')
+      setData(payload)
+      const first=payload.entities?.[0]?.id||''
+      setGoal(value=>({...value,entityId:value.entityId||first}))
+      setMetric(value=>({...value,entityId:value.entityId||first}))
+      return true
+    }catch{
+      if(!background){setData(null);setFeedback({kind:'error',message:getPublicErrorMessage('DATA_UNAVAILABLE')})}
+      return false
+    }finally{
+      if(!background)setLoading(false)
+    }
+  }
   useEffect(()=>{void load()},[])
   useEffect(()=>{setGoal(value=>({...value,month:selectedMonth}));setMetric(value=>({...value,month:selectedMonth}))},[selectedMonth])
 
-  async function post(body:unknown){ setSaving(true);setFeedback(null);try{const response=await fetch('/api/management/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!response.ok)throw new Error('SAVE_FAILED');setFeedback({kind:'success',message:'Cambios guardados.'});await load()}catch{setFeedback({kind:'error',message:getPublicErrorMessage('SAVE_FAILED')})}finally{setSaving(false)} }
-  async function updateAlert(id:string,action:string){const notes=action==='resolve'||action==='dismiss'?window.prompt('Notas')||'':'';setSaving(true);setFeedback(null);try{const response=await fetch('/api/management/admin',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action,notes})});if(!response.ok)throw new Error('ALERT_UPDATE_FAILED');setFeedback({kind:'success',message:'Alerta actualizada.'});await load()}catch{setFeedback({kind:'error',message:getPublicErrorMessage('REQUEST_FAILED')})}finally{setSaving(false)} }
+  async function post(body:unknown){
+    if(saving)return
+    setSaving(true);setFeedback(null)
+    try{
+      const response=await fetch('/api/management/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      if(!response.ok)throw new Error('SAVE_FAILED')
+      const refreshed=await load({background:true})
+      setFeedback(refreshed
+        ? {kind:'success',message:'Cambios guardados.'}
+        : {kind:'error',message:'Los cambios se guardaron, pero no fue posible actualizar la vista. Recarga antes de continuar.'})
+    }catch{
+      setFeedback({kind:'error',message:getPublicErrorMessage('SAVE_FAILED')})
+    }finally{setSaving(false)}
+  }
+
+  async function updateAlert(id:string,action:string){
+    if(saving)return
+    let notes=''
+    if(action==='resolve'||action==='dismiss'){
+      const prompted=window.prompt('Notas')
+      if(prompted===null)return
+      notes=prompted.trim()
+    }
+    setSaving(true);setFeedback(null)
+    try{
+      const response=await fetch('/api/management/admin',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action,notes})})
+      if(!response.ok)throw new Error('ALERT_UPDATE_FAILED')
+      const refreshed=await load({background:true})
+      setFeedback(refreshed
+        ? {kind:'success',message:'Alerta actualizada.'}
+        : {kind:'error',message:'La alerta se actualizó, pero no fue posible refrescar la vista. Recarga antes de continuar.'})
+    }catch{
+      setFeedback({kind:'error',message:getPublicErrorMessage('REQUEST_FAILED')})
+    }finally{setSaving(false)}
+  }
 
   const goalsForMonth=useMemo(()=>data?.goals.filter(item=>item.period_start.slice(0,7)===selectedMonth)??[],[data,selectedMonth])
   const openAlerts=useMemo(()=>data?.alerts.filter(alert=>['open','acknowledged'].includes(alert.status))??[],[data])
@@ -60,7 +111,7 @@ export default function ManagementAdminPage(){
       <h3 className="mt-1 text-sm font-medium">{alert.title}</h3>
       <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{alert.management_entities?.name??'Entidad'}{alert.detail?` · ${alert.detail}`:''}</p>
     </div>
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" aria-busy={saving}>
       {alert.status==='open'?<button disabled={saving} onClick={()=>void updateAlert(alert.id,'acknowledge')} className="min-h-11 border border-[var(--n3-line)] px-4 text-xs font-medium disabled:opacity-40">Revisar</button>:null}
       <button disabled={saving} onClick={()=>void updateAlert(alert.id,'resolve')} className="min-h-11 border border-[#78d59a]/35 px-4 text-xs font-medium text-[#78d59a] disabled:opacity-40">Resolver</button>
       <button disabled={saving} onClick={()=>void updateAlert(alert.id,'dismiss')} className="min-h-11 border border-[var(--n3-line)] px-4 text-xs text-[var(--n3-text-muted)] disabled:opacity-40">Descartar</button>
