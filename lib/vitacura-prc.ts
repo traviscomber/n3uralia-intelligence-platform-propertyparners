@@ -151,7 +151,15 @@ export async function fetchVitacuraPrcRows() {
 
   for (const source of SOURCES) {
     const url = `https://www.google.com/maps/d/u/1/kml?mid=${source.mid}&forcekml=1`
-    const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(20000) })
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/vnd.google-earth.kml+xml, application/xml, text/xml, */*',
+        Referer: OFFICIAL_VIEWER,
+        'User-Agent': 'Mozilla/5.0 (compatible; PropertyPartners/1.0; +https://ppartnersgroup.app)',
+      },
+      signal: AbortSignal.timeout(20000),
+    })
     const text = await response.text()
     if (!response.ok) throw new Error(`PRC ${source.layer} source failed with ${response.status}`)
     const parsed = parseVitacuraPrcKml(text, source.layer)
