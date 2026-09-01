@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { AlertTriangle, CheckCircle2, ExternalLink, MapPinned, ShieldCheck } from 'lucide-react'
+import { redirect } from 'next/navigation'
+import { AlertTriangle, ExternalLink, MapPinned, ShieldCheck } from 'lucide-react'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { requireAnyPageCapability } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
@@ -52,7 +53,7 @@ function ExceptionCard({ row }: { row: QueueRow }) {
         <p className="mt-2 text-sm font-medium leading-6 text-[var(--n3-text-light)]">{row.raw_address || row.title || 'Dirección no disponible'}</p>
         {row.title && row.raw_address ? <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.title}</p> : null}
         <p className="mt-2 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">{row.reason}</p>
-        <p className="mt-2 text-xs leading-5 text-[#f0c96a]">El sistema no publica un barrio mientras la evidencia no sea suficientemente consistente. No requiere una aprobación ejecutiva; requiere mejor evidencia.</p>
+        <p className="mt-2 text-xs leading-5 text-[#f0c96a]">Falta evidencia suficiente para publicar un barrio. El sistema mantiene el caso abierto sin forzar una clasificación.</p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--n3-text-muted)]">
           <span>MLC-{row.source_listing_id}</span>
           {row.url ? <Link href={row.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-[var(--n3-accent)] hover:underline">Ver aviso <ExternalLink size={12} /></Link> : null}
@@ -83,12 +84,14 @@ export default async function NeighborhoodReviewPage() {
   const exceptions = rows.length
   const errors = [queueResult.error, territoryResult.error].filter(Boolean)
 
+  if (errors.length === 0 && exceptions === 0) redirect('/dashboard/market')
+
   return (
     <WorkspaceShell>
       <WorkspaceHeader
-        eyebrow="Mercado · Territorio"
-        title="Resolución territorial"
-        meta={`${resolved} de ${active} resueltas · ${exceptions} excepciones`}
+        eyebrow="Mercado · Excepción"
+        title="Territorio pendiente"
+        meta={`${exceptions} caso${exceptions === 1 ? '' : 's'} requiere${exceptions === 1 ? '' : 'n'} evidencia`}
         actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
       />
 
@@ -96,36 +99,23 @@ export default async function NeighborhoodReviewPage() {
 
       <MetricStrip items={[
         { label: 'Casas activas', value: active.toLocaleString('es-CL') },
-        { label: 'Resueltas', value: resolved.toLocaleString('es-CL'), tone: resolved === active && active > 0 ? 'success' : 'default' },
-        { label: 'Excepciones', value: exceptions.toLocaleString('es-CL'), tone: exceptions ? 'warning' : 'success' },
-        { label: 'Decisiones CEO', value: '0' },
+        { label: 'Resueltas', value: resolved.toLocaleString('es-CL') },
+        { label: 'Excepciones', value: exceptions.toLocaleString('es-CL'), tone: 'warning' },
       ]} />
 
-      {exceptions === 0 ? (
-        <section className="mt-8 max-w-4xl border-y border-[var(--n3-line)] py-7">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-[var(--n3-accent)]" />
-            <div>
-              <p className="text-lg font-medium text-[var(--n3-text-light)]">Territorio al día</p>
-              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Resolver v3 ya determinó y registró el barrio de todas las casas activas. No existe ninguna aprobación territorial pendiente para el CEO.</p>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="mt-8">
-          <div className="border-b border-[var(--n3-line)] pb-3">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[#ff8d87]">Excepciones reales</p>
-            <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{exceptions} casos que el resolver no debe forzar</h2>
-            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Estos registros permanecen abiertos hasta que aparezca nueva evidencia. No se transforman en una tarea de aprobación ejecutiva.</p>
-          </div>
-          <div className="divide-y divide-[var(--n3-line)]">{rows.map((row) => <ExceptionCard key={row.source_listing_id} row={row} />)}</div>
-        </section>
-      )}
+      <section className="mt-8">
+        <div className="border-b border-[var(--n3-line)] pb-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#ff8d87]">Sólo excepciones</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Casos que el resolver no debe forzar</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Esta vista existe únicamente cuando falta evidencia territorial suficiente. Los casos resueltos no aparecen en el flujo operativo.</p>
+        </div>
+        <div className="divide-y divide-[var(--n3-line)]">{rows.map((row) => <ExceptionCard key={row.source_listing_id} row={row} />)}</div>
+      </section>
 
       <section className="mt-8 border-t border-[var(--n3-line)] pt-4">
         <div className="flex items-start gap-2 text-xs leading-5 text-[var(--n3-text-muted)]">
           <ShieldCheck size={15} className="mt-0.5 shrink-0 text-[var(--n3-accent)]" />
-          <p><span className="font-medium text-[var(--n3-text-light)]">Resolver v3.</span> Prioriza memoria territorial validada, evidencia cruzada, coordenadas KML, nombres KML canónicos, reglas territoriales verificadas y consenso CBRS. Las resoluciones automáticas quedan auditadas como sistema; identidad de propiedad se mantiene separada y nunca se crea sólo para asignar un barrio.</p>
+          <p><span className="font-medium text-[var(--n3-text-light)]">Resolver v3.</span> Prioriza memoria territorial validada, evidencia cruzada, coordenadas KML, nombres KML canónicos, reglas territoriales verificadas y consenso CBRS. Identidad de propiedad se mantiene separada.</p>
         </div>
       </section>
     </WorkspaceShell>
