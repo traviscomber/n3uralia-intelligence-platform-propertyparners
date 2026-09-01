@@ -18,9 +18,9 @@ export async function GET() {
   if (!['ceo', 'admin'].includes(normalize(profile.role))) return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 })
 
   const [valuations, assignments, properties, tasks, profiles] = await Promise.all([
-    supabase.from('valuation_cases').select('id,status,updated_at'),
+    supabase.from('valuation_cases').select('id,status,updated_at').eq('property_type', 'Casa'),
     supabase.from('property_assignments').select('id,status,assigned_to,updated_at'),
-    supabase.from('market_properties').select('id,identity_status,last_seen_at'),
+    supabase.from('market_properties').select('id,identity_status,last_seen_at').eq('property_type', 'Casa'),
     supabase.from('management_tasks').select('id,status,priority,due_date,office,assigned_to,updated_at'),
     supabase.from('profiles').select('id,role,team'),
   ])
