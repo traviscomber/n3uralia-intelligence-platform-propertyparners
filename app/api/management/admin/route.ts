@@ -5,6 +5,7 @@ const LEADER_ROLES = new Set(['admin', 'ceo', 'director', 'subdirector'])
 const EXECUTIVE_ROLES = new Set(['admin', 'ceo'])
 const CALCULATED_SOURCE = 'canonical_calculated_v1'
 const MANUAL_QUALITY = new Set(['provisional', 'verified'])
+const TRACE_WARNING = 'La operación se completó, pero no fue posible registrar su trazabilidad.'
 
 async function context() {
   const supabase = await createClient()
@@ -38,10 +39,12 @@ async function recordChange(
   const { error } = await supabase.from('management_change_log').insert(entry)
   if (!error) return null
   console.error('[management-admin] change log failed', { code: error.code, scope })
-  return NextResponse.json(
-    { error: 'La operación se completó, pero no fue posible registrar su trazabilidad.' },
-    { status: 500 },
-  )
+  return TRACE_WARNING
+}
+
+function mutationResponse(data: Record<string, unknown>, warning: string | null, successStatus = 200) {
+  if (warning) return NextResponse.json({ ...data, warning }, { status: 207 })
+  return NextResponse.json(data, { status: successStatus })
 }
 
 export async function GET() {
@@ -108,16 +111,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No fue posible guardar la meta.' }, { status: 400 })
     }
 
-    const traceFailure = await recordChange(supabase, {
+    const traceWarning = await recordChange(supabase, {
       entity_name: 'management_goals',
       entity_id: data.id,
       action: 'update',
       after_data: data,
       changed_by: user.id,
     }, 'goal')
-    if (traceFailure) return traceFailure
 
-    return NextResponse.json(data, { status: 201 })
+    return mutationResponse(data, traceWarning, 201)
   }
 
   if (type === 'rule') {
@@ -152,16 +154,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No fue posible guardar la regla.' }, { status: 400 })
     }
 
-    const traceFailure = await recordChange(supabase, {
+    const traceWarning = await recordChange(supabase, {
       entity_name: 'management_alert_rules',
       entity_id: data.id,
       action: 'update',
       after_data: data,
       changed_by: user.id,
     }, 'rule')
-    if (traceFailure) return traceFailure
 
-    return NextResponse.json(data, { status: 201 })
+    return mutationResponse(data, traceWarning, 201)
   }
 
   if (type === 'metric') {
@@ -228,16 +229,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No fue posible guardar la métrica.' }, { status: 400 })
     }
 
-    const traceFailure = await recordChange(supabase, {
+    const traceWarning = await recordChange(supabase, {
       entity_name: 'management_metric_values',
       entity_id: data.id,
       action: 'import',
       after_data: data,
       changed_by: user.id,
     }, 'metric')
-    if (traceFailure) return traceFailure
 
-    return NextResponse.json(data, { status: 201 })
+    return mutationResponse(data, traceWarning, 201)
   }
 
   return NextResponse.json({ error: 'Tipo de operación no soportado' }, { status: 400 })
@@ -286,7 +286,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'No fue posible actualizar la alerta.' }, { status: 400 })
   }
 
-  const traceFailure = await recordChange(supabase, {
+  const traceWarning = await recordChange(supabase, {
     entity_name: 'management_alerts',
     entity_id: id,
     action,
@@ -294,7 +294,6 @@ export async function PATCH(request: Request) {
     after_data: data,
     changed_by: user.id,
   }, 'alert')
-  if (traceFailure) return traceFailure
 
-  return NextResponse.json(data)
+  return mutationResponse(data, traceWarning)
 }
