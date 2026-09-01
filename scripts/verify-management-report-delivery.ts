@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
 import {
   buildManagementReportEmailContent,
   DEFAULT_REPORT_FROM_EMAIL,
@@ -10,6 +11,17 @@ import {
 import { buildManagementReportPdf } from '../lib/management-report-artifact'
 
 async function main() {
+  const recipientResolver = fs.readFileSync('lib/document-recipient-resolution.ts', 'utf8')
+  const weeklyRoute = fs.readFileSync('app/api/cron/deliver-documents-weekly/route.ts', 'utf8')
+  const monthlyRoute = fs.readFileSync('app/api/cron/deliver-documents-monthly/route.ts', 'utf8')
+
+  assert.match(recipientResolver, /\.select\('id, full_name, role'\)/)
+  assert.match(recipientResolver, /\.in\('role', roles\)/)
+  assert.match(recipientResolver, /auth\.admin\.getUserById/)
+  assert.doesNotMatch(recipientResolver, /copilot_role/)
+  assert.match(weeklyRoute, /document-recipient-resolution/)
+  assert.match(monthlyRoute, /document-recipient-resolution/)
+
   assert.equal(getManagementReportDeliveryConfiguration({} as NodeJS.ProcessEnv), null)
   assert.equal(extractReportEmailAddress('Business Intelligence Property Partners <info@ppartnersgroup.app>'), 'info@ppartnersgroup.app')
   assert.equal(extractReportEmailAddress('invalid-address'), null)

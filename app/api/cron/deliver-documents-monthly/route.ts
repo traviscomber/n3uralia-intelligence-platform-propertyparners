@@ -3,9 +3,9 @@ import { getCronAuthorizationFailure } from '@/lib/management-report-schedule'
 import {
   getScheduledDocuments,
   createDocumentDistributions,
-  getRecipientsForSchedule,
   updateScheduleNextSendAt,
 } from '@/lib/document-delivery'
+import { getRecipientsForSchedule } from '@/lib/document-recipient-resolution'
 
 export const runtime = 'nodejs'
 
@@ -42,7 +42,7 @@ async function handleCron(request: Request) {
       } catch (error) {
         console.error(
           `[Document Delivery] Monthly schedule ${schedule.id} failed:`,
-          error instanceof Error ? error.name : 'unknown_error',
+          error instanceof Error ? error.message : 'DOCUMENT_DELIVERY_UNKNOWN_ERROR',
         )
       }
     }
@@ -56,7 +56,7 @@ async function handleCron(request: Request) {
   } catch (error) {
     console.error(
       '[Document Delivery] Monthly cron failed:',
-      error instanceof Error ? error.name : 'unknown_error',
+      error instanceof Error ? error.message : 'DOCUMENT_DELIVERY_UNKNOWN_ERROR',
     )
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
