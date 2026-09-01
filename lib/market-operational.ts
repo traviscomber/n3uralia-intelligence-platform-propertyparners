@@ -7,6 +7,13 @@ export type OperationalMarketSnapshot = {
   canonicalProperties: number | null
   confirmedProperties: number | null
   missingNeighborhoods: number | null
+  physicalHouseRows: number | null
+  outOfScopeLegacyHouses: number | null
+  logicalHouseComponents: number | null
+  confirmedDuplicateRows: number | null
+  duplicateComponents: number | null
+  logicalComponentsWithNeighborhood: number | null
+  conflictingNeighborhoodComponents: number | null
   activeInventory: number | null
   confirmedSales: number | null
   medianDaysOnMarket: number | null
@@ -69,6 +76,20 @@ type HouseIdentityProgress = {
   unlinked_without_existing_external_identity: number | null
 }
 
+type HouseScopeSummary = {
+  physical_house_rows: number | null
+  v1_house_rows: number | null
+  explicit_out_of_scope_rows: number | null
+  v1_confirmed_rows: number | null
+  v1_missing_neighborhood_rows: number | null
+  v1_identity_candidates: number | null
+  logical_house_components: number | null
+  confirmed_duplicate_rows: number | null
+  duplicate_components: number | null
+  logical_components_with_neighborhood: number | null
+  conflicting_neighborhood_components: number | null
+}
+
 type ClientSaleSignalSummary = {
   accepted_house_signals: number | null
   latest_observed_at: string | null
@@ -81,6 +102,13 @@ const emptySnapshot: OperationalMarketSnapshot = {
   canonicalProperties: null,
   confirmedProperties: null,
   missingNeighborhoods: null,
+  physicalHouseRows: null,
+  outOfScopeLegacyHouses: null,
+  logicalHouseComponents: null,
+  confirmedDuplicateRows: null,
+  duplicateComponents: null,
+  logicalComponentsWithNeighborhood: null,
+  conflictingNeighborhoodComponents: null,
   activeInventory: null,
   confirmedSales: null,
   medianDaysOnMarket: null,
@@ -131,15 +159,11 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [houseSummaryResult, territoryProgressResult, identityProgressResult, historicalIdentityCandidates, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase.rpc('get_market_house_identity_progress_v1').maybeSingle(),
-      supabase
-        .from('market_properties')
-        .select('id', { count: 'exact', head: true })
-        .eq('property_type', 'Casa')
-        .in('identity_status', ['candidate', 'needs_review']),
+      supabase.rpc('get_market_house_scope_summary_v1').maybeSingle(),
       supabase
         .from('market_property_matches')
         .select('id', { count: 'exact', head: true })
@@ -183,7 +207,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       houseSummaryResult.error,
       territoryProgressResult.error,
       identityProgressResult.error,
-      historicalIdentityCandidates.error,
+      scopeSummaryResult.error,
       highIdentityCandidates.error,
       clientSaleSignalsResult.error,
       confirmedSalesResult.error,
@@ -196,6 +220,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const house = houseSummaryResult.data as HouseDeliverySummary | null
     const territoryProgress = territoryProgressResult.data as HouseTerritoryProgress | null
     const identityProgress = identityProgressResult.data as HouseIdentityProgress | null
+    const scopeSummary = scopeSummaryResult.data as HouseScopeSummary | null
     const clientSaleSignals = clientSaleSignalsResult.data as ClientSaleSignalSummary | null
     const metric = latestMetric.data
     const ingestion = latestIngestion.data
@@ -205,9 +230,16 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
 
     return {
       connected: errors.length === 0,
-      canonicalProperties: houseSummaryResult.error ? null : house?.canonical_houses ?? 0,
-      confirmedProperties: houseSummaryResult.error ? null : house?.confirmed_houses ?? 0,
-      missingNeighborhoods: houseSummaryResult.error ? null : house?.missing_neighborhood_houses ?? 0,
+      canonicalProperties: scopeSummaryResult.error ? (houseSummaryResult.error ? null : house?.canonical_houses ?? 0) : scopeSummary?.v1_house_rows ?? 0,
+      confirmedProperties: scopeSummaryResult.error ? (houseSummaryResult.error ? null : house?.confirmed_houses ?? 0) : scopeSummary?.v1_confirmed_rows ?? 0,
+      missingNeighborhoods: scopeSummaryResult.error ? (houseSummaryResult.error ? null : house?.missing_neighborhood_houses ?? 0) : scopeSummary?.v1_missing_neighborhood_rows ?? 0,
+      physicalHouseRows: scopeSummaryResult.error ? null : scopeSummary?.physical_house_rows ?? 0,
+      outOfScopeLegacyHouses: scopeSummaryResult.error ? null : scopeSummary?.explicit_out_of_scope_rows ?? 0,
+      logicalHouseComponents: scopeSummaryResult.error ? null : scopeSummary?.logical_house_components ?? 0,
+      confirmedDuplicateRows: scopeSummaryResult.error ? null : scopeSummary?.confirmed_duplicate_rows ?? 0,
+      duplicateComponents: scopeSummaryResult.error ? null : scopeSummary?.duplicate_components ?? 0,
+      logicalComponentsWithNeighborhood: scopeSummaryResult.error ? null : scopeSummary?.logical_components_with_neighborhood ?? 0,
+      conflictingNeighborhoodComponents: scopeSummaryResult.error ? null : scopeSummary?.conflicting_neighborhood_components ?? 0,
       activeInventory: latestMetric.error
         ? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0)
         : metric?.active_inventory ?? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0),
@@ -223,7 +255,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       offerToSalesRatio: latestMetric.error ? null : metric?.offer_to_sales_ratio ?? null,
       latestPeriod: !latestMetric.error && metric ? `${metric.period_start} / ${metric.period_end}` : null,
       pendingMatches: identityProgressResult.error ? null : identityProgress?.unlinked_houses ?? 0,
-      historicalIdentityCandidates: historicalIdentityCandidates.error ? null : historicalIdentityCandidates.count ?? 0,
+      historicalIdentityCandidates: scopeSummaryResult.error ? null : scopeSummary?.v1_identity_candidates ?? 0,
       liveLinkedHouses: identityProgressResult.error ? null : identityProgress?.linked_houses ?? 0,
       identityCollisions: identityProgressResult.error ? null : identityProgress?.external_identity_collisions ?? 0,
       newLiveIdentityCases: identityProgressResult.error ? null : identityProgress?.unlinked_without_existing_external_identity ?? 0,
