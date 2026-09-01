@@ -43,7 +43,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Explain check
-        run: echo 'Read-only smoke: discover up to 3 Yapo Vitacura house listings and verify public commercial facts. No Supabase writes are performed.'
+        run: |
+          echo 'Read-only smoke: discover up to 3 Yapo Vitacura house listings and verify public commercial facts.'
+          echo 'Why: prove source stability before any Supabase ingestion. No database writes are performed.'
 
       - name: Run Yapo source smoke
         run: node --import tsx scripts/smoke-yapo-collector.ts
