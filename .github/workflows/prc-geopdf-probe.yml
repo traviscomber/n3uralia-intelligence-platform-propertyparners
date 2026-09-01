@@ -1,0 +1,31 @@
+name: Vitacura PRC GeoPDF probe
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/prc-geopdf-probe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Install GDAL and PDF tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gdal-bin poppler-utils
+      - name: Download official consolidated plans
+        run: |
+          curl -L --fail --retry 3 -o edification.pdf 'https://vitacura.cl/descargas/plano_regulador/pdf/2021/01_prc-v__plano_de_edificacion_vigente_2021.pdf'
+          curl -L --fail --retry 3 -o land-use.pdf 'https://vitacura.cl/descargas/plano_regulador/pdf/2021/02_prc-v__plano_de_usos_de_suelo_vigente_2021.pdf'
+      - name: Inspect geospatial metadata
+        run: |
+          for f in edification.pdf land-use.pdf; do
+            echo "=== $f pdfinfo ==="
+            pdfinfo "$f" | head -80
+            echo "=== $f gdalinfo ==="
+            gdalinfo "$f" 2>&1 | head -160 || true
+          done
