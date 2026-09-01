@@ -5,6 +5,9 @@ import { requireAnyPageCapability } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 import { reviewNeighborhoodAction } from './actions'
 
+const KML_SOURCE_CODE = 'kml_vitacura_barrios_2026_08_12'
+const HOUSE_SCOPE = 'Vitacura · Casa · Venta'
+
 type ReviewRow = {
   id: string
   classification: 'clear' | 'ambiguous' | 'no_match'
@@ -16,6 +19,7 @@ type ReviewRow = {
     reason?: string
     property_id?: string
     scope?: string
+    source_code?: string
   } | null
   listing: {
     source_listing_id: string
@@ -31,6 +35,8 @@ type ReviewRow = {
     rationale: string
   } | null
 }
+
+type CanonicalNeighborhood = { id: string; name: string }
 
 function ActionButtons({ row }: { row: ReviewRow }) {
   return (
@@ -59,19 +65,20 @@ function ActionButtons({ row }: { row: ReviewRow }) {
   )
 }
 
-function ReviewCard({ row, compact = false }: { row: ReviewRow; compact?: boolean }) {
-  const score = row.assessment?.confidence_score ?? 0
-  const suggested = row.neighborhood?.name || row.candidate_neighborhoods?.join(' / ') || 'Sin barrio sugerido'
-  const canDecide = row.classification === 'clear' && Boolean(row.neighborhood)
+function ReviewCard({ row, resolvedNeighborhood, compact = false }: { row: ReviewRow; resolvedNeighborhood?: CanonicalNeighborhood | null; compact?: boolean }) {
+  const score = row.assessment?.confidence_score ?? null
+  const suggested = row.neighborhood?.name || resolvedNeighborhood?.name || row.candidate_neighborhoods?.join(' / ') || 'Sin barrio sugerido'
+  const canDecide = (row.classification === 'clear' && Boolean(row.neighborhood)) || Boolean(resolvedNeighborhood)
+  const systemRecognized = Boolean(resolvedNeighborhood) && row.classification === 'ambiguous'
 
   return (
     <article className={`grid gap-4 py-5 ${compact ? 'lg:grid-cols-[minmax(0,1fr)_220px]' : 'lg:grid-cols-[minmax(0,1.45fr)_minmax(220px,0.7fr)_220px]'} lg:items-center`}>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-accent)]">
-            {score}/100 · {row.assessment?.review_priority === 'approve_recommended' ? 'Aprobación recomendada' : 'Revisión CEO'}
+            {systemRecognized ? 'Reconocido contra KML' : `${score ?? '—'}/100 · ${row.assessment?.review_priority === 'approve_recommended' ? 'Aprobación recomendada' : 'Revisión CEO'}`}
           </span>
-          {row.classification !== 'clear' ? (
+          {row.classification !== 'clear' && !systemRecognized ? (
             <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.1em] text-[#ff8d87]"><AlertTriangle size={12} /> Excepción</span>
           ) : null}
         </div>
@@ -80,7 +87,9 @@ function ReviewCard({ row, compact = false }: { row: ReviewRow; compact?: boolea
         </p>
         {row.listing.title && row.listing.raw_address ? <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.listing.title}</p> : null}
         <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">
-          {row.evidence?.reason || row.assessment?.rationale || 'Sin evidencia adicional.'}
+          {systemRecognized
+            ? 'De los candidatos del aviso, sólo este nombre existe como barrio en el KML canónico. Las otras referencias son sectores o puntos de interés.'
+            : row.evidence?.reason || row.assessment?.rationale || 'Sin evidencia adicional.'}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--n3-text-muted)]">
           <span>MLC-{row.listing.source_listing_id}</span>
@@ -97,7 +106,7 @@ function ReviewCard({ row, compact = false }: { row: ReviewRow; compact?: boolea
           <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Barrio propuesto</p>
           <p className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">{suggested}</p>
           <p className="mt-2 flex items-start gap-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">
-            <MapPinned size={12} className="mt-0.5 shrink-0" /> Coincidencia única contra el KML Property Partners.
+            <MapPinned size={12} className="mt-0.5 shrink-0" /> {systemRecognized ? 'Único candidato que coincide con un barrio del KML Property Partners.' : 'Coincidencia única contra el KML Property Partners.'}
           </p>
         </div>
       ) : null}
@@ -113,36 +122,65 @@ export default async function NeighborhoodReviewPage() {
   await requireAnyPageCapability(['market.manage_sources', 'management.global.read'])
 
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('market_neighborhood_review_items')
-    .select(`
-      id,
-      classification,
-      candidate_neighborhoods,
-      decision,
-      reviewed_at,
-      evidence,
-      listing:market_listings!inner(source_listing_id,raw_address,title,url),
-      neighborhood:market_neighborhoods(name),
-      assessment:market_neighborhood_review_assessments(confidence_score,review_priority,geometry_status,rationale)
-    `)
-    .order('created_at', { ascending: false })
+  const [{ data, error }, { data: kmlSource }] = await Promise.all([
+    supabase
+      .from('market_neighborhood_review_items')
+      .select(`
+        id,
+        classification,
+        candidate_neighborhoods,
+        decision,
+        reviewed_at,
+        evidence,
+        listing:market_listings!inner(source_listing_id,raw_address,title,url),
+        neighborhood:market_neighborhoods(name),
+        assessment:market_neighborhood_review_assessments(confidence_score,review_priority,geometry_status,rationale)
+      `)
+      .order('created_at', { ascending: false }),
+    supabase.from('market_sources').select('id').eq('code', KML_SOURCE_CODE).maybeSingle(),
+  ])
 
-  const rows = (data || []) as unknown as ReviewRow[]
-  const pendingRows = rows.filter((row) => row.decision === 'pending')
+  const { data: kmlNeighborhoods } = kmlSource
+    ? await supabase.from('market_neighborhoods').select('id,name').eq('geometry_source_id', kmlSource.id)
+    : { data: [] as CanonicalNeighborhood[] }
+
+  const canonicalByName = new Map((kmlNeighborhoods ?? []).map((row) => [row.name.toLocaleLowerCase('es'), row as CanonicalNeighborhood]))
+  const allRows = (data || []) as unknown as ReviewRow[]
+  const pendingByListing = new Map<string, ReviewRow>()
+  for (const row of allRows) {
+    if (row.decision !== 'pending') continue
+    if (!pendingByListing.has(row.listing.source_listing_id)) pendingByListing.set(row.listing.source_listing_id, row)
+  }
+  const pendingRows = [...pendingByListing.values()]
+
+  const resolveCanonicalCandidate = (row: ReviewRow) => {
+    if (row.classification !== 'ambiguous') return null
+    const matches = row.candidate_neighborhoods
+      .map((name) => canonicalByName.get(name.toLocaleLowerCase('es')))
+      .filter((value): value is CanonicalNeighborhood => Boolean(value))
+    return matches.length === 1 ? matches[0] : null
+  }
+
   const recommendedRows = pendingRows
-    .filter((row) => row.classification === 'clear' && row.neighborhood && row.assessment?.review_priority === 'approve_recommended')
+    .filter((row) => row.evidence?.scope === HOUSE_SCOPE && row.classification === 'clear' && row.neighborhood && row.assessment?.review_priority === 'approve_recommended')
     .sort((a, b) => (b.assessment?.confidence_score ?? 0) - (a.assessment?.confidence_score ?? 0))
-  const otherPendingRows = pendingRows.filter((row) => !recommendedRows.some((recommended) => recommended.id === row.id))
-  const acceptedRows = rows.filter((row) => row.decision === 'accepted')
-  const rejectedRows = rows.filter((row) => row.decision === 'discarded')
+
+  const recognizedRows = pendingRows
+    .map((row) => ({ row, resolved: resolveCanonicalCandidate(row) }))
+    .filter(({ row, resolved }) => Boolean(resolved) && row.evidence?.source_code?.includes('portal-houses'))
+
+  const fastIds = new Set([...recommendedRows.map((row) => row.id), ...recognizedRows.map(({ row }) => row.id)])
+  const otherPendingRows = pendingRows.filter((row) => !fastIds.has(row.id))
+  const acceptedRows = allRows.filter((row) => row.decision === 'accepted')
+  const rejectedRows = allRows.filter((row) => row.decision === 'discarded')
+  const fastCount = recommendedRows.length + recognizedRows.length
 
   return (
     <WorkspaceShell>
       <WorkspaceHeader
         eyebrow="Mercado · Decisión CEO"
         title="Aprobar barrios pendientes"
-        meta={`${recommendedRows.length} recomendados · ${otherPendingRows.length} casos especiales`}
+        meta={`${fastCount} listos · ${recognizedRows.length} reconocidos adicionales · ${otherPendingRows.length} casos especiales`}
         actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
       />
 
@@ -153,8 +191,8 @@ export default async function NeighborhoodReviewPage() {
       ) : null}
 
       <MetricStrip items={[
-        { label: 'Listos para decidir', value: recommendedRows.length.toLocaleString('es-CL') },
-        { label: 'Casos especiales', value: otherPendingRows.length.toLocaleString('es-CL'), tone: otherPendingRows.length > 0 ? 'warning' : 'default' },
+        { label: 'Listos para decidir', value: fastCount.toLocaleString('es-CL') },
+        { label: 'Reconocidos extra', value: recognizedRows.length.toLocaleString('es-CL'), tone: recognizedRows.length > 0 ? 'success' : 'default' },
         { label: 'Aprobados', value: acceptedRows.length.toLocaleString('es-CL') },
         { label: 'Rechazados', value: rejectedRows.length.toLocaleString('es-CL') },
       ]} />
@@ -164,7 +202,7 @@ export default async function NeighborhoodReviewPage() {
           <div className="max-w-3xl">
             <p className="text-sm font-medium text-[var(--n3-text-light)]">Una decisión, dos opciones.</p>
             <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">
-              Aprobar publica el barrio KML sugerido en la propiedad canónica y guarda la decisión como aprendizaje auditado. Rechazar conserva la propiedad sin barrio. Ninguna de las dos acciones modifica precio, identidad, valorización ni ventas.
+              Aprobar publica el barrio KML sugerido en la propiedad canónica y guarda la decisión como aprendizaje auditado. Los casos reconocidos adicionales sólo se habilitan cuando queda exactamente un candidato válido dentro del KML oficial. Rechazar conserva la propiedad sin barrio.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 text-xs text-[var(--n3-text-muted)]">
@@ -178,16 +216,17 @@ export default async function NeighborhoodReviewPage() {
         <div className="mb-3 flex items-end justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Cola recomendada</p>
-            <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{recommendedRows.length} decisiones rápidas</h2>
+            <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{fastCount} decisiones rápidas</h2>
           </div>
           <p className="hidden text-xs text-[var(--n3-text-muted)] sm:block">Dirección + barrio + evidencia · Aprobar / Rechazar</p>
         </div>
 
         <div className="divide-y divide-[var(--n3-line)] border-t border-[var(--n3-line)]">
           {recommendedRows.map((row) => <ReviewCard key={row.id} row={row} />)}
+          {recognizedRows.map(({ row, resolved }) => <ReviewCard key={row.id} row={row} resolvedNeighborhood={resolved} />)}
         </div>
 
-        {!recommendedRows.length && !error ? (
+        {!fastCount && !error ? (
           <div className="flex items-center gap-2 py-8 text-sm text-[var(--n3-text-muted)]"><CheckCircle2 size={16} /> No hay aprobaciones recomendadas pendientes.</div>
         ) : null}
       </section>
