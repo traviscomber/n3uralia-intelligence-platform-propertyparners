@@ -9,12 +9,12 @@ import {
 } from '@/components/intelligence/design-system'
 import { getCanonicalMarketReconciliation } from '@/lib/market-canonical-reconciliation'
 
-function n(value: number) {
-  return value.toLocaleString('es-CL')
+function n(value: number | null) {
+  return value === null ? '—' : value.toLocaleString('es-CL')
 }
 
-function pct(value: number) {
-  return `${(value * 100).toFixed(1)}%`
+function pct(value: number | null) {
+  return value === null ? '—' : `${(value * 100).toFixed(1)}%`
 }
 
 function date(value: string | null) {
@@ -37,14 +37,14 @@ export default async function CanonicalMarketReconciliationPage() {
           { label: 'Ver trazabilidad', href: '/dashboard/market/fuentes', primary: true },
         ]}
         meta={
-          <div className="grid min-w-[360px] grid-cols-2 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)]">
+          <div className="grid w-full min-w-0 grid-cols-1 gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:min-w-[360px] sm:grid-cols-2">
             <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Alcance</p><p className="mt-2 text-sm font-semibold">{reconciliation.scope.commune} · {reconciliation.scope.operation}</p></div>
             <div className="bg-[#0c1111] p-4"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Última observación operativa</p><p className="mt-2 text-sm font-semibold">{date(reconciliation.operational.latestObservedAt)}</p></div>
           </div>
         }
       />
 
-      {reconciliation.error ? <div className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">La reconciliación operativa está incompleta. Reintenta más tarde o revisa la trazabilidad con un administrador.</div> : null}
+      {reconciliation.error ? <div role="alert" className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">La reconciliación operativa está incompleta. Las fuentes canónicas siguen visibles; cualquier métrica operativa no disponible se muestra como “—” en lugar de asumir cero.</div> : null}
 
       <section>
         <SectionHeading eyebrow="01 · Universo canónico" title="Fuentes auditadas disponibles" description="Estos conteos provienen de manifiestos con hash y perfiles de estructura. No implican que cada fila ya esté reconciliada como entidad operativa." />
