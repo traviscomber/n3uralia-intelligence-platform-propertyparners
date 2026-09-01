@@ -1,15 +1,117 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-08-09",
+  "asOf": "2026-09-01",
   "allowedStatuses": ["pending", "passed", "failed", "blocked-client-input", "accepted-with-observation"],
   "cases": [
-    {"id":"UAT-01","area":"access-and-permissions","status":"pending","evidence":["Server-side access guards and capability model are implemented","Prebuild tenant-isolation audit passes with manualReview=0 on production build 91dcd94b40f9ef879cbd8b4fb41221b5d4d521d6","Role hierarchy confirmed by project owner on 2026-08-09: admin is Travis/N3uralia technical site administrator outside the Property Partners organization; Property Partners hierarchy is CEO Pedro Pablo -> account directors -> executives","Supabase profiles currently cover admin=1, ceo=1, director=1 and seller=3; only the final nominal user directory remains client input","Production login at https://ppartnersgroup.app is reachable, Spanish-localized, keyboard-focusable and protected by security headers","config/client-dependencies-status.json#users-and-roles"],"owner":"Shared","blocking":true},
-    {"id":"UAT-02","area":"ceo-dashboard","status":"pending","evidence":["CEO dashboard is deployed in production build 91dcd94b40f9ef879cbd8b4fb41221b5d4d521d6","Dashboard trust-boundary audit passes in prebuild for 76 source files","Management reconciliation workspace separates provisional and approved evidence","Authenticated visual acceptance by final CEO participant is still pending"],"owner":"Shared","blocking":true},
-    {"id":"UAT-03","area":"crm-commercial","status":"pending","evidence":["CRM canonical intelligence and management metric layers are implemented","Historical inventory gate passes: 84 workbooks, 45 authoritative, 39 review-only","Supabase verifies 45/45 historical authoritative import runs completed with zero recorded errors and 11/11 July import runs with zero recorded errors","Client KPI dictionary remains pending and unconfirmed KPIs must remain blocked or identified","config/client-dependencies-status.json#kpi-dictionary"],"owner":"Shared","blocking":true},
-    {"id":"UAT-04","area":"market-intelligence","status":"blocked-client-input","evidence":["config/client-dependencies-status.json#market-cbr-sales","config/client-dependencies-status.json#market-kml"],"owner":"Client","blocking":false},
-    {"id":"UAT-05","area":"valuation","status":"pending","evidence":["Valuation workstream is classified ready-for-uat with no internal blockers","Valuation workflow, comparables, adjustments and decision recording are implemented","Production build 91dcd94b40f9ef879cbd8b4fb41221b5d4d521d6 passes contractual prebuild gates","Authenticated business acceptance remains pending","config/contract-closeout-status.json#valuation"],"owner":"Shared","blocking":true},
-    {"id":"UAT-06","area":"monthly-reporting","status":"pending","evidence":["Closed-month enforcement and protected report preview/delivery routes are implemented","Reportin canonical PDF verification passes in production build 91dcd94b40f9ef879cbd8b4fb41221b5d4d521d6","Production delivery infrastructure has successful sent distributions and hourly cron evidence","Report schedule creation remains client-dependent while reporting calendar, recipients and approval are pending","config/client-dependencies-status.json#reporting-approval"],"owner":"Shared","blocking":true},
-    {"id":"UAT-07","area":"functional-security","status":"passed","evidence":["Production login surface at https://ppartnersgroup.app returns HTTP 200 with X-Frame-Options: DENY, X-Content-Type-Options: nosniff, restrictive Permissions-Policy and same-origin resource/opener policies on 2026-08-09","Prebuild security checks pass: IP boundaries, credential boundaries, exposure boundaries, tenant isolation and dashboard trust boundaries","Supabase has RLS enabled on all 85 public tables and 153 policies present during QA verification on 2026-08-09"],"owner":"N3uralia","blocking":true},
-    {"id":"UAT-08","area":"operational-continuity","status":"passed","evidence":["Production deployment 91dcd94b40f9ef879cbd8b4fb41221b5d4d521d6 reached READY on Vercel on 2026-08-09","Frozen-lockfile install, contractual gates, historical CRM lineage and Reportin verification all pass before Next.js production build","No production runtime errors were found in the checked 24h window during QA on 2026-08-09","docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"],"owner":"N3uralia","blocking":true}
+    {
+      "id": "UAT-01",
+      "area": "access-and-permissions",
+      "status": "pending",
+      "evidence": [
+        "Server-side access guards and capability model are implemented.",
+        "Dashboard access verification passes for CEO, admin, director, subdirector and seller route boundaries.",
+        "Tenant isolation gate passed on 2026-09-01 with manualReview=0 and 16 verified historical migrations.",
+        "Production profiles include ceo=1, admin=1, director=1 and seller=3.",
+        "Authenticated role UAT was not executed because designated QA credentials/participants are not configured in GitHub Actions.",
+        "config/client-dependencies-status.json#uat-participants"
+      ],
+      "owner": "Shared",
+      "blocking": true
+    },
+    {
+      "id": "UAT-02",
+      "area": "ceo-dashboard",
+      "status": "pending",
+      "evidence": [
+        "CEO dashboard is deployed on the audited production deployment dpl_DeEMDDjyGpNEBU2g6cdsaSBYputL.",
+        "Management scoring, persistence, reconciliation, reporting and delivery gates pass in the 2026-09-01 technical acceptance run.",
+        "Authenticated visual and business acceptance by the designated CEO participant remains pending.",
+        "config/client-dependencies-status.json#uat-participants"
+      ],
+      "owner": "Shared",
+      "blocking": true
+    },
+    {
+      "id": "UAT-03",
+      "area": "crm-commercial",
+      "status": "pending",
+      "evidence": [
+        "Canonical management scoring, persisted overlays, reconciliation, comparisons, source contracts and report delivery gates pass on 2026-09-01.",
+        "Production management entities count is 7.",
+        "Official KPI definitions remain a Shared dependency; provisional or derived metrics must not be presented as approved official KPIs.",
+        "config/client-dependencies-status.json#kpi-dictionary"
+      ],
+      "owner": "Shared",
+      "blocking": true
+    },
+    {
+      "id": "UAT-04",
+      "area": "market-intelligence",
+      "status": "pending",
+      "evidence": [
+        "Canonical UAT scope is sales of houses in Vitacura.",
+        "CBRS source is received and integrated with 17,581 reference transactions at the audited production cut.",
+        "Property Partners KML is received and integrated with 19 canonical neighborhood polygons.",
+        "Recent V1 Portal house refresh runs observed completed with 12 accepted and 0 rejected rows.",
+        "Market identity, ingestion and contractual source compatibility gates pass on 2026-09-01.",
+        "Authenticated business reading/acceptance remains pending."
+      ],
+      "owner": "Shared",
+      "blocking": true
+    },
+    {
+      "id": "UAT-05",
+      "area": "valuation",
+      "status": "pending",
+      "evidence": [
+        "Valuation model, canonical evidence, workflow and condition gates pass on 2026-09-01.",
+        "Full valuation regression suite passes 25/25 tests.",
+        "Workflow verification confirms atomic transitions, CEO-only approval, scoped review and immutable issued-version evidence.",
+        "Production contains 10 valuation cases at the audited cut: 2 draft, 8 review and 0 issued.",
+        "An authorized real case must complete the human UAT cycle through issued; no production case will be issued only to satisfy QA."
+      ],
+      "owner": "Shared",
+      "blocking": true
+    },
+    {
+      "id": "UAT-06",
+      "area": "monthly-reporting",
+      "status": "pending",
+      "evidence": [
+        "Management report scheduling, runtime KPI/reporting gates, recipient validation and authorization rules pass on 2026-09-01.",
+        "Management report delivery and canonical Reportin PDF verification pass.",
+        "Final schedule, recipients, frequency and delivery format remain a Shared approval dependency.",
+        "config/client-dependencies-status.json#reporting-approval"
+      ],
+      "owner": "Shared",
+      "blocking": true
+    },
+    {
+      "id": "UAT-07",
+      "area": "functional-security",
+      "status": "passed",
+      "evidence": [
+        "2026-09-01 closeout run passed IP boundaries, credential boundaries, exposure boundaries and tenant isolation before authenticated UAT preflight.",
+        "Tenant isolation passed with manualReview=0 and 16 verified historical migrations.",
+        "Live production verification for market_neighborhood_review_items confirmed RLS enabled, SELECT limited to admin/CEO, UPDATE limited to admin/CEO plus AAL2, and an explicit service_role operational policy.",
+        "Two raw API error responses discovered during closeout were sanitized on the delivery branch before merge."
+      ],
+      "owner": "N3uralia",
+      "blocking": true
+    },
+    {
+      "id": "UAT-08",
+      "area": "operational-continuity",
+      "status": "passed",
+      "evidence": [
+        "Production deployment dpl_DeEMDDjyGpNEBU2g6cdsaSBYputL is READY and serves ppartnersgroup.app.",
+        "No production error/fatal events were found in the checked six-hour window on 2026-09-01.",
+        "No 5xx events were found for the audited production deployment in the checked two-hour window.",
+        "Frozen-lockfile install and production build pass in the 2026-09-01 technical acceptance run.",
+        "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"
+      ],
+      "owner": "N3uralia",
+      "blocking": true
+    }
   ]
 }
