@@ -91,16 +91,16 @@ export default async function MarketPage() {
         </div>
         <div className="divide-y divide-[var(--n3-line)]">
           {actions.length ? actions.map((item) => (
-            <Link key={item.label} href={item.href} className="grid min-h-16 grid-cols-[1fr_auto] items-center gap-4 py-3 hover:bg-white/[0.02]">
+            <Link key={item.label} href={item.href} className="grid min-h-16 gap-2 py-3 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
               <span className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</span>
-              <span className={item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}>{item.value}</span>
+              <span className={`text-sm font-semibold ${item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}`}>{item.value}</span>
             </Link>
           )) : <div className="py-7 text-sm text-[var(--n3-text-muted)]">Sin acciones pendientes con la evidencia disponible.</div>}
         </div>
       </section>
 
       <details className="mt-10 border-t border-[var(--n3-line)] pt-4">
-        <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+        <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
           Ver datos y metodología
         </summary>
 
@@ -128,7 +128,7 @@ export default async function MarketPage() {
                 <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Referencia histórica canónica frente al corte live de V1.</p>
               </div>
               <div className="grid gap-4 py-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Listings</p><p className="mt-1 text-lg font-semibold">{number(houseLive?.listingCount ?? 0)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {number(houseReference.listingCount)}</span></p></div>
+                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Listings</p><p className="mt-1 text-lg font-semibold">{number(houseLive?.listingCount ?? null)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {number(houseReference.listingCount)}</span></p></div>
                 <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Mediana UF</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianPriceUf ?? null, 0)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {decimal(houseReference.medianPriceUf, 0)}</span></p></div>
                 <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">UF/m²</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianUfM2 ?? null, 1)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {decimal(houseReference.medianUfM2, 1)}</span></p></div>
                 <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Superficie</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianAreaM2 ?? null, 0)} <span className="text-xs font-normal text-[var(--n3-text-muted)]">/ {decimal(houseReference.medianAreaM2, 0)} m²</span></p></div>
@@ -158,11 +158,11 @@ export default async function MarketPage() {
             status={dataStatus}
           />
 
-          <div className="flex flex-wrap gap-5 text-xs">
-            <a href="/api/market/export?dataset=listings&format=xlsx" className="text-[var(--n3-teal-soft)]">Exportar XLSX</a>
-            {canManage ? <Link href="/dashboard/market/fuentes" className="text-[var(--n3-teal-soft)]">Administrar fuentes</Link> : null}
-            {canManage ? <Link href="/dashboard/market/reconciliacion" className="text-[var(--n3-teal-soft)]">Reconciliación</Link> : null}
-            {canManage ? <Link href="/dashboard/market/revisar-barrios" className="text-[var(--n3-teal-soft)]">Revisar barrios</Link> : null}
+          <div className="flex flex-wrap gap-2 text-xs">
+            <a href="/api/market/export?dataset=listings&format=xlsx" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Exportar XLSX</a>
+            {canManage ? <Link href="/dashboard/market/fuentes" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Administrar fuentes</Link> : null}
+            {canManage ? <Link href="/dashboard/market/reconciliacion" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Reconciliación</Link> : null}
+            {canManage ? <Link href="/dashboard/market/revisar-barrios" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Revisar barrios</Link> : null}
           </div>
         </div>
       </details>
