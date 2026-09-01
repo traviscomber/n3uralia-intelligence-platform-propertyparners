@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Download, Mail, Play, RefreshCw, ShieldAlert } from 'lucide-react'
 import { IntelligencePanel, MetricCard, MetricGrid, SectionHeading } from '@/components/intelligence/design-system'
+import { OperationalState } from '@/components/ui/operational-state'
 
 type Distribution = {
   id: string
@@ -70,6 +71,7 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
   const [reports, setReports] = useState<Report[]>([])
   const [delivery, setDelivery] = useState({ configured: false, provider: null as string | null })
   const [loading, setLoading] = useState(true)
+  const [hasLoaded, setHasLoaded] = useState(false)
   const [action, setAction] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -83,6 +85,7 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
       if (!response.ok) throw new Error(payload.error || 'No fue posible cargar los reportes.')
       setReports(payload.reports ?? [])
       setDelivery(payload.delivery ?? { configured: false, provider: null })
+      setHasLoaded(true)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No fue posible cargar los reportes.')
     } finally {
@@ -124,7 +127,15 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
   const failed = distributions.filter((item) => item.status === 'failed').length
   const sent = distributions.filter((item) => ['sent', 'acknowledged'].includes(item.status)).length
 
-  return <div className="space-y-10">
+  if (loading && !hasLoaded) {
+    return <OperationalState kind="loading" title="Cargando operación de informes" description="Consultando reportes, entregas y configuración del proveedor." />
+  }
+
+  if (error && !hasLoaded) {
+    return <OperationalState kind="error" title="No fue posible cargar la operación de informes" description={error}><button type="button" onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm font-semibold"><RefreshCw size={15}/>Reintentar</button></OperationalState>
+  }
+
+  return <div className="space-y-10" aria-busy={loading || Boolean(action)}>
     <section>
       <SectionHeading eyebrow="Operación" title="Generación y entrega de reportes" description="Cada ejecución conserva período, snapshot, destinatario, intentos y referencia del proveedor." />
       <MetricGrid>
@@ -142,59 +153,58 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
       critical={!delivery.configured}
     >
       <div className="flex flex-wrap items-center gap-3 p-5">
-        <span className={`border px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] ${delivery.configured ? 'border-[#2f8f4e] text-[#65c780]' : 'border-[#a77a22] text-[#f6c453]'}`}>
+        <span className={`inline-flex min-h-11 items-center border px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] ${delivery.configured ? 'border-[#2f8f4e] text-[#65c780]' : 'border-[#a77a22] text-[#f6c453]'}`}>
           {delivery.configured ? 'Configurado' : 'Bloqueado por configuración'}
         </span>
         {canOperate ? <>
           <button
             type="button"
-            disabled={Boolean(action)}
+            disabled={Boolean(action) || loading}
             onClick={() => void execute('/api/management/reports/run', 'generate')}
-            className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm disabled:opacity-50"
+            className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm disabled:opacity-50"
           >
             <Play size={15} />{action === 'generate' ? 'Generando…' : 'Generar vencidos'}
           </button>
           <button
             type="button"
-            disabled={Boolean(action) || !delivery.configured}
+            disabled={Boolean(action) || loading || !delivery.configured}
             onClick={() => void execute('/api/management/reports/deliver', 'deliver')}
-            className="inline-flex items-center gap-2 border border-[#d7332b] px-4 py-2 text-sm text-[#ff766f] disabled:opacity-50"
+            className="inline-flex min-h-11 items-center gap-2 border border-[#d7332b] px-4 py-2 text-sm text-[#ff766f] disabled:opacity-50"
           >
             <Mail size={15} />{action === 'deliver' ? 'Procesando…' : 'Procesar entregas'}
           </button>
         </> : null}
-        <button type="button" disabled={loading} onClick={() => void load()} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm disabled:opacity-50">
-          <RefreshCw size={15} />Actualizar
+        <button type="button" disabled={loading || Boolean(action)} onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm disabled:opacity-50">
+          <RefreshCw size={15} />{loading ? 'Actualizando…' : 'Actualizar'}
         </button>
       </div>
       {message ? <p role="status" className="border-t border-[var(--n3-line)] p-5 text-sm text-[#65c780]">{message}</p> : null}
-      {error ? <p role="alert" className="border-t border-[var(--n3-line)] p-5 text-sm text-[#ff766f]">{error}</p> : null}
+      {error ? <p role="alert" className="border-t border-[var(--n3-line)] p-5 text-sm text-[#ff766f]">No se pudo completar la última operación. Se mantienen los últimos datos válidos visibles. {error}</p> : null}
     </IntelligencePanel>
 
     <section>
       <SectionHeading eyebrow="Registro" title="Ejecuciones recientes" description="El PDF se genera desde el snapshot persistido; no vuelve a calcular los datos." />
-      {loading ? <div role="status" className="border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">Cargando reportes…</div> : null}
-      {!loading && !reports.length ? <div className="border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen reportes generados dentro de su alcance.</div> : null}
+      {!loading && !reports.length ? <OperationalState compact kind="empty" title="Sin reportes generados" description="No existen reportes generados dentro de su alcance." /> : null}
       <div className="space-y-4">
         {reports.map((report) => {
           const reportDistributions = report.management_report_distributions ?? []
           return <article key={report.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">{reportLabels[report.report_type] ?? report.report_type}</p>
-                <h3 className="mt-2 text-lg font-semibold">{report.period_start} – {report.period_end}</h3>
+                <h3 className="mt-2 break-words text-lg font-semibold">{report.period_start} – {report.period_end}</h3>
                 <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Generado {dateTime(report.generated_at)} · Estado {statusLabel(report.status)}</p>
               </div>
-              <Link href={`/api/management/reports/${report.id}/artifact`} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm">
+              <Link href={`/api/management/reports/${report.id}/artifact`} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm">
                 <Download size={15} />Descargar PDF
               </Link>
             </div>
             <div className="mt-5 space-y-2">
               {!reportDistributions.length ? <p className="text-xs text-[var(--n3-text-muted)]">Sin destinatarios registrados.</p> : reportDistributions.map((distribution) => <div key={distribution.id} className="grid gap-2 border-t border-[var(--n3-line)] py-3 text-xs md:grid-cols-[minmax(180px,1fr)_110px_90px_minmax(180px,1fr)]">
-                <span>{distribution.recipient}</span>
+                <span className="break-all">{distribution.recipient}</span>
                 <span>{statusLabel(distribution.status)}</span>
                 <span>{distribution.attempt_count} intentos</span>
-                <span className={distribution.error_message ? 'text-[#ff766f]' : 'text-[var(--n3-text-muted)]'}>
+                <span className={`break-words ${distribution.error_message ? 'text-[#ff766f]' : 'text-[var(--n3-text-muted)]'}`}>
                   {distribution.error_message || (distribution.sent_at ? `Enviado ${dateTime(distribution.sent_at)}` : `Próximo ${dateTime(distribution.next_attempt_at)}`)}
                 </span>
               </div>)}
