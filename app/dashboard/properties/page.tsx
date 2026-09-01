@@ -92,32 +92,56 @@ export default async function PropertiesPage() {
         <span className="text-xs text-[var(--n3-text-muted)]">{Number(actionableIdentity > 0) + Number(staleAssignments > 0)}</span>
       </div>
       <div className="divide-y divide-[var(--n3-line)]">
-        {actionableIdentity > 0 ? <Link href="/dashboard/properties/admin/identity" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Resolver identidades pendientes</span><strong className="text-[#f0c96a]">{actionableIdentity}</strong></Link> : null}
-        {staleAssignments > 0 ? <Link href="/dashboard/market" className="flex min-h-14 items-center justify-between py-3 text-sm hover:bg-white/[0.03]"><span>Verificar vigencia de cartera</span><strong className="text-[#f0c96a]">{staleAssignments}</strong></Link> : null}
+        {actionableIdentity > 0 ? <Link href="/dashboard/properties/admin/identity" className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm hover:bg-white/[0.03]"><span>Resolver identidades pendientes</span><strong className="text-[#f0c96a]">{actionableIdentity}</strong></Link> : null}
+        {staleAssignments > 0 ? <Link href="/dashboard/market" className="flex min-h-14 items-center justify-between gap-4 py-3 text-sm hover:bg-white/[0.03]"><span>Verificar vigencia de cartera</span><strong className="text-[#f0c96a]">{staleAssignments}</strong></Link> : null}
       </div>
     </section> : null}
 
     <section className="mt-7 max-w-6xl">
       <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold">Propiedades</h2><span className="text-xs text-[var(--n3-text-muted)]">{assignments.length}</span></div>
-      {assignmentResult.error ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="Reintente más tarde." /> : assignments.length ? <div className="overflow-x-auto border-y border-[var(--n3-line)]">
-        <table className="w-full min-w-[640px] text-sm">
-          <thead className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="p-3 text-left">Propiedad</th><th className="p-3 text-left">Asignación</th><th className="p-3 text-left">Estado</th><th className="p-3 text-right"></th></tr></thead>
-          <tbody>{assignments.map((assignment) => {
+      {assignmentResult.error ? <OperationalState kind="error" title="No fue posible consultar la cartera" description="Reintente más tarde." /> : assignments.length ? <>
+        <div className="divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)] md:hidden">
+          {assignments.map((assignment) => {
             const property = assignment.market_properties[0] ?? null
             const area = property?.useful_area_m2 ?? property?.built_area_m2 ?? null
-            return <tr key={assignment.id} className="border-t border-[var(--n3-line)]">
-              <td className="p-3"><p className="font-medium">{property?.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}{property?.bedrooms != null ? ` · ${property.bedrooms} dorm.` : ''}{area != null ? ` · ${area} m²` : ''}</p></td>
-              <td className="p-3 text-[var(--n3-text-muted)]">{assignmentRole(assignment.assignment_role)}</td>
-              <td className="p-3"><p>{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Evidencia {formatDate(property?.last_seen_at ?? null)}</p></td>
-              <td className="p-3 text-right">{property ? <Link href={`/dashboard/properties/${property.id}`} className="text-sm font-medium text-[var(--n3-teal-soft)]">Abrir</Link> : null}</td>
-            </tr>
-          })}</tbody>
-        </table>
-      </div> : <OperationalState kind="empty" title="Sin propiedades asignadas" description="No existen asignaciones activas para este perfil." action={canAssign ? { label: 'Asignar propiedades', href: '/dashboard/properties/admin' } : undefined} />}
+            const content = <>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold">{property?.normalized_address || 'Sin dirección'}</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}{property?.bedrooms != null ? ` · ${property.bedrooms} dorm.` : ''}{area != null ? ` · ${area} m²` : ''}</p>
+                </div>
+                {property ? <span className="shrink-0 text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir</span> : null}
+              </div>
+              <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                <div><dt className="text-[var(--n3-text-muted)]">Asignación</dt><dd className="mt-1 text-[var(--n3-text-light)]">{assignmentRole(assignment.assignment_role)}</dd></div>
+                <div><dt className="text-[var(--n3-text-muted)]">Identidad</dt><dd className="mt-1 text-[var(--n3-text-light)]">{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</dd></div>
+                <div className="col-span-2"><dt className="text-[var(--n3-text-muted)]">Última evidencia</dt><dd className="mt-1 text-[var(--n3-text-light)]">{formatDate(property?.last_seen_at ?? null)}</dd></div>
+              </dl>
+            </>
+            return property ? <Link key={assignment.id} href={`/dashboard/properties/${property.id}`} className="block min-h-11 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{content}</Link> : <article key={assignment.id} className="py-4">{content}</article>
+          })}
+        </div>
+
+        <div className="hidden overflow-x-auto border-y border-[var(--n3-line)] md:block">
+          <table className="w-full min-w-[640px] text-sm">
+            <thead className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="p-3 text-left">Propiedad</th><th className="p-3 text-left">Asignación</th><th className="p-3 text-left">Estado</th><th className="p-3 text-right"></th></tr></thead>
+            <tbody>{assignments.map((assignment) => {
+              const property = assignment.market_properties[0] ?? null
+              const area = property?.useful_area_m2 ?? property?.built_area_m2 ?? null
+              return <tr key={assignment.id} className="border-t border-[var(--n3-line)]">
+                <td className="p-3"><p className="font-medium">{property?.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}{property?.bedrooms != null ? ` · ${property.bedrooms} dorm.` : ''}{area != null ? ` · ${area} m²` : ''}</p></td>
+                <td className="p-3 text-[var(--n3-text-muted)]">{assignmentRole(assignment.assignment_role)}</td>
+                <td className="p-3"><p>{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Evidencia {formatDate(property?.last_seen_at ?? null)}</p></td>
+                <td className="p-3 text-right">{property ? <Link href={`/dashboard/properties/${property.id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--n3-teal-soft)]">Abrir</Link> : null}</td>
+              </tr>
+            })}</tbody>
+          </table>
+        </div>
+      </> : <OperationalState kind="empty" title="Sin propiedades asignadas" description="No existen asignaciones activas para este perfil." action={canAssign ? { label: 'Asignar propiedades', href: '/dashboard/properties/admin' } : undefined} />}
     </section>
 
     <details className="mt-8 max-w-6xl">
-      <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Estado de datos</summary>
+      <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Estado de datos</summary>
       <DataStatusBar
         cutoff={formatDate(latestObservation)}
         coverage={assignments.length ? `${confirmedIdentity} de ${assignments.length} asignaciones con identidad confirmada (${Math.round((coverage ?? 0) * 100)}%)` : 'Sin asignaciones activas'}
