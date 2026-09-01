@@ -1,5 +1,6 @@
 {
   "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm exec tsx scripts/verify-vitacura-prc-source.ts && pnpm run build",
   "crons": [
     { "path": "/api/cron/management-monthly", "schedule": "0 9 1 * *" },
     { "path": "/api/cron/management-delivery", "schedule": "0 * * * *" },
