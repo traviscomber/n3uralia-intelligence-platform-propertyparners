@@ -6,17 +6,24 @@ on:
       base_url:
         description: Production or preview URL to audit
         required: false
-        default: https://n3uralia-intelligence-platform.vercel.app
+        default: https://ppartnersgroup.app
+  push:
+    branches: [main]
 
 permissions:
   contents: read
+
+concurrency:
+  group: authenticated-visual-qa-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   visual-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      QA_BASE_URL: ${{ inputs.base_url }}
+      QA_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.base_url || 'https://ppartnersgroup.app' }}
+      QA_EXPECTED_SHA: ${{ github.sha }}
       QA_OUTPUT_DIR: artifacts/visual-qa
       QA_CEO_EMAIL: ${{ secrets.QA_CEO_EMAIL }}
       QA_CEO_PASSWORD: ${{ secrets.QA_CEO_PASSWORD }}
@@ -47,6 +54,41 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Wait for the exact production release
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          node <<'NODE'
+          const baseUrl = process.env.QA_BASE_URL
+          const expectedSha = process.env.QA_EXPECTED_SHA
+          const maxAttempts = 60
+          const delayMs = 10_000
+
+          for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            try {
+              const response = await fetch(`${baseUrl}/api/release`, {
+                headers: { 'cache-control': 'no-cache' },
+              })
+              if (response.ok) {
+                const release = await response.json()
+                console.log(`release check ${attempt}/${maxAttempts}: ${release.sha ?? 'unknown'} (${release.environment ?? 'unknown'})`)
+                if (release.sha === expectedSha && release.environment === 'production') {
+                  process.exit(0)
+                }
+              } else {
+                console.log(`release check ${attempt}/${maxAttempts}: HTTP ${response.status}`)
+              }
+            } catch (error) {
+              console.log(`release check ${attempt}/${maxAttempts}: ${error instanceof Error ? error.message : String(error)}`)
+            }
+
+            if (attempt < maxAttempts) await new Promise((resolve) => setTimeout(resolve, delayMs))
+          }
+
+          console.error(`Production did not expose expected commit ${expectedSha} at ${baseUrl} within the verification window.`)
+          process.exit(1)
+          NODE
+
       - name: Validate required secrets
         id: preflight
         shell: bash
@@ -70,7 +112,7 @@ jobs:
           else
             complete=false
           fi
-          printf '{\n  "generatedAt": "%s",\n  "baseUrl": "%s",\n  "complete": %s,\n  "missing": [' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$QA_BASE_URL" "$complete" > artifacts/visual-qa/preflight.json
+          printf '{\n  "generatedAt": "%s",\n  "baseUrl": "%s",\n  "expectedSha": "%s",\n  "complete": %s,\n  "missing": [' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$QA_BASE_URL" "$QA_EXPECTED_SHA" "$complete" > artifacts/visual-qa/preflight.json
           for i in "${!missing[@]}"; do
             [ "$i" -gt 0 ] && printf ', ' >> artifacts/visual-qa/preflight.json
             printf '"%s"' "${missing[$i]}" >> artifacts/visual-qa/preflight.json
