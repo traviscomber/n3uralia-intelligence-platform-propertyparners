@@ -16,13 +16,13 @@ La incorporación de esta mejora no altera los criterios de aceptación contract
 - Rama: `public-valuation-estimator-v1`.
 - Head funcional validado antes de agregar esta documentación: `363eafff6358f5b67f5b5662775eb1f43b8b1740`.
 - Base del PR: `main` en `3fd42a54eb2fda2fab5e0a644a712b6ef4ef7aae`.
-- Estado GitHub del PR durante la validación: `open`, `mergeable=true`.
+- Estado GitHub del PR durante la validación funcional: `open`, `mergeable=true`.
 - Preview Vercel del head funcional: `READY`.
 - `N3uralia IP Boundaries` sobre el head funcional: PASS.
 - `Contractual modules CI` sobre el head funcional: PASS.
 - Suite de valorización: 28/28 tests PASS durante el build validado, incluyendo los tres tests específicos del cotizador público.
 
-Los commits posteriores al head funcional corresponden a documentación de entrega. Deben completar nuevamente los gates automáticos del PR antes del merge.
+Los commits posteriores al head funcional corresponden a documentación de entrega. Deben completar nuevamente los gates automáticos del PR antes del merge. El estado de esos gates debe comprobarse sobre el head actual inmediatamente antes de fusionar.
 
 Importante: mientras PR #181 no sea mergeado y desplegado a producción, esta mejora debe describirse como **candidato verificado de entrega**, no como funcionalidad productiva vigente.
 
@@ -198,7 +198,7 @@ No modifica los tres pilares contractuales ni sus criterios de aceptación.
 
 Antes de declararla incluida en producción corresponde:
 
-1. completar los gates automáticos sobre el head documental final del PR;
+1. completar los gates automáticos sobre el head actual del PR;
 2. mergear PR #181;
 3. verificar el SHA resultante en Vercel producción;
 4. comprobar `/`, `/api/public/valuation-estimate` y `/dashboard` en el dominio productivo;
