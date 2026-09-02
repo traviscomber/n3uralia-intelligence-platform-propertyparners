@@ -1,117 +1,175 @@
-# Registro de cierre técnico
+# Registro de cierre técnico — Property Partners
 
 Fecha de actualización: 2 de septiembre de 2026
 
-## Alcance del cierre
+## 1. Alcance del cierre
 
-Este documento consolida el estado técnico verificable de la plataforma Property Partners sobre el baseline productivo actual. La aceptación contractual final sigue siendo una actividad distinta y requiere UAT con usuarios Property Partners.
+Este documento consolida el estado técnico verificable de la plataforma sobre el baseline productivo actual.
 
-## Baseline validado
+El cierre técnico y la aceptación contractual son gates distintos. Este documento puede declarar PASS técnico, pero no declara UAT del Cliente completado ni aceptación comercial final.
 
-- Repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`.
-- Rama operativa: `main`.
-- Producción: `https://ppartnersgroup.app`.
-- Commit productivo verificado: `067870537c3e8b897f2f07359dd45b9776ea8095`.
-- Deployment Vercel: `READY`.
-- Errores runtime observados en las últimas 24 horas durante esta revisión: 0.
+## 2. Baseline productivo validado
 
-## Gate técnico confirmado
+- repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`;
+- rama: `main`;
+- producción: `https://ppartnersgroup.app`;
+- commit productivo: `4dacae91757d1f67d14a3ac443dded212a14fa0d`;
+- Vercel deployment: `dpl_9CtkvZ3LXXtRms9a9RccPHkb5TH8`;
+- deployment: `READY`;
+- aliases productivos incluyen `ppartnersgroup.app`;
+- verificación visual: desktop PASS, móvil estrecho PASS.
 
-Sobre el baseline productivo se verificaron exitosamente los siguientes gates automatizados:
+## 3. Gates de release
 
-- `Contractual modules CI`: PASS.
-- `Authenticated role QA`: PASS.
-- `Authenticated visual QA`: PASS.
-- `N3uralia IP Boundaries`: PASS.
+Sobre el candidato que produjo el baseline actual se verificó:
 
-Este estado reemplaza la nota histórica que mantenía el QA visual autenticado como diferido.
-
-## Estado técnico
-
-- Matriz central de capacidades y alcance aplicada a páginas y APIs críticas.
-- RLS autenticada validada para los perfiles contemplados por el producto.
-- Escrituras cruzadas entre oficinas bloqueadas.
-- Flujos de valorización, tareas, correcciones, comparables y decisiones conectados.
-- Aprobación y emisión de valorizaciones protegidas por rol y MFA/AAL2.
-- Reporte imprimible con evidencia, snapshot e historial disponible.
-- Configuración y destinatarios protegidos por capacidades específicas.
-- Edición personal de `team` y `role` bloqueada.
-- Regresiones reproducibles versionadas.
-- Cola operativa de revisión live separada de la revisión histórica de duplicados.
-- CTAs operativos de atención alineados a la cola correcta.
-- Paquete contractual, manuales y plan UAT disponibles en `docs/`.
-
-## Mejora complementaria candidata — Cotizador público
-
-El PR `#181` agrega un cotizador público referencial como mejora complementaria para visitantes externos. No forma parte de los tres pilares contractuales ni modifica el Valorizador Profesional.
-
-Candidato verificado:
-
-- rama: `public-valuation-estimator-v1`;
-- head funcional validado: `363eafff6358f5b67f5b5662775eb1f43b8b1740`;
-- preview Vercel: `READY`;
-- `N3uralia IP Boundaries`: PASS;
 - `Contractual modules CI`: PASS;
-- 28/28 tests de valorización PASS durante el build, incluyendo regresiones del estimador;
-- `/dashboard` continúa protegido por sesión/rol;
-- endpoint público limitado a agregados;
-- no solicita ni persiste datos personales.
+- `N3uralia IP Boundaries`: PASS;
+- Vercel preview: `READY`;
+- runtime del preview en la ventana final: sin warnings/errors/fatal observados;
+- QA visual pública: PASS;
+- QA visual autenticada: PASS;
+- QA responsive móvil: PASS;
+- PR mergeable antes del merge;
+- merge controlado con head exacto validado.
 
-Cobertura observada en la validación: Club de Polo 6, La Llavería 7 y Santa María 11 observaciones utilizables. El piso mínimo de publicación es 5.
+El merge resultante produjo el commit productivo indicado en la sección anterior y su deployment quedó `READY`.
 
-La metodología pública deriva UF/m² construido desde precio UF y superficie construida y publica mediana más rango intercuartil. No usa directamente el UF/m² histórico del feed cuando éste corresponde a otra definición de superficie.
+## 4. Estado técnico de los tres pilares
 
-Estado de esta mejora: **PASS técnico en preview / pendiente merge y verificación productiva**.
+### Pilar I — Inteligencia de Mercado — PASS
 
-No debe utilizarse este PR para declarar UAT contractual completado ni para sustituir un caso real del Valorizador Profesional.
+Verificado:
+
+- fuentes y observaciones con procedencia;
+- oferta activa separada de compraventas CBRS;
+- territorialidad KML de Vitacura;
+- listing observado separado de property canónica;
+- cola de revisión live separada de revisión histórica property ↔ property;
+- CTAs operativos alineados a la cola live;
+- métricas de oferta con semántica explícita;
+- UF/m² construido derivado correctamente para casas cuando corresponde;
+- estados de frescura, cobertura y ausencia de evidencia sin completar con valores inventados.
+
+Snapshot auditado el 2 de septiembre de 2026:
+
+- 44 casas activas;
+- 44/44 con barrio KML resoluble;
+- 41/44 utilizables para UF/m² construido.
+
+### Pilar II — Valorización de Propiedades — PASS
+
+Verificado:
+
+- identificación de sujeto;
+- comparables trazables;
+- mínimo de tres comparables seleccionados por humano;
+- cálculo determinístico;
+- workflow de revisión/devolución/corrección/reenvío;
+- aprobación CEO con MFA/AAL2;
+- snapshots/versiones e integridad;
+- emisión y PDF desde el snapshot emitido;
+- historial y decisiones auditables.
+
+### Pilar III — Control de Gestión y Reportes — PASS técnico
+
+Verificado:
+
+- scopes por rol;
+- métricas persistidas y reconciliación;
+- tareas y seguimiento;
+- reportes desde snapshots;
+- delivery trazable;
+- retries e idempotencia;
+- scheduling protegido;
+- comportamiento fail-closed cuando faltan definiciones oficiales.
+
+La activación de recurrencia definitiva continúa condicionada por información de negocio que N3uralia no debe inventar.
+
+## 5. Mejora complementaria pública — productiva
+
+El cotizador público para casas en Vitacura ya no es un candidato de preview.
+
+PR #183 fue mergeado y forma parte del baseline productivo actual.
+
+Estado verificado:
+
+- 19 sectores KML seleccionables;
+- referencia sectorial sólo con >=5 observaciones utilizables;
+- fallback explícito a referencia general de Vitacura bajo ese piso;
+- 41 observaciones utilizables en el snapshot de auditoría;
+- Santa María 12, La Llavería 7 y Club de Polo 6 con nivel sectorial en ese snapshot;
+- dormitorios/baños no degradan una muestra válida cuando su cobertura es insuficiente;
+- endpoint público expone agregados, no listings crudos;
+- no solicita ni persiste datos personales;
+- responsive y mobile verificados;
+- dashboard autenticado permanece aislado.
 
 Detalle: `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`.
 
-## Pendientes excluidos del cierre técnico
+Esta mejora no reemplaza el Valorizador Profesional y no constituye UAT del Pilar II.
 
-### UAT / aceptación cliente
+## 6. Seguridad y aislamiento
 
-- validar con usuarios Property Partners la suficiencia operacional de los tres pilares;
-- confirmar nomenclatura, filtros, barrios y lectura de inteligencia de mercado;
-- ejecutar un caso real de valorización punta a punta con los roles correspondientes;
-- revisar PDFs sobre casos reales de UAT;
-- registrar PASS/FAIL/BLOCKED_EXTERNAL y defectos P0-P3;
-- obtener aceptación por módulo o lista cerrada de correcciones.
+La arquitectura de seguridad mantiene:
 
-### Definiciones de negocio externas
+- autorización server-side por capability;
+- scope global/oficina/personal;
+- RLS autenticada;
+- operaciones privilegiadas server-only;
+- aprobación/emisión protegida por rol y MFA/AAL2;
+- separación entre visibilidad de UI y autoridad real;
+- límites de propiedad intelectual N3uralia verificados por gate automatizado.
 
-- diccionario KPI oficial;
-- metas, umbrales y ranking definitivos;
-- calendario, destinatarios y reglas finales de reportes;
-- cualquier política o fuente adicional que Property Partners deba aprobar o proporcionar.
+No se considera suficiente ocultar un control en UI para declarar una operación protegida.
 
-Estas dependencias no deben sustituirse por fixtures, datos inventados ni reglas inferidas presentadas como oficiales.
+## 7. Pendientes externos al cierre técnico
 
-## Criterio de cierre técnico
+### UAT / aceptación
 
-El cierre técnico se considera PASS porque:
+Pendiente ejecutar `docs/UAT_PROPERTY_PARTNERS.md` con usuarios autorizados para:
 
-1. el baseline productivo tiene gates automatizados críticos verdes;
-2. el deployment productivo está `READY`;
-3. no se observaron errores runtime asociados al release durante la revisión;
-4. las regresiones críticas están versionadas;
-5. los pendientes externos están separados de los defectos técnicos;
-6. el producto mantiene comportamiento fail-closed donde faltan definiciones de negocio.
+- suficiencia operacional de Mercado;
+- nomenclatura/filtros/barrios;
+- caso real completo de Valorización;
+- revisión de PDFs reales;
+- visibilidad y lectura por rol;
+- resultado por pilar.
 
-La mejora pública del PR #181 no cambia este criterio: mientras no esté mergeada, se registra como candidato separado; si se incorpora al release final, el SHA resultante debe volver a pasar el gate técnico y la validación productiva.
+### Definiciones de negocio
 
-## Restricciones de aceptación
+Continúan externas hasta aprobación formal:
 
-Este documento sí declara el gate técnico automatizado como PASS, pero no declara:
+- diccionario KPI;
+- metas/umbrales/ranking;
+- calendario y destinatarios de reportes;
+- reglas definitivas de recurrencia;
+- nuevas fuentes o políticas adicionales si el Cliente las requiere.
 
-- aceptación comercial definitiva;
-- UAT Property Partners completado;
-- aprobación de reglas de negocio aún no definidas;
-- existencia de datos fuente que actualmente no estén disponibles;
-- cotizador público PR #181 desplegado en producción antes de su merge y validación del SHA final.
+Una dependencia externa no debe registrarse como defecto del producto ni sustituirse por fixtures para simular cierre.
 
-## Siguiente gate
+## 8. Criterio de cierre técnico
 
-Ejecutar `docs/UAT_PROPERTY_PARTNERS.md` con Pedro Pablo y/o usuarios autorizados. Sólo después de esa ejecución corresponde cerrar defectos, repetir el gate técnico si hubo cambios y congelar el baseline final de entrega.
+**Resultado: PASS técnico.**
 
-En paralelo, si se aprueba la incorporación del cotizador público, corresponde mergear PR #181, verificar el deployment productivo resultante y actualizar `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md` con el SHA definitivo.
+Se sustenta en que:
+
+1. los tres pilares tienen gates técnicos críticos verdes;
+2. el baseline exacto está identificado;
+3. producción está `READY`;
+4. la QA visual afectada fue ejecutada en desktop y móvil;
+5. no existe un P0/P1 técnico conocido en el alcance verificado;
+6. las dependencias externas permanecen explícitas y fail-closed donde corresponde;
+7. los cambios complementarios del cotizador están productivos y separados del criterio UAT contractual.
+
+## 9. Siguiente gate
+
+Ejecutar UAT de Property Partners.
+
+Si el UAT produce cambios de código:
+
+1. corregir;
+2. repetir CI/IP boundaries/preview/runtime/QA afectada;
+3. desplegar sólo con gate PASS;
+4. actualizar este documento con el nuevo baseline;
+5. congelar el release final después de aceptación.
