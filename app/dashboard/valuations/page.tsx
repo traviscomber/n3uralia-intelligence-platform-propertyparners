@@ -89,7 +89,7 @@ export default function ValuationRegistryPage() {
         meta={actionCount > 0 ? `${actionCount} requieren acción` : undefined}
         actions={[
           { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
-          { label: 'Nueva', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> },
+          { label: 'Nueva valorización', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> },
         ]}
       />
 
@@ -117,7 +117,7 @@ export default function ValuationRegistryPage() {
                   <p className="text-sm font-semibold">Completar borrador</p>
                   <p className="mt-1 break-words text-sm text-[var(--n3-text-muted)]">{nextDraft.address || 'Propiedad sin dirección'}{nextDraft.neighborhood ? ` · ${nextDraft.neighborhood}` : ''}</p>
                 </div>
-                <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Continuar</span>
+                <span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Completar borrador</span>
               </Link>
             ) : null}
           </div>
