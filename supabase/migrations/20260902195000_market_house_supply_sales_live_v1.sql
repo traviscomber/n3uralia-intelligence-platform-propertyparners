@@ -1,6 +1,9 @@
 -- Live house supply vs CBRS sales intelligence.
 -- This is additive: the historical apartment aggregate remains unchanged.
 -- No pricing signal thresholds are introduced here; the function exposes observed metrics only.
+-- NOTE: portal UF/m2 basis in this initial definition is superseded immediately by
+-- 20260902201500_market_house_supply_sales_built_area_basis.sql, which derives
+-- house UF/m2 from price_uf / built_area_m2 before release.
 
 create or replace function public.get_market_house_supply_sales_live_v1()
 returns table(
