@@ -48,7 +48,7 @@ test('publishes a robust median and interquartile range with sufficient evidence
   assert.equal(estimate.highUf, 24000)
   assert.equal(estimate.sampleCount, 5)
   assert.equal(estimate.marketSampleCount, 5)
-  assert.equal(estimate.methodology, 'median-active-offer-uf-m2')
+  assert.equal(estimate.methodology, 'median-active-offer-built-uf-m2')
 })
 
 test('coverage exposes only neighborhoods meeting the evidence floor', () => {
