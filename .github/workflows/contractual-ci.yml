@@ -103,6 +103,9 @@ jobs:
       - name: Verify property condition assessment
         run: pnpm valuation:condition:verify
 
+      - name: Verify public valuation estimator safeguards
+        run: node --import tsx --test tests/valuation/public-estimator.test.ts
+
       - name: Verify canonical management scoring
         run: pnpm management:scoring:verify
 
