@@ -186,16 +186,18 @@ Para declarar DONE contractual aún corresponde:
 
 Se documenta adicionalmente el candidato PR `#181`, rama `public-valuation-estimator-v1`, como una mejora complementaria de orientación/captación para visitantes externos.
 
-Estado verificado del candidato al 2 de septiembre de 2026:
+Head funcional validado antes de incorporar la documentación de entrega: `363eafff6358f5b67f5b5662775eb1f43b8b1740`.
 
-- head: `363eafff6358f5b67f5b5662775eb1f43b8b1740`;
-- PR abierto y mergeable;
+Sobre ese head funcional se verificó:
+
 - preview Vercel: `READY`;
 - `N3uralia IP Boundaries`: PASS;
 - `Contractual modules CI`: PASS;
 - suite de valorización: 28/28 PASS, incluyendo pruebas del estimador público;
 - `/dashboard` permanece protegido sin sesión;
 - el endpoint público entrega sólo agregados y no expone comparables/listings crudos.
+
+Los commits posteriores son documentales y deben completar nuevamente los gates del PR antes del merge.
 
 Cobertura pública inicial verificada para casas en Vitacura:
 
