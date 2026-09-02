@@ -26,7 +26,7 @@ export type PublicValuationEstimate = {
   sampleCount: number
   marketSampleCount: number
   newestObservation: string | null
-  methodology: 'median-active-offer-uf-m2'
+  methodology: 'median-active-offer-built-uf-m2'
 }
 
 function quantile(values: number[], q: number) {
@@ -115,6 +115,6 @@ export function buildPublicValuationEstimate(
     sampleCount: pool.length,
     marketSampleCount: marketPool.length,
     newestObservation,
-    methodology: 'median-active-offer-uf-m2',
+    methodology: 'median-active-offer-built-uf-m2',
   }
 }
