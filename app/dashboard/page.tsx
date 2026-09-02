@@ -80,6 +80,8 @@ export default async function DashboardHome() {
     const metadata = (entityResult.data?.metadata || {}) as Record<string, unknown>
     const branch = String(metadata.branch || profile?.team || 'Sucursal no informada')
     const personalDataUnavailable = Boolean(entityResult.error || assignmentResult.error || valuationResult.error)
+    const activeAssignments = assignmentResult.count ?? 0
+    const hasOperationalPriority = drafts > 0 || activeAssignments > 0
 
     return (
       <div className="mx-auto max-w-[1400px] space-y-7 pb-16">
@@ -115,7 +117,7 @@ export default async function DashboardHome() {
           </Link>
           <Link href="/dashboard/properties" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cartera asignada</p>
-            <p className="mt-3 text-4xl font-semibold">{assignmentResult.count ?? 0}</p>
+            <p className="mt-3 text-4xl font-semibold">{activeAssignments}</p>
             <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">Propiedades activas vinculadas explícitamente a tu perfil.</p>
           </Link>
           <Link href="/dashboard/reportes/audiencias/ejecutivo" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
@@ -125,22 +127,22 @@ export default async function DashboardHome() {
           </Link>
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:p-6">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Prioridad operativa</p>
-            <h2 className="mt-3 text-xl font-semibold">Siguiente acción verificable</h2>
-            <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">
-              {drafts > 0
-                ? `Tienes ${drafts} valorización${drafts === 1 ? '' : 'es'} en borrador. Revisa comparables y completa el expediente antes de enviarlo a dirección.`
-                : (assignmentResult.count ?? 0) > 0
-                  ? 'Revisa tu cartera asignada y confirma la vigencia de la evidencia disponible antes de contactar o reportar disponibilidad.'
-                  : 'No hay tareas operativas inferidas. Revisa tu desempeño o crea una valorización cuando exista una solicitud real.'}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link href={drafts > 0 ? '/dashboard/valuations' : '/dashboard/partner'} className="bg-[#d7332b] px-4 py-2 text-xs font-semibold text-white">{drafts > 0 ? 'Revisar borradores' : 'Abrir mi desempeño'}</Link>
-              <Link href="/dashboard/valuation/new" className="border border-[var(--n3-line)] px-4 py-2 text-xs font-semibold hover:border-[var(--n3-teal)]">Nueva valorización</Link>
+        <section className={`grid gap-5 ${hasOperationalPriority ? 'lg:grid-cols-[1.2fr_0.8fr]' : ''}`}>
+          {hasOperationalPriority ? (
+            <div className="border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Prioridad operativa</p>
+              <h2 className="mt-3 text-xl font-semibold">Siguiente acción verificable</h2>
+              <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">
+                {drafts > 0
+                  ? `Tienes ${drafts} valorización${drafts === 1 ? '' : 'es'} en borrador. Revisa comparables y completa el expediente antes de enviarlo a dirección.`
+                  : 'Revisa tu cartera asignada y confirma la vigencia de la evidencia disponible antes de contactar o reportar disponibilidad.'}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href={drafts > 0 ? '/dashboard/valuations' : '/dashboard/properties'} className="bg-[#d7332b] px-4 py-2 text-xs font-semibold text-white">{drafts > 0 ? 'Revisar borradores' : 'Abrir cartera'}</Link>
+                <Link href="/dashboard/valuation/new" className="border border-[var(--n3-line)] px-4 py-2 text-xs font-semibold hover:border-[var(--n3-teal)]">Nueva valorización</Link>
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="border border-[var(--n3-line)] bg-[#0c1111] p-5 sm:p-6">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Confianza de datos</p>
@@ -163,7 +165,7 @@ export default async function DashboardHome() {
 
   const valuationStatus = operations.error
     ? 'Consulta operativa incompleta'
-    : `${n(operations.valuationCases)} casos · ${n(operations.valuationDrafts)} borradores`
+    : `${n(operations.valuationCases)} casos${(operations.valuationDrafts ?? 0) > 0 ? ` · ${n(operations.valuationDrafts)} borradores` : ''}`
 
   const managementStatus = operations.error
     ? 'Consulta operativa incompleta'
@@ -184,7 +186,7 @@ export default async function DashboardHome() {
 
       <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Criterio de producto</p><h2 className="mt-3 text-xl font-semibold">Información verificable, sin funcionalidades ajenas al contrato</h2><div className="mt-6 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">{principles.map((principle) => <div key={principle} className="bg-[#080d0d] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">{principle}</div>)}</div></div>
-        <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p><div className="mt-5 space-y-3 text-sm"><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Mercado</span><strong className={`text-right ${market.error || !market.connected ? 'text-[#ff766f]' : ''}`}>{marketStatus}</strong></div><p className="mt-2 text-right text-xs leading-5 text-[var(--n3-text-muted)]">{n(market.confirmedSales)} ventas confirmadas · {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}</p><p className="mt-1 text-right text-[10px] leading-4 text-[var(--n3-text-muted)]">Última observación: {formatDate(market.latestObservedAt)}</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Valorización</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{valuationStatus}</strong></div><p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.valuationApproved)} casos aprobados o emitidos</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Control de gestión</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{managementStatus}</strong></div><p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.managementAlerts)} alertas abiertas o reconocidas</p></div><div className="flex justify-between gap-4"><span>Reportes</span><strong className="text-right">Estructura disponible · ejecuciones no consolidadas en este resumen</strong></div></div>{market.error || operations.error ? <div className="mt-4 border-t border-[var(--n3-line)] pt-4"><PublicErrorNotice code="DATA_UNAVAILABLE" title="Estado operativo incompleto" compact /></div> : null}</div>
+        <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p><div className="mt-5 space-y-3 text-sm"><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Mercado</span><strong className={`text-right ${market.error || !market.connected ? 'text-[#ff766f]' : ''}`}>{marketStatus}</strong></div><p className="mt-2 text-right text-xs leading-5 text-[var(--n3-text-muted)]">{n(market.confirmedSales)} ventas confirmadas · {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}</p><p className="mt-1 text-right text-[10px] leading-4 text-[var(--n3-text-muted)]">Última observación: {formatDate(market.latestObservedAt)}</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Valorización</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{valuationStatus}</strong></div>{(operations.valuationApproved ?? 0) > 0 ? <p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.valuationApproved)} casos aprobados o emitidos</p> : null}</div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Control de gestión</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{managementStatus}</strong></div>{(operations.managementAlerts ?? 0) > 0 ? <p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.managementAlerts)} alertas abiertas o reconocidas</p> : null}</div><div className="flex justify-between gap-4"><span>Reportes</span><strong className="text-right">Estructura disponible · ejecuciones no consolidadas en este resumen</strong></div></div>{market.error || operations.error ? <div className="mt-4 border-t border-[var(--n3-line)] pt-4"><PublicErrorNotice code="DATA_UNAVAILABLE" title="Estado operativo incompleto" compact /></div> : null}</div>
       </section>
     </div>
   )
