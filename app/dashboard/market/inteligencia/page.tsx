@@ -160,14 +160,14 @@ export default async function MarketIntelligencePage() {
         <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="flex items-center gap-2"><Home size={15} className="text-[var(--n3-accent)]" /><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Casas · oferta activa</h2></div>
-            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Avisos activos con barrio KML canónico versus compraventas CBRS. Se publica la brecha observada; no se inventa una señal comercial para casas.</p>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Avisos activos con barrio KML canónico versus compraventas CBRS. La mediana UF/m² se deriva de precio UF / superficie construida y excluye avisos sin superficie construida válida. Se publica la brecha observada; no se inventa una señal comercial para casas.</p>
           </div>
           <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Portal {dateLabel(housePortalCut)} · CBRS {dateLabel(houseCbrsCut)}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[880px] text-sm">
             <thead className="border-b border-[var(--n3-line)] text-left text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
-              <tr><th className="py-3 pr-4">Barrio</th><th className="py-3 pr-4 text-right">Avisos live</th><th className="py-3 pr-4 text-right">Ventas CBRS</th><th className="py-3 pr-4 text-right">Portal UF/m²</th><th className="py-3 pr-4 text-right">CBRS UF/m²</th><th className="py-3 text-right">Brecha observada</th></tr>
+              <tr><th className="py-3 pr-4">Barrio</th><th className="py-3 pr-4 text-right">Avisos live</th><th className="py-3 pr-4 text-right">Ventas CBRS</th><th className="py-3 pr-4 text-right">Portal UF/m² const.</th><th className="py-3 pr-4 text-right">CBRS UF/m² const.</th><th className="py-3 text-right">Brecha UF/m² const.</th></tr>
             </thead>
             <tbody className="divide-y divide-[var(--n3-line)]">
               {liveHouses.length ? liveHouses.map((row) => (
@@ -250,7 +250,7 @@ export default async function MarketIntelligencePage() {
       </section>
 
       <section className="mt-6 border-t border-[var(--n3-line)] pt-4 text-xs leading-relaxed text-[var(--n3-text-muted)]">
-        <p>Casas usa oferta activa con barrio KML resuelto y publica métricas observadas sin asignar una clasificación comercial nueva. Departamentos conserva la referencia histórica y sus señales existentes.</p>
+        <p>Casas usa oferta activa con barrio KML resuelto. Su UF/m² se deriva de precio UF / superficie construida cuando esa superficie existe; los avisos sin superficie construida siguen contando como oferta pero no entran a esa mediana. No se asigna una clasificación comercial nueva. Departamentos conserva la referencia histórica y sus señales existentes.</p>
         <p className="mt-2"><Link href="/dashboard/market/cbrs" className="text-[var(--n3-accent)]">Ver histórico CBRS</Link></p>
       </section>
     </WorkspaceShell>
