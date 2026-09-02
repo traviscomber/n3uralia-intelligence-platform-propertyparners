@@ -4,137 +4,131 @@
 
 ## Objetivo
 
-Cerrar y entregar la plataforma contractual de Property Partners sobre los tres pilares comprometidos:
+Cerrar y entregar la plataforma contractual de Property Partners sin ampliar alcance ni confundir mejoras complementarias con criterios de aceptación.
+
+Los tres pilares contractuales siguen siendo:
 
 1. Inteligencia de Mercado.
 2. Valorización de Propiedades.
 3. Control de Gestión y Automatización de Reportes.
 
-Este documento reemplaza como plan operativo vigente el roadmap experimental de 8 semanas del 27 de julio de 2026. Las capacidades retiradas o fuera del alcance contractual no deben reintroducirse para cerrar la entrega.
+Este documento es el roadmap operativo vigente. `docs/PRODUCT_ROADMAP.md` y otros roadmaps experimentales se mantienen sólo como referencia histórica.
 
-## Estado ejecutivo
+## Estado ejecutivo actual
+
+Producción: `https://ppartnersgroup.app`
+
+Baseline productivo verificado:
+
+- `main`: `4dacae91757d1f67d14a3ac443dded212a14fa0d`;
+- Vercel deployment: `dpl_9CtkvZ3LXXtRms9a9RccPHkb5TH8`;
+- estado: `READY`;
+- QA visual desktop: PASS;
+- QA visual móvil estrecho: PASS;
+- `Contractual modules CI`: PASS;
+- `N3uralia IP Boundaries`: PASS.
 
 | Pilar | Estado técnico | Estado de cierre |
 |---|---|---|
-| Valorización de Propiedades | PASS | Listo para UAT/aceptación |
-| Inteligencia de Mercado | PASS | Listo para UAT/aceptación |
-| Control de Gestión + Reportes | PASS técnico | Espera definiciones de negocio para activar recurrencia |
+| Inteligencia de Mercado | PASS | Listo para UAT |
+| Valorización de Propiedades | PASS | Listo para UAT |
+| Control de Gestión + Reportes | PASS técnico | Listo para UAT; recurrencia depende de definiciones externas |
 
-Baseline de aplicación validado en producción: `067870537c3e8b897f2f07359dd45b9776ea8095`.
+La plataforma está técnicamente preparada para UAT. La aceptación contractual definitiva sigue pendiente.
 
-Gate técnico confirmado el 2 de septiembre de 2026:
+## Snapshot de mercado usado para el cierre técnico
 
-- `Contractual modules CI`: PASS;
-- `Authenticated role QA`: PASS;
-- `Authenticated visual QA`: PASS;
-- `N3uralia IP Boundaries`: PASS;
-- deployment productivo Vercel: `READY`;
-- errores runtime observados en las últimas 24 horas: 0.
+Auditoría del 2 de septiembre de 2026:
 
-La documentación de cierre puede avanzar sin ampliar alcance. La aceptación contractual definitiva sigue dependiendo de UAT con usuarios Property Partners y de las definiciones de negocio que continúan externas.
+- 44 casas activas en la fuente dedicada de Vitacura;
+- 44/44 con barrio KML resoluble;
+- 41/44 utilizables para cálculo UF/m² construido;
+- 19 sectores KML canónicos disponibles en el cotizador público;
+- muestra sectorial >=5: Santa María 12, La Llavería 7, Club de Polo 6.
 
-## Principios de ejecución
-
-1. La propuesta comercial, contrato, anexos y documentación canónica del cliente mandan sobre roadmaps históricos.
-2. No inventar KPI, metas, umbrales, destinatarios, periodicidades, políticas ni datos faltantes.
-3. Datos de oferta, ventas confirmadas, históricos y referencias deben mantenerse semánticamente separados.
-4. Todo cambio productivo debe pasar preview/gate, merge controlado, deployment `READY`, runtime scan y rollback verificable.
-5. Las dependencias del cliente se documentan como dependencias; no se simulan para declarar cierre.
-6. Un pilar sólo se considera cerrado cuando existe evidencia técnica y aceptación/UAT correspondiente.
+Estos valores son snapshot de auditoría. No deben hardcodearse como invariantes de negocio.
 
 ---
 
-## Fase 1 — Cierre técnico de los tres pilares
+## Fase 1 — Cierre técnico de los tres pilares — COMPLETADO
 
-### 1. Valorización de Propiedades — PASS
+### Inteligencia de Mercado — PASS
 
-Criterios ya cumplidos:
+Validado:
 
-- búsqueda canónica de propiedad;
-- flujo guiado de 5 pasos;
+- fuentes y evidencia con procedencia;
+- oferta activa separada de ventas CBRS;
+- casas activas de Vitacura con territorialidad KML;
+- listing live separado de identidad/property canónica;
+- cola operativa live separada de revisión histórica de duplicados;
+- UF/m² de casas derivado desde precio UF / superficie construida cuando corresponde;
+- estados de dato faltante/frescura sin inventar valores;
+- QA autenticado y responsive.
+
+Pendiente únicamente de negocio:
+
+- UAT de suficiencia operacional;
+- validar nomenclatura, filtros, barrios y lectura con Property Partners.
+
+### Valorización de Propiedades — PASS
+
+Validado:
+
+- identificación canónica de sujeto;
+- flujo guiado;
 - mínimo de 3 comparables seleccionados por humano;
 - cálculo determinístico y trazable;
-- workflow vendedor → revisión → dirección → CEO → emisión;
-- snapshots históricos inmutables con hash de integridad;
-- reporte emitido desde el snapshot exacto de la versión;
-- regresión completa del valorizador verde;
-- MFA/AAL2 validado para aprobación y emisión.
+- revisión/devolución/corrección/reenvío;
+- aprobación CEO con MFA/AAL2;
+- snapshots históricos e integridad;
+- emisión y PDF desde snapshot;
+- historial y decisiones auditables.
 
-Pendiente de cierre comercial:
+Pendiente:
 
-- UAT de negocio con Property Partners;
-- registro de aceptación o defectos de negocio.
+- caso UAT real punta a punta con usuarios Property Partners.
 
-### 2. Inteligencia de Mercado — PASS
+### Control de Gestión + Reportes — PASS técnico
 
-Criterios ya cumplidos:
+Validado:
 
-- Portal live para departamentos, casas y proyectos;
-- ingestión canónica `ingest_portal_listing_snapshot_v2`;
-- refresh fail-closed por dataset;
-- CBRS consolidado y separado de oferta;
-- KML/barrios y territorialidad;
-- inteligencia oferta vs ventas;
-- trazabilidad, raw evidence, frescura y calidad;
-- sin creación paralela de identidades canónicas;
-- ingestión real service-role validada;
-- cola live separada de la revisión histórica de duplicados;
-- CTAs de “Qué requiere atención” alineados a la cola operativa correcta;
-- producción y rollback verificados.
-
-Pendiente de cierre comercial:
-
-- UAT del dashboard de mercado;
-- validar con Property Partners que filtros, barrios, nomenclatura y vistas sean suficientes para operación diaria;
-- registrar como N/D cualquier métrica que no tenga evidencia oficial suficiente.
-
-### 3. Control de Gestión + Automatización de Reportes — PASS técnico
-
-Criterios técnicos cumplidos:
-
-- scoring y reglas determinísticas;
 - métricas persistidas y reconciliación;
-- publicación sólo de valores aprobados;
+- scopes por rol;
+- tareas y seguimiento;
 - reportes desde snapshots persistidos;
-- PDF y delivery con trazabilidad;
-- retries, idempotencia y recuperación de workers;
-- límites de acceso por rol;
+- PDF y delivery trazable;
+- retries/idempotencia;
 - scheduling protegido;
-- activación fail-closed si KPI o reglas de reporting están pendientes;
-- destinatarios sintácticamente válidos obligatorios;
-- runtime vuelve a verificar aprobaciones antes de ejecutar.
+- fail-closed cuando faltan definiciones aprobadas.
 
-Dependencias de negocio pendientes:
+Dependencias externas pendientes:
 
-- aprobación del diccionario oficial de KPI;
-- metas, umbrales, rankings y reglas definitivas;
-- calendario de reportes;
-- destinatarios;
-- periodicidad/canal/hora/formato cuando corresponda.
+- diccionario KPI oficial;
+- metas y umbrales;
+- reglas de ranking/alertas;
+- calendario, periodicidad y destinatarios de reportes.
 
-Regla de cierre: el motor puede entregarse técnicamente listo aunque la recurrencia permanezca deliberadamente bloqueada hasta recibir estas definiciones.
+No inventar estas definiciones para declarar cierre.
 
 ---
 
-## Fase 2 — Gate transversal de producto — PASS técnico automatizado
+## Fase 2 — Mejora complementaria pública — COMPLETADO
 
-Validado sobre el baseline `067870537c3e8b897f2f07359dd45b9776ea8095`:
+El cotizador público referencial para casas en Vitacura está productivo en `/` y documentado en `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`.
 
-- build/CI contractual verde;
-- deployment de producción `READY`;
-- runtime errors P0/P1 observados = 0;
-- permisos y roles verificados por QA autenticado;
-- QA visual autenticado automatizado verde;
-- límites de propiedad intelectual N3uralia verificados;
-- flujos críticos sin mocks como sustituto de datos reales;
-- estados y restricciones críticas cubiertos por los verificadores versionados.
+Estado:
 
-Pendiente humano que deliberadamente no se confunde con el gate automatizado:
+- 19 sectores KML seleccionables;
+- sectores con >=5 observaciones utilizables: estimación sectorial;
+- sectores con <5: referencia general de Vitacura claramente rotulada;
+- mínimo de evidencia no se reduce;
+- dormitorios/baños no degradan el cálculo cuando su cobertura es escasa;
+- no se capturan datos personales;
+- no se exponen listings crudos;
+- no reemplaza el Valorizador Profesional;
+- no amplía el alcance contractual.
 
-- aceptación visual/funcional del cliente;
-- validación de nomenclatura y suficiencia operativa;
-- accesibilidad manual ampliada cuando corresponda;
-- inspección de PDF sobre casos reales de UAT.
+PR #183 fue mergeado y verificado en producción dentro del baseline actual.
 
 ---
 
@@ -142,125 +136,119 @@ Pendiente humano que deliberadamente no se confunde con el gate automatizado:
 
 Plan canónico: `docs/UAT_PROPERTY_PARTNERS.md`.
 
-Ejecutar UAT con casos representativos y usuarios autorizados.
+Ejecutar con usuarios autorizados.
+
+### Mercado
+
+- validar inventario actual;
+- revisar casas en venta en Vitacura;
+- validar barrios/KML;
+- comparar oferta vs ventas CBRS;
+- revisar fuentes, frescura y estados sin datos.
 
 ### Valorización
 
 - crear caso real;
-- confirmar sujeto;
-- seleccionar 3 comparables;
-- revisar cálculo y ajustes;
-- devolver/corregir/re-enviar;
-- aprobar con MFA y emitir;
+- seleccionar al menos 3 comparables;
+- revisar cálculo y justificación;
+- devolver y corregir;
+- reenviar;
+- aprobar con MFA;
+- emitir;
 - verificar PDF e historial.
-
-### Mercado
-
-- revisar inventario actual;
-- consultar casas en venta de Vitacura dentro del alcance contractual;
-- revisar barrio/KML;
-- comparar oferta vs ventas CBRS;
-- abrir detalle/comparables;
-- validar estados sin datos y frescura.
 
 ### Gestión/Reportes
 
-- revisar CEO, dirección/subdirección y partner;
-- verificar métricas y procedencia;
-- revisar reconciliaciones;
+- validar visibilidad por rol;
+- revisar métricas y procedencia;
 - generar reporte manual;
 - validar PDF;
-- probar distribución controlada cuando existan destinatarios aprobados;
-- comprobar que programación recurrente siga bloqueada mientras falten definiciones.
+- confirmar que recurrencia permanezca bloqueada si faltan definiciones;
+- probar distribución sólo cuando existan destinatarios aprobados.
 
-Salida de fase:
+Criterio de salida:
 
-- defectos P0/P1 = 0;
-- observaciones P2/P3 registradas;
-- aceptación por módulo o lista cerrada de correcciones.
-
----
-
-## Fase 4 — Definiciones del cliente
-
-Cerrar explícitamente las dependencias que N3uralia no debe inventar:
-
-1. Diccionario KPI oficial.
-2. Metas y umbrales.
-3. Reglas de ranking/alertas.
-4. Calendario y periodicidad de reportes.
-5. Destinatarios y responsables.
-6. Criterios y representantes de aceptación UAT.
-7. Política de retención/archivo/eliminación si aplica.
-8. Política de privacidad/datos personales si aplica.
-9. Cualquier integración o credencial adicional aprobada.
-
-Toda definición recibida debe quedar versionada y trazable antes de activar automatización.
+- P0 = 0;
+- P1 = 0;
+- P2/P3 corregidos, aceptados o programados;
+- resultado por pilar registrado;
+- cualquier cambio de código vuelve a pasar gate técnico completo.
 
 ---
 
-## Fase 5 — Documentación y capacitación
+## Fase 4 — Definiciones del Cliente
 
-Entregables mínimos:
+Cerrar únicamente con evidencia formal:
+
+1. diccionario KPI;
+2. metas y umbrales;
+3. reglas de ranking/desempate/alertas;
+4. calendario de reportes;
+5. destinatarios y responsables;
+6. responsables de aceptación UAT;
+7. políticas adicionales de privacidad/retención si aplican;
+8. nuevas fuentes o integraciones aprobadas si aplican.
+
+Mientras falten, las funciones dependientes permanecen fail-closed.
+
+---
+
+## Fase 5 — Capacitación y entrega documental
+
+Documentación canónica de entrada: `docs/README.md`.
+
+Antes de aceptación final debe confirmarse:
 
 - manual de usuario por rol;
 - manual de administración;
-- runbook de operación;
-- runbook de incidentes y rollback;
-- arquitectura y modelo de datos actualizados;
-- inventario de fuentes y responsables;
-- matriz de permisos;
-- procedimiento de generación y distribución de reportes;
-- procedimiento de actualización de fuentes de mercado;
-- procedimiento de valorización y emisión;
-- registro de capacitación;
-- plan de soporte y mantenimiento.
+- seguridad/autorización;
+- operación/QA y rollback;
+- arquitectura y datos relevantes;
+- metodología de valorización;
+- procedimiento de mercado/reportes;
+- registro de capacitación.
 
 Capacitación mínima:
 
 - CEO/administración;
 - dirección/subdirección;
-- partners/ejecutivos que usarán valorización y mercado.
+- partners/ejecutivos que operen mercado y valorización.
 
 ---
 
-## Fase 6 — Paquete final de entrega y aceptación
+## Fase 6 — Paquete final y aceptación
 
 Checklist final:
 
-- commit exacto de release identificado;
-- producción estable en `ppartnersgroup.app`;
+- baseline final de release identificado;
+- `ppartnersgroup.app` estable;
 - deployment `READY`;
-- rollback validado;
-- migraciones y esquema reconciliados;
-- backups/recuperación documentados;
-- secretos no incluidos en entregables;
-- documentación consolidada;
+- rollback disponible;
+- P0/P1 = 0;
 - UAT completado;
+- manuales consolidados;
 - capacitación registrada;
-- acta/minuta de aceptación;
-- lista de pendientes externos del cliente separada de defectos del producto.
+- dependencias externas separadas de defectos;
+- acta/minuta de aceptación.
 
 ## Definición de DONE contractual
 
-La plataforma se considera cerrada cuando:
+La plataforma se considera cerrada contractual y operacionalmente cuando:
 
-1. los tres pilares tienen gate técnico PASS;
+1. los tres pilares mantienen gate técnico PASS;
 2. no existen P0/P1 abiertos;
-3. producción está estable y verificable;
-4. UAT del cliente está ejecutado;
+3. producción está estable;
+4. UAT del Cliente está ejecutado;
 5. documentación y capacitación están entregadas;
-6. las definiciones de negocio recibidas están aplicadas o, si aún no fueron entregadas, quedan registradas como dependencias externas que mantienen sólo las funciones correspondientes en estado fail-closed;
+6. definiciones externas recibidas están aplicadas o quedan explícitamente registradas como pendientes fail-closed;
 7. existe evidencia de aceptación/entrega.
 
-## Orden de ejecución desde hoy
+## Orden de ejecución desde ahora
 
-1. ~~Verificar deployment productivo y runtime.~~ COMPLETADO 2026-09-02.
-2. ~~Ejecutar QA transversal final de los tres pilares.~~ COMPLETADO 2026-09-02.
-3. ~~Preparar checklist UAT y casos de aceptación.~~ COMPLETADO — `docs/UAT_PROPERTY_PARTNERS.md`.
-4. Ejecutar UAT con Pedro Pablo/usuarios autorizados.
-5. Cerrar defectos encontrados y repetir gate.
-6. Incorporar definiciones KPI/reporting cuando Property Partners las entregue.
-7. Ejecutar capacitación.
-8. Consolidar paquete de entrega y acta de aceptación.
-9. Congelar release y documentar baseline final.
+1. Ejecutar UAT con usuarios Property Partners.
+2. Registrar hallazgos y separar defectos de dependencias externas.
+3. Corregir cualquier P0/P1 y repetir gate técnico.
+4. Incorporar definiciones KPI/reporting sólo cuando sean formalmente entregadas.
+5. Ejecutar capacitación por rol.
+6. Consolidar acta/minuta de aceptación.
+7. Congelar y documentar el baseline final.
