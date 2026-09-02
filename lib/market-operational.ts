@@ -56,6 +56,8 @@ type HouseDeliverySummary = {
   canonical_houses: number | null
   confirmed_houses: number | null
   missing_neighborhood_houses: number | null
+  cbrs_house_transactions: number | null
+  cbrs_as_of: string | null
 }
 
 type HouseTerritoryProgress = {
@@ -159,7 +161,7 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
-    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, cbrsHouseReferenceResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestIngestion, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase.rpc('get_market_house_identity_progress_v1').maybeSingle(),
@@ -175,13 +177,6 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .from('market_transactions')
         .select('id,market_properties!inner(property_type)', { count: 'exact', head: true })
         .eq('market_properties.property_type', 'Casa'),
-      supabase
-        .from('market_cbrs_reference_transactions')
-        .select('transaction_date', { count: 'exact' })
-        .eq('property_type', 'Casa')
-        .order('transaction_date', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
       supabase
         .from('market_metric_snapshots')
         .select('period_start,period_end,active_inventory,confirmed_sales,median_days_on_market,absorption_rate,offer_to_sales_ratio')
@@ -211,7 +206,6 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       highIdentityCandidates.error,
       clientSaleSignalsResult.error,
       confirmedSalesResult.error,
-      cbrsHouseReferenceResult.error,
       latestMetric.error,
       latestIngestion.error,
       ingestionRuns.error,
@@ -281,8 +275,8 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       unmatchedTerritoryHouses: territoryProgressResult.error ? null : territoryProgress?.unmatched_houses ?? 0,
       acceptedTerritoryReviews: territoryProgressResult.error ? null : territoryProgress?.accepted_reviews ?? 0,
       rejectedTerritoryReviews: territoryProgressResult.error ? null : territoryProgress?.rejected_reviews ?? 0,
-      cbrsHouseTransactions: cbrsHouseReferenceResult.error ? null : cbrsHouseReferenceResult.count ?? 0,
-      latestCbrsHouseSaleDate: cbrsHouseReferenceResult.error ? null : cbrsHouseReferenceResult.data?.transaction_date ?? null,
+      cbrsHouseTransactions: houseSummaryResult.error ? null : house?.cbrs_house_transactions ?? 0,
+      latestCbrsHouseSaleDate: houseSummaryResult.error ? null : house?.cbrs_as_of ?? null,
       error: errors.length ? errors.map((error) => error?.message).join(' · ') : undefined,
     }
   } catch (error) {
