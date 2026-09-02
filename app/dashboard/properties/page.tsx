@@ -77,7 +77,7 @@ export default async function PropertiesPage() {
       eyebrow="Propiedades"
       title="Mi cartera"
       meta={`${attentionCount} requieren atención`}
-      actions={canAssign ? [{ label: 'Asignar', href: '/dashboard/properties/admin', primary: true }] : []}
+      actions={canAssign ? [{ label: 'Asignar propiedades', href: '/dashboard/properties/admin', primary: true }] : []}
     />
 
     <MetricStrip items={[
@@ -110,7 +110,7 @@ export default async function PropertiesPage() {
                   <p className="break-words text-sm font-semibold">{property?.normalized_address || 'Sin dirección'}</p>
                   <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}{property?.bedrooms != null ? ` · ${property.bedrooms} dorm.` : ''}{area != null ? ` · ${area} m²` : ''}</p>
                 </div>
-                {property ? <span className="shrink-0 text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir</span> : null}
+                {property ? <span className="shrink-0 text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir propiedad</span> : null}
               </div>
               <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                 <div><dt className="text-[var(--n3-text-muted)]">Asignación</dt><dd className="mt-1 text-[var(--n3-text-light)]">{assignmentRole(assignment.assignment_role)}</dd></div>
@@ -132,7 +132,7 @@ export default async function PropertiesPage() {
                 <td className="p-3"><p className="font-medium">{property?.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}{property?.bedrooms != null ? ` · ${property.bedrooms} dorm.` : ''}{area != null ? ` · ${area} m²` : ''}</p></td>
                 <td className="p-3 text-[var(--n3-text-muted)]">{assignmentRole(assignment.assignment_role)}</td>
                 <td className="p-3"><p>{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Evidencia {formatDate(property?.last_seen_at ?? null)}</p></td>
-                <td className="p-3 text-right">{property ? <Link href={`/dashboard/properties/${property.id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--n3-teal-soft)]">Abrir</Link> : null}</td>
+                <td className="p-3 text-right">{property ? <Link href={`/dashboard/properties/${property.id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--n3-teal-soft)]">Abrir propiedad</Link> : null}</td>
               </tr>
             })}</tbody>
           </table>
