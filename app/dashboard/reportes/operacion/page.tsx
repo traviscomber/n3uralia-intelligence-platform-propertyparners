@@ -11,10 +11,10 @@ export default async function ReportOperationsPage() {
     <IntelligenceHeader
       eyebrow="Informes"
       title="Generar y enviar"
-      description="Genera el informe, revisa el PDF y envíalo."
+      description="Genera informes desde snapshots persistidos, revisa el PDF y procesa entregas autorizadas. La recurrencia permanece bloqueada hasta contar con reglas, calendario y destinatarios aprobados."
       actions={[
         { label: 'Ver informes', href: '/dashboard/reportes/canonicos', primary: true },
-        { label: 'Programaciones', href: '/dashboard/control/admin' },
+        { label: 'Revisar programaciones', href: '/dashboard/control/admin' },
       ]}
     />
     <ReportDeliveryConsole canOperate={scope.role === 'admin' || scope.role === 'ceo'} />
