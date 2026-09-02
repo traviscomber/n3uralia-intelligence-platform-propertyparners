@@ -91,7 +91,7 @@ export async function updateSession(request: NextRequest) {
       return clearSupabaseAuthCookies(request, NextResponse.redirect(url))
     }
 
-    if (user && isAuthPath && !pathname.startsWith('/auth/callback') && pathname !== '/auth/error') {
+    if (user && isAuthPath && !pathname.startsWith('/auth/callback') && pathname !== '/auth/error' && pathname !== '/auth/mfa') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
