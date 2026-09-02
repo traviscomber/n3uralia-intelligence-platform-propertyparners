@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { ArrowLeft, Clock3, MapPinned, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Clock3, Home, MapPinned, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
-import { getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
+import { getHouseSupplySalesLive, getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
 
 function number(value: number | null, digits = 0) {
   return value === null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
@@ -22,6 +22,12 @@ function periodLabel(value: string | null) {
   if (!value) return '—'
   const parsed = new Date(`${value.slice(0, 10)}T12:00:00Z`)
   return new Intl.DateTimeFormat('es-CL', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(parsed)
+}
+
+function dateLabel(value: string | null) {
+  if (!value) return '—'
+  const parsed = new Date(value)
+  return new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(parsed)
 }
 
 const signalLabel: Record<string, string> = {
@@ -70,11 +76,16 @@ function signalFill(signal: string | undefined) {
 }
 
 export default async function MarketIntelligencePage() {
-  const [intelligence, context] = await Promise.all([
+  const [intelligence, context, houses] = await Promise.all([
     getSupplySalesIntelligence(),
     getMarketIntelligenceContext(),
+    getHouseSupplySalesLive(),
   ])
   const apartments = intelligence.rows.filter((row) => row.propertyType === 'Departamento' && row.neighborhoodName !== 'SIN_BARRIO')
+  const liveHouses = houses.rows.filter((row) => row.neighborhoodName)
+  const houseListings = liveHouses.reduce((total, row) => total + row.portalListings, 0)
+  const housePortalCut = liveHouses.map((row) => row.asOfPortal).filter((value): value is string => Boolean(value)).sort().at(-1) ?? null
+  const houseCbrsCut = liveHouses.map((row) => row.asOfCbrs).filter((value): value is string => Boolean(value)).sort().at(-1) ?? null
   const strongGap = apartments.filter((row) => row.signal === 'asking_well_above_sales')
   const aboveMarket = apartments.filter((row) => row.signal === 'asking_moderately_above_sales')
   const aligned = apartments.filter((row) => row.signal === 'market_aligned')
@@ -130,36 +141,66 @@ export default async function MarketIntelligencePage() {
       <WorkspaceHeader
         eyebrow="Mercado"
         title="Oferta vs ventas"
-        meta="Portal Inmobiliario + CBRS + barrios KML Property Partners"
+        meta="Casas live + referencia de departamentos + CBRS + barrios KML Property Partners"
         actions={[{ label: 'Volver', href: '/dashboard/market', icon: <ArrowLeft size={15} /> }]}
       />
 
-      {intelligence.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la inteligencia de oferta versus ventas." /></div> : null}
+      {intelligence.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la referencia de departamentos versus ventas." /></div> : null}
+      {houses.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la oferta activa de casas versus ventas." /></div> : null}
       {context.error ? <div className="mt-4"><PublicErrorNotice compact message="La capa territorial o histórica no está disponible completa." /></div> : null}
 
       <MetricStrip items={[
-        { label: 'Barrios analizados', value: number(apartments.length) },
-        { label: 'Muy sobre ventas', value: number(strongGap.length), tone: strongGap.length ? 'warning' : 'default' },
-        { label: 'Alineados', value: number(aligned.length) },
-        { label: 'Confianza alta', value: percent(apartments.length ? highConfidence.length / apartments.length : null) },
+        { label: 'Casas activas', value: number(houseListings) },
+        { label: 'Barrios con casas', value: number(liveHouses.length) },
+        { label: 'Deptos muy sobre ventas', value: number(strongGap.length), tone: strongGap.length ? 'warning' : 'default' },
+        { label: 'Confianza alta deptos', value: percent(apartments.length ? highConfidence.length / apartments.length : null) },
       ]} />
 
-      <section className="mt-7 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="mt-7">
+        <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2"><Home size={15} className="text-[var(--n3-accent)]" /><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Casas · oferta activa</h2></div>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Avisos activos con barrio KML canónico versus compraventas CBRS. Se publica la brecha observada; no se inventa una señal comercial para casas.</p>
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Portal {dateLabel(housePortalCut)} · CBRS {dateLabel(houseCbrsCut)}</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[880px] text-sm">
+            <thead className="border-b border-[var(--n3-line)] text-left text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
+              <tr><th className="py-3 pr-4">Barrio</th><th className="py-3 pr-4 text-right">Avisos live</th><th className="py-3 pr-4 text-right">Ventas CBRS</th><th className="py-3 pr-4 text-right">Portal UF/m²</th><th className="py-3 pr-4 text-right">CBRS UF/m²</th><th className="py-3 text-right">Brecha observada</th></tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--n3-line)]">
+              {liveHouses.length ? liveHouses.map((row) => (
+                <tr key={row.neighborhoodName}>
+                  <td className="py-3 pr-4"><p className="font-medium text-[var(--n3-text-light)]">{row.neighborhoodName}</p><p className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">Corte {dateLabel(row.asOfPortal)}</p></td>
+                  <td className="py-3 pr-4 text-right font-semibold tabular-nums">{number(row.portalListings)}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{number(row.cbrsTransactions)}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{number(row.portalMedianUfM2, 1)}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{number(row.cbrsMedianUfM2, 1)}</td>
+                  <td className="py-3 text-right font-semibold tabular-nums">{percent(row.ufM2GapPct)}</td>
+                </tr>
+              )) : <tr><td colSpan={6} className="py-8 text-sm text-[var(--n3-text-muted)]">No hay casas activas con barrio KML resoluble para este corte.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="mt-8 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="border-t border-[var(--n3-line)] pt-4">
-          <div className="flex items-center gap-2"><TrendingUp size={15} className="text-[var(--n3-accent)]" /><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Lectura ejecutiva</h2></div>
-          <p className="mt-3 max-w-3xl text-base leading-relaxed text-[var(--n3-text-light)]">La brecha mediana de publicación versus compraventas es <span className="font-semibold tabular-nums">{percent(medianGap)}</span>. {strongGap.length} barrios presentan una brecha alta y {aboveMarket.length} una brecha moderada; {aligned.length} se encuentran alineados con ventas observadas.</p>
-          <p className="mt-2 text-xs leading-relaxed text-[var(--n3-text-muted)]">Esta capa prioriza revisión comercial y conversación de precio. No reemplaza la valorización individual ni modifica la inteligencia canónica de mercado.</p>
+          <div className="flex items-center gap-2"><TrendingUp size={15} className="text-[var(--n3-accent)]" /><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Lectura ejecutiva · departamentos</h2></div>
+          <p className="mt-3 max-w-3xl text-base leading-relaxed text-[var(--n3-text-light)]">En la referencia de departamentos, la brecha mediana de publicación versus compraventas es <span className="font-semibold tabular-nums">{percent(medianGap)}</span>. {strongGap.length} barrios presentan una brecha alta y {aboveMarket.length} una brecha moderada; {aligned.length} se encuentran alineados con ventas observadas.</p>
+          <p className="mt-2 text-xs leading-relaxed text-[var(--n3-text-muted)]">Esta referencia prioriza revisión comercial y conversación de precio. No reemplaza la valorización individual ni modifica la inteligencia canónica de mercado.</p>
         </div>
         <div className="border-t border-[var(--n3-line)] pt-4">
-          <div className="flex items-center justify-between gap-3"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Prioridad de revisión</h2><span className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Confianza alta</span></div>
+          <div className="flex items-center justify-between gap-3"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Prioridad de revisión · departamentos</h2><span className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Confianza alta</span></div>
           <div className="mt-2 divide-y divide-[var(--n3-line)]">{priority.map((row, index) => <div key={row.neighborhoodName} className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-3 py-2.5"><span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{String(index + 1).padStart(2, '0')}</span><span className="truncate text-sm text-[var(--n3-text-light)]">{row.neighborhoodName}</span><span className="text-sm font-semibold tabular-nums">{percent(row.ufM2GapPct)}</span></div>)}</div>
         </div>
       </section>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
         <div className="border-t border-[var(--n3-line)] pt-4">
-          <div className="flex items-center gap-2"><MapPinned size={15} className="text-[var(--n3-accent)]" /><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Mapa de presión de precio</h2></div>
-          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Polígonos KML Property Partners coloreados por señal Portal vs CBRS. El mapa expresa señal relativa, no valorización.</p>
+          <div className="flex items-center gap-2"><MapPinned size={15} className="text-[var(--n3-accent)]" /><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Mapa de presión de precio · departamentos</h2></div>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Polígonos KML Property Partners coloreados por la señal de referencia Portal vs CBRS para departamentos. El mapa expresa señal relativa, no valorización.</p>
           {mapped.length ? (
             <div className="mt-4 overflow-hidden border border-[var(--n3-line)] bg-white/[0.015]">
               <svg viewBox="0 0 1000 600" role="img" aria-label="Mapa de barrios de Vitacura según brecha entre oferta y ventas" className="block h-auto w-full">
@@ -195,7 +236,7 @@ export default async function MarketIntelligencePage() {
       </section>
 
       <section className="mt-8">
-        <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Departamentos por barrio</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Mediana UF/m² publicada versus mediana UF/m² de compraventas CBRS consolidadas.</p></div>
+        <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Departamentos por barrio · referencia histórica</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Mediana UF/m² publicada versus mediana UF/m² de compraventas CBRS consolidadas.</p></div>
         <div className="divide-y divide-[var(--n3-line)]">{apartments.length ? apartments.map((row) => (
           <div key={row.neighborhoodName} className="grid gap-3 py-4 lg:grid-cols-[minmax(180px,1.3fr)_repeat(5,minmax(100px,1fr))] lg:items-center">
             <div><p className="text-sm font-semibold text-[var(--n3-text-light)]">{row.neighborhoodName}</p><p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{signalLabel[row.signal] ?? row.signal} · confianza {confidenceLabel[row.confidence] ?? row.confidence}</p></div>
@@ -208,8 +249,8 @@ export default async function MarketIntelligencePage() {
         )) : <div className="py-8 text-sm text-[var(--n3-text-muted)]">No hay barrios con datos suficientes para publicar una señal.</div>}</div>
       </section>
 
-      <section className="mt-6 border-t border-[var(--n3-line)] pt-4 text-xs text-[var(--n3-text-muted)]">
-        <p>Casas: la referencia Portal entregada no trae geocodificación por barrio, por lo que no se publica una señal territorial hasta disponer de coordenadas confiables.</p>
+      <section className="mt-6 border-t border-[var(--n3-line)] pt-4 text-xs leading-relaxed text-[var(--n3-text-muted)]">
+        <p>Casas usa oferta activa con barrio KML resuelto y publica métricas observadas sin asignar una clasificación comercial nueva. Departamentos conserva la referencia histórica y sus señales existentes.</p>
         <p className="mt-2"><Link href="/dashboard/market/cbrs" className="text-[var(--n3-accent)]">Ver histórico CBRS</Link></p>
       </section>
     </WorkspaceShell>
