@@ -1,6 +1,6 @@
 # Property Partners — Roadmap contractual de cierre
 
-Última actualización: 16 de agosto de 2026
+Última actualización: 2 de septiembre de 2026
 
 ## Objetivo
 
@@ -20,7 +20,18 @@ Este documento reemplaza como plan operativo vigente el roadmap experimental de 
 | Inteligencia de Mercado | PASS | Listo para UAT/aceptación |
 | Control de Gestión + Reportes | PASS técnico | Espera definiciones de negocio para activar recurrencia |
 
-Baseline técnico después de los cierres de Market Intelligence y Management Reports: `main` posterior a PR #110 y PR #111.
+Baseline de aplicación validado en producción: `067870537c3e8b897f2f07359dd45b9776ea8095`.
+
+Gate técnico confirmado el 2 de septiembre de 2026:
+
+- `Contractual modules CI`: PASS;
+- `Authenticated role QA`: PASS;
+- `Authenticated visual QA`: PASS;
+- `N3uralia IP Boundaries`: PASS;
+- deployment productivo Vercel: `READY`;
+- errores runtime observados en las últimas 24 horas: 0.
+
+La documentación de cierre puede avanzar sin ampliar alcance. La aceptación contractual definitiva sigue dependiendo de UAT con usuarios Property Partners y de las definiciones de negocio que continúan externas.
 
 ## Principios de ejecución
 
@@ -46,7 +57,8 @@ Criterios ya cumplidos:
 - workflow vendedor → revisión → dirección → CEO → emisión;
 - snapshots históricos inmutables con hash de integridad;
 - reporte emitido desde el snapshot exacto de la versión;
-- regresión completa del valorizador verde.
+- regresión completa del valorizador verde;
+- MFA/AAL2 validado para aprobación y emisión.
 
 Pendiente de cierre comercial:
 
@@ -66,6 +78,8 @@ Criterios ya cumplidos:
 - trazabilidad, raw evidence, frescura y calidad;
 - sin creación paralela de identidades canónicas;
 - ingestión real service-role validada;
+- cola live separada de la revisión histórica de duplicados;
+- CTAs de “Qué requiere atención” alineados a la cola operativa correcta;
 - producción y rollback verificados.
 
 Pendiente de cierre comercial:
@@ -102,27 +116,31 @@ Regla de cierre: el motor puede entregarse técnicamente listo aunque la recurre
 
 ---
 
-## Fase 2 — Gate transversal de producto
+## Fase 2 — Gate transversal de producto — PASS técnico automatizado
 
-Antes de declarar los tres pilares listos para aceptación final:
+Validado sobre el baseline `067870537c3e8b897f2f07359dd45b9776ea8095`:
 
-- build y TypeScript verdes;
+- build/CI contractual verde;
 - deployment de producción `READY`;
-- runtime errors P0/P1 = 0 en rutas críticas;
-- rollback candidate disponible;
-- permisos y RLS verificados en superficies críticas;
-- estados loading/empty/error/disabled revisados;
-- responsive desktop/tablet/mobile en flujos principales;
-- accesibilidad básica de navegación, foco y controles;
-- formatos de fecha, UF y números consistentes;
-- no mocks, datos demo o placeholders presentados como reales;
-- documentación de cualquier P2/P3 no bloqueante.
+- runtime errors P0/P1 observados = 0;
+- permisos y roles verificados por QA autenticado;
+- QA visual autenticado automatizado verde;
+- límites de propiedad intelectual N3uralia verificados;
+- flujos críticos sin mocks como sustituto de datos reales;
+- estados y restricciones críticas cubiertos por los verificadores versionados.
 
-GitHub Actions bloqueados antes de ejecución por infraestructura/billing no sustituyen el gate: usar Vercel preview + verificadores determinísticos + runtime + Supabase como gate de reemplazo documentado.
+Pendiente humano que deliberadamente no se confunde con el gate automatizado:
+
+- aceptación visual/funcional del cliente;
+- validación de nomenclatura y suficiencia operativa;
+- accesibilidad manual ampliada cuando corresponda;
+- inspección de PDF sobre casos reales de UAT.
 
 ---
 
-## Fase 3 — UAT Property Partners
+## Fase 3 — UAT Property Partners — SIGUIENTE GATE
+
+Plan canónico: `docs/UAT_PROPERTY_PARTNERS.md`.
 
 Ejecutar UAT con casos representativos y usuarios autorizados.
 
@@ -133,13 +151,13 @@ Ejecutar UAT con casos representativos y usuarios autorizados.
 - seleccionar 3 comparables;
 - revisar cálculo y ajustes;
 - devolver/corregir/re-enviar;
-- aprobar y emitir;
+- aprobar con MFA y emitir;
 - verificar PDF e historial.
 
 ### Mercado
 
 - revisar inventario actual;
-- consultar departamentos, casas y proyectos;
+- consultar casas en venta de Vitacura dentro del alcance contractual;
 - revisar barrio/KML;
 - comparar oferta vs ventas CBRS;
 - abrir detalle/comparables;
@@ -237,9 +255,9 @@ La plataforma se considera cerrada cuando:
 
 ## Orden de ejecución desde hoy
 
-1. Verificar deployment productivo posterior a PR #111 y runtime.
-2. Ejecutar QA transversal final de los tres pilares.
-3. Preparar checklist UAT y casos de aceptación.
+1. ~~Verificar deployment productivo y runtime.~~ COMPLETADO 2026-09-02.
+2. ~~Ejecutar QA transversal final de los tres pilares.~~ COMPLETADO 2026-09-02.
+3. ~~Preparar checklist UAT y casos de aceptación.~~ COMPLETADO — `docs/UAT_PROPERTY_PARTNERS.md`.
 4. Ejecutar UAT con Pedro Pablo/usuarios autorizados.
 5. Cerrar defectos encontrados y repetir gate.
 6. Incorporar definiciones KPI/reporting cuando Property Partners las entregue.

@@ -1,138 +1,156 @@
 # Checklist final de aceptación contractual
 
-Última actualización: 6 de agosto de 2026
+Última actualización: 2 de septiembre de 2026
 
 ## Criterio de estado
 
-- **Verificado técnico:** implementación disponible y evidencia reproducible mediante código, SQL, RLS, verificadores o build.
-- **Pendiente visual/UAT:** requiere sesión autenticada y revisión humana en navegador real.
+- **PASS técnico:** implementación disponible y evidencia reproducible mediante código, SQL, RLS, verificadores, QA autenticado o build/deployment.
+- **Pendiente UAT cliente:** requiere ejecución y aceptación por usuarios autorizados de Property Partners.
 - **Dependencia cliente:** requiere fuente, definición, aprobación, destinatario o criterio formal del Cliente.
 - **No disponible en fuente:** la plataforma debe mostrar `n/d`, `—` o estado equivalente y no inferir el dato.
 
-La aceptación técnica se ejecuta con `pnpm qa:technical`. El recorrido visual permanece separado mediante los procedimientos de QA autenticado.
+Baseline productivo verificado: `067870537c3e8b897f2f07359dd45b9776ea8095` en `https://ppartnersgroup.app`.
+
+Gate confirmado el 2 de septiembre de 2026:
+
+- `Contractual modules CI`: PASS;
+- `Authenticated role QA`: PASS;
+- `Authenticated visual QA`: PASS;
+- `N3uralia IP Boundaries`: PASS;
+- Vercel producción: `READY`;
+- errores runtime observados en las últimas 24 horas: 0.
+
+La aceptación técnica automatizada no sustituye el UAT de negocio definido en `docs/UAT_PROPERTY_PARTNERS.md`.
 
 ## 1. Plataforma y seguridad
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| Autenticación y perfil válido | Verificado técnico | guards, post-login por rol y alcance centralizado |
-| Alcance CEO global | Verificado técnico | capacidades, rutas protegidas y RLS |
-| Alcance dirección por oficina | Verificado técnico | RLS y pruebas negativas entre oficinas |
-| Alcance Partner personal | Verificado técnico | alcance personal y RLS |
-| Protección de APIs críticas | Verificado técnico | guards de servidor y autorización en RPC críticas |
-| MFA para aprobación/emisión de valorizaciones | Verificado técnico | `/auth/mfa`, AAL2 y guard de operación crítica |
-| Recorrido autenticado de perfiles | Pendiente visual/UAT | requiere navegador autenticado |
-| Protección de contraseñas filtradas de Supabase Auth | Pendiente administración | requiere activación en configuración Auth |
+| Autenticación y perfil válido | PASS técnico | guards, post-login por rol, alcance centralizado y role QA verde |
+| Alcance CEO global | PASS técnico | capacidades, rutas protegidas y RLS |
+| Alcance dirección por oficina | PASS técnico | RLS y pruebas negativas entre oficinas |
+| Alcance Partner personal | PASS técnico | alcance personal y RLS |
+| Protección de APIs críticas | PASS técnico | guards de servidor y autorización en RPC críticas |
+| MFA para aprobación/emisión de valorizaciones | PASS técnico | `/auth/mfa`, AAL2 y guard de operación crítica |
+| Recorrido autenticado automatizado de perfiles | PASS técnico | `Authenticated role QA` + `Authenticated visual QA` |
+| Aceptación humana de los recorridos por perfil | Pendiente UAT cliente | casos UAT por rol y pilar |
+| Protección de contraseñas filtradas de Supabase Auth | Pendiente administración | requiere confirmación/activación en configuración Auth si aún no está aplicada |
 
 ## 2. Pilar I — Inteligencia de Mercado
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| Ingestión canónica con raw records | Verificado técnico | `market_ingestion_runs`, `market_raw_records` y RPC de ingestión |
-| Normalización y validación | Verificado técnico | normalizadores de Portal, CBRS y agregados |
-| Deduplicación de propiedades/publicaciones/transacciones | Verificado técnico | claves y constraints; auditoría productiva sin duplicados |
-| Historial de publicaciones | Verificado técnico | versiones por `observed_at` y control de cambios |
-| Persistencia de fallos | Verificado técnico | ejecución `failed` fuera de la transacción revertida |
-| Cuarentena de fuente fallida | Verificado técnico | estado `quarantined` y error persistido |
-| Estado/frescura/error visible por fuente | Verificado técnico | `/dashboard/market/fuentes` |
-| Publicación no presentada como venta confirmada | Verificado técnico | separación listings/transactions e identidad |
-| Identidad canónica auditada | Verificado técnico | decisión con evidencia y trazabilidad |
-| Fuente CBRS real de compraventas | Dependencia cliente/fuente | pipeline disponible; hoy no existen transacciones canónicas cargadas |
-| KML/microbarrios definitivo | Dependencia cliente/fuente | no se inventa geometría final |
-| Scraping Portal en Vercel | Parcial técnico | error de Chromium controlado; fuente no se declara activa si falla |
+| Ingestión canónica con raw records | PASS técnico | `market_ingestion_runs`, `market_raw_records` y RPC de ingestión |
+| Normalización y validación | PASS técnico | normalizadores de Portal, CBRS y agregados |
+| Deduplicación de propiedades/publicaciones/transacciones | PASS técnico | claves, constraints y verificadores |
+| Historial de publicaciones | PASS técnico | versiones por `observed_at` y control de cambios |
+| Persistencia de fallos | PASS técnico | ejecución `failed` fuera de la transacción revertida |
+| Cuarentena de fuente fallida | PASS técnico | estado `quarantined` y error persistido |
+| Estado/frescura/error visible por fuente | PASS técnico | `/dashboard/market/fuentes` |
+| Publicación no presentada como venta confirmada | PASS técnico | separación listings/transactions e identidad |
+| Identidad canónica auditada | PASS técnico | decisión con evidencia y trazabilidad |
+| Cola de revisión live separada de duplicados históricos | PASS técnico | flujo operativo live y revisión histórica en Administración |
+| CTAs “Qué requiere atención” | PASS técnico | enlaces alineados a la cola operativa correspondiente |
+| Suficiencia de filtros, barrios y nomenclatura para operación diaria | Pendiente UAT cliente | UAT-MKT-01 a UAT-MKT-05 |
+| Datos/fuentes adicionales no presentes en el canon | Dependencia cliente/fuente | no se inventa cobertura faltante |
 
 ## 3. Pilar II — Valorización de Propiedades
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| Expediente y propiedad sujeto | Verificado técnico | caso persistido y origen trazable |
-| Comparables aceptados/excluidos | Verificado técnico | decisiones y evidencia por comparable |
-| Ajustes con límites | Verificado técnico | controles de ajuste y cálculo |
-| Valor sugerido, rango y confianza | Verificado técnico | cálculo determinista y validaciones |
-| Mínimo de comparables antes de avanzar | Verificado técnico | guard de workflow en base |
-| Revisión, devolución y reenvío | Verificado técnico | transición atómica e historial |
-| Aprobación/emisión exclusiva CEO | Verificado técnico | capability + RPC + MFA/AAL2 |
-| Versiones y decision log | Verificado técnico | snapshots e historial inmutable |
-| Reporte imprimible/PDF | Verificado técnico; pendiente visual | ruta de reporte y verificador; falta inspección humana final |
-| Caso real completo de punta a punta | Dependencia de datos reales | no se crea fixture ni valorización ficticia |
+| Expediente y propiedad sujeto | PASS técnico | caso persistido y origen trazable |
+| Comparables aceptados/excluidos | PASS técnico | decisiones y evidencia por comparable |
+| Ajustes con límites | PASS técnico | controles de ajuste y cálculo |
+| Valor sugerido, rango y confianza | PASS técnico | cálculo determinista y validaciones |
+| Mínimo de 3 comparables antes de avanzar | PASS técnico | guard de workflow en base |
+| Revisión, devolución y reenvío | PASS técnico | transición atómica e historial |
+| Aprobación/emisión exclusiva CEO | PASS técnico | capability + RPC + MFA/AAL2 |
+| Versiones y decision log | PASS técnico | snapshots e historial inmutable |
+| Reporte imprimible/PDF | PASS técnico automatizado | ruta de reporte, snapshot y verificadores |
+| Caso real completo punta a punta | Pendiente UAT cliente | UAT-VAL-01 a UAT-VAL-07; no se sustituye por fixture |
+| Inspección humana del PDF emitido | Pendiente UAT cliente | UAT-VAL-07 |
 
 ## 4. Pilar III — Control de Gestión Comercial
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| Vista CEO | Verificado técnico | consolidado global y período |
-| Vista dirección/oficina | Verificado técnico | alcance de oficina |
-| Vista Partner | Verificado técnico | alcance personal |
-| Metas y alertas | Verificado técnico como infraestructura | almacenamiento, edición y evaluación |
-| Acción, responsable, plazo y seguimiento | Verificado técnico | tareas y control operativo |
-| Informes por alcance | Verificado técnico | rutas global/oficina/personal |
-| Fuente y período visibles | Verificado técnico | modelo de métricas y estados de datos |
-| Captaciones brutas oficiales | No disponible en fuente | se mantiene `n/d`; no se sustituye por stock |
+| Vista CEO | PASS técnico | consolidado global y período |
+| Vista dirección/oficina | PASS técnico | alcance de oficina |
+| Vista Partner | PASS técnico | alcance personal |
+| Metas y alertas | PASS técnico como infraestructura | almacenamiento, edición y evaluación |
+| Acción, responsable, plazo y seguimiento | PASS técnico | tareas y control operativo |
+| Informes por alcance | PASS técnico | rutas global/oficina/personal |
+| Fuente y período visibles | PASS técnico | modelo de métricas y estados de datos |
+| Programación fail-closed sin definiciones aprobadas | PASS técnico | scheduling protegido y runtime revalida aprobaciones |
+| Captaciones brutas oficiales | No disponible en fuente / dependencia | no se sustituye por stock |
 | Fórmula oficial de productividad | Dependencia cliente | no se declara definitiva sin aprobación |
 | Ranking y desempates oficiales | Dependencia cliente | reglas derivadas no sustituyen definición oficial |
 | Umbrales/escalamiento oficiales | Dependencia cliente | infraestructura preparada para parametrización |
+| Calendario y destinatarios finales | Dependencia cliente | recurrencia permanece bloqueada hasta aprobación |
 
 ## 5. Informes y trazabilidad
 
 | Requisito | Estado | Evidencia |
 |---|---|---|
-| Directorio de informes canónicos | Verificado técnico | `/dashboard/reportes/canonicos` |
-| Generación/entrega operativa | Verificado técnico | `/dashboard/reportes/operacion` |
-| Acción de generación sin ruta rota | Verificado técnico | CTA canónico enlazado al centro operativo |
-| Exclusión de fixtures/pruebas de vista cliente | Verificado técnico | tags `reportin-test`, `qa`, `mock`, `demo`, `fixture` filtrados |
-| Modelo/prompt/costo/fuentes visibles cuando existen | Verificado técnico | trazabilidad leída desde metadata canónica; ausencia se muestra `—` |
-| PDF vinculado | Parcial según documento | cobertura visible; nunca se afirma PDF si no existe artefacto |
+| Directorio de informes canónicos | PASS técnico | `/dashboard/reportes/canonicos` |
+| Generación/entrega operativa | PASS técnico | `/dashboard/reportes/operacion` |
+| Acción de generación sin ruta rota | PASS técnico | CTA canónico enlazado al centro operativo |
+| Exclusión de fixtures/pruebas de vista cliente | PASS técnico | tags `reportin-test`, `qa`, `mock`, `demo`, `fixture` filtrados |
+| Modelo/prompt/costo/fuentes visibles cuando existen | PASS técnico | trazabilidad desde metadata canónica; ausencia se muestra `—` |
+| PDF vinculado sólo cuando existe artefacto real | PASS técnico | disponibilidad calculada desde artefacto persistido |
 | Generador IA heredado no auditado | Retirado | `/api/reports/generate` devuelve `409 retired` |
-| Calendario y destinatarios definitivos | Dependencia cliente | requiere definición/aprobación |
-| Distribución final por correo | Dependencia cliente/configuración | requiere destinatarios y configuración definitiva |
+| Distribución recurrente definitiva | Dependencia cliente/configuración | requiere calendario, audiencia y destinatarios aprobados |
 
-## 6. QA técnico reproducible
+## 6. QA y release reproducible
 
-El comando `pnpm qa:technical` agrupa los verificadores existentes y detiene la ejecución ante el primer fallo. Debe cubrir, como mínimo:
+La aceptación técnica combina verificadores versionados y evidencia del release. Para el baseline actual quedaron verdes:
 
-1. acceso y cierre contractual;
-2. Mercado;
-3. Valorización;
-4. Control de Gestión;
-5. trazabilidad/documentos;
-6. build de producción.
+1. CI de módulos contractuales;
+2. QA autenticado por roles;
+3. QA visual autenticado;
+4. límites de propiedad intelectual N3uralia;
+5. deployment productivo `READY`;
+6. runtime scan sin errores observados en la ventana revisada.
 
-Un resultado técnico sólo se marca como aprobado cuando el comando y el deployment correspondiente terminan correctamente. No sustituye la inspección visual.
+Si se modifica código después del UAT, este gate debe repetirse antes de congelar el release final.
 
-## 7. Pendientes visuales/UAT
+## 7. Pendientes UAT
 
-- recorrido CEO, dirección/subdirección y Partner con sesión real;
-- móvil 320–430 px;
-- tableta 768–1024 px;
-- escritorio 1280 px o superior;
-- navegación sólo con teclado y foco;
-- contraste medido;
-- impresión/PDF de informes y valorizaciones;
-- confirmación de estados vacíos, error, éxito y recuperación.
+Plan ejecutable: `docs/UAT_PROPERTY_PARTNERS.md`.
+
+Pendiente de aceptación humana:
+
+- Mercado: inventario, casas en venta de Vitacura, barrios/KML, oferta vs ventas y estados sin datos/frescura;
+- Valorización: caso real, 3 comparables, devolución, corrección, reenvío, aprobación CEO con MFA, emisión e inspección PDF;
+- Gestión: vistas por rol, métricas/procedencia, reporte manual y bloqueo correcto de recurrencia mientras falten definiciones;
+- distribución controlada sólo cuando existan destinatarios aprobados.
+
+Salida aceptable: P0 = 0, P1 = 0; P2/P3 corregidos, aceptados o programados sin bloquear el flujo contractual.
 
 ## 8. Dependencias exclusivas del Cliente
 
-- dataset oficial/adicional de compraventas;
-- KML/microbarrios definitivo, si corresponde;
+- fuentes/datasets adicionales que Property Partners determine como oficiales;
 - definición de captaciones;
 - fórmula oficial de productividad;
 - ranking, desempates y umbrales;
 - metas oficiales faltantes;
 - calendario, audiencias y destinatarios de informes;
-- aprobación funcional y UAT final.
+- representantes y aprobación funcional de UAT;
+- políticas adicionales de retención, privacidad o integración cuando correspondan.
 
 Ninguna de estas dependencias autoriza datos ficticios, reglas inventadas o inferencias presentadas como hechos.
 
-## 9. Criterio de listo para entrega técnica
+## 9. Estado de listo para entrega técnica
 
-La parte bajo control de N3uralia queda lista cuando simultáneamente:
+A fecha 2 de septiembre de 2026, la parte bajo control técnico de N3uralia cumple el gate de release verificado sobre `067870537c3e8b897f2f07359dd45b9776ea8095`.
 
-1. `pnpm qa:technical` termina sin errores;
-2. el último deployment productivo está `READY`;
-3. no existen errores fatales de runtime asociados al release;
-4. las tablas/RPC críticas mantienen RLS y autorización verificadas;
-5. los tres pilares tienen sus flujos técnicos disponibles sin mocks;
-6. los informes de prueba no aparecen como canónicos del cliente;
-7. todos los faltantes externos están clasificados como dependencia y no como dato disponible.
+Esto significa **PASS técnico / READY para UAT**, no aceptación contractual final.
 
-La aceptación contractual definitiva sigue requiriendo los puntos de UAT y las definiciones del Cliente indicadas arriba.
+La entrega contractual definitiva requiere:
+
+1. ejecutar los casos READY de UAT con usuarios autorizados;
+2. cerrar cualquier P0/P1 encontrado y repetir gate si hubo cambios;
+3. registrar observaciones P2/P3;
+4. ejecutar capacitación;
+5. consolidar acta/minuta de aceptación y baseline final;
+6. mantener separadas las dependencias externas que continúen fail-closed.
