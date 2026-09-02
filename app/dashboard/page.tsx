@@ -8,7 +8,7 @@ const modules = [
   {
     number: '01',
     title: 'Inteligencia de Mercado',
-    description: 'Registros de oferta, fuentes, barrios, calidad de datos e indicadores disponibles. Las ventas y métricas derivadas permanecen pendientes hasta cargar transacciones confirmadas.',
+    description: 'Oferta activa, fuentes, barrios, calidad y trazabilidad. Las ventas registrales CBRS se mantienen separadas de la oferta y las métricas recientes quedan N/D cuando no existe evidencia suficiente.',
     href: '/dashboard/market',
   },
   {
@@ -20,7 +20,7 @@ const modules = [
   {
     number: '03',
     title: 'Control de Gestión Comercial',
-    description: 'Métricas, metas, variaciones, rankings y alertas por rol. Los resultados aparecen únicamente cuando existen entidades y datos operativos cargados.',
+    description: 'Métricas persistidas, reconciliación, alertas y reportes por rol. Metas, rankings y automatización recurrente sólo se activan con definiciones aprobadas por Property Partners.',
     href: '/dashboard/control',
   },
 ]
@@ -28,7 +28,7 @@ const modules = [
 const principles = [
   'Sólo se muestran indicadores respaldados por fuentes identificables.',
   'Cada módulo conserva trazabilidad de datos, período y metodología.',
-  'Las funcionalidades adicionales permanecen separadas en Versión 2.',
+  'Las funciones sin definición oficial permanecen bloqueadas o N/D; no se completan con supuestos.',
   'Los accesos y la información visible dependen del perfil del usuario.',
 ]
 
@@ -108,7 +108,7 @@ export default async function DashboardHome() {
           <Link href="/dashboard/partner" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Desempeño</p>
             <p className="mt-3 text-2xl font-semibold">Ver métricas personales</p>
-            <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">Resultados, metas, conversión y evolución desde la fuente canónica.</p>
+            <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">Resultados y evolución respaldados por la fuente canónica; metas sólo cuando exista definición oficial aprobada.</p>
           </Link>
           <Link href="/dashboard/valuations" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Valorizaciones</p>
@@ -149,7 +149,7 @@ export default async function DashboardHome() {
             <div className="mt-5 space-y-4 text-sm">
               <div className="flex justify-between gap-4 border-b border-[var(--n3-line)] pb-3"><span>Vínculo personal</span><strong>{entityResult.data ? 'Canónico' : 'No disponible'}</strong></div>
               <div className="flex justify-between gap-4 border-b border-[var(--n3-line)] pb-3"><span>Mercado observado</span><strong className={market.freshnessStatus === 'stale' ? 'text-[#ff766f]' : ''}>{freshnessLabel(market.freshnessStatus, market.observationAgeDays)}</strong></div>
-              <div className="flex justify-between gap-4"><span>Ventas confirmadas</span><strong>{n(market.confirmedSales)}</strong></div>
+              <div className="flex justify-between gap-4"><span>Ventas recientes confirmadas</span><strong>{n(market.confirmedSales)}</strong></div>
             </div>
           </div>
         </section>
@@ -180,13 +180,13 @@ export default async function DashboardHome() {
       </header>
 
       <section>
-        <div className="mb-4 flex items-end justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Alcance vigente</p><h2 className="mt-2 text-2xl font-semibold">Tres módulos integrados</h2></div><Link href="/dashboard/version-2" className="text-xs font-semibold text-[var(--n3-text-muted)] hover:text-[#ff766f]">Revisar Versión 2 →</Link></div>
+        <div className="mb-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Alcance vigente</p><h2 className="mt-2 text-2xl font-semibold">Tres módulos integrados</h2></div>
         <div className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] lg:grid-cols-3">{modules.map((module) => <article key={module.number} className="flex min-h-[300px] flex-col bg-[#0c1111] p-6"><div className="flex items-center justify-between gap-4"><span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Módulo {module.number}</span><span className="border border-[var(--n3-line)] px-2 py-1 text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Alcance contractual</span></div><h3 className="mt-8 text-2xl font-semibold">{module.title}</h3><p className="mt-4 flex-1 text-sm leading-6 text-[var(--n3-text-muted)]">{module.description}</p><Link href={module.href} className="mt-8 border-t border-[var(--n3-line)] pt-4 text-sm font-semibold text-[#ff766f]">Abrir módulo →</Link></article>)}</div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ff766f]">Criterio de producto</p><h2 className="mt-3 text-xl font-semibold">Información verificable, sin funcionalidades ajenas al contrato</h2><div className="mt-6 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">{principles.map((principle) => <div key={principle} className="bg-[#080d0d] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">{principle}</div>)}</div></div>
-        <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p><div className="mt-5 space-y-3 text-sm"><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Mercado</span><strong className={`text-right ${market.error || !market.connected ? 'text-[#ff766f]' : ''}`}>{marketStatus}</strong></div><p className="mt-2 text-right text-xs leading-5 text-[var(--n3-text-muted)]">{n(market.confirmedSales)} ventas confirmadas · {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}</p><p className="mt-1 text-right text-[10px] leading-4 text-[var(--n3-text-muted)]">Última observación: {formatDate(market.latestObservedAt)}</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Valorización</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{valuationStatus}</strong></div>{(operations.valuationApproved ?? 0) > 0 ? <p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.valuationApproved)} casos aprobados o emitidos</p> : null}</div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Control de gestión</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{managementStatus}</strong></div>{(operations.managementAlerts ?? 0) > 0 ? <p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.managementAlerts)} alertas abiertas o reconocidas</p> : null}</div><div className="flex justify-between gap-4"><span>Reportes</span><strong className="text-right">Estructura disponible · ejecuciones no consolidadas en este resumen</strong></div></div>{market.error || operations.error ? <div className="mt-4 border-t border-[var(--n3-line)] pt-4"><PublicErrorNotice code="DATA_UNAVAILABLE" title="Estado operativo incompleto" compact /></div> : null}</div>
+        <div className="border border-[var(--n3-line)] bg-[#0c1111] p-6"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Estado operativo</p><div className="mt-5 space-y-3 text-sm"><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Mercado</span><strong className={`text-right ${market.error || !market.connected ? 'text-[#ff766f]' : ''}`}>{marketStatus}</strong></div><p className="mt-2 text-right text-xs leading-5 text-[var(--n3-text-muted)]">{n(market.confirmedSales)} ventas recientes confirmadas · {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}</p><p className="mt-1 text-right text-[10px] leading-4 text-[var(--n3-text-muted)]">Última observación: {formatDate(market.latestObservedAt)}</p></div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Valorización</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{valuationStatus}</strong></div>{(operations.valuationApproved ?? 0) > 0 ? <p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.valuationApproved)} casos aprobados o emitidos</p> : null}</div><div className="border-b border-[var(--n3-line)] pb-3"><div className="flex items-start justify-between gap-4"><span>Control de gestión</span><strong className={`text-right ${operations.error ? 'text-[#ff766f]' : ''}`}>{managementStatus}</strong></div>{(operations.managementAlerts ?? 0) > 0 ? <p className="mt-2 text-right text-xs text-[var(--n3-text-muted)]">{n(operations.managementAlerts)} alertas abiertas o reconocidas</p> : null}</div><div className="flex justify-between gap-4"><span>Reportes</span><strong className="text-right">Estructura disponible · ejecuciones no consolidadas en este resumen</strong></div></div>{market.error || operations.error ? <div className="mt-4 border-t border-[var(--n3-line)] pt-4"><PublicErrorNotice code="DATA_UNAVAILABLE" title="Estado operativo incompleto" compact /></div> : null}</div>
       </section>
     </div>
   )
