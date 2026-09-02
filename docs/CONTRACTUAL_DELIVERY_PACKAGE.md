@@ -4,215 +4,228 @@ Fecha de consolidación: 2 de septiembre de 2026
 
 ## 1. Propósito
 
-Este documento consolida la evidencia técnica y funcional disponible para entregar la plataforma a UAT de Property Partners. El gate técnico está verificado; la aceptación contractual definitiva requiere ejecución de UAT, capacitación y registro de aceptación.
+Este documento resume qué está técnicamente listo para entrega, qué evidencia respalda ese estado y qué actividades siguen pendientes antes de la aceptación contractual final.
 
-No se consideran resueltas por defecto las definiciones de negocio que siguen dependiendo del Cliente.
+El producto está **técnicamente preparado para UAT**. Esto no equivale a aceptación comercial del Cliente.
 
-## 2. Plataforma y baseline de producción
+## 2. Baseline productivo
 
-- Repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`
-- Rama operativa: `main`
-- Producción: `https://ppartnersgroup.app`
-- Supabase: `orfncinmhymhhoxbxgjb`
-- Baseline productivo verificado: `067870537c3e8b897f2f07359dd45b9776ea8095`
-- Vercel: `READY`
-- Errores runtime observados en las últimas 24 horas durante la revisión: 0
-- Control de acceso: matriz central de capacidades, scopes por rol, guards de páginas y APIs, RLS autenticada y MFA/AAL2 en operaciones críticas de valorización.
+- repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`;
+- rama: `main`;
+- producción: `https://ppartnersgroup.app`;
+- commit: `4dacae91757d1f67d14a3ac443dded212a14fa0d`;
+- Vercel deployment: `dpl_9CtkvZ3LXXtRms9a9RccPHkb5TH8`;
+- estado: `READY`;
+- QA visual desktop: PASS;
+- QA visual móvil estrecho: PASS.
 
 ## 3. Gate técnico de entrega
 
-Resultado sobre el baseline productivo:
+Resultado: **PASS técnico / READY para UAT**.
+
+Evidencia del candidato que produjo el baseline:
 
 - `Contractual modules CI`: PASS;
-- `Authenticated role QA`: PASS;
-- `Authenticated visual QA`: PASS;
 - `N3uralia IP Boundaries`: PASS;
-- deployment productivo: PASS / `READY`;
-- runtime scan de la ventana revisada: PASS, sin errores observados.
+- preview Vercel: `READY`;
+- runtime final revisado: sin warnings/errors/fatal atribuibles al cambio;
+- navegación pública y autenticada: PASS;
+- responsive móvil: PASS;
+- PR #183 mergeado con el head validado;
+- deployment productivo posterior al merge: `READY`.
 
-Estado de release: **PASS técnico / READY para UAT**.
+Si UAT produce un cambio de código, este gate debe repetirse sobre el nuevo candidato.
 
-Este resultado no equivale a aceptación comercial del Cliente.
+## 4. Alcance contractual
 
-## 4. Evidencia por perfil
+Los tres pilares son:
 
-### CEO
+1. **Inteligencia de Mercado**.
+2. **Valorización de Propiedades**.
+3. **Control de Gestión y Automatización de Reportes**.
 
-- Consolidado global, oficinas, metas, evolución e indicadores ejecutivos disponibles según evidencia canónica.
-- Centro de decisiones conectado con oficina, valorización, tarea, responsable e historial.
-- Acceso a Mercado, Propiedades, Informes y gestión administrativa según capacidades.
-- Aprobación y emisión de valorizaciones protegidas por segundo factor/AAL2.
+No se amplía alcance por medio de documentación, experimentos históricos o mejoras complementarias.
 
-### Dirección y subdirección
+## 5. Pilar I — Inteligencia de Mercado
 
-- Alcance de oficina resuelto centralmente.
-- Equipo, propiedades, tareas, metas, comparaciones y valorizaciones en revisión.
-- Devolución con motivo, corrección, reenvío e historial versionado.
-- Aislamiento entre oficinas.
+**Estado técnico: PASS.**
 
-### Partner / Ejecutivo
+Entregado técnicamente:
 
-- Alcance personal, propiedades asignadas, tareas y alertas.
-- Propiedad asignada → valorización con evidencia de origen.
-- Corrección de borrador, comparables, envío a revisión y reenvío.
-- Métricas personales con fuente y período cuando existe evidencia disponible.
+- ingestión y persistencia de observaciones;
+- trazabilidad de fuente y frescura;
+- separación entre oferta activa y compraventas CBRS;
+- KML/barrios de Vitacura;
+- inteligencia oferta vs ventas;
+- propiedad canónica separada de listing live;
+- cola de revisión live separada de la revisión histórica de duplicados;
+- CTAs operativos alineados a la cola correcta;
+- datos faltantes/frescura representados explícitamente;
+- métricas UF/m² de casas con base de superficie construida cuando corresponde.
 
-## 5. Integración transversal
+Snapshot de auditoría del 2 de septiembre de 2026:
 
-Cadena operativa del producto:
+- 44 casas activas;
+- 44/44 con barrio KML resoluble;
+- 41/44 utilizables para UF/m² construido.
 
-`Data canónica → inteligencia → acción → responsable → seguimiento → resultado → informe`
+Pendiente para aceptación:
 
-Flujos técnicos disponibles:
+- validar con Property Partners suficiencia de filtros, nomenclatura, barrios y lectura diaria;
+- registrar observaciones de negocio como UAT, no como supuestos técnicos.
 
-- Mercado → publicación persistida → comparable candidato.
-- Fuente → ingestión → raw record → normalización → historial → estado/frescura/error.
-- Listing live → revisión operativa → propiedad canónica, sin confundirlo con revisión histórica property ↔ property.
-- Propiedad → asignación → valorización.
-- Valorización → historial → decisiones → aprobación MFA → emisión → reporte.
-- Alerta/revisión → tarea → responsable → seguimiento.
-- CEO → oficina → responsable → caso → evidencia.
-- Informe canónico → artefacto → historial → entrega operativa.
+## 6. Pilar II — Valorización de Propiedades
 
-Los CTAs de “Qué requiere atención” están alineados con la cola operativa live correspondiente.
+**Estado técnico: PASS.**
 
-## 6. Seguridad y QA reproducible
+Entregado técnicamente:
 
-- Matriz RLS por alcance global, oficina y personal.
-- Pruebas negativas entre oficinas y perfiles.
-- Escrituras QA reversibles con `ROLLBACK` cuando corresponde.
-- Separación entre propiedad operativa e identidad canónica confirmada.
-- Helpers de autorización internos fuera del esquema API público cuando corresponde.
-- Aprobación global de valorizaciones reservada al CEO.
-- MFA/AAL2 para aprobación y emisión.
-- Fallos de ingestión persistidos y fuentes fallidas tratadas de forma fail-closed.
-- Informes técnicos/fixtures excluidos de la vista canónica del cliente.
-- Límites de propiedad intelectual N3uralia cubiertos por gate automatizado.
+- identificación canónica de propiedad;
+- flujo guiado;
+- mínimo de tres comparables seleccionados por humano;
+- cálculo determinístico y trazable;
+- justificación profesional;
+- revisión y devolución;
+- corrección y reenvío;
+- aprobación CEO con MFA/AAL2;
+- snapshots/versiones e integridad;
+- emisión y PDF desde snapshot;
+- historial y decisiones auditables.
 
-Si se modifica código a raíz del UAT, los gates deben repetirse sobre el nuevo candidato antes de congelar release.
+Pendiente para aceptación:
 
-## 7. Documentación de aceptación y operación
+- ejecutar caso real punta a punta con roles Property Partners;
+- revisar resultado, PDF e historial con el Cliente.
 
-Documentación principal existente:
+## 7. Pilar III — Control de Gestión y Reportes
 
-- `ROADMAP.md`
-- `docs/UAT_PROPERTY_PARTNERS.md`
-- `docs/PRODUCT_ROADMAP.md`
-- `docs/CANONICAL_DELIVERY_PLAN.md`
-- `docs/CONTRACTUAL_SCOPE_MATRIX.md`
-- `docs/QA_ACCEPTANCE_MATRIX.md`
-- `docs/FINAL_ACCEPTANCE_CHECKLIST.md`
-- `docs/TECHNICAL_CLOSURE_RECORD.md`
-- `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`
-- `docs/AUTHENTICATED_VISUAL_QA_GUIDE.md`
-- `docs/AUTOMATED_VISUAL_QA_RUNBOOK.md`
-- `docs/USER_MANUAL.md`
-- `docs/ADMIN_MANUAL.md`
-- `docs/SECURITY_AUTHORIZATION_MODEL.md`
-- `docs/VALUATION_PRODUCTION_READINESS.md`
-- `docs/CONTRACTUAL_DELIVERY_PACKAGE.md`
+**Estado técnico: PASS técnico.**
 
-Los manuales describen únicamente funciones y restricciones verificables de la implementación. No fijan como oficiales reglas de negocio que aún dependan del Cliente.
+Entregado técnicamente:
 
-## 8. Estado de los tres pilares
+- scopes por rol;
+- métricas persistidas y reconciliación;
+- tareas y seguimiento;
+- infraestructura de metas/alertas;
+- reportes desde snapshots;
+- generación PDF;
+- delivery trazable;
+- retries e idempotencia;
+- scheduling protegido;
+- fail-closed si faltan definiciones aprobadas.
 
-### Pilar I — Inteligencia de Mercado — PASS técnico
+Dependencias externas aún no deben inventarse:
 
-La arquitectura de ingestión, normalización, raw records, deduplicación, historial, control de fallos, observabilidad, territorialidad e inteligencia oferta/ventas está disponible. La revisión operativa de listings live está separada de la revisión histórica de duplicados y sus accesos principales fueron alineados.
+- diccionario KPI oficial;
+- metas y umbrales;
+- rankings/desempates;
+- calendario y periodicidad;
+- destinatarios de reportes.
 
-Pendiente: UAT de suficiencia operacional de filtros, barrios, nomenclatura, frescura y estados sin datos. Fuentes adicionales que el Cliente requiera siguen siendo dependencias externas hasta ser entregadas y validadas.
+El motor puede estar técnicamente entregable aunque esas funciones permanezcan deliberadamente bloqueadas.
 
-### Pilar II — Valorización — PASS técnico
+## 8. Mejora complementaria — Cotizador público referencial
 
-Motor, comparables, workflow, devolución/reenvío, aprobación CEO con MFA, snapshots, trazabilidad, emisión y reporte están técnicamente preparados.
+El cotizador público ya está productivo dentro del baseline actual.
 
-Pendiente: ejecutar el caso UAT real de punta a punta. No se crea una valorización ficticia para simular aceptación.
+No forma parte de los criterios de aceptación contractual de los tres pilares.
 
-### Pilar III — Control de Gestión y Reportes — PASS técnico
+Características verificadas:
 
-Vistas por alcance, métricas persistidas, reconciliación, metas/alertas como infraestructura, tareas, seguimiento, informes y scheduling protegido están disponibles.
+- sólo casas en Vitacura;
+- 19 sectores KML seleccionables;
+- estimación sectorial sólo con >=5 observaciones utilizables;
+- fallback explícito a referencia general de Vitacura bajo ese piso;
+- UF/m² construido derivado desde precio UF / superficie construida;
+- dormitorios y baños opcionales sin degradar una muestra válida cuando falta cobertura;
+- no captura datos personales;
+- no expone listings/comparables crudos;
+- responsive desktop y móvil verificado;
+- dashboard autenticado permanece separado.
 
-La recurrencia debe permanecer fail-closed mientras falten definiciones oficiales de KPI, metas, umbrales, ranking, calendario o destinatarios.
+Snapshot auditado:
 
-## 9. Informes canónicos
+- 41 observaciones utilizables;
+- Santa María 12;
+- La Llavería 7;
+- Club de Polo 6.
 
-- la vista canónica no muestra documentos etiquetados como `reportin-test`, `qa`, `mock`, `demo` o `fixture`;
-- el CTA de generación conduce al centro operativo real `/dashboard/reportes/operacion`;
-- el endpoint IA heredado no auditado permanece retirado;
-- modelo, prompt, costo y fuentes se muestran cuando existen en metadata canónica; si faltan, se presenta `—` en vez de inferirlos;
-- la disponibilidad del PDF se calcula desde el artefacto real y no desde una etiqueta;
-- la distribución recurrente no debe activarse sin configuración y destinatarios aprobados.
+Detalle: `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`.
 
-## 10. Siguiente gate: UAT Property Partners
+## 9. Seguridad y autorización
 
-Plan canónico: `docs/UAT_PROPERTY_PARTNERS.md`.
+La entrega mantiene:
 
-Debe ejecutarse con usuarios autorizados de Property Partners sobre los tres pilares. Los resultados se registran `PASS`, `FAIL` o `BLOCKED_EXTERNAL`, con severidad P0-P3 cuando exista defecto.
+- capacidades server-side;
+- scopes global/oficina/personal;
+- RLS autenticada;
+- separación entre UI visible y autoridad real;
+- operaciones privilegiadas server-only;
+- MFA/AAL2 para operaciones críticas de valorización;
+- límites de propiedad intelectual N3uralia verificados por gate.
+
+La ausencia de un botón en UI nunca sustituye autorización server-side.
+
+## 10. Documentación canónica de entrega
+
+Punto de entrada: `docs/README.md`.
+
+Documentos principales:
+
+- `ROADMAP.md` — roadmap contractual de cierre;
+- `docs/CONTRACTUAL_DELIVERY_PACKAGE.md` — este paquete;
+- `docs/TECHNICAL_CLOSURE_RECORD.md` — evidencia técnica;
+- `docs/UAT_PROPERTY_PARTNERS.md` — plan UAT;
+- `docs/FINAL_ACCEPTANCE_CHECKLIST.md` — aceptación final;
+- `docs/USER_MANUAL.md` — usuarios;
+- `docs/ADMIN_MANUAL.md` — administración;
+- `docs/SECURITY_AUTHORIZATION_MODEL.md` — seguridad;
+- `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md` — mejora pública;
+- `docs/VALUATION_CANONICAL_METHODOLOGY_V2.md` — valorización.
+
+Roadmaps experimentales, agentes históricos, ML y documentos V2 no citados por el canon se consideran referencia histórica, no definición de entrega.
+
+## 11. Siguiente gate — UAT Property Partners
+
+Plan: `docs/UAT_PROPERTY_PARTNERS.md`.
+
+Debe ejecutarse con usuarios autorizados sobre los tres pilares.
 
 Criterio de salida:
 
 - P0 = 0;
 - P1 = 0;
-- P2/P3 corregidos, aceptados o programados sin bloquear el alcance contractual;
-- aceptación por módulo o lista cerrada de correcciones;
+- P2/P3 corregidos, aceptados o programados;
+- resultado por pilar registrado;
 - cualquier cambio posterior vuelve a pasar el gate técnico.
 
-## 11. Dependencias externas vigentes
+## 12. Dependencias externas vigentes
 
-Según aplique y siempre sin inventar datos/reglas:
+Según aplique:
 
-- diccionario KPI oficial;
-- metas, umbrales, ranking y desempates definitivos;
-- calendario, audiencias y destinatarios de reportes;
-- fuentes/datasets adicionales que Property Partners determine como oficiales;
-- políticas adicionales de retención, privacidad o integración;
-- representantes y firma/registro de aceptación.
+- definiciones KPI;
+- metas/umbrales/ranking;
+- calendario y destinatarios;
+- fuentes adicionales solicitadas por Property Partners;
+- políticas adicionales de privacidad/retención;
+- responsables y registro de aceptación.
 
-## 12. Cierre contractual pendiente
+Estas dependencias deben permanecer separadas de defectos del producto.
 
-La parte bajo control técnico de N3uralia está lista para UAT sobre el baseline verificado.
+## 13. Cierre contractual pendiente
 
 Para declarar DONE contractual aún corresponde:
 
-1. ejecutar UAT con Pedro Pablo y/o usuarios autorizados;
-2. corregir y revalidar cualquier P0/P1;
+1. ejecutar UAT;
+2. corregir/revalidar cualquier P0/P1;
 3. registrar P2/P3 y dependencias externas;
 4. ejecutar capacitación por rol;
 5. consolidar acta/minuta de aceptación;
-6. identificar y congelar el commit final de release;
-7. mantener en estado fail-closed cualquier automatización dependiente de definiciones aún no aprobadas.
+6. congelar el baseline final de release;
+7. mantener fail-closed las automatizaciones dependientes de definiciones no aprobadas.
 
-## 13. Mejora complementaria — Cotizador público referencial
+## 14. Estado de entrega
 
-Se documenta adicionalmente el candidato PR `#181`, rama `public-valuation-estimator-v1`, como una mejora complementaria de orientación/captación para visitantes externos.
+**Técnicamente: grado A / listo para UAT.**
 
-Head funcional validado antes de incorporar la documentación de entrega: `363eafff6358f5b67f5b5662775eb1f43b8b1740`.
-
-Sobre ese head funcional se verificó:
-
-- preview Vercel: `READY`;
-- `N3uralia IP Boundaries`: PASS;
-- `Contractual modules CI`: PASS;
-- suite de valorización: 28/28 PASS, incluyendo pruebas del estimador público;
-- `/dashboard` permanece protegido sin sesión;
-- el endpoint público entrega sólo agregados y no expone comparables/listings crudos.
-
-Los commits posteriores son documentales y deben completar nuevamente los gates del PR antes del merge.
-
-Cobertura pública inicial verificada para casas en Vitacura:
-
-- Club de Polo: 6 observaciones utilizables;
-- La Llavería: 7;
-- Santa María: 11.
-
-El estimador exige un mínimo de 5 observaciones, deriva UF/m² construido desde precio UF y superficie construida, y publica estimación central más rango intercuartil. Si la evidencia es insuficiente, no publica una cifra.
-
-Esta mejora:
-
-- no modifica el Valorizador Profesional contractual;
-- no cambia el workflow Ejecutivo → Director → CEO;
-- no sustituye MFA/AAL2, snapshots ni revisión humana;
-- no forma parte del criterio de aprobación UAT de los tres pilares;
-- no debe considerarse productiva hasta que PR #181 sea mergeado y el SHA resultante sea verificado en producción.
-
-Detalle auditable: `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`.
+**Contractualmente: pendiente de UAT, capacitación y aceptación formal.**
