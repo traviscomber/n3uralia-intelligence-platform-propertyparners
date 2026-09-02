@@ -41,6 +41,32 @@ Este estado reemplaza la nota histórica que mantenía el QA visual autenticado 
 - CTAs operativos de atención alineados a la cola correcta.
 - Paquete contractual, manuales y plan UAT disponibles en `docs/`.
 
+## Mejora complementaria candidata — Cotizador público
+
+El PR `#181` agrega un cotizador público referencial como mejora complementaria para visitantes externos. No forma parte de los tres pilares contractuales ni modifica el Valorizador Profesional.
+
+Candidato verificado:
+
+- rama: `public-valuation-estimator-v1`;
+- head funcional validado: `363eafff6358f5b67f5b5662775eb1f43b8b1740`;
+- preview Vercel: `READY`;
+- `N3uralia IP Boundaries`: PASS;
+- `Contractual modules CI`: PASS;
+- 28/28 tests de valorización PASS durante el build, incluyendo regresiones del estimador;
+- `/dashboard` continúa protegido por sesión/rol;
+- endpoint público limitado a agregados;
+- no solicita ni persiste datos personales.
+
+Cobertura observada en la validación: Club de Polo 6, La Llavería 7 y Santa María 11 observaciones utilizables. El piso mínimo de publicación es 5.
+
+La metodología pública deriva UF/m² construido desde precio UF y superficie construida y publica mediana más rango intercuartil. No usa directamente el UF/m² histórico del feed cuando éste corresponde a otra definición de superficie.
+
+Estado de esta mejora: **PASS técnico en preview / pendiente merge y verificación productiva**.
+
+No debe utilizarse este PR para declarar UAT contractual completado ni para sustituir un caso real del Valorizador Profesional.
+
+Detalle: `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`.
+
 ## Pendientes excluidos del cierre técnico
 
 ### UAT / aceptación cliente
@@ -72,6 +98,8 @@ El cierre técnico se considera PASS porque:
 5. los pendientes externos están separados de los defectos técnicos;
 6. el producto mantiene comportamiento fail-closed donde faltan definiciones de negocio.
 
+La mejora pública del PR #181 no cambia este criterio: mientras no esté mergeada, se registra como candidato separado; si se incorpora al release final, el SHA resultante debe volver a pasar el gate técnico y la validación productiva.
+
 ## Restricciones de aceptación
 
 Este documento sí declara el gate técnico automatizado como PASS, pero no declara:
@@ -79,8 +107,11 @@ Este documento sí declara el gate técnico automatizado como PASS, pero no decl
 - aceptación comercial definitiva;
 - UAT Property Partners completado;
 - aprobación de reglas de negocio aún no definidas;
-- existencia de datos fuente que actualmente no estén disponibles.
+- existencia de datos fuente que actualmente no estén disponibles;
+- cotizador público PR #181 desplegado en producción antes de su merge y validación del SHA final.
 
 ## Siguiente gate
 
 Ejecutar `docs/UAT_PROPERTY_PARTNERS.md` con Pedro Pablo y/o usuarios autorizados. Sólo después de esa ejecución corresponde cerrar defectos, repetir el gate técnico si hubo cambios y congelar el baseline final de entrega.
+
+En paralelo, si se aprueba la incorporación del cotizador público, corresponde mergear PR #181, verificar el deployment productivo resultante y actualizar `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md` con el SHA definitivo.

@@ -103,6 +103,7 @@ Documentación principal existente:
 - `docs/QA_ACCEPTANCE_MATRIX.md`
 - `docs/FINAL_ACCEPTANCE_CHECKLIST.md`
 - `docs/TECHNICAL_CLOSURE_RECORD.md`
+- `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`
 - `docs/AUTHENTICATED_VISUAL_QA_GUIDE.md`
 - `docs/AUTOMATED_VISUAL_QA_RUNBOOK.md`
 - `docs/USER_MANUAL.md`
@@ -180,3 +181,38 @@ Para declarar DONE contractual aún corresponde:
 5. consolidar acta/minuta de aceptación;
 6. identificar y congelar el commit final de release;
 7. mantener en estado fail-closed cualquier automatización dependiente de definiciones aún no aprobadas.
+
+## 13. Mejora complementaria — Cotizador público referencial
+
+Se documenta adicionalmente el candidato PR `#181`, rama `public-valuation-estimator-v1`, como una mejora complementaria de orientación/captación para visitantes externos.
+
+Head funcional validado antes de incorporar la documentación de entrega: `363eafff6358f5b67f5b5662775eb1f43b8b1740`.
+
+Sobre ese head funcional se verificó:
+
+- preview Vercel: `READY`;
+- `N3uralia IP Boundaries`: PASS;
+- `Contractual modules CI`: PASS;
+- suite de valorización: 28/28 PASS, incluyendo pruebas del estimador público;
+- `/dashboard` permanece protegido sin sesión;
+- el endpoint público entrega sólo agregados y no expone comparables/listings crudos.
+
+Los commits posteriores son documentales y deben completar nuevamente los gates del PR antes del merge.
+
+Cobertura pública inicial verificada para casas en Vitacura:
+
+- Club de Polo: 6 observaciones utilizables;
+- La Llavería: 7;
+- Santa María: 11.
+
+El estimador exige un mínimo de 5 observaciones, deriva UF/m² construido desde precio UF y superficie construida, y publica estimación central más rango intercuartil. Si la evidencia es insuficiente, no publica una cifra.
+
+Esta mejora:
+
+- no modifica el Valorizador Profesional contractual;
+- no cambia el workflow Ejecutivo → Director → CEO;
+- no sustituye MFA/AAL2, snapshots ni revisión humana;
+- no forma parte del criterio de aprobación UAT de los tres pilares;
+- no debe considerarse productiva hasta que PR #181 sea mergeado y el SHA resultante sea verificado en producción.
+
+Detalle auditable: `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`.

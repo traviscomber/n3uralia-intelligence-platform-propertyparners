@@ -154,3 +154,24 @@ La entrega contractual definitiva requiere:
 4. ejecutar capacitación;
 5. consolidar acta/minuta de aceptación y baseline final;
 6. mantener separadas las dependencias externas que continúen fail-closed.
+
+## 10. Mejora complementaria — Cotizador público referencial
+
+El candidato PR `#181` se registra fuera de los tres pilares contractuales como mejora complementaria y no bloqueante.
+
+| Control | Estado | Evidencia |
+|---|---|---|
+| Landing pública en `/` | PASS técnico en preview | QA visual sobre head `363eafff6358f5b67f5b5662775eb1f43b8b1740` |
+| Cotizador sin registro ni datos personales | PASS técnico en preview | formulario limitado a sector, m² construidos, dormitorios y baños |
+| Cobertura mínima de 5 observaciones | PASS técnico | regresión específica + endpoint de cobertura |
+| Cobertura publicada sólo con evidencia suficiente | PASS técnico | Club de Polo 6, La Llavería 7, Santa María 11 |
+| Estimación central + rango intercuartil | PASS técnico | modelo `median-active-offer-built-uf-m2` |
+| UF/m² construido derivado desde precio UF y superficie construida | PASS técnico | lógica server-side auditada |
+| Endpoint público sólo agregado | PASS técnico | no expone listings, payloads ni comparables crudos |
+| `/dashboard` permanece autenticado | PASS técnico | navegación sin sesión redirige a login |
+| Gate de IP/tenant isolation | PASS técnico | `N3uralia IP Boundaries` PASS |
+| CI contractual y build | PASS técnico | `Contractual modules CI` PASS; 28/28 tests de valorización |
+| Incorporación a producción | Pendiente merge/deploy | PR #181 sigue abierto; no se declara productivo antes del merge y validación del SHA final |
+| Aceptación contractual de los tres pilares | No aplica | esta mejora no modifica el UAT contractual |
+
+Ficha completa: `docs/PUBLIC_VALUATION_ESTIMATOR_DELIVERY.md`.

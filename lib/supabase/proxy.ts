@@ -13,10 +13,12 @@ function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Release identity is intentionally public so CI can verify that the exact
-  // Git commit reached production before authenticated browser QA starts.
-  // The route exposes only deployment SHA/environment and no business data.
-  if (pathname === '/api/release') return NextResponse.next({ request })
+  // These two endpoints are intentionally public and expose no authenticated
+  // business records. /api/release returns deployment identity for CI, while
+  // the valuation endpoint returns aggregate market statistics only.
+  if (pathname === '/api/release' || pathname === '/api/public/valuation-estimate') {
+    return NextResponse.next({ request })
+  }
 
   let supabaseResponse = NextResponse.next({ request })
 
