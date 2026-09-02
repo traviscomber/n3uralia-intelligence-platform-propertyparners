@@ -39,11 +39,7 @@ async function loadPublicEvidence(): Promise<PublicValuationEvidenceRow[]> {
       supabase.from('market_neighborhoods').select('id,name'),
       supabase
         .from('market_neighborhood_review_items')
-        .select('listing_id,suggested_neighborhood_id,updated_at')
-        .eq('classification', 'clear')
-        .eq('decision', 'resolved_by_system')
-        .eq('resolution_origin', 'system')
-        .not('suggested_neighborhood_id', 'is', null)
+        .select('listing_id,suggested_neighborhood_id,classification,decision,resolution_origin,updated_at')
         .order('updated_at', { ascending: false }),
     ])
 
@@ -53,12 +49,21 @@ async function loadPublicEvidence(): Promise<PublicValuationEvidenceRow[]> {
 
   const neighborhoodById = new Map((neighborhoods ?? []).map((row) => [String(row.id), String(row.name)]))
   const latestResolutionByListing = new Map<string, string>()
+  const seenListings = new Set<string>()
 
   for (const row of resolutions ?? []) {
     const listingId = String(row.listing_id ?? '')
+    if (!listingId || seenListings.has(listingId)) continue
+    seenListings.add(listingId)
+
     const neighborhoodId = String(row.suggested_neighborhood_id ?? '')
-    if (!listingId || !neighborhoodId || latestResolutionByListing.has(listingId)) continue
-    latestResolutionByListing.set(listingId, neighborhoodId)
+    const isCanonicalSystemResolution =
+      row.classification === 'clear' &&
+      row.decision === 'resolved_by_system' &&
+      row.resolution_origin === 'system' &&
+      Boolean(neighborhoodId)
+
+    if (isCanonicalSystemResolution) latestResolutionByListing.set(listingId, neighborhoodId)
   }
 
   const listingIds = Array.from(latestResolutionByListing.keys())
@@ -66,7 +71,7 @@ async function loadPublicEvidence(): Promise<PublicValuationEvidenceRow[]> {
 
   const { data: listings, error: listingsError } = await supabase
     .from('market_current_listings')
-    .select('id,price_uf_m2,observed_at,raw_payload')
+    .select('id,price_uf,observed_at,raw_payload')
     .eq('operation', 'Venta')
     .eq('status', 'active')
     .in('id', listingIds)
@@ -79,15 +84,15 @@ async function loadPublicEvidence(): Promise<PublicValuationEvidenceRow[]> {
 
     const neighborhoodId = latestResolutionByListing.get(String(listing.id))
     const neighborhood = neighborhoodId ? neighborhoodById.get(neighborhoodId) : null
-    const priceUfM2 = asFiniteNumber(listing.price_uf_m2)
-    const builtAreaM2 = asFiniteNumber(payload.built_area_m2) ?? asFiniteNumber(payload.useful_area_m2)
-    if (!neighborhood || priceUfM2 === null || priceUfM2 <= 0 || builtAreaM2 === null || builtAreaM2 <= 0) return []
+    const priceUf = asFiniteNumber(listing.price_uf)
+    const builtAreaM2 = asFiniteNumber(payload.built_area_m2)
+    if (!neighborhood || priceUf === null || priceUf <= 0 || builtAreaM2 === null || builtAreaM2 <= 0) return []
 
     return [
       {
         neighborhood,
         propertyType: 'Casa',
-        priceUfM2,
+        priceUfM2: priceUf / builtAreaM2,
         builtAreaM2,
         bedrooms: asInteger(payload.bedrooms),
         bathrooms: asInteger(payload.bathrooms),
@@ -113,7 +118,8 @@ export async function GET() {
         scope: 'Vitacura',
         propertyTypes: ['Casa'],
         coverage: buildPublicCoverageOptions(rows),
-        methodology: 'Oferta activa territorialmente resuelta; mínimo 5 observaciones utilizables por sector.',
+        methodology:
+          'Oferta activa territorialmente resuelta; UF por m² construido derivado desde precio publicado; mínimo 5 observaciones utilizables por sector.',
       },
       { headers: { 'Cache-Control': PUBLIC_CACHE } },
     )
