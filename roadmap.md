@@ -1,182 +1,252 @@
-# Roadmap de desarrollo
+# Roadmap contractual de entrega — Property Partners
 
-## Objetivo
+**Versión:** 2 de septiembre de 2026  
+**Fuente de verdad:** propuesta comercial, contrato final y `docs/CONTRACTUAL_SCOPE_MATRIX.md`.
 
-Dejar el módulo de inteligencia de mercado listo para operar y presentar únicamente con información canónica, trazable y verificable ya contenida en el sitio y sus fuentes auditadas.
+## 1. Objetivo
 
-## Regla principal
+Completar la Versión 1 comprometida para Property Partners con datos reales, trazabilidad, permisos por rol, pruebas reproducibles y operación documentada. La prioridad es cerrar requisitos contractuales; no ampliar el producto con funciones experimentales.
 
-No inventar, completar ni inferir datos que no estén respaldados por una fuente canónica o por evidencia operativa almacenada en Supabase.
+## 2. Reglas de alcance
 
-## Colaboración y responsabilidades
+1. El orden de trabajo se define por los requisitos contractuales `MKT`, `VAL`, `MGT`, `AUT` y `ARC`.
+2. Un requisito sólo se declara completo cuando está implementado, probado en producción, documentado y respaldado por evidencia reproducible.
+3. Cuando falta una fuente o definición oficial de Property Partners, el requisito se clasifica como `Pendiente Cliente`; la plataforma no inventa datos ni indicadores.
+4. Las mejoras fuera de V1 requieren una orden de cambio aprobada.
+5. Toda entrega debe terminar con CI aprobado, deployment `READY` y QA funcional autenticado.
+6. Los datos recibidos se conservan con fuente, período, hash o referencia, reglas de transformación, filas aceptadas/rechazadas y responsable de aprobación.
 
-### Mi Toro
+## 3. Estado operativo de referencia
 
-- Auditar el alcance antes de recomendar o aprobar cambios.
-- Verificar brandbook, UI, UX, funcionalidad, datos y confianza.
-- Clasificar hallazgos por severidad y exigir evidencia observable.
-- No aprobar una fase con errores críticos o altos pendientes.
+Corte verificado en producción el 2 de septiembre de 2026:
 
-### Cíclope
+- oferta live de casas: 43 avisos;
+- avisos live sin vínculo canónico: 32;
+- casos de identidad revisables con evidencia: 2;
+- casos live sin evidencia suficiente: 30;
+- vínculo automático: desactivado;
+- cola histórica de duplicados separada en Administración;
+- alertas de Mercado enlazadas a la cola live correcta;
+- deployment productivo del cierre de navegación: `35567d6e40695a64b9661310fa16256890b6ce66`, `READY`.
 
-- Mantener coherencia entre el dashboard, el sistema visual y la arquitectura de información.
-- Revisar jerarquía, navegación, densidad, componentes, estados y accesibilidad.
-- Priorizar cambios sistémicos antes de correcciones aisladas.
-- Verificar visualmente escritorio y móvil antes de declarar una pantalla terminada.
+Estos conteos son operativos y pueden variar con nuevas ingestas. No sustituyen los criterios de aceptación.
 
-### Chacuco
+## 4. Plan de cierre contractual
 
-- Aplicar disciplina operativa al desarrollo incremental.
-- Revisar código y esquema real antes de modificar interfaces respaldadas por datos.
-- Preservar trazabilidad, estados vacíos honestos, manejo de errores y datos productivos.
-- Exigir commits pequeños, CI aprobado y despliegue verificado después de cada bloque.
+### Hito 1 — Identidad y base única
 
-### Regla de colaboración
+**Requisitos:** `MKT-03`, `MKT-06`, `MKT-07`, `MKT-08`.
 
-Las tres revisiones deben usar las mismas fuentes canónicas. Ninguna recomendación visual, funcional u operativa puede reemplazar evidencia faltante ni crear datos nuevos.
+**Trabajo N3uralia**
 
-## Estado actual verificado
+- probar confirmación, rechazo y componente duplicado con casos reales;
+- verificar MFA2, auditoría, permisos y evidencia;
+- ejecutar una nueva ingestión y comprobar que las decisiones sobreviven;
+- medir cobertura, precisión, rechazos y reincidencias;
+- mantener separadas la cola `listing live ↔ property` y la revisión histórica `property ↔ property`;
+- documentar el procedimiento de revisión.
 
-- Fuentes canónicas auditadas: Portal Inmobiliario, CBRS Vitacura y KML de barrios.
-- Publicaciones Portal con identificador válido: 5.197.
-- Publicaciones elegibles para venta: 5.190.
-- Publicaciones en cuarentena por señal de arriendo: 7.
-- Filas CBRS disponibles: 40.843.
-- Barrios definidos en KML: 19.
-- Registros actualmente materializados en Supabase: 837.
-- Identidades confirmadas: 0.
-- Ventas confirmadas: 0.
+**Datos útiles de Property Partners**
 
-## Fase 1 — Control canónico por archivo
+| Prioridad | Dato | Formato preferido | Finalidad |
+|---|---|---|---|
+| Alta | Identificador interno y URL Portal de propiedades conocidas | XLSX/CSV | Vincular publicación con propiedad |
+| Alta | Dirección completa, número y unidad | XLSX/CSV | Resolver identidad y contradicciones |
+| Alta | ROL cuando exista | XLSX/CSV | Evidencia fuerte de identidad |
+| Alta | Tipo, dormitorios, baños y superficies | XLSX/CSV | Validar candidatos |
+| Media | Coordenadas verificadas | XLSX/CSV/KML | Identidad y territorio |
+| Media | Historial de publicación y cambios de precio | XLSX/CSV | Historial y días en mercado |
 
-### Alcance
+**Gate de aceptación**
 
-Controlar por separado los archivos canónicos ya auditados:
+- una confirmación, un rechazo y un componente duplicado probados end-to-end;
+- decisiones persistentes después de reingesta;
+- cero asociación automática sin evidencia;
+- evidencia reproducible de cobertura y precisión del universo aprobado.
 
-- `portal_detalle_deptos_full.xlsx`
-- `portal_urls_casas_final.xlsx`
-- `portal_detalle_Proyectos.xlsx`
-- `BASE_CBR_CON_BARRIO_ASIGNADO VITACURA.xlsx`
-- `Barrios Vitacura.kml`
+### Hito 2 — Territorio oficial
 
-### Resultado esperado
+**Requisito:** `MKT-04`.
 
-Para cada archivo, mostrar y conservar:
+**Trabajo N3uralia**
 
-- nombre;
-- hash;
-- cantidad de filas o geometrías esperadas;
-- cantidad materializada;
-- cantidad rechazada;
-- cantidad en cuarentena;
-- cantidad pendiente.
+- contrastar propiedades y avisos contra el KML oficial;
+- clasificar asignación única, ambigua, fuera de polígono y sin coordenadas;
+- verificar que barrio y microbarrio se propaguen a búsqueda, comparables e inteligencia;
+- publicar cobertura y excepciones sin forzar asignaciones.
 
-## Fase 2 — Materialización de Portal
+**Datos útiles de Property Partners**
 
-### Alcance
+| Prioridad | Dato | Formato preferido | Finalidad |
+|---|---|---|---|
+| Alta | KML oficial vigente y fecha de vigencia | KML/KMZ | Fuente territorial canónica |
+| Alta | Tabla de nombres y alias de barrios | XLSX/CSV | Normalización |
+| Media | Decisión humana para excepciones | XLSX/CSV | Cerrar casos ambiguos |
+| Media | Responsable que aprueba cambios territoriales | Nombre y rol | Gobernanza |
 
-Materializar las publicaciones Portal elegibles conservando su trazabilidad de origen.
+**Gate de aceptación**
 
-### Campos mínimos
+- cobertura calculada contra el archivo oficial;
+- excepciones visibles y trazables;
+- muestra real validada por Property Partners;
+- ninguna asignación territorial sin evidencia suficiente.
 
-- archivo fuente;
-- fila original;
-- identificador Portal;
-- tipo de propiedad;
-- precio;
-- superficies disponibles;
-- dirección disponible;
-- coordenadas disponibles;
-- fecha observada;
-- payload original;
-- estado de aceptación o cuarentena.
+### Hito 3 — Comparables y valorización
 
-### Restricción
+**Requisitos:** `MKT-09`, `VAL-01` a `VAL-09`.
 
-Una publicación no se convierte automáticamente en una propiedad única.
+**Trabajo N3uralia**
 
-## Fase 3 — Calidad territorial
+- completar un expediente real con exactamente tres comparables aceptados;
+- conservar comparables incluidos, excluidos, ajustes y justificación;
+- verificar rango y valor sugerido;
+- probar seller → revisión → devolución → reenvío → aprobación CEO AAL2 → emisión;
+- verificar snapshot, versión, decisiones e informe exportable.
 
-### Alcance
+**Datos útiles de Property Partners**
 
-Aplicar la geometría canónica de barrios a los registros que tengan evidencia espacial suficiente.
+| Prioridad | Dato | Formato preferido | Finalidad |
+|---|---|---|---|
+| Alta | Caso real de aceptación | Ficha/XLSX | UAT del valorizador |
+| Alta | Tres o más comparables revisados por un profesional | XLSX/CSV | Validación de selección |
+| Alta | Criterios profesionales de ajuste | Documento/XLSX | Aprobar metodología |
+| Alta | Usuarios autorizados para seller, director y CEO | Lista de cuentas y roles | Probar workflow |
+| Media | Texto y formato esperado del informe | PDF/DOCX de referencia | Validación editorial |
 
-### Estados permitidos
+**Gate de aceptación**
 
-- asignación única;
-- fuera de polígonos;
-- asignación ambigua;
-- sin coordenadas.
+- expediente real emitido;
+- exactamente tres comparables aceptados;
+- historial completo e inmutable;
+- permisos y MFA2 verificados;
+- informe consistente con el expediente.
 
-### Restricción
+### Hito 4 — Inteligencia de mercado
 
-No asignar barrio cuando la evidencia no sea suficiente.
+**Requisitos:** `MKT-01`, `MKT-02`, `MKT-05`, `MKT-10` a `MKT-15`.
 
-## Fase 4 — Materialización de CBRS
+**Trabajo N3uralia**
 
-### Alcance
+- cerrar ingestión y normalización de Portal y CBRS;
+- reconciliar inventario y ventas por período comparable;
+- publicar estadísticas, velocidad, absorción, oferta versus ventas y evolución sólo cuando exista evidencia suficiente;
+- verificar paridad de CSV, XLSX y PDF con los datos visibles.
 
-Materializar las filas CBRS conservando archivo, fila original, clave determinística y datos registrales disponibles.
+**Datos útiles de Property Partners**
 
-### Restricción
+| Prioridad | Dato | Formato preferido | Finalidad |
+|---|---|---|---|
+| Alta | Archivo CBRS oficial y corte | XLSX/CSV | Ventas registrales |
+| Alta | Fuente oficial de ventas recientes | XLSX/CSV | Actividad posterior al corte CBRS |
+| Alta | Periodicidad acordada de actualización | Definición aprobada | Operación recurrente |
+| Media | Historial Portal o snapshots sucesivos | XLSX/CSV | Evolución y días en mercado |
+| Media | Reglas para considerar una venta confirmada | Documento breve | Metodología |
 
-Una fila CBRS no se convierte automáticamente en una venta residencial confirmada ni en un comparable.
+**Gate de aceptación**
 
-## Fase 5 — Identidad Portal–CBRS
+- cada indicador muestra fuente, período y metodología;
+- métricas no evaluables permanecen como `Sin datos operativos`;
+- exportaciones coinciden con la interfaz;
+- dependencias no entregadas quedan registradas como `Pendiente Cliente`.
 
-### Alcance
+### Hito 5 — Control de gestión por rol
 
-Crear candidatos de coincidencia usando únicamente la evidencia disponible:
+**Requisitos:** `MGT-01` a `MGT-14`, `ARC-04`, `ARC-05`.
 
-- ROL;
-- dirección;
-- barrio;
-- distancia;
-- tipología;
-- superficie;
-- precio;
-- ventana temporal;
-- contradicciones.
+**Trabajo N3uralia**
 
-### Restricción
+- completar dashboards CEO, dirección/subdirección y partner/agente;
+- validar RLS global, oficina y personal con cuentas reales;
+- activar únicamente KPI, metas, conversiones, rankings y alertas formalmente definidos;
+- probar aislamiento cruzado entre oficinas y personas.
 
-La identidad no se confirma únicamente por score. La confirmación requiere evidencia suficiente y revisión humana.
+**Datos y definiciones útiles de Property Partners**
 
-## Fase 6 — Métricas y valorización
+| Prioridad | Definición o dato | Finalidad |
+|---|---|---|
+| Alta | Estructura oficial de oficinas, equipos y responsables | Alcance y permisos |
+| Alta | Cuentas reales para cada rol | QA autenticado |
+| Alta | Captaciones brutas y fuente | KPI contractual |
+| Alta | Ventas y seguimiento mensual | Dashboard operativo |
+| Alta | Fórmula de conversión | KPI contractual |
+| Alta | Metas por entidad y período | Cumplimiento |
+| Alta | Umbrales, severidad y responsable de alertas | Alertas |
+| Media | Regla de productividad | KPI |
+| Media | Regla de ranking y desempates | Ranking |
 
-### Condición de inicio
+**Gate de aceptación**
 
-Esta fase comienza sólo cuando existan identidades y ventas confirmadas suficientes.
+- pruebas con CEO, director, subdirector y agente;
+- ninguna filtración entre alcances;
+- KPI vivos respaldados por valores aprobados;
+- toda ausencia de definición declarada como `Pendiente Cliente`.
 
-### Alcance
+### Hito 6 — Automatización, documentación y transferencia
 
-- velocidad de venta;
-- absorción;
-- relación oferta y cierre;
-- comparables;
-- valorizaciones;
-- escenarios de publicación.
+**Requisitos:** `AUT-01` a `AUT-06`, `ARC-08` a `ARC-15`.
 
-### Restricción
+**Trabajo N3uralia**
 
-Mientras no exista evidencia suficiente, estas métricas deben permanecer como `Sin datos operativos`.
+- verificar dashboard responsive y accesible;
+- cerrar presentaciones y reportes periódicos incluidos;
+- probar cron, entrega, fallo, reintento y destinatarios;
+- actualizar modelo, diccionario, manuales y runbook;
+- ejecutar restauración y reconstrucción por un tercero;
+- congelar versión, tag, checksums y paquete de transferencia;
+- realizar capacitación y acta de aceptación.
 
-## Orden de ejecución
+**Datos y decisiones útiles de Property Partners**
 
-1. Control canónico por archivo.
-2. Materialización de Portal.
-3. Calidad territorial.
-4. Materialización de CBRS.
-5. Identidad Portal–CBRS.
-6. Métricas y valorización.
+| Prioridad | Dato o decisión | Finalidad |
+|---|---|---|
+| Alta | Destinatarios y periodicidad de reportes | Automatización |
+| Alta | Aprobación del formato ejecutivo y por oficina | Presentaciones |
+| Alta | Administrador receptor | Transferencia |
+| Alta | Asistentes y fecha de capacitación | Cierre |
+| Alta | Responsables de aceptación por módulo | Firma UAT |
 
-## Criterio transversal de cierre
+**Gate de aceptación**
 
-Cada fase debe quedar respaldada por:
+- reporte real entregado y trazado;
+- documentación reproducible;
+- restauración o reconstrucción probada;
+- capacitación ejecutada;
+- paquete final y acta de aceptación completados.
 
-- trazabilidad a la fuente original;
-- conteos reproducibles;
-- rechazos explícitos;
-- ausencia de datos inventados;
-- CI aprobado;
-- despliegue de producción verificado.
+## 5. Orden obligatorio de ejecución
+
+1. Identidad y base única.
+2. Territorio oficial.
+3. Comparables y valorización.
+4. Inteligencia de mercado.
+5. Control de gestión por rol.
+6. Automatización, documentación y transferencia.
+
+Un hito puede preparar componentes del siguiente, pero no se declara cerrado sin superar su gate de aceptación.
+
+## 6. Próxima ejecución
+
+La siguiente sesión debe cerrar el UAT de identidad:
+
+1. seleccionar tres casos reversibles y representativos;
+2. registrar evidencia antes de decidir;
+3. confirmar un candidato;
+4. rechazar un candidato;
+5. vincular un componente duplicado;
+6. ejecutar o esperar la siguiente ingestión;
+7. comprobar persistencia, auditoría, conteos y ausencia de reincidencia;
+8. adjuntar evidencia al requisito `MKT-03/MKT-08`.
+
+## 7. Definition of Done
+
+Un requisito contractual queda `Completo` únicamente cuando:
+
+- funciona con datos reales o declara claramente una dependencia del Cliente;
+- conserva fuente, período, metodología y versión;
+- respeta permisos en UI, servidor y RLS;
+- posee prueba reproducible y evidencia;
+- no depende de una capacidad fuera de V1;
+- está documentado para operación, soporte y transferencia;
+- CI está aprobado;
+- el deployment correspondiente está `READY`;
+- el responsable de aceptación de Property Partners puede validarlo.
