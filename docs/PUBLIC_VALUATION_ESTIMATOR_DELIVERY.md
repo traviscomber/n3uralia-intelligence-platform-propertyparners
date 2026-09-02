@@ -14,13 +14,15 @@ La incorporación de esta mejora no altera los criterios de aceptación contract
 
 - Pull request: `#181` — `feat: add public referential property estimator`.
 - Rama: `public-valuation-estimator-v1`.
-- Head verificado: `363eafff6358f5b67f5b5662775eb1f43b8b1740`.
+- Head funcional validado antes de agregar esta documentación: `363eafff6358f5b67f5b5662775eb1f43b8b1740`.
 - Base del PR: `main` en `3fd42a54eb2fda2fab5e0a644a712b6ef4ef7aae`.
-- Estado GitHub: `open`, `mergeable=true` al cierre de la validación.
-- Preview Vercel del head: `READY`.
-- `N3uralia IP Boundaries`: PASS.
-- `Contractual modules CI`: PASS.
+- Estado GitHub del PR durante la validación: `open`, `mergeable=true`.
+- Preview Vercel del head funcional: `READY`.
+- `N3uralia IP Boundaries` sobre el head funcional: PASS.
+- `Contractual modules CI` sobre el head funcional: PASS.
 - Suite de valorización: 28/28 tests PASS durante el build validado, incluyendo los tres tests específicos del cotizador público.
+
+Los commits posteriores al head funcional corresponden a documentación de entrega. Deben completar nuevamente los gates automáticos del PR antes del merge.
 
 Importante: mientras PR #181 no sea mergeado y desplegado a producción, esta mejora debe describirse como **candidato verificado de entrega**, no como funcionalidad productiva vigente.
 
@@ -124,7 +126,7 @@ Además permanece pública la ruta técnica existente `/api/release`.
 
 El resto de `/api/*` continúa requiriendo autenticación según el proxy central.
 
-Controles confirmados:
+Controles confirmados sobre el head funcional:
 
 - `SUPABASE_SERVICE_ROLE_KEY` permanece server-only;
 - el endpoint público usa acceso privilegiado sólo en servidor;
@@ -133,7 +135,7 @@ Controles confirmados:
 - `/dashboard` mantiene guard independiente de sesión, rol y capacidad;
 - sin sesión, `/dashboard` redirige a login;
 - la ruta pública quedó registrada explícitamente en el manifiesto de revisión de aislamiento de tenants;
-- el gate `N3uralia IP Boundaries` quedó PASS sobre el head final.
+- el gate `N3uralia IP Boundaries` quedó PASS.
 
 ## 8. QA y regresiones
 
@@ -145,13 +147,13 @@ Se agregaron regresiones para validar:
 
 El CI contractual ejecuta estas pruebas antes del build.
 
-Validaciones adicionales realizadas sobre preview:
+Validaciones adicionales realizadas sobre preview del head funcional:
 
 - landing pública accesible sin sesión;
 - selector de cobertura muestra únicamente Club de Polo, La Llavería y Santa María;
 - endpoint GET público responde únicamente scope, tipos, cobertura y metodología;
 - `/dashboard` sigue protegido sin sesión;
-- preview Vercel del head final queda `READY`.
+- preview Vercel queda `READY`.
 
 ## 9. Comparación con el valorizador público existente de Property Partners
 
@@ -196,8 +198,9 @@ No modifica los tres pilares contractuales ni sus criterios de aceptación.
 
 Antes de declararla incluida en producción corresponde:
 
-1. mergear PR #181;
-2. verificar el SHA resultante en Vercel producción;
-3. comprobar `/`, `/api/public/valuation-estimate` y `/dashboard` en el dominio productivo;
-4. confirmar gates del merge SHA;
-5. actualizar esta ficha con el SHA productivo definitivo.
+1. completar los gates automáticos sobre el head documental final del PR;
+2. mergear PR #181;
+3. verificar el SHA resultante en Vercel producción;
+4. comprobar `/`, `/api/public/valuation-estimate` y `/dashboard` en el dominio productivo;
+5. confirmar gates del merge SHA;
+6. actualizar esta ficha con el SHA productivo definitivo.
