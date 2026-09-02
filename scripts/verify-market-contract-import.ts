@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import {
   isSourceDatasetCompatible,
   validateMarketContractRow,
@@ -40,4 +41,13 @@ assert.deepEqual(validateMarketContractRow({
 }, 'kml_neighborhoods'), [])
 assert.equal(validateMarketContractRow({ name: 'Lo Curro' }, 'kml_neighborhoods').includes('geometry GeoJSON requerida'), true)
 
-console.log('Contractual source compatibility and market row validation verified.')
+const houseSupplyCorrection = readFileSync(
+  new URL('../supabase/migrations/20260902201500_market_house_supply_sales_built_area_basis.sql', import.meta.url),
+  'utf8',
+)
+assert.match(houseSupplyCorrection, /raw_payload ->> 'built_area_m2'/)
+assert.match(houseSupplyCorrection, /ll\.price_uf \/ ll\.built_area_m2/)
+assert.doesNotMatch(houseSupplyCorrection, /order by r\.price_uf_m2/)
+assert.match(houseSupplyCorrection, /does not classify price signals/)
+
+console.log('Contractual source compatibility, market row validation and house UF/m2 basis verified.')
