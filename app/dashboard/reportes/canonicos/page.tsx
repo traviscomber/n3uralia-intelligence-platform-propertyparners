@@ -31,6 +31,8 @@ function isClientCanonical(document:CanonicalDocumentRow){
   const tags=document.tags??[]
   return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')
 }
+function hasArtifact(report:ReportRecord){return Boolean(report.pdfUrl||report.downloadUrl)}
+function isDeliverable(report:ReportRecord){return report.period!=='Sin período'&&hasArtifact(report)}
 
 export default async function CanonicalClientReportsPage(){
   await requirePageCapability('reports.global.read')
@@ -38,8 +40,11 @@ export default async function CanonicalClientReportsPage(){
   const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
   const documents=(error?[]:(data||[]) as CanonicalDocumentRow[]).filter(isClientCanonical)
   const reports:ReportRecord[]=documents.map(document=>{const parsed=parseContent(document.content);const t=trace(parsed);return{id:document.id,title:document.title,period:formatPeriod(parsed),status:normalizeStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:getArtifactUrl(parsed,'pdf'),downloadUrl:getArtifactUrl(parsed,'download'),...t}})
-  const current=reports[0]??null;const history=reports.slice(1);const missingArtifacts=reports.filter(r=>!r.pdfUrl&&!r.downloadUrl).length
-  const status=reports.length===0?'blocked':missingArtifacts>0?'partial':'ready'
+  const current=reports.find(isDeliverable)??null
+  const history=reports.filter(report=>report.id!==current?.id)
+  const incomplete=reports.filter(report=>!isDeliverable(report))
+  const deliverableCount=reports.filter(isDeliverable).length
+  const status=reports.length===0?'blocked':incomplete.length>0?'partial':'ready'
   const cutoff=current?formatDate(current.createdAt):'—'
 
   if(error){
@@ -50,7 +55,7 @@ export default async function CanonicalClientReportsPage(){
   }
 
   return <WorkspaceShell>
-    <WorkspaceHeader eyebrow="Informes" title="Último informe" meta={current?`${current.status} · ${current.period}`:'Sin informe vigente'} actions={[{label:'Generar y entregar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+    <WorkspaceHeader eyebrow="Informes" title="Último informe entregable" meta={current?`${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y entregar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
 
     <section className="mt-6 max-w-5xl">
       {current?<article className="grid gap-6 border-y border-[var(--n3-line)] py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
@@ -63,9 +68,8 @@ export default async function CanonicalClientReportsPage(){
         <div className="flex flex-wrap gap-2">
           {current.pdfUrl?<Link href={current.pdfUrl} target="_blank" className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs"><ExternalLink size={14}/>Abrir</Link>:null}
           {current.downloadUrl?<Link href={current.downloadUrl} className="inline-flex min-h-11 items-center gap-2 bg-[var(--primary)] px-4 text-xs font-semibold text-white"><Download size={14}/>Descargar PDF</Link>:null}
-          {!current.pdfUrl&&!current.downloadUrl?<span className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs text-[var(--n3-text-muted)]"><FileText size={14}/>PDF no vinculado</span>:null}
         </div>
-      </article>:<OperationalState compact kind="empty" title="Sin informes registrados" description="Todavía no existe un informe canónico disponible para este alcance."/>}
+      </article>:<OperationalState compact kind="empty" title="Sin informe listo para entrega" description="No existe todavía un informe canónico con período y artefacto PDF listo para entrega. Los borradores incompletos se conservan en el historial y no se presentan como informe vigente."/>}
     </section>
 
     {current?<details className="mt-5 max-w-5xl border-b border-[var(--n3-line)] pb-5">
@@ -79,13 +83,13 @@ export default async function CanonicalClientReportsPage(){
     </details>:null}
 
     <section className="mt-8 max-w-5xl">
-      <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Anteriores</h2><span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{history.length}</span></div>
-      {history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=><article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_100px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="break-words text-sm font-medium sm:truncate">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{formatDate(report.createdAt)}</p></div><span className="text-xs text-[var(--n3-text-muted)]">{report.status}</span><div className="flex gap-2 sm:justify-end">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}</div></article>)}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}
+      <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Historial</h2><span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{history.length}</span></div>
+      {history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=>{const incompleteReport=!isDeliverable(report);return <article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_120px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="break-words text-sm font-medium sm:truncate">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{formatDate(report.createdAt)}</p></div><span className={`text-xs ${incompleteReport?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{incompleteReport?'Borrador incompleto':report.status}</span><div className="flex gap-2 sm:justify-end">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}{!hasArtifact(report)?<span aria-label="PDF no vinculado" className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)] text-[var(--n3-text-muted)]"><FileText size={14}/></span>:null}</div></article>})}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}
     </section>
 
     <details className="mt-8 max-w-5xl">
       <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Estado de datos</summary>
-      <DataStatusBar cutoff={cutoff} coverage={reports.length?`${reports.length-missingArtifacts}/${reports.length} con artefacto PDF`:'Sin informes'} issues={missingArtifacts} status={status}/>
+      <DataStatusBar cutoff={cutoff} coverage={reports.length?`${deliverableCount}/${reports.length} entregables con período y PDF`:'Sin informes'} issues={incomplete.length} status={status}/>
     </details>
   </WorkspaceShell>
 }
