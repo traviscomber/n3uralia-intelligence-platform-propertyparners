@@ -2,40 +2,38 @@
 
 Fecha de actualización: 2 de septiembre de 2026
 
-## 1. Propósito y límite de alcance
+## 1. Estado actual
 
-El cotizador público referencial es una mejora complementaria para visitantes externos de Property Partners Vitacura.
+El cotizador público referencial está desplegado en producción como mejora complementaria de Property Partners Vitacura.
 
-Su alcance permanece deliberadamente restringido a:
+Producción: `https://ppartnersgroup.app`
+
+Baseline productivo verificado:
+
+- `main`: `4dacae91757d1f67d14a3ac443dded212a14fa0d`;
+- Vercel deployment: `dpl_9CtkvZ3LXXtRms9a9RccPHkb5TH8`;
+- estado: `READY`;
+- PR de hardening: `#183` — mergeado;
+- QA visual directa: PASS en desktop y viewport móvil estrecho;
+- `Contractual modules CI`: PASS;
+- `N3uralia IP Boundaries`: PASS.
+
+La raíz `/` funciona como landing pública con cotizador. `/dashboard` conserva autenticación y autorización separadas.
+
+## 2. Propósito y límite de alcance
+
+El cotizador entrega una estimación automática referencial de oferta para visitantes externos.
+
+Alcance deliberadamente restringido:
 
 - comuna: **Vitacura**;
 - tipo de propiedad: **Casa**;
 - operación: **Venta**;
-- resultado: **estimación automática referencial de oferta**, no tasación.
+- resultado: **estimación referencial de oferta**, no tasación ni valorización profesional.
 
-No reemplaza ni modifica el Pilar II contractual de Valorización de Propiedades. El Valorizador Profesional autenticado conserva comparables, juicio profesional, revisión humana, workflow Ejecutivo → Director → CEO, MFA/AAL2, snapshots, emisión y trazabilidad.
+No habilita departamentos ni otras comunas.
 
-No se habilitan departamentos ni otras comunas mediante este hardening.
-
-## 2. Estado de release
-
-### V1 productiva
-
-PR #181 incorporó el cotizador público inicial a producción. La raíz `/` funciona como landing pública y `/dashboard` mantiene autenticación independiente.
-
-La primera versión publicaba únicamente sectores con al menos cinco observaciones utilizables por sector.
-
-### Hardening Vitacura — candidato PR #183
-
-PR #183 (`polish: Vitacura responsive UX and estimator coverage`) amplía la experiencia territorial **sin ampliar la comuna ni bajar el piso de evidencia**:
-
-- los 19 sectores del KML canónico de Property Partners Vitacura son seleccionables;
-- sectores con ≥5 observaciones utilizables reciben una estimación sectorial;
-- sectores con <5 observaciones no reciben una falsa estimación sectorial: usan una **referencia general de Vitacura**, identificada explícitamente en selector y resultado;
-- el mínimo de cálculo continúa siendo cinco observaciones utilizables;
-- se mejora responsive, foco, tamaño de controles y jerarquía visual de la landing y de primitives compartidos del dashboard.
-
-Mientras PR #183 no esté mergeado y verificado en producción, este comportamiento debe describirse como **candidato de release**, no como estado productivo vigente.
+No reemplaza ni modifica el Pilar II contractual de Valorización de Propiedades. El Valorizador Profesional autenticado mantiene comparables individuales, juicio profesional, revisión humana, workflow Ejecutivo → Director → CEO, MFA/AAL2, snapshots, emisión e historial.
 
 ## 3. Experiencia pública
 
@@ -46,7 +44,7 @@ El visitante entrega únicamente:
 - dormitorios, opcional;
 - baños, opcional.
 
-El cotizador no solicita ni persiste:
+No se solicita ni persiste:
 
 - nombre;
 - email;
@@ -54,15 +52,15 @@ El cotizador no solicita ni persiste:
 - RUT;
 - dirección exacta;
 - rol de propiedad;
-- datos personales de contacto.
+- otros datos personales de contacto.
 
-La interfaz informa antes del cálculo si el sector seleccionado tiene muestra sectorial suficiente o si el resultado usará la referencia general de Vitacura.
+La interfaz informa antes del cálculo si la muestra permite estimación sectorial o si debe usar una referencia general de Vitacura.
 
-## 4. Cobertura canónica de Vitacura
+## 4. Cobertura canónica
 
-El catálogo territorial procede exclusivamente del KML canónico `kml_vitacura_barrios_2026_08_12`.
+El catálogo territorial procede del KML canónico `kml_vitacura_barrios_2026_08_12`.
 
-Sectores canónicos disponibles:
+Sectores disponibles:
 
 1. Alonso de Córdova
 2. Bicentenario
@@ -84,43 +82,43 @@ Sectores canónicos disponibles:
 18. Sport Frances
 19. Tabancura
 
-Evidencia live auditada antes de PR #183:
+Snapshot auditado durante el hardening del 2 de septiembre de 2026:
 
 - 44 casas activas en la fuente dedicada `portal-inmobiliario-vitacura-portal-houses`;
-- 44/44 con barrio KML resoluble mediante la lógica canónica actual;
-- 41/44 con precio UF y superficie construida válidos para el cálculo UF/m² construido.
+- 44/44 con barrio KML resoluble mediante la lógica canónica;
+- 41/44 con precio UF y superficie construida válidos para UF/m² construido.
 
-Sectores que hoy alcanzan el piso sectorial de cinco observaciones utilizables:
+Sectores que alcanzaban el piso sectorial de 5 observaciones utilizables:
 
-| Sector | Observaciones utilizables auditadas |
+| Sector | Observaciones utilizables |
 |---|---:|
 | Santa María | 12 |
 | La Llavería | 7 |
 | Club de Polo | 6 |
 
-Los demás sectores siguen siendo seleccionables porque pertenecen al universo territorial canónico de Vitacura, pero su resultado se etiqueta como **referencia general de Vitacura** mientras no alcancen cinco observaciones utilizables propias.
+Los demás sectores siguen siendo seleccionables, pero el resultado se presenta como **referencia general de Vitacura** mientras no alcancen el piso sectorial.
 
-La cobertura es dinámica: el nivel `sector` o `Vitacura` se calcula desde la evidencia live disponible, no desde una lista manual fija.
+La cobertura es dinámica. Los números anteriores son un snapshot de auditoría, no valores hardcodeados.
 
 ## 5. Fuente y resolución territorial
 
-La capa pública usa exclusivamente la fuente dedicada de casas de Vitacura y la territorialidad canónica ya utilizada por Inteligencia de Mercado.
+La capa pública usa la fuente dedicada de casas de Vitacura y la misma territorialidad canónica utilizada por Inteligencia de Mercado.
 
-Una publicación debe cumplir:
+Para participar en el cálculo UF/m², una publicación debe cumplir:
 
 1. fuente `portal-inmobiliario-vitacura-portal-houses`;
 2. operación `Venta`;
 3. estado `active`;
 4. tipo `Casa`;
 5. precio UF positivo;
-6. superficie construida positiva para participar en el cálculo UF/m².
+6. superficie construida positiva.
 
-La resolución de barrio sigue este orden:
+Resolución de barrio:
 
 1. barrio de la propiedad canónica si pertenece al KML oficial de Vitacura;
 2. si no existe, última resolución territorial aceptada o `resolved_by_system`, siempre que el barrio pertenezca al mismo KML.
 
-Las publicaciones sin superficie construida válida pueden formar parte de otras métricas de oferta, pero no entran al cálculo público de UF/m² construido.
+Una publicación activa puede formar parte de métricas de oferta aunque no sirva para UF/m² construido. Por eso “casas activas” y “observaciones utilizables” no son métricas equivalentes.
 
 ## 6. Base de cálculo
 
@@ -128,111 +126,109 @@ El ratio público se deriva explícitamente:
 
 `UF/m² construido = precio publicado en UF / superficie construida`
 
-El campo upstream `price_uf_m2` **no se usa directamente**, porque la auditoría demostró que no es consistentemente equivalente a `precio UF / superficie construida` para casas. No se atribuye un significado alternativo no verificado a ese campo.
+El campo upstream `price_uf_m2` no se usa directamente porque la auditoría demostró que no es consistentemente equivalente al cálculo sobre superficie construida para casas.
 
-La metodología permanece:
+Metodología:
 
-1. determinar si el sector tiene al menos cinco observaciones utilizables;
-2. si las tiene, usar pool sectorial; si no, usar pool general de Vitacura;
-3. intentar refinar por superficie construida dentro de ±35%, sólo si permanecen ≥5 observaciones;
-4. dormitorios y baños son opcionales y sólo refinan cuando el atributo tiene cobertura suficiente y el subconjunto mantiene ≥5 observaciones;
-5. calcular mediana UF/m² construido;
-6. calcular rango intercuartil P25–P75;
-7. multiplicar por la superficie construida ingresada;
-8. redondear el resultado a decenas de UF.
+1. medir observaciones utilizables del sector;
+2. si hay >=5, usar pool sectorial;
+3. si hay <5, usar pool general de Vitacura;
+4. intentar refinar por superficie construida dentro de ±35% sólo si permanecen >=5 observaciones;
+5. dormitorios y baños refinan únicamente cuando existe cobertura suficiente y el subconjunto mantiene >=5 observaciones;
+6. calcular mediana UF/m² construido;
+7. calcular rango intercuartil P25–P75;
+8. multiplicar por la superficie construida ingresada;
+9. redondear resultado a decenas de UF.
 
-No se reduce el piso mínimo para aumentar cobertura aparente.
+El piso mínimo no se reduce para aumentar cobertura aparente.
 
 ## 7. Transparencia del resultado
 
-Cada resultado expone:
+Cada resultado expone, según disponibilidad:
 
 - estimación central en UF;
 - rango P25–P75 en UF;
 - mediana de oferta UF/m² construido;
-- cantidad de observaciones efectivamente usadas;
-- cantidad de evidencia del sector seleccionado;
+- observaciones efectivamente usadas;
+- evidencia del sector seleccionado;
 - base territorial usada: sector o Vitacura;
-- observación más reciente cuando está disponible.
+- observación más reciente.
 
-Si el sector tiene menos de cinco observaciones utilizables, la interfaz informa explícitamente que la cifra es una referencia general de Vitacura. No se presenta como estimación propia del sector.
+Si el sector tiene menos de cinco observaciones utilizables, la interfaz lo declara explícitamente y no presenta la cifra como estimación propia del sector.
 
 ## 8. Seguridad y aislamiento
 
-La ruta pública funcional continúa siendo únicamente:
+Ruta pública funcional:
 
 `/api/public/valuation-estimate`
-
-Además permanece la ruta técnica pública existente `/api/release`.
 
 Controles:
 
 - `SUPABASE_SERVICE_ROLE_KEY` permanece server-only;
-- el acceso privilegiado se ejecuta únicamente en la route handler del servidor;
-- la respuesta pública contiene agregados y metadatos de cobertura, nunca listings/comparables crudos;
-- no se exponen `raw_payload`, URLs de publicación, IDs internos o datos personales;
-- el endpoint valida que el sector solicitado pertenezca a los 19 barrios KML de Vitacura;
-- `propertyType` público continúa bloqueado a `Casa`;
-- `/dashboard` conserva su guard independiente de sesión y rol;
-- `N3uralia IP Boundaries` debe permanecer PASS para cada release.
+- acceso privilegiado sólo desde servidor;
+- respuesta pública limitada a agregados y metadatos de cobertura;
+- no se exponen `raw_payload`, URLs de publicación, IDs internos ni comparables/listings crudos;
+- el endpoint valida que el sector pertenezca a los 19 barrios KML;
+- `propertyType` público permanece restringido a `Casa`;
+- `/dashboard` conserva guard de sesión/rol independiente;
+- `N3uralia IP Boundaries` debe permanecer PASS en releases futuros.
 
-## 9. Responsive y accesibilidad — PR #183
+## 9. Responsive y accesibilidad
 
-El hardening de entrega incorpora:
+Hardening productivo verificado:
 
-- jerarquía tipográfica fluida para evitar clipping en mobile;
-- controles con altura táctil mínima de 48 px en el cotizador;
-- inputs de 16 px en mobile para evitar zoom involuntario;
+- jerarquía tipográfica fluida;
+- controles táctiles de tamaño adecuado;
+- inputs con tamaño seguro en mobile;
 - dormitorios/baños apilables en pantallas estrechas;
 - CTA de resultado full-width en mobile;
-- focus visible en controles interactivos;
+- focus visible;
 - agrupación semántica del selector por nivel de evidencia;
-- acciones de `WorkspaceHeader` apilables en mobile;
-- `MetricStrip` en dos columnas en pantallas estrechas y cuatro en desktop;
-- reducción de padding anidado en workspaces densos;
-- campos/selects de workspace con ancho seguro en layouts estrechos.
+- acciones de workspace apilables en mobile;
+- `MetricStrip` adaptable;
+- reducción de padding anidado;
+- prevención de overflow horizontal.
+
+QA visual directa fue ejecutada sobre preview y el mismo código fue posteriormente desplegado a producción.
 
 ## 10. QA y regresiones
 
 La suite específica cubre:
 
-- no publicar cifra si ni siquiera la muestra general de Vitacura alcanza cinco observaciones;
-- cálculo sectorial cuando un sector alcanza el piso;
-- fallback a Vitacura sin reducir el piso de cinco;
-- catálogo de los 19 barrios con clasificación `sector` o `vitacura`;
-- no perder un cálculo válido por datos opcionales escasos de dormitorios/baños;
+- no publicar cifra si la muestra general de Vitacura no llega a cinco;
+- cálculo sectorial cuando existe muestra suficiente;
+- fallback a Vitacura sin reducir el piso;
+- catálogo de los 19 barrios y clasificación `sector` / `vitacura`;
+- no perder cálculo válido por escasez de dormitorios/baños;
 - mantenimiento de la metodología `median-active-offer-built-uf-m2`.
 
-Antes de merge de PR #183 se requieren:
+Gate final previo a merge de PR #183:
 
-1. `Contractual modules CI` PASS;
-2. `N3uralia IP Boundaries` PASS;
-3. Vercel preview `READY`;
-4. ausencia de errores/warnings de runtime atribuibles al cambio;
-5. QA visual responsive cuando exista navegador de preview disponible;
-6. verificación de cálculo sectorial y fallback Vitacura.
+- `Contractual modules CI`: PASS;
+- `N3uralia IP Boundaries`: PASS;
+- preview Vercel: `READY`;
+- runtime revisado sin warnings/errors/fatal atribuibles al cambio;
+- QA visual desktop: PASS;
+- QA visual mobile: PASS;
+- cálculo y fallback verificados.
 
-La aceptación UAT del cliente permanece separada.
+Después del merge, el deployment productivo del SHA `4dacae91757d1f67d14a3ac443dded212a14fa0d` quedó `READY`.
 
 ## 11. Separación del Valorizador Profesional
 
 El cotizador público no:
 
 - crea expedientes profesionales;
-- selecciona ni muestra comparables individuales;
-- usa el workflow Ejecutivo → Director → CEO;
+- muestra comparables individuales;
+- aplica el workflow Ejecutivo → Director → CEO;
 - aprueba ni emite informes;
 - sustituye MFA/AAL2;
 - modifica la metodología contractual del Valorizador Profesional;
-- convierte una publicación activa en una compraventa cerrada;
-- genera aceptación UAT del Pilar II.
+- convierte oferta activa en compraventa confirmada;
+- constituye aceptación UAT del Pilar II.
 
-El CTA deriva al servicio profesional de Property Partners.
+## 12. Clasificación de entrega
 
-## 12. Tratamiento de entrega
+**Mejora complementaria productiva y no bloqueante — cotizador público referencial para casas en Vitacura.**
 
-Clasificación:
-
-**Mejora complementaria no bloqueante — cotizador público referencial para casas en Vitacura.**
-
-No amplía los tres pilares contractuales ni cambia sus criterios de aceptación. El crecimiento futuro de cobertura debe mantenerse dentro de Vitacura mientras ése sea el alcance aprobado y sólo promover un sector a estimación sectorial cuando la evidencia live cumpla el piso definido.
+No amplía los tres pilares contractuales ni sus criterios de aceptación. Cualquier crecimiento de cobertura debe mantener la misma disciplina: sólo promover un sector a estimación sectorial cuando la evidencia live alcance el piso definido.
