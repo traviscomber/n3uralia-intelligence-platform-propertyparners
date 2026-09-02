@@ -1,78 +1,150 @@
-# Acta ejecutiva de cierre — Property Partners Intelligence Platform
+# Acta ejecutiva de cierre técnico — Property Partners Intelligence Platform
 
-Fecha de cierre: 30 de julio de 2026
-Estado: cierre técnico no visual emitido
-Rama de cierre: `main`
-Producción: `https://n3uralia-intelligence-platform.vercel.app`
+Fecha de actualización: 2 de septiembre de 2026
+Estado: **PASS técnico / listo para UAT**
+Producción: `https://ppartnersgroup.app`
 
-## Declaración de cierre
+## Declaración ejecutiva
 
-Se declara cerrado el desarrollo técnico no visual del alcance implementado para Property Partners. La plataforma queda desplegada en producción, con control central de capacidades, aislamiento por perfil y oficina, flujos operativos integrados, trazabilidad de valorizaciones y evidencia contractual versionada.
+La plataforma Property Partners Intelligence Platform completó el gate técnico de los tres pilares contractuales y se encuentra desplegada en producción sobre un baseline identificado y verificado.
 
-Este cierre no equivale a declarar ejecutado el QA visual autenticado ni resuelve definiciones de negocio que no han sido entregadas. Esas materias quedan formalmente diferidas y separadas de defectos técnicos conocidos.
+Este documento declara **cierre técnico**, no aceptación contractual definitiva.
 
-## Alcance entregado
+La aceptación final requiere todavía:
 
-- Experiencias diferenciadas para CEO, dirección y ejecutivas.
-- Dashboards y métricas globales, por oficina y personales.
-- Propiedades, asignaciones, valorizaciones, comparables y evidencia de mercado.
-- Tareas, alertas, devolución, corrección, reenvío y decisiones.
-- Centro de decisiones CEO conectado con oficina, responsable, expediente e historial.
-- Reporte imprimible de valorización con metodología, evidencia y cronología.
-- Matriz central de capacidades, guards de página y API, y RLS autenticada.
-- Protección específica de configuración, destinatarios y administración de propiedades.
-- Regresiones reproducibles y documentación consolidada de aceptación.
+- UAT con usuarios autorizados de Property Partners;
+- cierre de cualquier hallazgo P0/P1 que aparezca en UAT;
+- capacitación;
+- registro formal de aceptación;
+- incorporación, cuando corresponda, de definiciones de negocio que siguen bajo responsabilidad del Cliente.
 
-## Evidencia principal
+## Baseline productivo
 
-- `docs/TECHNICAL_CLOSURE_RECORD.md`
-- `docs/CONTRACTUAL_DELIVERY_PACKAGE.md`
-- `docs/FINAL_ACCEPTANCE_CHECKLIST.md`
-- `docs/QA_ACCEPTANCE_MATRIX.md`
-- `docs/VISUAL_QA_EXECUTION_LOG.md`
-- `scripts/test-technical-closure.mjs`
+- repositorio: `traviscomber/n3uralia-intelligence-platform-propertyparners`;
+- rama: `main`;
+- commit productivo: `4dacae91757d1f67d14a3ac443dded212a14fa0d`;
+- deployment Vercel: `dpl_9CtkvZ3LXXtRms9a9RccPHkb5TH8`;
+- estado: `READY`;
+- dominio productivo: `ppartnersgroup.app`.
 
-## Exclusiones diferidas
+## Resultado por pilar
 
-### QA visual autenticado
+| Pilar | Estado técnico | Pendiente de aceptación |
+|---|---|---|
+| Inteligencia de Mercado | PASS | UAT de suficiencia operacional |
+| Valorización de Propiedades | PASS | UAT punta a punta con caso real |
+| Control de Gestión + Reportes | PASS técnico | UAT + definiciones de negocio externas |
 
-Queda diferido por decisión operativa:
+## Evidencia de release
 
-- recorrido real por perfil;
-- revisión en escritorio, tableta y móvil;
-- teclado, lector de pantalla, contraste y zoom;
-- inspección visual del PDF autenticado;
-- ciclo visual integral dirección–ejecutiva.
+En el candidato que produjo el baseline vigente se verificó:
 
-La suite Puppeteer y el workflow manual permanecen preparados para su ejecución posterior.
+- `Contractual modules CI`: PASS;
+- `N3uralia IP Boundaries`: PASS;
+- Vercel preview: `READY`;
+- runtime final revisado: sin warnings/errors/fatal atribuibles al cambio;
+- QA visual pública desktop: PASS;
+- QA visual autenticada desktop: PASS;
+- QA visual móvil estrecha: PASS;
+- navegación responsive y ausencia de overflow bloqueante en las superficies afectadas;
+- merge controlado y deployment posterior a `READY`.
 
-### Definiciones de negocio
+## Estado de Inteligencia de Mercado
 
-Permanecen pendientes de fuente o definición oficial:
+La plataforma mantiene separación explícita entre:
 
-- reglas de ranking;
-- umbrales de alertas;
-- fuente independiente de captaciones brutas;
-- cuenta QA específica de subdirector, sólo con autorización expresa.
+- oferta activa y compraventas CBRS;
+- listing observado y propiedad canónica;
+- cola live de revisión y revisión histórica de duplicados;
+- avisos activos y observaciones utilizables para un cálculo específico;
+- falta de evidencia y valor cero.
 
-## Estado de aceptación
+Snapshot auditado el 2 de septiembre de 2026:
 
-- Cierre técnico no visual: aprobado para entrega.
-- Seguridad y alcance: verificados mediante matrices autenticadas y pruebas negativas.
-- Producción: activa.
-- QA visual: no ejecutado; no se presenta como aprobado.
-- Definiciones de negocio pendientes: no sustituidas por supuestos.
+- 44 casas activas de Vitacura;
+- 44/44 con barrio KML resoluble;
+- 41/44 utilizables para UF/m² construido.
 
-## Condiciones de reapertura
+## Estado de Valorización
 
-El proyecto deberá reabrirse si ocurre cualquiera de los siguientes casos:
+El flujo profesional conserva:
 
-1. Regresión de autorización, RLS o aislamiento entre oficinas.
-2. Falla de build, deployment o runtime productivo.
-3. Incorporación de nuevas superficies administrativas o de ingestión.
-4. Entrega de definiciones de negocio que requieran modificar cálculos o alertas.
-5. Detección de incidencias críticas o altas durante el QA visual diferido.
+- identificación canónica del sujeto;
+- mínimo de 3 comparables seleccionados por humano;
+- cálculo determinístico y justificación;
+- revisión/devolución/corrección/reenvío;
+- aprobación CEO protegida por MFA/AAL2;
+- snapshots/versiones e integridad;
+- emisión y PDF desde snapshot;
+- historial auditable.
 
-## Resultado
+## Estado de Control de Gestión y Reportes
 
-El repositorio `main` y la producción vigente constituyen la versión formal de cierre técnico no visual. Cualquier trabajo posterior debe registrarse como reapertura, mantenimiento correctivo o fase de aceptación visual/negocio.
+El motor técnico soporta:
+
+- scopes por rol;
+- métricas persistidas y reconciliación;
+- tareas y seguimiento;
+- reportes desde snapshots;
+- generación y delivery trazable;
+- retries/idempotencia;
+- programación protegida y fail-closed.
+
+Siguen como dependencias externas, hasta aprobación formal:
+
+- diccionario KPI;
+- metas/umbrales;
+- ranking/desempates;
+- calendario y periodicidad;
+- destinatarios de reportes.
+
+## Mejora complementaria pública
+
+El cotizador público referencial para casas en Vitacura está productivo y forma parte del baseline actual.
+
+No reemplaza el Valorizador Profesional ni modifica los criterios de aceptación contractual.
+
+Estado auditado:
+
+- 19 sectores KML seleccionables;
+- 41 observaciones utilizables en el snapshot;
+- muestra sectorial >=5 en Santa María 12, La Llavería 7 y Club de Polo 6;
+- fallback explícito a referencia general de Vitacura cuando el sector no alcanza el piso;
+- no captura datos personales;
+- no expone listings crudos;
+- responsive desktop y mobile verificado.
+
+## Documentación principal
+
+Punto de entrada: `docs/README.md`.
+
+Documentos de cierre:
+
+- `ROADMAP.md`;
+- `docs/CONTRACTUAL_DELIVERY_PACKAGE.md`;
+- `docs/TECHNICAL_CLOSURE_RECORD.md`;
+- `docs/UAT_PROPERTY_PARTNERS.md`;
+- `docs/FINAL_ACCEPTANCE_CHECKLIST.md`;
+- `docs/USER_MANUAL.md`;
+- `docs/ADMIN_MANUAL.md`.
+
+## Siguiente gate
+
+Ejecutar UAT con usuarios Property Partners.
+
+La salida esperada es:
+
+- P0 = 0;
+- P1 = 0;
+- P2/P3 corregidos, aceptados o programados;
+- resultado por pilar registrado;
+- capacitación completada;
+- acta/minuta de aceptación preparada.
+
+Si UAT requiere cambios de código, el nuevo baseline debe repetir el gate técnico antes de considerarse apto para aceptación.
+
+## Resultado ejecutivo
+
+**La plataforma está técnicamente cerrada y preparada para UAT.**
+
+**La aceptación contractual final todavía no debe declararse hasta completar UAT, capacitación y registro formal de aceptación.**
