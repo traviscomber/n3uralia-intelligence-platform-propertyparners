@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "status": "verified-live",
   "principle": "Static ambiguity is tracked without being treated as proof of exposure. Live Supabase policy and route authorization evidence remain authoritative.",
-  "verifiedAt": "2026-09-01T01:45:00Z",
+  "verifiedAt": "2026-09-02T17:40:00Z",
   "verifiedProject": "orfncinmhymhhoxbxgjb",
   "verification": {
     "method": "Live pg_policies, pg_class RLS flags, role grants, function ACLs and Supabase security advisors were inspected against the production project.",
@@ -10,6 +10,7 @@
     "retiredTables": "Historical report-delivery, scrape, valuation-quote and PP-learning tables referenced by the listed migrations are not present in the current public schema.",
     "modernModules": "Market and valuation tables have RLS enabled; valuation case/version/comparable policies are scoped by authenticated user and management scope; market shared-reference tables are read-only through RLS for authenticated users.",
     "neighborhoodReview": "The historical neighborhood-review migration was rechecked against live production policy state on 2026-09-01. market_neighborhood_review_items has RLS enabled; SELECT is restricted to admin/ceo, UPDATE is restricted to admin/ceo plus AAL2, and service_role retains the explicit operational policy. The historical AAL2-only policy text is therefore not the effective authorization surface.",
+    "publicValuationEstimator": "Reviewed on 2026-09-02. app/api/public/valuation-estimate/route.ts is intentionally public and server-only. It reads active house listings and canonical system-resolved neighborhoods through the server-only admin client, but returns only coverage counts and aggregate estimate statistics. It does not return raw listings, addresses, URLs, seller data, source payloads or user/client records. lib/supabase/proxy.ts allowlists only this exact route (plus /api/release); all other unauthenticated API paths remain denied.",
     "migrationEvidence": [
       "20260807212835_harden_legacy_public_rls_surface",
       "20260807213125_remove_anonymous_market_and_valuation_grants",
@@ -25,6 +26,7 @@
     "app/api/prc/sync/route.ts",
     "app/api/prc/zones/route.ts",
     "app/api/profiles/route.ts",
+    "app/api/public/valuation-estimate/route.ts",
     "app/api/report-deliveries/route.ts",
     "app/api/report-directory/route.ts",
     "app/api/reports/export/route.ts",
@@ -52,7 +54,7 @@
     "supabase/migrations/20260824_harden_and_auto_enqueue_neighborhood_review.sql"
   ],
   "requiredResolution": {
-    "apiRoutes": "Keep explicit authentication/capability guards on privileged routes and service-role operations.",
+    "apiRoutes": "Keep explicit authentication/capability guards on privileged routes and document intentional public aggregate routes with reviewed exposure boundaries.",
     "historicalMigrations": "Re-run live verification after material schema/RLS changes; historical SQL text alone is not proof of current exposure."
   }
 }
