@@ -1,11 +1,12 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { ArrowRight, BarChart3, Loader2, MapPin, ShieldCheck } from 'lucide-react'
 
 type CoverageOption = {
   neighborhood: string
   sampleCount: number
+  coverageLevel: 'sector' | 'vitacura'
 }
 
 type Estimate = {
@@ -15,7 +16,10 @@ type Estimate = {
   medianUfM2: number
   sampleCount: number
   marketSampleCount: number
+  sectorSampleCount: number
   newestObservation: string | null
+  coverageLevel: 'sector' | 'vitacura'
+  referenceArea: string
 }
 
 type EstimateResponse = {
@@ -63,6 +67,13 @@ export default function PublicValuationEstimator() {
     }
   }, [])
 
+  const selectedCoverage = useMemo(
+    () => coverage.find((option) => option.neighborhood === neighborhood) ?? null,
+    [coverage, neighborhood],
+  )
+  const sectorCoverage = coverage.filter((option) => option.coverageLevel === 'sector')
+  const vitacuraCoverage = coverage.filter((option) => option.coverageLevel === 'vitacura')
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitting(true)
@@ -94,43 +105,67 @@ export default function PublicValuationEstimator() {
   }
 
   return (
-    <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5 sm:p-7 lg:p-8">
-      <div className="mb-7 flex items-start justify-between gap-4 border-b border-[var(--n3-line)] pb-5">
-        <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Cotizador público</p>
-          <h2 className="text-2xl font-semibold text-[var(--n3-text-light)] sm:text-3xl">Obtén un rango referencial</h2>
+    <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 flex items-start justify-between gap-4 border-b border-[var(--n3-line)] pb-5 sm:mb-7">
+        <div className="min-w-0">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Cotizador público · Vitacura</p>
+          <h2 className="text-2xl font-semibold leading-tight text-[var(--n3-text-light)] sm:text-3xl">Obtén un rango referencial</h2>
         </div>
         <BarChart3 className="mt-1 size-6 shrink-0 text-[var(--n3-teal-soft)]" aria-hidden="true" />
       </div>
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-5" onSubmit={handleSubmit} aria-busy={submitting}>
         <div className="grid gap-5 sm:grid-cols-2">
           <label className="space-y-2 sm:col-span-2">
             <span className="flex items-center gap-2 text-sm text-[var(--n3-text-muted)]">
               <MapPin className="size-4" aria-hidden="true" /> Sector en Vitacura
             </span>
             <select
-              className="h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 text-[var(--n3-text-light)] outline-none focus:border-[var(--n3-teal-soft)]"
+              className="min-h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 text-base text-[var(--n3-text-light)] outline-none focus-visible:border-[var(--n3-teal-soft)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
               value={neighborhood}
-              onChange={(event) => setNeighborhood(event.target.value)}
+              onChange={(event) => {
+                setNeighborhood(event.target.value)
+                setResult(null)
+                setMessage('')
+              }}
               disabled={loadingCoverage || coverage.length === 0}
               required
             >
               {loadingCoverage && <option value="">Cargando cobertura…</option>}
               {!loadingCoverage && coverage.length === 0 && <option value="">Cobertura no disponible</option>}
-              {coverage.map((option) => (
-                <option key={option.neighborhood} value={option.neighborhood}>
-                  {option.neighborhood}
-                </option>
-              ))}
+              {sectorCoverage.length ? (
+                <optgroup label="Estimación con muestra sectorial">
+                  {sectorCoverage.map((option) => (
+                    <option key={option.neighborhood} value={option.neighborhood}>
+                      {option.neighborhood}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
+              {vitacuraCoverage.length ? (
+                <optgroup label="Referencia general de Vitacura">
+                  {vitacuraCoverage.map((option) => (
+                    <option key={option.neighborhood} value={option.neighborhood}>
+                      {option.neighborhood}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </select>
+            {selectedCoverage ? (
+              <span className="block text-xs leading-5 text-[var(--n3-text-muted)]">
+                {selectedCoverage.coverageLevel === 'sector'
+                  ? `${selectedCoverage.sampleCount} avisos utilizables en el sector: la estimación será sectorial.`
+                  : `${selectedCoverage.sampleCount} avisos utilizables en el sector: se usará una referencia general de Vitacura sin bajar el mínimo de 5 observaciones.`}
+              </span>
+            ) : null}
           </label>
 
           <label className="space-y-2">
             <span className="text-sm text-[var(--n3-text-muted)]">Superficie construida</span>
             <div className="relative">
               <input
-                className="h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 pr-12 text-[var(--n3-text-light)] outline-none placeholder:text-[#67706f] focus:border-[var(--n3-teal-soft)]"
+                className="min-h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 pr-12 text-base text-[var(--n3-text-light)] outline-none placeholder:text-[#67706f] focus-visible:border-[var(--n3-teal-soft)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                 type="number"
                 min="30"
                 max="1500"
@@ -145,28 +180,30 @@ export default function PublicValuationEstimator() {
             </div>
           </label>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm text-[var(--n3-text-muted)]">Dormitorios</span>
+              <span className="text-sm text-[var(--n3-text-muted)]">Dormitorios <span className="text-xs">(opcional)</span></span>
               <input
-                className="h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 text-[var(--n3-text-light)] outline-none placeholder:text-[#67706f] focus:border-[var(--n3-teal-soft)]"
+                className="min-h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 text-base text-[var(--n3-text-light)] outline-none placeholder:text-[#67706f] focus-visible:border-[var(--n3-teal-soft)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                 type="number"
                 min="1"
                 max="12"
                 step="1"
+                inputMode="numeric"
                 placeholder="4"
                 value={bedrooms}
                 onChange={(event) => setBedrooms(event.target.value)}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm text-[var(--n3-text-muted)]">Baños</span>
+              <span className="text-sm text-[var(--n3-text-muted)]">Baños <span className="text-xs">(opcional)</span></span>
               <input
-                className="h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 text-[var(--n3-text-light)] outline-none placeholder:text-[#67706f] focus:border-[var(--n3-teal-soft)]"
+                className="min-h-12 w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 text-base text-[var(--n3-text-light)] outline-none placeholder:text-[#67706f] focus-visible:border-[var(--n3-teal-soft)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                 type="number"
                 min="1"
                 max="12"
                 step="1"
+                inputMode="numeric"
                 placeholder="3"
                 value={bathrooms}
                 onChange={(event) => setBathrooms(event.target.value)}
@@ -178,7 +215,7 @@ export default function PublicValuationEstimator() {
         <button
           type="submit"
           disabled={submitting || loadingCoverage || coverage.length === 0}
-          className="flex h-12 w-full items-center justify-center gap-2 bg-[var(--n3-teal)] px-5 font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-12 w-full items-center justify-center gap-2 bg-[var(--n3-teal)] px-5 font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <ArrowRight className="size-4" aria-hidden="true" />}
           {submitting ? 'Calculando…' : 'Calcular rango referencial'}
@@ -187,7 +224,7 @@ export default function PublicValuationEstimator() {
 
       <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[var(--n3-text-muted)]">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[var(--n3-teal-soft)]" aria-hidden="true" />
-        No solicitamos ni almacenamos datos personales en este cotizador. La cobertura pública inicial corresponde a casas en Vitacura.
+        Sólo casas en Vitacura. No solicitamos ni almacenamos nombre, email, teléfono ni dirección en este cotizador.
       </p>
 
       <div aria-live="polite">
@@ -199,7 +236,9 @@ export default function PublicValuationEstimator() {
 
         {result && (
           <div className="mt-7 border-t border-[var(--n3-line)] pt-7">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Valor aproximado</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">
+              {result.coverageLevel === 'sector' ? `Estimación sectorial · ${result.referenceArea}` : 'Referencia general · Vitacura'}
+            </p>
             <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <strong className="text-4xl font-semibold tracking-tight text-[var(--n3-text-light)] sm:text-5xl">
                 {uf.format(result.estimateUf)}
@@ -210,18 +249,28 @@ export default function PublicValuationEstimator() {
               Rango de mercado: <span className="text-[var(--n3-text-light)]">{uf.format(result.lowUf)}–{uf.format(result.highUf)} UF</span>
             </p>
 
-            <div className="mt-6 grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
+            {result.coverageLevel === 'vitacura' ? (
+              <div className="mt-5 border-l-2 border-[var(--n3-teal-soft)] bg-[#080d0d] px-4 py-3 text-xs leading-5 text-[var(--n3-text-muted)]">
+                El sector seleccionado tiene {result.sectorSampleCount} avisos utilizables, bajo el mínimo sectorial de 5. El rango usa la muestra general de Vitacura y se presenta explícitamente como referencia comunal.
+              </div>
+            ) : null}
+
+            <div className="mt-6 grid gap-px bg-[var(--n3-line)] min-[420px]:grid-cols-2">
               <div className="bg-[var(--n3-deep)] p-4">
-                <span className="block text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Muestra usada</span>
+                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Muestra usada</span>
                 <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.sampleCount}</strong>
               </div>
               <div className="bg-[var(--n3-deep)] p-4">
-                <span className="block text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana oferta</span>
+                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana oferta</span>
                 <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.medianUfM2.toFixed(1)} UF/m² construido</strong>
               </div>
               <div className="bg-[var(--n3-deep)] p-4">
-                <span className="block text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base sector</span>
-                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.marketSampleCount}</strong>
+                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base territorial</span>
+                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.referenceArea} · {result.marketSampleCount}</strong>
+              </div>
+              <div className="bg-[var(--n3-deep)] p-4">
+                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Evidencia del sector</span>
+                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.sectorSampleCount} avisos</strong>
               </div>
             </div>
 
@@ -236,7 +285,7 @@ export default function PublicValuationEstimator() {
             </p>
 
             <a
-              className="mt-5 inline-flex items-center gap-2 border border-[var(--n3-teal)] px-4 py-3 text-sm font-medium text-[var(--n3-text-light)] hover:bg-[var(--n3-teal-dim)]"
+              className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[var(--n3-teal)] px-4 py-3 text-sm font-medium text-[var(--n3-text-light)] hover:bg-[var(--n3-teal-dim)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] sm:w-auto"
               href="https://ppartnersgroup.com/contacto/"
               target="_blank"
               rel="noreferrer"

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
-  buildPublicCoverageOptions,
   buildPublicValuationEstimate,
+  buildPublicVitacuraCoverageOptions,
   type PublicValuationEvidenceRow,
   type PublicValuationInput,
 } from '@/lib/public-valuation'
@@ -10,6 +10,8 @@ import {
 export const runtime = 'nodejs'
 
 const PUBLIC_CACHE = 'public, s-maxage=300, stale-while-revalidate=600'
+const PORTAL_HOUSES_SOURCE = 'portal-inmobiliario-vitacura-portal-houses'
+const VITACURA_KML_SOURCE = 'kml_vitacura_barrios_2026_08_12'
 
 function asFiniteNumber(value: unknown) {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -31,59 +33,102 @@ function asPayload(value: unknown): Record<string, unknown> {
     : {}
 }
 
-async function loadPublicEvidence(): Promise<PublicValuationEvidenceRow[]> {
+type PublicMarketData = {
+  rows: PublicValuationEvidenceRow[]
+  canonicalNeighborhoods: string[]
+}
+
+async function loadPublicMarketData(): Promise<PublicMarketData> {
   const supabase = createAdminClient()
 
-  const [{ data: neighborhoods, error: neighborhoodsError }, { data: resolutions, error: resolutionsError }] =
-    await Promise.all([
-      supabase.from('market_neighborhoods').select('id,name'),
-      supabase
-        .from('market_neighborhood_review_items')
-        .select('listing_id,suggested_neighborhood_id,classification,decision,resolution_origin,updated_at')
-        .order('updated_at', { ascending: false }),
-    ])
+  const { data: sources, error: sourcesError } = await supabase
+    .from('market_sources')
+    .select('id,code')
+    .in('code', [PORTAL_HOUSES_SOURCE, VITACURA_KML_SOURCE])
 
-  if (neighborhoodsError || resolutionsError) {
-    throw neighborhoodsError ?? resolutionsError
+  if (sourcesError) throw sourcesError
+
+  const portalSourceId = sources?.find((row) => row.code === PORTAL_HOUSES_SOURCE)?.id
+  const kmlSourceId = sources?.find((row) => row.code === VITACURA_KML_SOURCE)?.id
+  if (!portalSourceId || !kmlSourceId) throw new Error('Canonical Vitacura market sources are not available.')
+
+  const [neighborhoodsResult, listingsResult] = await Promise.all([
+    supabase
+      .from('market_neighborhoods')
+      .select('id,name')
+      .eq('geometry_source_id', kmlSourceId)
+      .order('name', { ascending: true }),
+    supabase
+      .from('market_current_listings')
+      .select('id,property_id,price_uf,observed_at,raw_payload')
+      .eq('source_id', portalSourceId)
+      .eq('operation', 'Venta')
+      .eq('status', 'active'),
+  ])
+
+  if (neighborhoodsResult.error || listingsResult.error) {
+    throw neighborhoodsResult.error ?? listingsResult.error
   }
 
-  const neighborhoodById = new Map((neighborhoods ?? []).map((row) => [String(row.id), String(row.name)]))
-  const latestResolutionByListing = new Map<string, string>()
-  const seenListings = new Set<string>()
+  const neighborhoods = neighborhoodsResult.data ?? []
+  const listings = listingsResult.data ?? []
+  const neighborhoodById = new Map(neighborhoods.map((row) => [String(row.id), String(row.name)]))
 
-  for (const row of resolutions ?? []) {
+  const listingIds = listings.map((row) => String(row.id)).filter(Boolean)
+  const propertyIds = Array.from(
+    new Set(listings.map((row) => String(row.property_id ?? '')).filter(Boolean)),
+  )
+
+  const [propertiesResult, reviewsResult] = await Promise.all([
+    propertyIds.length
+      ? supabase.from('market_properties').select('id,neighborhood_id').in('id', propertyIds)
+      : Promise.resolve({ data: [], error: null }),
+    listingIds.length
+      ? supabase
+          .from('market_neighborhood_review_items')
+          .select('id,listing_id,suggested_neighborhood_id,decision,created_at')
+          .in('listing_id', listingIds)
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  if (propertiesResult.error || reviewsResult.error) {
+    throw propertiesResult.error ?? reviewsResult.error
+  }
+
+  const neighborhoodByPropertyId = new Map(
+    (propertiesResult.data ?? []).map((row) => [String(row.id), String(row.neighborhood_id ?? '')]),
+  )
+  const latestReviewByListing = new Map<
+    string,
+    { suggestedNeighborhoodId: string; decision: string }
+  >()
+
+  for (const row of reviewsResult.data ?? []) {
     const listingId = String(row.listing_id ?? '')
-    if (!listingId || seenListings.has(listingId)) continue
-    seenListings.add(listingId)
-
-    const neighborhoodId = String(row.suggested_neighborhood_id ?? '')
-    const isCanonicalSystemResolution =
-      row.classification === 'clear' &&
-      row.decision === 'resolved_by_system' &&
-      row.resolution_origin === 'system' &&
-      Boolean(neighborhoodId)
-
-    if (isCanonicalSystemResolution) latestResolutionByListing.set(listingId, neighborhoodId)
+    if (!listingId || latestReviewByListing.has(listingId)) continue
+    latestReviewByListing.set(listingId, {
+      suggestedNeighborhoodId: String(row.suggested_neighborhood_id ?? ''),
+      decision: String(row.decision ?? ''),
+    })
   }
 
-  const listingIds = Array.from(latestResolutionByListing.keys())
-  if (listingIds.length === 0) return []
-
-  const { data: listings, error: listingsError } = await supabase
-    .from('market_current_listings')
-    .select('id,price_uf,observed_at,raw_payload')
-    .eq('operation', 'Venta')
-    .eq('status', 'active')
-    .in('id', listingIds)
-
-  if (listingsError) throw listingsError
-
-  return (listings ?? []).flatMap((listing): PublicValuationEvidenceRow[] => {
+  const rows = listings.flatMap((listing): PublicValuationEvidenceRow[] => {
     const payload = asPayload(listing.raw_payload)
     if (payload.property_type !== 'Casa') return []
 
-    const neighborhoodId = latestResolutionByListing.get(String(listing.id))
-    const neighborhood = neighborhoodId ? neighborhoodById.get(neighborhoodId) : null
+    const propertyId = String(listing.property_id ?? '')
+    const propertyNeighborhoodId = propertyId ? neighborhoodByPropertyId.get(propertyId) : null
+    const review = latestReviewByListing.get(String(listing.id))
+    const reviewNeighborhoodId =
+      review && ['accepted', 'resolved_by_system'].includes(review.decision)
+        ? review.suggestedNeighborhoodId
+        : null
+
+    const neighborhood =
+      (propertyNeighborhoodId ? neighborhoodById.get(propertyNeighborhoodId) : null) ??
+      (reviewNeighborhoodId ? neighborhoodById.get(reviewNeighborhoodId) : null)
+
     const priceUf = asFiniteNumber(listing.price_uf)
     const builtAreaM2 = asFiniteNumber(payload.built_area_m2)
     if (!neighborhood || priceUf === null || priceUf <= 0 || builtAreaM2 === null || builtAreaM2 <= 0) return []
@@ -100,6 +145,11 @@ async function loadPublicEvidence(): Promise<PublicValuationEvidenceRow[]> {
       },
     ]
   })
+
+  return {
+    rows,
+    canonicalNeighborhoods: neighborhoods.map((row) => String(row.name)),
+  }
 }
 
 function errorResponse(message: string, status: number) {
@@ -111,15 +161,18 @@ function errorResponse(message: string, status: number) {
 
 export async function GET() {
   try {
-    const rows = await loadPublicEvidence()
+    const { rows, canonicalNeighborhoods } = await loadPublicMarketData()
+    const coverage = buildPublicVitacuraCoverageOptions(rows, canonicalNeighborhoods)
     return NextResponse.json(
       {
         ok: true,
         scope: 'Vitacura',
         propertyTypes: ['Casa'],
-        coverage: buildPublicCoverageOptions(rows),
+        coverage,
+        usableMarketSample: rows.length,
+        sectorCoverageCount: coverage.filter((option) => option.coverageLevel === 'sector').length,
         methodology:
-          'Oferta activa territorialmente resuelta; UF por m² construido derivado desde precio publicado; mínimo 5 observaciones utilizables por sector.',
+          'Oferta activa de casas en Vitacura con barrio KML canónico; UF por m² construido derivado desde precio publicado. Con 5 o más observaciones utilizables se usa el sector; bajo ese piso se publica una referencia general de Vitacura claramente identificada.',
       },
       { headers: { 'Cache-Control': PUBLIC_CACHE } },
     )
@@ -160,7 +213,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const rows = await loadPublicEvidence()
+    const { rows, canonicalNeighborhoods } = await loadPublicMarketData()
+    if (!canonicalNeighborhoods.includes(neighborhood)) return errorResponse('Selecciona un sector válido de Vitacura.', 400)
+
     const estimate = buildPublicValuationEstimate(rows, input)
 
     if (!estimate) {
@@ -168,7 +223,7 @@ export async function POST(request: NextRequest) {
         {
           ok: false,
           code: 'INSUFFICIENT_COVERAGE',
-          error: 'Aún no tenemos evidencia suficiente en este sector para publicar una estimación responsable.',
+          error: 'Aún no tenemos evidencia suficiente en Vitacura para publicar una estimación responsable.',
         },
         { status: 422, headers: { 'Cache-Control': 'no-store' } },
       )
