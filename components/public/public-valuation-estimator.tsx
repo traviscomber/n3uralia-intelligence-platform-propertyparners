@@ -26,6 +26,7 @@ type EstimateResponse = {
 }
 
 const uf = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
+const date = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
 
 export default function PublicValuationEstimator() {
   const [coverage, setCoverage] = useState<CoverageOption[]>([])
@@ -216,7 +217,7 @@ export default function PublicValuationEstimator() {
               </div>
               <div className="bg-[var(--n3-deep)] p-4">
                 <span className="block text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana oferta</span>
-                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.medianUfM2.toFixed(1)} UF/m²</strong>
+                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.medianUfM2.toFixed(1)} UF/m² construido</strong>
               </div>
               <div className="bg-[var(--n3-deep)] p-4">
                 <span className="block text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base sector</span>
@@ -224,7 +225,13 @@ export default function PublicValuationEstimator() {
               </div>
             </div>
 
-            <p className="mt-5 text-xs leading-5 text-[var(--n3-text-muted)]">
+            {result.newestObservation && (
+              <p className="mt-4 text-xs text-[var(--n3-text-muted)]">
+                Observación más reciente de la muestra: {date.format(new Date(result.newestObservation))}.
+              </p>
+            )}
+
+            <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">
               Estimación automática referencial basada en publicaciones activas de oferta territorialmente resueltas. No constituye una tasación ni reemplaza la valorización profesional de Property Partners.
             </p>
 
