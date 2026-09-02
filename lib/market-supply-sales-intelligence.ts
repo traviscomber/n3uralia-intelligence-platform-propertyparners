@@ -56,7 +56,8 @@ export async function getSupplySalesIntelligence(): Promise<{ rows: SupplySalesR
 
     if (error) return { rows: [], error: error.message }
 
-    return { rows: (data ?? []).map((row) => supplySalesRow(row as Record<string, unknown>)) }
+    const rows = (data ?? []) as Record<string, unknown>[]
+    return { rows: rows.map(supplySalesRow) }
   } catch (error) {
     return { rows: [], error: error instanceof Error ? error.message : 'No fue posible consultar la inteligencia oferta/ventas.' }
   }
@@ -69,8 +70,9 @@ export async function getHouseSupplySalesLive(): Promise<{ rows: HouseSupplySale
 
     if (error) return { rows: [], error: error.message }
 
+    const rows = (data ?? []) as Record<string, unknown>[]
     return {
-      rows: (data ?? []).map((row) => ({
+      rows: rows.map((row) => ({
         neighborhoodName: String(row.neighborhood_name ?? ''),
         portalListings: Number(row.portal_listings ?? 0),
         cbrsTransactions: Number(row.cbrs_transactions ?? 0),
