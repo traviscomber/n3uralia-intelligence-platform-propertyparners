@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Download, ExternalLink, FileText, Send } from 'lucide-react'
 import { requirePageCapability } from '@/lib/access-guards'
 import {
+  canonicalReportKind,
   extractCanonicalReportTrace,
   formatCanonicalReportPeriod,
   normalizeCanonicalReportStatus,
@@ -13,7 +14,7 @@ import { DataStatusBar, WorkspaceHeader, WorkspaceShell } from '@/components/ui/
 import { OperationalState } from '@/components/ui/operational-state'
 
 type CanonicalDocumentRow = { id:string; title:string; content:string; doc_type:string|null; tags:string[]|null; created_at:string }
-type ReportRecord = { id:string; title:string; period:string; status:string; createdAt:string; pdfUrl:string|null; downloadUrl:string|null; sourceCount:number; model:string|null; promptVersion:string|null; costUsd:number|null }
+type ReportRecord = { id:string; title:string; kind:string; period:string; status:string; createdAt:string; pdfUrl:string|null; downloadUrl:string|null; sourceCount:number; model:string|null; promptVersion:string|null; costUsd:number|null }
 function formatDate(value:string){const d=new Date(value);return Number.isNaN(d.getTime())?value:new Intl.DateTimeFormat('es-CL',{dateStyle:'medium',timeStyle:'short'}).format(d)}
 function isClientCanonical(document:CanonicalDocumentRow){const tags=document.tags??[];return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')}
 function hasArtifact(report:ReportRecord){return Boolean(report.pdfUrl||report.downloadUrl)}
@@ -24,7 +25,7 @@ export default async function CanonicalClientReportsPage(){
   const supabase=createAdminClient()
   const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,doc_type,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
   const documents=(error?[]:(data||[]) as CanonicalDocumentRow[]).filter(isClientCanonical)
-  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseCanonicalReportContent(document.content);const trace=extractCanonicalReportTrace(parsed);const metadata={docType:document.doc_type,tags:document.tags};return{id:document.id,title:document.title,period:formatCanonicalReportPeriod(parsed),status:normalizeCanonicalReportStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:resolveCanonicalReportArtifactUrl(parsed,'pdf',document.id,metadata),downloadUrl:resolveCanonicalReportArtifactUrl(parsed,'download',document.id,metadata),...trace}})
+  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseCanonicalReportContent(document.content);const trace=extractCanonicalReportTrace(parsed);const metadata={docType:document.doc_type,tags:document.tags};return{id:document.id,title:document.title,kind:canonicalReportKind(parsed),period:formatCanonicalReportPeriod(parsed),status:normalizeCanonicalReportStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:resolveCanonicalReportArtifactUrl(parsed,'pdf',document.id,metadata),downloadUrl:resolveCanonicalReportArtifactUrl(parsed,'download',document.id,metadata),...trace}})
   const current=reports.find(isDeliverable)??null
   const history=reports.filter(report=>report.id!==current?.id)
   const incomplete=reports.filter(report=>!isDeliverable(report))
@@ -34,18 +35,18 @@ export default async function CanonicalClientReportsPage(){
 
   if(error){
     return <WorkspaceShell>
-      <WorkspaceHeader eyebrow="Informes" title="Último informe" meta="Consulta no disponible" actions={[{label:'Generar y entregar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+      <WorkspaceHeader eyebrow="Informes" title="Último informe" meta="Consulta no disponible" actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
       <div className="mt-6 max-w-5xl"><OperationalState kind="error" title="No fue posible consultar informes" description="La consulta de informes canónicos falló. No se interpreta este estado como ausencia de informes; reintenta más tarde o revisa la operación de reportes." /></div>
     </WorkspaceShell>
   }
 
   return <WorkspaceShell>
-    <WorkspaceHeader eyebrow="Informes" title="Último informe entregable" meta={current?`${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y entregar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+    <WorkspaceHeader eyebrow="Informes" title="Último informe entregable" meta={current?`${current.kind} · ${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
 
     <section className="mt-6 max-w-5xl">
       {current?<article className="grid gap-6 border-y border-[var(--n3-line)] py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{current.period}</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{current.kind} · {current.period}</p>
           <h2 className="mt-2 break-words text-xl font-semibold">{current.title}</h2>
           <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Generado {formatDate(current.createdAt)}</p>
           <p className="mt-1 text-sm text-[var(--n3-text-muted)]">Estado: {current.status}</p>
@@ -69,7 +70,7 @@ export default async function CanonicalClientReportsPage(){
 
     <section className="mt-8 max-w-5xl">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Historial</h2><span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{history.length}</span></div>
-      {history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=>{const incompleteReport=!isDeliverable(report);return <article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_120px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="break-words text-sm font-medium sm:truncate">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{formatDate(report.createdAt)}</p></div><span className={`text-xs ${incompleteReport?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{incompleteReport?'Borrador incompleto':report.status}</span><div className="flex gap-2 sm:justify-end">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}{!hasArtifact(report)?<span aria-label="PDF no vinculado" className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)] text-[var(--n3-text-muted)]"><FileText size={14}/></span>:null}</div></article>})}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}
+      {history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=>{const incompleteReport=!isDeliverable(report);return <article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_120px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="break-words text-sm font-medium sm:truncate">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{report.kind} · {formatDate(report.createdAt)}</p></div><span className={`text-xs ${incompleteReport?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{incompleteReport?'Borrador incompleto':report.status}</span><div className="flex gap-2 sm:justify-end">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}{!hasArtifact(report)?<span aria-label="PDF no vinculado" className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)] text-[var(--n3-text-muted)]"><FileText size={14}/></span>:null}</div></article>})}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}
     </section>
 
     <details className="mt-8 max-w-5xl">
