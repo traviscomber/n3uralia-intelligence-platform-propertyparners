@@ -121,6 +121,9 @@ jobs:
       - name: Verify management report delivery
         run: pnpm management:delivery:verify
 
+      - name: Verify canonical company sales target
+        run: pnpm exec tsx scripts/verify-canonical-company-sales-target.ts
+
       - name: Verify Reportin canonical PDF and delivery contract
         run: pnpm reportin:verify
 
