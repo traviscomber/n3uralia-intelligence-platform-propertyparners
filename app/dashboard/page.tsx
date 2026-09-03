@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { createClient } from '@/lib/supabase/server'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
 import { getDashboardOperationalSnapshot } from '@/lib/dashboard-operational'
+import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 
 const modules = [
   {
@@ -15,7 +17,7 @@ const modules = [
     number: '02',
     title: 'Valorización de Propiedades',
     description: 'Creación de casos en borrador, comparables documentados, ajustes, revisión, aprobación, expediente y registro de decisiones.',
-    href: '/dashboard/valuation',
+    href: '/dashboard/valuations',
   },
   {
     number: '03',
@@ -38,8 +40,7 @@ function n(value: number | null) {
 
 function formatDate(value: string | null) {
   if (!value) return 'Sin fecha observada'
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? 'Fecha no válida' : date.toLocaleString('es-CL')
+  return formatPropertyPartnersDateTime(value)
 }
 
 function freshnessLabel(status: MarketFreshnessStatus, ageDays: number | null) {
@@ -56,6 +57,10 @@ export default async function DashboardHome() {
     ? await supabase.from('profiles').select('role,full_name,team').eq('id', user.id).maybeSingle()
     : { data: null }
   const role = String(profile?.role || '').toLowerCase()
+
+  if (role === 'admin' || role === 'ceo') redirect('/dashboard/ceo')
+  if (role === 'director' || role === 'subdirector') redirect('/dashboard/director')
+
   const isSeller = role === 'seller'
 
   const [market, operations, entityResult, assignmentResult, valuationResult] = await Promise.all([
