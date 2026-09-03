@@ -1,16 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, FileText, RefreshCw } from 'lucide-react'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
+import { formatPropertyPartnersDate, propertyPartnersMonthKey } from '@/lib/property-partners-time'
 
 type ImportRun = { id:string; source_name:string; period_start:string; status:string; rows_received:number; rows_inserted:number; rows_rejected?:number; created_at:string }
 type Report = { id:string; report_type:string; period_start:string; status:string; generated_at:string }
 
 export default function ManagementOperationsPage() {
-  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
+  const [period, setPeriod] = useState(propertyPartnersMonthKey())
   const [rows, setRows] = useState('[]')
   const [runs, setRuns] = useState<ImportRun[]>([])
   const [reports, setReports] = useState<Report[]>([])
@@ -19,6 +20,7 @@ export default function ManagementOperationsPage() {
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const periodInitialized = useRef(false)
 
   async function refresh() {
     setLoading(true)
@@ -29,8 +31,21 @@ export default function ManagementOperationsPage() {
         fetch('/api/management/reports', { cache: 'no-store' }),
       ])
       if (!importsResponse.ok || !reportsResponse.ok) throw new Error('LOAD_FAILED')
-      setRuns((await importsResponse.json()).runs ?? [])
-      setReports((await reportsResponse.json()).reports ?? [])
+      const nextRuns = (await importsResponse.json()).runs ?? [] as ImportRun[]
+      const nextReports = (await reportsResponse.json()).reports ?? [] as Report[]
+      setRuns(nextRuns)
+      setReports(nextReports)
+
+      if (!periodInitialized.current) {
+        const latestWithEvidence = [
+          ...nextRuns.map((run: ImportRun) => run.period_start.slice(0, 7)),
+          ...nextReports.map((report: Report) => report.period_start.slice(0, 7)),
+        ]
+          .filter((value) => /^\d{4}-\d{2}$/.test(value))
+          .sort((left, right) => right.localeCompare(left))[0]
+        if (latestWithEvidence) setPeriod(latestWithEvidence)
+        periodInitialized.current = true
+      }
     } catch {
       setFailed(true)
     } finally {
@@ -99,9 +114,9 @@ export default function ManagementOperationsPage() {
       ? { title: 'Aún no hay datos del período', detail: 'El cierre no debe generarse hasta contar con evidencia operativa cargada.', label: 'Ver operación de datos', href: '#technical-data' }
       : !latestReport
         ? { title: 'El período está listo para preparar cierre', detail: 'Evalúa excepciones y genera el reporte mensual cuando las alertas estén revisadas.', label: 'Evaluar alertas', action: 'evaluate' as const }
-        : { title: 'Reporte mensual disponible', detail: `Último reporte: ${new Date(latestReport.generated_at).toLocaleDateString('es-CL')}.`, label: 'Abrir reporte', href: `/dashboard/control/reports/${latestReport.id}` }
+        : { title: 'Reporte mensual disponible', detail: `Último reporte: ${formatPropertyPartnersDate(latestReport.generated_at)}.`, label: 'Abrir reporte', href: `/dashboard/control/reports/${latestReport.id}` }
 
-  if (loading) return <WorkspaceShell><OperationalState kind="loading" title="Cargando gestión" description="Consultando el período seleccionado." /></WorkspaceShell>
+  if (loading) return <WorkspaceShell><OperationalState kind="loading" title="Cargando gestión" description="Consultando el período con evidencia más reciente." /></WorkspaceShell>
   if (failed) return <WorkspaceShell><OperationalState kind="error" title="No fue posible cargar gestión" description="Reintente la consulta."><button onClick={() => void refresh()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><RefreshCw size={15}/> Reintentar</button></OperationalState></WorkspaceShell>
 
   return (
@@ -109,7 +124,7 @@ export default function ManagementOperationsPage() {
       <WorkspaceHeader
         eyebrow="Gestión"
         title="Qué falta para cerrar"
-        meta={rejected ? `${rejected} observaciones de datos requieren revisión` : latestReport ? 'Reporte mensual disponible' : 'Cierre aún no emitido'}
+        meta={rejected ? `${rejected} observaciones de datos requieren revisión` : latestReport ? 'Reporte mensual disponible' : currentRuns.length ? 'Período con evidencia · cierre aún no emitido' : 'Sin evidencia cargada para el período'}
         controls={<div><label htmlFor="management-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><input id="management-period" type="month" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm" /></div>}
         actions={[{ label: 'Metas y alertas', href: '/dashboard/control/admin' }]}
       />
@@ -133,8 +148,8 @@ export default function ManagementOperationsPage() {
 
       <section className="mt-8 max-w-5xl">
         <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cierre mensual</h2><span className="text-xs text-[var(--n3-text-muted)]">{currentReports.length ? 'Disponible' : 'Pendiente'}</span></div>
-        {latestReport ? <article className="grid gap-4 border-b border-[var(--n3-line)] py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div><p className="text-sm font-medium">Reporte {latestReport.report_type}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{latestReport.status} · {new Date(latestReport.generated_at).toLocaleDateString('es-CL')}</p></div><div className="flex flex-wrap gap-2"><Link href={`/dashboard/control/reports/${latestReport.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><FileText size={14}/> Abrir</Link><a href={`/api/management/reports/${latestReport.id}/artifact`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><Download size={14}/> PDF</a></div></article> : <div className="border-b border-[var(--n3-line)] py-6"><p className="text-sm text-[var(--n3-text-muted)]">Todavía no existe un reporte mensual para este período.</p><button disabled={busy || currentRuns.length===0 || rejected>0} onClick={() => void generateReport()} className="mt-4 min-h-11 bg-[var(--primary)] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">{busy ? 'Procesando…' : 'Generar reporte mensual'}</button>{currentRuns.length===0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Carga evidencia del período antes de generar el cierre.</p>:rejected>0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Resuelve las observaciones de datos antes de generar el cierre.</p>:null}</div>}
-        {currentReports.length>1?<details className="border-b border-[var(--n3-line)]"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ver {currentReports.length-1} reporte{currentReports.length-1===1?' anterior':'s anteriores'}</summary><div className="divide-y divide-[var(--n3-line)]">{currentReports.slice(1).map((report) => <div key={report.id} className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm"><div><p className="font-medium">Reporte {report.report_type}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{report.status} · {new Date(report.generated_at).toLocaleDateString('es-CL')}</p></div><Link href={`/dashboard/control/reports/${report.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4"><FileText size={14}/> Abrir</Link></div>)}</div></details>:null}
+        {latestReport ? <article className="grid gap-4 border-b border-[var(--n3-line)] py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div><p className="text-sm font-medium">Reporte {latestReport.report_type}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{latestReport.status} · {formatPropertyPartnersDate(latestReport.generated_at)}</p></div><div className="flex flex-wrap gap-2"><Link href={`/dashboard/control/reports/${latestReport.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><FileText size={14}/> Abrir</Link><a href={`/api/management/reports/${latestReport.id}/artifact`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><Download size={14}/> PDF</a></div></article> : <div className="border-b border-[var(--n3-line)] py-6"><p className="text-sm text-[var(--n3-text-muted)]">Todavía no existe un reporte mensual para este período.</p><button disabled={busy || currentRuns.length===0 || rejected>0} onClick={() => void generateReport()} className="mt-4 min-h-11 bg-[var(--primary)] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">{busy ? 'Procesando…' : 'Generar reporte mensual'}</button>{currentRuns.length===0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Carga evidencia del período antes de generar el cierre.</p>:rejected>0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Resuelve las observaciones de datos antes de generar el cierre.</p>:null}</div>}
+        {currentReports.length>1?<details className="border-b border-[var(--n3-line)]"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ver {currentReports.length-1} reporte{currentReports.length-1===1?' anterior':'s anteriores'}</summary><div className="divide-y divide-[var(--n3-line)]">{currentReports.slice(1).map((report) => <div key={report.id} className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm"><div><p className="font-medium">Reporte {report.report_type}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{report.status} · {formatPropertyPartnersDate(report.generated_at)}</p></div><Link href={`/dashboard/control/reports/${report.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4"><FileText size={14}/> Abrir</Link></div>)}</div></details>:null}
         <Link href="/dashboard/control/reports" className="mt-3 inline-flex min-h-11 items-center text-xs font-medium text-[var(--n3-teal-soft)]">Ver archivo completo</Link>
       </section>
 
