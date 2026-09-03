@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
 import {
   PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
   applyPropertyPartnersHouseScope,
@@ -113,5 +114,15 @@ assert.throws(
   () => assertPropertyPartnersHouseScope({ ...report, executive_summary: 'Incluye departamentos.' }),
   /CEO_INTELLIGENCE_OUT_OF_SCOPE_CONTENT/,
 )
+
+const pdfSource = fs.readFileSync(new URL('../lib/reportin-ceo-intelligence-pdf-house-only.ts', import.meta.url), 'utf8')
+assert.doesNotMatch(pdfSource, /departamentos?/i, 'House-only artifact builder must not carry apartment labels in its page content.')
+assert.doesNotMatch(pdfSource, /arriendos?/i, 'House-only artifact builder must not carry rental labels in its page content.')
+assert.match(pdfSource, /replacePage\(pdf, 2\)/, 'House-only artifact must replace the legacy map page, not overlay it.')
+assert.match(pdfSource, /replacePage\(pdf, 3\)/, 'House-only artifact must replace the legacy benchmark page, not overlay it.')
+assert.match(pdfSource, /replacePage\(pdf, 6\)/, 'House-only artifact must replace the legacy decisions page, not overlay it.')
+
+const artifactRouteSource = fs.readFileSync(new URL('../app/api/management/reports/ceo-intelligence/[id]/artifact/route.ts', import.meta.url), 'utf8')
+assert.match(artifactRouteSource, /buildHouseOnlyCeoIntelligencePdf/, 'CEO artifact route must serve the semantic-clean house-only PDF builder.')
 
 console.log('CEO Intelligence house-only contractual scope verified.')
