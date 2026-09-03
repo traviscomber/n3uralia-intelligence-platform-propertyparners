@@ -159,7 +159,9 @@ for (const profile of profiles) {
     }
     results.push({ profile: profile.key, route: profile.start, check: 'keyboard', status: focusTrail.some((item) => item.tag) ? 'observed' : 'failed', focusTrail })
 
-    const reportLink = await page.$('a[href*="/report"]')
+    // Only report-specific surfaces qualify for PDF evidence. The global /dashboard/reportes/canonicos
+    // navigation item contains "/report" too, but is an index page rather than a printable report.
+    const reportLink = await page.$('a[href$="/reporte"], a[href*="/reportes/audiencias/"]')
     if (reportLink) {
       const href = await page.evaluate((element) => element.getAttribute('href'), reportLink)
       if (href) {
