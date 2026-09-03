@@ -87,9 +87,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
   const visibleProfiles = scope.visibleProfileIds
 
   const [profilesResult, assignmentsResult] = await Promise.all([
-    visibleProfiles.length
-      ? supabase.from('profiles').select('id,full_name,team,role').in('id', visibleProfiles).eq('role', 'seller').order('full_name')
-      : Promise.resolve({ data: [], error: null }),
+    supabase.rpc('current_user_visible_sellers'),
     visibleProfiles.length
       ? supabase.from('property_assignments').select('id,property_id,assigned_to,assignment_role,status,notes,assigned_at,ended_at').in('assigned_to', visibleProfiles).order('assigned_at', { ascending: false }).limit(100)
       : Promise.resolve({ data: [], error: null }),
