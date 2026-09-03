@@ -7,6 +7,12 @@ import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 const ASSIGNMENT_ROLES = new Set(['owner', 'co_broker', 'support'])
 const ASSIGNMENT_STATUSES = new Set(['active', 'paused', 'closed'])
 
+type VisibleSeller = {
+  id: string
+  full_name: string
+  team: string | null
+}
+
 function text(value: FormDataEntryValue | null) {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -87,9 +93,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
   const visibleProfiles = scope.visibleProfileIds
 
   const [profilesResult, assignmentsResult] = await Promise.all([
-    visibleProfiles.length
-      ? supabase.from('profiles').select('id,full_name,team,role').in('id', visibleProfiles).eq('role', 'seller').order('full_name')
-      : Promise.resolve({ data: [], error: null }),
+    supabase.rpc('current_user_visible_sellers'),
     visibleProfiles.length
       ? supabase.from('property_assignments').select('id,property_id,assigned_to,assignment_role,status,notes,assigned_at,ended_at').in('assigned_to', visibleProfiles).order('assigned_at', { ascending: false }).limit(100)
       : Promise.resolve({ data: [], error: null }),
@@ -111,7 +115,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
     ? await supabase.from('market_properties').select('id,normalized_address,property_type').in('id', assignmentPropertyIds)
     : { data: [], error: null }
 
-  const profiles = profilesResult.data ?? []
+  const profiles = (profilesResult.data ?? []) as VisibleSeller[]
   const properties = propertiesResult.data ?? []
   const profileById = new Map(profiles.map((item) => [item.id, item]))
   const propertyById = new Map((assignedPropertiesResult.data ?? []).map((item) => [item.id, item]))

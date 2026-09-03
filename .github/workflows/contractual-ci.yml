@@ -130,6 +130,9 @@ jobs:
       - name: Verify Vitacura property-assignment scope
         run: pnpm exec tsx scripts/verify-property-assignment-vitacura-scope.ts
 
+      - name: Verify scoped seller visibility RPC
+        run: pnpm exec tsx scripts/verify-management-visible-sellers-rpc.ts
+
       - name: Verify operational CEO coherence
         run: pnpm exec tsx scripts/verify-operational-ceo-coherence.ts
 
