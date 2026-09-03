@@ -124,6 +124,9 @@ jobs:
       - name: Verify Reportin canonical PDF and delivery contract
         run: pnpm reportin:verify
 
+      - name: Verify Reportin CEO intelligence contract
+        run: pnpm exec tsx --tsconfig scripts/tsconfig.reportin.json scripts/verify-reportin-ceo-intelligence.ts
+
       - name: Verify dashboard access
         run: pnpm access:verify
 
