@@ -21,9 +21,7 @@ type GenerationResponse = {
 }
 
 function gatewayErrorMessage(status: number) {
-  if ([502, 503, 504].includes(status)) {
-    return 'La generación excedió la ventana interactiva disponible. Intenta nuevamente.'
-  }
+  if ([502, 503, 504].includes(status)) return 'La generación excedió la ventana interactiva disponible. Intenta nuevamente.'
   return 'El servicio de generación devolvió una respuesta no válida. Intenta nuevamente.'
 }
 
@@ -43,46 +41,41 @@ export function CanonicalLatestReportGenerator() {
         headers: { 'Content-Type': 'application/json' },
       })
       const contentType = response.headers.get('content-type') || ''
-      const payload = contentType.includes('application/json')
-        ? await response.json() as GenerationResponse
-        : null
-
-      if (!response.ok) {
-        throw new Error(payload?.error || gatewayErrorMessage(response.status))
-      }
+      const payload = contentType.includes('application/json') ? await response.json() as GenerationResponse : null
+      if (!response.ok) throw new Error(payload?.error || gatewayErrorMessage(response.status))
       if (!payload) throw new Error(gatewayErrorMessage(response.status))
       setResult(payload)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No fue posible generar el informe canónico.')
+      setError(cause instanceof Error ? cause.message : 'No fue posible generar el informe contractual.')
     } finally {
       setLoading(false)
     }
   }
 
   return <IntelligencePanel
-    eyebrow="Reportin · canónico"
-    title="Último período disponible"
-    description="Construye el paquete exclusivamente desde métricas y estados canónicos persistidos. Los valores no verificables permanecen N/D y el resultado se guarda como borrador; no se envía automáticamente."
+    eyebrow="Reportin · entrega contractual"
+    title="Avance de implementación N3uralia"
+    description="Documento separado para trazabilidad de entrega, capacidades, dependencias y cierre contractual. No corresponde al informe mensual de negocio para el CEO."
   >
     <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 text-xs text-[var(--n3-text-muted)]">
         <p>Fuente: gestión canónica + registro de capacidades.</p>
-        <p className="mt-1">Protección: no duplica un informe canónico existente para el mismo período.</p>
+        <p className="mt-1">Uso: seguimiento de entrega y UAT. No se envía automáticamente.</p>
       </div>
       <button
         type="button"
         disabled={loading}
         onClick={() => void generate()}
-        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm font-semibold disabled:opacity-50"
       >
         {loading ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
-        {loading ? 'Generando informe…' : 'Generar canónico'}
+        {loading ? 'Generando contractual…' : 'Generar contractual'}
       </button>
     </div>
 
     {result?.id ? <div role="status" className="border-t border-[var(--n3-line)] p-5 text-sm">
-      <p className="font-medium text-[#65c780]">{result.reused ? 'Informe existente recuperado.' : 'Borrador canónico generado.'}</p>
-      <p className="mt-2 break-words text-[var(--n3-text-muted)]">{result.title || 'Informe canónico'}</p>
+      <p className="font-medium text-[#65c780]">{result.reused ? 'Informe contractual existente recuperado.' : 'Borrador contractual generado.'}</p>
+      <p className="mt-2 break-words text-[var(--n3-text-muted)]">{result.title || 'Informe contractual'}</p>
       {result.sourceSnapshot ? <p className="mt-1 text-xs text-[var(--n3-text-muted)]">
         {result.sourceSnapshot.periodStart} – {result.sourceSnapshot.periodEnd} · corte {result.sourceSnapshot.sourceCutoff} · {result.sourceSnapshot.evidenceCount ?? 0} evidencias
       </p> : null}
