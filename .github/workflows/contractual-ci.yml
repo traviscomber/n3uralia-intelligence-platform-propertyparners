@@ -127,6 +127,9 @@ jobs:
       - name: Verify Reportin CEO intelligence contract
         run: pnpm exec tsx --tsconfig scripts/tsconfig.reportin.json scripts/verify-reportin-ceo-intelligence.ts
 
+      - name: Verify CEO house-only contractual scope
+        run: pnpm exec tsx --tsconfig scripts/tsconfig.reportin.json scripts/verify-ceo-house-scope.ts
+
       - name: Verify dashboard access
         run: pnpm access:verify
 
