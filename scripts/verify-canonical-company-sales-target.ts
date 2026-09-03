@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import targets from '@/data/targets-2026.json'
 import {
   CANONICAL_COMPANY_MONTHLY_SALES_TARGET,
@@ -23,7 +24,7 @@ if (july.actual !== null) {
   assert.equal(july.compliance, Number(((july.actual / 8) * 100).toFixed(1)))
 }
 
-const source = await import('node:fs').then(({ readFileSync }) => readFileSync('lib/targets-2026.ts', 'utf8'))
+const source = readFileSync('lib/targets-2026.ts', 'utf8')
 assert.ok(!source.includes('management_credited_sales'), 'La meta corporativa no debe acoplarse al crédito fraccionario de gestión')
 
 console.log(JSON.stringify({
