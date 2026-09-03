@@ -2,179 +2,118 @@
 
 Última actualización: 3 de septiembre de 2026
 
-## Criterio de estado
-
-- **PASS técnico:** implementación disponible y evidencia reproducible mediante código, SQL, RLS, verificadores, QA autenticado, navegador o deployment.
-- **Pendiente UAT cliente:** requiere ejecución y aceptación por usuarios autorizados de Property Partners.
-- **Dependencia cliente:** requiere fuente, definición, aprobación, destinatario o criterio formal del Cliente.
-- **No disponible en fuente:** la plataforma muestra `n/d`, `—` o estado equivalente y no infiere el dato.
-
-Baseline de aplicación productivo verificado al iniciar este cierre: `92f1ca63ab2c2d606edc40d55aadb250669cd154` en `https://ppartnersgroup.app`, deployment `dpl_4CxmckkJfevb5zMd7GwELLeqt1H3` (`READY`).
-
-PR #202 contiene únicamente una aclaración de copy para declarar el denominador de cobertura territorial. Se mantiene fuera del baseline hasta completar `Contractual modules CI` y `N3uralia IP Boundaries`; al integrarse, corresponde actualizar el SHA final y repetir el gate productivo.
-
-La aceptación técnica automatizada no sustituye `docs/UAT_PROPERTY_PARTNERS.md`.
-
-## 1. Plataforma y seguridad
-
-| Requisito | Estado | Evidencia |
-|---|---|---|
-| Autenticación y perfil válido | PASS técnico | guards, post-login por rol, alcance centralizado y role QA |
-| Alcance CEO global | PASS técnico | capacidades, rutas protegidas y RLS |
-| Alcance dirección/subdirección por oficina | PASS técnico | matriz de capacidades, RLS y pruebas negativas |
-| Alcance Ejecutivo personal | PASS técnico | alcance personal y RLS |
-| Protección de APIs críticas | PASS técnico | guards de servidor y autorización interna de RPC críticas |
-| MFA para aprobación/emisión de valorizaciones | PASS técnico | AAL2 y guard de operación crítica |
-| Recorrido autenticado automatizado | PASS técnico | Auth/RLS QA + visual QA del baseline productivo |
-| Aceptación humana de recorridos por perfil | Pendiente UAT cliente | casos UAT por rol y pilar |
-| Protección de contraseñas filtradas de Supabase Auth | Pendiente administración | advisor vigente; activar en configuración Auth cuando corresponda |
-
-PR #201 corrigió la lista de ejecutivas para asignación mediante una RPC acotada al predicado central de alcance; no se amplió la política self-only de `profiles`.
-
-## 2. Pilar I — Inteligencia de Mercado
-
-Estado global: **PASS técnico / READY para UAT**.
-
-| Requisito | Estado | Evidencia |
-|---|---|---|
-| Ingestión y trazabilidad de fuentes | PASS técnico | runs/raw records/manifiestos y UI de fuentes |
-| Separación publicación vs venta confirmada | PASS técnico | listings/transactions y copy fail-closed |
-| Identidad canónica revisable | PASS técnico | 50 casas live; 11 vinculadas, 39 sin vínculo; 1 candidato fuerte y 1 colisión |
-| KML Vitacura | PASS técnico | 19 barrios canónicos |
-| Cobertura territorial operativa | PASS técnico con deuda de datos visible | 84,2%; 50 de 317 propiedades operativas sin barrio |
-| Asignaciones comerciales V1 | PASS técnico | sólo casas cuya dirección acredita Vitacura; ejecutivas visibles según alcance |
-| Ventas CBRS publicables actuales | No disponible en fuente validada | no se convierte una fila registral en venta residencial sin validación |
-| Suficiencia de filtros, barrios y nomenclatura | Pendiente UAT cliente | UAT-MKT-01 a UAT-MKT-05 |
-
-Nota de interpretación: las **50 propiedades sin barrio** pertenecen al universo de **317 propiedades operativas/históricas**, no al universo de **50 casas live**. PR #202 hace explícito ese denominador en la UI.
-
-## 3. Pilar II — Valorización de Propiedades
-
-Estado global: **PASS técnico / READY para UAT**.
-
-| Requisito | Estado | Evidencia |
-|---|---|---|
-| Expediente y sujeto | PASS técnico | caso persistido y trazable |
-| Comparables aceptados/excluidos | PASS técnico | decisiones y evidencia por comparable |
-| Ajustes con límites | PASS técnico | controles deterministas y auditoría |
-| Valor sugerido, rango y confianza | PASS técnico | cálculo/modelo y validaciones |
-| Mínimo 3 comparables antes de avanzar | PASS técnico | guard de workflow |
-| Revisión/devolución/reenvío | PASS técnico | transición atómica e historial |
-| Aprobación/emisión exclusiva CEO | PASS técnico | capability + MFA/AAL2 |
-| Versiones y decision log | PASS técnico | snapshots e historial |
-| Reporte/PDF | PASS técnico automatizado | snapshot y verificadores |
-| Caso real completo punta a punta | Pendiente UAT cliente | UAT-VAL-01 a UAT-VAL-07 |
-| Inspección humana del PDF emitido | Pendiente UAT cliente | UAT-VAL-07 |
-
-Expediente UAT observado en producción: `LA PEROUSSE 5214`, Casa/Jardín del Este, versión 3, `EN REVISIÓN`, UF 46.978 preliminar, confianza Media, 5 comparables CBRS aceptados y 0 alertas visibles. No se declara emitido ni aprobado antes de completar el flujo humano.
-
-## 4. Pilar III — Control de Gestión Comercial
-
-Estado global: **PASS técnico / READY para UAT**, con dependencias de negocio explícitas.
-
-| Requisito | Estado | Evidencia |
-|---|---|---|
-| Vista CEO | PASS técnico | julio 2026 como último período con evidencia |
-| Vista dirección/oficina | PASS técnico | alcance centralizado |
-| Vista Ejecutivo | PASS técnico | alcance personal |
-| Ventas reales julio 2026 | PASS técnico/canónico | 11 |
-| Meta corporativa mensual | PASS técnico/canónico | 8 ventas |
-| Cumplimiento julio | PASS técnico/canónico | 137,5% |
-| Créditos de gestión separados de ventas | PASS técnico | 9,5 corporativo como dimensión de atribución, no venta real |
-| Metas y alertas | PASS técnico como infraestructura | almacenamiento, edición y evaluación |
-| Reportes manuales | PASS técnico | persistencia, artefacto y trazabilidad |
-| Programación fail-closed | PASS técnico | bloqueos por definiciones/destinatarios pendientes |
-| Fórmula oficial de productividad/ranking/umbrales finales | Dependencia cliente | no se inventan reglas contractuales |
-| Calendario y destinatarios definitivos | Dependencia cliente | distribución recurrente bloqueada hasta aprobación |
-
-Esta revisión no generó ni envió un nuevo reporte a destinatarios externos.
-
-## 5. Cotizador público complementario
-
-Estado: **productivo / no bloqueante**.
-
-| Control | Estado | Evidencia |
-|---|---|---|
-| Landing pública `/` | PASS técnico productivo | verificación directa 3-sep-2026 |
-| Casas en Vitacura | PASS técnico | scope del endpoint y UI |
-| 19 sectores KML seleccionables | PASS técnico productivo | PR #183 mergeado |
-| Piso mínimo de 5 observaciones | PASS técnico | regresiones y UI |
-| Fallback general Vitacura cuando falta muestra sectorial | PASS técnico productivo | explícito, sin falsa precisión |
-| Sin PII | PASS técnico | no solicita ni almacena datos de contacto |
-| Separación del Valorizador Profesional | PASS técnico | flujos, permisos y metodología independientes |
-
-PR #181 y PR #183 fueron mergeados el 2 de septiembre de 2026. Ya no corresponden a estado “candidato”.
-
-## 6. Informes y trazabilidad
-
-| Requisito | Estado | Evidencia |
-|---|---|---|
-| Directorio de informes canónicos | PASS técnico | `/dashboard/reportes/canonicos` |
-| Operación de reportes | PASS técnico | `/dashboard/reportes/operacion` |
-| Snapshot persistido | PASS técnico | documentos/artefactos auditables |
-| N/D preservado | PASS técnico | no se publica cero por ausencia |
-| Modelo/prompt/costo/fuentes cuando existen | PASS técnico | metadata canónica |
-| Distribución recurrente definitiva | Dependencia cliente/configuración | calendario/audiencia/destinatarios aprobados |
-
-## 7. QA y release reproducible
-
-El baseline productivo previo a PR #202 tiene evidencia verde para:
-
-1. `Contractual modules CI`;
-2. QA autenticado por roles;
-3. QA visual autenticado;
-4. `N3uralia IP Boundaries`;
-5. Vercel producción `READY`;
-6. navegación real de Mercado, Gestión, Valorización y cartera;
-7. cotizador público productivo.
-
-PR #202 tiene preview Vercel `READY` y build completo, pero no se integra hasta que sus dos jobs de GitHub Actions dejen el estado `queued` y concluyan correctamente.
-
-Si se modifica código después del UAT, este gate debe repetirse antes de congelar el release final.
-
-## 8. Higiene de ramas y PRs
-
-El 3 de septiembre se cerraron sin merge por estar superseded u obsoletos: #78, #79, #121, #140, #143, #144 y #184.
-
-Las capacidades útiles de #140/#143/#144 ya están materializadas en versiones posteriores en producción; no se reintroducen ramas antiguas para “cerrar” deuda administrativa.
-
-## 9. Pendientes UAT
-
-Plan ejecutable: `docs/UAT_PROPERTY_PARTNERS.md`.
-
-Pendiente de aceptación humana:
-
-- Mercado: inventario live, barrios/KML, identidad/reconciliación, oferta vs evidencia registral y estados sin datos;
-- Valorización: caso real, comparables, devolución, corrección, reenvío, aprobación CEO con MFA, emisión e inspección PDF;
-- Gestión: vistas por rol, procedencia de métricas, reporte manual y bloqueo correcto de recurrencia;
-- distribución controlada sólo cuando existan destinatarios aprobados.
-
-Salida aceptable: P0 = 0, P1 = 0; P2/P3 corregidos, aceptados o programados sin bloquear el flujo contractual.
-
-## 10. Dependencias exclusivas del Cliente
-
-- fuentes/datasets adicionales que Property Partners determine como oficiales;
-- definición definitiva de captaciones/productividad/ranking/umbrales cuando aún esté pendiente;
-- calendario, audiencias y destinatarios de informes;
-- representantes y aprobación funcional de UAT;
-- políticas adicionales de retención, privacidad o integración cuando correspondan.
-
-Ninguna de estas dependencias autoriza datos ficticios, reglas inventadas o inferencias presentadas como hechos.
-
-## 11. Estado de listo para entrega técnica
-
-A fecha 3 de septiembre de 2026, el estado correcto es:
+## Estado ejecutivo
 
 **PASS técnico / READY para UAT**.
 
-La entrega contractual definitiva requiere:
+Baseline funcional productivo:
+- SHA `dbb9ae7717e9152858d2e989a36691f6ab03b765`;
+- producción `https://ppartnersgroup.app`;
+- deployment `dpl_4vk2HRhNZQiKZ3sikeQ2qir69n49` — `READY`;
+- PR #202 integrado después de Contractual CI PASS, N3uralia IP Boundaries PASS y preview READY;
+- producción verificada en navegador y sin `error`/`fatal` en la ventana runtime posterior al deploy.
 
-1. completar cualquier gate pendiente del último cambio funcional antes de mergearlo;
-2. ejecutar los casos READY de UAT con usuarios autorizados;
-3. cerrar P0/P1 y repetir gates cuando haya cambios;
-4. registrar P2/P3 y dependencias externas;
-5. ejecutar capacitación;
-6. consolidar acta/minuta de aceptación;
-7. congelar SHA y deployment finales.
+La aceptación técnica no sustituye `docs/UAT_PROPERTY_PARTNERS.md` ni el acta del Cliente.
 
-No se declara aceptación contractual final antes de esos pasos.
+## 1. Plataforma y seguridad
+
+| Requisito | Estado |
+|---|---|
+| Autenticación, perfiles y alcance por rol | PASS técnico |
+| RLS / tenant isolation | PASS técnico |
+| APIs y RPC críticas con guards de servidor | PASS técnico |
+| MFA/AAL2 para aprobación/emisión crítica | PASS técnico |
+| Asignación de cartera sólo dentro de V1 Vitacura | PASS técnico |
+| Sellers visibles sin ampliar `profiles` RLS | PASS técnico |
+| Protección contra contraseñas filtradas Supabase Auth | Pendiente administración |
+| Backup/recovery probado mediante restore drill actual | Pendiente técnico de gobernanza |
+| Aceptación humana por roles | Pendiente UAT cliente |
+
+## 2. Mercado
+
+Estado: **PASS técnico / READY para UAT**.
+
+| Requisito | Estado / evidencia |
+|---|---|
+| Fuentes y trazabilidad | PASS; Portal, CBRS y KML separados |
+| Casas live | 50 |
+| Identidad live | 11 vinculadas / 39 sin vínculo; 1 candidato fuerte; 1 colisión |
+| Barrios KML | 19 |
+| Cobertura territorial operativa | 84,2%; 50 de 317 propiedades operativas sin barrio |
+| Copy del denominador | PASS productivo; explícitamente separado de las 50 casas live |
+| Publicaciones tratadas como ventas | Prohibido / fail-closed |
+| Filas CBRS publicadas automáticamente como venta | Prohibido / fail-closed |
+| Lectura y suficiencia de negocio | Pendiente UAT cliente |
+
+## 3. Valorización
+
+Estado: **PASS técnico / READY para UAT**.
+
+| Requisito | Estado |
+|---|---|
+| Expediente, comparables y ajustes auditables | PASS técnico |
+| Mínimo 3 comparables antes de avanzar | PASS técnico |
+| Revisión/devolución/reenvío | PASS técnico |
+| CEO-only aprobación/emisión + MFA | PASS técnico |
+| Versiones/snapshots/decision log | PASS técnico |
+| PDF/artefacto | PASS automatizado |
+| Caso real hasta `issued` | Pendiente UAT cliente |
+| Inspección humana del PDF emitido | Pendiente UAT cliente |
+
+Caso UAT observado: `LA PEROUSSE 5214`, Casa/Jardín del Este, versión 3, `EN REVISIÓN`, UF 46.978 preliminar, confianza Media, 5 comparables aceptados y 0 alertas visibles.
+
+## 4. Gestión y reportes
+
+Estado: **PASS técnico / READY para UAT**, con dependencias cliente.
+
+| Requisito | Estado / evidencia |
+|---|---|
+| Ventas reales julio 2026 | 11 |
+| Meta corporativa mensual | 8 |
+| Cumplimiento | 137,5% |
+| Crédito de gestión corporativo | 9,5, separado de ventas reales |
+| Vistas CEO/dirección/ejecutivo | PASS técnico |
+| Reportes manuales y trazabilidad | PASS técnico |
+| Scheduling / delivery fail-closed | PASS técnico |
+| KPI finales aún no aprobados | Dependencia cliente |
+| Calendario / destinatarios / frecuencia | Dependencia cliente |
+
+Esta revisión no envió reportes externos.
+
+## 5. Cotizador público
+
+Estado: **productivo / no bloqueante**.
+
+PR #181 y #183 están mergeados. Se verificó alcance Casas/Vitacura, 19 sectores KML, mínimo de cinco observaciones, fallback general Vitacura explícito, ausencia de PII y separación del Valorizador Profesional.
+
+## 6. QA de release
+
+Para el último cambio funcional #202:
+
+- Contractual modules CI: PASS;
+- N3uralia IP Boundaries: PASS;
+- Vercel preview: READY;
+- merge a `main`: PASS;
+- deployment productivo: READY;
+- navegador productivo: PASS;
+- logs `error`/`fatal` post-deploy: ninguno encontrado.
+
+El baseline previo mantiene además QA autenticado por roles y QA visual verdes; #202 fue un cambio de copy sin cambios en autorización, datos o lógica.
+
+## 7. Higiene
+
+Cerrados sin merge por estar superseded/obsoletos: #78, #79, #121, #140, #143, #144 y #184.
+
+## 8. Gates pendientes antes de aceptación final
+
+- UAT del Cliente con participantes designados;
+- caso real de valorización hasta `issued` e inspección PDF;
+- aprobación de KPI pendientes;
+- calendario, canal y destinatarios de reporting;
+- capacitación y evidencia de asistencia;
+- restore drill / evidencia de backup-recovery vigente;
+- receptor técnico/titularidad de servicios de terceros;
+- artefacto final + checksum + autorización de entrega;
+- acta de aceptación.
+
+No se declara `accepted` mientras estos gates sigan abiertos.
