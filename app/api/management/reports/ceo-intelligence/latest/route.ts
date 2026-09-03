@@ -7,11 +7,45 @@ import {
   buildContractScopedCeoIntelligenceInput,
   generateContractScopedCeoIntelligenceReport,
 } from '@/lib/property-partners-ceo-intelligence-contract-scope'
+import type { CanonicalCeoIntelligenceInput, PropertyPartnersCeoIntelligenceReport } from '@/lib/property-partners-ceo-intelligence-report'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 const REPORTIN_VERSION = '1.2'
+const MAX_GENERATION_ATTEMPTS = 2
+
+function isRetryableGenerationError(error: unknown) {
+  if (error instanceof SyntaxError) return true
+  const code = error instanceof Error ? error.message : String(error)
+  return [
+    'OPENAI_CEO_INTELLIGENCE_EMPTY',
+    'OPENAI_CEO_INTELLIGENCE_INVALID_JSON',
+    'OPENAI_CEO_INTELLIGENCE_INVALID_SHAPE',
+  ].includes(code)
+}
+
+async function generateWithRetry(input: CanonicalCeoIntelligenceInput): Promise<{
+  report: PropertyPartnersCeoIntelligenceReport
+  attempts: number
+}> {
+  let lastError: unknown = null
+  for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt += 1) {
+    try {
+      const report = await generateContractScopedCeoIntelligenceReport(input)
+      return { report, attempts: attempt }
+    } catch (error) {
+      lastError = error
+      if (!isRetryableGenerationError(error) || attempt === MAX_GENERATION_ATTEMPTS) throw error
+      console.warn('CEO_INTELLIGENCE_REPORT_RETRY', {
+        attempt,
+        code: error instanceof Error ? error.message : String(error),
+        sourceSnapshotId: input.sourceSnapshotId,
+      })
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('CEO_INTELLIGENCE_REPORT_FAILED')
+}
 
 export async function POST() {
   const access = await requireRoleAccess(['admin', 'ceo'])
@@ -51,7 +85,8 @@ export async function POST() {
     }
 
     const generationStartedAt = Date.now()
-    const report = await generateContractScopedCeoIntelligenceReport(input)
+    const generation = await generateWithRetry(input)
+    const report = generation.report
     const openaiAndValidationMs = Date.now() - generationStartedAt
     const modelTag = `openai-${report.canonical_metadata.model}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-')
 
@@ -109,7 +144,12 @@ export async function POST() {
           cbrs_cutoff: input.market.cbrsCutoff,
           valuation_case_count: input.valuation.totalCases,
         },
-        reportin: { version: REPORTIN_VERSION, artifact_url: artifactUrl, design_authority: 'DESIGN.md' },
+        reportin: {
+          version: REPORTIN_VERSION,
+          artifact_url: artifactUrl,
+          design_authority: 'DESIGN.md',
+          generation_attempts: generation.attempts,
+        },
         timing: { openai_and_validation_ms: openaiAndValidationMs, persistence_ms: persistenceMs, total_ms: totalMs },
       },
     })
@@ -131,6 +171,7 @@ export async function POST() {
         marketRows: input.market.rows.length,
         contractualScope: PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
       },
+      reportin: { generationAttempts: generation.attempts },
       timing: { openaiAndValidationMs, persistenceMs, totalMs },
     }, { status: 201 })
   } catch (error) {
