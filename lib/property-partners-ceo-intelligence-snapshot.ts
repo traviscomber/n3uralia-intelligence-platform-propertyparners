@@ -297,6 +297,11 @@ export async function buildLatestCeoIntelligenceInput(): Promise<CanonicalCeoInt
       })
   }
 
+  const monthlySeries = {
+    sales: monthlySeriesFor('sales'),
+    salesUf: monthlySeriesFor('sales_uf'),
+  }
+
   const polygons: CeoMarketPolygon[] = ((polygonsResult.data || []) as MarketPolygonRow[])
     .map((row) => {
       const geometry = normalizeGeometry(row.geometry)
@@ -347,8 +352,10 @@ export async function buildLatestCeoIntelligenceInput(): Promise<CanonicalCeoInt
     }
   })
 
-  const marketPortalCutoff = marketRows.map((row) => row.asOfPortal).filter((value): value is string => Boolean(value)).sort().at(-1) || null
-  const marketCbrsCutoff = marketRows.map((row) => row.asOfCbrs).filter((value): value is string => Boolean(value)).sort().at(-1) || null
+  const matchedMarketRows = marketRows.filter((row) =>
+    polygons.some((polygon) => normalizeName(polygon.name) === normalizeName(row.neighborhood)))
+  const marketPortalCutoff = matchedMarketRows.map((row) => row.asOfPortal).filter((value): value is string => Boolean(value)).sort().at(-1) || null
+  const marketCbrsCutoff = matchedMarketRows.map((row) => row.asOfCbrs).filter((value): value is string => Boolean(value)).sort().at(-1) || null
 
   const valuationRows = (valuationResult.data || []) as ValuationRow[]
   const valuationCounts = new Map<string, number>()
@@ -377,7 +384,8 @@ export async function buildLatestCeoIntelligenceInput(): Promise<CanonicalCeoInt
   if (marketPortalCutoff && marketPortalCutoff < periodStart) dependencies.push(`La referencia Portal disponible tiene corte ${marketPortalCutoff}, anterior al período comercial; usarla como benchmark, no como oferta de julio.`)
   if (marketCbrsCutoff && marketCbrsCutoff < periodStart) dependencies.push(`La referencia CBRS disponible tiene corte ${marketCbrsCutoff}, anterior al período comercial; usarla como benchmark, no como transacciones de julio.`)
 
-  const sourceSnapshotId = `pp-ceo:${periodStart}_${periodEnd}:${sourceCutoff}:${evidence.size}`
+  const evidenceList = [...evidence.values()]
+  const sourceSnapshotId = `pp-ceo:${periodStart}_${periodEnd}:${sourceCutoff}:${evidenceList.length}`
   return {
     reportId: `ceo-intelligence:${periodStart}_${periodEnd}`,
     title: `Property Partners Vitacura · CEO Intelligence · ${periodStart.slice(0, 7)}`,
@@ -390,17 +398,14 @@ export async function buildLatestCeoIntelligenceInput(): Promise<CanonicalCeoInt
       sourceCutoff,
       emittedAt: new Date().toISOString(),
     },
-    evidence: [...evidence.values()],
+    evidence: evidenceList,
     headlineKpis,
-    monthlySeries: {
-      sales: monthlySeriesFor('sales'),
-      salesUf: monthlySeriesFor('sales_uf'),
-    },
+    monthlySeries,
     funnel,
     offices,
     market: {
       polygons,
-      rows: marketRows.filter((row) => polygons.some((polygon) => normalizeName(polygon.name) === normalizeName(row.neighborhood))),
+      rows: matchedMarketRows,
       portalCutoff: marketPortalCutoff,
       cbrsCutoff: marketCbrsCutoff,
     },
