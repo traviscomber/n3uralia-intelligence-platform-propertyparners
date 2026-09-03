@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { requireRoleAccess } from '@/lib/api-access'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildPolishedCeoIntelligencePdf } from '@/lib/reportin-ceo-intelligence-pdf-polish'
+import {
+  PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
+  assertPropertyPartnersHouseScope,
+} from '@/lib/property-partners-ceo-intelligence-contract-scope'
 import type { PropertyPartnersCeoIntelligenceReport } from '@/lib/property-partners-ceo-intelligence-report'
 
 export const runtime = 'nodejs'
@@ -41,13 +45,20 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!data) return NextResponse.json({ error: 'Informe no encontrado.' }, { status: 404 })
 
   const tags = Array.isArray(data.tags) ? data.tags.filter((tag): tag is string => typeof tag === 'string') : []
-  if (!tags.includes('n3uralia-client-report') || !tags.includes('canonical') || !tags.includes('ceo-intelligence-report')) {
-    return NextResponse.json({ error: 'El documento no corresponde a un CEO Intelligence Report canónico.' }, { status: 422 })
+  if (
+    !tags.includes('n3uralia-client-report')
+    || !tags.includes('canonical')
+    || !tags.includes('ceo-intelligence-report')
+    || !tags.includes(PROPERTY_PARTNERS_HOUSE_SCOPE_TAG)
+    || tags.includes('superseded')
+  ) {
+    return NextResponse.json({ error: 'Este informe no corresponde al alcance contractual vigente de casas en Vitacura.' }, { status: 422 })
   }
 
   try {
     const parsed = JSON.parse(data.content) as unknown
     if (!isCeoIntelligenceReport(parsed)) throw new Error('REPORTIN_INVALID_CEO_INTELLIGENCE_DOCUMENT')
+    assertPropertyPartnersHouseScope(parsed)
     const artifact = await buildPolishedCeoIntelligencePdf(parsed)
     const disposition = new URL(request.url).searchParams.get('disposition') === 'inline' ? 'inline' : 'attachment'
     return new Response(Buffer.from(artifact.bytes), {
@@ -58,6 +69,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         'Cache-Control': 'private, no-store, max-age=0',
         'X-Content-Type-Options': 'nosniff',
         'X-Reportin-Version': artifact.reportinVersion,
+        'X-Contractual-Scope': PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
       },
     })
   } catch (error) {
