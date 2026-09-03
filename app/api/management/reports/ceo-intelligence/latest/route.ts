@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoleAccess } from '@/lib/api-access'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isReusableCeoIntelligenceDocument, type CeoIntelligenceDocumentCandidate } from '@/lib/ceo-intelligence-report-dedupe'
 import {
   PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
   buildContractScopedCeoIntelligenceInput,
@@ -11,7 +12,6 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 const REPORTIN_VERSION = '1.2'
-type ExistingDocument = { id: string; title: string; created_at: string; tags: string[] | null }
 
 export async function POST() {
   const access = await requireRoleAccess(['admin', 'ceo'])
@@ -25,7 +25,7 @@ export async function POST() {
 
     const { data: candidates } = await supabase
       .from('knowledge_documents')
-      .select('id,title,created_at,tags')
+      .select('id,title,created_at,tags,content')
       .contains('tags', [
         'canonical',
         'n3uralia-client-report',
@@ -36,8 +36,8 @@ export async function POST() {
       .order('created_at', { ascending: false })
       .limit(10)
 
-    const existing = ((candidates || []) as ExistingDocument[])
-      .find((document) => !(document.tags || []).some((tag) => ['reportin-test', 'qa', 'mock', 'demo', 'fixture', 'superseded'].includes(tag)))
+    const existing = ((candidates || []) as CeoIntelligenceDocumentCandidate[])
+      .find((document) => isReusableCeoIntelligenceDocument(document, input.sourceSnapshotId))
 
     if (existing) {
       return NextResponse.json({
@@ -46,6 +46,7 @@ export async function POST() {
         title: existing.title,
         artifactUrl: `/api/management/reports/ceo-intelligence/${existing.id}/artifact`,
         reused: true,
+        sourceSnapshotId: input.sourceSnapshotId,
       })
     }
 
@@ -121,6 +122,7 @@ export async function POST() {
       artifactUrl,
       reused: false,
       sourceSnapshot: {
+        id: input.sourceSnapshotId,
         periodStart: input.period.start,
         periodEnd: input.period.end,
         sourceCutoff: input.period.sourceCutoff,
