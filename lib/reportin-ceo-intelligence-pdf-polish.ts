@@ -29,7 +29,7 @@ type Fonts = { regular: PDFFont; bold: PDFFont }
 
 function stripEvidenceRefs(value: string) {
   return String(value || '')
-    .replace(/\s*\[(?:metric|market|valuation|kml):[^\]]+\]/g, '')
+    .replace(/\s*\[(?:metric|market|valuation|kml|contract):[^\]]+\]/g, '')
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\s+([,.;:])/g, '$1')
     .trim()
@@ -40,6 +40,13 @@ function translatedSignal(signal: string) {
   if (signal === 'asking_moderately_above_sales') return 'moderado_sobre_ventas'
   if (signal === 'asking_well_above_sales') return 'muy_sobre_ventas'
   return signal || 'cobertura_limitada'
+}
+
+function signalLabel(signal: string) {
+  if (signal === 'market_aligned' || signal === 'alineado') return 'alineado'
+  if (signal === 'asking_moderately_above_sales' || signal === 'moderado_sobre_ventas') return 'moderado sobre ventas'
+  if (signal === 'asking_well_above_sales' || signal === 'muy_sobre_ventas') return 'muy sobre ventas'
+  return 'cobertura limitada'
 }
 
 function polishForClient(report: PropertyPartnersCeoIntelligenceReport): PropertyPartnersCeoIntelligenceReport {
@@ -89,8 +96,8 @@ function normalizeName(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
-function marketRow(rows: CeoMarketRow[], name: string, propertyType: string) {
-  return rows.find((row) => normalizeName(row.neighborhood) === normalizeName(name) && row.propertyType === propertyType) || null
+function marketRow(rows: CeoMarketRow[], name: string) {
+  return rows.find((row) => normalizeName(row.neighborhood) === normalizeName(name) && row.propertyType === 'Casa') || null
 }
 
 function signalColor(signal: string): RGB {
@@ -100,11 +107,10 @@ function signalColor(signal: string): RGB {
   return C.gray
 }
 
-function overlayMarketMap(
+function overlayHouseMap(
   page: PDFPage,
   polygons: CeoMarketPolygon[],
   rows: CeoMarketRow[],
-  propertyType: string,
   x: number,
   y: number,
   width: number,
@@ -116,10 +122,10 @@ function overlayMarketMap(
   const maxLon = Math.max(...points.map((point) => point[0]))
   const minLat = Math.min(...points.map((point) => point[1]))
   const maxLat = Math.max(...points.map((point) => point[1]))
-  const mapX = x + 8
-  const mapY = y - height + 8
-  const mapW = width - 16
-  const mapH = height - 34
+  const mapX = x + 10
+  const mapY = y - height + 10
+  const mapW = width - 20
+  const mapH = height - 42
   const scale = Math.min(mapW / Math.max(maxLon - minLon, 0.000001), mapH / Math.max(maxLat - minLat, 0.000001))
   const drawnW = (maxLon - minLon) * scale
   const drawnH = (maxLat - minLat) * scale
@@ -127,7 +133,7 @@ function overlayMarketMap(
   const offsetY = mapY + (mapH - drawnH) / 2
 
   for (const polygon of polygons) {
-    const row = marketRow(rows, polygon.name, propertyType)
+    const row = marketRow(rows, polygon.name)
     const color = row ? signalColor(row.signal) : C.gray
     for (const ring of geometryRings(polygon.geometry)) {
       if (ring.length < 3) continue
@@ -141,8 +147,8 @@ function overlayMarketMap(
         y: offsetY + drawnH,
         color,
         borderColor: C.paper,
-        borderWidth: 0.55,
-        opacity: row ? 0.9 : 0.32,
+        borderWidth: 0.6,
+        opacity: row ? 0.9 : 0.38,
       })
     }
   }
@@ -167,6 +173,95 @@ function drawWrapped(page: PDFPage, font: PDFFont, text: string, x: number, y: n
   return lines.length
 }
 
+function redrawHouseMapPage(page: PDFPage, fonts: Fonts, report: PropertyPartnersCeoIntelligenceReport) {
+  const panelTop = TOP - 58
+  const panelHeight = 280
+  const panelBottom = panelTop - panelHeight
+  page.drawRectangle({ x: MX - 2, y: panelBottom - 4, width: W - 2 * MX + 4, height: panelHeight + 8, color: C.paper })
+  page.drawRectangle({ x: MX, y: panelBottom, width: W - 2 * MX, height: panelHeight, color: C.soft, borderColor: C.line, borderWidth: 0.6 })
+  page.drawText('CASAS · ALCANCE CONTRACTUAL', { x: MX + 10, y: panelTop - 18, size: 7.4, font: fonts.bold, color: C.ink })
+  overlayHouseMap(page, report.snapshot.market.polygons, report.snapshot.market.rows, MX, panelTop, W - 2 * MX, panelHeight)
+
+  page.drawRectangle({ x: MX - 2, y: 391, width: W - 2 * MX + 4, height: 54, color: C.paper })
+  const comparableRows = report.snapshot.market.rows.filter((row) => row.gapPct !== null)
+  const coverage = comparableRows.length
+    ? `${comparableRows.length} micromercados con benchmark comparable para casas.`
+    : 'Benchmark comparable de precio para casas: N/D. No se reconstruyen referencias ausentes.'
+  page.drawText('Alcance: ventas de casas en Vitacura.', { x: MX, y: 425, size: 7.6, font: fonts.bold, color: C.red })
+  page.drawText(coverage, { x: MX, y: 409, size: 7.4, font: fonts.regular, color: C.gray })
+}
+
+function drawHouseBenchmark(page: PDFPage, fonts: Fonts, rows: CeoMarketRow[]) {
+  page.drawRectangle({ x: MX - 2, y: 80, width: W - 2 * MX + 4, height: 640, color: C.paper })
+  page.drawText('CASAS · ALCANCE CONTRACTUAL', { x: MX, y: 702, size: 8, font: fonts.bold, color: C.red })
+
+  const comparableRows = rows
+    .filter((row) => row.propertyType === 'Casa' && row.gapPct !== null)
+    .sort((a, b) => (b.gapPct || 0) - (a.gapPct || 0))
+    .slice(0, 12)
+
+  if (!comparableRows.length) {
+    page.drawRectangle({ x: MX, y: 652, width: W - 2 * MX, height: 34, color: C.soft, borderColor: C.line, borderWidth: 0.5 })
+    page.drawText('N/D · Sin benchmark comparable de oferta para casas; no se reconstruyen referencias ausentes.', {
+      x: MX + 10,
+      y: 665,
+      size: 7.4,
+      font: fonts.regular,
+      color: C.gray,
+    })
+    page.drawText('La geometría KML permanece disponible como estructura territorial, sin convertir ausencia de benchmark en una señal de precio.', {
+      x: MX,
+      y: 625,
+      size: 7.4,
+      font: fonts.regular,
+      color: C.gray,
+    })
+    return
+  }
+
+  const headers = ['Micromercado', 'Oferta', 'Tx CBRS', 'UF/m² oferta', 'UF/m² venta', 'Gap / señal']
+  const widths = [150, 46, 52, 72, 72, 107]
+  let y = 678
+  page.drawRectangle({ x: MX, y: y - 20, width: W - 2 * MX, height: 20, color: C.ink })
+  let x = MX
+  headers.forEach((header, index) => {
+    page.drawText(header, { x: x + 4, y: y - 13.5, size: 5.7, font: fonts.bold, color: C.paper })
+    x += widths[index]
+  })
+  y -= 20
+
+  for (const [index, row] of comparableRows.entries()) {
+    page.drawRectangle({ x: MX, y: y - 22, width: W - 2 * MX, height: 22, color: index % 2 ? C.soft : C.paper })
+    const values = [
+      row.neighborhood,
+      row.portalListings ?? 'N/D',
+      row.cbrsTransactions ?? 'N/D',
+      row.portalMedianUfM2 ?? 'N/D',
+      row.cbrsMedianUfM2 ?? 'N/D',
+      row.gapPct === null ? 'N/D' : `${row.gapPct >= 0 ? '+' : ''}${(row.gapPct * 100).toFixed(1)}% · ${signalLabel(row.signal)}`,
+    ]
+    x = MX
+    values.forEach((value, valueIndex) => {
+      const max = valueIndex === 0 ? 28 : valueIndex === 5 ? 28 : 16
+      page.drawText(String(value).slice(0, max), { x: x + 4, y: y - 14.5, size: 6, font: valueIndex === 0 ? fonts.bold : fonts.regular, color: C.ink })
+      x += widths[valueIndex]
+    })
+    y -= 22
+  }
+
+  drawWrapped(
+    page,
+    fonts.regular,
+    'El gap compara medianas de referencia disponibles para casas y no prueba por sí solo sobreprecio de una propiedad individual. Debe leerse junto con tipología, ubicación, condición y comparables.',
+    MX,
+    y - 20,
+    W - 2 * MX,
+    7.5,
+    C.gray,
+    3,
+  )
+}
+
 function redrawDecisions(page: PDFPage, fonts: Fonts, report: PropertyPartnersCeoIntelligenceReport) {
   page.drawRectangle({ x: MX, y: 86, width: W - 2 * MX, height: 650, color: C.paper })
   let dy = TOP - 60
@@ -186,20 +281,6 @@ function redrawDecisions(page: PDFPage, fonts: Fonts, report: PropertyPartnersCe
   }
 }
 
-function replaceEmptyHouseBenchmark(page: PDFPage, fonts: Fonts, report: PropertyPartnersCeoIntelligenceReport) {
-  const houseRows = report.snapshot.market.rows.filter((row) => row.propertyType === 'Casa' && row.gapPct !== null)
-  if (houseRows.length) return
-  page.drawRectangle({ x: MX, y: 680, width: W - 2 * MX, height: 30, color: C.paper })
-  page.drawRectangle({ x: MX, y: 680, width: W - 2 * MX, height: 28, color: C.soft, borderColor: C.line, borderWidth: 0.5 })
-  page.drawText('N/D · Sin benchmark comparable de oferta Portal para casas; no se reconstruyen referencias ausentes.', {
-    x: MX + 10,
-    y: 691,
-    size: 7.2,
-    font: fonts.regular,
-    color: C.gray,
-  })
-}
-
 export async function buildPolishedCeoIntelligencePdf(report: PropertyPartnersCeoIntelligenceReport) {
   const polished = polishForClient(report)
   const base = await buildCeoIntelligencePdf(polished)
@@ -211,19 +292,17 @@ export async function buildPolishedCeoIntelligencePdf(report: PropertyPartnersCe
 
   const pages = pdf.getPages()
   const mapPage = pages[2]
-  if (mapPage) {
-    overlayMarketMap(mapPage, report.snapshot.market.polygons, report.snapshot.market.rows, 'Casa', MX, TOP - 58, 240, 280)
-    overlayMarketMap(mapPage, report.snapshot.market.polygons, report.snapshot.market.rows, 'Departamento', MX + 255, TOP - 58, 240, 280)
-  }
+  if (mapPage) redrawHouseMapPage(mapPage, fonts, report)
 
   const marketTablePage = pages[3]
-  if (marketTablePage) replaceEmptyHouseBenchmark(marketTablePage, fonts, report)
+  if (marketTablePage) drawHouseBenchmark(marketTablePage, fonts, polished.snapshot.market.rows)
 
   const decisionsPage = pages[6]
   if (decisionsPage) redrawDecisions(decisionsPage, fonts, polished)
 
   return {
     ...base,
+    reportinVersion: '1.2',
     bytes: await pdf.save(),
   }
 }
