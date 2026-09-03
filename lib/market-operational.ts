@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { propertyPartnersCalendarDayAge } from '@/lib/property-partners-time'
 
 export type MarketFreshnessStatus = 'recent' | 'aging' | 'stale' | 'unknown'
 
@@ -149,10 +150,8 @@ const emptySnapshot: OperationalMarketSnapshot = {
 function getObservationFreshness(value: string | null | undefined) {
   if (!value) return { ageDays: null, status: 'unknown' as const }
 
-  const observedAt = new Date(value)
-  if (Number.isNaN(observedAt.getTime())) return { ageDays: null, status: 'unknown' as const }
-
-  const ageDays = Math.max(0, Math.floor((Date.now() - observedAt.getTime()) / 86_400_000))
+  const ageDays = propertyPartnersCalendarDayAge(value)
+  if (ageDays === null) return { ageDays: null, status: 'unknown' as const }
   if (ageDays <= 3) return { ageDays, status: 'recent' as const }
   if (ageDays <= 7) return { ageDays, status: 'aging' as const }
   return { ageDays, status: 'stale' as const }
