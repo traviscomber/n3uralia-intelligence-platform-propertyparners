@@ -1,4 +1,8 @@
 export type CanonicalReportRecord = Record<string, unknown>
+export type CanonicalReportDocumentMetadata = {
+  docType?: string | null
+  tags?: string[] | null
+}
 
 function asRecord(value: unknown): CanonicalReportRecord | null {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -38,10 +42,29 @@ export function formatCanonicalReportPeriod(record: CanonicalReportRecord | null
   return start || end || 'Sin período'
 }
 
+export function isCanonicalReportArtifactEligible(
+  parsed: CanonicalReportRecord | null,
+  metadata: CanonicalReportDocumentMetadata,
+) {
+  const canonicalMetadata = readRecord(parsed, 'canonical_metadata')
+  const tags = metadata.tags ?? []
+
+  return metadata.docType === 'report'
+    && tags.includes('n3uralia-client-report')
+    && tags.includes('canonical')
+    && readString(parsed, 'report_type') === 'n3uralia_client_canonical'
+    && readString(parsed, 'standard_version') === '1.0'
+    && Boolean(readString(parsed, 'title'))
+    && Boolean(readString(parsed, 'executive_summary'))
+    && Array.isArray(parsed?.sections)
+    && readString(canonicalMetadata, 'source_policy') === 'canonical_input_only'
+}
+
 export function resolveCanonicalReportArtifactUrl(
   parsed: CanonicalReportRecord | null,
   type: 'pdf' | 'download',
   documentId: string,
+  metadata: CanonicalReportDocumentMetadata = {},
 ) {
   const artifacts = readRecord(parsed, 'artifacts')
   const pdf = readRecord(artifacts, 'pdf')
@@ -54,14 +77,10 @@ export function resolveCanonicalReportArtifactUrl(
     if (value.startsWith('/') || value.startsWith('https://')) return value
   }
 
-  if (
-    readString(parsed, 'report_type') === 'n3uralia_client_canonical'
-    && readString(parsed, 'standard_version')
-  ) {
-    return `/api/management/reports/canonical-client/${encodeURIComponent(documentId)}/artifact`
-  }
+  if (!isCanonicalReportArtifactEligible(parsed, metadata)) return null
 
-  return null
+  const base = `/api/management/reports/canonical-client/${encodeURIComponent(documentId)}/artifact`
+  return type === 'pdf' ? `${base}?disposition=inline` : base
 }
 
 export function normalizeCanonicalReportStatus(parsed: CanonicalReportRecord | null, tags: string[] | null) {
