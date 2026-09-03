@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { CanonicalLatestReportGenerator } from '@/components/management/canonical-latest-report-generator'
 import { ReportDeliveryConsole } from '@/components/management/report-delivery-console'
 import { IntelligenceHeader, IntelligencePage } from '@/components/intelligence/design-system'
 import { getUserScope } from '@/lib/user-scope'
@@ -6,6 +7,7 @@ import { getUserScope } from '@/lib/user-scope'
 export default async function ReportOperationsPage() {
   const scope = await getUserScope()
   if (!['admin', 'ceo', 'director', 'subdirector'].includes(scope.role)) redirect('/dashboard/reportes/autonomos')
+  const canOperate = scope.role === 'admin' || scope.role === 'ceo'
 
   return <IntelligencePage>
     <IntelligenceHeader
@@ -17,6 +19,7 @@ export default async function ReportOperationsPage() {
         { label: 'Revisar programaciones', href: '/dashboard/control/admin' },
       ]}
     />
-    <ReportDeliveryConsole canOperate={scope.role === 'admin' || scope.role === 'ceo'} />
+    {canOperate ? <CanonicalLatestReportGenerator /> : null}
+    <ReportDeliveryConsole canOperate={canOperate} />
   </IntelligencePage>
 }
