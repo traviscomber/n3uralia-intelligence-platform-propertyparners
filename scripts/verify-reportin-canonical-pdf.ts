@@ -62,17 +62,39 @@ async function main() {
   assert.ok(parsedReport)
   assert.equal(formatCanonicalReportPeriod(parsedReport), '2026-07-01 — 2026-07-31')
 
+  const metadata = {
+    docType: 'report',
+    tags: ['canonical', 'n3uralia-client-report'],
+  }
   const deterministicArtifact = '/api/management/reports/canonical-client/reportin-contract-test/artifact'
   assert.equal(
-    resolveCanonicalReportArtifactUrl(parsedReport, 'pdf', 'reportin-contract-test'),
+    resolveCanonicalReportArtifactUrl(parsedReport, 'pdf', 'reportin-contract-test', metadata),
+    `${deterministicArtifact}?disposition=inline`,
+  )
+  assert.equal(
+    resolveCanonicalReportArtifactUrl(parsedReport, 'download', 'reportin-contract-test', metadata),
     deterministicArtifact,
   )
   assert.equal(
-    resolveCanonicalReportArtifactUrl(parsedReport, 'download', 'reportin-contract-test'),
-    deterministicArtifact,
+    resolveCanonicalReportArtifactUrl(parsedReport, 'download', 'reportin-contract-test', {
+      docType: 'report',
+      tags: ['n3uralia-client-report'],
+    }),
+    null,
   )
   assert.equal(
-    resolveCanonicalReportArtifactUrl({ report_type: 'legacy_report' }, 'pdf', 'legacy-report'),
+    resolveCanonicalReportArtifactUrl({ ...parsedReport, standard_version: '2.0' }, 'download', 'reportin-contract-test', metadata),
+    null,
+  )
+  assert.equal(
+    resolveCanonicalReportArtifactUrl({
+      ...parsedReport,
+      canonical_metadata: { source_policy: 'external_sources_forbidden' },
+    }, 'download', 'reportin-contract-test', metadata),
+    null,
+  )
+  assert.equal(
+    resolveCanonicalReportArtifactUrl({ report_type: 'legacy_report' }, 'pdf', 'legacy-report', metadata),
     null,
   )
   assert.equal(
