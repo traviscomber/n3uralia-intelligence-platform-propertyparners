@@ -12,7 +12,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { DataStatusBar, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 
-type CanonicalDocumentRow = { id:string; title:string; content:string; tags:string[]|null; created_at:string }
+type CanonicalDocumentRow = { id:string; title:string; content:string; doc_type:string|null; tags:string[]|null; created_at:string }
 type ReportRecord = { id:string; title:string; period:string; status:string; createdAt:string; pdfUrl:string|null; downloadUrl:string|null; sourceCount:number; model:string|null; promptVersion:string|null; costUsd:number|null }
 function formatDate(value:string){const d=new Date(value);return Number.isNaN(d.getTime())?value:new Intl.DateTimeFormat('es-CL',{dateStyle:'medium',timeStyle:'short'}).format(d)}
 function isClientCanonical(document:CanonicalDocumentRow){const tags=document.tags??[];return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')}
@@ -22,9 +22,9 @@ function isDeliverable(report:ReportRecord){return report.period!=='Sin período
 export default async function CanonicalClientReportsPage(){
   await requirePageCapability('reports.global.read')
   const supabase=createAdminClient()
-  const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
+  const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,doc_type,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
   const documents=(error?[]:(data||[]) as CanonicalDocumentRow[]).filter(isClientCanonical)
-  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseCanonicalReportContent(document.content);const trace=extractCanonicalReportTrace(parsed);return{id:document.id,title:document.title,period:formatCanonicalReportPeriod(parsed),status:normalizeCanonicalReportStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:resolveCanonicalReportArtifactUrl(parsed,'pdf',document.id),downloadUrl:resolveCanonicalReportArtifactUrl(parsed,'download',document.id),...trace}})
+  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseCanonicalReportContent(document.content);const trace=extractCanonicalReportTrace(parsed);const metadata={docType:document.doc_type,tags:document.tags};return{id:document.id,title:document.title,period:formatCanonicalReportPeriod(parsed),status:normalizeCanonicalReportStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:resolveCanonicalReportArtifactUrl(parsed,'pdf',document.id,metadata),downloadUrl:resolveCanonicalReportArtifactUrl(parsed,'download',document.id,metadata),...trace}})
   const current=reports.find(isDeliverable)??null
   const history=reports.filter(report=>report.id!==current?.id)
   const incomplete=reports.filter(report=>!isDeliverable(report))
