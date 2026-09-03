@@ -57,7 +57,10 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
           <div className="border border-[var(--n3-line)] bg-black/20 px-5 py-4 text-right">
             <div className="text-xs text-[var(--n3-text-muted)]">Ventas Vitacura · {MONTHS[monthNumber - 1]} 2026</div>
             <div className="mt-1 text-2xl font-bold">{format(companySales.actual)} / {format(companySales.target)}</div>
-            <div className="text-xs text-[var(--n3-teal-soft)]">{companySales.compliance === null ? 'Cumplimiento n/d' : `${companySales.compliance}% de la meta fuente`}</div>
+            <div className="text-xs text-[var(--n3-teal-soft)]">{companySales.compliance === null ? 'Cumplimiento n/d' : `${companySales.compliance}% de la meta canónica`}</div>
+            <div className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">
+              Meta corporativa vigente: 8 ventas/mes. La referencia histórica del archivo fuente ({formatSource(companySales.legacyDocumentaryTarget)}) se conserva para trazabilidad y no se usa para calcular el cumplimiento corporativo actual.
+            </div>
           </div>
         </div>
       </header>
@@ -170,15 +173,11 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
           {branch.unmappedCells.length > 0 && (
             <div className="rounded-xl border border-[var(--n3-line)] bg-[#160d0c] p-4">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--n3-teal-soft)]">Celdas fuera de bloque preservadas</p>
-              <div className="mt-3 grid gap-2 md:grid-cols-2">{branch.unmappedCells.map((cell) => <div key={cell.address} className="rounded-lg bg-[var(--n3-deep)] px-3 py-2 text-xs text-red-950"><strong>{cell.address}</strong> · {String(cell.value)}{cell.formula ? ` · fórmula ${cell.formula}` : ''}</div>)}</div>
+              <div className="mt-3 grid gap-2 md:grid-cols-2">{branch.unmappedCells.map((cell) => <div key={cell.address} className="rounded-lg bg-[var(--n3-deep)] px-3 py-2 text-xs"><strong>{cell.address}</strong> · {String(cell.value)}{cell.formula ? ` · =${cell.formula}` : ''}</div>)}</div>
             </div>
           )}
         </section>
       ))}
-
-      <footer className="rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5 text-xs leading-5 text-[var(--n3-text-muted)]">
-        El manifiesto de auditoría conserva las {source.cellCoverage.storedCells.toLocaleString('es-CL')} celdas almacenadas con dirección, valor, visualización Excel, fórmula, tipo, formato, estilo y color. Las columnas anuales paralelas se muestran en forma independiente. Los colores se describen como marcas de la fuente y no se interpretan como estado laboral. El repositorio actual es público; el manifiesto no debe considerarse privado hasta migrarlo a almacenamiento servidor.
-      </footer>
     </div>
   )
 }
