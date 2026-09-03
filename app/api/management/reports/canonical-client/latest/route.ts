@@ -221,7 +221,7 @@ export async function POST() {
     }
 
     const generationStartedAt = Date.now()
-    const report = await generateCanonicalClientReport(input)
+    const report = await generateCanonicalClientReport(input, { profile: 'interactive' })
     const openaiAndValidationMs = Date.now() - generationStartedAt
     const modelTag = `openai-${report.canonical_metadata.model}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-')
 
@@ -293,12 +293,18 @@ export async function POST() {
     }, { status: 201 })
   } catch (error) {
     const code = error instanceof Error ? error.message : 'CANONICAL_LATEST_REPORT_FAILED'
-    const status = code === 'OPENAI_API_KEY_MISSING' ? 503 : 500
+    const status = code === 'OPENAI_API_KEY_MISSING'
+      ? 503
+      : code === 'OPENAI_CANONICAL_REPORT_TIMEOUT'
+        ? 504
+        : 500
     console.error('CANONICAL_LATEST_REPORT_FAILED', { code, totalMs: Date.now() - startedAt })
     return NextResponse.json({
       error: status === 503
         ? 'La generación canónica está pendiente de configurar OPENAI_API_KEY.'
-        : 'No fue posible generar el informe canónico del último período disponible.',
+        : status === 504
+          ? 'La generación canónica excedió el tiempo interactivo disponible. Intenta nuevamente.'
+          : 'No fue posible generar el informe canónico del último período disponible.',
       code,
     }, { status })
   }

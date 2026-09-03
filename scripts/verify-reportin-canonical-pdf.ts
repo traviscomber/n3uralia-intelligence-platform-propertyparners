@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import { PDFDocument } from 'pdf-lib'
-import type { CanonicalClientReport } from '../lib/n3uralia-canonical-client-report'
+import {
+  getCanonicalClientReportInteractiveConfiguration,
+  type CanonicalClientReport,
+} from '../lib/n3uralia-canonical-client-report'
 import {
   extractCanonicalReportTrace,
   formatCanonicalReportPeriod,
@@ -58,6 +61,16 @@ const report: CanonicalClientReport = {
 }
 
 async function main() {
+  const interactiveConfig = getCanonicalClientReportInteractiveConfiguration()
+  assert.equal(interactiveConfig.model, process.env.OPENAI_CANONICAL_REPORT_MODEL || 'gpt-5.6-sol')
+  assert.equal(interactiveConfig.reasoningEffort, 'medium')
+  assert.equal(interactiveConfig.reasoningMode, 'standard')
+  assert.equal(interactiveConfig.verbosity, 'medium')
+  assert.equal(interactiveConfig.maxOutputTokens, 8_000)
+  assert.equal(interactiveConfig.timeoutMs, 120_000)
+  assert.equal(interactiveConfig.store, false)
+  assert.equal(interactiveConfig.sourcePolicy, 'canonical_input_only')
+
   const parsedReport = parseCanonicalReportContent(JSON.stringify(report))
   assert.ok(parsedReport)
   assert.equal(formatCanonicalReportPeriod(parsedReport), '2026-07-01 — 2026-07-31')

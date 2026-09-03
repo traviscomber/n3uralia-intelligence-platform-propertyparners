@@ -20,6 +20,13 @@ type GenerationResponse = {
   code?: string
 }
 
+function gatewayErrorMessage(status: number) {
+  if ([502, 503, 504].includes(status)) {
+    return 'La generación excedió la ventana interactiva disponible. Intenta nuevamente.'
+  }
+  return 'El servicio de generación devolvió una respuesta no válida. Intenta nuevamente.'
+}
+
 export function CanonicalLatestReportGenerator() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResponse | null>(null)
@@ -35,8 +42,15 @@ export function CanonicalLatestReportGenerator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
-      const payload = await response.json() as GenerationResponse
-      if (!response.ok) throw new Error(payload.error || 'No fue posible generar el informe canónico.')
+      const contentType = response.headers.get('content-type') || ''
+      const payload = contentType.includes('application/json')
+        ? await response.json() as GenerationResponse
+        : null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || gatewayErrorMessage(response.status))
+      }
+      if (!payload) throw new Error(gatewayErrorMessage(response.status))
       setResult(payload)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No fue posible generar el informe canónico.')

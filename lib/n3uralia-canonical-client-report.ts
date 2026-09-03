@@ -90,6 +90,8 @@ export type CanonicalClientReport = CanonicalNarrative & {
   }
 }
 
+export type CanonicalClientReportGenerationProfile = 'configured' | 'interactive'
+
 const NARRATIVE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -219,54 +221,84 @@ export function getCanonicalClientReportConfiguration() {
   }
 }
 
+export function getCanonicalClientReportInteractiveConfiguration() {
+  const configured = getCanonicalClientReportConfiguration()
+  return {
+    ...configured,
+    reasoningEffort: 'medium' as const,
+    reasoningMode: 'standard' as const,
+    verbosity: 'medium' as const,
+    maxOutputTokens: 8_000,
+    timeoutMs: 120_000,
+  }
+}
+
+function resolveExecutionConfiguration(profile: CanonicalClientReportGenerationProfile) {
+  const configured = getCanonicalClientReportConfiguration()
+  if (profile === 'interactive') return getCanonicalClientReportInteractiveConfiguration()
+  return {
+    ...configured,
+    verbosity: 'high' as const,
+    maxOutputTokens: 20_000,
+    timeoutMs: 240_000,
+  }
+}
+
 export async function generateCanonicalClientReport(
   input: CanonicalClientReportInput,
+  options: { profile?: CanonicalClientReportGenerationProfile } = {},
 ): Promise<CanonicalClientReport> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('OPENAI_API_KEY_MISSING')
 
-  const configuration = getCanonicalClientReportConfiguration()
+  const configuration = resolveExecutionConfiguration(options.profile || 'configured')
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 240_000)
+  const timeout = setTimeout(() => controller.abort(), configuration.timeoutMs)
 
   try {
     const reasoning = configuration.reasoningMode === 'pro'
       ? { effort: configuration.reasoningEffort, mode: 'pro', context: 'current_turn' }
       : { effort: configuration.reasoningEffort, context: 'current_turn' }
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: configuration.model,
-        store: false,
-        reasoning,
-        max_output_tokens: 20_000,
-        text: {
-          verbosity: 'high',
-          format: {
-            type: 'json_schema',
-            name: 'n3uralia_canonical_client_report',
-            strict: true,
-            schema: NARRATIVE_SCHEMA,
-          },
+    let response: Response
+    try {
+      response = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
         },
-        input: [
-          {
-            role: 'developer',
-            content: [{ type: 'input_text', text: DEVELOPER_INSTRUCTIONS }],
+        body: JSON.stringify({
+          model: configuration.model,
+          store: false,
+          reasoning,
+          max_output_tokens: configuration.maxOutputTokens,
+          text: {
+            verbosity: configuration.verbosity,
+            format: {
+              type: 'json_schema',
+              name: 'n3uralia_canonical_client_report',
+              strict: true,
+              schema: NARRATIVE_SCHEMA,
+            },
           },
-          {
-            role: 'user',
-            content: [{ type: 'input_text', text: JSON.stringify(input) }],
-          },
-        ],
-      }),
-      signal: controller.signal,
-    })
+          input: [
+            {
+              role: 'developer',
+              content: [{ type: 'input_text', text: DEVELOPER_INSTRUCTIONS }],
+            },
+            {
+              role: 'user',
+              content: [{ type: 'input_text', text: JSON.stringify(input) }],
+            },
+          ],
+        }),
+        signal: controller.signal,
+      })
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error('OPENAI_CANONICAL_REPORT_TIMEOUT')
+      throw error
+    }
 
     const payload = await response.json().catch(() => null)
     if (!response.ok) {
