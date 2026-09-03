@@ -127,6 +127,9 @@ jobs:
       - name: Verify Property Partners Santiago timezone
         run: pnpm exec tsx scripts/verify-property-partners-timezone.ts
 
+      - name: Verify operational CEO coherence
+        run: pnpm exec tsx scripts/verify-operational-ceo-coherence.ts
+
       - name: Verify CEO report snapshot-aware dedupe
         run: pnpm exec tsx scripts/verify-ceo-report-snapshot-dedupe.ts
 
