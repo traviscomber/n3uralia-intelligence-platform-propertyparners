@@ -14,16 +14,38 @@ const readString=(r:Record<string,unknown>|null,k:string,f='')=>r&&typeof r[k]==
 const readNumber=(r:Record<string,unknown>|null,k:string)=>r&&typeof r[k]==='number'&&Number.isFinite(r[k] as number)?Number(r[k]):null
 function formatDate(value:string){const d=new Date(value);return Number.isNaN(d.getTime())?value:new Intl.DateTimeFormat('es-CL',{dateStyle:'medium',timeStyle:'short'}).format(d)}
 function formatPeriod(record:Record<string,unknown>|null){const p=readRecord(record,'period');const s=readString(p,'start');const e=readString(p,'end');return s&&e&&s!==e?`${s} — ${e}`:s||e||'Sin período'}
-function getArtifactUrl(parsed:Record<string,unknown>|null,type:'pdf'|'download'){const artifacts=readRecord(parsed,'artifacts');const pdf=readRecord(artifacts,'pdf');const keys=type==='pdf'?['url','viewUrl','artifactUrl','path']:['downloadUrl','url','artifactUrl','path'];for(const key of keys){const value=readString(pdf,key);if(value.startsWith('/')||value.startsWith('https://'))return value}return null}
-function normalizeStatus(parsed:Record<string,unknown>|null,tags:string[]|null){const delivery=readRecord(parsed,'delivery');const raw=readString(delivery,'status',tags?.includes('approved')?'approved':'draft');return ({draft:'Borrador',review:'En revisión',approved:'Aprobado',sent:'Enviado',resent:'Reenviado',registered:'Registrado'} as Record<string,string>)[raw.toLowerCase()]??raw}
+function getArtifactUrl(parsed:Record<string,unknown>|null,type:'pdf'|'download',documentId:string){
+  const artifacts=readRecord(parsed,'artifacts')
+  const pdf=readRecord(artifacts,'pdf')
+  const keys=type==='pdf'?['url','viewUrl','artifactUrl','path']:['downloadUrl','url','artifactUrl','path']
+  for(const key of keys){
+    const value=readString(pdf,key)
+    if(value.startsWith('/')||value.startsWith('https://'))return value
+  }
+  if(readString(parsed,'report_type')==='n3uralia_client_canonical'&&readString(parsed,'standard_version')){
+    return `/api/management/reports/canonical-client/${encodeURIComponent(documentId)}/artifact`
+  }
+  return null
+}
+function normalizeStatus(parsed:Record<string,unknown>|null,tags:string[]|null){const delivery=readRecord(parsed,'delivery');const raw=readString(delivery,'status',tags?.includes('approved')?'approved':'draft');return ({draft:'Borrador',review:'En revisión',approved:'Aprobado',sent:'Enviado',resent:'Reenviado',acknowledged:'Acusado recibo',registered:'Registrado'} as Record<string,string>)[raw.toLowerCase()]??raw}
 function trace(parsed:Record<string,unknown>|null){
   const provenance=readRecord(parsed,'provenance')
   const generation=readRecord(parsed,'generation')
+  const canonicalMetadata=readRecord(parsed,'canonical_metadata')
   const sources=provenance?.sources
+  const evidenceRefs=new Set<string>()
+  const sections=parsed?.sections
+  if(Array.isArray(sections)){
+    for(const section of sections){
+      const record=asRecord(section)
+      const refs=record?.evidence_refs
+      if(Array.isArray(refs))for(const ref of refs)if(typeof ref==='string'&&ref.trim())evidenceRefs.add(ref.trim())
+    }
+  }
   return {
-    sourceCount:Array.isArray(sources)?sources.length:0,
-    model:readString(generation,'model')||null,
-    promptVersion:readString(generation,'promptVersion')||readString(generation,'prompt_version')||null,
+    sourceCount:Array.isArray(sources)?sources.length:evidenceRefs.size,
+    model:readString(generation,'model')||readString(canonicalMetadata,'model')||null,
+    promptVersion:readString(generation,'promptVersion')||readString(generation,'prompt_version')||readString(parsed,'standard_version')||null,
     costUsd:readNumber(generation,'costUsd')??readNumber(generation,'cost_usd'),
   }
 }
@@ -39,7 +61,7 @@ export default async function CanonicalClientReportsPage(){
   const supabase=createAdminClient()
   const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
   const documents=(error?[]:(data||[]) as CanonicalDocumentRow[]).filter(isClientCanonical)
-  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseContent(document.content);const t=trace(parsed);return{id:document.id,title:document.title,period:formatPeriod(parsed),status:normalizeStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:getArtifactUrl(parsed,'pdf'),downloadUrl:getArtifactUrl(parsed,'download'),...t}})
+  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseContent(document.content);const t=trace(parsed);return{id:document.id,title:document.title,period:formatPeriod(parsed),status:normalizeStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:getArtifactUrl(parsed,'pdf',document.id),downloadUrl:getArtifactUrl(parsed,'download',document.id),...t}})
   const current=reports.find(isDeliverable)??null
   const history=reports.filter(report=>report.id!==current?.id)
   const incomplete=reports.filter(report=>!isDeliverable(report))
