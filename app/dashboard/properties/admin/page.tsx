@@ -7,6 +7,12 @@ import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 const ASSIGNMENT_ROLES = new Set(['owner', 'co_broker', 'support'])
 const ASSIGNMENT_STATUSES = new Set(['active', 'paused', 'closed'])
 
+type VisibleSeller = {
+  id: string
+  full_name: string
+  team: string | null
+}
+
 function text(value: FormDataEntryValue | null) {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -109,7 +115,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
     ? await supabase.from('market_properties').select('id,normalized_address,property_type').in('id', assignmentPropertyIds)
     : { data: [], error: null }
 
-  const profiles = profilesResult.data ?? []
+  const profiles = (profilesResult.data ?? []) as VisibleSeller[]
   const properties = propertiesResult.data ?? []
   const profileById = new Map(profiles.map((item) => [item.id, item]))
   const propertyById = new Map((assignedPropertiesResult.data ?? []).map((item) => [item.id, item]))
