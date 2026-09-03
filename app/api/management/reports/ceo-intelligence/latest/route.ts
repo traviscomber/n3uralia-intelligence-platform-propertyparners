@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server'
 import { requireRoleAccess } from '@/lib/api-access'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { buildLatestCeoIntelligenceInput } from '@/lib/property-partners-ceo-intelligence-snapshot'
-import { generateCeoIntelligenceReport } from '@/lib/property-partners-ceo-intelligence-report'
+import {
+  PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
+  buildContractScopedCeoIntelligenceInput,
+  generateContractScopedCeoIntelligenceReport,
+} from '@/lib/property-partners-ceo-intelligence-contract-scope'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-const REPORTIN_VERSION = '1.1'
+const REPORTIN_VERSION = '1.2'
 type ExistingDocument = { id: string; title: string; created_at: string; tags: string[] | null }
 
 export async function POST() {
@@ -16,19 +19,25 @@ export async function POST() {
 
   const startedAt = Date.now()
   try {
-    const input = await buildLatestCeoIntelligenceInput()
+    const input = await buildContractScopedCeoIntelligenceInput()
     const supabase = createAdminClient()
     const periodTag = `${input.period.start}_${input.period.end}`
 
     const { data: candidates } = await supabase
       .from('knowledge_documents')
       .select('id,title,created_at,tags')
-      .contains('tags', ['canonical', 'n3uralia-client-report', 'ceo-intelligence-report', periodTag])
+      .contains('tags', [
+        'canonical',
+        'n3uralia-client-report',
+        'ceo-intelligence-report',
+        PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
+        periodTag,
+      ])
       .order('created_at', { ascending: false })
       .limit(10)
 
     const existing = ((candidates || []) as ExistingDocument[])
-      .find((document) => !(document.tags || []).some((tag) => ['reportin-test', 'qa', 'mock', 'demo', 'fixture'].includes(tag)))
+      .find((document) => !(document.tags || []).some((tag) => ['reportin-test', 'qa', 'mock', 'demo', 'fixture', 'superseded'].includes(tag)))
 
     if (existing) {
       return NextResponse.json({
@@ -41,7 +50,7 @@ export async function POST() {
     }
 
     const generationStartedAt = Date.now()
-    const report = await generateCeoIntelligenceReport(input)
+    const report = await generateContractScopedCeoIntelligenceReport(input)
     const openaiAndValidationMs = Date.now() - generationStartedAt
     const modelTag = `openai-${report.canonical_metadata.model}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-')
 
@@ -58,6 +67,7 @@ export async function POST() {
           'n3uralia-client-report',
           'ceo-intelligence-report',
           'client-facing',
+          PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
           modelTag,
           `reportin-${REPORTIN_VERSION}`,
           periodTag,
@@ -86,6 +96,7 @@ export async function POST() {
         period: report.period,
         delivery: report.delivery,
         canonical_metadata: report.canonical_metadata,
+        contractual_scope: PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
         source_snapshot: {
           source_snapshot_id: input.sourceSnapshotId,
           evidence_count: input.evidence.length,
@@ -116,6 +127,7 @@ export async function POST() {
         evidenceCount: input.evidence.length,
         kmlPolygonCount: input.market.polygons.length,
         marketRows: input.market.rows.length,
+        contractualScope: PROPERTY_PARTNERS_HOUSE_SCOPE_TAG,
       },
       timing: { openaiAndValidationMs, persistenceMs, totalMs },
     }, { status: 201 })
@@ -125,14 +137,18 @@ export async function POST() {
       ? 503
       : code === 'OPENAI_CEO_INTELLIGENCE_TIMEOUT'
         ? 504
-        : 500
+        : code.startsWith('CEO_INTELLIGENCE_OUT_OF_SCOPE') || code === 'CEO_INTELLIGENCE_SCOPE_TAG_MISSING'
+          ? 422
+          : 500
     console.error('CEO_INTELLIGENCE_REPORT_FAILED', { code, totalMs: Date.now() - startedAt })
     return NextResponse.json({
       error: status === 503
         ? 'La generación CEO Intelligence está pendiente de configurar OPENAI_API_KEY.'
         : status === 504
           ? 'La generación CEO Intelligence excedió el tiempo interactivo disponible. Intenta nuevamente.'
-          : 'No fue posible generar el CEO Intelligence Report del último período disponible.',
+          : status === 422
+            ? 'El informe generado salió del alcance contractual de casas en Vitacura y fue rechazado antes de persistir.'
+            : 'No fue posible generar el CEO Intelligence Report del último período disponible.',
       code,
     }, { status })
   }
