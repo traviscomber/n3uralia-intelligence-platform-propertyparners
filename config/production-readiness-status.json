@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "in-review",
-  "commit": "92f1ca63ab2c2d606edc40d55aadb250669cd154",
+  "commit": "dbb9ae7717e9152858d2e989a36691f6ab03b765",
   "deployment": "https://ppartnersgroup.app",
   "checks": {
     "build": "passed",
@@ -17,11 +17,13 @@
   "criticalFindings": [],
   "highFindings": [],
   "evidence": [
-    "Production baseline 92f1ca63ab2c2d606edc40d55aadb250669cd154 is served by ppartnersgroup.app through Vercel deployment dpl_4CxmckkJfevb5zMd7GwELLeqt1H3 READY, verified 2026-09-03",
-    "The production baseline has successful Contractual modules CI, authenticated Role/RLS QA, authenticated visual QA and N3uralia IP Boundaries evidence",
+    "Functional production baseline dbb9ae7717e9152858d2e989a36691f6ab03b765 is served by ppartnersgroup.app through Vercel deployment dpl_4vk2HRhNZQiKZ3sikeQ2qir69n49 READY, verified 2026-09-03",
+    "PR #202 passed Contractual modules CI, N3uralia IP Boundaries and a READY Vercel preview before merge",
+    "Production browser verification confirmed the corrected territorial coverage copy: 50 of 317 operational properties without barrio, explicitly distinct from the 50 live-house universe",
+    "No error/fatal runtime logs were found for deployment dpl_4vk2HRhNZQiKZ3sikeQ2qir69n49 in the post-deploy verification window",
+    "Earlier authenticated Role/RLS QA and authenticated visual QA remain green for the same application behavior; PR #202 changed copy only",
     "Production navigation verified for CEO/management, market reconciliation, valuation review, portfolio assignment and the public Vitacura estimator",
     "Supabase security review found no open application-level critical/high finding; privileged mutating RPCs reviewed use role/scope/state guards and critical transitions use MFA/AAL2 where required",
-    "Vercel production runtime was reviewed during 2026-09-03 closure without an observed current error that invalidates the release",
     "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md",
     "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md",
     "docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md",
