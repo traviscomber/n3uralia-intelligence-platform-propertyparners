@@ -4,6 +4,8 @@ export type CanonicalReportDocumentMetadata = {
   tags?: string[] | null
 }
 
+type SupportedReportType = 'n3uralia_client_canonical' | 'property_partners_ceo_intelligence'
+
 function asRecord(value: unknown): CanonicalReportRecord | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as CanonicalReportRecord
@@ -26,6 +28,13 @@ function readNumber(record: CanonicalReportRecord | null, key: string) {
     : null
 }
 
+function supportedReportType(parsed: CanonicalReportRecord | null): SupportedReportType | null {
+  const reportType = readString(parsed, 'report_type')
+  return reportType === 'n3uralia_client_canonical' || reportType === 'property_partners_ceo_intelligence'
+    ? reportType
+    : null
+}
+
 export function parseCanonicalReportContent(content: string) {
   try {
     return asRecord(JSON.parse(content))
@@ -42,22 +51,32 @@ export function formatCanonicalReportPeriod(record: CanonicalReportRecord | null
   return start || end || 'Sin período'
 }
 
+export function canonicalReportKind(parsed: CanonicalReportRecord | null) {
+  return supportedReportType(parsed) === 'property_partners_ceo_intelligence'
+    ? 'CEO Intelligence'
+    : supportedReportType(parsed) === 'n3uralia_client_canonical'
+      ? 'Avance contractual'
+      : 'Informe'
+}
+
 export function isCanonicalReportArtifactEligible(
   parsed: CanonicalReportRecord | null,
   metadata: CanonicalReportDocumentMetadata,
 ) {
   const canonicalMetadata = readRecord(parsed, 'canonical_metadata')
   const tags = metadata.tags ?? []
+  const reportType = supportedReportType(parsed)
 
   return metadata.docType === 'report'
     && tags.includes('n3uralia-client-report')
     && tags.includes('canonical')
-    && readString(parsed, 'report_type') === 'n3uralia_client_canonical'
+    && Boolean(reportType)
     && readString(parsed, 'standard_version') === '1.0'
     && Boolean(readString(parsed, 'title'))
     && Boolean(readString(parsed, 'executive_summary'))
     && Array.isArray(parsed?.sections)
     && readString(canonicalMetadata, 'source_policy') === 'canonical_input_only'
+    && (reportType !== 'property_partners_ceo_intelligence' || tags.includes('ceo-intelligence-report'))
 }
 
 export function resolveCanonicalReportArtifactUrl(
@@ -78,8 +97,9 @@ export function resolveCanonicalReportArtifactUrl(
   }
 
   if (!isCanonicalReportArtifactEligible(parsed, metadata)) return null
-
-  const base = `/api/management/reports/canonical-client/${encodeURIComponent(documentId)}/artifact`
+  const reportType = supportedReportType(parsed)
+  const route = reportType === 'property_partners_ceo_intelligence' ? 'ceo-intelligence' : 'canonical-client'
+  const base = `/api/management/reports/${route}/${encodeURIComponent(documentId)}/artifact`
   return type === 'pdf' ? `${base}?disposition=inline` : base
 }
 
@@ -122,6 +142,7 @@ export function extractCanonicalReportTrace(parsed: CanonicalReportRecord | null
     promptVersion:
       readString(generation, 'promptVersion')
       || readString(generation, 'prompt_version')
+      || readString(canonicalMetadata, 'prompt_version')
       || readString(parsed, 'standard_version')
       || null,
     costUsd: readNumber(generation, 'costUsd') ?? readNumber(generation, 'cost_usd'),
