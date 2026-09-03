@@ -6,6 +6,7 @@ import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
 import { getPortalReferenceSnapshot } from '@/lib/portal-reference-intelligence'
+import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
 
 function number(value: number | null) {
@@ -22,8 +23,7 @@ function percent(value: number | null) {
 
 function date(value: string | null) {
   if (!value) return '—'
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? '—' : new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(parsed)
+  return formatPropertyPartnersDateTime(value)
 }
 
 function shortDate(value: string | null) {

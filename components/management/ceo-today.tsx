@@ -5,16 +5,28 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, RefreshCw } from 'lucide-react'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
+import { formatPropertyPartnersPeriod } from '@/lib/property-partners-time'
 
-type Point = {
-  period: string
+type CurrentSnapshot = {
+  period: { key: string; start: string; end: string }
   sales: number | null
   salesTarget: number | null
-  metrics?: Record<string, number | null>
+  compliance: number | null
+  salesUf: number | null
+  managementCreditedSales: number | null
+  metrics: Record<string, number | null>
+  status: 'verified_operational'
+  publicationStatus: 'not_formal_monthly_close'
+  goalSource: string | null
+  sourceCutoffAt: string | null
 }
 
-type Entity = { entityType: string; evolution?: Point[] }
-type Summary = { entities: Entity[]; generatedAt?: string }
+type CurrentResponse = {
+  snapshot: CurrentSnapshot | null
+  status: string
+  note?: string
+}
+
 type Operations = {
   valuations: { review: number }
   assignments: { paused: number }
@@ -26,13 +38,18 @@ type Operations = {
   tasks: { overdue: number; urgent: number }
   generatedAt: string
 }
+
 type Priority = { label: string; detail: string; href: string; critical?: boolean }
 
-const n = (value: number | null | undefined, digits = 0) => value == null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
-const ratio = (value: number | null | undefined, target: number | null | undefined) => value != null && target != null && target !== 0 ? value / target * 100 : null
+const n = (value: number | null | undefined, digits = 0) => value == null
+  ? '—'
+  : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
+
+const ratio = (value: number | null | undefined, target: number | null | undefined) =>
+  value != null && target != null && target !== 0 ? value / target * 100 : null
 
 export function CeoToday() {
-  const [summary, setSummary] = useState<Summary | null>(null)
+  const [current, setCurrent] = useState<CurrentResponse | null>(null)
   const [operations, setOperations] = useState<Operations | null>(null)
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
@@ -41,12 +58,12 @@ export function CeoToday() {
     setLoading(true)
     setFailed(false)
     try {
-      const [summaryResponse, operationsResponse] = await Promise.all([
-        fetch('/api/management/summary', { cache: 'no-store' }),
+      const [currentResponse, operationsResponse] = await Promise.all([
+        fetch('/api/management/ceo-current', { cache: 'no-store' }),
         fetch('/api/management/ceo-operations', { cache: 'no-store' }),
       ])
-      if (!summaryResponse.ok || !operationsResponse.ok) throw new Error('LOAD_FAILED')
-      setSummary(await summaryResponse.json())
+      if (!currentResponse.ok || !operationsResponse.ok) throw new Error('LOAD_FAILED')
+      setCurrent(await currentResponse.json())
       setOperations(await operationsResponse.json())
     } catch {
       setFailed(true)
@@ -57,15 +74,14 @@ export function CeoToday() {
 
   useEffect(() => { void load() }, [])
 
-  const company = summary?.entities.find((item) => item.entityType === 'company')
-  const latest = useMemo(() => [...(company?.evolution ?? [])].sort((a, b) => b.period.localeCompare(a.period))[0], [company])
-  const compliance = ratio(latest?.sales, latest?.salesTarget)
-  const gap = latest?.sales != null && latest?.salesTarget != null ? latest.sales - latest.salesTarget : null
-  const active = latest?.metrics?.active_leads_snapshot ?? null
-  const stale = latest?.metrics?.stale_90_leads ?? null
+  const snapshot = current?.snapshot ?? null
+  const compliance = snapshot?.compliance ?? null
+  const gap = snapshot?.sales != null && snapshot?.salesTarget != null ? snapshot.sales - snapshot.salesTarget : null
+  const active = snapshot?.metrics.active_leads_snapshot ?? null
+  const stale = snapshot?.metrics.stale_90_leads ?? null
   const staleRatio = ratio(stale, active)
-  const scheduled = latest?.metrics?.scheduled_visits ?? null
-  const realized = latest?.metrics?.realized_visits ?? null
+  const scheduled = snapshot?.metrics.scheduled_visits ?? null
+  const realized = snapshot?.metrics.realized_visits ?? null
   const visitRate = ratio(realized, scheduled)
 
   const priorities = useMemo<Priority[]>(() => {
@@ -77,42 +93,76 @@ export function CeoToday() {
         href: '/dashboard/market/revisar-barrios',
       })
     }
-    if (operations?.tasks.overdue) items.push({ label: 'Tareas vencidas', detail: `${n(operations.tasks.overdue)} requieren resolución`, href: '/dashboard/control/operations', critical: true })
-    if (gap != null && gap < 0) items.push({ label: 'Meta comercial', detail: `Brecha de ${n(Math.abs(gap), 1)} operaciones`, href: '/dashboard/control/admin', critical: true })
-    if (stale != null && stale > 0 && staleRatio != null && staleRatio >= 20) items.push({ label: 'Leads antiguos', detail: `${n(stale)} leads superan 90 días`, href: '/dashboard/control/operations' })
-    if (visitRate != null && visitRate < 80) items.push({ label: 'Visitas', detail: `${n(visitRate, 0)}% de ejecución`, href: '/dashboard/control/operations' })
-    if (operations?.valuations.review) items.push({ label: 'Valorizaciones', detail: `${n(operations.valuations.review)} esperando revisión`, href: '/dashboard/valuations' })
-    if (operations?.assignments.paused) items.push({ label: 'Asignaciones', detail: `${n(operations.assignments.paused)} pausadas`, href: '/dashboard/properties/admin' })
+    if (operations?.tasks.overdue) {
+      items.push({
+        label: 'Tareas vencidas',
+        detail: `${n(operations.tasks.overdue)} requieren resolución`,
+        href: '/dashboard/control/operations',
+        critical: true,
+      })
+    }
+    if (gap != null && gap < 0) {
+      items.push({
+        label: 'Meta comercial',
+        detail: `Brecha de ${n(Math.abs(gap), 1)} operaciones respecto de la meta aprobada`,
+        href: '/dashboard/control/admin',
+        critical: true,
+      })
+    }
+    if (stale != null && stale > 0 && staleRatio != null && staleRatio >= 20) {
+      items.push({ label: 'Leads antiguos', detail: `${n(stale)} leads superan 90 días`, href: '/dashboard/control/operations' })
+    }
+    if (visitRate != null && visitRate < 80) {
+      items.push({ label: 'Visitas', detail: `${n(visitRate, 0)}% de ejecución`, href: '/dashboard/control/operations' })
+    }
+    if (operations?.valuations.review) {
+      items.push({ label: 'Valorizaciones', detail: `${n(operations.valuations.review)} esperando revisión`, href: '/dashboard/valuations' })
+    }
+    if (operations?.assignments.paused) {
+      items.push({ label: 'Asignaciones', detail: `${n(operations.assignments.paused)} pausadas`, href: '/dashboard/properties/admin' })
+    }
     return items.slice(0, 3)
   }, [gap, operations, stale, staleRatio, visitRate])
 
-  if (loading) return <WorkspaceShell><OperationalState kind="loading" title="Preparando prioridades" description="Consultando desempeño, tareas y excepciones ejecutivas del período." /></WorkspaceShell>
+  if (loading) {
+    return <WorkspaceShell><OperationalState kind="loading" title="Preparando prioridades" description="Consultando el último período operativo verificado, tareas y excepciones ejecutivas." /></WorkspaceShell>
+  }
 
-  if (failed || !summary || !operations) return <WorkspaceShell><OperationalState kind="error" title="No fue posible preparar las prioridades" description="La información ejecutiva no pudo consultarse. No se muestran métricas parciales como si fueran completas."><button type="button" onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm font-semibold"><RefreshCw size={15} />Reintentar</button></OperationalState></WorkspaceShell>
+  if (failed || !current || !operations) {
+    return <WorkspaceShell><OperationalState kind="error" title="No fue posible preparar las prioridades" description="La información ejecutiva no pudo consultarse. No se muestran métricas parciales como si fueran completas."><button type="button" onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm font-semibold"><RefreshCw size={15} />Reintentar</button></OperationalState></WorkspaceShell>
+  }
+
+  if (!snapshot) {
+    return <WorkspaceShell><OperationalState kind="empty" title="Sin período operativo verificado" description="No existe un período con ventas verificadas y evaluables para construir la vista ejecutiva." /></WorkspaceShell>
+  }
 
   const statusText = compliance == null
-    ? 'No hay evidencia suficiente para resumir el avance del período.'
+    ? 'El período tiene ventas verificadas, pero no existe una meta aprobada suficiente para calcular cumplimiento.'
     : compliance >= 100
-      ? null
+      ? `Meta mensual superada: ${n(snapshot.sales)} cierres sobre una meta aprobada de ${n(snapshot.salesTarget)}.`
       : compliance >= 80
-        ? 'El negocio está cerca de la meta; conviene concentrarse en las excepciones.'
+        ? 'El negocio está cerca de la meta; conviene concentrarse en las excepciones operativas.'
         : 'El negocio está bajo la meta y requiere atención en las prioridades señaladas.'
+
   const reviewCount = operations.valuations.review + operations.market.neighborhoodExceptions
 
   return (
     <WorkspaceShell>
-      <WorkspaceHeader eyebrow="Hoy" title="Prioridades ejecutivas" meta={latest?.period ?? 'Sin período'} />
+      <WorkspaceHeader
+        eyebrow="Hoy"
+        title="Prioridades ejecutivas"
+        meta={`${formatPropertyPartnersPeriod(snapshot.period.key)} · último período operativo verificado`}
+      />
 
-      {statusText ? (
-        <div className="mt-6 max-w-4xl">
-          <p className="text-xl leading-8 text-[var(--n3-text-light)] sm:text-2xl">{statusText}</p>
-        </div>
-      ) : null}
+      <div className="mt-5 max-w-4xl border-l-2 border-[var(--n3-line)] pl-4">
+        <p className="text-xl leading-8 text-[var(--n3-text-light)] sm:text-2xl">{statusText}</p>
+        <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Vista operativa verificada. No sustituye un cierre mensual emitido ni convierte métricas no aprobadas en publicación formal.</p>
+      </div>
 
       <MetricStrip items={[
-        { label: 'Ventas', value: n(latest?.sales, 1) },
-        { label: 'Meta', value: n(latest?.salesTarget, 1) },
-        { label: 'Cumplimiento', value: compliance == null ? '—' : `${n(compliance, 0)}%`, tone: compliance == null ? 'default' : compliance >= 100 ? 'success' : compliance >= 80 ? 'warning' : 'danger' },
+        { label: 'Ventas', value: n(snapshot.sales) },
+        { label: 'Meta', value: n(snapshot.salesTarget) },
+        { label: 'Cumplimiento', value: compliance == null ? '—' : `${n(compliance, 1)}%`, tone: compliance == null ? 'default' : compliance >= 100 ? 'success' : compliance >= 80 ? 'warning' : 'danger' },
         ...(reviewCount > 0 ? [{ label: 'Por revisar', value: reviewCount.toLocaleString('es-CL'), tone: 'warning' as const }] : []),
       ]} />
 
@@ -134,7 +184,11 @@ export function CeoToday() {
             ))}
           </div>
         </section>
-      ) : null}
+      ) : (
+        <section className="mt-8 max-w-5xl border-y border-[var(--n3-line)] py-5">
+          <p className="text-sm font-medium">Sin excepciones prioritarias abiertas para esta vista.</p>
+        </section>
+      )}
     </WorkspaceShell>
   )
 }
