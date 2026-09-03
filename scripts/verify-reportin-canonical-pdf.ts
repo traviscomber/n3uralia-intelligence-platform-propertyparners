@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { PDFDocument } from 'pdf-lib'
 import type { CanonicalClientReport } from '../lib/n3uralia-canonical-client-report'
+import {
+  extractCanonicalReportTrace,
+  formatCanonicalReportPeriod,
+  parseCanonicalReportContent,
+  resolveCanonicalReportArtifactUrl,
+} from '../lib/canonical-report-delivery'
 
 const report: CanonicalClientReport = {
   report_type: 'n3uralia_client_canonical',
@@ -52,6 +58,43 @@ const report: CanonicalClientReport = {
 }
 
 async function main() {
+  const parsedReport = parseCanonicalReportContent(JSON.stringify(report))
+  assert.ok(parsedReport)
+  assert.equal(formatCanonicalReportPeriod(parsedReport), '2026-07-01 — 2026-07-31')
+
+  const deterministicArtifact = '/api/management/reports/canonical-client/reportin-contract-test/artifact'
+  assert.equal(
+    resolveCanonicalReportArtifactUrl(parsedReport, 'pdf', 'reportin-contract-test'),
+    deterministicArtifact,
+  )
+  assert.equal(
+    resolveCanonicalReportArtifactUrl(parsedReport, 'download', 'reportin-contract-test'),
+    deterministicArtifact,
+  )
+  assert.equal(
+    resolveCanonicalReportArtifactUrl({ report_type: 'legacy_report' }, 'pdf', 'legacy-report'),
+    null,
+  )
+  assert.equal(
+    resolveCanonicalReportArtifactUrl({
+      ...parsedReport,
+      artifacts: { pdf: { url: '/explicit/view.pdf', downloadUrl: '/explicit/download.pdf' } },
+    }, 'pdf', 'reportin-contract-test'),
+    '/explicit/view.pdf',
+  )
+  assert.equal(
+    resolveCanonicalReportArtifactUrl({
+      ...parsedReport,
+      artifacts: { pdf: { url: '/explicit/view.pdf', downloadUrl: '/explicit/download.pdf' } },
+    }, 'download', 'reportin-contract-test'),
+    '/explicit/download.pdf',
+  )
+
+  const trace = extractCanonicalReportTrace(parsedReport)
+  assert.equal(trace.model, 'verification-model')
+  assert.equal(trace.promptVersion, '1.0')
+  assert.equal(trace.sourceCount, 1)
+
   const { buildReportinCanonicalPdf } = await import('../lib/reportin-canonical-pdf')
   const artifact = await buildReportinCanonicalPdf(report)
   assert.equal(artifact.reportinVersion, '1.0')
@@ -77,7 +120,7 @@ async function main() {
     /REPORTIN_INVALID_SOURCE_POLICY/,
   )
 
-  console.log('Reportin canonical PDF verification passed.')
+  console.log('Reportin canonical PDF and delivery contract verification passed.')
 }
 
 main().catch((error) => {
