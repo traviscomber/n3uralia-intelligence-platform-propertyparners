@@ -6,6 +6,7 @@ export function formatPropertyPartnersDateTime(value: string | Date) {
   return new Intl.DateTimeFormat('es-CL', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    hourCycle: 'h23',
     timeZone: PROPERTY_PARTNERS_TIME_ZONE,
   }).format(date)
 }
