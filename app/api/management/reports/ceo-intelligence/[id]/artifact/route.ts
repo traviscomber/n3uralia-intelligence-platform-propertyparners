@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoleAccess } from '@/lib/api-access'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { buildCeoIntelligencePdf } from '@/lib/reportin-ceo-intelligence-pdf'
+import { buildPolishedCeoIntelligencePdf } from '@/lib/reportin-ceo-intelligence-pdf-polish'
 import type { PropertyPartnersCeoIntelligenceReport } from '@/lib/property-partners-ceo-intelligence-report'
 
 export const runtime = 'nodejs'
@@ -48,7 +48,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   try {
     const parsed = JSON.parse(data.content) as unknown
     if (!isCeoIntelligenceReport(parsed)) throw new Error('REPORTIN_INVALID_CEO_INTELLIGENCE_DOCUMENT')
-    const artifact = await buildCeoIntelligencePdf(parsed)
+    const artifact = await buildPolishedCeoIntelligencePdf(parsed)
     const disposition = new URL(request.url).searchParams.get('disposition') === 'inline' ? 'inline' : 'attachment'
     return new Response(Buffer.from(artifact.bytes), {
       status: 200,
