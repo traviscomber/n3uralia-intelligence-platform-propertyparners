@@ -30,8 +30,15 @@ assert.equal(
 )
 
 const propertiesPage = readFileSync('app/dashboard/properties/page.tsx', 'utf8')
-assert.match(propertiesPage, /\['ceo', 'admin', 'director', 'subdirector'\]/)
+assert.match(propertiesPage, /requireUserScope\(\)/)
+assert.match(propertiesPage, /properties\.global\.assign/)
+assert.match(propertiesPage, /properties\.office\.assign/)
 assert.match(propertiesPage, /redirect\('\/dashboard\/properties\/admin'\)/)
-assert.match(propertiesPage, /formatPropertyPartnersDate/)
+assert.match(propertiesPage, /propertyPartnersCalendarDayAge\(property\.last_seen_at\)/)
+assert.match(propertiesPage, /\.eq\('assigned_to', scope\.profileId\)/)
 
-console.log('Property Partners timezone and portfolio-routing verification passed.')
+const marketOperational = readFileSync('lib/market-operational.ts', 'utf8')
+assert.match(marketOperational, /propertyPartnersCalendarDayAge\(value\)/)
+assert.doesNotMatch(marketOperational, /Date\.now\(\) - observedAt\.getTime\(\)/)
+
+console.log('Property Partners timezone, freshness and portfolio-routing verification passed.')
