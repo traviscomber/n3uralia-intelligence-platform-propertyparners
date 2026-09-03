@@ -9,13 +9,14 @@ import {
   parseCanonicalReportContent,
   resolveCanonicalReportArtifactUrl,
 } from '@/lib/canonical-report-delivery'
+import { formatPropertyPartnersDateTime, propertyPartnersTimeZoneLabel } from '@/lib/property-partners-time'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { DataStatusBar, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 
 type CanonicalDocumentRow = { id:string; title:string; content:string; doc_type:string|null; tags:string[]|null; created_at:string }
 type ReportRecord = { id:string; title:string; kind:string; period:string; status:string; createdAt:string; pdfUrl:string|null; downloadUrl:string|null; sourceCount:number; model:string|null; promptVersion:string|null; costUsd:number|null }
-function formatDate(value:string){const d=new Date(value);return Number.isNaN(d.getTime())?value:new Intl.DateTimeFormat('es-CL',{dateStyle:'medium',timeStyle:'short'}).format(d)}
+function formatDate(value:string){return formatPropertyPartnersDateTime(value)}
 function isClientCanonical(document:CanonicalDocumentRow){const tags=document.tags??[];return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')}
 function hasArtifact(report:ReportRecord){return Boolean(report.pdfUrl||report.downloadUrl)}
 function isDeliverable(report:ReportRecord){return report.period!=='Sin período'&&hasArtifact(report)}
@@ -48,7 +49,7 @@ export default async function CanonicalClientReportsPage(){
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{current.kind} · {current.period}</p>
           <h2 className="mt-2 break-words text-xl font-semibold">{current.title}</h2>
-          <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Generado {formatDate(current.createdAt)}</p>
+          <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Generado {formatDate(current.createdAt)} · {propertyPartnersTimeZoneLabel()}</p>
           <p className="mt-1 text-sm text-[var(--n3-text-muted)]">Estado: {current.status}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -70,7 +71,7 @@ export default async function CanonicalClientReportsPage(){
 
     <section className="mt-8 max-w-5xl">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Historial</h2><span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{history.length}</span></div>
-      {history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=>{const incompleteReport=!isDeliverable(report);return <article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_120px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="break-words text-sm font-medium sm:truncate">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{report.kind} · {formatDate(report.createdAt)}</p></div><span className={`text-xs ${incompleteReport?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{incompleteReport?'Borrador incompleto':report.status}</span><div className="flex gap-2 sm:justify-end">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}{!hasArtifact(report)?<span aria-label="PDF no vinculado" className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)] text-[var(--n3-text-muted)]"><FileText size={14}/></span>:null}</div></article>})}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}
+      {history.length?<div className="divide-y divide-[var(--n3-line)]">{history.map(report=>{const incompleteReport=!isDeliverable(report);return <article key={report.id} className="grid gap-3 py-4 sm:grid-cols-[140px_minmax(0,1fr)_120px_auto] sm:items-center"><span className="text-xs text-[var(--n3-text-muted)]">{report.period}</span><div className="min-w-0"><p className="break-words text-sm font-medium sm:truncate">{report.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{report.kind} · {formatDate(report.createdAt)} · hora Chile</p></div><span className={`text-xs ${incompleteReport?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{incompleteReport?'Borrador incompleto':report.status}</span><div className="flex gap-2 sm:justify-end">{report.pdfUrl?<Link href={report.pdfUrl} target="_blank" aria-label={`Abrir ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><ExternalLink size={14}/></Link>:null}{report.downloadUrl?<Link href={report.downloadUrl} aria-label={`Descargar ${report.title}`} className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)]"><Download size={14}/></Link>:null}{!hasArtifact(report)?<span aria-label="PDF no vinculado" className="inline-flex h-11 w-11 items-center justify-center border border-[var(--n3-line)] text-[var(--n3-text-muted)]"><FileText size={14}/></span>:null}</div></article>})}</div>:<div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin versiones anteriores.</div>}
     </section>
 
     <details className="mt-8 max-w-5xl">
