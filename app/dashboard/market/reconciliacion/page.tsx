@@ -70,7 +70,7 @@ export default async function CanonicalMarketReconciliationPage() {
         <SectionHeading eyebrow="03 · Cobertura" title="Avance real de reconciliación" description="La cobertura live mide riesgo operativo actual; el backlog legacy se mantiene separado como deuda histórica." />
         <MetricGrid>
           <MetricCard label="Identidad live vinculada" value={pct(reconciliation.coverage.liveIdentityCoverageRate)} detail={`${n(reconciliation.operational.liveLinkedHouses)} de ${n(reconciliation.operational.liveHouses)} casas live`} />
-          <MetricCard label="Cobertura territorial operativa" value={pct(reconciliation.coverage.territorialCoverageRate)} detail={`${n(reconciliation.gaps.neighborhoodsMissing)} registros todavía sin barrio`} />
+          <MetricCard label="Cobertura territorial operativa" value={pct(reconciliation.coverage.territorialCoverageRate)} detail={`${n(reconciliation.gaps.neighborhoodsMissing)} de ${n(reconciliation.operational.properties)} propiedades operativas sin barrio · no corresponde al universo de ${n(reconciliation.operational.liveHouses)} casas live`} />
           <MetricCard label="Backlog legacy de identidad" value={n(reconciliation.operational.historicalIdentityCandidates)} detail="Candidatos históricos; no equivalen a excepciones live" />
           <MetricCard label="Portal materializado" value={pct(reconciliation.coverage.portalMaterializedRate)} detail={`${n(reconciliation.operational.properties)} registros operativos / ${n(reconciliation.canonical.portalValidListings)} publicaciones fuente`} />
         </MetricGrid>
