@@ -124,6 +124,9 @@ jobs:
       - name: Verify canonical company sales target
         run: pnpm exec tsx scripts/verify-canonical-company-sales-target.ts
 
+      - name: Verify Property Partners Santiago timezone
+        run: pnpm exec tsx scripts/verify-property-partners-timezone.ts
+
       - name: Verify CEO report snapshot-aware dedupe
         run: pnpm exec tsx scripts/verify-ceo-report-snapshot-dedupe.ts
 
