@@ -121,6 +121,9 @@ jobs:
       - name: Verify management report delivery
         run: pnpm management:delivery:verify
 
+      - name: Verify Reportin canonical PDF and delivery contract
+        run: pnpm reportin:verify
+
       - name: Verify dashboard access
         run: pnpm access:verify
 

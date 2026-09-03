@@ -21,7 +21,7 @@ function isCanonicalClientReport(value: unknown): value is CanonicalClientReport
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const access = await requireRoleAccess(['admin', 'ceo'])
@@ -51,12 +51,13 @@ export async function GET(
     const parsed = JSON.parse(data.content) as unknown
     if (!isCanonicalClientReport(parsed)) throw new Error('REPORTIN_INVALID_CANONICAL_DOCUMENT')
     const artifact = await buildReportinCanonicalPdf(parsed)
+    const disposition = new URL(request.url).searchParams.get('disposition') === 'inline' ? 'inline' : 'attachment'
 
     return new Response(Buffer.from(artifact.bytes), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${artifact.filename}"`,
+        'Content-Disposition': `${disposition}; filename="${artifact.filename}"`,
         'Cache-Control': 'private, no-store, max-age=0',
         'X-Content-Type-Options': 'nosniff',
         'X-Reportin-Version': artifact.reportinVersion,

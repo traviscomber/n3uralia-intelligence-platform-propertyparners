@@ -1,45 +1,30 @@
 import Link from 'next/link'
 import { Download, ExternalLink, FileText, Send } from 'lucide-react'
 import { requirePageCapability } from '@/lib/access-guards'
+import {
+  extractCanonicalReportTrace,
+  formatCanonicalReportPeriod,
+  normalizeCanonicalReportStatus,
+  parseCanonicalReportContent,
+  resolveCanonicalReportArtifactUrl,
+} from '@/lib/canonical-report-delivery'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { DataStatusBar, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 
-type CanonicalDocumentRow = { id:string; title:string; content:string; tags:string[]|null; created_at:string }
+type CanonicalDocumentRow = { id:string; title:string; content:string; doc_type:string|null; tags:string[]|null; created_at:string }
 type ReportRecord = { id:string; title:string; period:string; status:string; createdAt:string; pdfUrl:string|null; downloadUrl:string|null; sourceCount:number; model:string|null; promptVersion:string|null; costUsd:number|null }
-const asRecord=(v:unknown):Record<string,unknown>|null=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:null
-const parseContent=(content:string)=>{try{return asRecord(JSON.parse(content))}catch{return null}}
-const readRecord=(r:Record<string,unknown>|null,k:string)=>r?asRecord(r[k]):null
-const readString=(r:Record<string,unknown>|null,k:string,f='')=>r&&typeof r[k]==='string'&&String(r[k]).trim()?String(r[k]):f
-const readNumber=(r:Record<string,unknown>|null,k:string)=>r&&typeof r[k]==='number'&&Number.isFinite(r[k] as number)?Number(r[k]):null
 function formatDate(value:string){const d=new Date(value);return Number.isNaN(d.getTime())?value:new Intl.DateTimeFormat('es-CL',{dateStyle:'medium',timeStyle:'short'}).format(d)}
-function formatPeriod(record:Record<string,unknown>|null){const p=readRecord(record,'period');const s=readString(p,'start');const e=readString(p,'end');return s&&e&&s!==e?`${s} — ${e}`:s||e||'Sin período'}
-function getArtifactUrl(parsed:Record<string,unknown>|null,type:'pdf'|'download'){const artifacts=readRecord(parsed,'artifacts');const pdf=readRecord(artifacts,'pdf');const keys=type==='pdf'?['url','viewUrl','artifactUrl','path']:['downloadUrl','url','artifactUrl','path'];for(const key of keys){const value=readString(pdf,key);if(value.startsWith('/')||value.startsWith('https://'))return value}return null}
-function normalizeStatus(parsed:Record<string,unknown>|null,tags:string[]|null){const delivery=readRecord(parsed,'delivery');const raw=readString(delivery,'status',tags?.includes('approved')?'approved':'draft');return ({draft:'Borrador',review:'En revisión',approved:'Aprobado',sent:'Enviado',resent:'Reenviado',registered:'Registrado'} as Record<string,string>)[raw.toLowerCase()]??raw}
-function trace(parsed:Record<string,unknown>|null){
-  const provenance=readRecord(parsed,'provenance')
-  const generation=readRecord(parsed,'generation')
-  const sources=provenance?.sources
-  return {
-    sourceCount:Array.isArray(sources)?sources.length:0,
-    model:readString(generation,'model')||null,
-    promptVersion:readString(generation,'promptVersion')||readString(generation,'prompt_version')||null,
-    costUsd:readNumber(generation,'costUsd')??readNumber(generation,'cost_usd'),
-  }
-}
-function isClientCanonical(document:CanonicalDocumentRow){
-  const tags=document.tags??[]
-  return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')
-}
+function isClientCanonical(document:CanonicalDocumentRow){const tags=document.tags??[];return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')}
 function hasArtifact(report:ReportRecord){return Boolean(report.pdfUrl||report.downloadUrl)}
 function isDeliverable(report:ReportRecord){return report.period!=='Sin período'&&hasArtifact(report)}
 
 export default async function CanonicalClientReportsPage(){
   await requirePageCapability('reports.global.read')
   const supabase=createAdminClient()
-  const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
+  const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,doc_type,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
   const documents=(error?[]:(data||[]) as CanonicalDocumentRow[]).filter(isClientCanonical)
-  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseContent(document.content);const t=trace(parsed);return{id:document.id,title:document.title,period:formatPeriod(parsed),status:normalizeStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:getArtifactUrl(parsed,'pdf'),downloadUrl:getArtifactUrl(parsed,'download'),...t}})
+  const reports:ReportRecord[]=documents.map(document=>{const parsed=parseCanonicalReportContent(document.content);const trace=extractCanonicalReportTrace(parsed);const metadata={docType:document.doc_type,tags:document.tags};return{id:document.id,title:document.title,period:formatCanonicalReportPeriod(parsed),status:normalizeCanonicalReportStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:resolveCanonicalReportArtifactUrl(parsed,'pdf',document.id,metadata),downloadUrl:resolveCanonicalReportArtifactUrl(parsed,'download',document.id,metadata),...trace}})
   const current=reports.find(isDeliverable)??null
   const history=reports.filter(report=>report.id!==current?.id)
   const incomplete=reports.filter(report=>!isDeliverable(report))
