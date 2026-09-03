@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { CeoIntelligenceReportGenerator } from '@/components/management/ceo-intelligence-report-generator'
 import { CanonicalLatestReportGenerator } from '@/components/management/canonical-latest-report-generator'
 import { ReportDeliveryConsole } from '@/components/management/report-delivery-console'
 import { IntelligenceHeader, IntelligencePage } from '@/components/intelligence/design-system'
@@ -12,13 +13,14 @@ export default async function ReportOperationsPage() {
   return <IntelligencePage>
     <IntelligenceHeader
       eyebrow="Informes"
-      title="Generar y enviar"
-      description="Genera informes desde snapshots persistidos, revisa el PDF y procesa entregas autorizadas. La recurrencia permanece bloqueada hasta contar con reglas, calendario y destinatarios aprobados."
+      title="Generar y revisar"
+      description="CEO Intelligence es el informe mensual de negocio para Property Partners. El informe contractual permanece separado para seguimiento de entrega N3uralia. Ningún borrador se envía automáticamente."
       actions={[
         { label: 'Ver informes', href: '/dashboard/reportes/canonicos', primary: true },
         { label: 'Revisar programaciones', href: '/dashboard/control/admin' },
       ]}
     />
+    {canOperate ? <CeoIntelligenceReportGenerator /> : null}
     {canOperate ? <CanonicalLatestReportGenerator /> : null}
     <ReportDeliveryConsole canOperate={canOperate} />
   </IntelligencePage>
