@@ -2,13 +2,7 @@
   "schemaVersion": 1,
   "asOf": "2026-09-03",
   "overallStatus": "in-progress",
-  "allowedStatuses": [
-    "not-started",
-    "in-progress",
-    "blocked-client-input",
-    "ready-for-uat",
-    "accepted"
-  ],
+  "allowedStatuses": ["not-started", "in-progress", "blocked-client-input", "ready-for-uat", "accepted"],
   "documents": [
     "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
     "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
@@ -22,10 +16,10 @@
       "status": "ready-for-uat",
       "owner": "N3uralia",
       "evidence": [
-        "Produccion ppartnersgroup.app verificada sobre baseline 92f1ca63ab2c2d606edc40d55aadb250669cd154, deployment dpl_4CxmckkJfevb5zMd7GwELLeqt1H3 READY el 2026-09-03",
-        "Baseline productivo mantiene Contractual modules CI, Auth/RLS QA, visual QA y N3uralia IP Boundaries en PASS",
-        "Runtime productivo revisado sin un defecto actual que invalide el release",
-        "Asignacion de cartera Vitacura y visibilidad de sellers verificadas en navegador sin ampliar RLS"
+        "Functional production baseline dbb9ae7717e9152858d2e989a36691f6ab03b765 is served by ppartnersgroup.app through deployment dpl_4vk2HRhNZQiKZ3sikeQ2qir69n49 READY on 2026-09-03",
+        "PR #202 passed Contractual modules CI, N3uralia IP Boundaries and Vercel preview before merge; production browser verification passed after deployment",
+        "No error/fatal runtime logs were found for the new deployment in the post-deploy verification window",
+        "Portfolio assignment and scoped seller visibility remain verified without broadening profiles RLS"
       ],
       "blockers": []
     },
@@ -40,9 +34,7 @@
         "Aprobacion y emision permanecen restringidas a CEO con MFA/AAL2 y evidencia valida",
         "El sistema no emite un caso de produccion solo para satisfacer QA"
       ],
-      "blockers": [
-        "Ejecutar con usuarios autorizados un caso real de UAT hasta issued y registrar aceptacion"
-      ]
+      "blockers": ["Ejecutar con usuarios autorizados un caso real de UAT hasta issued y registrar aceptacion"]
     },
     {
       "id": "management-intelligence",
@@ -55,9 +47,7 @@
         "Scoring, persistencia, reconciliacion, comparaciones, fuentes y report delivery pasan gates",
         "Rutas CEO, director, subdirector y seller respetan capacidades y alcance"
       ],
-      "blockers": [
-        "Aprobar diccionario oficial de KPI antes de presentar metricas provisionales como oficiales"
-      ]
+      "blockers": ["Aprobar diccionario oficial de KPI antes de presentar metricas provisionales como oficiales"]
     },
     {
       "id": "market-intelligence",
@@ -68,7 +58,7 @@
         "Alcance canonico de aceptacion: ventas de casas en Vitacura",
         "Produccion expone 50 casas live: 11 vinculadas, 39 sin vinculo, 1 candidato fuerte y 1 colision externa",
         "KML recibido e integrado: 19 barrios canonicos",
-        "Cobertura territorial operativa 84.2%: 50 de 317 propiedades operativas aun sin barrio; este denominador es distinto del universo de 50 casas live",
+        "Cobertura territorial operativa 84.2%: 50 de 317 propiedades operativas aun sin barrio; produccion declara explicitamente que este denominador es distinto del universo de 50 casas live",
         "Portal, CBRS e identidad se mantienen semanticamente separados y los gates de mercado pasan"
       ],
       "blockers": []
@@ -84,11 +74,7 @@
         "Reportin canonico y CEO Intelligence preservan scope house-only y snapshots auditables",
         "La revision de cierre 2026-09-03 no genero ni envio un nuevo reporte a destinatarios externos"
       ],
-      "blockers": [
-        "Calendario definitivo",
-        "Destinatarios aprobados",
-        "Frecuencia, formato/canal y reglas operativas confirmadas"
-      ]
+      "blockers": ["Calendario definitivo", "Destinatarios aprobados", "Frecuencia, formato/canal y reglas operativas confirmadas"]
     },
     {
       "id": "uat-and-acceptance",
@@ -98,14 +84,10 @@
       "evidence": [
         "UAT-07 seguridad funcional permanece passed",
         "UAT-08 continuidad operativa permanece passed",
-        "QA autenticado por roles y visual del baseline productivo actual esta verde",
+        "QA autenticado por roles y visual del baseline previo permanece verde; el cambio #202 fue exclusivamente de copy y paso los gates completos",
         "Plan UAT contractual documenta casos de Mercado, Valorizacion y Gestion por rol"
       ],
-      "blockers": [
-        "Participantes UAT designados por el Cliente",
-        "Ejecucion y aceptacion humana de los casos compartidos, incluido un Valorizador real hasta issued",
-        "Acta o registro de aceptacion"
-      ]
+      "blockers": ["Participantes UAT designados por el Cliente", "Ejecucion y aceptacion humana de los casos compartidos, incluido un Valorizador real hasta issued", "Acta o registro de aceptacion"]
     },
     {
       "id": "training-and-handover",
@@ -117,11 +99,7 @@
         "Manual ejecutivo y manual de administracion/operacion ya forman parte del inventario del paquete de entrega",
         "Training execution pack incluido en el paquete de entrega"
       ],
-      "blockers": [
-        "Fechas y asistentes confirmados",
-        "Sesiones ejecutadas",
-        "Registro de asistencia y cierre"
-      ]
+      "blockers": ["Fechas y asistentes confirmados", "Sesiones ejecutadas", "Registro de asistencia y cierre"]
     },
     {
       "id": "final-delivery-package",
@@ -133,11 +111,7 @@
         "Arquitectura, UAT, seguridad, rollback, reconstruccion y operacion cuentan con documentacion incluida",
         "PRs historicos superseded #78, #79, #121, #140, #143, #144 y #184 fueron cerrados sin merge el 2026-09-03"
       ],
-      "blockers": [
-        "Definir titularidad y receptor tecnico autorizado de servicios de terceros",
-        "Generar artefacto final y checksum sobre el commit aprobado despues de UAT/handover",
-        "Autorizar formalmente la entrega del paquete"
-      ]
+      "blockers": ["Definir titularidad y receptor tecnico autorizado de servicios de terceros", "Generar artefacto final y checksum sobre el commit aprobado despues de UAT/handover", "Autorizar formalmente la entrega del paquete"]
     }
   ],
   "acceptanceRule": {
