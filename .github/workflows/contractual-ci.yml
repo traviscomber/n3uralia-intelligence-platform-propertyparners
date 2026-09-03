@@ -124,6 +124,9 @@ jobs:
       - name: Verify canonical company sales target
         run: pnpm exec tsx scripts/verify-canonical-company-sales-target.ts
 
+      - name: Verify CEO report snapshot-aware dedupe
+        run: pnpm exec tsx scripts/verify-ceo-report-snapshot-dedupe.ts
+
       - name: Verify Reportin canonical PDF and delivery contract
         run: pnpm reportin:verify
 
