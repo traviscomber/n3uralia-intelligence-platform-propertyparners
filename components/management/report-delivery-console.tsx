@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Download, Mail, Play, RefreshCw, ShieldAlert } from 'lucide-react'
 import { IntelligencePanel, MetricCard, MetricGrid, SectionHeading } from '@/components/intelligence/design-system'
 import { OperationalState } from '@/components/ui/operational-state'
+import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 
 type Distribution = {
   id: string
@@ -51,7 +52,7 @@ const reportLabels: Record<string, string> = {
 
 function dateTime(value: string | null | undefined) {
   if (!value) return 'n/d'
-  return new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+  return formatPropertyPartnersDateTime(value)
 }
 
 function statusLabel(value: string) {
@@ -144,7 +145,7 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
 
   return <div className="space-y-10" aria-busy={loading || Boolean(action)}>
     <section>
-      <SectionHeading eyebrow="Operación" title="Generación y entrega de reportes" description="Cada ejecución conserva período, snapshot, destinatario, intentos y referencia del proveedor." />
+      <SectionHeading eyebrow="Operación" title="Generación y entrega de reportes" description="Cada ejecución conserva período, snapshot, destinatario, intentos y referencia del proveedor. Las horas se muestran en America/Santiago." />
       <MetricGrid>
         <MetricCard label="Reportes" value={String(reports.length)} detail="Ejecuciones visibles según el alcance del usuario." />
         <MetricCard label="Envíos completados" value={String(sent)} detail="Estados enviados o confirmados." />
@@ -202,7 +203,7 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">{reportLabels[report.report_type] ?? report.report_type}</p>
                 <h3 className="mt-2 break-words text-lg font-semibold">{report.period_start} – {report.period_end}</h3>
-                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Generado {dateTime(report.generated_at)} · Estado {statusLabel(report.status)}</p>
+                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Generado {dateTime(report.generated_at)} · hora Chile · Estado {statusLabel(report.status)}</p>
               </div>
               <Link href={`/api/management/reports/${report.id}/artifact`} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm">
                 <Download size={15} />Descargar PDF
@@ -214,7 +215,7 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
                 <span>{statusLabel(distribution.status)}</span>
                 <span>{distribution.attempt_count} intentos</span>
                 <span className={`break-words ${distribution.error_message ? 'text-[#ff766f]' : 'text-[var(--n3-text-muted)]'}`}>
-                  {distribution.error_message || (distribution.sent_at ? `Enviado ${dateTime(distribution.sent_at)}` : `Próximo ${dateTime(distribution.next_attempt_at)}`)}
+                  {distribution.error_message || (distribution.sent_at ? `Enviado ${dateTime(distribution.sent_at)} · hora Chile` : `Próximo ${dateTime(distribution.next_attempt_at)} · hora Chile`)}
                 </span>
               </div>)}
             </div>
