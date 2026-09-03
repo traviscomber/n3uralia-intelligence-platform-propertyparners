@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OperationalState } from '@/components/ui/operational-state'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
-import { formatPropertyPartnersDate } from '@/lib/property-partners-time'
+import { hasCapability } from '@/lib/access-control'
+import { requireUserScope } from '@/lib/access-guards'
+import { formatPropertyPartnersDate, propertyPartnersCalendarDayAge } from '@/lib/property-partners-time'
 
 type AssignedProperty = {
   id: string
@@ -37,27 +39,20 @@ function assignmentRole(value: string) {
 }
 
 export default async function PropertiesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = user
-    ? await supabase.from('profiles').select('role,full_name').eq('id', user.id).maybeSingle()
-    : { data: null }
-
-  const role = String(profile?.role || '').toLowerCase()
-  if (['ceo', 'admin', 'director', 'subdirector'].includes(role)) {
+  const scope = await requireUserScope()
+  if (hasCapability(scope.role, 'properties.global.assign') || hasCapability(scope.role, 'properties.office.assign')) {
     redirect('/dashboard/properties/admin')
   }
 
+  const supabase = await createClient()
   const [observationResult, assignmentResult] = await Promise.all([
     supabase.from('market_current_listings').select('observed_at').order('observed_at', { ascending: false }).limit(1).maybeSingle(),
-    user
-      ? supabase
-        .from('property_assignments')
-        .select('id,assignment_role,status,assigned_at,notes,market_properties(id,normalized_address,property_type,useful_area_m2,built_area_m2,bedrooms,bathrooms,parking_spaces,identity_status,last_seen_at)')
-        .eq('assigned_to', user.id)
-        .eq('status', 'active')
-        .order('assigned_at', { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from('property_assignments')
+      .select('id,assignment_role,status,assigned_at,notes,market_properties(id,normalized_address,property_type,useful_area_m2,built_area_m2,bedrooms,bathrooms,parking_spaces,identity_status,last_seen_at)')
+      .eq('assigned_to', scope.profileId)
+      .eq('status', 'active')
+      .order('assigned_at', { ascending: false }),
   ])
 
   const assignments = (assignmentResult.data || []) as AssignedProperty[]
@@ -67,8 +62,8 @@ export default async function PropertiesPage() {
   const staleAssignments = assignments.filter((assignment) => {
     const property = assignment.market_properties[0]
     if (!property?.last_seen_at) return true
-    const age = Date.now() - new Date(property.last_seen_at).getTime()
-    return age > 7 * 24 * 60 * 60 * 1000
+    const ageDays = propertyPartnersCalendarDayAge(property.last_seen_at)
+    return ageDays === null || ageDays > 7
   }).length
   const coverage = assignments.length ? confirmedIdentity / assignments.length : null
   const dataStatus = assignmentResult.error ? 'blocked' : assignments.length && confirmedIdentity === assignments.length ? 'ready' : 'partial'
