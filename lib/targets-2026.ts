@@ -3,6 +3,9 @@ import crm from '@/data/crm-intelligence.json'
 
 export type TargetMetric = 'stock_count' | 'requirements_count' | 'leads_count' | 'visits_count' | 'offers_count' | 'sales_count' | 'sales_uf'
 
+export const CANONICAL_COMPANY_MONTHLY_SALES_TARGET = 8
+export const LEGACY_DOCUMENTARY_COMPANY_MONTHLY_SALES_TARGET = 8.1
+
 const ACTUAL_FIELD: Partial<Record<TargetMetric, string>> = {
   stock_count: 'stockByOffice',
   requirements_count: 'requirementsByOffice',
@@ -33,13 +36,16 @@ export function getTargetSource() {
 
 export function getCompanySalesCompliance(period = '2026-06') {
   const month = crm.months.find((item) => item.period === period)
-  const target = targets.companyMonthlyTargets.sales_count[period as keyof typeof targets.companyMonthlyTargets.sales_count] ?? null
+  const legacyDocumentaryTarget = targets.companyMonthlyTargets.sales_count[period as keyof typeof targets.companyMonthlyTargets.sales_count] ?? null
+  const target = CANONICAL_COMPANY_MONTHLY_SALES_TARGET
   const actual = month?.salesCount ?? null
   return {
     period,
     target,
     actual,
-    compliance: target && actual !== null ? Number(((actual / target) * 100).toFixed(1)) : null,
+    compliance: actual !== null ? Number(((actual / target) * 100).toFixed(1)) : null,
+    targetSource: 'Canonical management directive 2026-09-03',
+    legacyDocumentaryTarget,
   }
 }
 
