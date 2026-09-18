@@ -8,10 +8,10 @@
 
 Release candidate productivo:
 
-- SHA: `85015ea37be37f0bb6f01f9cf9d63ddf1683e99c`
+- SHA: `002805a52c660155b8a71cb90528ee78725e9067`
 - Producción: `https://ppartnersgroup.app`
-- Deployment: `dpl_Gz3KWFmrENwNZs9gZQ63bc2g6WPY` — READY
-- Runtime posterior al deploy: sin errores observados en la ventana auditada
+- Deployment: `dpl_DKMAAsqKgKHMnY8grSEVv8gCdfky` — READY
+- Runtime posterior al deploy actual: sin errores observados en la ventana auditada; crons productivos verificados en HTTP 200
 - Tres pilares contractuales: PASS técnico
 
 Este documento no declara aceptación del Cliente. Separa lo que ya está validado técnicamente de las pocas decisiones que corresponde validar a Property Partners.
@@ -50,7 +50,7 @@ La portada muestra resultado actual, métricas esenciales y hasta tres prioridad
 
 Portal Inmobiliario, CBRS Vitacura y KML se mantienen como fuentes separadas y trazables. Una publicación no se considera venta confirmada. Una fila CBRS no se convierte automáticamente en comparable sin controles de identidad y comparabilidad.
 
-La automatización de identidad de alta confianza aplicada en base de datos reduce revisión manual, pero el PR #208 permanece **HOLD** hasta cerrar el conflicto P1 detectado sobre evidencia de identidad externa. No forma parte del release candidate de código.
+La automatización de identidad de alta confianza está integrada mediante el PR #211. El PR #208 quedó supersedido. La auto-resolución sólo opera ante match único, score alto y ausencia de evidencia externa ambigua o contradictoria; los demás casos siguen en revisión humana.
 
 ### 2. Valorización
 
@@ -76,7 +76,7 @@ Debe reconocer falta de información en vez de inventar precisión. Las pregunta
 
 Autenticación, autorización por rol, tenant isolation y MFA/AAL2 para operaciones críticas forman parte del gate técnico.
 
-El hardening productivo de funciones `SECURITY DEFINER` ya fue aplicado en Supabase: ejecución `anon` y `PUBLIC` cerrada. PR #207 permanece abierto porque su gate de prevención futura recibió una observación P2 y debe corregirse antes de integrarlo al repositorio. El estado productivo de seguridad no depende de mergear ese PR.
+El hardening de funciones `SECURITY DEFINER` está integrado mediante el PR #207: ejecución `anon` y `PUBLIC` cerrada y gate preventivo activo para migraciones futuras. Los RPC autenticados intencionales conservan controles internos de identidad, rol y alcance.
 
 Pendientes administrativos/técnicos de cierre:
 
@@ -122,6 +122,7 @@ Todo cambio de código posterior obliga a repetir los gates técnicos correspond
 
 - **PR #207 integrado:** hardening reproducible de SECURITY DEFINER y gate sobre migraciones futuras.
 - **PR #211 integrado:** auto-resolución de identidad de alta confianza con bloqueo explícito ante evidencia externa ambigua o contradictoria.
+- **PR #213 integrado:** QA autenticada y visual mantienen sus pasos de prueba obligatorios; la carga de artefactos queda best-effort para no convertir la cuota de almacenamiento de GitHub en un falso fallo de QA.
 - El único caso auto-confirmado en producción fue auditado: la evidencia externa apunta a la misma propiedad canónica.
 - No quedan P0/P1 técnicos conocidos abiertos en estos dos frentes.
 
