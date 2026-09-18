@@ -144,6 +144,63 @@ function isReportPrompt(prompt: string) {
   return ['reporte', 'reportes', 'informe', 'informes', 'entrega', 'entregas', 'envio', 'envios'].some((term) => prompt.includes(term))
 }
 
+function seniorResponse(base: BaseResponse, prompt: string, expertise: ReturnType<typeof expertiseCardsForPrompt>): BaseResponse {
+  if (!expertise.length) return base
+
+  const topics = new Set(expertise.map((item) => item.topic))
+  const evidence: Evidence[] = [
+    ...base.evidence.filter((item) => item.domain === 'valuations' || item.domain === 'properties').slice(0, 4),
+    {
+      label: 'Alcance y fuentes aprobadas',
+      source: 'client-response-pedro-pablo-2026-08-12 · Vitacura only',
+      cutoff: '2026-08-12',
+      domain: 'properties',
+    },
+  ]
+
+  const lines: string[] = []
+  lines.push('Hecho canónico: la etapa vigente está limitada a Vitacura y la metodología contractual de valorización tiene precedencia.')
+
+  if (topics.has('pricing_strategy') || topics.has('commercial_valuation')) {
+    lines.push('Interpretación senior: un precio de salida defendible debe construirse desde el inmueble concreto, sus atributos verificables y comparables aceptados; Portal representa oferta y CBRS evidencia transaccional sujeta a identidad y comparabilidad.')
+    lines.push('Hipótesis a revisar: puedo evaluar si el precio publicado está defendido, alto o bajo sólo cuando exista un caso de propiedad/valorización identificable y evidencia suficiente.')
+    lines.push('Evidencia faltante: identifica la propiedad o expediente que quieres revisar; para una cifra específica deben existir comparables y atributos verificables dentro del flujo contractual.')
+    lines.push('Siguiente acción: indícame la dirección o la valorización y revisaré precio publicado, valor comercial, comparables, historial y brechas de evidencia.')
+  }
+
+  if (topics.has('marketability')) {
+    lines.push('Interpretación senior: liquidez y marketability deben leerse desde señales observables —historial de publicación, cambios de precio, profundidad de comparables y singularidad del activo—, no como una probabilidad automática de venta.')
+    lines.push('Evidencia faltante: sin un inmueble identificado no corresponde afirmar días en mercado, absorción ni velocidad de venta.')
+    lines.push('Siguiente acción: indica la propiedad para revisar sus señales de exposición y comparables dentro de Vitacura.')
+  }
+
+  if (topics.has('due_diligence')) {
+    lines.push('Interpretación senior: antes de una recomendación definitiva conviene verificar identidad, superficies, regularización y antecedentes disponibles; una brecha documental reduce confianza, pero no demuestra por sí sola una pérdida de valor.')
+    lines.push('Checkpoint humano: títulos, gravámenes, permisos y recepción final requieren antecedentes específicos y revisión humana; el asistente no emite opinión legal.')
+  }
+
+  if (topics.has('urban_planning')) {
+    lines.push('Interpretación senior: no corresponde concluir constructibilidad, altura, uso de suelo o subdivisión sin identificar la zona y el antecedente oficial vigente del predio.')
+  }
+
+  if (topics.has('fiscal_appraisal') || topics.has('property_tax')) {
+    lines.push('Interpretación senior: avalúo fiscal y contribuciones son antecedentes fiscales; no sustituyen el valor comercial ni la metodología contractual de valorización.')
+  }
+
+  return {
+    ...base,
+    title: 'Lectura senior inmobiliaria · Vitacura',
+    answer: Array.from(new Set(lines)).join('\n'),
+    evidence,
+    actions: Array.from(new Map([
+      ...base.actions,
+      { label: 'Abrir Mercado Vitacura', href: '/dashboard/market' },
+      { label: 'Abrir Valorizaciones', href: '/dashboard/valuations' },
+    ].map((item) => [item.href, item])).values()),
+    decisionPolicy: `${base.decisionPolicy} · senior-real-estate-vitacura-v2 · advisory-only`,
+  }
+}
+
 function reportResponse(base: BaseResponse, reports: ReportContext): BaseResponse {
   const coverage = {
     ...base.coverage,
@@ -210,9 +267,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'La consulta debe contener entre 1 y 800 caracteres.' }, { status: 400 })
   }
 
-  const routing = routePedroPabloPrompt(prompt)
+  const baseRouting = routePedroPabloPrompt(prompt)
   const seniorExpertise = expertiseCardsForPrompt(prompt)
   const scopeConflict = detectOutOfScopeMarket(prompt)
+  const routing = seniorExpertise.length > 0
+    ? {
+        route: 'full-agentic' as const,
+        domains: ['market', 'valuations', 'properties', 'cross-domain'] as const,
+        reason: 'La consulta activa criterio inmobiliario senior y requiere sintetizar evidencia antes de interpretar o recomendar.',
+        maxEvidenceItems: 12,
+      }
+    : baseRouting
   const cookie = request.headers.get('cookie') ?? ''
   const [baseResponse, reportsResponse] = await Promise.all([
     fetch(new URL('/api/pedro-pablo', request.url), {
@@ -269,6 +334,10 @@ export async function POST(request: NextRequest) {
       }],
       actions: [{ label: 'Abrir Mercado Vitacura', href: '/dashboard/market' }],
     }
+  }
+
+  if (!scopeConflict && seniorExpertise.length > 0) {
+    response = seniorResponse(response, prompt, seniorExpertise)
   }
 
   const proposals = buildProposals(response)
