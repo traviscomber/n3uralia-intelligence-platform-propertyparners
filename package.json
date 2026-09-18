@@ -76,7 +76,8 @@
     "qa:visual": "node scripts/run-authenticated-visual-qa.mjs",
     "qa:roles": "node scripts/run-authenticated-role-qa.mjs",
     "qa:technical": "node scripts/run-technical-acceptance.mjs",
-    "ai:senior:verify": "node --import tsx --test tests/pedro-pablo-vitacura-senior-behavior.test.ts && node --test tests/pedro-pablo-vitacura-senior-expertise.test.mjs"
+    "ai:senior:verify": "node --import tsx --test tests/pedro-pablo-vitacura-senior-behavior.test.ts && node --test tests/pedro-pablo-vitacura-senior-expertise.test.mjs",
+    "security:secdef-contract": "node scripts/verify-security-definer-contract.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
