@@ -20,6 +20,8 @@ Este documento no declara aceptación del Cliente. Separa lo que ya está valida
 
 La UAT ejecutiva debe ser breve. Pedro Pablo valida negocio y criterio, no funcionamiento interno del software.
 
+Estas cuatro validaciones son el **resumen ejecutivo** de aceptación. No sustituyen la ejecución de los casos canónicos por rol definidos en `docs/UAT_PROPERTY_PARTNERS.md` y `config/uat-case-status.json`. N3uralia debe ejecutar y registrar los casos READY con CEO, Director y Ejecutivo antes de declarar aceptación contractual.
+
 1. **Hoy** — que la portada muestre lo importante para dirigir la operación.
 2. **Mercado Vitacura** — que la lectura de mercado, fuentes y contexto resulte útil y coherente para Property Partners.
 3. **Una valorización real** — revisar comparables y llevar un caso representativo hasta aprobación/emisión.
@@ -86,14 +88,24 @@ Pendientes administrativos/técnicos de cierre:
 Para declarar la entrega aceptada:
 
 - UAT ejecutiva de los cuatro puntos anteriores;
+- ejecución y registro de los casos canónicos READY de `docs/UAT_PROPERTY_PARTNERS.md` con CEO, Director y Ejecutivo;
+- `config/uat-case-status.json` sin casos bloqueantes pendientes salvo dependencias externas explícitamente aceptadas;
 - P0 = 0 y P1 = 0;
-- una valorización real hasta `issued`;
+- una valorización real hasta `issued`, incluyendo devolución por Director, corrección/reenvío por Ejecutivo y aprobación/emisión CEO con AAL2;
 - inspección humana del PDF;
-- capacitación/entrega operativa registrada;
+- capacitación realizada o renunciada formalmente;
 - restore drill registrado;
 - KPI/reporting pendientes documentados como aprobados o dependencia cliente;
-- congelar SHA final;
+- paquete final generado e inspeccionado;
+- reconstrucción en ambiente limpio completada;
+- checksum SHA-256 registrado;
+- variables documentadas por nombre, sin valores;
+- titularidad/costos de terceros y receptor técnico definidos;
+- autorización de entrega registrada;
+- congelar SHA y deployment final;
 - registrar aceptación del Cliente.
+
+La lista completa y vinculante de cierre sigue siendo `docs/canonical/FINAL_CLOSEOUT_CHECKLIST.md`.
 
 ## Regla de congelamiento
 
@@ -127,9 +139,13 @@ Resultados permitidos: `PASS`, `FAIL`, `BLOCKED_EXTERNAL`.
 
 **SHA final:** ____________________
 
+**Deployment aceptado (HTTPS):** ____________________
+
 **Fecha:** ____________________
 
 **Representante Property Partners:** ____________________
+
+**Representante N3uralia:** ____________________
 
 **Resultado:** ☐ Aceptado  ☐ Aceptado con observaciones  ☐ Requiere correcciones
 
