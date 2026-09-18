@@ -1,5 +1,9 @@
-import { redirect } from 'next/navigation'
+import { PedroPabloOperationalMemory } from '@/components/intelligence/pedro-pablo-operational-memory'
+import { PedroPabloWorkspaceV2 } from '@/components/intelligence/pedro-pablo-workspace-v2'
 
 export default function PedroPabloPage() {
-  redirect('/dashboard')
+  return <div className="space-y-8">
+    <PedroPabloWorkspaceV2 />
+    <PedroPabloOperationalMemory />
+  </div>
 }
