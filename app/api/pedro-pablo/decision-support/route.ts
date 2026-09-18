@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profile'
+import { routePedroPabloPrompt } from '@/lib/pedro-pablo/agentic-router'
 
 type Evidence = {
   label: string
@@ -208,6 +209,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'La consulta debe contener entre 1 y 800 caracteres.' }, { status: 400 })
   }
 
+  const routing = routePedroPabloPrompt(prompt)
   const cookie = request.headers.get('cookie') ?? ''
   const [baseResponse, reportsResponse] = await Promise.all([
     fetch(new URL('/api/pedro-pablo', request.url), {
@@ -269,5 +271,12 @@ export async function POST(request: NextRequest) {
     proposalPolicy: 'pedro-pablo-proposal-contract-v4-reports-aware',
     executionPolicy: 'human-confirmation-required',
     executableWrites: 0,
+    routing,
+    architecture: {
+      pattern: 'fast-track-full-agentic',
+      fastTrack: 'canonical direct answer with bounded evidence',
+      fullAgentic: 'cross-domain investigation with governed evidence and human-confirmed writes',
+      safety: 'read-first; all writes remain behind action-gateway preview + explicit confirmation',
+    },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
