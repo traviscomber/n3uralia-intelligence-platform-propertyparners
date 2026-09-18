@@ -4,7 +4,7 @@ import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profile'
 import { routePedroPabloPrompt } from '@/lib/pedro-pablo/agentic-router'
-import { PEDRO_PABLO_VITACURA_EXPERTISE, expertiseCardsForPrompt } from '@/lib/pedro-pablo/vitacura-expertise'
+import { PEDRO_PABLO_ALIGNMENT_CONTRACT, PEDRO_PABLO_VITACURA_EXPERTISE, detectOutOfScopeMarket, expertiseCardsForPrompt } from '@/lib/pedro-pablo/vitacura-expertise'
 
 type Evidence = {
   label: string
@@ -212,6 +212,7 @@ export async function POST(request: NextRequest) {
 
   const routing = routePedroPabloPrompt(prompt)
   const seniorExpertise = expertiseCardsForPrompt(prompt)
+  const scopeConflict = detectOutOfScopeMarket(prompt)
   const cookie = request.headers.get('cookie') ?? ''
   const [baseResponse, reportsResponse] = await Promise.all([
     fetch(new URL('/api/pedro-pablo', request.url), {
@@ -254,6 +255,22 @@ export async function POST(request: NextRequest) {
         },
       }
 
+  if (scopeConflict) {
+    response = {
+      ...response,
+      title: 'Alcance de mercado · Vitacura',
+      answer: `La etapa vigente está definida sólo para Vitacura. No incorporaré ${scopeConflict.requestedCommune} como universo canónico ni como fuente de comparación. Puedo responder usando Portal Inmobiliario, CBRS Vitacura, el KML entregado y datos canónicos internos dentro de Vitacura.`,
+      confidence: 'high',
+      evidence: [{
+        label: 'Alcance aprobado por Pedro Pablo',
+        source: 'client-response-pedro-pablo-2026-08-12 · Vitacura only',
+        cutoff: '2026-08-12',
+        domain: 'properties',
+      }],
+      actions: [{ label: 'Abrir Mercado Vitacura', href: '/dashboard/market' }],
+    }
+  }
+
   const proposals = buildProposals(response)
   const scope = await requireUserScope()
   const canCreateTask = hasCapability(scope.role, 'tasks.global.manage') || hasCapability(scope.role, 'tasks.office.manage')
@@ -278,6 +295,8 @@ export async function POST(request: NextRequest) {
       active: seniorExpertise.length > 0,
       invisibleSpecialist: true,
       profile: PEDRO_PABLO_VITACURA_EXPERTISE,
+      alignmentContract: PEDRO_PABLO_ALIGNMENT_CONTRACT,
+      scopeConflict,
       expertise: seniorExpertise,
       reasoningContract: PEDRO_PABLO_VITACURA_EXPERTISE.reasoningFrame,
       policy: 'canonical-facts-first; expert-interpretation-second; hypothesis-explicit; human-checkpoint-required',
