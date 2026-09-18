@@ -39,3 +39,28 @@ test('senior commercial questions route to FullAgentic synthesis', () => {
   assert.match(router, /microzona/)
   assert.match(router, /due diligence/)
 })
+
+
+test('Pedro Pablo alignment contract locks V1 to Vitacura and approved source semantics', () => {
+  assert.match(expertise, /geographicScope: 'Vitacura only'/)
+  assert.match(expertise, /Portal Inmobiliario/)
+  assert.match(expertise, /CBRS Vitacura/)
+  assert.match(expertise, /KML de barrios entregado/)
+  assert.match(expertise, /nunca ventas confirmadas/)
+  assert.match(expertise, /requiere control de identidad y comparabilidad/)
+  assert.match(expertise, /metodología contractual de valorización tiene precedencia/)
+  assert.match(expertise, /No crear KPI, rankings, umbrales, absorción, velocidad de venta/)
+})
+
+test('out-of-scope communes are blocked from canonical comparison', () => {
+  assert.match(expertise, /las condes/)
+  assert.match(expertise, /lo barnechea/)
+  assert.match(support, /detectOutOfScopeMarket\(prompt\)/)
+  assert.match(support, /No incorporaré \$\{scopeConflict\.requestedCommune\} como universo canónico/)
+  assert.match(support, /client-response-pedro-pablo-2026-08-12/)
+})
+
+test('decision support exposes the Pedro Pablo alignment contract to the senior layer', () => {
+  assert.match(support, /alignmentContract: PEDRO_PABLO_ALIGNMENT_CONTRACT/)
+  assert.match(support, /scopeConflict,/)
+})
