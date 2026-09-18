@@ -46,3 +46,16 @@ test('visible senior answer refuses unsupported pricing and liquidity precision'
   assert.match(source, /No tengo información suficiente para estimar liquidez/)
   assert.doesNotMatch(source, /seguramente se venderá/)
 })
+
+
+test('assistant follow-up questions are contextual instead of static starters', async () => {
+  const route = await import('node:fs/promises').then((fs) => fs.readFile('app/api/pedro-pablo/decision-support/route.ts', 'utf8'))
+  const chat = await import('node:fs/promises').then((fs) => fs.readFile('components/intelligence/pedro-pablo-floating-chat.tsx', 'utf8'))
+
+  assert.match(route, /function suggestedQuestionsForPrompt\(/)
+  assert.match(route, /¿Qué comparables sostienen mejor esta valorización\?/)
+  assert.match(route, /¿Qué antecedente falta verificar antes de avanzar\?/)
+  assert.match(chat, /message\.suggestedQuestions/)
+  assert.match(chat, /Las próximas preguntas se adaptarán a tu consulta/)
+  assert.doesNotMatch(chat, /const starters =/)
+})
