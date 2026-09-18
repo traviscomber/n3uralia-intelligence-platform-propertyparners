@@ -201,6 +201,76 @@ function seniorResponse(base: BaseResponse, prompt: string, expertise: ReturnTyp
   }
 }
 
+
+function suggestedQuestionsForPrompt(
+  prompt: string,
+  expertise: ReturnType<typeof expertiseCardsForPrompt>,
+  scopeConflict: ReturnType<typeof detectOutOfScopeMarket>,
+) {
+  const normalized = normalize(prompt)
+  const topics = new Set(expertise.map((item) => item.topic))
+  const suggestions: string[] = []
+
+  if (scopeConflict) {
+    return [
+      '¿Qué evidencia comparable tenemos dentro de Vitacura?',
+      '¿Qué microzona de Vitacura corresponde a esta propiedad?',
+    ]
+  }
+
+  if (topics.has('commercial_valuation') || topics.has('pricing_strategy')) {
+    suggestions.push(
+      '¿Qué comparables sostienen mejor esta valorización?',
+      '¿Qué evidencia falta para defender este precio?',
+      '¿Hay diferencias entre Portal, CBRS y la valorización interna?',
+    )
+  }
+
+  if (topics.has('marketability')) {
+    suggestions.push(
+      '¿Qué señales observables afectan la liquidez de esta propiedad?',
+      '¿Qué cambió en su exposición o precio?',
+      '¿Qué comparables muestran una posición de mercado distinta?',
+    )
+  }
+
+  if (topics.has('due_diligence')) {
+    suggestions.push(
+      '¿Qué antecedente falta verificar antes de avanzar?',
+      '¿Hay discrepancias de superficie o identidad?',
+      '¿Qué punto requiere revisión humana?',
+    )
+  }
+
+  if (topics.has('urban_planning')) {
+    suggestions.push(
+      '¿Qué antecedente oficial falta para confirmar la normativa del predio?',
+      '¿La zona PRC está identificada con evidencia suficiente?',
+    )
+  }
+
+  if (topics.has('fiscal_appraisal') || topics.has('property_tax')) {
+    suggestions.push(
+      '¿Qué dato fiscal está vigente para este inmueble?',
+      '¿Qué parte de esta información no debe usarse como valor comercial?',
+    )
+  }
+
+  if (normalized.includes('valoriz') && suggestions.length < 3) {
+    suggestions.push('¿Qué valorizaciones requieren revisión ahora?')
+  }
+
+  if ((normalized.includes('propiedad') || normalized.includes('cartera')) && suggestions.length < 3) {
+    suggestions.push('¿Qué propiedad tiene la mayor brecha de evidencia?')
+  }
+
+  if (normalized.includes('reporte') && suggestions.length < 3) {
+    suggestions.push('¿Qué entrega requiere revisión operativa?')
+  }
+
+  return Array.from(new Set(suggestions)).slice(0, 3)
+}
+
 function reportResponse(base: BaseResponse, reports: ReportContext): BaseResponse {
   const coverage = {
     ...base.coverage,
@@ -340,6 +410,7 @@ export async function POST(request: NextRequest) {
     response = seniorResponse(response, prompt, seniorExpertise)
   }
 
+  const suggestedQuestions = suggestedQuestionsForPrompt(prompt, seniorExpertise, scopeConflict)
   const proposals = buildProposals(response)
   const scope = await requireUserScope()
   const canCreateTask = hasCapability(scope.role, 'tasks.global.manage') || hasCapability(scope.role, 'tasks.office.manage')
@@ -347,6 +418,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     ...response,
     proposals,
+    suggestedQuestions,
     assistantProfile: {
       id: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
       purpose: PEDRO_PABLO_EXECUTIVE_PROFILE.purpose,
