@@ -4,6 +4,7 @@ import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profile'
 import { routePedroPabloPrompt } from '@/lib/pedro-pablo/agentic-router'
+import { PEDRO_PABLO_VITACURA_EXPERTISE, expertiseCardsForPrompt } from '@/lib/pedro-pablo/vitacura-expertise'
 
 type Evidence = {
   label: string
@@ -210,6 +211,7 @@ export async function POST(request: NextRequest) {
   }
 
   const routing = routePedroPabloPrompt(prompt)
+  const seniorExpertise = expertiseCardsForPrompt(prompt)
   const cookie = request.headers.get('cookie') ?? ''
   const [baseResponse, reportsResponse] = await Promise.all([
     fetch(new URL('/api/pedro-pablo', request.url), {
@@ -272,6 +274,15 @@ export async function POST(request: NextRequest) {
     executionPolicy: 'human-confirmation-required',
     executableWrites: 0,
     routing,
+    seniorRealEstate: {
+      active: seniorExpertise.length > 0,
+      invisibleSpecialist: true,
+      profile: PEDRO_PABLO_VITACURA_EXPERTISE,
+      expertise: seniorExpertise,
+      reasoningContract: PEDRO_PABLO_VITACURA_EXPERTISE.reasoningFrame,
+      policy: 'canonical-facts-first; expert-interpretation-second; hypothesis-explicit; human-checkpoint-required',
+      writesPerformed: 0,
+    },
     architecture: {
       pattern: 'fast-track-full-agentic',
       fastTrack: 'canonical direct answer with bounded evidence',
