@@ -51,9 +51,10 @@ jobs:
 
       - name: Upload QA evidence
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: authenticated-role-qa-${{ github.run_id }}
           path: artifacts/authenticated-role-qa
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 1
