@@ -1,4 +1,4 @@
-> **Cierre vigente — 18 de septiembre de 2026:** usar `docs/FINAL_CLOSEOUT_2026-09-18.md` como hoja ejecutiva de cierre y UAT. Baseline de cierre: `85015ea37be37f0bb6f01f9cf9d63ddf1683e99c`. Este documento conserva el detalle contractual/técnico histórico.
+> **Cierre vigente — 18 de septiembre de 2026:** usar `docs/FINAL_CLOSEOUT_2026-09-18.md` como hoja ejecutiva de cierre y UAT. Baseline de cierre: `002805a52c660155b8a71cb90528ee78725e9067`. Este documento conserva el detalle contractual/técnico histórico.
 
 # Paquete de entrega contractual — Property Partners
 
