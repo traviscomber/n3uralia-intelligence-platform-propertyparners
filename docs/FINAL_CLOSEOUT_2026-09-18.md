@@ -18,16 +18,24 @@ Este documento no declara aceptación del Cliente. Separa lo que ya está valida
 
 ## Qué debe validar Pedro Pablo
 
-La UAT ejecutiva debe ser breve. Pedro Pablo valida negocio y criterio, no funcionamiento interno del software.
+Pedro Pablo es el **último eslabón de la cadena y el validador final de negocio de Property Partners**.
 
-Estas cuatro validaciones son el **resumen ejecutivo** de aceptación. No sustituyen la ejecución de los casos canónicos por rol definidos en `docs/UAT_PROPERTY_PARTNERS.md` y `config/uat-case-status.json`. N3uralia debe ejecutar y registrar los casos READY con CEO, Director y Ejecutivo antes de declarar aceptación contractual.
+La cadena de trabajo es:
+
+**Ejecutivo → Director → Pedro Pablo (CEO / validación final).**
+
+N3uralia valida funcionamiento técnico, seguridad, trazabilidad, permisos, datos, CI y regresión. Ejecutivo y Director preparan y revisan la operación. Pedro Pablo recibe el resultado consolidado y valida si representa correctamente el criterio de negocio de Property Partners.
+
+El criterio de **Business Intelligence / Gestión fue definido por Pedro Pablo**; por eso su validación final de esa capa es canónica.
+
+Los siguientes cuatro puntos son los checkpoints ejecutivos desde los que Pedro Pablo valida el resultado completo:
 
 1. **Hoy** — que la portada muestre lo importante para dirigir la operación.
-2. **Mercado Vitacura** — que la lectura de mercado, fuentes y contexto resulte útil y coherente para Property Partners.
-3. **Una valorización real** — revisar comparables y llevar un caso representativo hasta aprobación/emisión.
-4. **Gestión** — confirmar que prioridades, cifras e informes corresponden a la forma en que quiere gestionar.
+2. **Mercado Vitacura** — que fuentes, lectura y conclusiones sean correctas para Property Partners.
+3. **Valorización real** — que el expediente completo, comparables, fundamento, valor/rango y PDF final sean utilizables frente a un cliente.
+4. **Business Intelligence / Gestión** — que prioridades, métricas, rankings, alertas, informes y automatizaciones correspondan al criterio que él definió.
 
-No se solicita a Pedro Pablo validar RLS, APIs, migraciones, deduplicación técnica, CI, seguridad interna, cálculos automatizados ni registros uno a uno.
+Pedro Pablo valida **el resultado completo de negocio**, no sólo estos cuatro screens. No se le pide repetir QA técnica ni revisar RLS, APIs, migraciones, logs o detalles internos que son responsabilidad de N3uralia.
 
 ## Experiencia ejecutiva
 
@@ -87,7 +95,7 @@ Pendientes administrativos/técnicos de cierre:
 
 Para declarar la entrega aceptada:
 
-- UAT ejecutiva de los cuatro puntos anteriores;
+- ejecución operativa de los casos READY por Ejecutivo/Director y validación final de negocio por Pedro Pablo;
 - ejecución y registro de los casos canónicos READY de `docs/UAT_PROPERTY_PARTNERS.md` con CEO, Director y Ejecutivo;
 - `config/uat-case-status.json` sin casos bloqueantes pendientes salvo dependencias externas explícitamente aceptadas;
 - P0 = 0 y P1 = 0;
@@ -128,12 +136,13 @@ Todo cambio de código posterior obliga a repetir los gates técnicos correspond
 
 ## Acta mínima de UAT
 
-| Punto | Resultado | Observación |
+| Punto de validación final Pedro Pablo | Resultado | Observación |
 |---|---|---|
 | Hoy / lectura ejecutiva | PENDIENTE | |
 | Mercado Vitacura | PENDIENTE | |
 | Valorización real + PDF | PENDIENTE | |
-| Gestión / informes | PENDIENTE | |
+| Business Intelligence / Gestión / informes | PENDIENTE | |
+| Aceptación final de negocio punta a punta | PENDIENTE | |
 
 Resultados permitidos: `PASS`, `FAIL`, `BLOCKED_EXTERNAL`.
 
