@@ -13,7 +13,9 @@
     "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
     "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
     "docs/canonical/TRAINING_AND_HANDOVER_PLAN.md",
-    "docs/canonical/DELIVERY_REQUIREMENTS_MATRIX_2026-09-01.md"
+    "docs/canonical/DELIVERY_REQUIREMENTS_MATRIX_2026-09-01.md",
+    "docs/FINAL_CLOSEOUT_2026-09-18.md",
+    "docs/canonical/FINAL_CLOSEOUT_CHECKLIST.md"
   ],
   "workstreams": [
     {
@@ -22,10 +24,11 @@
       "status": "ready-for-uat",
       "owner": "N3uralia",
       "evidence": [
-        "Functional production baseline dbb9ae7717e9152858d2e989a36691f6ab03b765 is served by ppartnersgroup.app through deployment dpl_4vk2HRhNZQiKZ3sikeQ2qir69n49 READY on 2026-09-03",
-        "PR #202 passed Contractual modules CI, N3uralia IP Boundaries and Vercel preview before merge; production browser verification passed after deployment",
-        "No error/fatal runtime logs were found for the new deployment in the post-deploy verification window",
-        "Portfolio assignment and scoped seller visibility remain verified without broadening profiles RLS"
+        "Production baseline cde1981f32bc7ad95a439897dbb74bf09148c0b5 is served by ppartnersgroup.app via dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU READY on 2026-09-18.",
+        "PR #215 passed Contractual modules CI, N3uralia IP Boundaries and Vercel preview before merge.",
+        "Production runtime review found no errors in the selected closeout window and critical CEO/Director/Market/Valuation routes returned HTTP 200.",
+        "Authenticated Role/RLS QA is automated with ephemeral OIDC identities; issue #60 is completed.",
+        "Application-level P0/P1 technical findings open: 0."
       ],
       "blockers": []
     },
@@ -35,29 +38,26 @@
       "status": "ready-for-uat",
       "owner": "Shared",
       "evidence": [
-        "Modelo, evidencia canonica, workflow y condicion pasan verificadores contractuales",
-        "Caso UAT LA PEROUSSE 5214 observado en produccion en revision, version 3, con 5 comparables CBRS aceptados y 0 alertas visibles",
-        "Aprobacion y emision permanecen restringidas a CEO con MFA/AAL2 y evidencia valida",
-        "El sistema no emite un caso de produccion solo para satisfacer QA"
+        "Valuation model, canonical evidence, workflow and condition gates pass.",
+        "Canonical chain is Executive -> Director -> Pedro Pablo.",
+        "CEO-only final approval and issuance require AAL2/MFA and preserve immutable issued-version evidence."
       ],
       "blockers": [
-        "Ejecutivo y Director deben completar el caso real; Pedro Pablo realiza la validación final, aprobación AAL2/MFA y emisión"
+        "Ejecutivo y Director deben completar un caso real; Pedro Pablo realiza validacion final, aprobacion AAL2/MFA y emision del PDF"
       ]
     },
     {
       "id": "management-intelligence",
-      "label": "CEO, direccion y agentes",
+      "label": "Business Intelligence / Gestion",
       "status": "ready-for-uat",
       "owner": "Shared",
       "evidence": [
-        "Julio 2026 es el ultimo periodo operativo con evidencia: 11 ventas, meta corporativa 8 y cumplimiento 137.5%",
-        "Creditos de gestion se mantienen separados de ventas reales; credito corporativo julio 9.5",
-        "Scoring, persistencia, reconciliacion, comparaciones, fuentes y report delivery pasan gates",
-        "Rutas CEO, director, subdirector y seller respetan capacidades y alcance",
-        "Pedro Pablo is the canonical final business validator for Business Intelligence / Management; this criterion originates from his business-intelligence definition."
+        "Scoring, persistence, reconciliation, comparisons, source contracts, CEO coherence and report delivery gates pass.",
+        "Pedro Pablo is the canonical final business validator and the Business Intelligence / Management criterion originates from him.",
+        "Provisional metrics remain explicitly non-official until formal KPI approval."
       ],
       "blockers": [
-        "Pedro Pablo debe aprobar las definiciones KPI todavía no formalizadas antes de presentarlas como oficiales"
+        "Pedro Pablo debe aprobar las definiciones KPI que aun no esten formalizadas"
       ]
     },
     {
@@ -66,14 +66,13 @@
       "status": "ready-for-uat",
       "owner": "Shared",
       "evidence": [
-        "Alcance canonico de aceptacion: ventas de casas en Vitacura",
-        "Produccion expone 50 casas live: 11 vinculadas, 39 sin vinculo, 1 candidato fuerte y 1 colision externa",
-        "KML recibido e integrado: 19 barrios canonicos",
-        "Cobertura territorial operativa 84.2%: 50 de 317 propiedades operativas aun sin barrio; produccion declara explicitamente que este denominador es distinto del universo de 50 casas live",
-        "Portal, CBRS e identidad se mantienen semanticamente separados y los gates de mercado pasan"
+        "Canonical acceptance scope remains sales of houses in Vitacura.",
+        "CBRS and Property Partners KML are received, audited and integrated.",
+        "Portal, CBRS and identity evidence remain semantically separated and market gates pass.",
+        "High-confidence identity automation is integrated with an external-conflict guard."
       ],
       "blockers": [
-        "Validación final de Pedro Pablo sobre la lectura y conclusiones de negocio de Vitacura"
+        "Pedro Pablo debe validar finalmente la lectura y conclusiones de negocio de Vitacura"
       ]
     },
     {
@@ -82,15 +81,13 @@
       "status": "blocked-client-input",
       "owner": "Shared",
       "evidence": [
-        "Generacion, previsualizacion, scheduling y delivery pasan verificadores tecnicos",
-        "Regla de cierre mensual y validacion de destinatarios implementadas",
-        "Reportin canonico y CEO Intelligence preservan scope house-only y snapshots auditables",
-        "La revision de cierre 2026-09-03 no genero ni envio un nuevo reporte a destinatarios externos"
+        "Generation, preview, scheduling, Reportin PDF, recipient validation and delivery gates pass.",
+        "The system remains fail-closed while KPI/reporting approvals are pending."
       ],
       "blockers": [
         "Calendario definitivo",
-        "Destinatarios aprobados",
-        "Frecuencia, formato/canal y reglas operativas confirmadas"
+        "Destinatarios y alcance aprobados",
+        "Frecuencia y canal confirmados por Pedro Pablo"
       ]
     },
     {
@@ -99,16 +96,14 @@
       "status": "in-progress",
       "owner": "Shared",
       "evidence": [
-        "UAT-07 seguridad funcional permanece passed",
-        "UAT-08 continuidad operativa permanece passed",
-        "QA autenticado por roles y visual del baseline previo permanece verde; el cambio #202 fue exclusivamente de copy y paso los gates completos",
-        "Plan UAT contractual documenta casos de Mercado, Valorizacion y Gestion por rol",
-        "Cadena canónica de decisión: Ejecutivo -> Director -> Pedro Pablo; Pedro Pablo es el validador final de negocio de los tres pilares."
+        "UAT-01 access/permissions, UAT-07 functional security and UAT-08 operational continuity are technically passed.",
+        "Canonical decision chain is Executive -> Director -> Pedro Pablo.",
+        "Pedro Pablo is final business validator for Market, Valuation and Business Intelligence/Management."
       ],
       "blockers": [
-        "Ejecución de casos por roles operativos",
-        "Validación final de negocio por Pedro Pablo",
-        "Acta o registro de aceptación"
+        "Ejecucion de casos operativos por Director/Ejecutivo",
+        "Validacion final de negocio por Pedro Pablo",
+        "Acta o registro de aceptacion"
       ]
     },
     {
@@ -117,14 +112,12 @@
       "status": "blocked-client-input",
       "owner": "Shared",
       "evidence": [
-        "Plan de capacitacion y traspaso documentado",
-        "Manual ejecutivo y manual de administracion/operacion ya forman parte del inventario del paquete de entrega",
-        "Training execution pack incluido en el paquete de entrega"
+        "Training/handover plan, executive manual, role manual, administration manual and execution pack are prepared."
       ],
       "blockers": [
-        "Fechas y asistentes confirmados",
-        "Sesiones ejecutadas",
-        "Registro de asistencia y cierre"
+        "Asistentes y fecha confirmados o renuncia formal",
+        "Receptor tecnico autorizado",
+        "Registro de sesion/cierre"
       ]
     },
     {
@@ -133,14 +126,15 @@
       "status": "in-progress",
       "owner": "Shared",
       "evidence": [
-        "delivery-package-inventory.json esta assembled e incluye manual ejecutivo, manual por rol, manual de administracion, runbooks, UAT, handover y documentacion canonica",
-        "Arquitectura, UAT, seguridad, rollback, reconstruccion y operacion cuentan con documentacion incluida",
-        "PRs historicos superseded #78, #79, #121, #140, #143, #144 y #184 fueron cerrados sin merge el 2026-09-03"
+        "Delivery package inventory is assembled and includes code/reconstruction, functional documentation, operations, security and acceptance evidence.",
+        "Ownership review #215 resolved the remaining generic scripts/** ambiguity while preserving N3uralia proprietary exclusions.",
+        "Variables are documented by name and secrets are excluded."
       ],
       "blockers": [
-        "Definir titularidad y receptor tecnico autorizado de servicios de terceros",
-        "Generar artefacto final y checksum sobre el commit aprobado despues de UAT/handover",
-        "Autorizar formalmente la entrega del paquete"
+        "Restore drill / backup-recovery evidence remains a N3uralia hardening gate",
+        "Leaked Password Protection remains an administrative Supabase hardening item",
+        "Final checksum and clean-room handover package must be generated after final accepted commit and authorized receiver are known",
+        "Client authorization for transfer remains pending"
       ]
     }
   ],
