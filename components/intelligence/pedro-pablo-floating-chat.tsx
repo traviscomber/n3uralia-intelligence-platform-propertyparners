@@ -131,7 +131,7 @@ export function PedroPabloFloatingChat() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Abrir asistente IA Asistente de IA"
+        aria-label="Abrir Asistente de IA"
         title="Asistente de IA"
         className={`fixed bottom-5 right-4 z-[70] grid h-16 w-16 place-items-center rounded-full border border-[var(--primary)] bg-[var(--n3-black)] text-[var(--n3-text-light)] shadow-xl transition-all hover:-translate-y-0.5 hover:bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] md:right-6 ${open ? 'pointer-events-none scale-95 opacity-0' : ''}`}
       >
