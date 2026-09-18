@@ -85,6 +85,28 @@ begin
     return new;
   end if;
 
+  -- External identity evidence has precedence over an automatic match.
+  -- Auto-confirm only when external evidence is absent or points uniquely
+  -- to the same canonical property.
+  if exists (
+    select 1
+    from public.market_properties p
+    where p.property_type='Casa'
+      and coalesce(p.identity_evidence::text,'') ilike '%' || v_source_listing_id || '%'
+      and p.id<>new.right_entity_id
+  ) then
+    return new;
+  end if;
+
+  if (
+    select count(*)
+    from public.market_properties p
+    where p.property_type='Casa'
+      and coalesce(p.identity_evidence::text,'') ilike '%' || v_source_listing_id || '%'
+  ) > 1 then
+    return new;
+  end if;
+
   v_evidence := coalesce(new.evidence,'[]'::jsonb) || jsonb_build_array(
     jsonb_build_object(
       'signal','system_auto_confirmation',
