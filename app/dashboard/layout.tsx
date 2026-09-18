@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/layout/sidebar'
 import Topbar from '@/components/layout/topbar'
+import { PedroPabloFloatingChat } from '@/components/intelligence/pedro-pablo-floating-chat'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -26,6 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
+      <PedroPabloFloatingChat />
     </div>
   )
 }
