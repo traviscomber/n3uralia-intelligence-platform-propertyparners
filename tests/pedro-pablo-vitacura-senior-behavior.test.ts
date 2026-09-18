@@ -56,7 +56,7 @@ test('assistant follow-up questions are contextual instead of static starters', 
   assert.match(route, /¿Qué comparables sostienen mejor esta valorización\?/)
   assert.match(route, /¿Qué antecedente falta verificar antes de avanzar\?/)
   assert.match(chat, /message\.suggestedQuestions/)
-  assert.match(chat, /Las próximas preguntas se adaptarán a tu consulta/)
+  assert.match(chat, /Después, las siguientes preguntas se adaptan a tu consulta/)
   assert.doesNotMatch(chat, /const starters =/)
 })
 
