@@ -1,3 +1,5 @@
+> **Checklist de cierre vigente — 18 de septiembre de 2026:** ver `docs/FINAL_CLOSEOUT_2026-09-18.md`. El baseline actual es `4b23ce001c1f870f7dd4c744ae79b6937a75e396`; los valores históricos de este archivo se mantienen como evidencia de la revisión del 3 de septiembre.
+
 # Checklist final de aceptación contractual
 
 Última actualización: 3 de septiembre de 2026
