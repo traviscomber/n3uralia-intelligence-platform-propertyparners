@@ -59,9 +59,15 @@
     },
     {
       "pattern": "scripts/**",
-      "class": "requires-review",
-      "delivery": "review-before-transfer",
-      "note": "Contains a mixture of client operational tooling and reusable N3uralia audit or intelligence tooling."
+      "class": "shared-contract",
+      "delivery": "include-after-secret-scan",
+      "note": "Repository-specific build, verification and acceptance tooling. Differential N3uralia runtime intelligence remains separately classified and excluded."
+    },
+    {
+      "pattern": "lib/**",
+      "class": "client-core",
+      "delivery": "include-after-exposure-audit",
+      "note": "Property Partners application libraries are client-core except explicitly classified N3uralia proprietary modules below."
     },
     {
       "pattern": "lib/n3uralia-runtime-contract.ts",
@@ -98,6 +104,12 @@
       "pattern": "**/*.key",
       "class": "secret-or-credential",
       "delivery": "exclude"
+    },
+    {
+      "pattern": "tests/**",
+      "class": "shared-contract",
+      "delivery": "include-after-secret-scan",
+      "note": "Regression and acceptance tests are part of the reproducible contracted product evidence."
     }
   ],
   "approval": {
@@ -106,5 +118,15 @@
     "contractual": null,
     "approvedCommit": null,
     "approvedAt": null
+  },
+  "internalReview": {
+    "asOf": "2026-09-18",
+    "technical": "completed",
+    "security": "completed",
+    "evidence": [
+      "N3uralia IP Boundaries passed on the current closeout branch before merge.",
+      "Proprietary runtime modules remain server-only and classified exclude-before-transfer.",
+      "Client canonical data, migrations, operational rules and contracted application code remain client-owned/client-core."
+    ]
   }
 }
