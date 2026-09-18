@@ -86,7 +86,7 @@ export function PedroPabloFloatingChat() {
         body: JSON.stringify({ prompt: query }),
       })
       const payload = await result.json()
-      if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Pedro Pablo.')
+      if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Asistente de IA.')
 
       const response = payload as AssistantResponse
       const assistantMessage: ChatMessage = {
@@ -101,7 +101,7 @@ export function PedroPabloFloatingChat() {
 
       setMessages((current) => [...current, assistantMessage])
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No fue posible consultar Pedro Pablo.')
+      setError(cause instanceof Error ? cause.message : 'No fue posible consultar Asistente de IA.')
     } finally {
       setLoading(false)
     }
@@ -131,8 +131,8 @@ export function PedroPabloFloatingChat() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Abrir asistente IA Pedro Pablo"
-        title="Asistente IA Pedro Pablo"
+        aria-label="Abrir asistente IA Asistente de IA"
+        title="Asistente de IA"
         className={`fixed bottom-5 right-4 z-[70] grid h-16 w-16 place-items-center rounded-full border border-[var(--primary)] bg-[var(--n3-black)] text-[var(--n3-text-light)] shadow-xl transition-all hover:-translate-y-0.5 hover:bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] md:right-6 ${open ? 'pointer-events-none scale-95 opacity-0' : ''}`}
       >
         <Bot size={27} aria-hidden="true" />
@@ -141,7 +141,7 @@ export function PedroPabloFloatingChat() {
 
       {open ? (
         <section
-          aria-label="Asistente IA Pedro Pablo"
+          aria-label="Asistente de IA"
           className="fixed inset-x-3 bottom-3 z-[70] flex h-[min(720px,calc(100vh-1.5rem))] flex-col overflow-hidden rounded-xl border border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(460px,calc(100vw-2rem))]"
         >
           <header className="border-b border-[var(--n3-line)] bg-[var(--n3-deep)] px-4 py-3">
@@ -155,7 +155,7 @@ export function PedroPabloFloatingChat() {
                     <Sparkles size={12} aria-hidden="true" />
                     Asistente IA complementario
                   </div>
-                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">Pedro Pablo</div>
+                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">Asistente de IA</div>
                   <div className="truncate text-[11px] text-[var(--n3-text-muted)]">Property Partners · apoyo contextual</div>
                 </div>
               </div>
@@ -268,7 +268,7 @@ export function PedroPabloFloatingChat() {
                 onKeyDown={onComposerKeyDown}
                 rows={2}
                 maxLength={800}
-                placeholder="Pregunta a Pedro Pablo…"
+                placeholder="Pregunta al Asistente de IA…"
                 className="min-h-[54px] max-h-36 flex-1 resize-none rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 py-2 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
               />
               <button
