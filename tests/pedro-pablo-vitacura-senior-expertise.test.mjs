@@ -64,3 +64,17 @@ test('decision support exposes the Pedro Pablo alignment contract to the senior 
   assert.match(support, /alignmentContract: PEDRO_PABLO_ALIGNMENT_CONTRACT/)
   assert.match(support, /scopeConflict,/)
 })
+
+
+test('senior expertise changes the visible answer, not only metadata', () => {
+  assert.match(support, /function seniorResponse\(/)
+  assert.match(support, /Lectura senior inmobiliaria · Vitacura/)
+  assert.match(support, /response = seniorResponse\(response, prompt, seniorExpertise\)/)
+  assert.match(support, /Portal representa oferta y CBRS evidencia transaccional/)
+})
+
+test('every recognized senior topic is forced through FullAgentic', () => {
+  assert.match(support, /seniorExpertise\.length > 0/)
+  assert.match(support, /route: 'full-agentic'/)
+  assert.match(support, /La consulta activa criterio inmobiliario senior/)
+})
