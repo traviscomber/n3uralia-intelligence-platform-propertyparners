@@ -6,11 +6,11 @@
 
 **READY PARA CIERRE / UAT CLIENTE.**
 
-Release candidate productivo:
+Baseline técnico/productivo de cierre (los commits posteriores de este PR sólo actualizan documentación/manifests):
 
-- SHA: `002805a52c660155b8a71cb90528ee78725e9067`
+- SHA: `cde1981f32bc7ad95a439897dbb74bf09148c0b5`
 - Producción: `https://ppartnersgroup.app`
-- Deployment: `dpl_DKMAAsqKgKHMnY8grSEVv8gCdfky` — READY
+- Deployment: `dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU` — READY
 - Runtime posterior al deploy actual: sin errores observados en la ventana auditada; crons productivos verificados en HTTP 200
 - Tres pilares contractuales: PASS técnico
 
