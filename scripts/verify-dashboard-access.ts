@@ -61,9 +61,10 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   }
 }
 
-assert.equal(CEO_NAVIGATION[0]?.items.length, 5)
+assert.equal(CEO_NAVIGATION.length, 1)
+assert.equal(CEO_NAVIGATION[0]?.items.length, 6)
 assert.equal(ADMIN_NAVIGATION[0]?.items.length, 5)
 assert.equal(DIRECTOR_NAVIGATION[0]?.items.length, 5)
 assert.equal(SELLER_NAVIGATION[0]?.items.length, 5)
 
-console.log('Dashboard access and simplified role navigation verified for CEO, admin, director, subdirector and seller.')
+console.log('Dashboard access and simplified role navigation verified for CEO, admin, director, subdirector and seller. CEO surface remains business-only.')
