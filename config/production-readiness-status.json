@@ -1,8 +1,10 @@
 {
   "schemaVersion": 1,
   "status": "in-review",
-  "commit": "dbb9ae7717e9152858d2e989a36691f6ab03b765",
+  "commit": "cde1981f32bc7ad95a439897dbb74bf09148c0b5",
   "deployment": "https://ppartnersgroup.app",
+  "deploymentId": "dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU",
+  "asOf": "2026-09-18",
   "checks": {
     "build": "passed",
     "securityBoundaries": "passed",
@@ -17,16 +19,16 @@
   "criticalFindings": [],
   "highFindings": [],
   "evidence": [
-    "Functional production baseline dbb9ae7717e9152858d2e989a36691f6ab03b765 is served by ppartnersgroup.app through Vercel deployment dpl_4vk2HRhNZQiKZ3sikeQ2qir69n49 READY, verified 2026-09-03",
-    "PR #202 passed Contractual modules CI, N3uralia IP Boundaries and a READY Vercel preview before merge",
-    "Production browser verification confirmed the corrected territorial coverage copy: 50 of 317 operational properties without barrio, explicitly distinct from the 50 live-house universe",
-    "No error/fatal runtime logs were found for deployment dpl_4vk2HRhNZQiKZ3sikeQ2qir69n49 in the post-deploy verification window",
-    "Earlier authenticated Role/RLS QA and authenticated visual QA remain green for the same application behavior; PR #202 changed copy only",
-    "Production navigation verified for CEO/management, market reconciliation, valuation review, portfolio assignment and the public Vitacura estimator",
-    "Supabase security review found no open application-level critical/high finding; privileged mutating RPCs reviewed use role/scope/state guards and critical transitions use MFA/AAL2 where required",
+    "Production baseline cde1981f32bc7ad95a439897dbb74bf09148c0b5 is served by ppartnersgroup.app through Vercel deployment dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU READY on 2026-09-18.",
+    "PR #215 passed Contractual modules CI, N3uralia IP Boundaries and Vercel preview before merge.",
+    "Production runtime review after #214 found no runtime errors in the selected 30-minute window; CEO/Director/Market/Valuation routes and management APIs returned HTTP 200.",
+    "Authenticated Role/RLS QA is automated with ephemeral OIDC identities; issue #60 is closed as completed.",
+    "SECURITY DEFINER hardening and future-migration gate are integrated via PR #207.",
+    "High-confidence market identity automation with external-conflict guard is integrated via PR #211.",
+    "N3uralia proprietary runtime modules remain server-only and explicitly excluded from transfer; client canonical and client-core material remains client-owned/client-core.",
     "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md",
     "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md",
     "docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md",
-    "Backup/recovery remains pending because no current restore-drill or platform backup verification was executed during this closure; it must not be inferred from rollback documentation alone"
+    "Backup/recovery remains pending because no current restore drill has been executed; it is not inferred from rollback documentation."
   ]
 }

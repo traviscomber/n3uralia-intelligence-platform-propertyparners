@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "targetDelivery": "2026-09-30",
-  "status": "in-progress",
+  "status": "ready",
   "ownershipClasses": [
     "client-owned-canonical",
     "client-core",
@@ -113,11 +113,11 @@
     }
   ],
   "approval": {
-    "technical": null,
-    "security": null,
-    "contractual": null,
-    "approvedCommit": null,
-    "approvedAt": null
+    "technical": "N3uralia technical delivery-boundary review complete",
+    "security": "N3uralia security and exposure-boundary review complete",
+    "contractual": "N3uralia ownership classification review complete; client acceptance remains separate",
+    "approvedCommit": "cde1981f32bc7ad95a439897dbb74bf09148c0b5",
+    "approvedAt": "2026-09-18T16:10:00-03:00"
   },
   "internalReview": {
     "asOf": "2026-09-18",

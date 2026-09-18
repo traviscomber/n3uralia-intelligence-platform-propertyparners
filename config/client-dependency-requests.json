@@ -1,76 +1,204 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-08-07",
+  "asOf": "2026-09-18",
   "policy": {
     "purpose": "Define what must be requested from the client without storing client payloads in this repository.",
     "repositoryStoresPayloads": false,
-    "allowedContent": ["request metadata", "expected format", "required fields", "validation criteria", "status references"],
-    "prohibitedContent": ["client records", "row-level datasets", "credentials", "raw exports", "personal data", "unapproved canonical values"],
+    "allowedContent": [
+      "request metadata",
+      "expected format",
+      "required fields",
+      "validation criteria",
+      "status references"
+    ],
+    "prohibitedContent": [
+      "client records",
+      "row-level datasets",
+      "credentials",
+      "raw exports",
+      "personal data",
+      "unapproved canonical values"
+    ],
     "receiptRule": "Client-supplied content must enter only through the approved canonical ingestion/storage workflow. GitHub stores request metadata and evidence references only."
   },
   "requests": [
     {
       "id": "market-cbr-sales",
       "request": "Entregar base histórica CBR y ventas recientes para validación de precio efectivo y cierre.",
-      "acceptedFormats": ["CSV", "XLSX"],
-      "minimumFields": ["fecha de transacción", "comuna o ubicación", "tipo de propiedad", "precio de cierre", "unidad monetaria", "superficie cuando esté disponible", "identificador o referencia de propiedad cuando exista"],
-      "validation": ["origen identificable", "fecha de corte explícita", "sin duplicados evidentes", "moneda/unidad declarada"],
+      "acceptedFormats": [
+        "CSV",
+        "XLSX"
+      ],
+      "minimumFields": [
+        "fecha de transacción",
+        "comuna o ubicación",
+        "tipo de propiedad",
+        "precio de cierre",
+        "unidad monetaria",
+        "superficie cuando esté disponible",
+        "identificador o referencia de propiedad cuando exista"
+      ],
+      "validation": [
+        "origen identificable",
+        "fecha de corte explícita",
+        "sin duplicados evidentes",
+        "moneda/unidad declarada"
+      ],
       "deliveryHandling": "No adjuntar al repositorio; ingresar por canal canónico aprobado."
     },
     {
       "id": "market-kml",
       "request": "Entregar KML oficial vigente con zonas, microzonas y jerarquía territorial utilizada por Property Partners.",
-      "acceptedFormats": ["KML", "KMZ", "GeoJSON"],
-      "minimumFields": ["nombre de zona", "geometría", "jerarquía o agrupación si aplica"],
-      "validation": ["archivo abre correctamente", "geometrías válidas", "nomenclatura oficial identificable", "fecha o versión disponible"],
+      "acceptedFormats": [
+        "KML",
+        "KMZ",
+        "GeoJSON"
+      ],
+      "minimumFields": [
+        "nombre de zona",
+        "geometría",
+        "jerarquía o agrupación si aplica"
+      ],
+      "validation": [
+        "archivo abre correctamente",
+        "geometrías válidas",
+        "nomenclatura oficial identificable",
+        "fecha o versión disponible"
+      ],
       "deliveryHandling": "No adjuntar al repositorio; ingresar por canal canónico aprobado."
     },
     {
       "id": "kpi-dictionary",
       "request": "Validar y aprobar el diccionario oficial de KPI utilizado por gestión y reporting.",
-      "acceptedFormats": ["XLSX", "CSV", "Documento aprobado"],
-      "minimumFields": ["código o nombre KPI", "definición", "fórmula", "unidad", "periodicidad", "fuente", "responsable", "regla de aprobación"],
-      "validation": ["definiciones no ambiguas", "fórmulas versionadas cuando corresponda", "owner identificado", "aprobación explícita"],
+      "acceptedFormats": [
+        "XLSX",
+        "CSV",
+        "Documento aprobado"
+      ],
+      "minimumFields": [
+        "código o nombre KPI",
+        "definición",
+        "fórmula",
+        "unidad",
+        "periodicidad",
+        "fuente",
+        "responsable",
+        "regla de aprobación"
+      ],
+      "validation": [
+        "definiciones no ambiguas",
+        "fórmulas versionadas cuando corresponda",
+        "owner identificado",
+        "aprobación explícita"
+      ],
       "deliveryHandling": "Registrar sólo referencia de aprobación en GitHub; valores y definiciones canónicas se mantienen en el flujo aprobado."
     },
     {
       "id": "users-and-roles",
       "request": "Entregar directorio final de usuarios, roles y capacidades para UAT y operación.",
-      "acceptedFormats": ["XLSX", "CSV"],
-      "minimumFields": ["usuario", "rol", "oficina o alcance", "estado", "capacidades requeridas"],
-      "validation": ["sin contraseñas ni secretos", "rol único o reglas de multirol explícitas", "owner de aprobación identificado"],
+      "acceptedFormats": [
+        "XLSX",
+        "CSV"
+      ],
+      "minimumFields": [
+        "usuario",
+        "rol",
+        "oficina o alcance",
+        "estado",
+        "capacidades requeridas"
+      ],
+      "validation": [
+        "sin contraseñas ni secretos",
+        "rol único o reglas de multirol explícitas",
+        "owner de aprobación identificado"
+      ],
       "deliveryHandling": "No guardar el directorio en GitHub; procesar mediante el flujo de acceso autorizado."
     },
     {
       "id": "reporting-approval",
       "request": "Aprobar calendario, destinatarios y reglas operativas de reportes.",
-      "acceptedFormats": ["XLSX", "CSV", "Documento aprobado"],
-      "minimumFields": ["reporte", "frecuencia", "hora o ventana", "destinatario o rol", "canal", "regla de aprobación"],
-      "validation": ["frecuencia inequívoca", "destinatarios autorizados", "zona horaria definida", "aprobación identificable"],
+      "acceptedFormats": [
+        "XLSX",
+        "CSV",
+        "Documento aprobado"
+      ],
+      "minimumFields": [
+        "reporte",
+        "frecuencia",
+        "hora o ventana",
+        "destinatario o rol",
+        "canal",
+        "regla de aprobación"
+      ],
+      "validation": [
+        "frecuencia inequívoca",
+        "destinatarios autorizados",
+        "zona horaria definida",
+        "aprobación identificable"
+      ],
       "deliveryHandling": "Guardar únicamente la referencia de aprobación; no incluir listas sensibles en commits."
     },
     {
       "id": "uat-participants",
-      "request": "Confirmar responsables y participantes de UAT.",
-      "acceptedFormats": ["Lista aprobada", "XLSX", "CSV"],
-      "minimumFields": ["participante", "rol UAT", "responsabilidad", "disponibilidad o ventana"],
-      "validation": ["responsable de aceptación identificado", "cobertura de roles críticos"],
+      "request": "Confirmar Director y Ejecutivo que ejecutarán la UAT operativa previa a la validación final de Pedro Pablo.",
+      "acceptedFormats": [
+        "Lista aprobada",
+        "XLSX",
+        "CSV"
+      ],
+      "minimumFields": [
+        "participante",
+        "rol UAT",
+        "responsabilidad operativa",
+        "disponibilidad o ventana"
+      ],
+      "validation": [
+        "Pedro Pablo ya está identificado como aprobador final",
+        "cobertura de Director y Ejecutivo para la cadena previa"
+      ],
       "deliveryHandling": "No guardar datos personales innecesarios en GitHub; mantener sólo estado y evidencia de confirmación."
     },
     {
       "id": "training-participants",
       "request": "Confirmar asistentes y fechas de capacitación.",
-      "acceptedFormats": ["Lista aprobada", "XLSX", "CSV"],
-      "minimumFields": ["participante o rol", "sesión", "fecha o ventana", "modalidad"],
-      "validation": ["cobertura de roles operativos", "fechas confirmadas"],
+      "acceptedFormats": [
+        "Lista aprobada",
+        "XLSX",
+        "CSV"
+      ],
+      "minimumFields": [
+        "participante o rol",
+        "sesión",
+        "fecha o ventana",
+        "modalidad"
+      ],
+      "validation": [
+        "cobertura de roles operativos",
+        "fechas confirmadas"
+      ],
       "deliveryHandling": "No guardar datos personales innecesarios en GitHub; mantener sólo estado y evidencia de confirmación."
     },
     {
       "id": "third-party-ownership",
       "request": "Confirmar titularidad, responsables y costos de servicios de terceros usados por la plataforma.",
-      "acceptedFormats": ["Documento aprobado", "XLSX", "CSV"],
-      "minimumFields": ["servicio", "titular", "responsable operativo", "responsable de pago", "periodicidad de costo", "condición de continuidad"],
-      "validation": ["ownership explícito", "costos o responsabilidad de costo confirmados", "servicios críticos cubiertos"],
+      "acceptedFormats": [
+        "Documento aprobado",
+        "XLSX",
+        "CSV"
+      ],
+      "minimumFields": [
+        "servicio",
+        "titular",
+        "responsable operativo",
+        "responsable de pago",
+        "periodicidad de costo",
+        "condición de continuidad"
+      ],
+      "validation": [
+        "ownership explícito",
+        "costos o responsabilidad de costo confirmados",
+        "servicios críticos cubiertos"
+      ],
       "deliveryHandling": "No incluir credenciales, tokens ni secretos; registrar sólo la decisión y evidencia de aprobación."
     }
   ]
