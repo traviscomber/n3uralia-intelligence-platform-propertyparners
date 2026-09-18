@@ -1,21 +1,26 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-01",
-  "allowedStatuses": ["pending", "passed", "failed", "blocked-client-input", "accepted-with-observation"],
+  "asOf": "2026-09-18",
+  "allowedStatuses": [
+    "pending",
+    "passed",
+    "failed",
+    "blocked-client-input",
+    "accepted-with-observation"
+  ],
   "cases": [
     {
       "id": "UAT-01",
       "area": "access-and-permissions",
-      "status": "pending",
+      "status": "passed",
       "evidence": [
         "Server-side access guards and capability model are implemented.",
-        "Dashboard access verification passes for CEO, admin, director, subdirector and seller route boundaries.",
-        "Tenant isolation gate passed on 2026-09-01 with manualReview=0 and 16 verified historical migrations.",
-        "Production profiles include ceo=1, admin=1, director=1 and seller=3.",
-        "Authenticated role UAT was not executed because designated QA credentials/participants are not configured in GitHub Actions.",
-        "config/client-dependencies-status.json#uat-participants"
+        "Authenticated Role/RLS QA is automated on main with ephemeral OIDC identities for CEO, Director, Subdirector and sellers.",
+        "The workflow exercises positive and negative cross-scope access and cleans QA identities after execution.",
+        "PR #213 preserved the actual QA test steps while making artifact upload best-effort when GitHub storage quota is full.",
+        "Issue #60 was closed as completed on 2026-09-18."
       ],
-      "owner": "Shared",
+      "owner": "N3uralia",
       "blocking": true
     },
     {
@@ -23,22 +28,21 @@
       "area": "ceo-dashboard",
       "status": "pending",
       "evidence": [
-        "CEO dashboard is deployed on the audited production deployment dpl_DeEMDDjyGpNEBU2g6cdsaSBYputL.",
-        "Management scoring, persistence, reconciliation, reporting and delivery gates pass in the 2026-09-01 technical acceptance run.",
-        "Authenticated visual and business acceptance by the designated CEO participant remains pending.",
-        "config/client-dependencies-status.json#uat-participants"
+        "CEO dashboard is deployed on the current production baseline.",
+        "Management scoring, persistence, reconciliation, reporting, delivery and CEO coherence gates pass in CI.",
+        "Pedro Pablo is the final business validator and must confirm that the executive reading reflects how Property Partners should be managed."
       ],
-      "owner": "Shared",
+      "owner": "Client",
       "blocking": true
     },
     {
       "id": "UAT-03",
-      "area": "crm-commercial",
+      "area": "business-intelligence-management",
       "status": "pending",
       "evidence": [
-        "Canonical management scoring, persisted overlays, reconciliation, comparisons, source contracts and report delivery gates pass on 2026-09-01.",
-        "Production management entities count is 7.",
-        "Official KPI definitions remain a Shared dependency; provisional or derived metrics must not be presented as approved official KPIs.",
+        "Management scoring, persisted overlays, reconciliation, comparisons, source contracts and report delivery gates pass.",
+        "Pedro Pablo is the canonical final validator of Business Intelligence / Management and the business-intelligence criterion originates from him.",
+        "Remaining KPI definitions must be formally approved before provisional metrics become official.",
         "config/client-dependencies-status.json#kpi-dictionary"
       ],
       "owner": "Shared",
@@ -50,13 +54,11 @@
       "status": "pending",
       "evidence": [
         "Canonical UAT scope is sales of houses in Vitacura.",
-        "CBRS source is received and integrated with 17,581 reference transactions at the audited production cut.",
-        "Property Partners KML is received and integrated with 19 canonical neighborhood polygons.",
-        "Recent V1 Portal house refresh runs observed completed with 12 accepted and 0 rejected rows.",
-        "Market identity, ingestion and contractual source compatibility gates pass on 2026-09-01.",
-        "Authenticated business reading/acceptance remains pending."
+        "CBRS and Property Partners KML are received, audited and integrated.",
+        "Market identity, ingestion and contractual source compatibility gates pass.",
+        "Pedro Pablo must perform the final business validation of the Vitacura reading, sources and conclusions."
       ],
-      "owner": "Shared",
+      "owner": "Client",
       "blocking": true
     },
     {
@@ -64,11 +66,10 @@
       "area": "valuation",
       "status": "pending",
       "evidence": [
-        "Valuation model, canonical evidence, workflow and condition gates pass on 2026-09-01.",
-        "Full valuation regression suite passes 25/25 tests.",
-        "Workflow verification confirms atomic transitions, CEO-only approval, scoped review and immutable issued-version evidence.",
-        "Production contains 10 valuation cases at the audited cut: 2 draft, 8 review and 0 issued.",
-        "An authorized real case must complete the human UAT cycle through issued; no production case will be issued only to satisfy QA."
+        "Valuation model, canonical evidence, workflow and condition gates pass.",
+        "Workflow verification confirms Executive -> Director -> Pedro Pablo with CEO-only approval, AAL2/MFA and immutable issued-version evidence.",
+        "A real authorized case must complete the human cycle through issued; no production case is issued only to satisfy QA.",
+        "Pedro Pablo is the final business validator and issuer."
       ],
       "owner": "Shared",
       "blocking": true
@@ -76,11 +77,11 @@
     {
       "id": "UAT-06",
       "area": "monthly-reporting",
-      "status": "pending",
+      "status": "blocked-client-input",
       "evidence": [
-        "Management report scheduling, runtime KPI/reporting gates, recipient validation and authorization rules pass on 2026-09-01.",
-        "Management report delivery and canonical Reportin PDF verification pass.",
-        "Final schedule, recipients, frequency and delivery format remain a Shared approval dependency.",
+        "Management report scheduling, KPI/reporting readiness gates, recipient validation, delivery and canonical Reportin PDF verification pass.",
+        "Final schedule, recipients, frequency and channel require Pedro Pablo's business approval.",
+        "The system remains fail-closed until those definitions are approved.",
         "config/client-dependencies-status.json#reporting-approval"
       ],
       "owner": "Shared",
@@ -91,10 +92,10 @@
       "area": "functional-security",
       "status": "passed",
       "evidence": [
-        "2026-09-01 closeout run passed IP boundaries, credential boundaries, exposure boundaries and tenant isolation before authenticated UAT preflight.",
-        "Tenant isolation passed with manualReview=0 and 16 verified historical migrations.",
-        "Live production verification for market_neighborhood_review_items confirmed RLS enabled, SELECT limited to admin/CEO, UPDATE limited to admin/CEO plus AAL2, and an explicit service_role operational policy.",
-        "Two raw API error responses discovered during closeout were sanitized on the delivery branch before merge."
+        "IP boundaries, credential boundaries, exposure boundaries and tenant isolation pass on the current closeout baseline.",
+        "Authenticated Role/RLS QA is automated with ephemeral identities.",
+        "SECURITY DEFINER execution is hardened and future migrations are scanned by CI.",
+        "No application-level P0/P1 security finding is open in the current closeout."
       ],
       "owner": "N3uralia",
       "blocking": true
@@ -104,10 +105,10 @@
       "area": "operational-continuity",
       "status": "passed",
       "evidence": [
-        "Production deployment dpl_DeEMDDjyGpNEBU2g6cdsaSBYputL is READY and serves ppartnersgroup.app.",
-        "No production error/fatal events were found in the checked six-hour window on 2026-09-01.",
-        "No 5xx events were found for the audited production deployment in the checked two-hour window.",
-        "Frozen-lockfile install and production build pass in the 2026-09-01 technical acceptance run.",
+        "Production deployment dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU is READY and serves ppartnersgroup.app.",
+        "Contractual modules CI and N3uralia IP Boundaries passed before merge.",
+        "Runtime review found no errors in the selected post-deploy window and critical routes returned HTTP 200.",
+        "Frozen-lockfile install and production build pass on clean GitHub runners.",
         "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"
       ],
       "owner": "N3uralia",
