@@ -85,6 +85,18 @@ begin
     return new;
   end if;
 
+  -- External identity evidence has precedence over automatic matching.
+  -- Any other canonical property that references the same source listing keeps the case human-reviewed.
+  if exists (
+    select 1
+    from public.market_properties p
+    where p.property_type='Casa'
+      and p.id<>new.right_entity_id
+      and coalesce(p.identity_evidence::text,'') ilike '%' || v_source_listing_id || '%'
+  ) then
+    return new;
+  end if;
+
   -- External identity evidence has precedence over an automatic match.
   -- Auto-confirm only when external evidence is absent or points uniquely
   -- to the same canonical property.
