@@ -153,10 +153,10 @@ export function PedroPabloFloatingChat() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">
                     <Sparkles size={12} aria-hidden="true" />
-                    Asistente IA ejecutivo
+                    Asistente IA complementario
                   </div>
                   <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">Pedro Pablo</div>
-                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">Property Partners · inteligencia operacional</div>
+                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">Property Partners · apoyo contextual</div>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -192,10 +192,10 @@ export function PedroPabloFloatingChat() {
                 <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-[var(--n3-text-light)]">
                     <Sparkles size={15} className="text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                    Pregunta al negocio como conversación
+                    Consulta contexto sin salir del flujo
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
-                    Puedo cruzar gestión, cartera, tareas, valorizaciones, reportes y mercado dentro de tu alcance. Si falta evidencia, lo indico y no completo el vacío con supuestos.
+                    Puedo ayudarte a interpretar gestión, cartera, tareas, valorizaciones, reportes y mercado dentro de tu alcance. Los módulos contractuales siguen siendo la fuente operativa y de aceptación; si falta evidencia, lo indico.
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -280,7 +280,7 @@ export function PedroPabloFloatingChat() {
                 <Send size={17} aria-hidden="true" />
               </button>
             </form>
-            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. Las acciones sensibles siguen requiriendo confirmación humana.</p>
+            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. El asistente no sustituye los flujos contractuales. Las acciones sensibles siguen requiriendo confirmación humana.</p>
           </footer>
         </section>
       ) : null}
