@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-08-02",
+  "asOf": "2026-09-18",
   "records": {
     "uat": {
       "status": "pending",
@@ -35,5 +35,17 @@
       "acceptedBy": null,
       "acceptedCommit": null
     }
+  },
+  "internalTechnical": {
+    "status": "complete",
+    "baselineCommit": "cde1981f32bc7ad95a439897dbb74bf09148c0b5",
+    "deploymentId": "dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU",
+    "p0Open": 0,
+    "p1Open": 0,
+    "notes": [
+      "Contractual modules CI and N3uralia IP Boundaries are green.",
+      "Authenticated Role/RLS QA is automated with ephemeral OIDC identities.",
+      "Client UAT, training and final acceptance remain separate human evidence records."
+    ]
   }
 }
