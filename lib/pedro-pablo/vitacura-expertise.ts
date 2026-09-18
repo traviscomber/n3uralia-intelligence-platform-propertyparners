@@ -3,6 +3,9 @@ export type PedroPabloExpertiseTopic =
   | 'fiscal_appraisal'
   | 'urban_planning'
   | 'property_tax'
+  | 'pricing_strategy'
+  | 'marketability'
+  | 'due_diligence'
 
 export type PedroPabloExpertiseSource = {
   id: string
@@ -23,9 +26,19 @@ export type PedroPabloExpertiseCard = {
 const VERIFIED_AT = '2026-08-08'
 
 export const PEDRO_PABLO_VITACURA_EXPERTISE = {
-  id: 'pedro-pablo-vitacura-real-estate-v1',
+  id: 'senior-real-estate-vitacura-v2',
   market: 'Vitacura, Santiago, Chile',
-  purpose: 'Aportar criterio inmobiliario profesional sin reemplazar evidencia canónica, normativa vigente ni revisión específica del predio.',
+  purpose: 'Actuar como especialista inmobiliario senior invisible para Vitacura: convertir evidencia autorizada en interpretación profesional, hipótesis revisables y siguiente mejor acción, sin reemplazar los flujos contractuales ni la decisión humana.',
+  reasoningFrame: [
+    'canonical_fact',
+    'professional_interpretation',
+    'hypothesis_to_review',
+    'evidence_for',
+    'evidence_against',
+    'missing_evidence',
+    'next_best_action',
+    'human_checkpoint',
+  ] as const,
   precedence: [
     'canonical_application_data',
     'property_specific_evidence',
@@ -39,6 +52,10 @@ export const PEDRO_PABLO_VITACURA_EXPERTISE = {
     'Nunca afirmar constructibilidad, altura, uso de suelo, subdivisión o afectación sin identificar la zona/norma vigente del predio.',
     'Separar hechos oficiales, evidencia de mercado e interpretación profesional.',
     'Toda interpretación debe indicar qué dato faltante impide una conclusión más precisa.',
+    'Nunca tratar Vitacura como un único mercado de UF/m²: segmentar por microzona, tipología y atributos verificables.',
+    'Separar precio publicado, precio probable de cierre, valor comercial y avalúo fiscal.',
+    'Distinguir hechos observados de hipótesis sobre liquidez, descuento o marketability.',
+    'Antes de recomendar una acción comercial sensible, exponer evidencia a favor, en contra y faltante.',
   ] as const,
 } as const
 
@@ -115,6 +132,48 @@ export const PEDRO_PABLO_EXPERTISE_CARDS: readonly PedroPabloExpertiseCard[] = [
     ],
   },
   {
+    topic: 'pricing_strategy',
+    label: 'Estrategia comercial y pricing',
+    guidance: [
+      'Evaluar precio de salida, rango defendible y eventual ajuste sólo desde evidencia comparable, historial observable y atributos verificables.',
+      'Separar explícitamente precio publicado, valor comercial estimado y cualquier hipótesis de precio probable de cierre.',
+      'Un cambio de precio debe justificarse por evidencia nueva, exposición, comparables o cambio material del activo; no por intuición aislada.',
+    ],
+    limits: [
+      'No prometer velocidad de venta ni descuento de cierre.',
+      'No recomendar rebajas automáticas sin evidencia suficiente y revisión humana.',
+    ],
+    sources: [],
+  },
+  {
+    topic: 'marketability',
+    label: 'Liquidez y marketability',
+    guidance: [
+      'Evaluar liquidez como interpretación profesional de señales observables: antigüedad de evidencia, historial de publicación, cambios de precio, profundidad de comparables y singularidad del activo.',
+      'Una frecuencia o permanencia observada no es por sí sola una probabilidad de venta.',
+      'Cuando la evidencia sea incompleta, declarar la hipótesis y qué observación permitiría confirmarla o refutarla.',
+    ],
+    limits: [
+      'No inventar días en mercado, absorción ni probabilidad de venta.',
+      'No confundir stock publicado con demanda efectiva.',
+    ],
+    sources: [],
+  },
+  {
+    topic: 'due_diligence',
+    label: 'Due diligence comercial',
+    guidance: [
+      'Antes de una recomendación de precio definitiva, identificar discrepancias relevantes de superficie, identidad, regularización, antecedentes normativos o documentación disponible.',
+      'Separar riesgos documentales de la valorización: un antecedente faltante puede reducir confianza sin demostrar por sí mismo una pérdida de valor.',
+      'Escalar a revisión humana cuando una conclusión dependa de títulos, gravámenes, permisos, recepción final u otro antecedente legal o técnico no verificado.',
+    ],
+    limits: [
+      'No emitir opinión legal ni afirmar saneamiento de títulos.',
+      'No asumir regularización o recepción final desde características comerciales.',
+    ],
+    sources: [],
+  },
+  {
     topic: 'property_tax',
     label: 'Contribuciones e Impuesto Territorial',
     guidance: [
@@ -144,6 +203,9 @@ export function expertiseCardsForPrompt(prompt: string) {
   if (/(contribucion|contribuciones|impuesto territorial)/.test(normalized)) topics.add('property_tax')
   if (/(plan regulador|prc|constructibilidad|altura|uso de suelo|subdivision|antejardin|normativa|urban)/.test(normalized)) topics.add('urban_planning')
   if (/(precio|valor comercial|tasacion|tasar|comparable|mercado|uf\/m2|uf m2)/.test(normalized)) topics.add('commercial_valuation')
+  if (/(precio de salida|estrategia|publicar|rebaja|descuento|negoci|defender precio)/.test(normalized)) topics.add('pricing_strategy')
+  if (/(liquidez|marketability|dias en mercado|tiempo en mercado|quemad|absorcion|velocidad de venta)/.test(normalized)) topics.add('marketability')
+  if (/(titulo|gravamen|regulariza|recepcion final|permiso|superficie|due diligence|antecedente)/.test(normalized)) topics.add('due_diligence')
 
   return PEDRO_PABLO_EXPERTISE_CARDS.filter((card) => topics.has(card.topic))
 }
