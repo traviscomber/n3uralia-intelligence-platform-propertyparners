@@ -31,3 +31,18 @@ test('Las Condes is explicitly outside the approved canonical universe', () => {
 test('Vitacura-only prompts do not trigger a geographic conflict', () => {
   assert.equal(detectOutOfScopeMarket('Compara esta casa de Lo Curro con Vitacura'), null)
 })
+
+
+test('senior communication contract is explicit about uncertainty', async () => {
+  const source = await import('node:fs/promises').then((fs) => fs.readFile('lib/pedro-pablo/vitacura-expertise.ts', 'utf8'))
+  assert.match(source, /profesional, directo, sobrio y no condescendiente/)
+  assert.match(source, /No tengo información suficiente para responder eso con rigor/)
+  assert.match(source, /certeza simulada/)
+})
+
+test('visible senior answer refuses unsupported pricing and liquidity precision', async () => {
+  const source = await import('node:fs/promises').then((fs) => fs.readFile('app/api/pedro-pablo/decision-support/route.ts', 'utf8'))
+  assert.match(source, /No tengo información suficiente para recomendar una cifra todavía/)
+  assert.match(source, /No tengo información suficiente para estimar liquidez/)
+  assert.doesNotMatch(source, /seguramente se venderá/)
+})
