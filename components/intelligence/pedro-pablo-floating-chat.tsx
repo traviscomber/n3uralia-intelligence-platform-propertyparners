@@ -21,6 +21,7 @@ type AssistantResponse = {
     domains: string[]
     reason: string
   }
+  suggestedQuestions?: string[]
 }
 
 type ChatMessage = {
@@ -31,14 +32,39 @@ type ChatMessage = {
   confidence?: 'high' | 'medium'
   evidence?: Evidence[]
   routing?: AssistantResponse['routing']
+  suggestedQuestions?: string[]
 }
 
-const starters = [
-  '¿Qué requiere mi atención hoy?',
-  '¿Qué cambió y qué debería revisar primero?',
-  '¿Cómo están las valorizaciones?',
-  '¿Qué propiedades necesitan revisión?',
-]
+const starterSections = [
+  {
+    label: 'Mercado Vitacura',
+    prompts: [
+      '¿Qué está cambiando en el mercado de Vitacura?',
+      '¿Qué microzona merece revisión?',
+    ],
+  },
+  {
+    label: 'Valorizaciones',
+    prompts: [
+      '¿Qué valorizaciones requieren atención?',
+      '¿Qué comparables sostienen mejor una valorización?',
+    ],
+  },
+  {
+    label: 'Propiedades y antecedentes',
+    prompts: [
+      '¿Qué propiedades tienen brechas de evidencia?',
+      '¿Qué antecedente falta verificar?',
+    ],
+  },
+  {
+    label: 'Gestión y reportes',
+    prompts: [
+      '¿Qué requiere atención hoy?',
+      '¿Qué entrega o reporte requiere revisión?',
+    ],
+  },
+] as const
 
 export function PedroPabloFloatingChat() {
   const [open, setOpen] = useState(false)
@@ -97,6 +123,7 @@ export function PedroPabloFloatingChat() {
         confidence: response.confidence,
         evidence: response.evidence,
         routing: response.routing,
+        suggestedQuestions: response.suggestedQuestions,
       }
 
       setMessages((current) => [...current, assistantMessage])
@@ -188,27 +215,35 @@ export function PedroPabloFloatingChat() {
 
           <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--n3-black)] px-4 py-4">
             {messages.length === 0 && !loading ? (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-[var(--n3-text-light)]">
                     <Sparkles size={15} className="text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                    Consulta contexto sin salir del flujo
+                    ¿Qué quieres revisar?
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
-                    Puedo ayudarte a interpretar gestión, cartera, tareas, valorizaciones, reportes y mercado dentro de tu alcance. Los módulos contractuales siguen siendo la fuente operativa y de aceptación; si falta evidencia, lo indico.
+                    Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-[var(--n3-text-muted)]">Puedes partir por:</p>
-                  {starters.map((starter) => (
-                    <button
-                      key={starter}
-                      type="button"
-                      onClick={() => setPrompt(starter)}
-                      className="w-full rounded-lg border border-[var(--n3-line)] bg-[var(--n3-black)] px-3 py-2.5 text-left text-sm leading-5 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
-                    >
-                      {starter}
-                    </button>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {starterSections.map((section) => (
+                    <div key={section.label} className="rounded-lg border border-[var(--n3-line)] p-3">
+                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
+                        {section.label}
+                      </div>
+                      <div className="space-y-1.5">
+                        {section.prompts.map((question) => (
+                          <button
+                            key={question}
+                            type="button"
+                            onClick={() => setPrompt(question)}
+                            className="block w-full rounded-md px-2 py-1.5 text-left text-[11px] leading-4 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                          >
+                            {question}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -235,6 +270,21 @@ export function PedroPabloFloatingChat() {
                             <div key={`${message.id}-evidence-${index}`} className="text-[10px] leading-4 text-[var(--n3-text-muted)]">
                               <span className="text-[var(--n3-text-light)]">{item.label}</span> · {item.source}
                             </div>
+                          ))}
+                        </div>
+                      ) : null}
+                      {message.role === 'assistant' && message.suggestedQuestions?.length ? (
+                        <div className="mt-3 space-y-1.5 border-t border-[var(--n3-line)] pt-2">
+                          <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Siguiente</div>
+                          {message.suggestedQuestions.map((question) => (
+                            <button
+                              key={question}
+                              type="button"
+                              onClick={() => void ask(question)}
+                              className="block w-full rounded-md border border-[var(--n3-line)] px-2.5 py-2 text-left text-[11px] leading-4 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                            >
+                              {question}
+                            </button>
                           ))}
                         </div>
                       ) : null}
