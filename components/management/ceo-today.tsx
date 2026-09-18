@@ -150,13 +150,13 @@ export function CeoToday() {
     <WorkspaceShell>
       <WorkspaceHeader
         eyebrow="Hoy"
-        title="Prioridades ejecutivas"
+        title="Lo importante hoy"
         meta={`${formatPropertyPartnersPeriod(snapshot.period.key)} · último período operativo verificado`}
       />
 
       <div className="mt-5 max-w-4xl border-l-2 border-[var(--n3-line)] pl-4">
         <p className="text-xl leading-8 text-[var(--n3-text-light)] sm:text-2xl">{statusText}</p>
-        <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Vista operativa verificada. No sustituye un cierre mensual emitido ni convierte métricas no aprobadas en publicación formal.</p>
+        <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Datos al último corte disponible.</p>
       </div>
 
       <MetricStrip items={[
@@ -169,7 +169,7 @@ export function CeoToday() {
       {priorities.length ? (
         <section className="mt-8 max-w-5xl">
           <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
-            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Qué requiere atención</h2>
+            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Requiere atención</h2>
             <span className="text-xs text-[var(--n3-text-muted)]">{priorities.length}</span>
           </div>
           <div className="divide-y divide-[var(--n3-line)]">
@@ -179,14 +179,14 @@ export function CeoToday() {
                   <p className="text-sm font-semibold text-[var(--n3-text-light)]">{item.label}</p>
                   <p className={`mt-1 break-words text-sm ${item.critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{item.detail}</p>
                 </div>
-                <span className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">Revisar <ArrowRight size={14} /></span>
+                <span className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir <ArrowRight size={14} /></span>
               </Link>
             ))}
           </div>
         </section>
       ) : (
         <section className="mt-8 max-w-5xl border-y border-[var(--n3-line)] py-5">
-          <p className="text-sm font-medium">Sin excepciones prioritarias abiertas para esta vista.</p>
+          <p className="text-sm font-medium">No hay pendientes prioritarios.</p>
         </section>
       )}
     </WorkspaceShell>
