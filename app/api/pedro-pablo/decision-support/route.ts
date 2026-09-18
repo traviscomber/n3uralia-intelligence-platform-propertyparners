@@ -164,13 +164,13 @@ function seniorResponse(base: BaseResponse, prompt: string, expertise: ReturnTyp
   if (topics.has('pricing_strategy') || topics.has('commercial_valuation')) {
     lines.push('Interpretación senior: un precio de salida defendible debe construirse desde el inmueble concreto, sus atributos verificables y comparables aceptados; Portal representa oferta y CBRS evidencia transaccional sujeta a identidad y comparabilidad.')
     lines.push('Hipótesis a revisar: puedo evaluar si el precio publicado está defendido, alto o bajo sólo cuando exista un caso de propiedad/valorización identificable y evidencia suficiente.')
-    lines.push('Evidencia faltante: identifica la propiedad o expediente que quieres revisar; para una cifra específica deben existir comparables y atributos verificables dentro del flujo contractual.')
+    lines.push('No tengo información suficiente para recomendar una cifra todavía. Falta identificar la propiedad o expediente y contar con comparables y atributos verificables.')
     lines.push('Siguiente acción: indícame la dirección o la valorización y revisaré precio publicado, valor comercial, comparables, historial y brechas de evidencia.')
   }
 
   if (topics.has('marketability')) {
     lines.push('Interpretación senior: liquidez y marketability deben leerse desde señales observables —historial de publicación, cambios de precio, profundidad de comparables y singularidad del activo—, no como una probabilidad automática de venta.')
-    lines.push('Evidencia faltante: sin un inmueble identificado no corresponde afirmar días en mercado, absorción ni velocidad de venta.')
+    lines.push('No tengo información suficiente para estimar liquidez. Sin un inmueble identificado no corresponde afirmar días en mercado, absorción ni velocidad de venta.')
     lines.push('Siguiente acción: indica la propiedad para revisar sus señales de exposición y comparables dentro de Vitacura.')
   }
 
