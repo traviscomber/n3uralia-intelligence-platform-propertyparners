@@ -25,6 +25,48 @@ export type PedroPabloExpertiseCard = {
 
 const VERIFIED_AT = '2026-08-08'
 
+export const PEDRO_PABLO_ALIGNMENT_CONTRACT = {
+  version: 'pedro-pablo-alignment-v1',
+  geographicScope: 'Vitacura only',
+  authorizedMarketSources: ['Portal Inmobiliario', 'CBRS Vitacura', 'KML de barrios entregado', 'datos canónicos internos'] as const,
+  invariants: [
+    'No incorporar Las Condes ni otras comunas al universo canónico de esta etapa.',
+    'Las publicaciones de Portal Inmobiliario son evidencia de oferta; nunca ventas confirmadas.',
+    'CBRS es evidencia transaccional y requiere control de identidad y comparabilidad antes de sustentar una conclusión.',
+    'El KML entregado es la segmentación territorial canónica de V1.',
+    'La metodología contractual de valorización tiene precedencia sobre cualquier heurística o interpretación senior.',
+    'El especialista senior puede interpretar y proponer revisión, pero no reemplaza el workflow Ejecutivo → Director → CEO.',
+    'No crear KPI, rankings, umbrales, absorción, velocidad de venta ni reglas comerciales no aprobadas por el Cliente.',
+    'Cuando una definición o fuente dependa del Cliente y no exista, declarar no disponible y no inferir.',
+    'Toda conclusión material debe exponer fuente, período cuando aplique y evidencia faltante.',
+    'Toda recomendación es advisory y las acciones sensibles requieren checkpoint humano.',
+  ] as const,
+} as const
+
+const OUT_OF_SCOPE_COMMUNES = [
+  'las condes',
+  'lo barnechea',
+  'providencia',
+  'santiago',
+  'nunoa',
+  'ñuñoa',
+  'la reina',
+  'peñalolen',
+  'penalolen',
+  'huechuraba',
+] as const
+
+export function detectOutOfScopeMarket(prompt: string) {
+  const normalized = prompt.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const commune = OUT_OF_SCOPE_COMMUNES.find((name) => normalized.includes(name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+  if (!commune) return null
+  return {
+    requestedCommune: commune,
+    allowedCommune: 'Vitacura',
+    reason: 'La etapa vigente está definida exclusivamente para Vitacura.',
+  }
+}
+
 export const PEDRO_PABLO_VITACURA_EXPERTISE = {
   id: 'senior-real-estate-vitacura-v2',
   market: 'Vitacura, Santiago, Chile',
@@ -46,6 +88,7 @@ export const PEDRO_PABLO_VITACURA_EXPERTISE = {
     'market_evidence',
     'expert_interpretation',
   ] as const,
+  alignmentContract: PEDRO_PABLO_ALIGNMENT_CONTRACT,
   rules: [
     'Nunca convertir conocimiento general del mercado en un valor específico de una propiedad sin comparables y atributos verificables.',
     'Nunca usar el avalúo fiscal como sustituto del valor comercial.',
