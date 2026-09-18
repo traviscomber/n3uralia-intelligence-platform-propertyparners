@@ -19,9 +19,17 @@ Este UAT valida resultados de negocio y operación dentro del alcance aprobado: 
 Jerarquía funcional vigente:
 
 - **Admin:** N3uralia / Travis. Sólo administración técnica.
-- **CEO:** Pedro Pablo.
-- **Director:** Director de Cuenta.
-- **Ejecutivo:** usuario comercial/operativo dentro de su alcance.
+- **CEO:** Pedro Pablo, último eslabón y validador final de negocio.
+- **Director:** Director de Cuenta; revisa, devuelve y eleva.
+- **Ejecutivo:** usuario comercial/operativo; prepara y ejecuta dentro de su alcance.
+
+Cadena canónica de decisión:
+
+**Ejecutivo → Director → Pedro Pablo.**
+
+N3uralia prueba la plataforma y conserva evidencia técnica. Ejecutivo y Director ejecutan el proceso. **Pedro Pablo valida el resultado final de negocio de los tres pilares antes de la aceptación contractual.**
+
+El criterio de **Business Intelligence / Gestión fue definido por Pedro Pablo**. Por tanto, la validación final de métricas, prioridades, rankings, alertas, reportes y lectura ejecutiva debe recaer en él; ninguna definición provisional se vuelve oficial sin su aprobación.
 
 No usar cuentas compartidas. Cada participante debe ingresar con su propia cuenta autorizada.
 
@@ -48,6 +56,18 @@ No usar `PASS` si el caso no fue ejecutado por el rol requerido.
 - **P3:** detalle menor de experiencia, copy o presentación.
 
 Salida UAT aceptable: P0 = 0, P1 = 0; P2/P3 documentados y aceptados o con corrección acordada.
+
+---
+
+## 2.1 Regla de validación final
+
+Los casos individuales pueden ser ejecutados por Director/Ejecutivo según corresponda, pero cada pilar termina con revisión de Pedro Pablo:
+
+- **Mercado:** valida que fuentes, lectura y conclusiones representen correctamente la realidad comercial de Property Partners.
+- **Valorización:** valida el expediente ya revisado por Director, aprueba con AAL2/MFA y emite el PDF final.
+- **Business Intelligence / Gestión:** valida que la inteligencia, métricas, prioridades, rankings, alertas y reportes respondan al criterio que él definió.
+
+Pedro Pablo no repite QA técnica. Recibe un producto ya probado por N3uralia y una operación ya preparada por los roles anteriores.
 
 ---
 
@@ -383,7 +403,7 @@ Estado: OPEN / FIXED / RETESTED / ACCEPTED
 - P0/P1 abiertos:
 - P2/P3 aceptados:
 - Resultado: `ACCEPTED` / `CORRECTIONS_REQUIRED` / `NOT_EXECUTED`
-- Aprobador Property Partners:
+- Aprobador Property Partners: Pedro Pablo
 - Fecha:
 
 ## Valorización de Propiedades
@@ -395,7 +415,7 @@ Estado: OPEN / FIXED / RETESTED / ACCEPTED
 - P0/P1 abiertos:
 - P2/P3 aceptados:
 - Resultado: `ACCEPTED` / `CORRECTIONS_REQUIRED` / `NOT_EXECUTED`
-- Aprobador Property Partners:
+- Aprobador Property Partners: Pedro Pablo
 - Fecha:
 
 ## Control de Gestión y Reportes
@@ -407,7 +427,7 @@ Estado: OPEN / FIXED / RETESTED / ACCEPTED
 - P0/P1 abiertos:
 - P2/P3 aceptados:
 - Resultado: `ACCEPTED` / `CORRECTIONS_REQUIRED` / `NOT_EXECUTED`
-- Aprobador Property Partners:
+- Aprobador Property Partners: Pedro Pablo
 - Fecha:
 
 # 9. Criterio de cierre de Fase 3
@@ -418,7 +438,8 @@ La Fase 3 puede cerrarse cuando:
 2. P0 = 0 y P1 = 0;
 3. P2/P3 estén corregidos, aceptados o programados sin afectar el flujo contractual;
 4. cada pilar tenga aceptación o una lista cerrada de correcciones;
-5. los casos `BLOCKED_EXTERNAL` estén vinculados a dependencias explícitas del Cliente y no se reporten como defectos del producto.
+5. los casos `BLOCKED_EXTERNAL` estén vinculados a dependencias explícitas del Cliente y no se reporten como defectos del producto;
+6. Pedro Pablo haya realizado la validación final de negocio de Mercado, Valorización y Business Intelligence/Gestión.
 
 ## Dependencias externas actualmente relevantes
 
