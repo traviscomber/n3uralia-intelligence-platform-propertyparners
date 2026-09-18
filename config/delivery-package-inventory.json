@@ -1,8 +1,13 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-01",
+  "asOf": "2026-09-18",
   "status": "assembled",
-  "allowedStatuses": ["draft", "assembled", "verified", "delivered"],
+  "allowedStatuses": [
+    "draft",
+    "assembled",
+    "verified",
+    "delivered"
+  ],
   "requiredSections": [
     "code-and-reconstruction",
     "functional-documentation",
@@ -11,35 +16,166 @@
     "quality-and-acceptance"
   ],
   "included": [
-    {"section":"code-and-reconstruction","artifact":"README.md","status":"included"},
-    {"section":"code-and-reconstruction","artifact":"package.json","status":"included"},
-    {"section":"code-and-reconstruction","artifact":"pnpm-lock.yaml","status":"included"},
-    {"section":"code-and-reconstruction","artifact":".env.example","status":"included-names-only"},
-    {"section":"code-and-reconstruction","artifact":"supabase/migrations","status":"included"},
-    {"section":"code-and-reconstruction","artifact":"docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md","status":"included"},
-    {"section":"code-and-reconstruction","artifact":"docs/canonical/ROLLBACK_AND_RECOVERY_PLAN.md","status":"included"},
-    {"section":"functional-documentation","artifact":"docs/CONTRACTUAL_SCOPE_MATRIX.md","status":"included"},
-    {"section":"functional-documentation","artifact":"docs/architecture/DATA_MODEL_AND_DICTIONARY.md","status":"included"},
-    {"section":"functional-documentation","artifact":"docs/canonical/EXECUTIVE_USER_MANUAL.md","status":"included"},
-    {"section":"functional-documentation","artifact":"docs/manuals/ROLE_USER_MANUAL.md","status":"included"},
-    {"section":"operations","artifact":"docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md","status":"included"},
-    {"section":"operations","artifact":"docs/operations/REPORT_DELIVERY.md","status":"included"},
-    {"section":"operations","artifact":"docs/manuals/ADMINISTRATION_MANUAL.md","status":"included"},
-    {"section":"operations","artifact":"docs/canonical/HANDOVER_READINESS_2026-09-01.md","status":"included"},
-    {"section":"operations","artifact":"docs/canonical/TRAINING_EXECUTION_PACK_2026-09-01.md","status":"included"},
-    {"section":"security-and-custody","artifact":"config/github-delivery-classification.json","status":"included"},
-    {"section":"security-and-custody","artifact":"config/credential-boundaries.json","status":"included"},
-    {"section":"security-and-custody","artifact":"docs/canonical/DELIVERY_PACKAGE_MANIFEST.md","status":"included"},
-    {"section":"quality-and-acceptance","artifact":"docs/canonical/UAT_ACCEPTANCE_PLAN.md","status":"included"},
-    {"section":"quality-and-acceptance","artifact":"docs/canonical/DELIVERY_REQUIREMENTS_MATRIX_2026-09-01.md","status":"included"},
-    {"section":"quality-and-acceptance","artifact":"docs/canonical/UAT_EXECUTION_RECORD_2026-09-01.md","status":"included"},
-    {"section":"quality-and-acceptance","artifact":"config/uat-case-status.json","status":"included"},
-    {"section":"quality-and-acceptance","artifact":"config/client-dependencies-status.json","status":"included"},
-    {"section":"quality-and-acceptance","artifact":"config/client-dependency-requests.json","status":"included"},
-    {"section":"quality-and-acceptance","artifact":"docs/canonical/CLIENT_ACCEPTANCE_RECORD_TEMPLATE.md","status":"included"}
+    {
+      "section": "code-and-reconstruction",
+      "artifact": "README.md",
+      "status": "included"
+    },
+    {
+      "section": "code-and-reconstruction",
+      "artifact": "package.json",
+      "status": "included"
+    },
+    {
+      "section": "code-and-reconstruction",
+      "artifact": "pnpm-lock.yaml",
+      "status": "included"
+    },
+    {
+      "section": "code-and-reconstruction",
+      "artifact": ".env.example",
+      "status": "included-names-only"
+    },
+    {
+      "section": "code-and-reconstruction",
+      "artifact": "supabase/migrations",
+      "status": "included"
+    },
+    {
+      "section": "code-and-reconstruction",
+      "artifact": "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md",
+      "status": "included"
+    },
+    {
+      "section": "code-and-reconstruction",
+      "artifact": "docs/canonical/ROLLBACK_AND_RECOVERY_PLAN.md",
+      "status": "included"
+    },
+    {
+      "section": "functional-documentation",
+      "artifact": "docs/CONTRACTUAL_SCOPE_MATRIX.md",
+      "status": "included"
+    },
+    {
+      "section": "functional-documentation",
+      "artifact": "docs/architecture/DATA_MODEL_AND_DICTIONARY.md",
+      "status": "included"
+    },
+    {
+      "section": "functional-documentation",
+      "artifact": "docs/canonical/EXECUTIVE_USER_MANUAL.md",
+      "status": "included"
+    },
+    {
+      "section": "functional-documentation",
+      "artifact": "docs/manuals/ROLE_USER_MANUAL.md",
+      "status": "included"
+    },
+    {
+      "section": "operations",
+      "artifact": "docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md",
+      "status": "included"
+    },
+    {
+      "section": "operations",
+      "artifact": "docs/operations/REPORT_DELIVERY.md",
+      "status": "included"
+    },
+    {
+      "section": "operations",
+      "artifact": "docs/manuals/ADMINISTRATION_MANUAL.md",
+      "status": "included"
+    },
+    {
+      "section": "operations",
+      "artifact": "docs/canonical/HANDOVER_READINESS_2026-09-01.md",
+      "status": "included"
+    },
+    {
+      "section": "operations",
+      "artifact": "docs/canonical/TRAINING_EXECUTION_PACK_2026-09-01.md",
+      "status": "included"
+    },
+    {
+      "section": "security-and-custody",
+      "artifact": "config/github-delivery-classification.json",
+      "status": "included"
+    },
+    {
+      "section": "security-and-custody",
+      "artifact": "config/credential-boundaries.json",
+      "status": "included"
+    },
+    {
+      "section": "security-and-custody",
+      "artifact": "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/canonical/DELIVERY_REQUIREMENTS_MATRIX_2026-09-01.md",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/canonical/UAT_EXECUTION_RECORD_2026-09-01.md",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "config/uat-case-status.json",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "config/client-dependencies-status.json",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "config/client-dependency-requests.json",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/canonical/CLIENT_ACCEPTANCE_RECORD_TEMPLATE.md",
+      "status": "included"
+    }
   ],
-  "excludedPatterns": [".env", ".env.*", "node_modules", ".next", "*.log", "*.pem", "*.key"],
+  "excludedPatterns": [
+    ".env",
+    ".env.*",
+    "node_modules",
+    ".next",
+    "*.log",
+    "*.pem",
+    "*.key"
+  ],
   "checksumSha256": null,
-  "cleanReconstruction": {"status":"pending","evidence":["docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md"]},
-  "deliveryAuthorization": {"status":"pending","evidence":[]}
+  "cleanReconstruction": {
+    "status": "pending",
+    "evidence": [
+      "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md"
+    ]
+  },
+  "deliveryAuthorization": {
+    "status": "pending",
+    "evidence": []
+  },
+  "internalReadiness": {
+    "status": "assembled",
+    "technicalBaseline": "cde1981f32bc7ad95a439897dbb74bf09148c0b5",
+    "productionDeployment": "dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU",
+    "clientTransferAuthorized": false,
+    "notes": [
+      "Package inventory is complete by required section.",
+      "Final artifact/checksum is intentionally deferred until the accepted commit and authorized receiver are fixed.",
+      "Clean independent reconstruction remains pending; do not infer it from normal CI build success."
+    ]
+  }
 }
