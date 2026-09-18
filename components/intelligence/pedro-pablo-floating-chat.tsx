@@ -35,6 +35,37 @@ type ChatMessage = {
   suggestedQuestions?: string[]
 }
 
+const starterSections = [
+  {
+    label: 'Mercado Vitacura',
+    prompts: [
+      '¿Qué está cambiando en el mercado de Vitacura?',
+      '¿Qué microzona merece revisión?',
+    ],
+  },
+  {
+    label: 'Valorizaciones',
+    prompts: [
+      '¿Qué valorizaciones requieren atención?',
+      '¿Qué comparables sostienen mejor una valorización?',
+    ],
+  },
+  {
+    label: 'Propiedades y antecedentes',
+    prompts: [
+      '¿Qué propiedades tienen brechas de evidencia?',
+      '¿Qué antecedente falta verificar?',
+    ],
+  },
+  {
+    label: 'Gestión y reportes',
+    prompts: [
+      '¿Qué requiere atención hoy?',
+      '¿Qué entrega o reporte requiere revisión?',
+    ],
+  },
+] as const
+
 export function PedroPabloFloatingChat() {
   const [open, setOpen] = useState(false)
   const [prompt, setPrompt] = useState('')
@@ -184,14 +215,37 @@ export function PedroPabloFloatingChat() {
 
           <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--n3-black)] px-4 py-4">
             {messages.length === 0 && !loading ? (
-              <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-[var(--n3-text-light)]">
-                  <Sparkles size={15} className="text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                  Consulta directa
+              <div className="space-y-4">
+                <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-[var(--n3-text-light)]">
+                    <Sparkles size={15} className="text-[var(--n3-teal-soft)]" aria-hidden="true" />
+                    ¿Qué quieres revisar?
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
+                    Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.
+                  </p>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
-                  Escribe lo que necesitas revisar. Las próximas preguntas se adaptarán a tu consulta y a la evidencia disponible.
-                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {starterSections.map((section) => (
+                    <div key={section.label} className="rounded-lg border border-[var(--n3-line)] p-3">
+                      <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
+                        {section.label}
+                      </div>
+                      <div className="space-y-1.5">
+                        {section.prompts.map((question) => (
+                          <button
+                            key={question}
+                            type="button"
+                            onClick={() => setPrompt(question)}
+                            className="block w-full rounded-md px-2 py-1.5 text-left text-[11px] leading-4 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                          >
+                            {question}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
 
