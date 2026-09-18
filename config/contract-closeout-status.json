@@ -1,8 +1,14 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-03",
+  "asOf": "2026-09-18",
   "overallStatus": "in-progress",
-  "allowedStatuses": ["not-started", "in-progress", "blocked-client-input", "ready-for-uat", "accepted"],
+  "allowedStatuses": [
+    "not-started",
+    "in-progress",
+    "blocked-client-input",
+    "ready-for-uat",
+    "accepted"
+  ],
   "documents": [
     "docs/canonical/UAT_ACCEPTANCE_PLAN.md",
     "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
@@ -34,7 +40,9 @@
         "Aprobacion y emision permanecen restringidas a CEO con MFA/AAL2 y evidencia valida",
         "El sistema no emite un caso de produccion solo para satisfacer QA"
       ],
-      "blockers": ["Ejecutar con usuarios autorizados un caso real de UAT hasta issued y registrar aceptacion"]
+      "blockers": [
+        "Ejecutivo y Director deben completar el caso real; Pedro Pablo realiza la validación final, aprobación AAL2/MFA y emisión"
+      ]
     },
     {
       "id": "management-intelligence",
@@ -45,9 +53,12 @@
         "Julio 2026 es el ultimo periodo operativo con evidencia: 11 ventas, meta corporativa 8 y cumplimiento 137.5%",
         "Creditos de gestion se mantienen separados de ventas reales; credito corporativo julio 9.5",
         "Scoring, persistencia, reconciliacion, comparaciones, fuentes y report delivery pasan gates",
-        "Rutas CEO, director, subdirector y seller respetan capacidades y alcance"
+        "Rutas CEO, director, subdirector y seller respetan capacidades y alcance",
+        "Pedro Pablo is the canonical final business validator for Business Intelligence / Management; this criterion originates from his business-intelligence definition."
       ],
-      "blockers": ["Aprobar diccionario oficial de KPI antes de presentar metricas provisionales como oficiales"]
+      "blockers": [
+        "Pedro Pablo debe aprobar las definiciones KPI todavía no formalizadas antes de presentarlas como oficiales"
+      ]
     },
     {
       "id": "market-intelligence",
@@ -61,7 +72,9 @@
         "Cobertura territorial operativa 84.2%: 50 de 317 propiedades operativas aun sin barrio; produccion declara explicitamente que este denominador es distinto del universo de 50 casas live",
         "Portal, CBRS e identidad se mantienen semanticamente separados y los gates de mercado pasan"
       ],
-      "blockers": []
+      "blockers": [
+        "Validación final de Pedro Pablo sobre la lectura y conclusiones de negocio de Vitacura"
+      ]
     },
     {
       "id": "automation-and-reporting",
@@ -74,7 +87,11 @@
         "Reportin canonico y CEO Intelligence preservan scope house-only y snapshots auditables",
         "La revision de cierre 2026-09-03 no genero ni envio un nuevo reporte a destinatarios externos"
       ],
-      "blockers": ["Calendario definitivo", "Destinatarios aprobados", "Frecuencia, formato/canal y reglas operativas confirmadas"]
+      "blockers": [
+        "Calendario definitivo",
+        "Destinatarios aprobados",
+        "Frecuencia, formato/canal y reglas operativas confirmadas"
+      ]
     },
     {
       "id": "uat-and-acceptance",
@@ -85,9 +102,14 @@
         "UAT-07 seguridad funcional permanece passed",
         "UAT-08 continuidad operativa permanece passed",
         "QA autenticado por roles y visual del baseline previo permanece verde; el cambio #202 fue exclusivamente de copy y paso los gates completos",
-        "Plan UAT contractual documenta casos de Mercado, Valorizacion y Gestion por rol"
+        "Plan UAT contractual documenta casos de Mercado, Valorizacion y Gestion por rol",
+        "Cadena canónica de decisión: Ejecutivo -> Director -> Pedro Pablo; Pedro Pablo es el validador final de negocio de los tres pilares."
       ],
-      "blockers": ["Participantes UAT designados por el Cliente", "Ejecucion y aceptacion humana de los casos compartidos, incluido un Valorizador real hasta issued", "Acta o registro de aceptacion"]
+      "blockers": [
+        "Ejecución de casos por roles operativos",
+        "Validación final de negocio por Pedro Pablo",
+        "Acta o registro de aceptación"
+      ]
     },
     {
       "id": "training-and-handover",
@@ -99,7 +121,11 @@
         "Manual ejecutivo y manual de administracion/operacion ya forman parte del inventario del paquete de entrega",
         "Training execution pack incluido en el paquete de entrega"
       ],
-      "blockers": ["Fechas y asistentes confirmados", "Sesiones ejecutadas", "Registro de asistencia y cierre"]
+      "blockers": [
+        "Fechas y asistentes confirmados",
+        "Sesiones ejecutadas",
+        "Registro de asistencia y cierre"
+      ]
     },
     {
       "id": "final-delivery-package",
@@ -111,11 +137,17 @@
         "Arquitectura, UAT, seguridad, rollback, reconstruccion y operacion cuentan con documentacion incluida",
         "PRs historicos superseded #78, #79, #121, #140, #143, #144 y #184 fueron cerrados sin merge el 2026-09-03"
       ],
-      "blockers": ["Definir titularidad y receptor tecnico autorizado de servicios de terceros", "Generar artefacto final y checksum sobre el commit aprobado despues de UAT/handover", "Autorizar formalmente la entrega del paquete"]
+      "blockers": [
+        "Definir titularidad y receptor tecnico autorizado de servicios de terceros",
+        "Generar artefacto final y checksum sobre el commit aprobado despues de UAT/handover",
+        "Autorizar formalmente la entrega del paquete"
+      ]
     }
   ],
   "acceptanceRule": {
-    "finalStatusesRequired": ["accepted"],
+    "finalStatusesRequired": [
+      "accepted"
+    ],
     "requireNoOpenBlockers": true,
     "requireUatEvidence": true,
     "requireTrainingEvidence": true,
