@@ -59,3 +59,13 @@ test('assistant follow-up questions are contextual instead of static starters', 
   assert.match(chat, /Las próximas preguntas se adaptarán a tu consulta/)
   assert.doesNotMatch(chat, /const starters =/)
 })
+
+
+test('assistant opens with useful sections and keeps follow-ups contextual', async () => {
+  const chat = await import('node:fs/promises').then((fs) => fs.readFile('components/intelligence/pedro-pablo-floating-chat.tsx', 'utf8'))
+  for (const label of ['Mercado Vitacura', 'Valorizaciones', 'Propiedades y antecedentes', 'Gestión y reportes']) {
+    assert.match(chat, new RegExp(label))
+  }
+  assert.match(chat, /Después, las siguientes preguntas se adaptan a tu consulta/)
+  assert.match(chat, /onClick=\{\(\) => setPrompt\(question\)\}/)
+})
