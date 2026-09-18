@@ -125,7 +125,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     <>
       <div className="border-b border-[var(--n3-line)] px-5 py-5">
         <PPLogo className="w-full" priority />
-        <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Intelligence Platform</p>
+        {profile?.role !== 'ceo' ? <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Intelligence Platform</p> : null}
       </div>
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
         {navigationSections.map((section, index) => {
@@ -156,22 +156,24 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
           )
         })}
       </nav>
-      <div className="border-t border-[var(--n3-line)] px-4 py-4">
-        {profile ? (
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--n3-line)] text-xs font-semibold text-[var(--n3-teal-soft)]">
-              {(profile.full_name || 'U').charAt(0).toUpperCase()}
+      {profile?.role !== 'ceo' ? (
+        <div className="border-t border-[var(--n3-line)] px-4 py-4">
+          {profile ? (
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--n3-line)] text-xs font-semibold text-[var(--n3-teal-soft)]">
+                {(profile.full_name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-xs font-medium text-[var(--n3-text-light)]">{profile.full_name || 'Usuario'}</div>
+                <div className="text-[10px] text-[var(--n3-text-muted)]">{getRoleLabel(profile.role)}</div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <div className="truncate text-xs font-medium text-[var(--n3-text-light)]">{profile.full_name || 'Usuario'}</div>
-              <div className="text-[10px] text-[var(--n3-text-muted)]">{getRoleLabel(profile.role)}</div>
-            </div>
+          ) : null}
+          <div className="mt-4 border-t border-[var(--n3-line)] pt-3 text-[10px] leading-4 text-[var(--n3-text-muted)]">
+            Plataforma desarrollada por <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium text-[var(--n3-text-light)] hover:opacity-80">N3uralia</a>
           </div>
-        ) : null}
-        <div className="mt-4 border-t border-[var(--n3-line)] pt-3 text-[10px] leading-4 text-[var(--n3-text-muted)]">
-          Plataforma desarrollada por <a href="https://n3uralia.com" target="_blank" rel="noreferrer" className="font-medium text-[var(--n3-text-light)] hover:opacity-80">N3uralia</a>
         </div>
-      </div>
+      ) : null}
     </>
   )
 
