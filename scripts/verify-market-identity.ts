@@ -58,3 +58,7 @@ assert.match(autoResolveSql, /humanValidationRequired',false/)
 assert.match(autoResolveSql, /status='confirmed'/)
 
 console.log('High-confidence identity auto-resolution contract verified: unique, contradiction-free score >= 0.94; ambiguous cases remain human-reviewed.')
+
+assert.match(autoResolveSql, /identity_evidence::text/)
+assert.match(autoResolveSql, /p\.id<>new\.right_entity_id/)
+console.log('External identity evidence guard verified: conflicting canonical candidates remain human-reviewed.')
