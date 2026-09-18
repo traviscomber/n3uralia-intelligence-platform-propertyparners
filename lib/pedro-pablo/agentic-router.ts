@@ -24,7 +24,7 @@ const DOMAIN_TERMS: Array<[PedroPabloDomain, readonly string[]]> = [
   ['valuations', ['valoriza', 'tasacion', 'tasar', 'comparable', 'precio por m2', 'precio/m2']],
   ['properties', ['propiedad', 'cartera', 'inmueble', 'identidad', 'vigencia']],
   ['reports', ['reporte', 'informe', 'entrega', 'envio']],
-  ['market', ['mercado', 'oferta', 'absorcion', 'competencia', 'portal', 'cbrs']],
+  ['market', ['mercado', 'oferta', 'absorcion', 'competencia', 'portal', 'cbrs', 'liquidez', 'precio de salida', 'descuento', 'dias en mercado', 'microzona', 'lo curro', 'santa maria', 'tabancura', 'jardines del este']],
   ['management', ['desempen', 'rendimiento', 'cumplimiento', 'meta', 'oficina', 'equipo', 'venta']],
 ]
 
@@ -49,6 +49,12 @@ const AGENTIC_TERMS = [
   'desde ayer',
   'esta semana',
   'causa',
+  'precio de salida',
+  'liquidez',
+  'estrategia',
+  'negoci',
+  'microzona',
+  'due diligence',
 ]
 
 export function routePedroPabloPrompt(prompt: string): PedroPabloRoutingDecision {
