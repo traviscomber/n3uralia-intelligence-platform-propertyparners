@@ -18,7 +18,7 @@ Este documento no declara aceptación del Cliente. Separa lo que ya está valida
 
 ## Qué debe validar Pedro Pablo
 
-La UAT ejecutiva debe ser breve. Pedro Pablo valida negocio y criterio, no funcionamiento interno del software.
+La UAT ejecutiva de Pedro Pablo debe ser breve. Él valida negocio y criterio, no funcionamiento interno del software. Estas cuatro validaciones son el resumen ejecutivo y **no sustituyen** los casos UAT autenticados por rol definidos en `docs/UAT_PROPERTY_PARTNERS.md` y `config/uat-case-status.json`.
 
 Estas cuatro validaciones son el **resumen ejecutivo** de aceptación. No sustituyen la ejecución de los casos canónicos por rol definidos en `docs/UAT_PROPERTY_PARTNERS.md` y `config/uat-case-status.json`. N3uralia debe ejecutar y registrar los casos READY con CEO, Director y Ejecutivo antes de declarar aceptación contractual.
 
@@ -88,6 +88,8 @@ Pendientes administrativos/técnicos de cierre:
 Para declarar la entrega aceptada:
 
 - UAT ejecutiva de los cuatro puntos anteriores;
+- completar los casos READY del plan canónico `docs/UAT_PROPERTY_PARTNERS.md` con los roles requeridos CEO, Director y Ejecutivo; los casos bloqueados por insumos del Cliente deben quedar registrados como `BLOCKED_EXTERNAL` / `blocked-client-input`, no omitidos;
+- `config/uat-case-status.json` sin casos bloqueantes `failed` ni `pending` que dependan de ejecución disponible;
 - ejecución y registro de los casos canónicos READY de `docs/UAT_PROPERTY_PARTNERS.md` con CEO, Director y Ejecutivo;
 - `config/uat-case-status.json` sin casos bloqueantes pendientes salvo dependencias externas explícitamente aceptadas;
 - P0 = 0 y P1 = 0;
