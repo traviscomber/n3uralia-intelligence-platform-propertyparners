@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "pnpm valuation:gate && pnpm management:gate",
+    "prebuild": "pnpm ai:senior:verify && pnpm valuation:gate && pnpm management:gate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -75,7 +75,8 @@
     "test:e2e": "tsx scripts/test-pipeline-end-to-end.mjs",
     "qa:visual": "node scripts/run-authenticated-visual-qa.mjs",
     "qa:roles": "node scripts/run-authenticated-role-qa.mjs",
-    "qa:technical": "node scripts/run-technical-acceptance.mjs"
+    "qa:technical": "node scripts/run-technical-acceptance.mjs",
+    "ai:senior:verify": "node --test tests/pedro-pablo-vitacura-senior-expertise.test.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
