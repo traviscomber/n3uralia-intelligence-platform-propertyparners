@@ -46,7 +46,7 @@ jobs:
           fi
           test -f supabase/config.toml
 
-      - name: Normalize migration versions in runner only
+      - name: Build clean reconstruction migration set
         shell: bash
         run: |
           set -euo pipefail
@@ -54,15 +54,31 @@ jobs:
 
           source_dir="supabase/migrations"
           normalized_dir=".clean-reconstruction-migrations"
+          baseline_file="20260712_production_database_init.sql"
+
+          test -f "$source_dir/$baseline_file"
+
           rm -rf "$normalized_dir"
           mkdir -p "$normalized_dir"
 
           declare -A used_versions=()
+          include=0
 
-          # Re-sequence only inside this clean runner. Git filenames and the
-          # production migration history remain untouched.
+          # The repository contains pre-baseline experimental/legacy migrations
+          # that were superseded by the complete production initialization.
+          # Clean reconstruction starts at that explicit baseline and then
+          # replays every later repository migration in source order.
           while IFS= read -r file; do
             base="$(basename "$file")"
+
+            if [ "$base" = "$baseline_file" ]; then
+              include=1
+            fi
+
+            if [ "$include" -ne 1 ]; then
+              echo "skip superseded pre-baseline migration: $base"
+              continue
+            fi
 
             if [[ ! "$base" =~ ^([0-9]{8,14})_(.+)\.sql$ ]]; then
               echo "Unsupported migration filename: $base" >&2
@@ -92,20 +108,8 @@ jobs:
             cp "$file" "$normalized_dir/$normalized"
           done < <(find "$source_dir" -maxdepth 1 -type f -name '*.sql' | sort)
 
+          test "$include" -eq 1
           test -n "$(find "$normalized_dir" -maxdepth 1 -type f -name '*.sql' -print -quit)"
-
-          cat > "$normalized_dir/00000000000001_legacy_bootstrap.sql" <<'SQL'
-          -- Runner-only compatibility shim for historical migration order.
-          create or replace function public.updated_at_trigger()
-          returns trigger
-          language plpgsql
-          as $body$
-          begin
-            new.updated_at = current_timestamp;
-            return new;
-          end;
-          $body$;
-          SQL
 
           rm -f "$source_dir"/*.sql
           cp "$normalized_dir"/*.sql "$source_dir"/
