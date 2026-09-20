@@ -4,6 +4,8 @@ Enterprise operating system for real-estate intelligence, property valuation and
 
 **Powered by N3uralia.**
 
+Current delivery/closeout record: `docs/FINAL_CLOSEOUT_2026-09-20.md`.
+
 This repository is not a generic dashboard and not a chatbot wrapper. The product is built around one operating principle:
 
 > **Evidence → Decision → Action → Traceability**
