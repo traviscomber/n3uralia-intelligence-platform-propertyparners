@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-18",
+  "asOf": "2026-09-20",
   "allowedStatuses": [
     "pending",
     "passed",
@@ -105,9 +105,10 @@
       "area": "operational-continuity",
       "status": "passed",
       "evidence": [
-        "Production deployment dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU is READY and serves ppartnersgroup.app.",
-        "Contractual modules CI and N3uralia IP Boundaries passed before merge.",
-        "Runtime review found no errors in the selected post-deploy window and critical routes returned HTTP 200.",
+        "Production deployment dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp is READY and serves ppartnersgroup.app.",
+        "Contractual modules CI, N3uralia IP Boundaries and Supabase migration-history guard passed on the current closeout.",
+        "Production home and login returned HTTP 200 on the current deployment.",
+        "Runtime review found no errors in the selected post-deploy window.",
         "Frozen-lockfile install and production build pass on clean GitHub runners.",
         "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"
       ],
