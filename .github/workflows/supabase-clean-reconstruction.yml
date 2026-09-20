@@ -1,98 +1,112 @@
-name: Supabase clean reconstruction
+name: Supabase migration history guard
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  pull_request:
+    branches: [main]
     paths:
-      - ".github/workflows/supabase-clean-reconstruction.yml"
       - "supabase/migrations/**"
+      - "config/production-schema-fingerprint.json"
+      - ".github/workflows/supabase-clean-reconstruction.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "config/production-schema-fingerprint.json"
+      - ".github/workflows/supabase-clean-reconstruction.yml"
 
 permissions:
   contents: read
 
 jobs:
-  reconstruct:
+  migration-history:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 10
     env:
-      SUPABASE_TELEMETRY_DISABLED: "1"
-      SUPABASE_USE_SLIM_IMAGES: "true"
+      BASELINE_LAST_VERSION: "20260918154759"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
         with:
-          version: 2.117.0
+          fetch-depth: 0
 
-      - name: Verify CLI
-        run: supabase --version
-
-      - name: Initialize local Supabase config
+      - name: Verify production schema fingerprint
         shell: bash
         run: |
           set -euo pipefail
-          if [ ! -f supabase/config.toml ]; then
-            supabase init
-          fi
-          test -f supabase/config.toml
+          node <<'NODE'
+          const fs = require('fs')
+          const p = 'config/production-schema-fingerprint.json'
+          const x = JSON.parse(fs.readFileSync(p, 'utf8'))
+          if (x.projectRef !== 'orfncinmhymhhoxbxgjb') throw new Error('Unexpected Supabase project ref')
+          if (x.migrations.lastVersion !== process.env.BASELINE_LAST_VERSION) throw new Error('Baseline migration version drift')
+          if (x.migrations.count !== 327) throw new Error('Baseline migration count drift')
+          const schemas = new Map(x.schemas.map(s => [s.schema, s]))
+          if (!schemas.has('public') || !schemas.has('private')) throw new Error('Missing schema fingerprint')
+          if (!x.captureMethod || x.captureMethod !== 'catalog-hash') throw new Error('Unknown fingerprint capture method')
+          console.log('Production schema fingerprint contract verified.')
+          NODE
 
-      - name: Start isolated local Supabase
-        run: supabase start
-
-      - name: Replay all migrations from zero
-        run: supabase db reset
-
-      - name: Verify critical reconstructed objects
+      - name: Guard immutable migration history
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PUSH_BEFORE_SHA: ${{ github.event.before || '' }}
         run: |
           set -euo pipefail
-          if ! command -v psql >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y postgresql-client
+
+          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$PR_BASE_SHA" ]; then
+            range="$PR_BASE_SHA...HEAD"
+          elif [ -n "$PUSH_BEFORE_SHA" ] && [ "$PUSH_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            range="$PUSH_BEFORE_SHA..HEAD"
+          else
+            range="HEAD^..HEAD"
           fi
 
-          psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -v ON_ERROR_STOP=1 <<'SQL'
-          do $$
-          declare
-            required_relation text;
-          begin
-            foreach required_relation in array array[
-              'public.profiles',
-              'public.properties',
-              'public.market_listings',
-              'public.market_cbrs_reference_transactions',
-              'public.market_neighborhoods',
-              'public.valuation_cases',
-              'public.valuation_comparables',
-              'public.valuation_decision_log',
-              'public.management_entities',
-              'public.management_metric_definitions',
-              'public.management_report_schedules',
-              'public.management_report_distributions'
-            ]
-            loop
-              if to_regclass(required_relation) is null then
-                raise exception 'missing reconstructed relation: %', required_relation;
-              end if;
-            end loop;
-          end
-          $$;
+          mapfile -t changes < <(git diff --name-status "$range" -- supabase/migrations || true)
 
-          select
-            count(*) filter (where schemaname = 'public' and tablename like 'valuation_%') as valuation_rls_tables,
-            count(*) filter (where schemaname = 'public' and tablename like 'market_%') as market_rls_tables,
-            count(*) filter (where schemaname = 'public' and tablename like 'management_%') as management_rls_tables
-          from pg_tables
-          where rowsecurity = true;
-          SQL
+          for change in "${changes[@]}"; do
+            [ -z "$change" ] && continue
 
-      - name: Verify local migration history
-        run: supabase migration list --local
+            status="$(printf '%s\n' "$change" | awk '{print $1}')"
+            path="$(printf '%s\n' "$change" | awk '{print $NF}')"
+            base="$(basename "$path")"
 
-      - name: Stop isolated stack
-        if: always()
-        run: supabase stop --no-backup
+            case "$status" in
+              A)
+                if [[ ! "$base" =~ ^([0-9]{14})_([a-z0-9_]+)\.sql$ ]]; then
+                  echo "New migrations require a unique 14-digit timestamp and snake_case name: $base" >&2
+                  exit 1
+                fi
+
+                version="${BASH_REMATCH[1]}"
+                if [ "$version" -le "$BASELINE_LAST_VERSION" ]; then
+                  echo "New migration version must be newer than production baseline $BASELINE_LAST_VERSION: $base" >&2
+                  exit 1
+                fi
+
+                count="$(find supabase/migrations -maxdepth 1 -type f -name "${version}_*.sql" | wc -l | tr -d ' ')"
+                if [ "$count" -ne 1 ]; then
+                  echo "Duplicate migration version $version detected." >&2
+                  exit 1
+                fi
+                ;;
+              M|D|R*)
+                echo "Applied/legacy migrations are immutable after the 2026-09-20 baseline: $change" >&2
+                exit 1
+                ;;
+              *)
+                echo "Unsupported migration change status: $change" >&2
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "Migration history guard passed: no historical mutation or invalid new migration detected."
+
+      - name: Explain restore boundary
+        run: |
+          echo "This workflow prevents new migration-history drift."
+          echo "It does not claim backup restore or clean-room reconstruction."
+          echo "Those require an isolated Supabase branch/project and are tracked separately."

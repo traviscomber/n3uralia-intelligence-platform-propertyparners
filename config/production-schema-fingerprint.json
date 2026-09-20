@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "projectRef": "orfncinmhymhhoxbxgjb",
+  "capturedAt": "2026-09-20T19:15:26.770494Z",
+  "captureMethod": "catalog-hash",
+  "postgresVersion": "17.6",
+  "schemas": [
+    {
+      "schema": "private",
+      "tables": 18,
+      "functions": 34,
+      "views": 16,
+      "tableContractHash": "1b6d828fcb47631b8d042eaeedaf1bfe",
+      "functionContractHash": "ae6b151ebbbabc57963c90f90770e8d5",
+      "viewContractHash": "9b0480de2565d3374a24963e68752903"
+    },
+    {
+      "schema": "public",
+      "tables": 101,
+      "functions": 152,
+      "views": 7,
+      "tableContractHash": "9ba94f30510bb104482788e6e1d0e006",
+      "functionContractHash": "2a60c474c6d73764c3e921b658f51a95",
+      "viewContractHash": "ca5519cc9717bc6ca74e7892d61be4d6"
+    }
+  ],
+  "migrations": {
+    "count": 327,
+    "firstVersion": "20260711005604",
+    "lastVersion": "20260918154759",
+    "historyHash": "35235793cef6ff13c2444c12f4aecbce"
+  },
+  "extensions": {
+    "count": 8,
+    "contractHash": "8731971be44fa042c70168e760ee193e"
+  },
+  "scope": "Schema structure only. No row data, secrets or credentials are included.",
+  "restoreStatus": "pending-isolated-restore-drill"
+}
