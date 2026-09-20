@@ -46,6 +46,55 @@ jobs:
           fi
           test -f supabase/config.toml
 
+      - name: Normalize legacy migration filenames in runner only
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          source_dir="supabase/migrations"
+          normalized_dir=".clean-reconstruction-migrations"
+          rm -rf "$normalized_dir"
+          mkdir -p "$normalized_dir"
+
+          declare -A legacy_seq=()
+
+          while IFS= read -r file; do
+            base="$(basename "$file")"
+
+            if [[ "$base" =~ ^([0-9]{14})_(.+)\.sql$ ]]; then
+              cp "$file" "$normalized_dir/$base"
+              continue
+            fi
+
+            if [[ "$base" =~ ^([0-9]{8})_(.+)\.sql$ ]]; then
+              day="${BASH_REMATCH[1]}"
+              name="${BASH_REMATCH[2]}"
+              seq="${legacy_seq[$day]:-0}"
+              printf -v suffix '%06d' "$seq"
+              legacy_seq[$day]=$((seq + 1))
+              normalized="${day}${suffix}_${name}.sql"
+              echo "normalize legacy migration: $base -> $normalized"
+              cp "$file" "$normalized_dir/$normalized"
+              continue
+            fi
+
+            echo "Unsupported migration filename: $base" >&2
+            exit 1
+          done < <(find "$source_dir" -maxdepth 1 -type f -name '*.sql' | sort)
+
+          test -n "$(find "$normalized_dir" -maxdepth 1 -type f -name '*.sql' -print -quit)"
+
+          rm -f "$source_dir"/*.sql
+          cp "$normalized_dir"/*.sql "$source_dir"/
+
+          duplicates="$(find "$source_dir" -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | cut -d_ -f1 | sort | uniq -d)"
+          if [ -n "$duplicates" ]; then
+            echo "Duplicate normalized migration versions remain:" >&2
+            echo "$duplicates" >&2
+            exit 1
+          fi
+
       - name: Start isolated local Supabase
         run: supabase start
 
