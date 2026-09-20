@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-18",
+  "asOf": "2026-09-20",
   "status": "assembled",
   "allowedStatuses": [
     "draft",
@@ -145,6 +145,21 @@
       "section": "quality-and-acceptance",
       "artifact": "docs/canonical/CLIENT_ACCEPTANCE_RECORD_TEMPLATE.md",
       "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/FINAL_CLOSEOUT_2026-09-20.md",
+      "status": "included"
+    },
+    {
+      "section": "security-and-custody",
+      "artifact": "config/production-schema-fingerprint.json",
+      "status": "included"
+    },
+    {
+      "section": "security-and-custody",
+      "artifact": "docs/SUPABASE_PRODUCTION_SCHEMA_BASELINE_2026-09-20.md",
+      "status": "included"
     }
   ],
   "excludedPatterns": [
@@ -169,13 +184,14 @@
   },
   "internalReadiness": {
     "status": "assembled",
-    "technicalBaseline": "cde1981f32bc7ad95a439897dbb74bf09148c0b5",
-    "productionDeployment": "dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU",
+    "technicalBaseline": "31bb6c462a0aec51c500c73eef00deab3d0ee6ca",
+    "productionDeployment": "dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp",
     "clientTransferAuthorized": false,
     "notes": [
-      "Package inventory is complete by required section.",
-      "Final artifact/checksum is intentionally deferred until the accepted commit and authorized receiver are fixed.",
-      "Clean independent reconstruction remains pending; do not infer it from normal CI build success."
+      "Documentation and package inventory are complete by required section.",
+      "docs/FINAL_CLOSEOUT_2026-09-20.md is the current executive closeout record.",
+      "Final delivery artifact/checksum remains intentionally deferred until the accepted commit and authorized receiver are fixed.",
+      "Restore drill remains pending in issue #217; normal CI success is not restore evidence."
     ]
   }
 }

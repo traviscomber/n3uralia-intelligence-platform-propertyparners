@@ -1,3 +1,5 @@
+> **Roadmap histórico de cierre.** La documentación y el baseline vigentes están en `docs/FINAL_CLOSEOUT_2026-09-20.md` contra `31bb6c462a0aec51c500c73eef00deab3d0ee6ca`. Este archivo se conserva para trazabilidad del plan y no debe usarse como estado productivo actual.
+
 # Property Partners — Roadmap contractual de cierre
 
 Última actualización: 2 de septiembre de 2026

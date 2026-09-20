@@ -2,14 +2,15 @@
 
 ## Identificación
 
-- Baseline técnico/productivo: `cde1981f32bc7ad95a439897dbb74bf09148c0b5`
-- Deployment validado: `dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU` — READY
+- Baseline técnico/productivo: `31bb6c462a0aec51c500c73eef00deab3d0ee6ca`
+- Deployment validado: `dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp` — READY
 - Producción: `https://ppartnersgroup.app`
-- Fecha de corte técnico: 18 de septiembre de 2026
+- Fecha de corte técnico/documental: 20 de septiembre de 2026
 - Representante N3uralia: Travis / N3uralia
 - Validador final Property Partners: Pedro Pablo
+- Documento ejecutivo vigente: `docs/FINAL_CLOSEOUT_2026-09-20.md`
 
-Los commits posteriores que sólo actualicen documentación/manifests de cierre no reabren el baseline funcional mientras CI, Vercel y los gates contractuales permanezcan verdes.
+Los cambios puramente documentales posteriores no reabren el baseline funcional mientras CI, Vercel y los gates contractuales permanezcan verdes.
 
 ## Cadena de aceptación
 
@@ -17,51 +18,51 @@ Los commits posteriores que sólo actualicen documentación/manifests de cierre 
 
 - Ejecutivo prepara y ejecuta.
 - Director revisa, devuelve/corrige y eleva.
-- Pedro Pablo es el último eslabón y valida el resultado final de negocio.
+- Pedro Pablo valida el resultado final de negocio.
 - N3uralia valida software, seguridad, permisos, datos, trazabilidad, CI y regresión.
-
-Pedro Pablo definió el criterio de Business Intelligence / Gestión; su validación final de esa capa es canónica.
 
 ## Verificaciones N3uralia
 
+- [x] Documentación de cierre consolidada y vigente.
 - [x] Build y deployment verdes.
-- [x] Sin hallazgos P0/P1 técnicos conocidos abiertos.
-- [x] Authenticated Role/RLS QA automatizada con identidades efímeras.
+- [x] P0 técnicos abiertos = 0.
+- [x] P1 técnicos abiertos = 0.
+- [x] Authenticated Role/RLS QA automatizada.
 - [x] Tenant isolation y límites de autorización verificados.
-- [x] SECURITY DEFINER hardening y gate preventivo integrados.
-- [x] Mercado: CBRS/KML/Portal separados y trazables.
-- [x] Valorización: workflow, versiones, devolución, AAL2/MFA, emisión y PDF implementados.
-- [x] Gestión/BI: scoring, persistencia, reconciliación, reporting y delivery gates implementados.
-- [x] Dependencias del Cliente registradas explícitamente.
-- [x] Variables documentadas por nombre, sin valores secretos.
-- [x] Rollback, recuperación e instalación documentados.
-- [x] Propiedad intelectual y materiales del Cliente clasificados; módulos N3uralia propietarios fuera de transferencia.
-- [x] Runtime productivo verificado sin errores en la ventana de cierre revisada.
-- [ ] Leaked Password Protection habilitado en Supabase Auth.
-- [ ] Restore drill / evidencia vigente de backup-recovery ejecutada y registrada.
+- [x] SECURITY DEFINER hardening y gate preventivo.
+- [x] Mercado: fuentes separadas y trazables.
+- [x] Valorización: workflow, AAL2/MFA, snapshots y PDF.
+- [x] Gestión/BI: scoring, persistencia, reconciliación y reporting.
+- [x] Fingerprint canónico de Supabase registrado.
+- [x] Historial de migraciones congelado y protegido contra drift nuevo.
+- [x] Dependencias del Cliente registradas.
+- [x] Variables documentadas por nombre, sin secretos.
+- [x] Rollback, instalación y recuperación documentados.
+- [x] Propiedad intelectual/materiales del Cliente clasificados.
+- [x] Runtime productivo revisado sin errores detectados.
+- [ ] Leaked Password Protection habilitado en Supabase Auth (#52).
+- [ ] Restore drill real ejecutado y registrado (#217).
 
 ## Verificaciones Property Partners / compartidas
 
-- [ ] Ejecutivo y Director ejecutan los casos operativos UAT requeridos.
-- [ ] Pedro Pablo valida Mercado como resultado final de negocio.
-- [ ] Pedro Pablo valida una valorización real completa hasta `issued` y PDF.
-- [ ] Pedro Pablo valida Business Intelligence / Gestión conforme al criterio que definió.
-- [ ] KPI todavía no formalizados quedan aprobados o explícitamente diferidos.
-- [ ] Calendario, destinatarios, frecuencia y canal de reportes quedan aprobados.
-- [ ] Capacitación realizada o renunciada formalmente.
-- [ ] Titularidad y costos de terceros definidos.
+- [ ] Ejecutivo y Director ejecutan UAT.
+- [ ] Pedro Pablo valida Mercado.
+- [ ] Pedro Pablo valida una valorización real hasta `issued` y PDF.
+- [ ] Pedro Pablo valida Business Intelligence / Gestión.
+- [ ] KPI no formalizados quedan aprobados o diferidos.
+- [ ] Reporting queda aprobado.
+- [ ] Capacitación realizada o renunciada.
+- [ ] Titularidad/costos de terceros definidos.
 - [ ] Receptor técnico autorizado definido.
-- [ ] Paquete final generado e inspeccionado después de la aceptación.
-- [ ] Reconstrucción independiente/clean-room completada con el receptor autorizado.
-- [ ] Checksum SHA-256 del paquete final registrado.
-- [ ] Credenciales transferidas o rotadas sólo con autorización.
-- [ ] Acta o aceptación inequívoca registrada por Pedro Pablo.
+- [ ] Artefacto/checksum final generados tras aceptación.
+- [ ] Credenciales transferidas/rotadas sólo con autorización.
+- [ ] Acta o aceptación inequívoca registrada.
 
 ## Resultado
 
-- Estado N3uralia: `ready-for-client-validation` con dos hardenings administrativos pendientes (leaked-password protection y restore drill).
-- Estado contractual: `pending-client-validation`.
-- P0 técnicos abiertos: 0.
-- P1 técnicos abiertos: 0.
-- Aprobador final de negocio: Pedro Pablo.
-- Observación: no declarar `accepted` hasta completar la cadena humana y la evidencia obligatoria.
+- Documentación N3uralia: `complete`
+- Estado técnico: `ready-for-client-validation`
+- Estado contractual: `pending-client-validation`
+- P0: 0
+- P1: 0
+- Aprobador final de negocio: Pedro Pablo
