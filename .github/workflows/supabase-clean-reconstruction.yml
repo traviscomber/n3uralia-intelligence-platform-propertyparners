@@ -99,12 +99,12 @@ jobs:
           create or replace function public.updated_at_trigger()
           returns trigger
           language plpgsql
-          as $
+          as $body$
           begin
             new.updated_at = current_timestamp;
             return new;
           end;
-          $;
+          $body$;
           SQL
 
           rm -f "$source_dir"/*.sql
