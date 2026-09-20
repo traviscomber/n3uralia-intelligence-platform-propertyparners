@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-18",
+  "asOf": "2026-09-20",
   "overallStatus": "in-progress",
   "allowedStatuses": [
     "not-started",
@@ -14,7 +14,7 @@
     "docs/canonical/DELIVERY_PACKAGE_MANIFEST.md",
     "docs/canonical/TRAINING_AND_HANDOVER_PLAN.md",
     "docs/canonical/DELIVERY_REQUIREMENTS_MATRIX_2026-09-01.md",
-    "docs/FINAL_CLOSEOUT_2026-09-18.md",
+    "docs/FINAL_CLOSEOUT_2026-09-20.md",
     "docs/canonical/FINAL_CLOSEOUT_CHECKLIST.md"
   ],
   "workstreams": [
@@ -24,10 +24,11 @@
       "status": "ready-for-uat",
       "owner": "N3uralia",
       "evidence": [
-        "Production baseline cde1981f32bc7ad95a439897dbb74bf09148c0b5 is served by ppartnersgroup.app via dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU READY on 2026-09-18.",
-        "PR #215 passed Contractual modules CI, N3uralia IP Boundaries and Vercel preview before merge.",
-        "Production runtime review found no errors in the selected closeout window and critical CEO/Director/Market/Valuation routes returned HTTP 200.",
-        "Authenticated Role/RLS QA is automated with ephemeral OIDC identities; issue #60 is completed.",
+        "Production baseline 31bb6c462a0aec51c500c73eef00deab3d0ee6ca is served by ppartnersgroup.app via dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp READY on 2026-09-20.",
+        "PR #219 passed Contractual modules CI, N3uralia IP Boundaries, Supabase migration-history guard and Vercel preview before merge.",
+        "Production home/login returned HTTP 200 and runtime review found no errors in the selected post-deploy window.",
+        "Authenticated Role/RLS QA is automated with ephemeral OIDC identities.",
+        "Documentation under N3uralia control is closed in docs/FINAL_CLOSEOUT_2026-09-20.md.",
         "Application-level P0/P1 technical findings open: 0."
       ],
       "blockers": []
@@ -126,14 +127,16 @@
       "status": "in-progress",
       "owner": "Shared",
       "evidence": [
-        "Delivery package inventory is assembled and includes code/reconstruction, functional documentation, operations, security and acceptance evidence.",
-        "Ownership review #215 resolved the remaining generic scripts/** ambiguity while preserving N3uralia proprietary exclusions.",
-        "Variables are documented by name and secrets are excluded."
+        "Delivery package inventory is assembled and all required documentation sections are present.",
+        "docs/FINAL_CLOSEOUT_2026-09-20.md is the current executive closeout record.",
+        "Ownership review preserves N3uralia proprietary exclusions and client-owned/client-core material.",
+        "Variables are documented by name and secrets are excluded.",
+        "Production schema fingerprint and migration-history governance are versioned."
       ],
       "blockers": [
-        "Restore drill / backup-recovery evidence remains a N3uralia hardening gate",
-        "Leaked Password Protection remains an administrative Supabase hardening item",
-        "Final checksum and clean-room handover package must be generated after final accepted commit and authorized receiver are known",
+        "Restore drill / backup-recovery evidence remains a N3uralia administrative hardening gate (#217)",
+        "Leaked Password Protection remains an administrative Supabase hardening item (#52)",
+        "Final checksum and transfer artifact must be generated after final accepted commit and authorized receiver are known",
         "Client authorization for transfer remains pending"
       ]
     }
