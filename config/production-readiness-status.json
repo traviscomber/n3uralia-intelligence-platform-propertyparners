@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "status": "in-review",
-  "commit": "cde1981f32bc7ad95a439897dbb74bf09148c0b5",
+  "commit": "31bb6c462a0aec51c500c73eef00deab3d0ee6ca",
   "deployment": "https://ppartnersgroup.app",
-  "deploymentId": "dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU",
-  "asOf": "2026-09-18",
+  "deploymentId": "dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp",
+  "asOf": "2026-09-20",
   "checks": {
     "build": "passed",
     "securityBoundaries": "passed",
@@ -19,16 +19,16 @@
   "criticalFindings": [],
   "highFindings": [],
   "evidence": [
-    "Production baseline cde1981f32bc7ad95a439897dbb74bf09148c0b5 is served by ppartnersgroup.app through Vercel deployment dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU READY on 2026-09-18.",
-    "PR #215 passed Contractual modules CI, N3uralia IP Boundaries and Vercel preview before merge.",
-    "Production runtime review after #214 found no runtime errors in the selected 30-minute window; CEO/Director/Market/Valuation routes and management APIs returned HTTP 200.",
-    "Authenticated Role/RLS QA is automated with ephemeral OIDC identities; issue #60 is closed as completed.",
-    "SECURITY DEFINER hardening and future-migration gate are integrated via PR #207.",
-    "High-confidence market identity automation with external-conflict guard is integrated via PR #211.",
+    "Production baseline 31bb6c462a0aec51c500c73eef00deab3d0ee6ca is served by ppartnersgroup.app through Vercel deployment dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp READY on 2026-09-20.",
+    "PR #219 passed Contractual modules CI, N3uralia IP Boundaries, Supabase migration-history guard and Vercel preview before merge.",
+    "Production home and login returned HTTP 200 on the current deployment; runtime review found no errors in the selected post-deploy window.",
+    "Authenticated Role/RLS QA is automated with ephemeral OIDC identities.",
+    "SECURITY DEFINER hardening and future-migration guard are integrated.",
+    "Production Supabase schema fingerprint is versioned in config/production-schema-fingerprint.json.",
     "N3uralia proprietary runtime modules remain server-only and explicitly excluded from transfer; client canonical and client-core material remains client-owned/client-core.",
     "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md",
     "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md",
     "docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md",
-    "Backup/recovery remains pending because no current restore drill has been executed; it is not inferred from rollback documentation."
+    "Backup/recovery remains pending because no isolated restore drill has been executed; this is tracked in issue #217 and is not inferred from rollback documentation."
   ]
 }
