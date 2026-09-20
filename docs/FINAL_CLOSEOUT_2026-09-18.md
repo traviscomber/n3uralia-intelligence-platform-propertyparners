@@ -1,3 +1,5 @@
+> **Documento histórico.** El cierre vigente es `docs/FINAL_CLOSEOUT_2026-09-20.md`, basado en producción `31bb6c462a0aec51c500c73eef00deab3d0ee6ca`. Este archivo se conserva como evidencia del corte del 18 de septiembre.
+
 # Property Partners — Cierre de entrega
 
 Última actualización: 18 de septiembre de 2026.
