@@ -46,7 +46,7 @@ jobs:
           fi
           test -f supabase/config.toml
 
-      - name: Normalize legacy migration filenames in runner only
+      - name: Normalize migration versions in runner only
         shell: bash
         run: |
           set -euo pipefail
@@ -59,36 +59,20 @@ jobs:
 
           declare -A used_versions=()
 
-          # Reserve and copy canonical 14-digit migrations first.
-          while IFS= read -r file; do
-            base="$(basename "$file")"
-            if [[ "$base" =~ ^([0-9]{14})_(.+)\.sql$ ]]; then
-              version="${BASH_REMATCH[1]}"
-              if [[ -n "${used_versions[$version]:-}" ]]; then
-                echo "Duplicate canonical migration version: $version" >&2
-                exit 1
-              fi
-              used_versions[$version]=1
-              cp "$file" "$normalized_dir/$base"
-            fi
-          done < <(find "$source_dir" -maxdepth 1 -type f -name '*.sql' | sort)
-
-          # Normalize historical 8-13 digit prefixes only inside this runner.
+          # Re-sequence only inside this clean runner. Git filenames and the
+          # production migration history remain untouched.
           while IFS= read -r file; do
             base="$(basename "$file")"
 
-            if [[ "$base" =~ ^[0-9]{14}_.+\.sql$ ]]; then
-              continue
-            fi
-
-            if [[ ! "$base" =~ ^([0-9]{8,13})_(.+)\.sql$ ]]; then
+            if [[ ! "$base" =~ ^([0-9]{8,14})_(.+)\.sql$ ]]; then
               echo "Unsupported migration filename: $base" >&2
               exit 1
             fi
 
-            legacy_prefix="${BASH_REMATCH[1]}"
+            original_prefix="${BASH_REMATCH[1]}"
             name="${BASH_REMATCH[2]}"
-            candidate="$legacy_prefix"
+            candidate="$original_prefix"
+
             while [ "${#candidate}" -lt 14 ]; do
               candidate="${candidate}0"
             done
@@ -100,7 +84,11 @@ jobs:
 
             used_versions[$candidate]=1
             normalized="${candidate}_${name}.sql"
-            echo "normalize legacy migration: $base -> $normalized"
+
+            if [ "$normalized" != "$base" ]; then
+              echo "normalize migration: $base -> $normalized"
+            fi
+
             cp "$file" "$normalized_dir/$normalized"
           done < <(find "$source_dir" -maxdepth 1 -type f -name '*.sql' | sort)
 
