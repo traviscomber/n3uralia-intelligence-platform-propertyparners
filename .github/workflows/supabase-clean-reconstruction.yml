@@ -1,0 +1,98 @@
+name: Supabase clean reconstruction
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - chore/clean-reconstruction-proof
+    paths:
+      - ".github/workflows/supabase-clean-reconstruction.yml"
+      - "supabase/migrations/**"
+
+permissions:
+  contents: read
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      SUPABASE_TELEMETRY_DISABLED: "1"
+      SUPABASE_USE_SLIM_IMAGES: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+
+      - name: Verify CLI
+        run: supabase --version
+
+      - name: Initialize local Supabase config
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f supabase/config.toml ]; then
+            supabase init
+          fi
+          test -f supabase/config.toml
+
+      - name: Start isolated local Supabase
+        run: supabase start
+
+      - name: Replay all migrations from zero
+        run: supabase db reset
+
+      - name: Verify critical reconstructed objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+
+          psql 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' -v ON_ERROR_STOP=1 <<'SQL'
+          do $$
+          declare
+            required_relation text;
+          begin
+            foreach required_relation in array array[
+              'public.profiles',
+              'public.properties',
+              'public.market_listings',
+              'public.market_cbrs_reference_transactions',
+              'public.market_neighborhoods',
+              'public.valuation_cases',
+              'public.valuation_comparables',
+              'public.valuation_decision_log',
+              'public.management_entities',
+              'public.management_metric_definitions',
+              'public.management_report_schedules',
+              'public.management_report_distributions'
+            ]
+            loop
+              if to_regclass(required_relation) is null then
+                raise exception 'missing reconstructed relation: %', required_relation;
+              end if;
+            end loop;
+          end
+          $$;
+
+          select
+            count(*) filter (where schemaname = 'public' and tablename like 'valuation_%') as valuation_rls_tables,
+            count(*) filter (where schemaname = 'public' and tablename like 'market_%') as market_rls_tables,
+            count(*) filter (where schemaname = 'public' and tablename like 'management_%') as management_rls_tables
+          from pg_tables
+          where rowsecurity = true;
+          SQL
+
+      - name: Verify local migration history
+        run: supabase migration list --local
+
+      - name: Stop isolated stack
+        if: always()
+        run: supabase stop --no-backup
