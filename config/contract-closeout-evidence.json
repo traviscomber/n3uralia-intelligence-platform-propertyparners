@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-18",
+  "asOf": "2026-09-20",
   "records": {
     "uat": {
       "status": "pending",
@@ -38,14 +38,17 @@
   },
   "internalTechnical": {
     "status": "complete",
-    "baselineCommit": "cde1981f32bc7ad95a439897dbb74bf09148c0b5",
-    "deploymentId": "dpl_GUg6TPPYJ8oLAcr1VTYakAFcDdaU",
+    "baselineCommit": "31bb6c462a0aec51c500c73eef00deab3d0ee6ca",
+    "deploymentId": "dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp",
     "p0Open": 0,
     "p1Open": 0,
     "notes": [
-      "Contractual modules CI and N3uralia IP Boundaries are green.",
+      "Documentation under N3uralia control is closed against docs/FINAL_CLOSEOUT_2026-09-20.md.",
+      "Contractual modules CI, N3uralia IP Boundaries and Supabase migration-history guard are green.",
       "Authenticated Role/RLS QA is automated with ephemeral OIDC identities.",
-      "Client UAT, training and final acceptance remain separate human evidence records."
+      "Production home/login returned HTTP 200 and no runtime errors were detected in the reviewed post-deploy window.",
+      "Client UAT, training and final acceptance remain separate human evidence records.",
+      "Administrative hardening #52 and restore drill #217 remain open and are not misreported as passed."
     ]
   }
 }
