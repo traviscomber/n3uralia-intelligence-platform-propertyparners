@@ -94,6 +94,19 @@ jobs:
 
           test -n "$(find "$normalized_dir" -maxdepth 1 -type f -name '*.sql' -print -quit)"
 
+          cat > "$normalized_dir/00000000000001_legacy_bootstrap.sql" <<'SQL'
+          -- Runner-only compatibility shim for historical migration order.
+          create or replace function public.updated_at_trigger()
+          returns trigger
+          language plpgsql
+          as $
+          begin
+            new.updated_at = current_timestamp;
+            return new;
+          end;
+          $;
+          SQL
+
           rm -f "$source_dir"/*.sql
           cp "$normalized_dir"/*.sql "$source_dir"/
 
