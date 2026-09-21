@@ -234,7 +234,8 @@ export async function sendDocumentEmail(
   const senderEmail = reportConfig?.from || 'Business Intelligence Property Partners <info@ppartnersgroup.app>'
   
   // Logo is embedded in the email header via a public image URL (no separate attachment needed)
-  let attachments: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- deuda registrada en docs/SECURITY_EXCEPTIONS.md
+  const attachments: any[] = []
 
   // Generate and attach CEO report if it's a CEO report document
   if (documentTitle.includes('Reporte Integral')) {
@@ -329,7 +330,7 @@ export async function updateScheduleNextSendAt(
   dayOfMonth?: number,
   sendTime: string = '09:00:00',
 ) {
-  let nextSendAt = new Date()
+  const nextSendAt = new Date()
   nextSendAt.setUTCHours(parseInt(sendTime.split(':')[0]), parseInt(sendTime.split(':')[1]), 0, 0)
   
   if (cadence === 'weekly' && dayOfWeek) {
