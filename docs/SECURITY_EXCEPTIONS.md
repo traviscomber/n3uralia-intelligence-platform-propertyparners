@@ -40,3 +40,21 @@ salida. Toda excepción debe tener owner, fecha de revisión y condición de cie
 - **Condición de cierre:** si el valorizador público crece en tráfico o
   sufra ataques, migrar a Upstash Ratelimit (límite global por IP + token
   opcional). Owner: N3uralia.
+
+---
+
+## 3. ESLint con alcance incremental (app/components/lib)
+
+- **Fecha de decisión:** 2026-09-21
+- **Qué se hizo:** las reglas oficiales de Next.js (`eslint-config-next/core-web-vitals`
+  y `/typescript`, ambas en formato flat nativo de ESLint 9) se activaron
+  primero sólo sobre `app/`, `components/` y `lib/`.
+- **Por qué:** activar las reglas sobre todo el repo (`scripts/`, `tests/`,
+  `config/`) de una sola vez habría hecho fallar el gate de CI con hallazgos
+  preexistentes no relacionados con esta auditoría, bloqueando UAT.
+- **Deuda:** `scripts/`, `tests/` y demás archivos no están aún bajo reglas
+  estrictas. Incorporarlos por lotes (primero `tests/`, luego `scripts/`),
+  corrigiendo hallazgos en el mismo PR de cada lote.
+- **Condición de cierre:** `eslint .` corre las reglas estrictas sobre todo
+  el repo sin errores. Owner: N3uralia.
+
