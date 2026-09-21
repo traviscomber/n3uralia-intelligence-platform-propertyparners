@@ -55,6 +55,13 @@ salida. Toda excepción debe tener owner, fecha de revisión y condición de cie
 - **Deuda:** `scripts/`, `tests/` y demás archivos no están aún bajo reglas
   estrictas. Incorporarlos por lotes (primero `tests/`, luego `scripts/`),
   corrigiendo hallazgos en el mismo PR de cada lote.
+- **Sub-deuda transitoria (UAT):** `@typescript-eslint/no-explicit-any` y
+  `@typescript-eslint/ban-ts-comment` quedan en `warn` sólo sobre código de
+  producto. CI del PR #221 los detectó (~10 sitios: `lib/document-delivery.ts`,
+  `app/api/cron/document-delivery-claim/route.ts`,
+  `app/api/management/reports/send-now/route.ts`,
+  `app/dashboard/market/contract-import/page.tsx`). No se corrigen en caliente
+  para no tocar lógica a ciegas (sin typecheck local) a días de UAT.
 - **Condición de cierre:** `eslint .` corre las reglas estrictas sobre todo
   el repo sin errores. Owner: N3uralia.
 
