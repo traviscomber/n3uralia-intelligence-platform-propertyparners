@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkPublicRateLimit, clientIpFrom } from '@/lib/public-rate-limit'
 import {
   buildPublicValuationEstimate,
   buildPublicVitacuraCoverageOptions,
@@ -159,7 +160,17 @@ function errorResponse(message: string, status: number) {
   )
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // El GET va detrás de caché CDN (s-maxage=300); el límite protege el origen
+  // ante bypasses de caché o ráfagas directas.
+  const limit = checkPublicRateLimit(`valuation-coverage:${clientIpFrom(request)}`)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { ok: false, error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+      { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(limit.retryAfterSeconds) } },
+    )
+  }
+
   try {
     const { rows, canonicalNeighborhoods } = await loadPublicMarketData()
     const coverage = buildPublicVitacuraCoverageOptions(rows, canonicalNeighborhoods)
@@ -183,6 +194,17 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Auditoría 2026-09-21: esta ruta usa el service role; sin límite era un
+  // vector de abuso de costo/carga. 30 estimaciones/minuto por IP es holgado
+  // para uso humano real.
+  const limit = checkPublicRateLimit(`valuation-estimate:${clientIpFrom(request)}`)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { ok: false, error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' },
+      { status: 429, headers: { 'Cache-Control': 'no-store', 'Retry-After': String(limit.retryAfterSeconds) } },
+    )
+  }
+
   let body: Record<string, unknown>
   try {
     body = (await request.json()) as Record<string, unknown>
