@@ -9,6 +9,21 @@ import { PPLogo } from '@/components/brand/pp-logo'
 
 const VALID_ROLES = new Set<UserRole>(['ceo', 'admin', 'director', 'subdirector', 'seller'])
 
+// Auditoría 2026-09-21 (Semana 2): Supabase devuelve mensajes de error en
+// inglés; se localizan los conocidos para presentar siempre español al
+// usuario. Mensajes no mapeados caen en el genérico, nunca en inglés crudo.
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  'Invalid login credentials': 'Credenciales inválidas. Verifica tu correo y contraseña.',
+  'Invalid email or password': 'Credenciales inválidas. Verifica tu correo y contraseña.',
+  'Email not confirmed': 'El correo no está confirmado. Contacta al administrador.',
+  'Too many requests': 'Demasiados intentos. Espera un minuto e inténtalo de nuevo.',
+  'User not found': 'No existe una cuenta registrada con ese correo.',
+}
+
+function localizeAuthError(message: string): string {
+  return AUTH_ERROR_MESSAGES[message] ?? 'No fue posible iniciar sesión. Inténtalo de nuevo.'
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,7 +38,7 @@ export default function LoginPage() {
     const supabase = createClient()
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError || !data.user) {
-      setError(signInError?.message || 'No fue posible iniciar sesión')
+      setError(signInError?.message ? localizeAuthError(signInError.message) : 'No fue posible iniciar sesión')
       setLoading(false)
       return
     }
