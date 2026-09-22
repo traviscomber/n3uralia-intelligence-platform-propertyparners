@@ -106,7 +106,7 @@ export default async function MarketSourcesPage() {
         <div className="border-b border-[var(--n3-line)] p-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-teal)]">Salud de fuentes</p>
           <h2 className="mt-2 text-xl font-semibold">Fuentes registradas y última evidencia operativa</h2>
-          <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">La frescura se expresa como antigüedad de la última ejecución observada. No se aplica un SLA artificial mientras no exista una política de actualización definida para cada fuente.</p>
+          <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">La frescura se expresa como antigüedad de la última ejecución observada.</p>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs">
@@ -198,7 +198,7 @@ export default async function MarketSourcesPage() {
       <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d7332b]">Criterio de reunión</p>
         <h2 className="mt-2 text-xl font-semibold">Evidencia operativa separada de registros heredados</h2>
-        <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">Los perfiles de archivos, hashes y cifras históricas permanecen disponibles como evidencia interna. La tabla de salud distingue explícitamente fuentes legadas de aquellas que poseen ejecuciones canónicas vinculadas, evitando presentar una fuente heredada como una carga operativa vigente.</p>
+        <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">Los perfiles de archivos, hashes y cifras históricas permanecen como evidencia interna. La tabla de salud distingue fuentes legadas de fuentes con ejecuciones canónicas vinculadas.</p>
       </section>
     </div>
   )

@@ -56,7 +56,7 @@ export default async function CanonicalClientReportsPage(){
           {current.pdfUrl?<Link href={current.pdfUrl} target="_blank" className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs"><ExternalLink size={14}/>Abrir</Link>:null}
           {current.downloadUrl?<Link href={current.downloadUrl} className="inline-flex min-h-11 items-center gap-2 bg-[var(--primary)] px-4 text-xs font-semibold text-white"><Download size={14}/>Descargar PDF</Link>:null}
         </div>
-      </article>:<OperationalState compact kind="empty" title="Sin informe listo para entrega" description="No existe todavía un informe canónico con período y artefacto PDF listo para entrega. Los borradores incompletos se conservan en el historial y no se presentan como informe vigente."/>}
+      </article>:<OperationalState compact kind="empty" title="Sin informe listo para entrega" description="Aún no hay un informe canónico listo para entrega. Los borradores incompletos quedan en el historial."/>}
     </section>
 
     {current?<details className="mt-5 max-w-5xl border-b border-[var(--n3-line)] pb-5">

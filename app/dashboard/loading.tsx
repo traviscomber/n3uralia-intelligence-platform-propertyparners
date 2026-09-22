@@ -6,7 +6,7 @@ export default function DashboardLoading() {
       <OperationalState
         kind="loading"
         title="Cargando información operativa"
-        description="Estamos verificando el perfil, los permisos y las fuentes autorizadas antes de mostrar resultados. No se presentan datos parciales como definitivos."
+        description="Verificando perfil, permisos y fuentes autorizadas."
       />
     </div>
   )

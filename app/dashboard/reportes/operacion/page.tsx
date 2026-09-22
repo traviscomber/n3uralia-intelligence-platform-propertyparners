@@ -14,7 +14,7 @@ export default async function ReportOperationsPage() {
     <IntelligenceHeader
       eyebrow="Informes"
       title="Generar y revisar"
-      description="CEO Intelligence es el informe mensual de negocio para Property Partners. El informe contractual permanece separado para seguimiento de entrega N3uralia. Ningún borrador se envía automáticamente."
+      description="Informe mensual de negocio. El informe contractual se entrega por separado; ningún borrador se envía automáticamente."
       actions={[
         { label: 'Ver informes', href: '/dashboard/reportes/canonicos', primary: true },
         { label: 'Revisar programaciones', href: '/dashboard/control/admin' },
