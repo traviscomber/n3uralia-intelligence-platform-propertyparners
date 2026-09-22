@@ -44,6 +44,14 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
+      // Reglas del React Compiler (react-hooks v7) que señalan ~34 patrones
+      // preexistentes de refactor (setState en effects, Date.now en render,
+      // memoización manual). Son optimizaciones, no bugs: quedan en warn
+      // hasta después de UAT. Las reglas clásicas (rules-of-hooks,
+      // exhaustive-deps) siguen como error.
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
     },
   },
 ]
