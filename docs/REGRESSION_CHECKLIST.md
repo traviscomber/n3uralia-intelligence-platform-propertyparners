@@ -26,11 +26,11 @@ Documento vivo con las verificaciones funcionales que deben pasar **antes de mer
 
 | # | Verificación | Pasos | Resultado esperado |
 |---|--------------|-------|--------------------|
-| 6 | Login inválido | Enviar credenciales incorrectas | Permanece en `/auth/login` con alerta de error genérica; **sin redirect** |
-| 7 | Login válido | Iniciar sesión con usuario admin | Redirect al home del rol (ver observación "landing por rol" abajo) |
+| 6 | Login inválido | Enviar credenciales incorrectas | Permanece en `/auth/login` con alerta de error **en español** ("Credenciales inválidas…" desde Semana 2, PR #224); **sin redirect** |
+| 7 | Login válido | Iniciar sesión con usuario admin | Redirect al home del rol según `defaultDashboardForRole` (`lib/access-control.ts`): ceo→`/dashboard/ceo`, director/subdirector→`/dashboard/director`, seller→`/dashboard/partner`, admin→`/dashboard` |
 | 8 | Sidebar completo | Revisar navegación | Hoy, Mercado, Valorizaciones, Propiedades, Informes + grupo ADMINISTRACIÓN (Gestión, Metas y alertas, Datos y metodología, Asignaciones, Usuarios y configuración) |
 | 9 | Logout | Botón "Salir" | Redirect a `/auth/login`, sesión cerrada |
-| 10 | 404 autenticada | Abrir ruta inexistente con sesión | Página 404 sin filtrar datos (ver observación "404 genérica") |
+| 10 | 404 autenticada | Abrir ruta inexistente con sesión | Página 404 con marca Property Partners en español (desde Semana 2, PR #224), sin filtrar datos |
 
 ## Parte C — Módulos del dashboard (con sesión admin)
 
@@ -43,7 +43,7 @@ Documento vivo con las verificaciones funcionales que deben pasar **antes de mer
 | 15 | **Informes canónicos** (`/dashboard/reportes/canonicos`) | Revisar panel | Último informe entregable con período, estado, botones Abrir/Descargar PDF, historial, "Estado de datos" |
 | 16 | **Propiedades / Asignaciones** (`/dashboard/properties/admin`) | Revisar cartera | Propiedades candidatas con m², ejecutivas asignadas por sucursal con rol, "Nota auditada" presente |
 | 17 | **Gestión** (`/dashboard/control/admin` y `/dashboard/control/operations`) | Revisar paneles | Período vigente, cobertura de metas, metas por entidad, cierre mensual con cargas/filas/reportes, disclosures honestos cuando no hay datos |
-| 18 | **Datos y metodología** (`/dashboard/market/fuentes`) | Revisar panel | Trazabilidad de fuentes/ejecuciones/raw; si la consulta falla, estado de error elegante (no maquillado) |
+| 18 | **Datos y metodología** (`/dashboard/market/fuentes`) | Revisar panel | Trazabilidad de fuentes/ejecuciones/raw; si la consulta falla, estado de error elegante (no maquillado). Ceros = estado real de la consulta, no bug de UI |
 | 19 | **Centro de control** (`/dashboard/settings`) | Revisar panel | Perfil, resumen del sistema (versión, zona horaria America/Santiago, idioma), directorio de personas |
 | 20 | **Asistente IA** (Pedro Pablo, chat flotante) | Preguntar por desempeño de un período | Respuesta con métricas por corredor, sección EVIDENCIA citando archivo canónico, badge de confianza y "control humano" |
 
@@ -66,13 +66,14 @@ Documento vivo con las verificaciones funcionales que deben pasar **antes de mer
 3. **Acentos por `curl`/Git Bash:** enviar `Jardín del Este` mal codificado produce 400 "Selecciona un sector válido". Usar UTF-8 correcto (`requests` en Python, fetch desde el navegador) o un sector sin acentos.
 4. **GET de cobertura va detrás de caché CDN** (`s-maxage=300`): un burst de GETs puede no tocar el origen; para probar el rate limit usar POST (`Cache-Control: no-store`).
 
-## Observaciones cosméticas conocidas (no bloquean, candidatas a Semana 2)
+## Observaciones cosméticas — estado (Semana 2, PR #224)
 
-- Error de login en inglés ("Invalid login credentials", viene de Supabase) — localizar.
-- Página 404 genérica de Next.js en inglés, sin marca — personalizar.
-- Landing post-login: confirmar intención del redirect por rol (`/dashboard/ceo` vs `/dashboard`).
-- `market/fuentes` puede mostrar ceros si la consulta de trazabilidad falla — distinguir "sin datos" de "error de consulta" en el mensaje.
+- ✅ **Error de login en inglés** — resuelto: mensajes de Supabase localizados al español (`app/auth/login/page.tsx`).
+- ✅ **404 genérica sin marca** — resuelto: `app/not-found.tsx` con identidad Property Partners, en español, con enlaces a inicio y login.
+- ✅ **Redirect post-login por rol** — confirmado **intencional**: `defaultDashboardForRole` (`lib/access-control.ts`). Nota de datos: la cuenta de pruebas aterriza en `/dashboard/ceo`, lo que sugiere `profile.role='ceo'` mientras la UI muestra "admin"; alinear la etiqueta mostrada con el rol canónico queda como tarea de datos, no de código.
+- ✅ **`market/fuentes` en ceros** — verificado: la UI maneja el estado honestamente; los ceros reflejan el estado real de la consulta (`getMarketSourceTrace`), no un defecto de presentación. Sin cambio de código.
+- ⏸ **Migración `xlsx`→`exceljs`** — diferida con justificación: `xlsx` se usa en 10 archivos de rutas operativas core (export/import de mercado, casos y borradores de valorización). La API de `exceljs` difiere completamente y el build de CI no valida equivalencia funcional; requiere ambiente ejecutable para validación real, como registra `docs/SECURITY_EXCEPTIONS.md`. Se retoma post-UAT con ambiente disponible.
 
 ---
 
-*Última actualización: 2026-09-21, tras el merge del PR #221 (Semana 1 de auditoría). Mantener al día con cada cambio funcional relevante.*
+*Última actualización: 2026-09-21, Semana 2 de auditoría (PR #224 en curso) sobre la base del PR #221. Mantener al día con cada cambio funcional relevante.*
