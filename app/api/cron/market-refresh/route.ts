@@ -156,7 +156,7 @@ export async function GET(request: Request) {
           valid: validRows.length,
           collectionFailures: collection.failures.length,
           status: 'ingestion_failed',
-          runId: pipelineResult?.run_id ?? null,
+          runId,
         })
         continue
       }
@@ -173,6 +173,33 @@ export async function GET(request: Request) {
           status: 'skipped_ingestion_lock',
         })
         continue
+      }
+
+      const runId = pipelineResult?.run_id ?? null
+      if (runId) {
+        const { data: currentRun } = await supabase
+          .from('market_ingestion_runs')
+          .select('metadata')
+          .eq('id', runId)
+          .maybeSingle()
+        const currentMetadata = currentRun?.metadata && typeof currentRun.metadata === 'object'
+          ? currentRun.metadata as Record<string, unknown>
+          : {}
+        await supabase
+          .from('market_ingestion_runs')
+          .update({
+            metadata: {
+              ...currentMetadata,
+              discovery_pages: collection.discovery.pagesVisited,
+              discovery_raw_candidates: collection.discovery.rawListingCandidates,
+              discovery_unique_listings: collection.listingUrls.length,
+              discovery_duplicate_candidates: collection.discovery.duplicateListingCandidates,
+              discovery_exhausted: collection.discovery.exhausted,
+              discovery_capped: collection.discovery.capped,
+              valid_coverage: validCoverage,
+            },
+          })
+          .eq('id', runId)
       }
 
       const accepted = Number(pipelineResult?.accepted ?? 0)
