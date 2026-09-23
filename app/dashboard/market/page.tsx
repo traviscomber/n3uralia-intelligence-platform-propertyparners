@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { FileText, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
-import { CalculationTrace } from '@/components/market/calculation-trace'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
@@ -125,6 +124,9 @@ export default async function MarketPage() {
       critical: false,
     } : null,
   ].filter((item): item is NonNullable<typeof item> => Boolean(item))
+
+  const primaryActions = actions.slice(0, 3)
+  const secondaryActions = actions.slice(3)
 
   const houseReference = portalReference.datasets.find((item) => item.datasetKind === 'portal_houses')
   const houseLive = portalReference.liveDatasets.find((item) => item.datasetKind === 'portal_houses')
@@ -275,44 +277,24 @@ export default async function MarketPage() {
             <span>Ver cómo se calculan los indicadores</span>
             <span className="text-[10px] uppercase tracking-[0.12em]">Metodología</span>
           </summary>
-        <div className="pt-2">
-          <CalculationTrace
-            title="Oferta activa"
-            source="Portal Inmobiliario · fuente canónica live de casas"
-            universe="Venta · Casa · Vitacura · publicaciones vigentes reconciliadas"
-            filters="Estado active/observed · fuente live actual"
-            exclusions="Legacy, publicaciones retiradas y fuentes fuera del universo"
-            formula="conteo de publicaciones vigentes del snapshot canónico"
-            result={number(market.activeInventory)}
-            note="La identidad canónica se aplica después para análisis por propiedad; los duplicados confirmados no inflan el universo lógico."
-          />
-          <CalculationTrace
-            title="Propiedades lógicas"
-            source="Universo V1 + relaciones de identidad confirmadas"
-            universe={`${number(market.canonicalProperties)} registros V1`}
-            exclusions={`${number(market.confirmedDuplicateRows)} registros duplicados confirmados`}
-            formula="registros V1 − duplicados confirmados"
-            result={number(market.logicalHouseComponents)}
-          />
-          <CalculationTrace
-            title="Ventas confirmadas"
-            source="Transacciones canónicas de casas"
-            universe="Operaciones respaldadas por fuente transaccional"
-            exclusions="Señales CRM sin fecha de cierre y estados no confirmados"
-            formula="conteo de operaciones confirmadas del período"
-            result={number(market.confirmedSales)}
-          />
-          <CalculationTrace
-            title="Absorción"
-            source="Oferta comparable + ventas confirmadas"
-            universe="Mismo tipo de propiedad, territorio y período comparable"
-            exclusions="Períodos sin ventas confirmadas suficientes"
-            formula="ventas confirmadas / oferta comparable"
-            result={percent(market.absorptionRate)}
-            note="Si falta una fuente reciente de ventas, el sistema no publica una absorción estimada."
-          />
-        </div>
-        </details>
+          <div className="mt-3 divide-y divide-[var(--n3-line)] text-xs leading-5">
+            {[
+              ['Oferta activa', 'Portal Inmobiliario · casas usadas en venta · Vitacura', 'Publicaciones únicas vigentes del snapshot completo', number(market.activeInventory)],
+              ['Propiedades lógicas PP', 'Base canónica PP', `${number(market.canonicalProperties)} registros − ${number(market.confirmedDuplicateRows)} duplicados confirmados`, number(market.logicalHouseComponents)],
+              ['Ventas confirmadas', 'Transacciones canónicas de casas', 'Sólo operaciones con evidencia transaccional confirmada', number(market.confirmedSales)],
+              ['Absorción', 'Oferta comparable + ventas confirmadas', 'ventas confirmadas / oferta comparable', percent(market.absorptionRate)],
+            ].map(([label, source, formula, result]) => (
+              <div key={label} className="grid gap-1 py-3 sm:grid-cols-[150px_minmax(0,1fr)_120px] sm:gap-4">
+                <p className="font-medium text-[var(--n3-text-light)]">{label}</p>
+                <div className="text-[var(--n3-text-muted)]">
+                  <p>{source}</p>
+                  <p className="mt-1 font-mono text-[11px]">{formula}</p>
+                </div>
+                <p className="tabular-nums text-[var(--n3-text-light)] sm:text-right">{result}</p>
+              </div>
+            ))}
+          </div>
+        </details>details>
       </section>
 
       {actions.length > 0 ? (
@@ -322,7 +304,7 @@ export default async function MarketPage() {
             <span className="text-xs text-[var(--n3-text-muted)]">{actions.length}</span>
           </div>
           <div className="divide-y divide-[var(--n3-line)]">
-            {actions.map((item) => (
+            {primaryActions.map((item) => (
               <Link key={item.label} href={item.href} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</p>
@@ -332,6 +314,21 @@ export default async function MarketPage() {
               </Link>
             ))}
           </div>
+          {secondaryActions.length > 0 ? (
+            <details className="border-t border-[var(--n3-line)] py-3">
+              <summary className="cursor-pointer text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+                Ver {secondaryActions.length} temas adicionales
+              </summary>
+              <div className="mt-2 divide-y divide-[var(--n3-line)]">
+                {secondaryActions.map((item) => (
+                  <Link key={item.label} href={item.href} className="flex min-h-14 items-center justify-between gap-4 py-3 text-xs hover:bg-white/[0.02]">
+                    <span className="text-[var(--n3-text-light)]">{item.label}</span>
+                    <span className={item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}>{item.value}</span>
+                  </Link>
+                ))}
+              </div>
+            </details>
+          ) : null}
         </section>
       ) : null}
 
