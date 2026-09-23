@@ -35,6 +35,11 @@ export type OperationalMarketSnapshot = {
   latestIngestionStatus: string | null
   latestIngestionAccepted: number | null
   latestIngestionRejected: number | null
+  latestIngestionFullSnapshot: boolean | null
+  latestIngestionNew: number | null
+  latestIngestionUpdated: number | null
+  latestIngestionUnchanged: number | null
+  latestIngestionRemoved: number | null
   ingestionRuns: number | null
   latestObservedAt: string | null
   observationAgeDays: number | null
@@ -132,6 +137,11 @@ const emptySnapshot: OperationalMarketSnapshot = {
   latestIngestionStatus: null,
   latestIngestionAccepted: null,
   latestIngestionRejected: null,
+  latestIngestionFullSnapshot: null,
+  latestIngestionNew: null,
+  latestIngestionUpdated: null,
+  latestIngestionUnchanged: null,
+  latestIngestionRemoved: null,
   ingestionRuns: null,
   latestObservedAt: null,
   observationAgeDays: null,
@@ -186,7 +196,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .maybeSingle(),
       supabase
         .from('market_ingestion_runs')
-        .select('status,accepted_rows,rejected_rows,completed_at,started_at')
+        .select('status,accepted_rows,rejected_rows,completed_at,started_at,metadata')
         .eq('dataset_kind', 'portal_houses')
         .order('started_at', { ascending: false })
         .limit(1)
@@ -217,6 +227,9 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const clientSaleSignals = clientSaleSignalsResult.data as ClientSaleSignalSummary | null
     const metric = latestMetric.data
     const ingestion = latestIngestion.data
+    const ingestionMetadata = ingestion?.metadata && typeof ingestion.metadata === 'object'
+      ? ingestion.metadata as Record<string, unknown>
+      : null
     const latestObservedAt = house?.portal_as_of ?? null
     const freshness = getObservationFreshness(latestObservedAt)
     const operationalHouseSales = confirmedSalesResult.error ? null : confirmedSalesResult.count ?? 0
@@ -264,6 +277,15 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestIngestionStatus: latestIngestion.error ? null : ingestion?.status ?? null,
       latestIngestionAccepted: latestIngestion.error ? null : ingestion?.accepted_rows ?? null,
       latestIngestionRejected: latestIngestion.error ? null : ingestion?.rejected_rows ?? null,
+      latestIngestionFullSnapshot: latestIngestion.error
+        ? null
+        : typeof ingestionMetadata?.full_snapshot === 'boolean'
+          ? ingestionMetadata.full_snapshot
+          : null,
+      latestIngestionNew: latestIngestion.error ? null : Number(ingestionMetadata?.new_listings ?? 0),
+      latestIngestionUpdated: latestIngestion.error ? null : Number(ingestionMetadata?.updated_listings ?? 0),
+      latestIngestionUnchanged: latestIngestion.error ? null : Number(ingestionMetadata?.unchanged_listings ?? 0),
+      latestIngestionRemoved: latestIngestion.error ? null : Number(ingestionMetadata?.removed_listings ?? 0),
       ingestionRuns: ingestionRuns.error ? null : ingestionRuns.count ?? 0,
       latestObservedAt: houseSummaryResult.error ? null : latestObservedAt,
       observationAgeDays: houseSummaryResult.error ? null : freshness.ageDays,
