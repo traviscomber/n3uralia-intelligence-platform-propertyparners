@@ -9,7 +9,7 @@ export const maxDuration = 300
 
 // V1 contractual scope: houses for sale in Vitacura. Apartments and projects remain V2.
 const DATASETS: PortalDatasetKind[] = ['portal_houses']
-const MAX_PAGES_PER_DATASET = 3
+const MAX_PAGES_PER_DATASET = 4
 const MAX_LISTINGS_PER_DATASET = 144
 const WAIT_MS = 300
 const MIN_FULL_SNAPSHOT_LISTINGS = 30
