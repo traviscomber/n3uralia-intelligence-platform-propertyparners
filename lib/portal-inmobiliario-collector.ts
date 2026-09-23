@@ -22,6 +22,8 @@ export type PortalCollectionResult = {
   discovery: {
     pagesVisited: number
     newListingsPerPage: number[]
+    rawListingCandidates: number
+    duplicateListingCandidates: number
     exhausted: boolean
     capped: boolean
   }
@@ -180,7 +182,7 @@ function extractEmbeddedListingUrls(html: string, datasetKind: PortalDatasetKind
     const relativeListings = decoded.match(/\/(?:MLC-?\d+|p\/MLC\d+)[^"'<>\\\s]*/gi) ?? []
     candidates.push(...absoluteListings, ...relativeListings.map((value) => new URL(value, PORTAL_ORIGIN).toString()))
   }
-  return unique(candidates.map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind)))
+  return candidates.map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind))
 }
 
 function collectJsonLd(html: string) {
@@ -467,6 +469,7 @@ async function waitForPrimaryDetail(page: Page, waitMs: number) {
 async function discoverListingUrls(browser: Browser, searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
   const urls = new Set<string>()
   const newListingsPerPage: number[] = []
+  let rawListingCandidates = 0
   let exhausted = false
 
   for (const searchUrl of searchUrls) {
@@ -479,11 +482,11 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const anchorUrls = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href))
       const html = await page.content()
       const embeddedUrls = extractEmbeddedListingUrls(html, datasetKind)
-      const pageUrls = unique(
-        [...anchorUrls, ...embeddedUrls]
-          .map(canonicalListingUrl)
-          .filter((href) => isDatasetListingUrl(href, datasetKind)),
-      )
+      const pageCandidates = [...anchorUrls, ...embeddedUrls]
+        .map(canonicalListingUrl)
+        .filter((href) => isDatasetListingUrl(href, datasetKind))
+      rawListingCandidates += pageCandidates.length
+      const pageUrls = unique(pageCandidates)
 
       let newCount = 0
       for (const href of pageUrls) {
@@ -508,6 +511,8 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   return {
     urls: [...urls],
     newListingsPerPage,
+    rawListingCandidates,
+    duplicateListingCandidates: Math.max(rawListingCandidates - urls.size, 0),
     exhausted,
   }
 }
@@ -556,6 +561,8 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
       discovery: {
         pagesVisited: discovered.newListingsPerPage.length,
         newListingsPerPage: discovered.newListingsPerPage,
+        rawListingCandidates: discovered.rawListingCandidates,
+        duplicateListingCandidates: discovered.duplicateListingCandidates,
         exhausted: discovered.exhausted,
         capped,
       },
