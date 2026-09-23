@@ -3,7 +3,7 @@ import { collectPortalVitacura } from '@/lib/portal-inmobiliario-collector'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 300
 
 export async function GET() {
   if (process.env.VERCEL_ENV === 'production') {
@@ -12,11 +12,11 @@ export async function GET() {
 
   try {
     const collection = await collectPortalVitacura({
-      datasetKind: 'portal_apartments',
+      datasetKind: 'portal_houses',
       commune: 'vitacura-metropolitana',
       operation: 'venta',
-      maxPages: 1,
-      maxListings: 3,
+      maxPages: 3,
+      maxListings: 144,
       waitMs: 300,
     })
 
@@ -36,7 +36,8 @@ export async function GET() {
       parsed: collection.rows.length,
       usableForValuation: usableForValuation.length,
       failures: collection.failures,
-      sample: collection.rows.map((row) => ({
+      discovery: collection.discovery,
+      sample: collection.rows.slice(0, 5).map((row) => ({
         source_listing_id: row.source_listing_id,
         url: row.url,
         title: row.title,
