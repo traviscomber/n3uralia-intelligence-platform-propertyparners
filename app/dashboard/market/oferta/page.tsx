@@ -17,9 +17,9 @@ export default async function MarketOfferPage() {
   await requireAnyPageCapability(['market.manage_sources', 'management.global.read', 'management.office.read'])
 
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('market_current_listings')
-    .select('source_listing_id,title,raw_address,price_uf,observed_at,url,market_sources!inner(code)')
+    .select('source_listing_id,title,raw_address,price_uf,observed_at,url,market_sources!inner(code)', { count: 'exact' })
     .eq('market_sources.code', 'portal-inmobiliario-vitacura-portal-houses')
     .in('status', ['active', 'observed'])
     .order('observed_at', { ascending: false })
@@ -40,9 +40,9 @@ export default async function MarketOfferPage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Universo visible</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{number(rows.length)}</p>
+            <p className="mt-1 text-3xl font-semibold tabular-nums">{number(error ? null : count ?? 0)}</p>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-              Publicaciones vigentes de casas capturadas desde Portal Inmobiliario para Vitacura. Legacy y otras fuentes no participan en este listado.
+              Publicaciones vigentes de casas capturadas desde Portal Inmobiliario para Vitacura. Legacy y otras fuentes no participan en este listado.{(count ?? 0) > rows.length ? ` Se muestran las ${rows.length} observaciones más recientes de ${count}.` : ''}
             </p>
           </div>
           <p className="text-xs text-[var(--n3-text-muted)]">Fuente canónica: portal-inmobiliario-vitacura-portal-houses</p>
