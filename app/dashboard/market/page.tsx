@@ -166,12 +166,12 @@ export default async function MarketPage() {
 
         <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-6">
           {[
-            ['Casas en oferta', number(market.activeInventory), 'Universo vigente reconciliado'],
-            ['Capturadas', number(market.latestIngestionAccepted), 'Aceptadas en la última corrida'],
-            ['Nuevas', number(market.latestIngestionNew), 'No estaban en el corte anterior'],
-            ['Actualizadas', number(market.latestIngestionUpdated), 'Cambió precio u otro dato'],
-            ['Retiradas', number(market.latestIngestionRemoved), 'Ausentes de un snapshot completo'],
-            ['Duplicados captura', number(market.latestDiscoveryDuplicateCandidates), 'Enlaces repetidos descartados antes de procesar'],
+            ['Portal reporta', number(market.latestPortalReportedCount), 'Resultados declarados por Portal para el mismo filtro'],
+            ['IDs únicos', number(market.latestDiscoveryUniqueListings), 'Publicaciones únicas observadas en todas las páginas'],
+            ['Cobertura', percent(market.latestInventoryCoverageRatio), 'IDs únicos capturados / total reportado por Portal'],
+            ['Nuevas', number(market.latestIngestionNew), 'No estaban en el snapshot completo anterior'],
+            ['Retiradas', number(market.latestIngestionRemoved), 'Estaban ayer y ya no aparecen en el snapshot completo'],
+            ['Enlaces repetidos', number(market.latestDiscoveryDuplicateCandidates), 'Repeticiones técnicas eliminadas antes de procesar'],
           ].map(([label, value, detail]) => (
             <div key={label} className="bg-[var(--n3-bg)] px-4 py-4">
               <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
@@ -184,7 +184,7 @@ export default async function MarketPage() {
         <div className="mt-4 grid gap-3 text-xs text-[var(--n3-text-muted)] lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
           <div><span className="text-[var(--n3-text-light)]">1. Captura</span><br />Portal · Venta · Casa · Vitacura</div>
           <span className="hidden lg:block">→</span>
-          <div><span className="text-[var(--n3-text-light)]">2. Reconciliación</span><br />{number(market.latestDiscoveryRawCandidates)} candidatos → {number(market.latestDiscoveryUniqueListings)} publicaciones únicas · nuevas · actualizadas · retiradas</div>
+          <div><span className="text-[var(--n3-text-light)]">2. Reconciliación</span><br />Portal {number(market.latestPortalReportedCount)} → {number(market.latestDiscoveryUniqueListings)} IDs únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</div>
           <span className="hidden lg:block">→</span>
           <div><span className="text-[var(--n3-text-light)]">3. Universo vigente</span><br />Sólo desde aquí se calculan los indicadores</div>
         </div>
@@ -222,10 +222,14 @@ export default async function MarketPage() {
           </div>
 
           <div className="mt-3 space-y-1 font-mono text-[11px] text-[var(--n3-text-muted)]">
-            <p>Captura: {number(market.latestDiscoveryRawCandidates)} candidatos − {number(market.latestDiscoveryDuplicateCandidates)} enlaces repetidos = {number(market.latestDiscoveryUniqueListings)} publicaciones únicas</p>
+            <p>Captura: Portal reporta {number(market.latestPortalReportedCount)} · observamos {number(market.latestDiscoveryRawCandidates)} referencias · eliminamos {number(market.latestDiscoveryDuplicateCandidates)} enlaces repetidos · quedan {number(market.latestDiscoveryUniqueListings)} IDs únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</p>
             <p>Identidad: {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades lógicas</p>
           </div>
         </div>
+
+        <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">
+          El inventario de presencia se recorre completo cada día. Precio, superficie, dirección y otros atributos se enriquecen por lotes para proteger runtime y carga sobre Portal; una ficha pendiente de detalle sigue contando correctamente dentro de la oferta vigente.
+        </p>
       </section>
 
       <section className="mt-8">
