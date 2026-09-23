@@ -476,7 +476,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
       if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
       if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
-      const anchorUrls = await page.$eval('a[href]', (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href))
+      const anchorUrls = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href))
       const html = await page.content()
       const embeddedUrls = extractEmbeddedListingUrls(html, datasetKind)
       const pageUrls = unique(
