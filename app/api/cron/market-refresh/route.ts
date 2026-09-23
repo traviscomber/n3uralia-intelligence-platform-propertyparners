@@ -9,9 +9,12 @@ export const maxDuration = 300
 
 // V1 contractual scope: houses for sale in Vitacura. Apartments and projects remain V2.
 const DATASETS: PortalDatasetKind[] = ['portal_houses']
-const MAX_LISTINGS_PER_DATASET = 12
-const WAIT_MS = 600
-const SOFT_RUNTIME_BUDGET_MS = 240_000
+const MAX_PAGES_PER_DATASET = 3
+const MAX_LISTINGS_PER_DATASET = 144
+const WAIT_MS = 300
+const MIN_FULL_SNAPSHOT_LISTINGS = 30
+const MIN_VALID_COVERAGE = 0.98
+const SOFT_RUNTIME_BUDGET_MS = 270_000
 
 function authorized(request: Request) {
   const secret = process.env.CRON_SECRET
@@ -97,13 +100,21 @@ export async function GET(request: Request) {
         datasetKind,
         commune: 'vitacura-metropolitana',
         operation: 'venta',
-        maxPages: 1,
+        maxPages: MAX_PAGES_PER_DATASET,
         maxListings: MAX_LISTINGS_PER_DATASET,
         waitMs: WAIT_MS,
       })
 
       const normalized = normalizePortalListingRows(collection.rows)
       const validRows = normalized.filter((row) => row.source_listing_id && row.url)
+      const validCoverage = collection.listingUrls.length > 0
+        ? validRows.length / collection.listingUrls.length
+        : 0
+      const fullSnapshot = collection.discovery.exhausted
+        && !collection.discovery.capped
+        && collection.listingUrls.length >= MIN_FULL_SNAPSHOT_LISTINGS
+        && collection.failures.length === 0
+        && validCoverage >= MIN_VALID_COVERAGE
 
       if (!validRows.length) {
         const failureCode = 'COLLECTOR_NO_VALID_ROWS'
@@ -132,7 +143,7 @@ export async function GET(request: Request) {
         p_dataset_kind: datasetKind,
         p_observed_at: collection.observedAt,
         p_rows: validRows,
-        p_full_snapshot: false,
+        p_full_snapshot: fullSnapshot,
       })
 
       if (pipelineError || pipelineResult?.failed) {
@@ -180,6 +191,9 @@ export async function GET(request: Request) {
         parsed: collection.rows.length,
         valid: validRows.length,
         collectionFailures: collection.failures.length,
+        discovery: collection.discovery,
+        validCoverage,
+        fullSnapshot,
         status: 'completed',
         accepted,
         rejected,
@@ -208,8 +222,9 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       ok,
-      fullSnapshot: false,
+      fullSnapshot: results.every((result) => result.status === 'completed' && result.fullSnapshot === true),
       canonicalCreation: false,
+      maxPagesPerDataset: MAX_PAGES_PER_DATASET,
       maxListingsPerDataset: MAX_LISTINGS_PER_DATASET,
       completedDatasets,
       expectedDatasets: DATASETS.length,
