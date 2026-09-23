@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import { requireAnyPageCapability } from '@/lib/access-guards'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 
@@ -24,7 +24,7 @@ type InventoryRun = {
 export default async function MarketOfferPage() {
   await requireAnyPageCapability(['market.manage_sources', 'management.global.read', 'management.office.read'])
 
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const { data: recentRuns, error: runError } = await supabase
     .from('market_ingestion_runs')
     .select('id,accepted_rows,completed_at,started_at,metadata')
