@@ -55,9 +55,9 @@ export async function POST(req: NextRequest) {
     const maxPages = boundedInteger(body.max_pages, 1, 1, 10)
     const maxListings = boundedInteger(body.max_listings, Math.min(maxPages * 48, 100), 1, 250)
     const waitMs = boundedInteger(body.wait_ms, 1_200, 300, 5_000)
-    const fullSnapshot = body.full_snapshot === true
+    const requestedFullSnapshot = body.full_snapshot === true
 
-    if (fullSnapshot && (maxPages < 2 || maxListings < 80)) {
+    if (requestedFullSnapshot && (maxPages < 2 || maxListings < 80)) {
       return NextResponse.json(
         { error: 'Un snapshot completo requiere al menos 2 páginas y capacidad para 80 publicaciones. Evitamos marcar retiros con una captura parcial.' },
         { status: 400 },
@@ -75,6 +75,15 @@ export async function POST(req: NextRequest) {
 
     const normalized = normalizePortalListingRows(collection.rows)
     const validRows = normalized.filter((row) => row.source_listing_id && row.url)
+    const validCoverage = collection.listingUrls.length > 0
+      ? validRows.length / collection.listingUrls.length
+      : 0
+    const fullSnapshotEligible = collection.discovery.exhausted
+      && !collection.discovery.capped
+      && collection.listingUrls.length >= 30
+      && collection.failures.length === 0
+      && validCoverage >= 0.98
+    const fullSnapshot = requestedFullSnapshot && fullSnapshotEligible
     const summary = {
       datasetKind,
       searchPages: collection.searchUrls.length,
@@ -82,7 +91,19 @@ export async function POST(req: NextRequest) {
       parsed: collection.rows.length,
       valid: validRows.length,
       failed: collection.failures.length,
+      discovery: collection.discovery,
+      validCoverage,
+      requestedFullSnapshot,
+      fullSnapshotEligible,
       fullSnapshot,
+    }
+
+    if (requestedFullSnapshot && !fullSnapshotEligible) {
+      return NextResponse.json({
+        error: 'La captura no demostró cobertura suficiente para cerrar un snapshot completo. No se marcarán publicaciones como retiradas.',
+        summary,
+        failures: collection.failures.slice(0, 20),
+      }, { status: 409 })
     }
 
     if (mode === 'preview') {
