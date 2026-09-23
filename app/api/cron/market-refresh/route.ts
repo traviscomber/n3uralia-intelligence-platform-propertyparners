@@ -169,14 +169,14 @@ async function persistInventoryRun(args: {
       source_sha256: sourceSha256,
       expected_rows: null,
       received_rows: currentIds.size,
-      accepted_rows: currentIds.size,
+      accepted_rows: 0,
       rejected_rows: 0,
-      status: 'completed',
-      completed_at: observedAt,
+      status: 'running',
+      completed_at: null,
       metadata: {
         pipeline: 'portal_inventory_discovery_v1',
-        stage: 'inventory_presence',
-        full_snapshot: fullSnapshot,
+        stage: 'persisting_inventory_presence',
+        full_snapshot: false,
         discovery_pages: discovery.pagesVisited,
         discovery_new_listings_per_page: discovery.newListingsPerPage,
         discovery_raw_candidates: discovery.rawListingCandidates,
@@ -217,11 +217,60 @@ async function persistInventoryRun(args: {
     }]
   })
 
-  for (let offset = 0; offset < records.length; offset += RAW_INSERT_CHUNK) {
-    const { error } = await supabase
-      .from('market_raw_records')
-      .insert(records.slice(offset, offset + RAW_INSERT_CHUNK))
-    if (error) throw error
+  try {
+    for (let offset = 0; offset < records.length; offset += RAW_INSERT_CHUNK) {
+      const { error } = await supabase
+        .from('market_raw_records')
+        .insert(records.slice(offset, offset + RAW_INSERT_CHUNK))
+      if (error) throw error
+    }
+
+    const { error: completeError } = await supabase
+      .from('market_ingestion_runs')
+      .update({
+        accepted_rows: currentIds.size,
+        status: 'completed',
+        completed_at: observedAt,
+        metadata: {
+          pipeline: 'portal_inventory_discovery_v1',
+          stage: 'inventory_presence',
+          full_snapshot: fullSnapshot,
+          discovery_pages: discovery.pagesVisited,
+          discovery_new_listings_per_page: discovery.newListingsPerPage,
+          discovery_raw_candidates: discovery.rawListingCandidates,
+          discovery_unique_listings: currentIds.size,
+          discovery_duplicate_candidates: discovery.duplicateListingCandidates,
+          portal_reported_result_count: discovery.reportedResultCount,
+          inventory_coverage_ratio: discovery.reportedResultCount && discovery.reportedResultCount > 0
+            ? currentIds.size / discovery.reportedResultCount
+            : null,
+          discovery_exhausted: discovery.exhausted,
+          discovery_capped: discovery.capped,
+          new_listings: newListings,
+          removed_listings: removedListings,
+          unchanged_listings: unchangedListings,
+          previous_complete_run_id: previousRunId,
+        },
+      })
+      .eq('id', run.id)
+    if (completeError) throw completeError
+  } catch (error) {
+    await supabase
+      .from('market_ingestion_runs')
+      .update({
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        error_message: 'INVENTORY_PERSISTENCE_FAILED',
+        metadata: {
+          pipeline: 'portal_inventory_discovery_v1',
+          stage: 'inventory_presence_failed',
+          full_snapshot: false,
+          discovery_unique_listings: currentIds.size,
+          portal_reported_result_count: discovery.reportedResultCount,
+        },
+      })
+      .eq('id', run.id)
+    throw error
   }
 
   return {
