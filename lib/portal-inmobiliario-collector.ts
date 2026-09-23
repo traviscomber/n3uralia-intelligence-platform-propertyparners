@@ -19,6 +19,12 @@ export type PortalCollectionResult = {
   rows: MarketImportInputRow[]
   failures: Array<{ url: string; error: string }>
   observedAt: string
+  discovery: {
+    pagesVisited: number
+    newListingsPerPage: number[]
+    exhausted: boolean
+    capped: boolean
+  }
 }
 
 const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
@@ -459,7 +465,10 @@ async function waitForPrimaryDetail(page: Page, waitMs: number) {
 }
 
 async function discoverListingUrls(browser: Browser, searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
-  const urls: string[] = []
+  const urls = new Set<string>()
+  const newListingsPerPage: number[] = []
+  let exhausted = false
+
   for (const searchUrl of searchUrls) {
     const page = await browser.newPage()
     try {
@@ -467,15 +476,40 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
       if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
       if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
-      const anchorUrls = await page.$$eval('a[href]', (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href))
+      const anchorUrls = await page.$eval('a[href]', (anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href))
       const html = await page.content()
       const embeddedUrls = extractEmbeddedListingUrls(html, datasetKind)
-      urls.push(...[...anchorUrls, ...embeddedUrls].map(canonicalListingUrl).filter((href) => isDatasetListingUrl(href, datasetKind)))
+      const pageUrls = unique(
+        [...anchorUrls, ...embeddedUrls]
+          .map(canonicalListingUrl)
+          .filter((href) => isDatasetListingUrl(href, datasetKind)),
+      )
+
+      let newCount = 0
+      for (const href of pageUrls) {
+        if (urls.has(href)) continue
+        urls.add(href)
+        newCount += 1
+      }
+      newListingsPerPage.push(newCount)
+
+      // A requested pagination page that contributes no new listings means
+      // Portal has been exhausted. This is stronger evidence of a complete
+      // snapshot than assuming a fixed result count from the first page.
+      if (newCount === 0) {
+        exhausted = true
+        break
+      }
     } finally {
       await page.close()
     }
   }
-  return unique(urls)
+
+  return {
+    urls: [...urls],
+    newListingsPerPage,
+    exhausted,
+  }
 }
 
 export async function collectPortalVitacura(options: PortalCollectorOptions): Promise<PortalCollectionResult> {
@@ -489,7 +523,9 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
   const browser = await launchServerlessBrowser()
 
   try {
-    const listingUrls = (await discoverListingUrls(browser, searchUrls, options.datasetKind, waitMs)).slice(0, maxListings)
+    const discovered = await discoverListingUrls(browser, searchUrls, options.datasetKind, waitMs)
+    const capped = discovered.urls.length > maxListings
+    const listingUrls = discovered.urls.slice(0, maxListings)
     const rows: MarketImportInputRow[] = []
     const failures: Array<{ url: string; error: string }> = []
     for (const url of listingUrls) {
@@ -511,7 +547,19 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         await page.close()
       }
     }
-    return { searchUrls, listingUrls, rows, failures, observedAt: new Date().toISOString() }
+    return {
+      searchUrls,
+      listingUrls,
+      rows,
+      failures,
+      observedAt: new Date().toISOString(),
+      discovery: {
+        pagesVisited: discovered.newListingsPerPage.length,
+        newListingsPerPage: discovered.newListingsPerPage,
+        exhausted: discovered.exhausted,
+        capped,
+      },
+    }
   } finally {
     await browser.close()
   }
