@@ -220,8 +220,12 @@ export default async function MarketPage() {
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Mercado hoy</p>
             <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <p className="text-5xl font-semibold tracking-[-0.04em] text-[var(--n3-text-light)] sm:text-6xl">{number(market.activeInventory)}</p>
-              <p className="text-sm text-[var(--n3-text-muted)]">casas usadas en venta · Vitacura</p>
+              <p className="text-5xl font-semibold tracking-[-0.04em] text-[var(--n3-text-light)] sm:text-6xl">
+                {market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—'}
+              </p>
+              <p className="text-sm text-[var(--n3-text-muted)]">
+                {market.latestIngestionFullSnapshot ? 'casas usadas en venta · Vitacura' : 'mercado completo pendiente de snapshot persistido'}
+              </p>
             </div>
             <p className="mt-3 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
               Inventario vigente observado en Portal Inmobiliario. El número sólo se publica como mercado completo cuando la captura demuestra cobertura suficiente contra el total informado por Portal.
