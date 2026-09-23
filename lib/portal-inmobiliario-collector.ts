@@ -13,20 +13,24 @@ export type PortalCollectorOptions = {
   waitMs?: number
 }
 
-export type PortalCollectionResult = {
+export type PortalDiscoveryResult = {
   searchUrls: string[]
   listingUrls: string[]
-  rows: MarketImportInputRow[]
-  failures: Array<{ url: string; error: string }>
   observedAt: string
   discovery: {
     pagesVisited: number
     newListingsPerPage: number[]
     rawListingCandidates: number
     duplicateListingCandidates: number
+    uniqueListings: number
     exhausted: boolean
     capped: boolean
   }
+}
+
+export type PortalCollectionResult = PortalDiscoveryResult & {
+  rows: MarketImportInputRow[]
+  failures: Array<{ url: string; error: string }>
 }
 
 const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
@@ -517,10 +521,83 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   }
 }
 
+export async function discoverPortalVitacuraUniverse(options: PortalCollectorOptions): Promise<PortalDiscoveryResult> {
+  const commune = options.commune || DEFAULT_COMMUNE
+  const operation = options.operation || 'venta'
+  const maxPages = Math.min(Math.max(options.maxPages || 1, 1), 40)
+  const waitMs = Math.min(Math.max(options.waitMs || 300, 100), 5_000)
+  const searchBase = buildSearchBase(options.datasetKind, operation, commune)
+  const searchUrls = Array.from({ length: maxPages }, (_, index) => buildSearchUrl(searchBase, index + 1, options.datasetKind))
+  const browser = await launchServerlessBrowser()
+
+  try {
+    const discovered = await discoverListingUrls(browser, searchUrls, options.datasetKind, waitMs)
+    const capped = !discovered.exhausted && discovered.newListingsPerPage.length >= maxPages
+    return {
+      searchUrls,
+      listingUrls: discovered.urls,
+      observedAt: new Date().toISOString(),
+      discovery: {
+        pagesVisited: discovered.newListingsPerPage.length,
+        newListingsPerPage: discovered.newListingsPerPage,
+        rawListingCandidates: discovered.rawListingCandidates,
+        duplicateListingCandidates: discovered.duplicateListingCandidates,
+        uniqueListings: discovered.urls.length,
+        exhausted: discovered.exhausted,
+        capped,
+      },
+    }
+  } finally {
+    await browser.close()
+  }
+}
+
+export async function collectPortalListingDetails(options: {
+  datasetKind: PortalDatasetKind
+  listingUrls: string[]
+  waitMs?: number
+}) {
+  const waitMs = Math.min(Math.max(options.waitMs || 300, 250), 5_000)
+  const browser = await launchServerlessBrowser()
+  const rows: MarketImportInputRow[] = []
+  const failures: Array<{ url: string; error: string }> = []
+
+  try {
+    for (const url of options.listingUrls) {
+      const page = await browser.newPage()
+      try {
+        await configurePage(page)
+        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+        if (!response?.ok()) throw new Error(`Listing returned HTTP ${response?.status() ?? 'unknown'}`)
+        await waitForPrimaryDetail(page, waitMs)
+        const html = await page.content()
+        const row = parsePortalListing(html, url, options.datasetKind)
+        if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
+        const parsedPriceUf = numeric(row.price_uf)
+        if (parsedPriceUf != null && parsedPriceUf > 0 && parsedPriceUf < 100) throw new Error('Implausible UF price after normalization')
+        rows.push(row)
+      } catch (error) {
+        failures.push({ url, error: error instanceof Error ? error.message : String(error) })
+      } finally {
+        await page.close()
+      }
+    }
+  } finally {
+    await browser.close()
+  }
+
+  return {
+    listingUrls: options.listingUrls,
+    rows,
+    failures,
+    observedAt: new Date().toISOString(),
+  }
+}
+
 export async function collectPortalVitacura(options: PortalCollectorOptions): Promise<PortalCollectionResult> {
   const commune = options.commune || DEFAULT_COMMUNE
   const operation = options.operation || 'venta'
-  const maxPages = Math.min(Math.max(options.maxPages || 1, 1), 10)
+  const maxPages = Math.min(Math.max(options.maxPages || 1, 1), 40)
   const maxListings = Math.min(Math.max(options.maxListings || 48, 1), 250)
   const waitMs = Math.min(Math.max(options.waitMs || 1_200, 300), 5_000)
   const searchBase = buildSearchBase(options.datasetKind, operation, commune)
@@ -563,6 +640,7 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         newListingsPerPage: discovered.newListingsPerPage,
         rawListingCandidates: discovered.rawListingCandidates,
         duplicateListingCandidates: discovered.duplicateListingCandidates,
+        uniqueListings: discovered.urls.length,
         exhausted: discovered.exhausted,
         capped,
       },
