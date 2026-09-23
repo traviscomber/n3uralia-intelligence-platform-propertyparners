@@ -1,0 +1,44 @@
+name: Portal Inventory Smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/portal-inmobiliario-collector.ts'
+      - 'app/api/cron/market-refresh/route.ts'
+      - 'app/api/internal/portal-collector-smoke/route.ts'
+      - 'scripts/smoke-portal-inventory.ts'
+      - '.github/workflows/portal-inventory-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portal-inventory-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inventory-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify full Portal inventory coverage
+        run: node --import tsx scripts/smoke-portal-inventory.ts
