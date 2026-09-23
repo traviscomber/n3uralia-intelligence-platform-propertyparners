@@ -116,7 +116,7 @@ function plausibleArea(value: unknown) {
   return parsed != null && parsed > 5 && parsed < 10_000 ? parsed : null
 }
 
-function extractListingId(url: string, datasetKind: PortalDatasetKind) {
+export function portalListingIdFromUrl(url: string, datasetKind: PortalDatasetKind) {
   const mlcMatch = url.match(/MLC-?(\d+)/i) || url.match(/\/p\/(MLC\d+)/i)
   if (mlcMatch) return mlcMatch[1].replace(/^MLC/i, '')
   if (datasetKind === 'portal_projects') {
@@ -410,7 +410,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const specs = extractPrimarySpecs(root)
   const visible = extractVisiblePrimaryFacts(root, title)
   const price = parsePrimaryPrice(root, primaryPriceTitle(root, title), jsonLd)
-  const listingId = extractListingId(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
+  const listingId = portalListingIdFromUrl(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
   const geo = extractPrimaryGeo(jsonLd)
   const address = cleanAddress(extractPrimaryAddress(jsonLd) || extractVisibleLocation(root) || visible.address)
   const totalArea = specArea(specs, 'Superficie total', 'Superficie construida') || visible.totalArea
