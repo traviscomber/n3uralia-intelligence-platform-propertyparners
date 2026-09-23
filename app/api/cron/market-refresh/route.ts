@@ -140,6 +140,7 @@ async function persistInventoryRun(args: {
     rawListingCandidates: number
     duplicateListingCandidates: number
     uniqueListings: number
+    reportedResultCount: number | null
     exhausted: boolean
     capped: boolean
   }
@@ -181,6 +182,10 @@ async function persistInventoryRun(args: {
         discovery_raw_candidates: discovery.rawListingCandidates,
         discovery_unique_listings: currentIds.size,
         discovery_duplicate_candidates: discovery.duplicateListingCandidates,
+        portal_reported_result_count: discovery.reportedResultCount,
+        inventory_coverage_ratio: discovery.reportedResultCount && discovery.reportedResultCount > 0
+          ? currentIds.size / discovery.reportedResultCount
+          : null,
         discovery_exhausted: discovery.exhausted,
         discovery_capped: discovery.capped,
         new_listings: newListings,
@@ -251,9 +256,15 @@ export async function GET(request: Request) {
         waitMs: DISCOVERY_WAIT_MS,
       })
 
+      const coverageRatio = inventory.discovery.reportedResultCount && inventory.discovery.reportedResultCount > 0
+        ? inventory.listingUrls.length / inventory.discovery.reportedResultCount
+        : null
       const fullSnapshot = inventory.discovery.exhausted
         && !inventory.discovery.capped
         && inventory.listingUrls.length >= MIN_COMPLETE_INVENTORY_LISTINGS
+        && coverageRatio != null
+        && coverageRatio >= 0.97
+        && coverageRatio <= 1.05
 
       const persistedInventory = await persistInventoryRun({
         supabase,
@@ -273,6 +284,7 @@ export async function GET(request: Request) {
           observedAt: inventory.observedAt,
           inventory: persistedInventory,
           discovery: inventory.discovery,
+          coverageRatio,
           detailStatus: 'skipped_until_complete_inventory',
         })
         continue
@@ -287,6 +299,7 @@ export async function GET(request: Request) {
           observedAt: inventory.observedAt,
           inventory: persistedInventory,
           discovery: inventory.discovery,
+          coverageRatio,
           detailStatus: 'skipped_runtime_guard',
         })
         continue
@@ -350,6 +363,7 @@ export async function GET(request: Request) {
         observedAt: inventory.observedAt,
         inventory: persistedInventory,
         discovery: inventory.discovery,
+        coverageRatio,
         detailStatus: detailResult,
       })
     } catch (cause) {
