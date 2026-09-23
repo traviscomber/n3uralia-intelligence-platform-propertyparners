@@ -44,6 +44,8 @@ export type OperationalMarketSnapshot = {
   latestDiscoveryUniqueListings: number | null
   latestDiscoveryDuplicateCandidates: number | null
   latestDiscoveryPages: number | null
+  latestPortalReportedCount: number | null
+  latestInventoryCoverageRatio: number | null
   ingestionRuns: number | null
   latestObservedAt: string | null
   observationAgeDays: number | null
@@ -150,6 +152,8 @@ const emptySnapshot: OperationalMarketSnapshot = {
   latestDiscoveryUniqueListings: null,
   latestDiscoveryDuplicateCandidates: null,
   latestDiscoveryPages: null,
+  latestPortalReportedCount: null,
+  latestInventoryCoverageRatio: null,
   ingestionRuns: null,
   latestObservedAt: null,
   observationAgeDays: null,
@@ -321,6 +325,12 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestDiscoveryPages: latestIngestionRuns.error || inventoryMetadata?.discovery_pages == null
         ? null
         : Number(inventoryMetadata.discovery_pages),
+      latestPortalReportedCount: latestIngestionRuns.error || inventoryMetadata?.portal_reported_result_count == null
+        ? null
+        : Number(inventoryMetadata.portal_reported_result_count),
+      latestInventoryCoverageRatio: latestIngestionRuns.error || inventoryMetadata?.inventory_coverage_ratio == null
+        ? null
+        : Number(inventoryMetadata.inventory_coverage_ratio),
       ingestionRuns: ingestionRuns.error ? null : ingestionRuns.count ?? 0,
       latestObservedAt: houseSummaryResult.error ? null : latestObservedAt,
       observationAgeDays: houseSummaryResult.error ? null : freshness.ageDays,
