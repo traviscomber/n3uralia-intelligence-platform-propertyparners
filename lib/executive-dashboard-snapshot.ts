@@ -99,6 +99,7 @@ export async function getExecutiveDashboardSnapshot() {
     service
       .from('properties')
       .select('id,address,neighborhood,price_uf,days_on_market,source,created_at')
+      .eq('status', 'available')
       .not('days_on_market', 'is', null)
       .order('days_on_market', { ascending: false })
       .limit(3),
