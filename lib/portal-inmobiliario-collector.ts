@@ -477,34 +477,42 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   let rawListingCandidates = 0
   let reportedResultCount: number | null = null
   let exhausted = false
+  const concurrency = 4
 
-  for (const searchUrl of searchUrls) {
-    const page = await browser.newPage()
-    try {
-      await configurePage(page)
-      const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-      if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
-      if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
-      const pageState = await page.evaluate(() => ({
-        links: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href),
-        text: document.body?.innerText ?? '',
-      }))
-      const anchorUrls = pageState.links
+  for (let start = 0; start < searchUrls.length && !exhausted; start += concurrency) {
+    const batch = searchUrls.slice(start, start + concurrency)
+    const pageResults = await Promise.all(batch.map(async (searchUrl) => {
+      const page = await browser.newPage()
+      try {
+        await configurePage(page)
+        const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+        if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
+        if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
+        const pageState = await page.evaluate(() => ({
+          links: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href),
+          text: document.body?.innerText ?? '',
+        }))
+        const html = await page.content()
+        const pageCandidates = [...pageState.links, ...extractEmbeddedListingUrls(html, datasetKind)]
+          .map(canonicalListingUrl)
+          .filter((href) => isDatasetListingUrl(href, datasetKind))
+        return { text: pageState.text, pageCandidates }
+      } finally {
+        await page.close()
+      }
+    }))
+
+    for (const result of pageResults) {
       if (reportedResultCount == null) {
-        const match = pageState.text.match(/([0-9][0-9.,]*)\s+resultados/i)
+        const match = result.text.match(/([0-9][0-9.,]*)\s+resultados/i)
         if (match?.[1]) {
           const parsed = Number(match[1].replace(/[^0-9]/g, ''))
           if (Number.isFinite(parsed) && parsed > 0) reportedResultCount = parsed
         }
       }
-      const html = await page.content()
-      const embeddedUrls = extractEmbeddedListingUrls(html, datasetKind)
-      const pageCandidates = [...anchorUrls, ...embeddedUrls]
-        .map(canonicalListingUrl)
-        .filter((href) => isDatasetListingUrl(href, datasetKind))
-      rawListingCandidates += pageCandidates.length
-      const pageUrls = unique(pageCandidates)
 
+      rawListingCandidates += result.pageCandidates.length
+      const pageUrls = unique(result.pageCandidates)
       let newCount = 0
       for (const href of pageUrls) {
         if (urls.has(href)) continue
@@ -513,15 +521,10 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       }
       newListingsPerPage.push(newCount)
 
-      // A requested pagination page that contributes no new listings means
-      // Portal has been exhausted. This is stronger evidence of a complete
-      // snapshot than assuming a fixed result count from the first page.
       if (newCount === 0) {
         exhausted = true
         break
       }
-    } finally {
-      await page.close()
     }
   }
 
