@@ -3,7 +3,7 @@ name: Contractual modules CI
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main, fix/portal-full-snapshot-reconciliation-v2]
+    branches: [main, fix/portal-full-snapshot-reconciliation-v2, feat/market-today-presentation]
   push:
     branches:
       - main
