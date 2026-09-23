@@ -478,7 +478,7 @@ export default async function MarketPage() {
             ['Leads', funnel.leads, null],
             ['Agendadas', funnel.scheduled, funnel.leads && funnel.scheduled !== null ? funnel.scheduled / funnel.leads : null],
             ['Realizadas', funnel.visits, funnel.scheduled && funnel.visits !== null ? funnel.visits / funnel.scheduled : null],
-            ['Ventas', funnel.sales, funnel.leads && funnel.sales !== null ? funnel.sales / funnel.leads : null],
+            ['Ventas', funnel.sales, funnel.visits && funnel.sales !== null ? funnel.sales / funnel.visits : null],
           ].map(([label, value, ratio], index) => (
             <div key={String(label)} className="contents">
               <div className="border-l border-[var(--n3-line)] pl-4">
