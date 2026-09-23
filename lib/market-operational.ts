@@ -233,9 +233,12 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       duplicateComponents: scopeSummaryResult.error ? null : scopeSummary?.duplicate_components ?? 0,
       logicalComponentsWithNeighborhood: scopeSummaryResult.error ? null : scopeSummary?.logical_components_with_neighborhood ?? 0,
       conflictingNeighborhoodComponents: scopeSummaryResult.error ? null : scopeSummary?.conflicting_neighborhood_components ?? 0,
-      activeInventory: latestMetric.error
+      // The canonical live Portal house universe is owned by the dedicated
+      // Vitacura house source. The legacy Portal source remains historical
+      // evidence and must never inflate today's available inventory.
+      activeInventory: identityProgressResult.error
         ? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0)
-        : metric?.active_inventory ?? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0),
+        : identityProgress?.portal_current_houses ?? 0,
       confirmedSales: latestMetric.error
         ? (operationalHouseSales && operationalHouseSales > 0 ? operationalHouseSales : null)
         : metric
