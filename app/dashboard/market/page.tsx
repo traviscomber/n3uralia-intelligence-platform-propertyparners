@@ -294,7 +294,7 @@ export default async function MarketPage() {
               </div>
             ))}
           </div>
-        </details>details>
+        </details>
       </section>
 
       {actions.length > 0 ? (
