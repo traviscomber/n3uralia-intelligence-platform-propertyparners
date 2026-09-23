@@ -100,6 +100,7 @@ export async function getExecutiveDashboardSnapshot() {
       .from('properties')
       .select('id,address,neighborhood,price_uf,days_on_market,source,created_at')
       .eq('status', 'available')
+      .eq('property_type', 'casa')
       .not('days_on_market', 'is', null)
       .order('days_on_market', { ascending: false })
       .limit(3),
