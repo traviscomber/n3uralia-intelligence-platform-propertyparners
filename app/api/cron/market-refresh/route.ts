@@ -145,6 +145,7 @@ export async function GET(request: Request) {
         p_rows: validRows,
         p_full_snapshot: fullSnapshot,
       })
+      const runId = pipelineResult?.run_id ?? null
 
       if (pipelineError || pipelineResult?.failed) {
         totalFailures += 1
@@ -175,7 +176,6 @@ export async function GET(request: Request) {
         continue
       }
 
-      const runId = pipelineResult?.run_id ?? null
       if (runId) {
         const { data: currentRun } = await supabase
           .from('market_ingestion_runs')
