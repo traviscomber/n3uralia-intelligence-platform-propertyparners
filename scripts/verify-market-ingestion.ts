@@ -59,8 +59,8 @@ async function main() {
   assert.match(authMigration, /revoke all on function public\.ingest_portal_listing_snapshot_v2[\s\S]*from public/i, 'Portal ingestion must not be executable by public.')
   assert.match(authMigration, /from anon/i, 'Portal ingestion must revoke anon execution.')
   assert.match(authMigration, /from authenticated/i, 'Portal ingestion must revoke authenticated execution.')
-  assert.match(proxy, /portal-collector-smoke[\s\S]*VERCEL_ENV !== 'production'/, 'Collector smoke may bypass session auth only outside production.')
-  assert.match(smoke, /VERCEL_ENV === 'production'[\s\S]*status: 404/, 'Collector smoke must remain unavailable in production.')
+  assert.match(proxy, /portal-collector-smoke[\s\S]*VERCEL_GIT_COMMIT_REF === 'fix\/portal-full-snapshot-reconciliation-v2'/, 'Collector smoke may bypass session auth only on the exact validation branch.')
+  assert.match(smoke, /VERCEL_GIT_COMMIT_REF !== 'fix\/portal-full-snapshot-reconciliation-v2'[\s\S]*status: 404/, 'Collector smoke must remain unavailable outside the exact validation branch, including main.')
   assert.doesNotMatch(smoke, /supabase|insert\(|update\(|delete\(/i, 'Collector smoke must remain read-only.')
 
   assert.match(authMigration, /grant execute on function public\.ingest_portal_listing_snapshot_v2[\s\S]*to service_role/i, 'Portal ingestion must be executable by service_role.')
