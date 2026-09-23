@@ -41,6 +41,8 @@ async function main() {
   assert.match(page, /Deduplicación canónica/, 'Market dashboard must expose canonical deduplication as a first-class metric.')
   assert.match(page, /confirmedDuplicateRows/, 'Market dashboard must show the number of confirmed duplicate rows.')
   assert.match(page, /logicalHouseComponents/, 'Market dashboard must show the clean logical-property universe.')
+  assert.match(page, /latestDiscoveryDuplicateCandidates/, 'Market dashboard must expose daily discovery deduplication separately from canonical identity deduplication.')
+  assert.match(refresh, /discovery_duplicate_candidates/, 'Portal refresh must persist daily discovery duplicate counts for auditability.')
 
   assert.match(authMigration, /revoke all on function public\.ingest_portal_listing_snapshot_v2[\s\S]*from public/i, 'Portal ingestion must not be executable by public.')
   assert.match(authMigration, /from anon/i, 'Portal ingestion must revoke anon execution.')
