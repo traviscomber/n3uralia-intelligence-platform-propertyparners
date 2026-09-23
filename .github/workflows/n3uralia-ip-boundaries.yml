@@ -2,7 +2,7 @@ name: N3uralia IP Boundaries
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, fix/portal-full-snapshot-reconciliation-v2]
   push:
     branches: [main]
 
