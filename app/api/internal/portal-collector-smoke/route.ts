@@ -15,7 +15,7 @@ export async function GET() {
       datasetKind: 'portal_houses',
       commune: 'vitacura-metropolitana',
       operation: 'venta',
-      maxPages: 3,
+      maxPages: 4,
       maxListings: 144,
       waitMs: 300,
     })
