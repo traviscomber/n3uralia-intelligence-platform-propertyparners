@@ -486,7 +486,11 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       try {
         await configurePage(page)
         const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-        if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
+        const status = response?.status() ?? null
+        // Portal returns 404 when pagination goes past the last available page.
+        // Treat that as proven exhaustion; all other non-2xx responses remain failures.
+        if (status === 404) return { text: '', pageCandidates: [] }
+        if (!response?.ok()) throw new Error(`Portal search returned HTTP ${status ?? 'unknown'}`)
         if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
         const pageState = await page.evaluate(() => ({
           links: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href),
