@@ -186,6 +186,43 @@ export default async function MarketPage() {
           <span className="hidden lg:block">→</span>
           <div><span className="text-[var(--n3-text-light)]">3. Universo vigente</span><br />Sólo desde aquí se calculan los indicadores</div>
         </div>
+
+        <div className="mt-6 border-t border-[var(--n3-line)] pt-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Deduplicación canónica</p>
+              <h3 className="mt-1 text-base font-medium text-[var(--n3-text-light)]">Una propiedad, una identidad lógica</h3>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
+                Conservamos la evidencia original, pero los duplicados confirmados se consolidan antes de calcular mercado, territorio y valorización.
+              </p>
+            </div>
+            <Link href="/dashboard/market/identidades" className="inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs text-[var(--n3-teal-soft)] hover:bg-white/[0.02]">
+              Ver identidad y duplicados
+            </Link>
+          </div>
+
+          <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
+            <div className="bg-[var(--n3-bg)] px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Registros V1</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{number(market.canonicalProperties)}</p>
+              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Casas dentro del universo operativo</p>
+            </div>
+            <div className="bg-[var(--n3-bg)] px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Duplicados consolidados</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--n3-teal-soft)]">−{number(market.confirmedDuplicateRows)}</p>
+              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{number(market.duplicateComponents)} grupos con identidad duplicada confirmada</p>
+            </div>
+            <div className="bg-[var(--n3-bg)] px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Propiedades lógicas</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{number(market.logicalHouseComponents)}</p>
+              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Base limpia usada por la inteligencia</p>
+            </div>
+          </div>
+
+          <p className="mt-3 font-mono text-[11px] text-[var(--n3-text-muted)]">
+            {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades lógicas
+          </p>
+        </div>
       </section>
 
       <section className="mt-8">
@@ -207,8 +244,8 @@ export default async function MarketPage() {
           <div className="grid gap-4 pb-2 pt-3 text-xs leading-5 text-[var(--n3-text-muted)] md:grid-cols-2">
             <div>
               <p className="font-medium text-[var(--n3-text-light)]">Oferta activa</p>
-              <p>Publicaciones de casas vigentes del snapshot canónico de Portal, después de deduplicar y reconciliar altas, cambios y bajas.</p>
-              <p className="mt-1 font-mono text-[11px]">Oferta activa = listings vigentes reconciliados</p>
+              <p>Publicaciones de casas vigentes del snapshot canónico de Portal, después de reconciliar altas, cambios y bajas. La capa de identidad consolida duplicados confirmados antes de los análisis por propiedad.</p>
+              <p className="mt-1 font-mono text-[11px]">Universo lógico = registros V1 − duplicados confirmados</p>
             </div>
             <div>
               <p className="font-medium text-[var(--n3-text-light)]">Ventas confirmadas</p>
