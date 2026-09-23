@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { propertyPartnersCalendarDayAge } from '@/lib/property-partners-time'
 
 export type MarketFreshnessStatus = 'recent' | 'aging' | 'stale' | 'unknown'
@@ -182,6 +183,7 @@ function getObservationFreshness(value: string | null | undefined) {
 export async function getOperationalMarketSnapshot(): Promise<OperationalMarketSnapshot> {
   try {
     const supabase = await createClient()
+    const service = createServiceClient()
     const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestIngestionRuns, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
@@ -206,13 +208,13 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .order('period_end', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      supabase
+      service
         .from('market_ingestion_runs')
         .select('id,status,accepted_rows,rejected_rows,completed_at,started_at,metadata')
         .eq('dataset_kind', 'portal_houses')
         .order('started_at', { ascending: false })
         .limit(30),
-      supabase
+      service
         .from('market_ingestion_runs')
         .select('id', { count: 'exact', head: true })
         .eq('dataset_kind', 'portal_houses'),
