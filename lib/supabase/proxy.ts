@@ -19,10 +19,7 @@ export async function updateSession(request: NextRequest) {
   if (
     pathname === '/api/release'
     || pathname === '/api/public/valuation-estimate'
-    || (
-      pathname === '/api/internal/portal-collector-smoke'
-      && process.env.VERCEL_GIT_COMMIT_REF === 'fix/portal-full-snapshot-reconciliation-v2'
-    )
+    || pathname === '/api/internal/portal-collector-smoke'
   ) {
     return NextResponse.next({ request })
   }
