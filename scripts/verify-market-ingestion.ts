@@ -34,6 +34,8 @@ async function main() {
   assert.match(refresh, /!inventory\.discovery\.capped/, 'Complete inventory must fail closed when the discovery page limit is reached.')
   assert.match(refresh, /coverageRatio >= 0\.97/, 'Complete inventory must cover at least 97% of the result count reported by Portal.')
   assert.match(refresh, /coverageRatio <= 1\.05/, 'Complete inventory must reject implausible over-collection against Portal.')
+  assert.match(refresh, /p_full_snapshot: false/, 'Bounded detail enrichment must never close unseen listings.')
+  assert.match(refresh, /MAX_DISCOVERY_PAGES = 40/, 'Full-market discovery must retain enough pagination capacity.')
   assert.match(refresh, /portal_reported_result_count/, 'Inventory runs must preserve Portal reported result counts.')
   assert.match(refresh, /portal_inventory_discovery_v1/, 'Inventory presence must have a distinct canonical pipeline identity.')
   assert.match(refresh, /from\('market_raw_records'\)/, 'Complete inventory members must be persisted as raw canonical evidence.')
@@ -46,6 +48,9 @@ async function main() {
   assert.match(refresh, /discovery_duplicate_candidates/, 'Portal refresh must persist daily discovery duplicate counts for auditability.')
   assert.match(page, /Portal reporta/, 'Market dashboard must make the Portal-reported universe visible.')
   assert.match(page, /IDs únicos/, 'Market dashboard must distinguish unique listing IDs from raw references.')
+  const collector = await readFile('lib/portal-inmobiliario-collector.ts', 'utf8')
+  assert.match(collector, /status === 404[\s\S]*pageCandidates: \[\]/, 'Portal pagination 404 must be treated as exhaustion evidence, not a fatal collector error.')
+  assert.match(collector, /const concurrency = 4/, 'Portal search-page discovery must remain bounded and concurrent.')
 
   assert.match(authMigration, /revoke all on function public\.ingest_portal_listing_snapshot_v2[\s\S]*from public/i, 'Portal ingestion must not be executable by public.')
   assert.match(authMigration, /from anon/i, 'Portal ingestion must revoke anon execution.')
