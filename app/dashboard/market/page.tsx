@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { FileText, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
+import { CalculationTrace } from '@/components/market/calculation-trace'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
@@ -237,31 +238,43 @@ export default async function MarketPage() {
           { label: 'Absorción', value: percent(market.absorptionRate) },
         ]} />
 
-        <details className="mt-4 border-t border-[var(--n3-line)] pt-3">
-          <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
-            Cómo se calculan estos indicadores
-          </summary>
-          <div className="grid gap-4 pb-2 pt-3 text-xs leading-5 text-[var(--n3-text-muted)] md:grid-cols-2">
-            <div>
-              <p className="font-medium text-[var(--n3-text-light)]">Oferta activa</p>
-              <p>Publicaciones de casas vigentes del snapshot canónico de Portal, después de reconciliar altas, cambios y bajas. La capa de identidad consolida duplicados confirmados antes de los análisis por propiedad.</p>
-              <p className="mt-1 font-mono text-[11px]">Universo lógico = registros V1 − duplicados confirmados</p>
-            </div>
-            <div>
-              <p className="font-medium text-[var(--n3-text-light)]">Ventas confirmadas</p>
-              <p>Operaciones de casas respaldadas por una fuente transaccional confirmada. Señales CRM sin fecha de cierre no se cuentan como venta.</p>
-            </div>
-            <div>
-              <p className="font-medium text-[var(--n3-text-light)]">Días en mercado</p>
-              <p>Mediana de permanencia de las propiedades observadas entre publicación y salida válida del mercado, cuando existe evidencia suficiente.</p>
-            </div>
-            <div>
-              <p className="font-medium text-[var(--n3-text-light)]">Absorción</p>
-              <p>Relaciona ventas confirmadas del período con la oferta disponible comparable. Si falta una fuente reciente de ventas, el indicador no se publica.</p>
-              <p className="mt-1 font-mono text-[11px]">Absorción = ventas confirmadas / oferta comparable</p>
-            </div>
-          </div>
-        </details>
+        <div className="mt-4">
+          <CalculationTrace
+            title="Oferta activa"
+            source="Portal Inmobiliario · fuente canónica live de casas"
+            universe="Venta · Casa · Vitacura · publicaciones vigentes reconciliadas"
+            filters="Estado active/observed · fuente live actual"
+            exclusions="Legacy, publicaciones retiradas y fuentes fuera del universo"
+            formula="conteo de publicaciones vigentes del snapshot canónico"
+            result={number(market.activeInventory)}
+            note="La identidad canónica se aplica después para análisis por propiedad; los duplicados confirmados no inflan el universo lógico."
+          />
+          <CalculationTrace
+            title="Propiedades lógicas"
+            source="Universo V1 + relaciones de identidad confirmadas"
+            universe={`${number(market.canonicalProperties)} registros V1`}
+            exclusions={`${number(market.confirmedDuplicateRows)} registros duplicados confirmados`}
+            formula="registros V1 − duplicados confirmados"
+            result={number(market.logicalHouseComponents)}
+          />
+          <CalculationTrace
+            title="Ventas confirmadas"
+            source="Transacciones canónicas de casas"
+            universe="Operaciones respaldadas por fuente transaccional"
+            exclusions="Señales CRM sin fecha de cierre y estados no confirmados"
+            formula="conteo de operaciones confirmadas del período"
+            result={number(market.confirmedSales)}
+          />
+          <CalculationTrace
+            title="Absorción"
+            source="Oferta comparable + ventas confirmadas"
+            universe="Mismo tipo de propiedad, territorio y período comparable"
+            exclusions="Períodos sin ventas confirmadas suficientes"
+            formula="ventas confirmadas / oferta comparable"
+            result={percent(market.absorptionRate)}
+            note="Si falta una fuente reciente de ventas, el sistema no publica una absorción estimada."
+          />
+        </div>
       </section>
 
       {actions.length > 0 ? (
