@@ -76,7 +76,7 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
         .order('listing_count', { ascending: false }),
       supabase
         .from('market_current_listings')
-        .select('price_uf,price_uf_m2,raw_payload,market_sources(metadata),market_properties(property_type,useful_area_m2)')
+        .select('price_uf,price_uf_m2,raw_payload,market_sources(code,metadata),market_properties(property_type,useful_area_m2)')
         .in('status', ['active', 'observed']),
     ])
 
@@ -107,9 +107,16 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
       const property = Array.isArray(row.market_properties) ? row.market_properties[0] : row.market_properties
       const source = Array.isArray(row.market_sources) ? row.market_sources[0] : row.market_sources
       const sourceMetadata = source?.metadata && typeof source.metadata === 'object' ? source.metadata as Record<string, unknown> : null
+      const sourceCode = typeof source?.code === 'string' ? source.code : null
       const sourceDatasetKind = typeof sourceMetadata?.dataset_kind === 'string' ? datasetKind(sourceMetadata.dataset_kind) : null
       const kind = sourceDatasetKind ?? liveKind(property?.property_type)
       if (!kind) continue
+
+      // "Live" means the current canonical Portal collectors only. Legacy
+      // imports remain available as historical evidence but must not be
+      // counted as today's Portal inventory.
+      const expectedSourceCode = `portal-inmobiliario-vitacura-${kind}`
+      if (sourceCode !== expectedSourceCode) continue
 
       const rawPayload = row.raw_payload && typeof row.raw_payload === 'object' ? row.raw_payload as Record<string, unknown> : null
       const payloadArea = numericPayload(rawPayload?.useful_area_m2)
