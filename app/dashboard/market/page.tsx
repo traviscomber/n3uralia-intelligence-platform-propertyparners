@@ -164,13 +164,14 @@ export default async function MarketPage() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-6">
           {[
             ['Casas en oferta', number(market.activeInventory), 'Universo vigente reconciliado'],
             ['Capturadas', number(market.latestIngestionAccepted), 'Aceptadas en la última corrida'],
             ['Nuevas', number(market.latestIngestionNew), 'No estaban en el corte anterior'],
             ['Actualizadas', number(market.latestIngestionUpdated), 'Cambió precio u otro dato'],
             ['Retiradas', number(market.latestIngestionRemoved), 'Ausentes de un snapshot completo'],
+            ['Duplicados captura', number(market.latestDiscoveryDuplicateCandidates), 'Enlaces repetidos descartados antes de procesar'],
           ].map(([label, value, detail]) => (
             <div key={label} className="bg-[var(--n3-bg)] px-4 py-4">
               <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
@@ -183,7 +184,7 @@ export default async function MarketPage() {
         <div className="mt-4 grid gap-3 text-xs text-[var(--n3-text-muted)] lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
           <div><span className="text-[var(--n3-text-light)]">1. Captura</span><br />Portal · Venta · Casa · Vitacura</div>
           <span className="hidden lg:block">→</span>
-          <div><span className="text-[var(--n3-text-light)]">2. Reconciliación</span><br />IDs únicos · válidas · nuevas · actualizadas · retiradas</div>
+          <div><span className="text-[var(--n3-text-light)]">2. Reconciliación</span><br />{number(market.latestDiscoveryRawCandidates)} candidatos → {number(market.latestDiscoveryUniqueListings)} publicaciones únicas · nuevas · actualizadas · retiradas</div>
           <span className="hidden lg:block">→</span>
           <div><span className="text-[var(--n3-text-light)]">3. Universo vigente</span><br />Sólo desde aquí se calculan los indicadores</div>
         </div>
@@ -220,9 +221,10 @@ export default async function MarketPage() {
             </div>
           </div>
 
-          <p className="mt-3 font-mono text-[11px] text-[var(--n3-text-muted)]">
-            {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades lógicas
-          </p>
+          <div className="mt-3 space-y-1 font-mono text-[11px] text-[var(--n3-text-muted)]">
+            <p>Captura: {number(market.latestDiscoveryRawCandidates)} candidatos − {number(market.latestDiscoveryDuplicateCandidates)} enlaces repetidos = {number(market.latestDiscoveryUniqueListings)} publicaciones únicas</p>
+            <p>Identidad: {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades lógicas</p>
+          </div>
         </div>
       </section>
 
