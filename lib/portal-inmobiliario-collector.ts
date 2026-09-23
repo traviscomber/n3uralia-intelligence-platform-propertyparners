@@ -23,6 +23,7 @@ export type PortalDiscoveryResult = {
     rawListingCandidates: number
     duplicateListingCandidates: number
     uniqueListings: number
+    reportedResultCount: number | null
     exhausted: boolean
     capped: boolean
   }
@@ -474,6 +475,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   const urls = new Set<string>()
   const newListingsPerPage: number[] = []
   let rawListingCandidates = 0
+  let reportedResultCount: number | null = null
   let exhausted = false
 
   for (const searchUrl of searchUrls) {
@@ -483,7 +485,18 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
       if (!response?.ok()) throw new Error(`Portal search returned HTTP ${response?.status() ?? 'unknown'}`)
       if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
-      const anchorUrls = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href))
+      const pageState = await page.evaluate(() => ({
+        links: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href),
+        text: document.body?.innerText ?? '',
+      }))
+      const anchorUrls = pageState.links
+      if (reportedResultCount == null) {
+        const match = pageState.text.match(/([0-9][0-9.,]*)\s+resultados/i)
+        if (match?.[1]) {
+          const parsed = Number(match[1].replace(/[^0-9]/g, ''))
+          if (Number.isFinite(parsed) && parsed > 0) reportedResultCount = parsed
+        }
+      }
       const html = await page.content()
       const embeddedUrls = extractEmbeddedListingUrls(html, datasetKind)
       const pageCandidates = [...anchorUrls, ...embeddedUrls]
@@ -517,6 +530,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
     newListingsPerPage,
     rawListingCandidates,
     duplicateListingCandidates: Math.max(rawListingCandidates - urls.size, 0),
+    reportedResultCount,
     exhausted,
   }
 }
@@ -543,6 +557,7 @@ export async function discoverPortalVitacuraUniverse(options: PortalCollectorOpt
         rawListingCandidates: discovered.rawListingCandidates,
         duplicateListingCandidates: discovered.duplicateListingCandidates,
         uniqueListings: discovered.urls.length,
+        reportedResultCount: discovered.reportedResultCount,
         exhausted: discovered.exhausted,
         capped,
       },
@@ -641,6 +656,7 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         rawListingCandidates: discovered.rawListingCandidates,
         duplicateListingCandidates: discovered.duplicateListingCandidates,
         uniqueListings: discovered.urls.length,
+        reportedResultCount: discovered.reportedResultCount,
         exhausted: discovered.exhausted,
         capped,
       },
