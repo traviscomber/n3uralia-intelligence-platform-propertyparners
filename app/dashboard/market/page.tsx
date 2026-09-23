@@ -142,12 +142,87 @@ export default async function MarketPage() {
 
       {market.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar toda la información de mercado." /></div> : null}
 
-      <MetricStrip items={[
-        { label: 'Oferta activa', value: number(market.activeInventory) },
-        { label: 'Ventas confirmadas', value: number(market.confirmedSales), tone: market.confirmedSales === null || market.confirmedSales === 0 ? 'warning' : 'default' },
-        { label: 'Días en mercado', value: market.medianDaysOnMarket === null ? '—' : number(market.medianDaysOnMarket) },
-        { label: 'Absorción', value: percent(market.absorptionRate) },
-      ]} />
+      <section className="mt-6 border-y border-[var(--n3-line)] py-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Captura diaria · Portal Inmobiliario</p>
+            <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué observamos hoy</h2>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
+              Primero mostramos el universo capturado y reconciliado. La inteligencia de mercado se calcula después, sólo sobre esta evidencia trazable.
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Última captura</p>
+            <p className="mt-1 text-sm font-medium">{date(market.latestIngestionAt)}</p>
+            <p className={`mt-1 text-xs ${market.latestIngestionFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[#f0c96a]'}`}>
+              {market.latestIngestionFullSnapshot ? 'Snapshot completo verificado' : 'Captura parcial · no se cierran bajas'}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-5">
+          {[
+            ['Casas en oferta', number(market.activeInventory), 'Universo vigente reconciliado'],
+            ['Capturadas', number(market.latestIngestionAccepted), 'Aceptadas en la última corrida'],
+            ['Nuevas', number(market.latestIngestionNew), 'No estaban en el corte anterior'],
+            ['Actualizadas', number(market.latestIngestionUpdated), 'Cambió precio u otro dato'],
+            ['Retiradas', number(market.latestIngestionRemoved), 'Ausentes de un snapshot completo'],
+          ].map(([label, value, detail]) => (
+            <div key={label} className="bg-[var(--n3-bg)] px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
+              <p className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{detail}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid gap-3 text-xs text-[var(--n3-text-muted)] lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
+          <div><span className="text-[var(--n3-text-light)]">1. Captura</span><br />Portal · Venta · Casa · Vitacura</div>
+          <span className="hidden lg:block">→</span>
+          <div><span className="text-[var(--n3-text-light)]">2. Reconciliación</span><br />IDs únicos · válidas · nuevas · actualizadas · retiradas</div>
+          <span className="hidden lg:block">→</span>
+          <div><span className="text-[var(--n3-text-light)]">3. Universo vigente</span><br />Sólo desde aquí se calculan los indicadores</div>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-3">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Inteligencia derivada</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué nos dicen los datos</h2>
+        </div>
+        <MetricStrip items={[
+          { label: 'Oferta activa', value: number(market.activeInventory) },
+          { label: 'Ventas confirmadas', value: number(market.confirmedSales), tone: market.confirmedSales === null || market.confirmedSales === 0 ? 'warning' : 'default' },
+          { label: 'Días en mercado', value: market.medianDaysOnMarket === null ? '—' : number(market.medianDaysOnMarket) },
+          { label: 'Absorción', value: percent(market.absorptionRate) },
+        ]} />
+
+        <details className="mt-4 border-t border-[var(--n3-line)] pt-3">
+          <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+            Cómo se calculan estos indicadores
+          </summary>
+          <div className="grid gap-4 pb-2 pt-3 text-xs leading-5 text-[var(--n3-text-muted)] md:grid-cols-2">
+            <div>
+              <p className="font-medium text-[var(--n3-text-light)]">Oferta activa</p>
+              <p>Publicaciones de casas vigentes del snapshot canónico de Portal, después de deduplicar y reconciliar altas, cambios y bajas.</p>
+              <p className="mt-1 font-mono text-[11px]">Oferta activa = listings vigentes reconciliados</p>
+            </div>
+            <div>
+              <p className="font-medium text-[var(--n3-text-light)]">Ventas confirmadas</p>
+              <p>Operaciones de casas respaldadas por una fuente transaccional confirmada. Señales CRM sin fecha de cierre no se cuentan como venta.</p>
+            </div>
+            <div>
+              <p className="font-medium text-[var(--n3-text-light)]">Días en mercado</p>
+              <p>Mediana de permanencia de las propiedades observadas entre publicación y salida válida del mercado, cuando existe evidencia suficiente.</p>
+            </div>
+            <div>
+              <p className="font-medium text-[var(--n3-text-light)]">Absorción</p>
+              <p>Relaciona ventas confirmadas del período con la oferta disponible comparable. Si falta una fuente reciente de ventas, el indicador no se publica.</p>
+              <p className="mt-1 font-mono text-[11px]">Absorción = ventas confirmadas / oferta comparable</p>
+            </div>
+          </div>
+        </details>
+      </section>
 
       {actions.length > 0 ? (
         <section className="mt-8 max-w-5xl">
