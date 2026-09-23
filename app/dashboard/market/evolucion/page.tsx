@@ -51,12 +51,14 @@ export default async function MarketEvolutionPage() {
   await requireAnyPageCapability(['market.manage_sources', 'management.global.read', 'management.office.read'])
 
   const supabase = await createClient()
+  const lastCompleteYear = new Date().getFullYear() - 1
   const [historyResult, liveRangeResult] = await Promise.all([
     supabase
       .from('market_cbrs_reference_metrics')
       .select('year,transactions,median_price_uf,median_uf_m2,observed_at')
       .eq('scope', 'year')
       .eq('property_type', 'Casa')
+      .lte('year', lastCompleteYear)
       .order('year', { ascending: false })
       .limit(4),
     supabase
@@ -173,18 +175,37 @@ export default async function MarketEvolutionPage() {
           title="Ventas anuales"
           source="CBRS · market_cbrs_reference_metrics"
           universe="Compraventas clasificadas como Casa"
-          filters="scope = year · últimos 4 años completos disponibles"
+          filters={`scope = year · year <= ${lastCompleteYear} · últimos 4 años completos disponibles`}
           exclusions="Otros tipos de propiedad; Portal no participa en este conteo"
           formula="conteo de transacciones confirmadas por año"
           result={number(latestTx)}
         />
         <CalculationTrace
+          title="Mediana precio de cierre"
+          source="CBRS · market_cbrs_reference_metrics"
+          universe="Compraventas clasificadas como Casa"
+          filters={`scope = year · year <= ${lastCompleteYear} · último año completo disponible`}
+          exclusions="Otros tipos de propiedad; precios de publicación de Portal"
+          formula="mediana de precio UF de cierres CBRS del año"
+          result={latestPrice == null ? '—' : `UF ${number(latestPrice, 0)}`}
+        />
+        <CalculationTrace
+          title="Mediana UF/m²"
+          source="CBRS · market_cbrs_reference_metrics"
+          universe="Compraventas de casas con superficie utilizable por la métrica canónica"
+          filters={`scope = year · year <= ${lastCompleteYear} · último año completo disponible`}
+          exclusions="Registros sin superficie válida; Portal no participa en este cálculo"
+          formula="mediana anual del indicador UF/m² canónico"
+          result={number(latestUfM2, 1)}
+        />
+        <CalculationTrace
           title="Variación YoY"
-          source="Dos años consecutivos de la misma métrica CBRS"
+          source="Dos años completos consecutivos de la misma métrica CBRS"
           universe="Mismo tipo de propiedad y misma definición"
+          filters={`ambos años <= ${lastCompleteYear}`}
           formula="(valor actual / valor año anterior) − 1"
           result={percent(pct(latestTx, previousTx))}
-          note="MoM requiere una serie mensual canónica. Se habilitará cuando la proyección mensual esté disponible; no se aproxima desde datos anuales."
+          note="MoM requiere una serie mensual canónica. Se habilitará cuando la serie mensual esté disponible; no se aproxima desde datos anuales."
         />
       </div>
     </WorkspaceShell>
