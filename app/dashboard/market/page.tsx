@@ -152,6 +152,9 @@ export default async function MarketPage() {
             </p>
           </div>
           <div className="text-right">
+            <Link href="/dashboard/market/oferta" className="mb-3 inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs text-[var(--n3-teal-soft)] hover:bg-white/[0.02]">
+              Ver casas en oferta
+            </Link>
             <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Última captura</p>
             <p className="mt-1 text-sm font-medium">{date(market.latestIngestionAt)}</p>
             <p className={`mt-1 text-xs ${market.latestIngestionFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[#f0c96a]'}`}>
