@@ -8,6 +8,7 @@ import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/
 import { getPortalReferenceSnapshot } from '@/lib/portal-reference-intelligence'
 import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
+import { getExecutiveDashboardSnapshot } from '@/lib/executive-dashboard-snapshot'
 
 function number(value: number | null) {
   return value === null ? '—' : value.toLocaleString('es-CL')
@@ -32,6 +33,38 @@ function shortDate(value: string | null) {
   return Number.isNaN(parsed.getTime()) ? '—' : new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeZone: 'UTC' }).format(parsed)
 }
 
+function delta(current: number | null, previous: number | null) {
+  if (current === null || previous === null || previous === 0) return null
+  return (current / previous) - 1
+}
+
+function signedPercent(value: number | null) {
+  if (value === null) return '—'
+  return `${value > 0 ? '+' : ''}${(value * 100).toFixed(1)}%`
+}
+
+function linePoints(values: Array<number | null>) {
+  const clean = values.filter((value): value is number => value !== null)
+  if (!clean.length) return ''
+  const min = Math.min(...clean)
+  const max = Math.max(...clean)
+  const span = Math.max(max - min, 1)
+  return values.map((value, index) => {
+    if (value === null) return null
+    const x = values.length === 1 ? 50 : 6 + (index / (values.length - 1)) * 88
+    const y = 88 - ((value - min) / span) * 72
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).filter(Boolean).join(' ')
+}
+
+function monthLabel(value: string | null) {
+  if (!value) return 'Sin período verificado'
+  const date = new Date(`${value.slice(0, 10)}T12:00:00.000Z`)
+  if (Number.isNaN(date.getTime())) return value
+  const label = new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date)
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
   if (status === 'recent') return ageDays === 0 ? 'Hoy' : `${ageDays} días`
   if (status === 'aging' || status === 'stale') return `${ageDays ?? '—'} días`
@@ -39,11 +72,12 @@ function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
 }
 
 export default async function MarketPage() {
-  const [market, scope, territory, portalReference] = await Promise.all([
+  const [market, scope, territory, portalReference, executive] = await Promise.all([
     getOperationalMarketSnapshot(),
     requireUserScope(),
     getVitacuraNeighborhoodSnapshot(),
     getPortalReferenceSnapshot(),
+    getExecutiveDashboardSnapshot(),
   ])
 
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
@@ -130,6 +164,42 @@ export default async function MarketPage() {
 
   const houseReference = portalReference.datasets.find((item) => item.datasetKind === 'portal_houses')
   const houseLive = portalReference.liveDatasets.find((item) => item.datasetKind === 'portal_houses')
+
+  const latestEvolution = executive.evolution.at(-1) ?? null
+  const previousEvolution = executive.evolution.at(-2) ?? null
+  const sameMonthPriorYear = latestEvolution
+    ? executive.evolution.find((item) => {
+        const current = new Date(`${latestEvolution.period}-01T12:00:00.000Z`)
+        const candidate = new Date(`${item.period}-01T12:00:00.000Z`)
+        return candidate.getUTCFullYear() === current.getUTCFullYear() - 1 && candidate.getUTCMonth() === current.getUTCMonth()
+      }) ?? null
+    : null
+
+  const leadsMom = delta(latestEvolution?.leads ?? null, previousEvolution?.leads ?? null)
+  const leadsYoy = delta(latestEvolution?.leads ?? null, sameMonthPriorYear?.leads ?? null)
+  const visitsMom = delta(latestEvolution?.visits ?? null, previousEvolution?.visits ?? null)
+  const visitsYoy = delta(latestEvolution?.visits ?? null, sameMonthPriorYear?.visits ?? null)
+  const salesMom = delta(latestEvolution?.sales ?? null, previousEvolution?.sales ?? null)
+  const salesYoy = delta(latestEvolution?.sales ?? null, sameMonthPriorYear?.sales ?? null)
+  const salesUfMom = delta(latestEvolution?.salesUf ?? null, previousEvolution?.salesUf ?? null)
+  const salesUfYoy = delta(latestEvolution?.salesUf ?? null, sameMonthPriorYear?.salesUf ?? null)
+
+  const annualTransactions = executive.history.map((row) => row.transactions)
+  const annualPrices = executive.history.map((row) => row.medianPriceUf)
+  const averageTransactions = annualTransactions.filter((value): value is number => value !== null).length
+    ? annualTransactions.filter((value): value is number => value !== null).reduce((sum, value) => sum + value, 0) / annualTransactions.filter((value): value is number => value !== null).length
+    : null
+  const averagePrice = annualPrices.filter((value): value is number => value !== null).length
+    ? annualPrices.filter((value): value is number => value !== null).reduce((sum, value) => sum + value, 0) / annualPrices.filter((value): value is number => value !== null).length
+    : null
+  const latestHistory = executive.history.at(-1) ?? null
+
+  const funnel = {
+    leads: executive.latest.leads,
+    scheduled: executive.latest.scheduledVisits,
+    visits: executive.latest.realizedVisits,
+    sales: executive.latest.sales,
+  }
 
   return (
     <WorkspaceShell>
@@ -295,6 +365,175 @@ export default async function MarketPage() {
             ))}
           </div>
         </details>
+      </section>
+
+      <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">04 · Evolución</p>
+            <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">3–4 años de mercado</h2>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
+              Historia registral CBRS para casas. La serie comercial se extenderá hacia atrás cuando Pedro entregue los períodos adicionales.
+            </p>
+          </div>
+          <Link href="/dashboard/market/evolucion" className="text-xs text-[var(--n3-teal-soft)]">Ver evolución completa</Link>
+        </div>
+
+        <div className="mt-5 grid gap-8 lg:grid-cols-2">
+          <div>
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs text-[var(--n3-text-muted)]">Compraventas</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums">{number(latestHistory?.transactions ?? null)}</p>
+              </div>
+              <p className="text-right text-[11px] text-[var(--n3-text-muted)]">
+                vs promedio 4 años<br /><span className="text-[var(--n3-text-light)]">{signedPercent(delta(latestHistory?.transactions ?? null, averageTransactions))}</span>
+              </p>
+            </div>
+            <svg viewBox="0 0 100 100" role="img" aria-label="Compraventas anuales de casas" className="mt-3 h-36 w-full">
+              <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
+              <polyline points={linePoints(annualTransactions)} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+            </svg>
+            <div className="grid grid-cols-4 gap-2 text-center text-[11px] text-[var(--n3-text-muted)]">
+              {executive.history.map((row) => <div key={row.year}><p>{row.year}</p><p className="mt-1 text-[var(--n3-text-light)]">{number(row.transactions)}</p></div>)}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs text-[var(--n3-text-muted)]">Mediana precio de cierre</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums">UF {decimal(latestHistory?.medianPriceUf ?? null, 0)}</p>
+              </div>
+              <p className="text-right text-[11px] text-[var(--n3-text-muted)]">
+                vs promedio 4 años<br /><span className="text-[var(--n3-text-light)]">{signedPercent(delta(latestHistory?.medianPriceUf ?? null, averagePrice))}</span>
+              </p>
+            </div>
+            <svg viewBox="0 0 100 100" role="img" aria-label="Mediana anual de precio UF" className="mt-3 h-36 w-full">
+              <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
+              <polyline points={linePoints(annualPrices)} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+            </svg>
+            <div className="grid grid-cols-4 gap-2 text-center text-[11px] text-[var(--n3-text-muted)]">
+              {executive.history.map((row) => <div key={row.year}><p>{row.year}</p><p className="mt-1 text-[var(--n3-text-light)]">{decimal(row.medianPriceUf, 0)}</p></div>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">05 · Último mes verificado</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{monthLabel(executive.verifiedPeriodEnd)}</h2>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">MoM y YoY sólo aparecen cuando existe el período comparable en la fuente canónica.</p>
+        </div>
+
+        <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ['Leads', executive.latest.leads, leadsMom, leadsYoy, 'count'],
+            ['Visitas realizadas', executive.latest.realizedVisits, visitsMom, visitsYoy, 'count'],
+            ['Ventas', executive.latest.sales, salesMom, salesYoy, 'count'],
+            ['UF vendidas', executive.latest.salesUf, salesUfMom, salesUfYoy, 'uf'],
+          ].map(([label, value, mom, yoy, unit]) => (
+            <div key={String(label)} className="bg-[var(--n3-bg)] p-4">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{unit === 'uf' && value !== null ? `UF ${number(value as number)}` : number(value as number | null)}</p>
+              <div className="mt-2 flex gap-3 text-[11px] text-[var(--n3-text-muted)]">
+                <span>MoM <strong className="font-medium text-[var(--n3-text-light)]">{signedPercent(mom as number | null)}</strong></span>
+                <span>YoY <strong className="font-medium text-[var(--n3-text-light)]">{signedPercent(yoy as number | null)}</strong></span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">06 · Balanced Scorecard</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Control ejecutivo</h2>
+        </div>
+        <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
+          {[
+            ['Mercado', 'Cobertura Portal', percent(market.latestInventoryCoverageRatio), market.latestIngestionFullSnapshot ? 'Verificado' : 'Parcial'],
+            ['Financiero', 'Margen / P&L', 'Pendiente fuente PP', 'Sin métrica canónica'],
+            ['Comercial', 'Calidad de conversión', executive.latest.conversionScore === null ? '—' : decimal(executive.latest.conversionScore, 1), executive.latest.conversionScore === null ? 'Sin dato' : 'Verificado'],
+            ['Procesos', 'Calidad de seguimiento', executive.latest.followUpScore === null ? '—' : decimal(executive.latest.followUpScore, 1), executive.latest.followUpScore === null ? 'Sin dato' : 'Verificado'],
+          ].map(([dimension, indicator, value, status]) => (
+            <div key={String(dimension)} className="grid gap-2 py-3 text-sm sm:grid-cols-[120px_minmax(0,1fr)_180px_140px] sm:items-center">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{dimension}</p>
+              <p>{indicator}</p>
+              <p className="font-medium tabular-nums">{value}</p>
+              <p className="text-xs text-[var(--n3-text-muted)]">{status}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">07 · Proceso comercial</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Leads → visitas → cierres</h2>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-center">
+          {[
+            ['Leads', funnel.leads, null],
+            ['Agendadas', funnel.scheduled, funnel.leads && funnel.scheduled !== null ? funnel.scheduled / funnel.leads : null],
+            ['Realizadas', funnel.visits, funnel.scheduled && funnel.visits !== null ? funnel.visits / funnel.scheduled : null],
+            ['Ventas', funnel.sales, funnel.leads && funnel.sales !== null ? funnel.sales / funnel.leads : null],
+          ].map(([label, value, ratio], index) => (
+            <div key={String(label)} className="contents">
+              <div className="border-l border-[var(--n3-line)] pl-4">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums">{number(value as number | null)}</p>
+                {ratio !== null ? <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{percent(ratio as number)} desde etapa anterior</p> : <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">base del período</p>}
+              </div>
+              {index < 3 ? <span className="hidden text-[var(--n3-text-muted)] lg:block">→</span> : null}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10 grid gap-8 border-t border-[var(--n3-line)] pt-6 lg:grid-cols-2">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">08 · Alertas del mes</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Sólo lo que requiere decisión</h2>
+          {executive.alerts.length ? (
+            <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
+              {executive.alerts.slice(0, 3).map((alert) => (
+                <div key={alert.id} className="py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">{alert.title}</p>
+                    <span className="text-[10px] uppercase tracking-[0.12em] text-[#f0c96a]">{alert.severity}</span>
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{alert.detail}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 border-y border-[var(--n3-line)] py-5">
+              <p className="text-sm font-medium text-[var(--n3-text-light)]">Sin alertas canónicas abiertas</p>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Las alertas aparecerán aquí cuando una regla de gestión evaluada quede abierta.</p>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">09 · Property 360</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Propiedades para revisar</h2>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Priorizadas por mayor permanencia registrada; la recomendación completa vive dentro de cada ficha 360.</p>
+          <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
+            {executive.properties.map((property) => (
+              <Link key={property.id} href={`/dashboard/properties/${property.id}`} className="grid gap-2 py-3 text-sm hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_110px_90px] sm:items-center">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{property.address || 'Propiedad sin dirección'}</p>
+                  <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{property.neighborhood || 'Sin barrio'} · {property.source || 'fuente no indicada'}</p>
+                </div>
+                <p className="tabular-nums">{property.price_uf == null ? '—' : `UF ${number(Number(property.price_uf))}`}</p>
+                <p className="text-xs text-[var(--n3-text-muted)]">{property.days_on_market == null ? '—' : `${property.days_on_market} días`}</p>
+              </Link>
+            ))}
+          </div>
+          <Link href="/dashboard/properties" className="mt-3 inline-flex min-h-10 items-center text-xs text-[var(--n3-teal-soft)]">Ver todas las propiedades</Link>
+        </div>
       </section>
 
       {actions.length > 0 ? (
