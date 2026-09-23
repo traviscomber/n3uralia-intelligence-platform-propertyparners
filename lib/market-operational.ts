@@ -40,6 +40,10 @@ export type OperationalMarketSnapshot = {
   latestIngestionUpdated: number | null
   latestIngestionUnchanged: number | null
   latestIngestionRemoved: number | null
+  latestDiscoveryRawCandidates: number | null
+  latestDiscoveryUniqueListings: number | null
+  latestDiscoveryDuplicateCandidates: number | null
+  latestDiscoveryPages: number | null
   ingestionRuns: number | null
   latestObservedAt: string | null
   observationAgeDays: number | null
@@ -142,6 +146,10 @@ const emptySnapshot: OperationalMarketSnapshot = {
   latestIngestionUpdated: null,
   latestIngestionUnchanged: null,
   latestIngestionRemoved: null,
+  latestDiscoveryRawCandidates: null,
+  latestDiscoveryUniqueListings: null,
+  latestDiscoveryDuplicateCandidates: null,
+  latestDiscoveryPages: null,
   ingestionRuns: null,
   latestObservedAt: null,
   observationAgeDays: null,
@@ -286,6 +294,18 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestIngestionUpdated: latestIngestion.error ? null : Number(ingestionMetadata?.updated_listings ?? 0),
       latestIngestionUnchanged: latestIngestion.error ? null : Number(ingestionMetadata?.unchanged_listings ?? 0),
       latestIngestionRemoved: latestIngestion.error ? null : Number(ingestionMetadata?.removed_listings ?? 0),
+      latestDiscoveryRawCandidates: latestIngestion.error || ingestionMetadata?.discovery_raw_candidates == null
+        ? null
+        : Number(ingestionMetadata.discovery_raw_candidates),
+      latestDiscoveryUniqueListings: latestIngestion.error || ingestionMetadata?.discovery_unique_listings == null
+        ? null
+        : Number(ingestionMetadata.discovery_unique_listings),
+      latestDiscoveryDuplicateCandidates: latestIngestion.error || ingestionMetadata?.discovery_duplicate_candidates == null
+        ? null
+        : Number(ingestionMetadata.discovery_duplicate_candidates),
+      latestDiscoveryPages: latestIngestion.error || ingestionMetadata?.discovery_pages == null
+        ? null
+        : Number(ingestionMetadata.discovery_pages),
       ingestionRuns: ingestionRuns.error ? null : ingestionRuns.count ?? 0,
       latestObservedAt: houseSummaryResult.error ? null : latestObservedAt,
       observationAgeDays: houseSummaryResult.error ? null : freshness.ageDays,
