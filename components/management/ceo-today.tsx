@@ -34,6 +34,9 @@ type Operations = {
     neighborhoodTotal: number
     neighborhoodResolved: number
     neighborhoodExceptions: number
+    canonicalProperties: number | null
+    confirmedDuplicates: number | null
+    logicalProperties: number | null
   }
   tasks: { overdue: number; urgent: number }
   generatedAt: string
@@ -165,6 +168,32 @@ export function CeoToday() {
         { label: 'Cumplimiento', value: compliance == null ? '—' : `${n(compliance, 1)}%`, tone: compliance == null ? 'default' : compliance >= 100 ? 'success' : compliance >= 80 ? 'warning' : 'danger' },
         ...(reviewCount > 0 ? [{ label: 'Por revisar', value: reviewCount.toLocaleString('es-CL'), tone: 'warning' as const }] : []),
       ]} />
+
+      <section className="mt-8 max-w-5xl border-y border-[var(--n3-line)] py-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Inteligencia de mercado</p>
+            <h2 className="mt-1 text-base font-semibold text-[var(--n3-text-light)]">Base consolidada para decisión</h2>
+          </div>
+          <Link href="/dashboard/market" className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">
+            Abrir mercado <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-2xl font-semibold tabular-nums">{n(operations.market.canonicalProperties)}</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">registros canónicos</p>
+          </div>
+          <div>
+            <p className="text-2xl font-semibold tabular-nums text-[var(--n3-teal-soft)]">{operations.market.confirmedDuplicates == null ? '—' : `−${n(operations.market.confirmedDuplicates)}`}</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">duplicados confirmados</p>
+          </div>
+          <div>
+            <p className="text-2xl font-semibold tabular-nums">{n(operations.market.logicalProperties)}</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">propiedades lógicas</p>
+          </div>
+        </div>
+      </section>
 
       {priorities.length ? (
         <section className="mt-8 max-w-5xl">
