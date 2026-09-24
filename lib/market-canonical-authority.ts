@@ -5,13 +5,13 @@ import { createServiceClient } from '@/lib/supabase/service'
 type CanonicalSourceRow = {
   code: string
   name: string
-  fileName: string | null
-  fileHash: string | null
-  rowCount: number | null
-  periodStart: string | null
-  periodEnd: string | null
+  file_name: string | null
+  file_hash: string | null
+  row_count: number | null
+  period_start: string | null
+  period_end: string | null
   status: string
-  metadata: Record<string, unknown>
+  metadata: unknown
 }
 
 export type CanonicalMarketAuthority = {
@@ -69,7 +69,7 @@ export async function getCanonicalMarketAuthority(): Promise<CanonicalMarketAuth
 
   if (error) throw new Error(`CANONICAL_MARKET_AUTHORITY_FAILED:${error.message}`)
 
-  const byCode = new Map((data ?? []).map((row) => [row.code, row as CanonicalSourceRow]))
+  const byCode = new Map<string, CanonicalSourceRow>((data ?? []).map((row) => [row.code, row]))
   const cbrs = byCode.get('cbrs_vitacura_canonical_2014_2026') ?? null
   const kml = byCode.get('kml_vitacura_barrios_2026_08_12') ?? null
   const housePortal = byCode.get('portal_canonical_houses_2026_03_09') ?? null
@@ -80,34 +80,34 @@ export async function getCanonicalMarketAuthority(): Promise<CanonicalMarketAuth
 
   const portalRows = [housePortal, apartmentPortal, projectPortal].filter((row): row is CanonicalSourceRow => Boolean(row))
   const observedAt = portalRows
-    .map((row) => row.periodEnd)
+    .map((row) => row.period_end)
     .filter((value): value is string => Boolean(value))
     .sort()
     .at(-1) ?? null
 
   return {
     cbrs: {
-      workbookRows: numberOrNull(cbrs?.rowCount),
+      workbookRows: numberOrNull(cbrs?.row_count),
       residentialEvents: numberOrNull(cbrsMeta.residential_compraventa_events),
       houses: numberOrNull(cbrsMeta.houses),
       apartments: numberOrNull(cbrsMeta.departments),
-      periodStart: cbrs?.periodStart ?? null,
-      periodEnd: cbrs?.periodEnd ?? null,
+      periodStart: cbrs?.period_start ?? null,
+      periodEnd: cbrs?.period_end ?? null,
       aggregationRule: typeof cbrsMeta.aggregation_rule === 'string' ? cbrsMeta.aggregation_rule : null,
-      sourceFile: cbrs?.fileName ?? null,
-      sourceHash: cbrs?.fileHash ?? null,
+      sourceFile: cbrs?.file_name ?? null,
+      sourceHash: cbrs?.file_hash ?? null,
     },
     portalReference: {
-      houses: numberOrNull(metadata(housePortal).valid_listing_rows ?? housePortal?.rowCount),
-      apartments: numberOrNull(metadata(apartmentPortal).valid_listing_rows ?? apartmentPortal?.rowCount),
-      projects: numberOrNull(metadata(projectPortal).valid_listing_rows ?? projectPortal?.rowCount),
+      houses: numberOrNull(metadata(housePortal).valid_listing_rows ?? housePortal?.row_count),
+      apartments: numberOrNull(metadata(apartmentPortal).valid_listing_rows ?? apartmentPortal?.row_count),
+      projects: numberOrNull(metadata(projectPortal).valid_listing_rows ?? projectPortal?.row_count),
       observedAt,
-      sourceFiles: portalRows.map((row) => row.fileName).filter((value): value is string => Boolean(value)),
+      sourceFiles: portalRows.map((row) => row.file_name).filter((value): value is string => Boolean(value)),
     },
     territory: {
-      neighborhoods: numberOrNull(kml?.rowCount),
-      sourceFile: kml?.fileName ?? null,
-      sourceHash: kml?.fileHash ?? null,
+      neighborhoods: numberOrNull(kml?.row_count),
+      sourceFile: kml?.file_name ?? null,
+      sourceHash: kml?.file_hash ?? null,
     },
   }
 }
