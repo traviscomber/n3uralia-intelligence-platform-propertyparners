@@ -50,14 +50,13 @@ test('Navidad 1427: 227 útiles, 53 terraza y 70 UF/m² produce 15.890 UF', () =
   assert.equal(result.commercialValueUf, 15890)
   assert.equal(result.effectiveAreaM2, 253.5)
   assert.equal(result.commercialWeightedUfM2, 62.7)
-  assert.deepEqual(result.scenarios.map((scenario) => scenario.publicationUf), [15890, 16726, 17656])
+  assert.deepEqual(result.scenarios.map((scenario) => scenario.publicationUf), [15890, 16726])
 })
 
 test('Publication scenarios use margin inversion, not multiplication', () => {
   const scenarios = calculatePublicationScenarios(15890, 253.5)
-  assert.deepEqual(scenarios.map((scenario) => scenario.margin), [0, 0.05, 0.1])
+  assert.deepEqual(scenarios.map((scenario) => scenario.margin), [0, 0.05])
   assert.equal(scenarios[1].publicationUf, Math.round(15890 / 0.95))
-  assert.equal(scenarios[2].publicationUf, Math.round(15890 / 0.9))
   assert.notEqual(scenarios[1].publicationUf, Math.round(15890 * 1.05))
 })
 
