@@ -10,6 +10,7 @@ import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
 import { getExecutiveDashboardSnapshot } from '@/lib/executive-dashboard-snapshot'
 import { comparisonPeriod, verifiedChange } from '@/lib/executive-dashboard-comparisons'
+import { getCanonicalMarketAuthority } from '@/lib/market-canonical-authority'
 
 function number(value: number | null) {
   return value === null ? '—' : value.toLocaleString('es-CL')
@@ -78,15 +79,19 @@ function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
 export default async function MarketPage() {
   const scope = await requireUserScope()
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
-  const [market, territory, portalReference, executiveResult] = await Promise.all([
+  const [market, territory, portalReference, executiveResult, authorityResult] = await Promise.all([
     getOperationalMarketSnapshot(),
     getVitacuraNeighborhoodSnapshot(),
     getPortalReferenceSnapshot(),
     canManage
       ? getExecutiveDashboardSnapshot().then((snapshot) => ({ snapshot, error: false })).catch(() => ({ snapshot: null, error: true }))
       : Promise.resolve({ snapshot: null, error: false }),
+    getCanonicalMarketAuthority()
+      .then((authority) => ({ authority, error: false }))
+      .catch(() => ({ authority: null, error: true })),
   ])
   const executive = executiveResult.snapshot
+  const authority = authorityResult.authority
 
   const territorialCoverage = market.canonicalProperties && market.missingNeighborhoods !== null
     ? (market.canonicalProperties - market.missingNeighborhoods) / market.canonicalProperties
@@ -341,6 +346,34 @@ export default async function MarketPage() {
             <p>Base PP: {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades lógicas</p>
           </div>
         </details>
+
+        {authority ? <details className="mt-3 border-b border-[var(--n3-line)] pb-3">
+          <summary className="flex min-h-10 cursor-pointer items-center justify-between gap-4 text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+            <span>Fuentes canónicas de inteligencia</span>
+            <span className="text-[10px] uppercase tracking-[0.12em]">Autoridad</span>
+          </summary>
+          <div className="mt-3 grid gap-5 text-xs leading-5 lg:grid-cols-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">CBRS</p>
+              <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{number(authority.cbrs.residentialEvents)} compraventas residenciales</p>
+              <p className="mt-1 text-[var(--n3-text-muted)]">{number(authority.cbrs.houses)} casas · {number(authority.cbrs.apartments)} departamentos</p>
+              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{number(authority.cbrs.workbookRows)} filas raw · agregación por inscripción canónica</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Portal · referencia</p>
+              <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{number(authority.portalReference.houses)} casas · {number(authority.portalReference.apartments)} deptos.</p>
+              <p className="mt-1 text-[var(--n3-text-muted)]">{number(authority.portalReference.projects)} proyectos · snapshot {shortDate(authority.portalReference.observedAt)}</p>
+              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Benchmark canónico entregado por Property Partners; no equivale al mercado live de hoy.</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Territorio</p>
+              <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{number(authority.territory.neighborhoods)} barrios oficiales</p>
+              <p className="mt-1 text-[var(--n3-text-muted)]">{authority.territory.sourceFile ?? 'KML Property Partners'}</p>
+              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">El KML es la autoridad territorial; el mapa sólo representa esa geometría.</p>
+            </div>
+          </div>
+        </details> : null}
+        {authorityResult.error ? <p className="mt-3 text-[11px] text-[#f0c96a]">No fue posible consultar el registro de fuentes canónicas; no se muestran cifras de autoridad.</p> : null}
       </section>
 
       <section className="mt-8">
