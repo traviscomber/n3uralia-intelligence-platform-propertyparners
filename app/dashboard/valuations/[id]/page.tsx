@@ -46,6 +46,21 @@ function effectiveHouseArea(built:number|null|undefined,land:number|null|undefin
   if(built==null || land==null) return null
   return built + land / 4
 }
+function median(values:number[]){
+  if(!values.length) return null
+  const sorted=[...values].sort((a,b)=>a-b)
+  const mid=Math.floor(sorted.length/2)
+  return sorted.length%2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2
+}
+function average(values:number[]){
+  return values.length ? values.reduce((sum,value)=>sum+value,0)/values.length : null
+}
+function pctDelta(value:number|null,base:number|null){
+  return value!=null && base!=null && base!==0 ? ((value-base)/base)*100 : null
+}
+function pctLabel(value:number|null){
+  return value==null ? '—' : `${value>=0?'+':''}${n1.format(value)}%`
+}
 
 export default function ValuationWorkspacePage(){
   const params = useParams<{id:string}>()
@@ -73,6 +88,34 @@ export default function ValuationWorkspacePage(){
 
   const accepted = useMemo(()=>data?.comparables.filter(item=>item.selected && item.match_status==='accepted') ?? [],[data])
   const evidenceAlerts = useMemo(()=>data?.comparables.filter(item=>(item.contradictions?.length ?? 0)>0) ?? [],[data])
+  const decisionMetrics = useMemo(()=>{
+    if(!data?.valuationCase) return null
+    const valuation=data.valuationCase
+    const ufM2=accepted.map(item=>Number(item.price_uf_m2)).filter(Number.isFinite)
+    const prices=accepted.map(item=>Number(item.price_uf)).filter(Number.isFinite)
+    const distances=accepted.map(item=>Number(item.distance_meters)).filter(Number.isFinite)
+    const medianUfM2=median(ufM2), averageUfM2=average(ufM2)
+    const minUfM2=ufM2.length?Math.min(...ufM2):null, maxUfM2=ufM2.length?Math.max(...ufM2):null
+    const effectiveArea=valuation.property_type==='Casa'
+      ? effectiveHouseArea(valuation.built_area_m2,valuation.land_area_m2)
+      : valuation.useful_area_m2!=null ? valuation.useful_area_m2 + (valuation.terrace_area_m2??0)/2 : null
+    const estimated=valuation.estimated_value_uf==null?null:Number(valuation.estimated_value_uf)
+    const impliedUfM2=estimated!=null && effectiveArea && effectiveArea>0 ? estimated/effectiveArea : null
+    const avgPrice=average(prices), medianPrice=median(prices)
+    const dispersionPct=medianUfM2 && minUfM2!=null && maxUfM2!=null ? ((maxUfM2-minUfM2)/medianUfM2)*100 : null
+    const cbrsCount=accepted.filter(item=>item.source_type==='CBRS').length
+    const offerCount=accepted.filter(item=>item.source_type==='Portal'||item.source_type==='TocToc').length
+    const scenarios=estimated==null?[]:[0,5,10].map(margin=>({margin,price:estimated/(1-margin/100)}))
+    return {
+      effectiveArea,impliedUfM2,medianUfM2,averageUfM2,minUfM2,maxUfM2,
+      avgPrice,medianPrice,dispersionPct,cbrsCount,offerCount,
+      medianDistance:median(distances),
+      deltaVsMedianUfM2:pctDelta(impliedUfM2,medianUfM2),
+      deltaVsAverageUfM2:pctDelta(impliedUfM2,averageUfM2),
+      deltaVsMedianPrice:pctDelta(estimated,medianPrice),
+      scenarios,
+    }
+  },[accepted,data?.valuationCase])
   const caseWarnings = data?.valuationCase.evidence?.warnings ?? []
 
   async function comparableAction(comparableId:string,action:'select'|'exclude'){
@@ -171,6 +214,42 @@ export default function ValuationWorkspacePage(){
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {[[resultLabel(valuation.status),uf(valuation.estimated_value_uf)],['Referencia persistida',valuation.low_value_uf===valuation.high_value_uf?uf(valuation.estimated_value_uf):`${uf(valuation.low_value_uf)} — ${uf(valuation.high_value_uf)}`],['Confianza',valuation.confidence ? (confidenceLabels[valuation.confidence] || valuation.confidence) : '—'],['Comparables aceptados',String(accepted.length)],['Alertas evidencia',String(evidenceAlerts.length)]].map(([label,value])=><div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{value}</p></div>)}
     </section>
+    {decisionMetrics && <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+      <div className="border-b border-[var(--n3-line)] p-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-[var(--n3-teal)]">INSIGHTS PARA DECISIÓN</p>
+        <h2 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">Cómo se posiciona esta valorización frente a la evidencia seleccionada</h2>
+        <p className="mt-1 text-sm text-[var(--n3-text-muted)]">Métricas descriptivas. No reemplazan la decisión profesional ni aplican ajustes automáticos.</p>
+      </div>
+      <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase text-[var(--n3-text-muted)]">Área comparable sujeto</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{m2(decisionMetrics.effectiveArea)}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{valuation.property_type==='Casa'?'Construidos + terreno/4':'Útil + terraza/2'}</p></div>
+        <div className="bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase text-[var(--n3-text-muted)]">UF/m² implícito</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{decisionMetrics.impliedUfM2==null?'—':`${n1.format(decisionMetrics.impliedUfM2)} UF/m²`}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">vs mediana {pctLabel(decisionMetrics.deltaVsMedianUfM2)}</p></div>
+        <div className="bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase text-[var(--n3-text-muted)]">Mediana comparables</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{decisionMetrics.medianUfM2==null?'—':`${n1.format(decisionMetrics.medianUfM2)} UF/m²`}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Promedio {decisionMetrics.averageUfM2==null?'—':n1.format(decisionMetrics.averageUfM2)} UF/m²</p></div>
+        <div className="bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase text-[var(--n3-text-muted)]">Dispersión muestra</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{decisionMetrics.dispersionPct==null?'—':`${n1.format(decisionMetrics.dispersionPct)}%`}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{decisionMetrics.minUfM2==null?'—':n1.format(decisionMetrics.minUfM2)}–{decisionMetrics.maxUfM2==null?'—':n1.format(decisionMetrics.maxUfM2)} UF/m²</p></div>
+      </div>
+      <div className="grid gap-4 p-4 lg:grid-cols-3">
+        <div className="border border-[var(--n3-line)] p-4">
+          <p className="text-xs uppercase text-[var(--n3-text-muted)]">Precio vs muestra</p>
+          <p className="mt-2 text-sm text-[var(--n3-text-light)]">Mediana CBRS/selección: <strong>{uf(decisionMetrics.medianPrice)}</strong></p>
+          <p className="mt-1 text-sm text-[var(--n3-text-light)]">Valorización vs mediana: <strong>{pctLabel(decisionMetrics.deltaVsMedianPrice)}</strong></p>
+        </div>
+        <div className="border border-[var(--n3-line)] p-4">
+          <p className="text-xs uppercase text-[var(--n3-text-muted)]">Cobertura de evidencia</p>
+          <p className="mt-2 text-sm text-[var(--n3-text-light)]">{decisionMetrics.cbrsCount} ventas CBRS · {decisionMetrics.offerCount} ofertas Portal/TocToc</p>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{decisionMetrics.offerCount===0?'Sin contraste de oferta activa en la muestra seleccionada.':'Ventas registradas y oferta observada presentes.'}</p>
+        </div>
+        <div className="border border-[var(--n3-line)] p-4">
+          <p className="text-xs uppercase text-[var(--n3-text-muted)]">Distancia típica</p>
+          <p className="mt-2 text-sm text-[var(--n3-text-light)]">{decisionMetrics.medianDistance==null?'No disponible':`${nf.format(decisionMetrics.medianDistance)} m mediana`}</p>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Contexto espacial de los comparables aceptados.</p>
+        </div>
+      </div>
+      {decisionMetrics.scenarios.length>0 && <div className="border-t border-[var(--n3-line)] p-4">
+        <p className="text-xs uppercase text-[var(--n3-text-muted)]">Escenarios de publicación canónicos</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          {decisionMetrics.scenarios.map(s=><div key={s.margin} className="border border-[var(--n3-line)] p-3"><p className="text-xs text-[var(--n3-text-muted)]">{s.margin===5?'+5% · estándar PP':`+${s.margin}%`}</p><p className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">{uf(s.price)}</p></div>)}
+        </div>
+      </div>}
+    </section>}
 
     <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
       <div className="border-b border-[var(--n3-line)] p-4"><h2 className="text-lg font-semibold text-[var(--n3-text-light)]">Comparables trazables</h2><p className="text-sm text-[var(--n3-text-muted)]">Portal, CBRS, KML canónico y metodología Property Partners se evalúan por separado. Una contradicción de ROL, geografía o UF/m² bloquea la selección hasta validación.</p></div>
