@@ -95,7 +95,12 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
       ? conditionResult.transformation as Record<string, unknown>
       : null
     const transformationStatus = text(transformation?.status)
-    return { evidence, recommendedValue, recommendedRate, confirmedValue, deltaPct, strictCount, gate, transformationStatus }
+    const backtestMapePct = numberValue(evidence.backtestMapePct)
+    const backtestReliability = text(evidence.backtestReliability)
+    const holdoutEventKey = text(evidence.subjectHoldoutEventKey)
+    const holdoutExcluded = evidence.holdoutExcludedFromCalculation === true
+    const contractualRangeDefined = valuation.low_value_uf != null && valuation.high_value_uf != null && Number(valuation.low_value_uf) !== Number(valuation.high_value_uf)
+    return { evidence, recommendedValue, recommendedRate, confirmedValue, deltaPct, strictCount, gate, transformationStatus, backtestMapePct, backtestReliability, holdoutEventKey, holdoutExcluded, contractualRangeDefined }
   }, [valuation])
 
   if (!valuation || !summary) return null
@@ -132,6 +137,12 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
           <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Rango defendible</dt><dd className="mt-2 text-base font-semibold">{range}</dd></div>
           <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Evidencia</dt><dd className="mt-2 text-xl font-semibold">{acceptedCount} comparables</dd><p className="mt-1 text-xs text-neutral-500">{summary.strictCount != null ? `${summary.strictCount} físicamente compatibles` : 'Compatibilidad no disponible'}</p></div>
         </dl>
+
+        <div className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
+          <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Rango contractual</p><p className="mt-1 font-semibold">{summary.contractualRangeDefined ? range : 'Pendiente de regla PP'}</p></div>
+          <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Backtest</p><p className="mt-1 font-semibold">{summary.backtestMapePct == null ? 'No disponible' : `MAPE ${decimal.format(summary.backtestMapePct)}%`}</p><p className="mt-1 text-xs text-neutral-500">Confiabilidad {summary.backtestReliability || 'no informada'}</p></div>
+          <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Holdout sujeto</p><p className="mt-1 break-all font-semibold">{summary.holdoutEventKey || 'No disponible'}</p><p className="mt-1 text-xs text-neutral-500">{summary.holdoutExcluded ? 'Excluido del cálculo; validación externa.' : 'Exclusión no confirmada.'}</p></div>
+        </div>
 
         <div className="mt-5 grid gap-4 text-sm lg:grid-cols-4">
           <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Selección</div><p className="mt-2 font-semibold">Barrio PP + compatibilidad física</p><p className="mt-1 text-xs leading-5 text-neutral-600">Gate: {summary.gate || 'metodología histórica / no disponible'}.</p></div>
