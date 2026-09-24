@@ -1,6 +1,6 @@
 import { OperationalState } from '@/components/ui/operational-state'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
-import VitacuraNeighborhoodsMap, { type MapFeature, type MapGeometry } from '@/components/market/vitacura-neighborhoods-map'
+import LeafletNeighborhoodsMap, { type MapFeature, type MapGeometry } from '@/components/market/leaflet-neighborhoods-map'
 import { requireAnyPageCapability } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
@@ -116,7 +116,7 @@ export default async function VitacuraMapPage() {
       ]} />
 
       <section className="mt-8">
-        <VitacuraNeighborhoodsMap features={features} sourceLabel={sourceLabel} />
+        <LeafletNeighborhoodsMap features={features} sourceLabel={sourceLabel} />
       </section>
     </WorkspaceShell>
   )
