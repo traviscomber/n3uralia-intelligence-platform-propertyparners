@@ -220,55 +220,68 @@ export async function POST(request: Request) {
     console.error('[management-import] alert evaluation failed', { code: alertError.code, runId: run.id })
   }
 
-  let reportRunId: string | null = null
   let reportGenerationFailed = false
-
   const importedMetrics = imported ?? []
-  const { data: existingReport, error: existingReportError } = await supabase
+  const globalReport = role === 'admin' || role === 'ceo'
+  const reportEntityIds: Array<string | null> = globalReport ? [null] : entityIds
+
+  const { data: existingReports, error: existingReportError } = await supabase
     .from('management_report_runs')
-    .select('id')
+    .select('id,entity_id')
     .eq('report_type', 'executive')
     .eq('period_start', periodStart)
     .eq('period_end', periodEnd)
     .contains('snapshot', { sourceImportRunId: run.id })
-    .maybeSingle()
+
+  const reportRunIds: string[] = []
 
   if (existingReportError) {
     reportGenerationFailed = true
     console.error('[management-import] weekly report dedupe lookup failed', { code: existingReportError.code, runId: run.id })
-  } else if (existingReport?.id) {
-    reportRunId = existingReport.id
   } else {
-    const { data: reportRun, error: reportError } = await supabase
-      .from('management_report_runs')
-      .insert({
-        report_type: 'executive',
-        entity_id: null,
-        period_start: periodStart,
-        period_end: periodEnd,
-        status: 'generated',
-        generated_by: user.id,
-        snapshot: {
-          trigger: 'weekly_source_upload',
-          sourceImportRunId: run.id,
-          sourceName,
-          sourceReference: body?.sourceReference ?? null,
-          generatedAt: new Date().toISOString(),
-          rowsReceived: rows.length,
-          rowsImported: importedMetrics.length,
-          warnings,
-          alertEvaluation: alerts?.[0] ?? null,
-          metrics: importedMetrics,
-        },
+    const existingByEntity = new Map((existingReports ?? []).map((report) => [report.entity_id ?? '__global__', report.id]))
+    const missingReports = reportEntityIds
+      .filter((entityId) => !existingByEntity.has(entityId ?? '__global__'))
+      .map((entityId) => {
+        const metrics = entityId === null
+          ? importedMetrics
+          : importedMetrics.filter((metric) => metric.entity_id === entityId)
+        return {
+          report_type: 'executive',
+          entity_id: entityId,
+          period_start: periodStart,
+          period_end: periodEnd,
+          status: 'generated',
+          generated_by: user.id,
+          snapshot: {
+            trigger: 'weekly_source_upload',
+            sourceImportRunId: run.id,
+            sourceName,
+            sourceReference: body?.sourceReference ?? null,
+            generatedAt: new Date().toISOString(),
+            rowsReceived: rows.filter((row) => entityId === null || row.entityId === entityId).length,
+            rowsImported: metrics.length,
+            warnings: warnings.filter((warning) => entityId === null || rows[warning.index]?.entityId === entityId),
+            alertEvaluation: alerts?.[0] ?? null,
+            metrics,
+          },
+        }
       })
-      .select('id')
-      .single()
 
-    if (reportError) {
-      reportGenerationFailed = true
-      console.error('[management-import] weekly report generation failed', { code: reportError.code, runId: run.id })
-    } else {
-      reportRunId = reportRun.id
+    for (const report of existingReports ?? []) reportRunIds.push(report.id)
+
+    if (missingReports.length) {
+      const { data: createdReports, error: reportError } = await supabase
+        .from('management_report_runs')
+        .insert(missingReports)
+        .select('id')
+
+      if (reportError) {
+        reportGenerationFailed = true
+        console.error('[management-import] weekly report generation failed', { code: reportError.code, runId: run.id })
+      } else {
+        reportRunIds.push(...(createdReports ?? []).map((report) => report.id))
+      }
     }
   }
 
@@ -279,7 +292,8 @@ export async function POST(request: Request) {
     warnings,
     alerts: alerts?.[0] ?? null,
     alertEvaluationFailed: Boolean(alertError),
-    reportRunId,
+    reportRunId: reportRunIds[0] ?? null,
+    reportRunIds,
     reportGenerationFailed,
   })
 }
