@@ -1,10 +1,231 @@
 {
-  "criterios_evaluacion": [
-    "Precio por m²",
-    "Velocidad de venta por zona",
-    "Tipo de propiedad",
-    "Ubicación y accesibilidad",
-    "Condiciones de mercado"
+  "schemaVersion": 2,
+  "status": "canonical",
+  "authority": {
+    "methodologyVersion": "property-partners-valuation-v2",
+    "sourcePriority": [
+      "Plantilla de Valorización Casas.xlsx",
+      "Plantilla de Valorización Departamentos.xlsx",
+      "BASE_CBR_CON_BARRIO_ASIGNADO VITACURA.xlsx",
+      "portal_urls_casas_final.xlsx",
+      "portal_detalle_deptos_full.xlsx",
+      "portal_detalle_Proyectos.xlsx",
+      "Barrios Vitacura.kml"
+    ],
+    "principle": "Source formulas and source semantics are canonical. Derived intelligence may explain or qualify them but must not silently replace them."
+  },
+  "sourceInventory": {
+    "valuationTemplates": [
+      {
+        "file": "Plantilla de Valorización Casas.xlsx",
+        "sha256": "b8e68128f76d1144f7bf8ef4c9244774f4baf9d7508559e8bbde3c1586254d1d",
+        "modifiedAt": "2020-09-11T19:51:34Z",
+        "role": "canonical_formula_source",
+        "formulaCells": 63,
+        "formulaErrorCells": 0
+      },
+      {
+        "file": "Plantilla de Valorización Departamentos.xlsx",
+        "sha256": "c71c7441de75da94cb4d661b639634db5026f4d1000cba9f9ab47c6d23114555",
+        "modifiedAt": "2020-09-10T23:03:55Z",
+        "role": "canonical_formula_source",
+        "formulaCells": 59,
+        "formulaErrorCells": 0
+      }
+    ],
+    "marketEvidence": [
+      {
+        "code": "cbrs_vitacura_canonical_2014_2026",
+        "file": "BASE_CBR_CON_BARRIO_ASIGNADO VITACURA.xlsx",
+        "canonicalDatabaseFile": "BASE_CBR_CON_BARRIO_ASIGNADO VITACURA(1).xlsx",
+        "sha256": "dd934b080dac2d9555c3dc9654c1226e525377a30f36f1368c52f4d49719cee3",
+        "workbookRows": 40843,
+        "residentialCompraventaEvents": 17581,
+        "houses": 5007,
+        "departments": 12574,
+        "periodStart": "2014-01-01",
+        "periodEnd": "2026-01-09",
+        "role": "registered_sale_evidence",
+        "aggregationRule": "one event per FOJA+NUMERO+FECHA+TOMO; exactly one residential primary asset; sum UF of event components; exclude remate and permuta"
+      },
+      {
+        "code": "portal_canonical_houses_2026_03_09",
+        "file": "portal_urls_casas_final.xlsx",
+        "sha256": "fe7e61b405f0131fa019cc2baf6b7b1f2bdb809f6f5fc5b0af61567725f2ec62",
+        "validRows": 1731,
+        "observedAt": "2026-03-09",
+        "role": "reference_asking_price_benchmark"
+      },
+      {
+        "code": "portal_canonical_departments_2026_03_09",
+        "file": "portal_detalle_deptos_full.xlsx",
+        "sha256": "70b702a490e4398b00aa62539e307ea3f565e2d0c62882c400e0d20c4245ccba",
+        "physicalRows": 3442,
+        "validRows": 3440,
+        "rejectedRows": 2,
+        "observedAt": "2026-03-09",
+        "role": "reference_asking_price_benchmark"
+      },
+      {
+        "code": "portal_canonical_projects_2026_03_09",
+        "file": "portal_detalle_Proyectos.xlsx",
+        "sha256": "91156a3ccc33d26ab279ecca20838e3400bd778ba060ca8e37cd7c88afc543ba",
+        "validRows": 26,
+        "areaFlaggedRows": 3,
+        "observedAt": "2026-03-09",
+        "role": "reference_project_benchmark"
+      },
+      {
+        "code": "kml_vitacura_barrios_2026_08_12",
+        "file": "Barrios Vitacura.kml",
+        "sha256": "334fc652e0cd02389f61c5eb2dc068d6c322524f1ad3de7c313e0659bfa1fa52",
+        "neighborhoods": 19,
+        "role": "territorial_geometry_authority"
+      }
+    ]
+  },
+  "methodology": {
+    "house": {
+      "commercialValueFormula": "built_area_m2 * built_rate_uf_m2 + land_area_m2 * land_rate_uf_m2",
+      "comparableAreaFormula": "built_area_m2 + land_area_m2 / 4",
+      "comparableUfM2Formula": "price_uf / (built_area_m2 + land_area_m2 / 4)",
+      "subjectWeightedUfM2Formula": "commercial_value_uf / (built_area_m2 + land_area_m2 / 4)",
+      "rule": "Construction and land rates remain separate inputs; never collapse them into one rate."
+    },
+    "apartment": {
+      "commercialValueFormula": "useful_area_m2 * applied_useful_uf_m2",
+      "portalComparableAreaFormula": "useful_area_m2 + (total_area_m2 - useful_area_m2) / 2",
+      "portalComparableUfM2Formula": "price_uf / (useful_area_m2 + (total_area_m2 - useful_area_m2) / 2)",
+      "cbrsComparableUfM2Formula": "price_uf / registered_area_m2",
+      "subjectWeightedAreaFormula": "useful_area_m2 + terrace_area_m2 / 2",
+      "subjectWeightedUfM2Formula": "commercial_value_uf / (useful_area_m2 + terrace_area_m2 / 2)",
+      "rule": "CBRS area is used as registered source area unless audited semantics prove it is specifically useful area."
+    },
+    "publication": {
+      "scenariosPct": [
+        0,
+        5,
+        10
+      ],
+      "formula": "commercial_value_uf / (1 - margin_pct/100)",
+      "semantics": "Publication scenario preserves the commercial value after the assumed negotiation margin.",
+      "productGuidance": "+5% may be highlighted as the standard recommendation, but 0/5/10 remain canonical evidence."
+    }
+  },
+  "comparablesPolicy": {
+    "technicalMinimumSelected": 3,
+    "normalReliableMaximum": 5,
+    "aboveFiveRule": "Allowed only with explicit justification that additional evidence improves quality or confidence.",
+    "automaticOutlierDeletion": false,
+    "lowPriceOpportunitySignal": "Lowest 20% may be surfaced as an opportunity/review signal, never auto-deleted.",
+    "duplicateListings": "Explicit duplicates must count once.",
+    "sourceSeparation": {
+      "portalAndTocToc": "asking_price_evidence",
+      "cbrs": "registered_sale_evidence"
+    }
+  },
+  "qualitativePolicy": {
+    "fields": [
+      "condition",
+      "remodeling",
+      "orientation",
+      "floor",
+      "light",
+      "view",
+      "noise",
+      "commercial_potential"
+    ],
+    "currentCanonicalBehavior": "review_evidence_only_no_automatic_economic_adjustment",
+    "databaseCatalogBoundsAreAdvisory": true,
+    "reason": "The source templates and current v2 contract do not define approved automatic economic weights for subjective factors."
+  },
+  "historicalTemplateFixture": {
+    "propertyType": "Departamento",
+    "address": "Navidad 1427, depto 81",
+    "neighborhood": "Las Nieves",
+    "rol": "413-293",
+    "usefulAreaM2": 227,
+    "terraceAreaM2": 53,
+    "appliedUsefulUfM2": 70,
+    "commercialValueUf": 15890,
+    "effectiveAreaM2": 253.5,
+    "weightedUfM2": 62.7,
+    "publicationScenarios": [
+      {
+        "marginPct": 0,
+        "publicationUf": 15890
+      },
+      {
+        "marginPct": 5,
+        "publicationUf": 16726
+      },
+      {
+        "marginPct": 10,
+        "publicationUf": 17656
+      }
+    ],
+    "status": "regression_fixture_not_current_market_truth"
+  },
+  "templateQualityFindings": [
+    {
+      "severity": "critical",
+      "code": "EXPLICIT_DUPLICATE_INCLUDED_IN_SOURCE_TEMPLATE",
+      "detail": "Apartment source rows 16 and 17 are declared to be the same listing but both feed source averages. Canonical processing deduplicates them."
+    },
+    {
+      "severity": "critical",
+      "code": "MISPLACED_RUT_VALUE_IN_TEMPLATE",
+      "detail": "The apartment template RUT field contains an area description and must not be interpreted as an identifier."
+    },
+    {
+      "severity": "warning",
+      "code": "STALE_TEMPLATE_PORTAL_URLS",
+      "detail": "The six historical apartment offer URLs are not present in the supplied 2026-03-09 Portal reference snapshot."
+    },
+    {
+      "severity": "warning",
+      "code": "PARTIAL_HISTORICAL_CBRS_REPRODUCIBILITY",
+      "detail": "Only 2 of the 6 apartment-template registered comparables reproduce exactly in the supplied canonical CBRS workbook under the legacy matching rule."
+    },
+    {
+      "severity": "warning",
+      "code": "HOUSE_TEMPLATE_NO_POPULATED_CASE",
+      "detail": "The house workbook is a formula authority but does not provide a populated historical valuation case."
+    },
+    {
+      "severity": "warning",
+      "code": "TEMPLATE_VINTAGE_2020",
+      "detail": "Both valuation templates were last modified in 2020; formulas remain authority, historical example evidence does not represent current market."
+    }
   ],
-  "metodologia": "Análisis multi-factor según ubicación, tipo de propiedad, condiciones de mercado"
+  "canonicalVsAdvisory": {
+    "canonical": [
+      "template mathematics",
+      "selected comparable evidence",
+      "CBRS registered sale evidence",
+      "Portal reference asking-price evidence",
+      "KML neighborhood geometry",
+      "0/5/10 publication scenarios",
+      "human workflow decisions and immutable issued snapshots"
+    ],
+    "advisoryOrShadow": [
+      "similarity scores",
+      "second opinion findings",
+      "ML shadow predictions",
+      "PRC features",
+      "topography evidence",
+      "road hierarchy evidence",
+      "regime routing",
+      "professional-review suggestions"
+    ],
+    "guardrail": "Advisory/shadow layers may inform review or confidence but must not silently overwrite the canonical v2 commercial value."
+  },
+  "privacy": {
+    "excludeFromCanonicalAnalytics": [
+      "owner_name",
+      "rut",
+      "buyer_name",
+      "seller_name"
+    ]
+  }
 }
