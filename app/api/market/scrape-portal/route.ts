@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { requireExecutiveAccess } from '@/lib/api-access'
 import { collectPortalVitacura } from '@/lib/portal-inmobiliario-collector'
-import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'\nimport { evaluatePortalSnapshotPolicy } from '@/lib/portal-snapshot-policy'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -75,15 +75,16 @@ export async function POST(req: NextRequest) {
 
     const normalized = normalizePortalListingRows(collection.rows)
     const validRows = normalized.filter((row) => row.source_listing_id && row.url)
-    const validCoverage = collection.listingUrls.length > 0
-      ? validRows.length / collection.listingUrls.length
-      : 0
-    const fullSnapshotEligible = collection.discovery.exhausted
-      && !collection.discovery.capped
-      && collection.listingUrls.length >= 30
-      && collection.failures.length === 0
-      && validCoverage >= 0.98
-    const fullSnapshot = requestedFullSnapshot && fullSnapshotEligible
+    const snapshotPolicy = evaluatePortalSnapshotPolicy({
+      requestedFullSnapshot,
+      pagesVisited: collection.discovery.pagesVisited,
+      discoveredListingUrls: collection.listingUrls.length,
+      validListingRows: validRows.length,
+      failedListingDetails: collection.failures.length,
+      discoveryExhausted: collection.discovery.exhausted,
+      discoveryCapped: collection.discovery.capped,
+    })
+    const { validCoverage, fullSnapshotEligible, fullSnapshot } = snapshotPolicy
     const summary = {
       datasetKind,
       searchPages: collection.searchUrls.length,
