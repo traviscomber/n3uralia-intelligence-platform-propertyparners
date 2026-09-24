@@ -35,6 +35,13 @@ export type PedroMarketTypeSnapshot = {
   offerLatestObservedAt: string | null
   fullSnapshot: boolean
   portalReportedCount: number | null
+  rawListingCandidates: number | null
+  duplicateListingCandidates: number | null
+  uniqueListingsDiscovered: number | null
+  validListingRows: number | null
+  discoveryExhausted: boolean | null
+  discoveryCapped: boolean | null
+  captureFilterLabel: string
   absorptionMonths: number | null
   salesPriceQuintiles: PedroQuintiles
   salesUfM2Quintiles: PedroQuintiles
@@ -204,6 +211,15 @@ export async function getPedroMarketSnapshot(): Promise<PedroMarketSnapshot> {
       : {}
     const fullSnapshot = metadata.full_snapshot === true
     const portalReportedCount = numberOrNull(metadata.portal_reported_count)
+    const rawListingCandidates = numberOrNull(metadata.raw_listing_candidates)
+    const duplicateListingCandidates = numberOrNull(metadata.duplicate_listing_candidates)
+    const uniqueListingsDiscovered = numberOrNull(metadata.unique_listings_discovered)
+    const validListingRows = numberOrNull(metadata.valid_listing_rows)
+    const discoveryExhausted = typeof metadata.discovery_exhausted === 'boolean' ? metadata.discovery_exhausted : null
+    const discoveryCapped = typeof metadata.discovery_capped === 'boolean' ? metadata.discovery_capped : null
+    const captureFilterLabel = propertyType === 'Casa'
+      ? 'Venta · Casa · Propiedades usadas · Vitacura'
+      : 'Venta · Departamento · Propiedades usadas · Vitacura'
     const offerEvidenceCount = offerRows.length
     const absorptionMonths = fullSnapshot && averageMonthlySales != null && averageMonthlySales > 0
       ? offerEvidenceCount / averageMonthlySales
@@ -226,6 +242,13 @@ export async function getPedroMarketSnapshot(): Promise<PedroMarketSnapshot> {
       offerLatestObservedAt: offerRows[0]?.observed_at ?? null,
       fullSnapshot,
       portalReportedCount,
+      rawListingCandidates,
+      duplicateListingCandidates,
+      uniqueListingsDiscovered,
+      validListingRows,
+      discoveryExhausted,
+      discoveryCapped,
+      captureFilterLabel,
       absorptionMonths,
       salesPriceQuintiles: quintiles(salesPrices),
       salesUfM2Quintiles: quintiles(salesUfM2),
