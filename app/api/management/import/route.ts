@@ -108,7 +108,7 @@ export async function POST(request: Request) {
   const metricCodes = [...new Set(rows.map((row) => row.metricCode))]
 
   const [{ data: entities, error: entityError }, { data: definitions, error: definitionError }] = await Promise.all([
-    supabase.from('management_entities').select('id').in('id', entityIds),
+    supabase.from('management_entities').select('id,name,entity_type').in('id', entityIds),
     supabase.from('management_metric_definitions').select('code,active,formula_version').in('code', metricCodes),
   ])
 
@@ -121,6 +121,7 @@ export async function POST(request: Request) {
   }
 
   const knownEntities = new Set((entities ?? []).map((entity) => entity.id))
+  const entityById = new Map((entities ?? []).map((entity) => [entity.id, entity]))
   const definitionMap = new Map((definitions ?? []).map((definition) => [definition.code, definition]))
   const warnings: Array<{ index: number; code: string; detail: string }> = []
 
@@ -257,6 +258,13 @@ export async function POST(request: Request) {
             sourceName,
             sourceReference: body?.sourceReference ?? null,
             generatedAt: new Date().toISOString(),
+            scope: entityId === null
+              ? { type: 'global', id: null, name: 'Property Partners Vitacura' }
+              : {
+                  type: entityById.get(entityId)?.entity_type ?? 'entity',
+                  id: entityId,
+                  name: entityById.get(entityId)?.name ?? entityId,
+                },
             rowsReceived: rows.filter((row) => entityId === null || row.entityId === entityId).length,
             rowsImported: metrics.length,
             warnings: warnings.filter((warning) => entityId === null || rows[warning.index]?.entityId === entityId),
