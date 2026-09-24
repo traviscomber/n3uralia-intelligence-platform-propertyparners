@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
+import { createServiceClient } from '@/lib/supabase/service'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 
 const DAY_MS = 86_400_000
@@ -39,10 +40,13 @@ function boundedScore(value: number) {
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  try {
+    await requireCapability('market.read')
+  } catch (error) {
+    return accessErrorResponse(error)
+  }
 
+  const supabase = createServiceClient()
   const { id } = await context.params
   const propertyFields = 'id,canonical_key,property_type,normalized_address,neighborhood_id,useful_area_m2,built_area_m2,bedrooms,bathrooms,parking_spaces,identity_status,identity_confidence,identity_evidence,first_seen_at,last_seen_at'
 

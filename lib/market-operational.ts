@@ -276,11 +276,9 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       // The canonical live Portal house universe is owned by the dedicated
       // Vitacura house source. The legacy Portal source remains historical
       // evidence and must never inflate today's available inventory.
-      activeInventory: inventoryCount != null && Number.isFinite(inventoryCount)
+      activeInventory: inventoryRun && inventoryCount != null && Number.isFinite(inventoryCount)
         ? inventoryCount
-        : identityProgressResult.error
-          ? (houseSummaryResult.error ? null : house?.portal_active_houses ?? 0)
-          : identityProgress?.portal_current_houses ?? 0,
+        : null,
       confirmedSales: latestMetric.error
         ? (operationalHouseSales && operationalHouseSales > 0 ? operationalHouseSales : null)
         : metric
@@ -337,11 +335,9 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestObservedAt: houseSummaryResult.error ? null : latestObservedAt,
       observationAgeDays: houseSummaryResult.error ? null : freshness.ageDays,
       freshnessStatus: houseSummaryResult.error ? 'unknown' : freshness.status,
-      liveHouseCount: inventoryCount != null && Number.isFinite(inventoryCount)
+      liveHouseCount: inventoryRun && inventoryCount != null && Number.isFinite(inventoryCount)
         ? inventoryCount
-        : identityProgressResult.error
-          ? (territoryProgressResult.error ? null : territoryProgress?.portal_current_houses ?? 0)
-          : identityProgress?.portal_current_houses ?? 0,
+        : null,
       exactKmlLiveHouses: territoryProgressResult.error ? null : territoryProgress?.exact_kml_houses ?? 0,
       pendingUniqueTerritorySuggestions: territoryProgressResult.error ? null : territoryProgress?.pending_unique_suggestions ?? 0,
       ambiguousTerritorySuggestions: territoryProgressResult.error ? null : territoryProgress?.ambiguous_suggestions ?? 0,

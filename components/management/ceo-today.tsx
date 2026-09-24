@@ -6,6 +6,7 @@ import { ArrowRight, RefreshCw } from 'lucide-react'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 import { formatPropertyPartnersPeriod } from '@/lib/property-partners-time'
+import { getDecisionThreshold } from '@/lib/management-decision-policy'
 
 type CurrentSnapshot = {
   period: { key: string; start: string; end: string }
@@ -34,6 +35,9 @@ type Operations = {
     neighborhoodTotal: number
     neighborhoodResolved: number
     neighborhoodExceptions: number
+    canonicalProperties: number | null
+    confirmedDuplicates: number | null
+    logicalProperties: number | null
   }
   tasks: { overdue: number; urgent: number }
   generatedAt: string
@@ -47,6 +51,9 @@ const n = (value: number | null | undefined, digits = 0) => value == null
 
 const ratio = (value: number | null | undefined, target: number | null | undefined) =>
   value != null && target != null && target !== 0 ? value / target * 100 : null
+
+const LEAD_BACKLOG_WATCH = getDecisionThreshold('lead-backlog-watch')
+const VISITS_WATCH = getDecisionThreshold('visits-watch')
 
 export function CeoToday() {
   const [current, setCurrent] = useState<CurrentResponse | null>(null)
@@ -109,10 +116,10 @@ export function CeoToday() {
         critical: true,
       })
     }
-    if (stale != null && stale > 0 && staleRatio != null && staleRatio >= 20) {
+    if (stale != null && stale > 0 && staleRatio != null && staleRatio >= LEAD_BACKLOG_WATCH) {
       items.push({ label: 'Leads antiguos', detail: `${n(stale)} leads superan 90 días`, href: '/dashboard/control/operations' })
     }
-    if (visitRate != null && visitRate < 80) {
+    if (visitRate != null && visitRate < VISITS_WATCH) {
       items.push({ label: 'Visitas', detail: `${n(visitRate, 0)}% de ejecución`, href: '/dashboard/control/operations' })
     }
     if (operations?.valuations.review) {
@@ -165,6 +172,32 @@ export function CeoToday() {
         { label: 'Cumplimiento', value: compliance == null ? '—' : `${n(compliance, 1)}%`, tone: compliance == null ? 'default' : compliance >= 100 ? 'success' : compliance >= 80 ? 'warning' : 'danger' },
         ...(reviewCount > 0 ? [{ label: 'Por revisar', value: reviewCount.toLocaleString('es-CL'), tone: 'warning' as const }] : []),
       ]} />
+
+      <section className="mt-8 max-w-5xl border-y border-[var(--n3-line)] py-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Inteligencia de mercado</p>
+            <h2 className="mt-1 text-base font-semibold text-[var(--n3-text-light)]">Base consolidada para decisión</h2>
+          </div>
+          <Link href="/dashboard/market" className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">
+            Abrir mercado <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-2xl font-semibold tabular-nums">{n(operations.market.canonicalProperties)}</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">registros canónicos</p>
+          </div>
+          <div>
+            <p className="text-2xl font-semibold tabular-nums text-[var(--n3-teal-soft)]">{operations.market.confirmedDuplicates == null ? '—' : `−${n(operations.market.confirmedDuplicates)}`}</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">duplicados confirmados</p>
+          </div>
+          <div>
+            <p className="text-2xl font-semibold tabular-nums">{n(operations.market.logicalProperties)}</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">propiedades lógicas</p>
+          </div>
+        </div>
+      </section>
 
       {priorities.length ? (
         <section className="mt-8 max-w-5xl">
