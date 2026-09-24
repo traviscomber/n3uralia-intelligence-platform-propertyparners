@@ -71,7 +71,7 @@ export type MarketSummary = {
 }
 
 export type PublicationScenario = {
-  upliftPct: 0 | 5
+  upliftPct: 0 | 5 | 10
   suggestedPriceUf: number
   suggestedUfM2: number
   varianceVsOfferMaxPct: number | null
@@ -211,7 +211,7 @@ export function calculateContractualValuation(
 
   const portalSummary = summarize(portalValues)
   const cbrsSummary = summarize(cbrsValues)
-  const publicationScenarios: PublicationScenario[] = ([0, 5] as const).map((upliftPct) => {
+  const publicationScenarios: PublicationScenario[] = ([0, 5, 10] as const).map((upliftPct) => {
     const suggestedPriceUf = round(commercial.valueUf / (1 - upliftPct / 100))
     const suggestedUfM2 = commercial.comparisonAreaM2 > 0 ? round(suggestedPriceUf / commercial.comparisonAreaM2) : 0
     return {
