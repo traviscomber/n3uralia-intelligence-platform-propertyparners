@@ -230,6 +230,7 @@ export function calculateContractualValuation(
   if (!cbrsSummary.count) warnings.push('Sin ventas CBRS seleccionadas para contraste.')
   if (portalSummary.count < 3) warnings.push('La muestra de oferta tiene menos de tres comparables.')
   if (cbrsSummary.count < 3) warnings.push('La muestra CBRS tiene menos de tres ventas comparables.')
+  if (selected.length > 5) warnings.push('La muestra supera cinco comparables; debe documentarse por qué la evidencia adicional mejora calidad o confianza.')
 
   const justification = subject.propertyType === 'Departamento'
     ? `Metodología canónica Property Partners para departamentos: valor comercial = m² útiles × UF/m² útil definido por el valorizador; oferta comparada con m² útiles + 50% de terraza y CBRS con la superficie registrada en la fuente canónica.`
