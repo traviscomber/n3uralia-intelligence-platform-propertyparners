@@ -668,10 +668,10 @@ resolved as (
   join public.management_entities e on e.name=g.entity_name and e.entity_type=g.entity_type
 )
 insert into public.management_goals (
-  entity_id,metric_code,period_start,period_end,target_value,source_name,status,approval_note,formula_version,updated_at
+  entity_id,metric_code,period_start,period_end,target_value,source_name,status,approval_note,formula_version,approved_at,updated_at
 )
 select entity_id,metric_code,period_start,period_end,target_value,'Pedro Directorio — Agosto 2026','approved',
-       'Canonical target published in Pedro''s August 2026 board report.',3,now()
+       'Canonical target published in Pedro''s August 2026 board report.',1,now(),now()
 from resolved
 on conflict (entity_id,metric_code,period_start,period_end)
 do update set
@@ -680,6 +680,7 @@ do update set
   status='approved',
   approval_note=excluded.approval_note,
   formula_version=1,
+  approved_at=now(),
   updated_at=now();
 
 commit;
