@@ -117,6 +117,18 @@ jobs:
       - name: Verify canonical management scoring
         run: pnpm management:scoring:verify
 
+      - name: Verify 2025 management source contracts
+        run: pnpm exec tsx scripts/verify-management-source-contracts-2025.ts
+
+      - name: Verify 2025 monthly management baseline
+        run: pnpm exec tsx scripts/verify-management-baseline-2025-events.ts
+
+      - name: Verify weekly report authorization scopes
+        run: node --import tsx --test tests/management-report-scope.test.ts
+
+      - name: Verify Property360 comparable gates
+        run: node --import tsx --test tests/property360-comparables.test.ts
+
       - name: Verify management report scheduling
         run: pnpm management:reports:verify
 
