@@ -105,6 +105,7 @@ export function getCanonicalManagementDashboardEntities(period = getLatestCanoni
     metrics: [
       metric('management_credited_sales', 'Cierres acreditados', 'count', company.creditedClosings, sourceName, sourceReference, period.period, company.documentaryClosingReference),
       metric('management_credited_sales_uf', 'UF acreditadas', 'uf', company.creditedSalesUf, sourceName, sourceReference, period.period),
+      metric('cumulative_management_credited_sales', 'Cierres acreditados acumulados', 'count', company.ytdCreditedClosings, sourceName, sourceReference, period.period, company.ytdDocumentaryReference),
       metric('operational_sales', 'Cierres operacionales', 'count', company.operationalClosings, sourceName, sourceReference, period.period),
       metric('operational_sales_uf', 'UF operacionales', 'uf', company.operationalSalesUf, sourceName, sourceReference, period.period),
       metric('stock', 'Cartera publicada', 'count', company.stock, sourceName, sourceReference, period.period),
