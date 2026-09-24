@@ -8,6 +8,12 @@ type TerritoryProgress = {
   exact_kml_houses: number | null
 }
 
+type HouseScopeSummary = {
+  v1_house_rows: number | null
+  logical_house_components: number | null
+  confirmed_duplicate_rows: number | null
+}
+
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -22,7 +28,7 @@ export async function GET() {
   if (profileError || !profile) return NextResponse.json({ error: profileError?.message ?? 'Perfil no configurado' }, { status: 403 })
   if (!['ceo', 'admin'].includes(normalize(profile.role))) return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 })
 
-  const [valuations, assignments, properties, tasks, profiles, neighborhoodQueue, territoryProgress] = await Promise.all([
+  const [valuations, assignments, properties, tasks, profiles, neighborhoodQueue, territoryProgress, scopeSummary] = await Promise.all([
     supabase.from('valuation_cases').select('id,status,updated_at').eq('property_type', 'Casa'),
     supabase.from('property_assignments').select('id,status,assigned_to,updated_at'),
     supabase.from('market_properties').select('id,identity_status,last_seen_at').eq('property_type', 'Casa'),
@@ -30,6 +36,7 @@ export async function GET() {
     supabase.from('profiles').select('id,role,team'),
     supabase.rpc('get_ceo_market_neighborhood_queue_v1'),
     supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
+    supabase.rpc('get_market_house_scope_summary_v1').maybeSingle(),
   ])
 
   const errors = [
@@ -40,6 +47,7 @@ export async function GET() {
     profiles.error,
     neighborhoodQueue.error,
     territoryProgress.error,
+    scopeSummary.error,
   ].map((error) => error?.message).filter((message): message is string => Boolean(message))
 
   const valuationRows = valuations.data ?? []
@@ -49,6 +57,7 @@ export async function GET() {
   const profileRows = profiles.data ?? []
   const neighborhoodExceptions = (neighborhoodQueue.data ?? []).length
   const territory = territoryProgress.data as TerritoryProgress | null
+  const scope = scopeSummary.data as HouseScopeSummary | null
   const today = new Date().toISOString().slice(0, 10)
   const countStatus = (rows: Array<{ status: string | null }>, status: string) => rows.filter((row) => row.status === status).length
   const openTasks = taskRows.filter((task) => ['open', 'in_progress'].includes(String(task.status)))
@@ -73,6 +82,9 @@ export async function GET() {
       neighborhoodTotal: Number(territory?.portal_current_houses ?? 0),
       neighborhoodResolved: Number(territory?.exact_kml_houses ?? 0),
       neighborhoodExceptions,
+      canonicalProperties: scopeSummary.error ? null : Number(scope?.v1_house_rows ?? 0),
+      confirmedDuplicates: scopeSummary.error ? null : Number(scope?.confirmed_duplicate_rows ?? 0),
+      logicalProperties: scopeSummary.error ? null : Number(scope?.logical_house_components ?? 0),
     },
     tasks: {
       total: taskRows.length,
