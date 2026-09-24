@@ -39,6 +39,11 @@ function boundedScore(value: number) {
   return Math.max(0, Math.min(1, value))
 }
 
+function isVitacuraAddress(value: unknown) {
+  const address = String(value ?? '').toLocaleLowerCase('es-CL')
+  return /(^|[\s,.-])vitacura([\s,.-]|$)/i.test(address)
+}
+
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     await requireCapability('market.read')
@@ -115,7 +120,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       const areaOk = candidateArea != null && candidateArea >= targetArea * 0.75 && candidateArea <= targetArea * 1.25
       const bedroomOk = property.bedrooms == null || bedrooms == null || Math.abs(Number(property.bedrooms) - bedrooms) <= 1
       const bathroomOk = property.bathrooms == null || bathrooms == null || Math.abs(Number(property.bathrooms) - bathrooms) <= 1
-      return areaOk && bedroomOk && bathroomOk
+      const geographyOk = isVitacuraAddress(candidate.normalized_address)
+      return areaOk && bedroomOk && bathroomOk && geographyOk
     })
   }
 
@@ -352,7 +358,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       impliedPriceAtMedian,
       priceVsMedianPct,
       domVsMedianMultiple,
-      methodology: 'Misma tipología y barrio contractual, superficie útil (o construida si falta) ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
+      methodology: 'Misma tipología y barrio contractual, comuna Vitacura verificada en la dirección normalizada, superficie útil (o construida si falta) ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
       quality: {
         score: Number(comparableQualityScore.toFixed(3)),
         label: comparableQualityScore >= 0.8 ? 'high' : comparableQualityScore >= 0.6 ? 'medium' : 'low',
