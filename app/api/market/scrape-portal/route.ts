@@ -146,45 +146,60 @@ export async function POST(req: NextRequest) {
 
     const runId = pipelineResult?.run_id ?? null
     if (runId) {
-      const { error: discoveryMetadataError } = await supabase
+      const { data: persistedRun, error: persistedRunError } = await supabase
         .from('market_ingestion_runs')
-        .update({
-          metadata: {
-            pipeline: 'unit_portal_listing_v2',
-            source_id: pipelineResult?.source_id ?? null,
-            observed_at: collection.observedAt,
-            full_snapshot: fullSnapshot,
-            requested_full_snapshot: requestedFullSnapshot,
-            portal_reported_count: collection.discovery.reportedResultCount,
-            search_filters: {
-              commune: 'vitacura-metropolitana',
-              operation: 'venta',
-              dataset_kind: datasetKind,
-            },
-            search_pages: collection.discovery.pagesVisited,
-            raw_listing_candidates: collection.discovery.rawListingCandidates,
-            duplicate_listing_candidates: collection.discovery.duplicateListingCandidates,
-            unique_listings_discovered: collection.discovery.uniqueListings,
-            discovered_listing_urls: collection.listingUrls.length,
-            parsed_listing_details: collection.rows.length,
-            valid_listing_rows: validRows.length,
-            failed_listing_details: collection.failures.length,
-            valid_coverage: validCoverage,
-            discovery_exhausted: collection.discovery.exhausted,
-            discovery_capped: collection.discovery.capped,
-            full_snapshot_eligible: fullSnapshotEligible,
-            linked_listings: Number(pipelineResult?.linked ?? 0),
-            unlinked_listings: Number(pipelineResult?.unlinked ?? 0),
-            new_listings: Number(pipelineResult?.new ?? 0),
-            updated_listings: Number(pipelineResult?.updated ?? 0),
-            unchanged_listings: Number(pipelineResult?.unchanged ?? 0),
-            removed_listings: Number(pipelineResult?.removed ?? 0),
-          },
-        })
+        .select('metadata')
         .eq('id', runId)
+        .maybeSingle()
 
-      if (discoveryMetadataError) {
-        logPortalFailure('PORTAL_DISCOVERY_METADATA_PERSIST_FAILED', discoveryMetadataError)
+      if (persistedRunError) {
+        logPortalFailure('PORTAL_DISCOVERY_METADATA_READ_FAILED', persistedRunError)
+      } else {
+        const existingMetadata = persistedRun?.metadata && typeof persistedRun.metadata === 'object' && !Array.isArray(persistedRun.metadata)
+          ? persistedRun.metadata as Record<string, unknown>
+          : {}
+
+        const { error: discoveryMetadataError } = await supabase
+          .from('market_ingestion_runs')
+          .update({
+            metadata: {
+              ...existingMetadata,
+              pipeline: 'unit_portal_listing_v2',
+              source_id: pipelineResult?.source_id ?? existingMetadata.source_id ?? null,
+              observed_at: collection.observedAt,
+              full_snapshot: fullSnapshot,
+              requested_full_snapshot: requestedFullSnapshot,
+              portal_reported_count: collection.discovery.reportedResultCount,
+              search_filters: {
+                commune: 'vitacura-metropolitana',
+                operation: 'venta',
+                dataset_kind: datasetKind,
+              },
+              search_pages: collection.discovery.pagesVisited,
+              raw_listing_candidates: collection.discovery.rawListingCandidates,
+              duplicate_listing_candidates: collection.discovery.duplicateListingCandidates,
+              unique_listings_discovered: collection.discovery.uniqueListings,
+              discovered_listing_urls: collection.listingUrls.length,
+              parsed_listing_details: collection.rows.length,
+              valid_listing_rows: validRows.length,
+              failed_listing_details: collection.failures.length,
+              valid_coverage: validCoverage,
+              discovery_exhausted: collection.discovery.exhausted,
+              discovery_capped: collection.discovery.capped,
+              full_snapshot_eligible: fullSnapshotEligible,
+              linked_listings: Number(pipelineResult?.linked ?? existingMetadata.linked_listings ?? 0),
+              unlinked_listings: Number(pipelineResult?.unlinked ?? existingMetadata.unlinked_listings ?? 0),
+              new_listings: Number(pipelineResult?.new ?? existingMetadata.new_listings ?? 0),
+              updated_listings: Number(pipelineResult?.updated ?? existingMetadata.updated_listings ?? 0),
+              unchanged_listings: Number(pipelineResult?.unchanged ?? existingMetadata.unchanged_listings ?? 0),
+              removed_listings: Number(pipelineResult?.removed ?? existingMetadata.removed_listings ?? 0),
+            },
+          })
+          .eq('id', runId)
+
+        if (discoveryMetadataError) {
+          logPortalFailure('PORTAL_DISCOVERY_METADATA_PERSIST_FAILED', discoveryMetadataError)
+        }
       }
     }
 
