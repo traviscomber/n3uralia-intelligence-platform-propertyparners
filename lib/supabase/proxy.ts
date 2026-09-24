@@ -16,7 +16,11 @@ export async function updateSession(request: NextRequest) {
   // These two endpoints are intentionally public and expose no authenticated
   // business records. /api/release returns deployment identity for CI, while
   // the valuation endpoint returns aggregate market statistics only.
-  if (pathname === '/api/release' || pathname === '/api/public/valuation-estimate') {
+  if (
+    pathname === '/api/release'
+    || pathname === '/api/public/valuation-estimate'
+    || pathname === '/api/internal/portal-collector-smoke'
+  ) {
     return NextResponse.next({ request })
   }
 

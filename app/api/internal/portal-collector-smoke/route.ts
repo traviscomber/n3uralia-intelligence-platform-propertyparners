@@ -1,58 +1,60 @@
 import { NextResponse } from 'next/server'
-import { collectPortalVitacura } from '@/lib/portal-inmobiliario-collector'
+import { discoverPortalVitacuraUniverse } from '@/lib/portal-inmobiliario-collector'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 300
 
 export async function GET() {
-  if (process.env.VERCEL_ENV === 'production') {
+  if (process.env.VERCEL_GIT_COMMIT_REF !== 'fix/portal-full-snapshot-reconciliation-v2') {
     return new NextResponse(null, { status: 404 })
   }
 
   try {
-    const collection = await collectPortalVitacura({
-      datasetKind: 'portal_apartments',
+    const startedAt = Date.now()
+    const collection = await discoverPortalVitacuraUniverse({
+      datasetKind: 'portal_houses',
       commune: 'vitacura-metropolitana',
       operation: 'venta',
-      maxPages: 1,
-      maxListings: 3,
-      waitMs: 300,
+      maxPages: 40,
+      waitMs: 150,
     })
 
-    const usableForValuation = collection.rows.filter((row) =>
-      Boolean(row.source_listing_id)
-      && Boolean(row.url)
-      && Boolean(row.address)
-      && Number(row.price_uf) >= 100
-      && (Number(row.useful_area_m2) > 5 || Number(row.built_area_m2) > 5),
+    const coverageRatio = collection.discovery.reportedResultCount && collection.discovery.reportedResultCount > 0
+      ? collection.listingUrls.length / collection.discovery.reportedResultCount
+      : null
+    const fullSnapshot = collection.discovery.exhausted
+      && !collection.discovery.capped
+      && collection.listingUrls.length >= 30
+      && coverageRatio != null
+      && coverageRatio >= 0.97
+      && coverageRatio <= 1.05
+
+    const runtimeMs = Date.now() - startedAt
+    console.info(
+      '[portal-collector-smoke-summary]',
+      JSON.stringify({
+        ok: fullSnapshot,
+        reported: collection.discovery.reportedResultCount,
+        unique: collection.listingUrls.length,
+        coverageRatio,
+        pagesVisited: collection.discovery.pagesVisited,
+        duplicateCandidates: collection.discovery.duplicateListingCandidates,
+        exhausted: collection.discovery.exhausted,
+        capped: collection.discovery.capped,
+        runtimeMs,
+      }),
     )
-    const ok = collection.listingUrls.length > 0 && collection.rows.length > 0 && usableForValuation.length > 0
 
     return NextResponse.json({
-      ok,
-      searchUrls: collection.searchUrls,
+      ok: fullSnapshot,
+      observedAt: collection.observedAt,
       discovered: collection.listingUrls.length,
-      parsed: collection.rows.length,
-      usableForValuation: usableForValuation.length,
-      failures: collection.failures,
-      sample: collection.rows.map((row) => ({
-        source_listing_id: row.source_listing_id,
-        url: row.url,
-        title: row.title,
-        address: row.address,
-        property_type: row.property_type,
-        price_uf: row.price_uf,
-        useful_area_m2: row.useful_area_m2,
-        built_area_m2: row.built_area_m2,
-        land_area_m2: row.land_area_m2,
-        bedrooms: row.bedrooms,
-        bathrooms: row.bathrooms,
-        parking_spaces: row.parking_spaces,
-        latitude: row.latitude,
-        longitude: row.longitude,
-      })),
-    }, { status: ok ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+      discovery: collection.discovery,
+      coverageRatio,
+      runtimeMs,
+      sample: collection.listingUrls.slice(0, 10),
+    }, { status: fullSnapshot ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('[portal-collector-smoke] collection failed', error)
     return NextResponse.json({
