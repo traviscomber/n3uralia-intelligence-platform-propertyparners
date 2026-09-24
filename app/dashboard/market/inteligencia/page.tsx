@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import { ArrowLeft, Clock3, Home, MapPinned, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
+import { requirePageCapability } from '@/lib/access-guards'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { getHouseSupplySalesLive, getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
+import { getPedroMarketSnapshot, type PedroMarketTypeSnapshot } from '@/lib/pedro-market-intelligence'
 
 function number(value: number | null, digits = 0) {
   return value === null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
@@ -75,12 +77,107 @@ function signalFill(signal: string | undefined) {
   return 'var(--n3-line)'
 }
 
+function signedPercent(value: number | null) {
+  if (value === null) return '—'
+  return `${value > 0 ? '+' : ''}${(value * 100).toFixed(1)}%`
+}
+
+function sparklinePoints(values: Array<number | null>, width = 280, height = 72) {
+  const clean = values.filter((value): value is number => value !== null && Number.isFinite(value))
+  if (!clean.length) return ''
+  const min = Math.min(...clean)
+  const max = Math.max(...clean)
+  const span = Math.max(max - min, 1)
+  return values.map((value, index) => {
+    const x = values.length <= 1 ? width / 2 : (index / (values.length - 1)) * width
+    const y = value === null ? height : height - ((value - min) / span) * (height - 8) - 4
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+}
+
+function PedroTypePanel({ snapshot }: { snapshot: PedroMarketTypeSnapshot }) {
+  const transactionPoints = sparklinePoints(snapshot.annual.map((row) => row.transactions))
+  const ufM2Points = sparklinePoints(snapshot.annual.map((row) => row.medianUfM2))
+  const label = snapshot.propertyType === 'Casa' ? 'Casas' : 'Departamentos'
+  const salesQ = snapshot.salesPriceQuintiles
+  const offerQ = snapshot.offerPriceQuintiles
+
+  return <article className="border-t border-[var(--n3-line)] pt-4">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p>
+        <h3 className="mt-1 text-xl font-medium text-[var(--n3-text-light)]">{snapshot.latestCompleteYear ?? '—'} · lectura anual verificada</h3>
+      </div>
+      <span className={`text-[10px] uppercase tracking-[0.12em] ${snapshot.fullSnapshot ? 'text-[var(--n3-accent)]' : 'text-[#f0c96a]'}`}>
+        {snapshot.fullSnapshot ? 'Oferta completa verificada' : 'Oferta parcial · no extrapolar'}
+      </span>
+    </div>
+
+    <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
+      {[
+        ['Ventas año', number(snapshot.latestTransactions), snapshot.latestCompleteYear ? String(snapshot.latestCompleteYear) : 'Sin año completo'],
+        ['Promedio mensual', number(snapshot.averageMonthlySales, 1), 'ventas/mes sobre último año completo'],
+        ['vs promedio 4 años', signedPercent(snapshot.latestVs4yAveragePct), 'desviación de volumen'],
+        ['YoY', signedPercent(snapshot.latestVsPriorYearPct), 'último año vs anterior'],
+      ].map(([metricLabel, metricValue, detail]) => <div key={metricLabel} className="bg-[var(--n3-bg)] px-4 py-3">
+        <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)]">{metricLabel}</p>
+        <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--n3-text-light)]">{metricValue}</p>
+        <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{detail}</p>
+      </div>)}
+    </div>
+
+    <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div>
+        <div className="flex items-center justify-between gap-3"><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Transacciones · 4 años</p><span className="text-[10px] text-[var(--n3-text-muted)]">{snapshot.annual.map((row) => row.year).join(' · ')}</span></div>
+        <svg viewBox="0 0 280 72" role="img" aria-label={`Evolución de transacciones de ${label.toLowerCase()}`} className="mt-2 h-[72px] w-full">
+          <polyline points={transactionPoints} fill="none" stroke="var(--n3-accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        </svg>
+        <div className="mt-1 flex justify-between text-[10px] text-[var(--n3-text-muted)]">{snapshot.annual.map((row) => <span key={row.year}>{row.transactions}</span>)}</div>
+      </div>
+      <div>
+        <div className="flex items-center justify-between gap-3"><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana UF/m² · 4 años</p><span className="text-[10px] text-[var(--n3-text-muted)]">CBRS</span></div>
+        <svg viewBox="0 0 280 72" role="img" aria-label={`Evolución UF por metro cuadrado de ${label.toLowerCase()}`} className="mt-2 h-[72px] w-full">
+          <polyline points={ufM2Points} fill="none" stroke="var(--n3-text-light)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        </svg>
+        <div className="mt-1 flex justify-between text-[10px] text-[var(--n3-text-muted)]">{snapshot.annual.map((row) => <span key={row.year}>{number(row.medianUfM2, 1)}</span>)}</div>
+      </div>
+    </div>
+
+    <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div className="border-y border-[var(--n3-line)] py-3">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Quintiles de venta · {snapshot.latestCompleteYear ?? '—'}</p>
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <div><p className="text-[10px] text-[var(--n3-text-muted)]">20% más barato ≤</p><p className="mt-1 font-semibold tabular-nums">UF {number(salesQ.p20)}</p></div>
+          <div><p className="text-[10px] text-[var(--n3-text-muted)]">Mediana</p><p className="mt-1 font-semibold tabular-nums">UF {number(salesQ.median)}</p></div>
+          <div><p className="text-[10px] text-[var(--n3-text-muted)]">20% más caro ≥</p><p className="mt-1 font-semibold tabular-nums">UF {number(salesQ.p80)}</p></div>
+        </div>
+        <p className="mt-2 text-[10px] text-[var(--n3-text-muted)]">{salesQ.count} transacciones con precio válido · estacionamientos y bodegas no forman parte de estas series Casa/Departamento.</p>
+      </div>
+
+      <div className="border-y border-[var(--n3-line)] py-3">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Oferta y absorción</p>
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <div><p className="text-[10px] text-[var(--n3-text-muted)]">Evidencia activa</p><p className="mt-1 font-semibold tabular-nums">{number(snapshot.offerEvidenceCount)}</p></div>
+          <div><p className="text-[10px] text-[var(--n3-text-muted)]">Absorción</p><p className="mt-1 font-semibold tabular-nums">{snapshot.absorptionMonths === null ? '—' : `${number(snapshot.absorptionMonths, 1)} meses`}</p></div>
+          <div><p className="text-[10px] text-[var(--n3-text-muted)]">Quintil oferta</p><p className="mt-1 font-semibold tabular-nums">{offerQ ? `UF ${number(offerQ.p20)}–${number(offerQ.p80)}` : '—'}</p></div>
+        </div>
+        <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">{snapshot.fullSnapshot ? 'Oferta, quintiles y meses de absorción usan el snapshot completo acreditado.' : 'La captura disponible no acredita el universo completo de Portal; el sistema muestra evidencia observada pero bloquea absorción y quintiles de oferta para no extrapolar una muestra parcial.'}</p>
+      </div>
+    </div>
+  </article>
+}
+
 export default async function MarketIntelligencePage() {
-  const [intelligence, context, houses] = await Promise.all([
+  await requirePageCapability('market.read')
+  const [intelligence, context, houses, pedroResult] = await Promise.all([
     getSupplySalesIntelligence(),
     getMarketIntelligenceContext(),
     getHouseSupplySalesLive(),
+    getPedroMarketSnapshot()
+      .then((snapshot) => ({ snapshot, error: null as string | null }))
+      .catch((error) => ({ snapshot: null, error: error instanceof Error ? error.message : 'No fue posible consultar la lectura ejecutiva.' })),
   ])
+  const pedro = pedroResult.snapshot
   const apartments = intelligence.rows.filter((row) => row.propertyType === 'Departamento' && row.neighborhoodName !== 'SIN_BARRIO')
   const liveHouses = houses.rows.filter((row) => row.neighborhoodName)
   const houseListings = liveHouses.reduce((total, row) => total + row.portalListings, 0)
@@ -148,6 +245,23 @@ export default async function MarketIntelligencePage() {
       {intelligence.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la referencia de departamentos versus ventas." /></div> : null}
       {houses.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la oferta activa de casas versus ventas." /></div> : null}
       {context.error ? <div className="mt-4"><PublicErrorNotice compact message="La capa territorial o histórica no está disponible completa." /></div> : null}
+      {pedroResult.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la lectura Pedro de 4 años y quintiles." /></div> : null}
+
+      {pedro ? <section className="mt-7">
+        <div className="border-b border-[var(--n3-line)] pb-3">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Lectura Pedro</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">4 años, desviaciones, velocidad de venta y quintiles</h2>
+          <p className="mt-1 max-w-4xl text-xs leading-5 text-[var(--n3-text-muted)]">Casas y departamentos se leen por separado. Las líneas usan años completos CBRS. La oferta sólo habilita absorción y quintiles cuando existe un snapshot Portal completo; una captura parcial nunca se presenta como mercado total.</p>
+        </div>
+        <div className="mt-4 grid gap-8">
+          <PedroTypePanel snapshot={pedro.houses} />
+          <PedroTypePanel snapshot={pedro.apartments} />
+        </div>
+        {pedro.warnings.length ? <details className="mt-5 border-y border-[var(--n3-line)] py-3">
+          <summary className="cursor-pointer text-xs text-[var(--n3-text-muted)]">Ver límites de cobertura actuales</summary>
+          <div className="mt-3 space-y-1 text-[11px] leading-5 text-[var(--n3-text-muted)]">{pedro.warnings.map((warning) => <p key={warning}>{warning}</p>)}</div>
+        </details> : null}
+      </section> : null}
 
       <MetricStrip items={[
         { label: 'Casas activas', value: number(houseListings) },
