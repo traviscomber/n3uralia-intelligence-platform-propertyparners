@@ -129,6 +129,9 @@ jobs:
       - name: Verify Property360 comparable gates
         run: node --import tsx --test tests/property360-comparables.test.ts
 
+      - name: Verify Jan-Aug canonical management periods
+        run: node --import tsx --test tests/management-canonical-periods.test.ts
+
       - name: Verify management report scheduling
         run: pnpm management:reports:verify
 
