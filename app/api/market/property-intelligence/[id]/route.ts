@@ -180,9 +180,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const medianUfM2 = percentile(ufM2Values, 0.5)
   const p75 = percentile(ufM2Values, 0.75)
   const medianSourceDom = percentile(domValues, 0.5)
-  const impliedPriceAtMedian = medianUfM2 != null && area != null ? medianUfM2 * area : null
-  const priceVsMedianPct = currentUfM2 != null && medianUfM2 != null && medianUfM2 !== 0 ? (currentUfM2 / medianUfM2 - 1) * 100 : null
-  const domVsMedianMultiple = sourceReportedDom != null && medianSourceDom != null && medianSourceDom > 0 ? sourceReportedDom / medianSourceDom : null
+  const comparableDecisionEligible = comparableRows.length >= 3
+  const decisionMedianUfM2 = comparableDecisionEligible ? medianUfM2 : null
+  const decisionMedianSourceDom = comparableDecisionEligible ? medianSourceDom : null
+  const impliedPriceAtMedian = decisionMedianUfM2 != null && area != null ? decisionMedianUfM2 * area : null
+  const priceVsMedianPct = currentUfM2 != null && decisionMedianUfM2 != null && decisionMedianUfM2 !== 0 ? (currentUfM2 / decisionMedianUfM2 - 1) * 100 : null
+  const domVsMedianMultiple = sourceReportedDom != null && decisionMedianSourceDom != null && decisionMedianSourceDom > 0 ? sourceReportedDom / decisionMedianSourceDom : null
 
   const comparableFreshRows = comparableRows.filter((row) => {
     const age = daysBetween(String(row.observedAt ?? ''), nowIso)
@@ -256,8 +259,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       id: `property:${property.id}:price-position`,
       domain: 'market',
       title: 'Posición de precio',
-      evidenceStatus: medianUfM2 != null ? 'external_market' : 'non_evaluable',
-      evidenceLabel: priceVsMedianPct == null ? 'No existe una mediana comparable suficiente para posicionar el precio.' : `UF/m² sujeto comparado con mediana de ${comparableRows.length} comparables: ${priceVsMedianPct.toFixed(1)}%.`,
+      evidenceStatus: comparableDecisionEligible && decisionMedianUfM2 != null ? 'external_market' : 'non_evaluable',
+      evidenceLabel: !comparableDecisionEligible
+        ? `Muestra insuficiente: ${comparableRows.length} comparables válidos; el mínimo decisional es 3.`
+        : priceVsMedianPct == null
+          ? 'No existe una mediana comparable suficiente para posicionar el precio.'
+          : `UF/m² sujeto comparado con mediana de ${comparableRows.length} comparables: ${priceVsMedianPct.toFixed(1)}%.`,
       source: 'Mercado externo normalizado',
       sourceReference: neighborhood?.name ?? null,
       cutoff: currentListing?.observed_at ?? property.last_seen_at ?? null,
@@ -352,9 +359,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     },
     comparables: {
       count: comparableRows.length,
+      minimumRequired: 3,
+      decisionEligible: comparableDecisionEligible,
       sourceDomCoverage: domValues.length,
       priceUfM2: { p25, median: medianUfM2, p75 },
-      medianSourceReportedDom: medianSourceDom,
+      medianSourceReportedDom: decisionMedianSourceDom,
       impliedPriceAtMedian,
       priceVsMedianPct,
       domVsMedianMultiple,
