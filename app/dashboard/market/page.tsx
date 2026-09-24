@@ -9,6 +9,7 @@ import { getPortalReferenceSnapshot } from '@/lib/portal-reference-intelligence'
 import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
 import { getExecutiveDashboardSnapshot } from '@/lib/executive-dashboard-snapshot'
+import { comparisonPeriod, verifiedChange } from '@/lib/executive-dashboard-comparisons'
 
 function number(value: number | null) {
   return value === null ? '—' : value.toLocaleString('es-CL')
@@ -43,18 +44,21 @@ function signedPercent(value: number | null) {
   return `${value > 0 ? '+' : ''}${(value * 100).toFixed(1)}%`
 }
 
-function linePoints(values: Array<number | null>) {
+function lineSegments(values: Array<number | null>) {
   const clean = values.filter((value): value is number => value !== null)
-  if (!clean.length) return ''
+  if (!clean.length) return []
   const min = Math.min(...clean)
   const max = Math.max(...clean)
   const span = Math.max(max - min, 1)
-  return values.map((value, index) => {
-    if (value === null) return null
+  const segments: string[][] = []
+  values.forEach((value, index) => {
+    if (value === null) return
     const x = values.length === 1 ? 50 : 6 + (index / (values.length - 1)) * 88
     const y = 88 - ((value - min) / span) * 72
-    return `${x.toFixed(1)},${y.toFixed(1)}`
-  }).filter(Boolean).join(' ')
+    if (index === 0 || values[index - 1] === null) segments.push([])
+    segments.at(-1)?.push(`${x.toFixed(1)},${y.toFixed(1)}`)
+  })
+  return segments.map((segment) => segment.join(' '))
 }
 
 function monthLabel(value: string | null) {
@@ -72,15 +76,18 @@ function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
 }
 
 export default async function MarketPage() {
-  const [market, scope, territory, portalReference, executive] = await Promise.all([
+  const scope = await requireUserScope()
+  const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
+  const [market, territory, portalReference, executiveResult] = await Promise.all([
     getOperationalMarketSnapshot(),
-    requireUserScope(),
     getVitacuraNeighborhoodSnapshot(),
     getPortalReferenceSnapshot(),
-    getExecutiveDashboardSnapshot(),
+    canManage
+      ? getExecutiveDashboardSnapshot().then((snapshot) => ({ snapshot, error: false })).catch(() => ({ snapshot: null, error: true }))
+      : Promise.resolve({ snapshot: null, error: false }),
   ])
+  const executive = executiveResult.snapshot
 
-  const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
   const territorialCoverage = market.canonicalProperties && market.missingNeighborhoods !== null
     ? (market.canonicalProperties - market.missingNeighborhoods) / market.canonicalProperties
     : null
@@ -165,40 +172,41 @@ export default async function MarketPage() {
   const houseReference = portalReference.datasets.find((item) => item.datasetKind === 'portal_houses')
   const houseLive = portalReference.liveDatasets.find((item) => item.datasetKind === 'portal_houses')
 
-  const latestEvolution = executive.evolution.at(-1) ?? null
-  const previousEvolution = executive.evolution.at(-2) ?? null
-  const sameMonthPriorYear = latestEvolution
-    ? executive.evolution.find((item) => {
-        const current = new Date(`${latestEvolution.period}-01T12:00:00.000Z`)
-        const candidate = new Date(`${item.period}-01T12:00:00.000Z`)
-        return candidate.getUTCFullYear() === current.getUTCFullYear() - 1 && candidate.getUTCMonth() === current.getUTCMonth()
-      }) ?? null
-    : null
+  const verifiedMonth = executive?.verifiedPeriodEnd?.slice(0, 7) ?? null
+  const latestEvolution = executive?.evolution.find((item) => item.period === verifiedMonth) ?? null
+  const previousMonth = verifiedMonth ? comparisonPeriod(verifiedMonth, 1) : null
+  const priorYearMonth = verifiedMonth ? comparisonPeriod(verifiedMonth, 12) : null
+  const previousEvolution = executive?.evolution.find((item) => item.period === previousMonth) ?? null
+  const sameMonthPriorYear = executive?.evolution.find((item) => item.period === priorYearMonth) ?? null
 
-  const leadsMom = delta(latestEvolution?.leads ?? null, previousEvolution?.leads ?? null)
-  const leadsYoy = delta(latestEvolution?.leads ?? null, sameMonthPriorYear?.leads ?? null)
-  const visitsMom = delta(latestEvolution?.visits ?? null, previousEvolution?.visits ?? null)
-  const visitsYoy = delta(latestEvolution?.visits ?? null, sameMonthPriorYear?.visits ?? null)
-  const salesMom = delta(latestEvolution?.sales ?? null, previousEvolution?.sales ?? null)
-  const salesYoy = delta(latestEvolution?.sales ?? null, sameMonthPriorYear?.sales ?? null)
-  const salesUfMom = delta(latestEvolution?.salesUf ?? null, previousEvolution?.salesUf ?? null)
-  const salesUfYoy = delta(latestEvolution?.salesUf ?? null, sameMonthPriorYear?.salesUf ?? null)
+  const change = (field: 'leads' | 'visits' | 'sales' | 'salesUf', previous: typeof latestEvolution) => verifiedChange(
+    latestEvolution ? { value: latestEvolution[field], formulaVersion: latestEvolution.versions[field] } : null,
+    previous ? { value: previous[field], formulaVersion: previous.versions[field] } : null,
+  )
+  const leadsMom = change('leads', previousEvolution)
+  const leadsYoy = change('leads', sameMonthPriorYear)
+  const visitsMom = change('visits', previousEvolution)
+  const visitsYoy = change('visits', sameMonthPriorYear)
+  const salesMom = change('sales', previousEvolution)
+  const salesYoy = change('sales', sameMonthPriorYear)
+  const salesUfMom = change('salesUf', previousEvolution)
+  const salesUfYoy = change('salesUf', sameMonthPriorYear)
 
-  const annualTransactions = executive.history.map((row) => row.transactions)
-  const annualPrices = executive.history.map((row) => row.medianPriceUf)
+  const annualTransactions = executive?.history.map((row) => row.transactions) ?? []
+  const annualPrices = executive?.history.map((row) => row.medianPriceUf) ?? []
   const averageTransactions = annualTransactions.filter((value): value is number => value !== null).length
     ? annualTransactions.filter((value): value is number => value !== null).reduce((sum, value) => sum + value, 0) / annualTransactions.filter((value): value is number => value !== null).length
     : null
   const averagePrice = annualPrices.filter((value): value is number => value !== null).length
     ? annualPrices.filter((value): value is number => value !== null).reduce((sum, value) => sum + value, 0) / annualPrices.filter((value): value is number => value !== null).length
     : null
-  const latestHistory = executive.history.at(-1) ?? null
+  const latestHistory = executive?.history.at(-1) ?? null
 
   const funnel = {
-    leads: executive.latest.leads,
-    scheduled: executive.latest.scheduledVisits,
-    visits: executive.latest.realizedVisits,
-    sales: executive.latest.sales,
+    leads: executive?.latest.leads ?? null,
+    scheduled: executive?.latest.scheduledVisits ?? null,
+    visits: executive?.latest.realizedVisits ?? null,
+    sales: executive?.latest.sales ?? null,
   }
 
   return (
@@ -214,6 +222,7 @@ export default async function MarketPage() {
       />
 
       {market.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar toda la información de mercado." /></div> : null}
+      {executiveResult.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar el control ejecutivo; sus indicadores no se muestran." /></div> : null}
 
       <section className="mt-6 border-y border-[var(--n3-line)] py-7">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.7fr)] lg:items-end">
@@ -371,6 +380,7 @@ export default async function MarketPage() {
         </details>
       </section>
 
+      {executive ? <>
       <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -380,7 +390,6 @@ export default async function MarketPage() {
               Historia registral CBRS para casas. La serie comercial se extenderá hacia atrás cuando Pedro entregue los períodos adicionales.
             </p>
           </div>
-          <Link href="/dashboard/market/evolucion" className="text-xs text-[var(--n3-teal-soft)]">Ver evolución completa</Link>
         </div>
 
         <div className="mt-5 grid gap-8 lg:grid-cols-2">
@@ -391,12 +400,12 @@ export default async function MarketPage() {
                 <p className="mt-1 text-2xl font-semibold tabular-nums">{number(latestHistory?.transactions ?? null)}</p>
               </div>
               <p className="text-right text-[11px] text-[var(--n3-text-muted)]">
-                vs promedio 4 años<br /><span className="text-[var(--n3-text-light)]">{signedPercent(delta(latestHistory?.transactions ?? null, averageTransactions))}</span>
+                vs promedio {annualTransactions.filter((value) => value !== null).length} años<br /><span className="text-[var(--n3-text-light)]">{signedPercent(delta(latestHistory?.transactions ?? null, averageTransactions))}</span>
               </p>
             </div>
             <svg viewBox="0 0 100 100" role="img" aria-label="Compraventas anuales de casas" className="mt-3 h-36 w-full">
               <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
-              <polyline points={linePoints(annualTransactions)} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+              {lineSegments(annualTransactions).map((points, index) => <polyline key={index} points={points} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />)}
             </svg>
             <div className="grid grid-cols-4 gap-2 text-center text-[11px] text-[var(--n3-text-muted)]">
               {executive.history.map((row) => <div key={row.year}><p>{row.year}</p><p className="mt-1 text-[var(--n3-text-light)]">{number(row.transactions)}</p></div>)}
@@ -410,12 +419,12 @@ export default async function MarketPage() {
                 <p className="mt-1 text-2xl font-semibold tabular-nums">UF {decimal(latestHistory?.medianPriceUf ?? null, 0)}</p>
               </div>
               <p className="text-right text-[11px] text-[var(--n3-text-muted)]">
-                vs promedio 4 años<br /><span className="text-[var(--n3-text-light)]">{signedPercent(delta(latestHistory?.medianPriceUf ?? null, averagePrice))}</span>
+                vs promedio {annualPrices.filter((value) => value !== null).length} años<br /><span className="text-[var(--n3-text-light)]">{signedPercent(delta(latestHistory?.medianPriceUf ?? null, averagePrice))}</span>
               </p>
             </div>
             <svg viewBox="0 0 100 100" role="img" aria-label="Mediana anual de precio UF" className="mt-3 h-36 w-full">
               <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
-              <polyline points={linePoints(annualPrices)} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+              {lineSegments(annualPrices).map((points, index) => <polyline key={index} points={points} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />)}
             </svg>
             <div className="grid grid-cols-4 gap-2 text-center text-[11px] text-[var(--n3-text-muted)]">
               {executive.history.map((row) => <div key={row.year}><p>{row.year}</p><p className="mt-1 text-[var(--n3-text-light)]">{decimal(row.medianPriceUf, 0)}</p></div>)}
@@ -428,7 +437,7 @@ export default async function MarketPage() {
         <div>
           <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">05 · Último mes verificado</p>
           <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{monthLabel(executive.verifiedPeriodEnd)}</h2>
-          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">MoM y YoY sólo aparecen cuando existe el período comparable en la fuente canónica.</p>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">MoM y YoY requieren el período calendario exacto y la misma versión de fórmula verificada.</p>
         </div>
 
         <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
@@ -514,8 +523,8 @@ export default async function MarketPage() {
             </div>
           ) : (
             <div className="mt-4 border-y border-[var(--n3-line)] py-5">
-              <p className="text-sm font-medium text-[var(--n3-text-light)]">Sin alertas canónicas abiertas</p>
-              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Las alertas aparecerán aquí cuando una regla de gestión evaluada quede abierta.</p>
+              <p className="text-sm font-medium text-[var(--n3-text-light)]">{verifiedMonth ? 'Sin alertas abiertas para este período' : 'Sin período mensual verificado'}</p>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{verifiedMonth ? 'No hay alertas abiertas en el período mostrado.' : 'Las alertas aparecerán cuando exista un período verificado.'}</p>
             </div>
           )}
         </div>
@@ -523,7 +532,7 @@ export default async function MarketPage() {
         <div>
           <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">09 · Property 360</p>
           <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Propiedades para revisar</h2>
-          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Priorizadas por mayor permanencia registrada; la recomendación completa vive dentro de cada ficha 360.</p>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Propiedades vigentes con ficha canónica, priorizadas por permanencia reportada por la fuente.</p>
           <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
             {executive.properties.map((property) => (
               <Link key={property.id} href={`/dashboard/properties/${property.id}`} className="grid gap-2 py-3 text-sm hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_110px_90px] sm:items-center">
@@ -536,9 +545,11 @@ export default async function MarketPage() {
               </Link>
             ))}
           </div>
-          <Link href="/dashboard/properties" className="mt-3 inline-flex min-h-10 items-center text-xs text-[var(--n3-teal-soft)]">Ver todas las propiedades</Link>
+          {!executive.properties.length ? <p className="py-4 text-xs text-[var(--n3-text-muted)]">Sin propiedades vigentes con permanencia y ficha canónica verificables.</p> : null}
+          <Link href="/dashboard/market/oferta" className="mt-3 inline-flex min-h-10 items-center text-xs text-[var(--n3-teal-soft)]">Ver oferta vigente</Link>
         </div>
       </section>
+      </> : null}
 
       {actions.length > 0 ? (
         <section className="mt-8 max-w-5xl">
