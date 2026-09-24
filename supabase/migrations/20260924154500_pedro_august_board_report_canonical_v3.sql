@@ -562,7 +562,14 @@ insert into public.management_metric_values (
   quality_status,evaluation_status,formula_version,evaluated_at,evidence,updated_at
 )
 select entity_id,metric_code,period_start,period_end,value,'Pedro Directorio — Agosto 2026','Ago_Directorio.pptx#sha256=395e5d942d575bf17939cef99567cfa6ef3f2c6b85bb9d1af43a7b2c20ea2f74',
-       '2026-08-31 23:59:59+00'::timestamptz,'verified','evaluable',3,now(),evidence,now()
+       '2026-08-31 23:59:59+00'::timestamptz,'verified','evaluable',
+       case when metric_code in (
+         'portfolio_stock_score','portfolio_requirements_score','portfolio_pricing_score','canonical_portfolio_score',
+         'follow_up_classified_score','follow_up_managed90_score','follow_up_managed15a_score','canonical_follow_up_score',
+         'conversion_visits_target_score','conversion_visits_performed_score','conversion_close_rate_score','canonical_conversion_score',
+         'canonical_management_score'
+       ) then 3 else 1 end,
+       now(),evidence,now()
 from resolved
 on conflict (entity_id,metric_code,period_start,period_end,source_name)
 do update set
@@ -672,7 +679,7 @@ do update set
   source_name=excluded.source_name,
   status='approved',
   approval_note=excluded.approval_note,
-  formula_version=3,
+  formula_version=1,
   updated_at=now();
 
 commit;
