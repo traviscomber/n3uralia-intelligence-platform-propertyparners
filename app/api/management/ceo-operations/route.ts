@@ -82,9 +82,9 @@ export async function GET() {
       neighborhoodTotal: Number(territory?.portal_current_houses ?? 0),
       neighborhoodResolved: Number(territory?.exact_kml_houses ?? 0),
       neighborhoodExceptions,
-      canonicalProperties: scopeSummary.error ? null : Number(scope?.v1_house_rows ?? 0),
-      confirmedDuplicates: scopeSummary.error ? null : Number(scope?.confirmed_duplicate_rows ?? 0),
-      logicalProperties: scopeSummary.error ? null : Number(scope?.logical_house_components ?? 0),
+      canonicalProperties: scopeSummary.error || scope?.v1_house_rows == null ? null : Number(scope.v1_house_rows),
+      confirmedDuplicates: scopeSummary.error || scope?.confirmed_duplicate_rows == null ? null : Number(scope.confirmed_duplicate_rows),
+      logicalProperties: scopeSummary.error || scope?.logical_house_components == null ? null : Number(scope.logical_house_components),
     },
     tasks: {
       total: taskRows.length,
