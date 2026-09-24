@@ -6,28 +6,11 @@
     "currentAuthoritySha256": "395e5d942d575bf17939cef99567cfa6ef3f2c6b85bb9d1af43a7b2c20ea2f74",
     "asReportedVsRestated": "HistoricalIssuedSnapshot captures what was reported at the time. Company/offices hold the current restated canon.",
     "targetSemantics": {
-      "rule": "The authoritative company closing target is a cumulative trajectory. Monthly target for performance is the delta between consecutive cumulative targets, preserving fractional allocations.",
-      "cumulativeTargets": [
-        5.86,
-        10.49,
-        18.29,
-        25.61,
-        34.2,
-        43,
-        50.4,
-        58.6
-      ],
-      "monthlyDeltaTargets": [
-        5.86,
-        4.63,
-        7.8,
-        7.32,
-        8.59,
-        8.8,
-        7.4,
-        8.2
-      ],
-      "reportedMonthlyRow": [
+      "rule": "Monthly and cumulative targets are separate published management facts. Do not derive one from the other.",
+      "monthlyMeaning": "Monthly target is the target assigned/published for that month, fractionally allocated across offices.",
+      "cumulativeMeaning": "Cumulative target is the published accumulated trajectory at that cutoff, also fractionally allocated across offices.",
+      "reason": "Targets can be reallocated/reforecast during the year and are displayed with rounding. Therefore the difference between two cumulative snapshots is not guaranteed to equal the published monthly target.",
+      "companyMonthlyTargets": [
         5.86,
         4.63,
         7.8,
@@ -37,12 +20,26 @@
         8.6,
         8.2
       ],
-      "julyConflict": {
-        "reportedMonthlyTarget": 8.6,
-        "cumulativeDeltaTarget": 7.4,
-        "treatment": "Preserve 8.6 as reported source evidence, but use 7.4 as the internally consistent monthly target implied by the canonical cumulative trajectory until Pedro clarifies the row discrepancy."
+      "companyCumulativeTargets": [
+        5.86,
+        10.49,
+        18.29,
+        25.61,
+        34.2,
+        43,
+        50.4,
+        58.6
+      ],
+      "keyExample": {
+        "period": "2026-07",
+        "monthlyTarget": 8.6,
+        "cumulativeTarget": 50.4,
+        "previousCumulativeTarget": 43,
+        "cumulativeDelta": 7.4,
+        "interpretation": "8.6 is the published July monthly target; 50.4 is the published July cumulative target. The 7.4 delta is not a replacement target."
       },
-      "fractionalReason": "Targets are allocated fractionally across offices and accumulated over time; they are not a flat 8.1 monthly target. Fractional credited closings are a separate concept caused by 50% captation / 50% sale attribution."
+      "fractionalAllocation": "At office level the published monthly targets are fractional and reconcile approximately to the company monthly target, subject to displayed rounding.",
+      "creditedClosings": "Fractional credited closings are a different concept, driven by commercial credit allocation such as 50% captation / 50% sale."
     }
   },
   "periods": [
@@ -79,8 +76,7 @@
         "followUpScore": 42.2,
         "conversionScore": 54.1,
         "scoringStatus": "evaluable",
-        "reportedMonthlyClosingTarget": 5.86,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
@@ -149,8 +145,7 @@
         "followUpScore": 42.2,
         "conversionScore": 50.2,
         "scoringStatus": "evaluable",
-        "reportedMonthlyClosingTarget": 4.63,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
@@ -219,8 +214,7 @@
         "followUpScore": 45,
         "conversionScore": 61.2,
         "scoringStatus": "evaluable",
-        "reportedMonthlyClosingTarget": 7.8,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
@@ -277,7 +271,7 @@
         "legalName": "PL Real Estate Spa",
         "creditedClosings": 8,
         "creditedSalesUf": 107500,
-        "canonicalClosingTarget": 7.32,
+        "canonicalClosingTarget": 7.33,
         "canonicalSalesUfTarget": 118087,
         "creditedClosingCompliancePercent": 109.1,
         "ytdCreditedClosings": 22,
@@ -289,8 +283,7 @@
         "followUpScore": 46.2,
         "conversionScore": 54.4,
         "scoringStatus": "evaluable",
-        "reportedMonthlyClosingTarget": 7.33,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
@@ -347,7 +340,7 @@
         "legalName": "PL Real Estate Spa",
         "creditedClosings": 4,
         "creditedSalesUf": 69850,
-        "canonicalClosingTarget": 8.59,
+        "canonicalClosingTarget": 8.6,
         "canonicalSalesUfTarget": 129023,
         "creditedClosingCompliancePercent": 46.5,
         "ytdCreditedClosings": 26,
@@ -359,8 +352,7 @@
         "followUpScore": 64.4,
         "conversionScore": 64.1,
         "scoringStatus": "evaluable",
-        "reportedMonthlyClosingTarget": 8.6,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
@@ -432,8 +424,7 @@
         "scoringStatus": "evaluable",
         "operationalClosings": 8,
         "operationalSalesUf": 158400,
-        "reportedMonthlyClosingTarget": 8.8,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
@@ -492,7 +483,7 @@
         "legalName": "PL Real Estate Spa",
         "creditedClosings": 9.5,
         "creditedSalesUf": 158266,
-        "canonicalClosingTarget": 7.4,
+        "canonicalClosingTarget": 8.6,
         "canonicalSalesUfTarget": 137304,
         "creditedClosingCompliancePercent": 110.5,
         "ytdCreditedClosings": 42.5,
@@ -547,8 +538,7 @@
           "activeALeads": 138,
           "stale15ALeads": 45
         },
-        "reportedMonthlyClosingTarget": 8.6,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
@@ -647,8 +637,7 @@
         "stale90Leads": 230,
         "activeALeads": 90,
         "stale15ALeads": 34,
-        "reportedMonthlyClosingTarget": 8.2,
-        "targetSemantics": "cumulative_delta"
+        "targetSemantics": "published_monthly_and_cumulative"
       },
       "offices": [
         {
