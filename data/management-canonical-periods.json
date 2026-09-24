@@ -4,7 +4,46 @@
     "precedence": "Latest Pedro board report controls the current management-credit, goal and scoring series. Earlier issued reports remain immutable historical evidence and are never silently deleted.",
     "currentAuthority": "Ago_Directorio.pptx",
     "currentAuthoritySha256": "395e5d942d575bf17939cef99567cfa6ef3f2c6b85bb9d1af43a7b2c20ea2f74",
-    "asReportedVsRestated": "HistoricalIssuedSnapshot captures what was reported at the time. Company/offices hold the current restated canon."
+    "asReportedVsRestated": "HistoricalIssuedSnapshot captures what was reported at the time. Company/offices hold the current restated canon.",
+    "targetSemantics": {
+      "rule": "The authoritative company closing target is a cumulative trajectory. Monthly target for performance is the delta between consecutive cumulative targets, preserving fractional allocations.",
+      "cumulativeTargets": [
+        5.86,
+        10.49,
+        18.29,
+        25.61,
+        34.2,
+        43,
+        50.4,
+        58.6
+      ],
+      "monthlyDeltaTargets": [
+        5.86,
+        4.63,
+        7.8,
+        7.32,
+        8.59,
+        8.8,
+        7.4,
+        8.2
+      ],
+      "reportedMonthlyRow": [
+        5.86,
+        4.63,
+        7.8,
+        7.33,
+        8.6,
+        8.8,
+        8.6,
+        8.2
+      ],
+      "julyConflict": {
+        "reportedMonthlyTarget": 8.6,
+        "cumulativeDeltaTarget": 7.4,
+        "treatment": "Preserve 8.6 as reported source evidence, but use 7.4 as the internally consistent monthly target implied by the canonical cumulative trajectory until Pedro clarifies the row discrepancy."
+      },
+      "fractionalReason": "Targets are allocated fractionally across offices and accumulated over time; they are not a flat 8.1 monthly target. Fractional credited closings are a separate concept caused by 50% captation / 50% sale attribution."
+    }
   },
   "periods": [
     {
@@ -39,7 +78,9 @@
         "portfolioScore": 79.8,
         "followUpScore": 42.2,
         "conversionScore": 54.1,
-        "scoringStatus": "evaluable"
+        "scoringStatus": "evaluable",
+        "reportedMonthlyClosingTarget": 5.86,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
@@ -107,7 +148,9 @@
         "portfolioScore": 73.3,
         "followUpScore": 42.2,
         "conversionScore": 50.2,
-        "scoringStatus": "evaluable"
+        "scoringStatus": "evaluable",
+        "reportedMonthlyClosingTarget": 4.63,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
@@ -175,7 +218,9 @@
         "portfolioScore": 81.7,
         "followUpScore": 45,
         "conversionScore": 61.2,
-        "scoringStatus": "evaluable"
+        "scoringStatus": "evaluable",
+        "reportedMonthlyClosingTarget": 7.8,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
@@ -232,7 +277,7 @@
         "legalName": "PL Real Estate Spa",
         "creditedClosings": 8,
         "creditedSalesUf": 107500,
-        "canonicalClosingTarget": 7.33,
+        "canonicalClosingTarget": 7.32,
         "canonicalSalesUfTarget": 118087,
         "creditedClosingCompliancePercent": 109.1,
         "ytdCreditedClosings": 22,
@@ -243,7 +288,9 @@
         "portfolioScore": 76.7,
         "followUpScore": 46.2,
         "conversionScore": 54.4,
-        "scoringStatus": "evaluable"
+        "scoringStatus": "evaluable",
+        "reportedMonthlyClosingTarget": 7.33,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
@@ -300,7 +347,7 @@
         "legalName": "PL Real Estate Spa",
         "creditedClosings": 4,
         "creditedSalesUf": 69850,
-        "canonicalClosingTarget": 8.6,
+        "canonicalClosingTarget": 8.59,
         "canonicalSalesUfTarget": 129023,
         "creditedClosingCompliancePercent": 46.5,
         "ytdCreditedClosings": 26,
@@ -311,7 +358,9 @@
         "portfolioScore": 68.9,
         "followUpScore": 64.4,
         "conversionScore": 64.1,
-        "scoringStatus": "evaluable"
+        "scoringStatus": "evaluable",
+        "reportedMonthlyClosingTarget": 8.6,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
@@ -382,7 +431,9 @@
         "conversionScore": 61,
         "scoringStatus": "evaluable",
         "operationalClosings": 8,
-        "operationalSalesUf": 158400
+        "operationalSalesUf": 158400,
+        "reportedMonthlyClosingTarget": 8.8,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
@@ -441,7 +492,7 @@
         "legalName": "PL Real Estate Spa",
         "creditedClosings": 9.5,
         "creditedSalesUf": 158266,
-        "canonicalClosingTarget": 8.6,
+        "canonicalClosingTarget": 7.4,
         "canonicalSalesUfTarget": 137304,
         "creditedClosingCompliancePercent": 110.5,
         "ytdCreditedClosings": 42.5,
@@ -495,7 +546,9 @@
           "stale90Leads": 451,
           "activeALeads": 138,
           "stale15ALeads": 45
-        }
+        },
+        "reportedMonthlyClosingTarget": 8.6,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
@@ -593,7 +646,9 @@
         "classifiedLeads": 808,
         "stale90Leads": 230,
         "activeALeads": 90,
-        "stale15ALeads": 34
+        "stale15ALeads": 34,
+        "reportedMonthlyClosingTarget": 8.2,
+        "targetSemantics": "cumulative_delta"
       },
       "offices": [
         {
