@@ -220,6 +220,69 @@ export async function POST(request: Request) {
     console.error('[management-import] alert evaluation failed', { code: alertError.code, runId: run.id })
   }
 
+  const { data: periodMetrics, error: periodMetricsError } = await supabase
+    .from('management_metric_values')
+    .select('entity_id,metric_code,period_start,period_end,value,source_name,source_reference,quality_status,evaluation_status,formula_version,source_cutoff_at')
+    .eq('period_start', periodStart)
+    .eq('period_end', periodEnd)
+    .in('entity_id', entityIds)
+    .in('metric_code', metricCodes)
+    .order('entity_id')
+    .order('metric_code')
+
+  let reportRunId: string | null = null
+  let reportGenerationFailed = false
+
+  if (periodMetricsError) {
+    reportGenerationFailed = true
+    console.error('[management-import] weekly report snapshot lookup failed', { code: periodMetricsError.code, runId: run.id })
+  } else {
+    const { data: existingReport } = await supabase
+      .from('management_report_runs')
+      .select('id')
+      .eq('report_type', 'executive')
+      .eq('period_start', periodStart)
+      .eq('period_end', periodEnd)
+      .contains('snapshot', { sourceImportRunId: run.id })
+      .maybeSingle()
+
+    if (existingReport?.id) {
+      reportRunId = existingReport.id
+    } else {
+      const { data: reportRun, error: reportError } = await supabase
+        .from('management_report_runs')
+        .insert({
+          report_type: 'executive',
+          entity_id: null,
+          period_start: periodStart,
+          period_end: periodEnd,
+          status: 'generated',
+          generated_by: user.id,
+          snapshot: {
+            trigger: 'weekly_source_upload',
+            sourceImportRunId: run.id,
+            sourceName,
+            sourceReference: body?.sourceReference ?? null,
+            generatedAt: new Date().toISOString(),
+            rowsReceived: rows.length,
+            rowsImported: imported?.length ?? rows.length,
+            warnings,
+            alertEvaluation: alerts?.[0] ?? null,
+            metrics: periodMetrics ?? [],
+          },
+        })
+        .select('id')
+        .single()
+
+      if (reportError) {
+        reportGenerationFailed = true
+        console.error('[management-import] weekly report generation failed', { code: reportError.code, runId: run.id })
+      } else {
+        reportRunId = reportRun.id
+      }
+    }
+  }
+
   return NextResponse.json({
     runId: run.id,
     status,
@@ -227,6 +290,8 @@ export async function POST(request: Request) {
     warnings,
     alerts: alerts?.[0] ?? null,
     alertEvaluationFailed: Boolean(alertError),
+    reportRunId,
+    reportGenerationFailed,
   })
 }
 
