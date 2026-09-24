@@ -9,7 +9,7 @@ const apartment = calculateDeterministicValuation({
 assert.equal(apartment.effectiveAreaM2, 253.5)
 assert.equal(apartment.commercialValueUf, 15890)
 assert.equal(apartment.commercialWeightedUfM2, 62.7)
-assert.deepEqual(apartment.scenarios.map((scenario) => scenario.publicationUf), [15890, 16726])
+assert.deepEqual(apartment.scenarios.map((scenario) => scenario.publicationUf), [15890, 16726, 17656])
 assert.equal(Number(apartmentOfferWeightedUfM2(14200, 220, 250).toFixed(6)), 60.425532)
 
 const house = calculateDeterministicValuation({
