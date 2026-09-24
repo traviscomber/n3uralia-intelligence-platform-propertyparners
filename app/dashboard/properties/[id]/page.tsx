@@ -70,6 +70,8 @@ type Intelligence = {
   }
   comparables: {
     count: number
+    minimumRequired: number
+    decisionEligible: boolean
     sourceDomCoverage?: number
     priceUfM2: { p25: number | null; median: number | null; p75: number | null }
     medianSourceReportedDom: number | null
@@ -171,8 +173,8 @@ export default function PropertyIntelligencePage() {
 
     <MetricStrip items={[
       { label: 'Precio', value: uf(data.currentMarket.priceUf) },
-      { label: 'UF/m²', value: number(data.currentMarket.priceUfM2), detail: `Mediana ${number(data.comparables.priceUfM2.median)}` },
-      { label: 'Posición', value: pct(data.comparables.priceVsMedianPct), tone: data.signals.pricePosition === 'above_market' ? 'warning' : 'default' },
+      { label: 'UF/m²', value: number(data.currentMarket.priceUfM2), detail: data.comparables.decisionEligible ? `Mediana ${number(data.comparables.priceUfM2.median)}` : `Muestra ${data.comparables.count}/${data.comparables.minimumRequired}` },
+      { label: 'Posición', value: data.comparables.decisionEligible ? pct(data.comparables.priceVsMedianPct) : 'No evaluable', detail: data.comparables.decisionEligible ? undefined : `Requiere ≥${data.comparables.minimumRequired} comparables`, tone: data.signals.pricePosition === 'above_market' ? 'warning' : 'default' },
       { label: 'Confianza', value: confidenceLabel(data.confidenceLabel), detail: `${number(data.confidence * 100, 0)}%`, tone: data.confidenceLabel === 'high' ? 'success' : data.confidenceLabel === 'low' ? 'danger' : 'warning' },
     ]} />
 
@@ -207,12 +209,15 @@ export default function PropertyIntelligencePage() {
 
     <section className="mt-7">
       <div className="flex items-end justify-between border-b border-[var(--n3-line)] pb-2"><div><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Comparables de mercado</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{data.comparables.methodology}</p></div><span className="text-sm font-semibold tabular-nums">{data.comparables.count}</span></div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-4">
+      {data.comparables.decisionEligible ? <div className="mt-3 grid gap-3 sm:grid-cols-4">
         <div><span className="text-xs text-[var(--n3-text-muted)]">P25</span><strong className="block">{number(data.comparables.priceUfM2.p25)} UF/m²</strong></div>
         <div><span className="text-xs text-[var(--n3-text-muted)]">Mediana</span><strong className="block">{number(data.comparables.priceUfM2.median)} UF/m²</strong></div>
         <div><span className="text-xs text-[var(--n3-text-muted)]">P75</span><strong className="block">{number(data.comparables.priceUfM2.p75)} UF/m²</strong></div>
         <div><span className="text-xs text-[var(--n3-text-muted)]">Precio implícito</span><strong className="block">{uf(data.comparables.impliedPriceAtMedian)}</strong></div>
-      </div>
+      </div> : <div className="mt-3 border-y border-[var(--n3-line)] py-3">
+        <p className="text-sm font-medium text-[var(--n3-text-light)]">Muestra insuficiente para una conclusión de precio.</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">Hay {data.comparables.count} comparables válidos y el mínimo decisional es {data.comparables.minimumRequired}. Las publicaciones se conservan abajo como evidencia, pero no generan mediana, posición ni precio implícito operativo.</p>
+      </div>}
       {comparableQuality ? <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4" aria-label="Calidad de comparables">
         <div className="bg-[var(--n3-deep)] p-3"><span className="text-xs text-[var(--n3-text-muted)]">Calidad</span><strong className="mt-1 block">{confidenceLabel(comparableQuality.label)} · {number(comparableQuality.score * 100, 0)}%</strong></div>
         <div className="bg-[var(--n3-deep)] p-3"><span className="text-xs text-[var(--n3-text-muted)]">Vigentes ≤30d</span><strong className="mt-1 block">{comparableQuality.freshCount}/{data.comparables.count}</strong></div>
