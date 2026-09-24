@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { managementReportEntityScopes, metricsForManagementReportScope } from '@/lib/management-report-scope'
 
 type QualityStatus = 'verified' | 'provisional' | 'missing' | 'rejected' | 'not_applicable' | 'not_evaluable'
 type EvaluationStatus = 'evaluable' | 'missing_source' | 'not_applicable' | 'not_evaluable' | 'rejected'
@@ -222,8 +223,7 @@ export async function POST(request: Request) {
 
   let reportGenerationFailed = false
   const importedMetrics = imported ?? []
-  const globalReport = role === 'admin' || role === 'ceo'
-  const reportEntityIds: Array<string | null> = globalReport ? [null] : entityIds
+  const reportEntityIds = managementReportEntityScopes(role, entityIds)
 
   const { data: existingReports, error: existingReportError } = await supabase
     .from('management_report_runs')
@@ -243,9 +243,7 @@ export async function POST(request: Request) {
     const missingReports = reportEntityIds
       .filter((entityId) => !existingByEntity.has(entityId ?? '__global__'))
       .map((entityId) => {
-        const metrics = entityId === null
-          ? importedMetrics
-          : importedMetrics.filter((metric) => metric.entity_id === entityId)
+        const metrics = metricsForManagementReportScope(importedMetrics, entityId)
         return {
           report_type: 'executive',
           entity_id: entityId,
