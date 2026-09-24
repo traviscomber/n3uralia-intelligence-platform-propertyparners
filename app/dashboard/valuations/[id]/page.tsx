@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { AlertTriangle, CheckCircle2, FileCheck2, History, Send, ShieldCheck, XCircle } from 'lucide-react'
+import { ValuationDecisionIntelligence } from '@/components/valuation/valuation-decision-intelligence'
 
 type ValuationCase = {
   id:string; status:string; address:string|null; neighborhood:string|null; property_type:string|null
@@ -250,6 +251,8 @@ export default function ValuationWorkspacePage(){
         </div>
       </div>}
     </section>}
+
+    <ValuationDecisionIntelligence valuationId={id} />
 
     <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
       <div className="border-b border-[var(--n3-line)] p-4"><h2 className="text-lg font-semibold text-[var(--n3-text-light)]">Comparables trazables</h2><p className="text-sm text-[var(--n3-text-muted)]">Portal, CBRS, KML canónico y metodología Property Partners se evalúan por separado. Una contradicción de ROL, geografía o UF/m² bloquea la selección hasta validación.</p></div>
