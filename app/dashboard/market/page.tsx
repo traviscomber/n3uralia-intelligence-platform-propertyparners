@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { FileText, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
-import { CalculationTrace } from '@/components/market/calculation-trace'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
@@ -126,6 +125,9 @@ export default async function MarketPage() {
     } : null,
   ].filter((item): item is NonNullable<typeof item> => Boolean(item))
 
+  const primaryActions = actions.slice(0, 3)
+  const secondaryActions = actions.slice(3)
+
   const houseReference = portalReference.datasets.find((item) => item.datasetKind === 'portal_houses')
   const houseLive = portalReference.liveDatasets.find((item) => item.datasetKind === 'portal_houses')
 
@@ -136,42 +138,45 @@ export default async function MarketPage() {
         title="Vitacura · Casas"
         meta={`Corte ${date(market.latestObservedAt)} · ${freshness(market.freshnessStatus, market.observationAgeDays)}`}
         actions={[
-          { label: 'Oferta vs ventas', href: '/dashboard/market/inteligencia', primary: true, icon: <TrendingUp size={15} /> },
+          { label: 'Ver casas en oferta', href: '/dashboard/market/oferta', primary: true, icon: <TrendingUp size={15} /> },
           { label: 'Informe', href: '/dashboard/market/export', icon: <FileText size={15} /> },
         ]}
       />
 
       {market.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar toda la información de mercado." /></div> : null}
 
-      <section className="mt-6 border-y border-[var(--n3-line)] py-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <section className="mt-6 border-y border-[var(--n3-line)] py-7">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.7fr)] lg:items-end">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Captura diaria · Portal Inmobiliario</p>
-            <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué observamos hoy</h2>
-            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
-              Primero mostramos el universo capturado y reconciliado. La inteligencia de mercado se calcula después, sólo sobre esta evidencia trazable.
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Mercado hoy</p>
+            <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <p className="text-5xl font-semibold tracking-[-0.04em] text-[var(--n3-text-light)] sm:text-6xl">{number(market.activeInventory)}</p>
+              <p className="text-sm text-[var(--n3-text-muted)]">casas usadas en venta · Vitacura</p>
+            </div>
+            <p className="mt-3 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
+              Inventario vigente observado en Portal Inmobiliario. El número sólo se publica como mercado completo cuando la captura demuestra cobertura suficiente contra el total informado por Portal.
             </p>
           </div>
-          <div className="text-right">
-            <Link href="/dashboard/market/oferta" className="mb-3 inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs text-[var(--n3-teal-soft)] hover:bg-white/[0.02]">
-              Ver casas en oferta
-            </Link>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Última captura</p>
-            <p className="mt-1 text-sm font-medium">{date(market.latestIngestionAt)}</p>
-            <p className={`mt-1 text-xs ${market.latestIngestionFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[#f0c96a]'}`}>
+
+          <div className="border-l border-[var(--n3-line)] pl-5">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Cobertura del corte</p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums">{percent(market.latestInventoryCoverageRatio)}</p>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">
+              Portal reporta {number(market.latestPortalReportedCount)} · N3uralia captura {number(market.latestDiscoveryUniqueListings)} IDs únicos
+            </p>
+            <p className={`mt-3 text-xs ${market.latestIngestionFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[#f0c96a]'}`}>
               {market.latestIngestionFullSnapshot ? 'Snapshot completo verificado' : 'Captura parcial · no se cierran bajas'}
             </p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Corte {date(market.latestIngestionAt)}</p>
           </div>
         </div>
 
-        <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-6">
+        <div className="mt-7 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ['Portal reporta', number(market.latestPortalReportedCount), 'Resultados declarados por Portal para el mismo filtro'],
-            ['IDs únicos', number(market.latestDiscoveryUniqueListings), 'Publicaciones únicas observadas en todas las páginas'],
-            ['Cobertura', percent(market.latestInventoryCoverageRatio), 'IDs únicos capturados / total reportado por Portal'],
             ['Nuevas', number(market.latestIngestionNew), 'No estaban en el snapshot completo anterior'],
-            ['Retiradas', number(market.latestIngestionRemoved), 'Estaban ayer y ya no aparecen en el snapshot completo'],
-            ['Enlaces repetidos', number(market.latestDiscoveryDuplicateCandidates), 'Repeticiones técnicas eliminadas antes de procesar'],
+            ['Retiradas', number(market.latestIngestionRemoved), 'Desaparecieron respecto del corte anterior'],
+            ['Mediana publicada', houseLive?.medianPriceUf == null ? '—' : `UF ${decimal(houseLive.medianPriceUf, 0)}`, 'Precio publicado del universo live enriquecido'],
+            ['Mediana UF/m²', decimal(houseLive?.medianUfM2 ?? null, 1), 'Sólo publicaciones con superficie válida'],
           ].map(([label, value, detail]) => (
             <div key={label} className="bg-[var(--n3-bg)] px-4 py-4">
               <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
@@ -180,62 +185,85 @@ export default async function MarketPage() {
             </div>
           ))}
         </div>
+      </section>
 
-        <div className="mt-4 grid gap-3 text-xs text-[var(--n3-text-muted)] lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
-          <div><span className="text-[var(--n3-text-light)]">1. Captura</span><br />Portal · Venta · Casa · Vitacura</div>
-          <span className="hidden lg:block">→</span>
-          <div><span className="text-[var(--n3-text-light)]">2. Reconciliación</span><br />Portal {number(market.latestPortalReportedCount)} → {number(market.latestDiscoveryUniqueListings)} IDs únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</div>
-          <span className="hidden lg:block">→</span>
-          <div><span className="text-[var(--n3-text-light)]">3. Universo vigente</span><br />Sólo desde aquí se calculan los indicadores</div>
+      <section className="mt-8 border-t border-[var(--n3-line)] pt-5">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">02 · Cobertura y limpieza</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué capturamos y qué consolidamos</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
+            Mercado completo y base canónica PP son universos distintos. Se muestran por separado para no confundir cobertura de Portal con identidad consolidada.
+          </p>
         </div>
 
-        <div className="mt-6 border-t border-[var(--n3-line)] pt-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Deduplicación canónica</p>
-              <h3 className="mt-1 text-base font-medium text-[var(--n3-text-light)]">Una propiedad, una identidad lógica</h3>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-                Conservamos la evidencia original, pero los duplicados confirmados se consolidan antes de calcular mercado, territorio y valorización.
-              </p>
+        <div className="mt-5 grid gap-6 lg:grid-cols-2">
+          <div className="border-t border-[var(--n3-line)] pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mercado completo · Portal</p>
+                <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">Cobertura diaria</p>
+              </div>
+              <span className="text-xs text-[var(--n3-teal-soft)]">{percent(market.latestInventoryCoverageRatio)}</span>
             </div>
-            <Link href="/dashboard/market/identidades" className="inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs text-[var(--n3-teal-soft)] hover:bg-white/[0.02]">
-              Ver identidad y duplicados
-            </Link>
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">{number(market.latestPortalReportedCount)}</p>
+                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Portal reporta</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">{number(market.latestDiscoveryUniqueListings)}</p>
+                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">IDs únicos capturados</p>
+              </div>
+            </div>
+            <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">
+              {number(market.latestDiscoveryDuplicateCandidates)} referencias técnicas repetidas fueron descartadas durante el recorrido. No representan propiedades adicionales.
+            </p>
           </div>
 
-          <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
-            <div className="bg-[var(--n3-bg)] px-4 py-4">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Registros V1</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{number(market.canonicalProperties)}</p>
-              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Casas dentro del universo operativo</p>
+          <div className="border-t border-[var(--n3-line)] pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base canónica PP</p>
+                <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">Identidad consolidada</p>
+              </div>
+              <Link href="/dashboard/market/identidades" className="text-xs text-[var(--n3-teal-soft)]">Ver duplicados</Link>
             </div>
-            <div className="bg-[var(--n3-bg)] px-4 py-4">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Duplicados consolidados</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--n3-teal-soft)]">−{number(market.confirmedDuplicateRows)}</p>
-              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{number(market.duplicateComponents)} grupos con identidad duplicada confirmada</p>
+            <div className="mt-4 grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">{number(market.canonicalProperties)}</p>
+                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">registros PP</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold tabular-nums text-[var(--n3-teal-soft)]">−{number(market.confirmedDuplicateRows)}</p>
+                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">duplicados</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">{number(market.logicalHouseComponents)}</p>
+                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">propiedades lógicas</p>
+              </div>
             </div>
-            <div className="bg-[var(--n3-bg)] px-4 py-4">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Propiedades lógicas</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{number(market.logicalHouseComponents)}</p>
-              <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Base limpia usada por la inteligencia</p>
-            </div>
-          </div>
-
-          <div className="mt-3 space-y-1 font-mono text-[11px] text-[var(--n3-text-muted)]">
-            <p>Captura: Portal reporta {number(market.latestPortalReportedCount)} · observamos {number(market.latestDiscoveryRawCandidates)} referencias · eliminamos {number(market.latestDiscoveryDuplicateCandidates)} enlaces repetidos · quedan {number(market.latestDiscoveryUniqueListings)} IDs únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</p>
-            <p>Identidad: {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades lógicas</p>
+            <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">
+              Esta base se usa para identidad, territorio y valorización. No representa por sí sola el total de casas actualmente publicadas en Portal.
+            </p>
           </div>
         </div>
 
-        <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">
-          El inventario de presencia se recorre completo cada día. Precio, superficie, dirección y otros atributos se enriquecen por lotes para proteger runtime y carga sobre Portal; una ficha pendiente de detalle sigue contando correctamente dentro de la oferta vigente.
-        </p>
+        <details className="mt-5 border-y border-[var(--n3-line)] py-3">
+          <summary className="flex min-h-10 cursor-pointer items-center justify-between gap-4 text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+            <span>Ver cómo se limpian los datos</span>
+            <span className="text-[10px] uppercase tracking-[0.12em]">Detalle</span>
+          </summary>
+          <div className="space-y-1 pt-3 font-mono text-[11px] leading-5 text-[var(--n3-text-muted)]">
+            <p>Captura Portal: {number(market.latestDiscoveryRawCandidates)} referencias observadas − {number(market.latestDiscoveryDuplicateCandidates)} repeticiones técnicas = {number(market.latestDiscoveryUniqueListings)} IDs únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</p>
+            <p>Base PP: {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades lógicas</p>
+          </div>
+        </details>
       </section>
 
       <section className="mt-8">
         <div className="mb-3">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Inteligencia derivada</p>
-          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué nos dicen los datos</h2>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">03 · Inteligencia derivada</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué nos dice el mercado</h2>
         </div>
         <MetricStrip items={[
           { label: 'Oferta activa', value: number(market.activeInventory) },
@@ -244,43 +272,29 @@ export default async function MarketPage() {
           { label: 'Absorción', value: percent(market.absorptionRate) },
         ]} />
 
-        <div className="mt-4">
-          <CalculationTrace
-            title="Oferta activa"
-            source="Portal Inmobiliario · fuente canónica live de casas"
-            universe="Venta · Casa · Vitacura · publicaciones vigentes reconciliadas"
-            filters="Estado active/observed · fuente live actual"
-            exclusions="Legacy, publicaciones retiradas y fuentes fuera del universo"
-            formula="conteo de publicaciones vigentes del snapshot canónico"
-            result={number(market.activeInventory)}
-            note="La identidad canónica se aplica después para análisis por propiedad; los duplicados confirmados no inflan el universo lógico."
-          />
-          <CalculationTrace
-            title="Propiedades lógicas"
-            source="Universo V1 + relaciones de identidad confirmadas"
-            universe={`${number(market.canonicalProperties)} registros V1`}
-            exclusions={`${number(market.confirmedDuplicateRows)} registros duplicados confirmados`}
-            formula="registros V1 − duplicados confirmados"
-            result={number(market.logicalHouseComponents)}
-          />
-          <CalculationTrace
-            title="Ventas confirmadas"
-            source="Transacciones canónicas de casas"
-            universe="Operaciones respaldadas por fuente transaccional"
-            exclusions="Señales CRM sin fecha de cierre y estados no confirmados"
-            formula="conteo de operaciones confirmadas del período"
-            result={number(market.confirmedSales)}
-          />
-          <CalculationTrace
-            title="Absorción"
-            source="Oferta comparable + ventas confirmadas"
-            universe="Mismo tipo de propiedad, territorio y período comparable"
-            exclusions="Períodos sin ventas confirmadas suficientes"
-            formula="ventas confirmadas / oferta comparable"
-            result={percent(market.absorptionRate)}
-            note="Si falta una fuente reciente de ventas, el sistema no publica una absorción estimada."
-          />
-        </div>
+        <details className="mt-4 border-t border-[var(--n3-line)] pt-3">
+          <summary className="flex min-h-10 cursor-pointer items-center justify-between gap-4 text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+            <span>Ver cómo se calculan los indicadores</span>
+            <span className="text-[10px] uppercase tracking-[0.12em]">Metodología</span>
+          </summary>
+          <div className="mt-3 divide-y divide-[var(--n3-line)] text-xs leading-5">
+            {[
+              ['Oferta activa', 'Portal Inmobiliario · casas usadas en venta · Vitacura', 'Publicaciones únicas vigentes del snapshot completo', number(market.activeInventory)],
+              ['Propiedades lógicas PP', 'Base canónica PP', `${number(market.canonicalProperties)} registros − ${number(market.confirmedDuplicateRows)} duplicados confirmados`, number(market.logicalHouseComponents)],
+              ['Ventas confirmadas', 'Transacciones canónicas de casas', 'Sólo operaciones con evidencia transaccional confirmada', number(market.confirmedSales)],
+              ['Absorción', 'Oferta comparable + ventas confirmadas', 'ventas confirmadas / oferta comparable', percent(market.absorptionRate)],
+            ].map(([label, source, formula, result]) => (
+              <div key={label} className="grid gap-1 py-3 sm:grid-cols-[150px_minmax(0,1fr)_120px] sm:gap-4">
+                <p className="font-medium text-[var(--n3-text-light)]">{label}</p>
+                <div className="text-[var(--n3-text-muted)]">
+                  <p>{source}</p>
+                  <p className="mt-1 font-mono text-[11px]">{formula}</p>
+                </div>
+                <p className="tabular-nums text-[var(--n3-text-light)] sm:text-right">{result}</p>
+              </div>
+            ))}
+          </div>
+        </details>
       </section>
 
       {actions.length > 0 ? (
@@ -290,7 +304,7 @@ export default async function MarketPage() {
             <span className="text-xs text-[var(--n3-text-muted)]">{actions.length}</span>
           </div>
           <div className="divide-y divide-[var(--n3-line)]">
-            {actions.map((item) => (
+            {primaryActions.map((item) => (
               <Link key={item.label} href={item.href} className="grid min-h-20 gap-3 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</p>
@@ -300,6 +314,21 @@ export default async function MarketPage() {
               </Link>
             ))}
           </div>
+          {secondaryActions.length > 0 ? (
+            <details className="border-t border-[var(--n3-line)] py-3">
+              <summary className="cursor-pointer text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+                Ver {secondaryActions.length} temas adicionales
+              </summary>
+              <div className="mt-2 divide-y divide-[var(--n3-line)]">
+                {secondaryActions.map((item) => (
+                  <Link key={item.label} href={item.href} className="flex min-h-14 items-center justify-between gap-4 py-3 text-xs hover:bg-white/[0.02]">
+                    <span className="text-[var(--n3-text-light)]">{item.label}</span>
+                    <span className={item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}>{item.value}</span>
+                  </Link>
+                ))}
+              </div>
+            </details>
+          ) : null}
         </section>
       ) : null}
 
