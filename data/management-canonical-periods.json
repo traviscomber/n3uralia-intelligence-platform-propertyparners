@@ -1,0 +1,208 @@
+{
+  "schemaVersion": "1.0.0",
+  "periods": [
+    {
+      "period": "2026-07",
+      "authority": {
+        "file": "Informe_Ejecutivo_Julio_2026_Property_Partners.pdf",
+        "sha256": "895b072f5dad551990e69beae8158d1e809f89fadf3dc08f67986ed88c85f14a",
+        "kind": "canonical_management_snapshot"
+      },
+      "company": {
+        "name": "Property Partners Vitacura",
+        "legalName": "PL Real Estate Spa",
+        "creditedClosings": 9.5,
+        "creditedSalesUf": 158266,
+        "operationalClosings": 11,
+        "operationalSalesUf": 186357,
+        "inScopeOperations": 10,
+        "documentaryClosingReference": 8.1,
+        "documentaryReferenceApproval": "provisional",
+        "creditedClosingCompliancePercent": 117.3,
+        "ytdCreditedClosings": 43.5,
+        "ytdDocumentaryReference": 56.7,
+        "ytdCompliancePercent": 76.7,
+        "stock": 350,
+        "captures": 29,
+        "leads": 435,
+        "requirements": 629,
+        "scheduledVisits": 307,
+        "realizedVisits": 160,
+        "visitCompletionRatePercent": 52.1,
+        "followUpScore": 65.9,
+        "managementScore": null,
+        "portfolioScore": null,
+        "conversionScore": null,
+        "scoringStatus": "partial_non_evaluable"
+      },
+      "yoy2025": {
+        "leads": {
+          "previous": 423,
+          "current": 435,
+          "changePercent": 2.8
+        },
+        "requirements": {
+          "previous": 546,
+          "current": 629,
+          "changePercent": 15.2
+        },
+        "scheduledVisits": {
+          "previous": 386,
+          "current": 307,
+          "changePercent": -20.5
+        },
+        "realizedVisits": {
+          "previous": 239,
+          "current": 160,
+          "changePercent": -33.1
+        },
+        "visitCompletionRate": {
+          "previous": 61.9,
+          "current": 52.1,
+          "changePercentagePoints": -9.8
+        }
+      },
+      "followUpInputs": {
+        "activeLeads": 1680,
+        "classifiedLeads": 961,
+        "stale90Leads": 451,
+        "activeALeads": 138,
+        "stale15ALeads": 45,
+        "classifiedScore": 57.2,
+        "managed90Score": 73.2,
+        "managed15AScore": 67.4
+      },
+      "offices": [
+        {
+          "name": "Lo Beltrán",
+          "stock": 94,
+          "captures": 10,
+          "leads": 182,
+          "activeLeads": 321,
+          "requirements": 271,
+          "scheduledVisits": 129,
+          "realizedVisits": 71,
+          "creditedClosings": 4,
+          "creditedSalesUf": 58325
+        },
+        {
+          "name": "Nueva Costanera",
+          "stock": 101,
+          "captures": 12,
+          "leads": 127,
+          "activeLeads": 714,
+          "requirements": 187,
+          "scheduledVisits": 95,
+          "realizedVisits": 37,
+          "creditedClosings": 3,
+          "creditedSalesUf": 46783
+        },
+        {
+          "name": "Santa María",
+          "stock": 153,
+          "captures": 7,
+          "leads": 123,
+          "activeLeads": 618,
+          "requirements": 169,
+          "scheduledVisits": 81,
+          "realizedVisits": 52,
+          "creditedClosings": 2.5,
+          "creditedSalesUf": 53158
+        }
+      ],
+      "partnerLevelAvailable": false
+    },
+    {
+      "period": "2026-08",
+      "authority": {
+        "file": "Ago_Directorio.pptx",
+        "sha256": "395e5d942d575bf17939cef99567cfa6ef3f2c6b85bb9d1af43a7b2c20ea2f74",
+        "kind": "canonical_board_report"
+      },
+      "company": {
+        "name": "Property Partners Vitacura",
+        "legalName": "PL Real Estate Spa",
+        "creditedClosings": 8,
+        "creditedSalesUf": 141650,
+        "operationalClosings": null,
+        "operationalSalesUf": null,
+        "inScopeOperations": null,
+        "documentaryClosingReference": 8.2,
+        "documentaryReferenceApproval": "approved_board_report",
+        "creditedClosingCompliancePercent": 98,
+        "ytdCreditedClosings": 50.5,
+        "ytdDocumentaryReference": 58.6,
+        "ytdCompliancePercent": 86,
+        "stock": 324,
+        "captures": null,
+        "leads": null,
+        "requirements": 468,
+        "scheduledVisits": 324,
+        "realizedVisits": 189,
+        "visitCompletionRatePercent": 58.3,
+        "followUpScore": 69.8,
+        "managementScore": 67.4,
+        "portfolioScore": 65.8,
+        "conversionScore": 67.3,
+        "scoringStatus": "evaluable"
+      },
+      "offices": [
+        {
+          "name": "Santa María",
+          "stock": 134,
+          "captures": null,
+          "leads": null,
+          "activeLeads": 532,
+          "requirements": 150,
+          "scheduledVisits": 94,
+          "realizedVisits": 65,
+          "creditedClosings": 3.5,
+          "creditedSalesUf": 76800,
+          "managementScore": 67.4,
+          "portfolioScore": 65.1,
+          "followUpScore": 68.4,
+          "conversionScore": 69.5
+        },
+        {
+          "name": "Nueva Costanera",
+          "stock": 95,
+          "captures": null,
+          "leads": null,
+          "activeLeads": 373,
+          "requirements": 165,
+          "scheduledVisits": 118,
+          "realizedVisits": 62,
+          "creditedClosings": 2,
+          "creditedSalesUf": 26650,
+          "managementScore": 67.5,
+          "portfolioScore": 69.1,
+          "followUpScore": 66.4,
+          "conversionScore": 66.6
+        },
+        {
+          "name": "Lo Beltrán",
+          "stock": 95,
+          "captures": null,
+          "leads": null,
+          "activeLeads": 323,
+          "requirements": 153,
+          "scheduledVisits": 112,
+          "realizedVisits": 62,
+          "creditedClosings": 2.5,
+          "creditedSalesUf": 38200,
+          "managementScore": 67.9,
+          "portfolioScore": 64.4,
+          "followUpScore": 76.8,
+          "conversionScore": 63.6
+        }
+      ],
+      "partnerLevelAvailable": false
+    }
+  ],
+  "semanticRules": {
+    "managementCreditedClosings": "Use for board/management performance and goal compliance.",
+    "operationalClosings": "Use as CRM operational context; never substitute management-credit closings.",
+    "officeAggregation": "Do not reconstruct corporate totals by summing office rows when a corporate canonical total exists.",
+    "partner": "Do not infer Partner metrics from office totals."
+  }
+}
