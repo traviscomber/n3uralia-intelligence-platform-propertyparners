@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     warnings,
     requested_by: user.id,
     started_at: new Date().toISOString(),
-  }).select('id,entity_id,metric_code,period_start,period_end,value,source_name,source_reference,quality_status,evaluation_status,formula_version,source_cutoff_at').single()
+  }).select('id').single()
   if (runError) {
     console.error('[management-import] run creation failed', { code: runError.code })
     return NextResponse.json({ error: 'No fue posible iniciar la ejecución de importación.' }, { status: 500 })
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
 
   const { data: imported, error: importError } = await supabase.from('management_metric_values').upsert(payload, {
     onConflict: 'entity_id,metric_code,period_start,period_end,source_name',
-  }).select('id')
+  }).select('id,entity_id,metric_code,period_start,period_end,value,source_name,source_reference,quality_status,evaluation_status,formula_version,source_cutoff_at')
 
   if (importError) {
     console.error('[management-import] metric upsert failed', { code: importError.code, runId: run.id })
