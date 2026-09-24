@@ -1,7 +1,8 @@
 export function managementReportEntityScopes(role: string, entityIds: string[]): Array<string | null> {
   const normalizedRole = role.trim().toLowerCase()
-  if (normalizedRole === 'admin' || normalizedRole === 'ceo') return [null]
-  if (normalizedRole === 'director' || normalizedRole === 'subdirector') return [...new Set(entityIds)]
+  const uniqueEntityIds = [...new Set(entityIds)]
+  if (normalizedRole === 'admin' || normalizedRole === 'ceo') return [null, ...uniqueEntityIds]
+  if (normalizedRole === 'director' || normalizedRole === 'subdirector') return uniqueEntityIds
   return []
 }
 
