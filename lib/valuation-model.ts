@@ -31,7 +31,7 @@ export type DeterministicValuation = {
   method: string
 }
 
-const PUBLICATION_MARGINS = [0, 0.05] as const
+const PUBLICATION_MARGINS = [0, 0.05, 0.1] as const
 
 function finiteNonNegative(value: number) {
   return Number.isFinite(value) && value >= 0 ? value : 0
