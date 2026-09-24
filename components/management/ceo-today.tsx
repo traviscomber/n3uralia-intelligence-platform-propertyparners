@@ -6,6 +6,7 @@ import { ArrowRight, RefreshCw } from 'lucide-react'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 import { formatPropertyPartnersPeriod } from '@/lib/property-partners-time'
+import { getDecisionThreshold } from '@/lib/management-decision-policy'
 
 type CurrentSnapshot = {
   period: { key: string; start: string; end: string }
@@ -50,6 +51,9 @@ const n = (value: number | null | undefined, digits = 0) => value == null
 
 const ratio = (value: number | null | undefined, target: number | null | undefined) =>
   value != null && target != null && target !== 0 ? value / target * 100 : null
+
+const LEAD_BACKLOG_WATCH = getDecisionThreshold('lead-backlog-watch')
+const VISITS_WATCH = getDecisionThreshold('visits-watch')
 
 export function CeoToday() {
   const [current, setCurrent] = useState<CurrentResponse | null>(null)
@@ -112,10 +116,10 @@ export function CeoToday() {
         critical: true,
       })
     }
-    if (stale != null && stale > 0 && staleRatio != null && staleRatio >= 20) {
+    if (stale != null && stale > 0 && staleRatio != null && staleRatio >= LEAD_BACKLOG_WATCH) {
       items.push({ label: 'Leads antiguos', detail: `${n(stale)} leads superan 90 días`, href: '/dashboard/control/operations' })
     }
-    if (visitRate != null && visitRate < 80) {
+    if (visitRate != null && visitRate < VISITS_WATCH) {
       items.push({ label: 'Visitas', detail: `${n(visitRate, 0)}% de ejecución`, href: '/dashboard/control/operations' })
     }
     if (operations?.valuations.review) {
