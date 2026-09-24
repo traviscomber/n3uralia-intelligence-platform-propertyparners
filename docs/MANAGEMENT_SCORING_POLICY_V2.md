@@ -1,44 +1,68 @@
-# Política ejecutable de scoring de gestión v2
+# Política ejecutable de scoring de gestión v3
 
 ## Estado
 
-Esta política convierte el entendimiento consolidado de `MANAGEMENT_MODEL_UNDERSTANDING.md` en reglas ejecutables y auditables. La versión productiva es `canonical_v2`. La versión `historical_v1` existe únicamente para reproducir resultados publicados anteriormente.
+La autoridad canónica vigente es el reporte de Pedro `Ago_Directorio.pptx` (cierre agosto 2026).
 
-## Reglas productivas
+- `canonical_v3`: vigente para nuevas publicaciones.
+- `canonical_v2`: preservado para reproducir el período interno anterior.
+- `historical_v1`: preservado para reproducción histórica.
 
-1. Todos los subscores y scores se mantienen en el rango 0–100.
-2. La tasa de cierre se calcula como:
+Fuente canónica y trazabilidad completa: `docs/canonical/PEDRO_DIRECTORIO_AGOSTO_2026.md`.
 
-   `min((tasa_de_cierre_porcentual / 2.86) × 100, 100)`
+## Fórmula principal
 
-3. Una meta o denominador igual a cero produce `score = null` y estado `not_evaluable`.
-4. Un valor negativo o un numerador que excede un universo de complemento produce estado `inconsistent_source`.
-5. Las dimensiones sólo se calculan cuando sus tres componentes son evaluables.
-6. La calidad de gestión se calcula con precisión interna completa:
+`Calidad Gestión = 0.4 × Calidad Cartera + 0.3 × Calidad Seguimiento + 0.3 × Calidad Conversión`
 
-   `0.4 × Cartera + 0.3 × Seguimiento + 0.3 × Conversión`
+Cada dimensión usa tres subscores con igual peso.
 
-7. Los umbrales de clasificación utilizan el valor exacto, no el valor redondeado visible.
-8. El redondeo a un decimal se aplica sólo en la interfaz o en una exportación de presentación.
+## Cartera
 
-## Reproducción histórica
+- Meta cartera: `min(Cartera/Meta,1)×100`
+- Requerimientos: `min(Ratio Req,1)×100`
+- Pricing: ≤1.05→100, ≤1.10→50, >1.10→0
 
-`historical_v1` conserva dos comportamientos necesarios para explicar presentaciones anteriores:
+## Seguimiento
 
-- tasa de cierre: `min(TC%, 2.86) × 35`, cuyo máximo literal es 100.1;
-- meta cero: score operativo 0, aunque el componente se muestre como no evaluable.
+- Clasificación: `Clasificados/Activos×100`
+- Gestión 90d: `(1−L90d/Activos)×100`
+- Gestión A 15d: `(1−LA15d/LeadsA)×100`
 
-Ese modo no debe utilizarse para nuevas publicaciones ni para clasificar desempeño actual.
+## Conversión
 
-## Compatibilidad
+- Visitas/meta: `min(Vis/Meta,1)×100`
+- Realizadas/agendadas: `VisReal/Agend×100`
+- Tasa cierre: `min(TC%6m,2.86)×35`
 
-El parámetro heredado `conversionCap: 'formula'` selecciona temporalmente `historical_v1`. Las nuevas integraciones deben usar `mode: 'canonical_v2'` o dejar la política sin especificar, porque v2 es el modo predeterminado.
+El reporte publicado muestra 100.1 como máximo literal de la tasa de cierre. V3 reproduce esa fórmula exactamente.
 
-## Decisiones aún abiertas
+## Semáforos
 
-La v2 no inventa prioridades no respaldadas. Continúan bloqueados:
+- Meta: rojo <90, amarillo 90–<100, verde ≥100.
+- Crecimiento AA: rojo <0, amarillo 0–<20, verde ≥20.
+- Score: rojo <50, amarillo 50–<70, verde ≥70.
 
-- Vendedor frente a Perseverante cuando ambas fortalezas coexisten;
-- la prioridad completa de Riesgo frente a una fortaleza simple;
-- la tabla oficial de benchmark de requerimientos por tipología;
-- el evento jurídico u operacional definitivo de cierre.
+## Clasificaciones
+
+- Estrella: 3 dimensiones ≥70.
+- Potencial: 1 ≥70 y las otras 2 ≥50.
+- Captador: Cartera ≥70.
+- Vendedor: Conversión ≥70.
+- Perseverante: Seguimiento ≥70.
+- Riesgo: 2 dimensiones <30.
+- Desarrollo: resto.
+
+No inventar prioridad entre múltiples etiquetas especializadas cuando Estrella/Potencial no resuelvan el caso.
+
+## Separación de ventas
+
+El reporte de Directorio usa créditos de gestión, incluso fraccionarios por oficina. Estos se persisten como:
+
+- `management_credited_sales`
+- `management_credited_sales_uf`
+
+`sales` y `sales_uf` continúan representando cierres operacionales CRM y no deben ser sustituidos por los valores de Directorio.
+
+## Partner
+
+La presentación de agosto no contiene páginas ni métricas a nivel Partner. El sistema soporta reportes Partner, pero esa capa debe quedar vacía/no evaluable hasta recibir una fuente canónica específica; nunca repartir automáticamente resultados de oficina.
