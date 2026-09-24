@@ -5,9 +5,9 @@ import {
   metricsForManagementReportScope,
 } from '../lib/management-report-scope'
 
-test('global management leaders receive one global report scope', () => {
-  assert.deepEqual(managementReportEntityScopes('admin', ['a', 'b']), [null])
-  assert.deepEqual(managementReportEntityScopes('CEO', ['a', 'b']), [null])
+test('global management leaders receive global plus entity report scopes', () => {
+  assert.deepEqual(managementReportEntityScopes('admin', ['company', 'office', 'partner']), [null, 'company', 'office', 'partner'])
+  assert.deepEqual(managementReportEntityScopes('CEO', ['office', 'partner', 'office']), [null, 'office', 'partner'])
 })
 
 test('director and subdirector reports remain entity scoped', () => {
