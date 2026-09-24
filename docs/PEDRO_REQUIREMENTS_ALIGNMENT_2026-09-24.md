@@ -1,101 +1,150 @@
-# Pedro requirements alignment — 2026-09-24
+# Pedro requirements alignment — canonical reset — 2026-09-24
 
-Status legend: **ALIGNED**, **PARTIAL**, **BLOCKED_SOURCE**, **NEEDS_DECISION**.
+This document is intentionally source-first. Notes from meetings can define product intent, but they do not override canonical source semantics or formulas.
 
-## Market intelligence
+## Canonical authority matrix
 
-| Requirement | Status | Current implementation / next action |
-| --- | --- | --- |
-| 3–4 years with lines, visuals and deviations | ALIGNED in PR #235 | Separate Casa / Departamento, 4 complete CBRS years, transaction and UF/m² lines, YoY and deviation vs 4-year average. |
-| MoM and YoY further back | PARTIAL | Current executive dashboard verifies latest comparable month. Historical annual series is now explicit. Monthly backfill needs additional verified periods from PP/Pedro before publishing longer MoM/YoY series. |
-| Offer, sales, average monthly sales, absorption | PARTIAL | Average monthly sales is derived from the latest complete CBRS year. Absorption is intentionally blocked unless Portal proves a full snapshot. |
-| Price quintiles, 20% cheapest / most expensive | ALIGNED for sales; PARTIAL for offer | CBRS sale quintiles are available. Offer quintiles are only published when a full Portal snapshot exists. |
-| Publication stay / DOM | ALIGNED | Property 360 exposes source DOM, observed span, evidence age and confirmed DOM when a transaction closes the lifecycle. |
-| Houses and apartments separated | ALIGNED in PR #235 | Both types are shown independently. Parking/storage are not merged into these residential transaction series. |
-| Large trends connected to sales | ALIGNED | Market Intelligence compares supply evidence with CBRS transactions and price gaps; annual CBRS trend is separated by type. |
-| Intramonth evolution / rotation up or down | PARTIAL | Canonical monthly snapshots exist but currently only one verified market period is available; no trend is fabricated. |
-| Neighborhood KML/KMZ | ALIGNED | Canonical Property Partners KML polygons are already used. |
-| Leaflet basemap | CONFIRMED | Use Leaflet as the interactive basemap over the canonical Property Partners KML geometry. Do not depend on Google Maps. |
-| Similar neighborhoods | PARTIAL | Valuation candidate logic and neighborhood comparability exist, but a client-facing explicit “similar neighborhoods” recommendation layer is not yet exposed. |
+| Domain | Canonical source | Authority | Canonical rule in product |
+| --- | --- | --- | --- |
+| Registered sales | `BASE_CBR_CON_BARRIO_ASIGNADO VITACURA.xlsx` | Property Partners / CBRS reference | 40,843 workbook rows are raw components, not 40,843 residential sales. Canonical residential event = one `FOJA+NUMERO+FECHA+TOMO` inscription with exactly one residential primary asset; sum UF of event components; exclude remate and permuta. Canonical result: 17,581 residential compraventa events = 5,007 Casa + 12,574 Departamento. |
+| Portal benchmark · Casa | `portal_urls_casas_final.xlsx` | Property Partners reference snapshot | 1,731 valid Portal listing IDs. Benchmark/reference snapshot, not today's live inventory. |
+| Portal benchmark · Departamento | `portal_detalle_deptos_full.xlsx` | Property Partners reference snapshot | 3,442 physical rows, 3,440 valid listing rows after 2 rejected rows. Benchmark/reference snapshot, not today's live inventory. |
+| Portal benchmark · Proyecto | `portal_detalle_Proyectos.xlsx` | Property Partners reference snapshot | 26 valid project listings. Some area fields are flagged; do not map contaminated values blindly. |
+| Territory | `Barrios Vitacura.kml` | Property Partners | 19 official neighborhoods. KML geometry is the territorial authority. |
+| Valuation · Casa | `Plantilla de Valorización Casas.xlsx` | Property Partners | Commercial value uses construction and land component rates; comparison UF/m² uses built area + land/4. |
+| Valuation · Departamento | `Plantilla de Valorización Departamentos.xlsx` | Property Partners | Commercial value uses useful m² × applied useful UF/m²; Portal comparison uses useful area + 50% of terrace/excess total area. |
+| Management | approved CRM imports + canonical monthly metrics | Property Partners | Metrics are published only for the verified period/formula version. Corporate totals are not reconstructed by blindly summing office subtotals. |
 
-## Portal inventory and source truth
+## Important source separation
 
-The following Pedro-note figures are **not yet canonical KPIs** because their universes are not reconciled:
+### 1. Portal reference snapshot vs Portal live
 
-- 46 Portal houses
-- 151 including apartments on 2026-09-22
-- 1,527 active houses on 2026-09-22
+These are different products of the data pipeline and must never be shown as the same universe.
 
-Current evidence:
-- the collector run on 2026-09-22 is explicitly **partial**, 12 house rows, not a full snapshot;
-- current canonical Portal-source active evidence contains more rows accumulated over time, but cannot be called the total live market until a full snapshot is proven;
-- the product therefore fails closed and does not publish absorption/quintiles as full-market facts.
+**Reference snapshot**
+- Casa: 1,731 valid listings.
+- Departamento: 3,440 valid listings.
+- Proyectos: 26.
+- Source date: 2026-03-09.
+- Purpose: benchmark and business intelligence from the Property Partners files.
 
-## CBRS transaction scope
+**Live Portal**
+- Comes from the canonical collector.
+- A current count is only publishable as a full market count when the ingestion run proves coverage/full snapshot.
+- Partial captures remain useful as evidence but must not be extrapolated to total market.
 
-**ALIGNED:** canonical CBRS reference metrics already separate Casa and Departamento. Parking/storage are not counted as Casa/Departamento transaction series.
+The Pedro-note numbers 46 / 151 / 1,527 are therefore capture/filter observations that need their exact capture context. They are not allowed to replace the canonical reference snapshot or be mixed with current PP inventory.
 
-Observed complete-year house counts in the canonical reference are materially below the note “~1,200 house sales/year”, so that note must not replace canonical metrics without reconciling the source/universe.
+## CBRS semantics
 
-## Valuation and publication strategy
+The workbook includes residential and non-residential components: Casa, Departamento, Estacionamiento, Bodega, Oficina, Comercial, Sitios and others.
 
-| Requirement | Status | Current implementation |
-| --- | --- | --- |
-| Weighted house area: built + land/4 | ALIGNED | Canonical valuation model uses built area + land/4 for comparison. |
-| Max / average / minimum market values | ALIGNED | Portal and CBRS summaries persist min, average, median and max. |
-| Publication scenarios +5% | ALIGNED | Canonical model exposes 0%, +5% and +10% publication scenarios. |
-| Compare proposed publication to market | ALIGNED | Scenarios include variance vs Portal average/max by price and UF/m². |
-| Publication strategy | CONFIRMED | Recommended publication uplift is +5%. Keep negotiation as a separate range, not as a second publication markup. |
-| 20% opportunity band | CONFIRMED | Use the cheapest 20% as an opportunity signal to identify a potential 'cazar la casa' case. Do not automatically remove those records; surface them for review/recommendation. |
-| Comparable sample size | CONFIRMED | 3 comparables remain the minimum. 5 is the default maximum reliable sample. More than 5 requires explicit justification and should only be accepted when it demonstrably improves evidence quality/confidence. |
-| Recommendation: cheap/expensive relative to current listings | PARTIAL | Property 360 positions price vs comparable median; publication scenario UI can be made more explicit as percentile/quintile positioning after Portal full-snapshot coverage is reliable. |
+Never count raw CBRS rows as house/apartment sales.
 
-## Management / reporting
+Canonical transaction aggregation already exists in the database source metadata:
 
-| Requirement | Status | Current implementation |
-| --- | --- | --- |
-| Leads, visits, process indicators | ALIGNED | Canonical metrics include leads, classified/unclassified, visits scheduled/realized, conversion and follow-up. |
-| Quick indicators and monthly alerts | ALIGNED | CEO and director views expose verified period metrics and alerts. |
-| Director sees office and partners | ALIGNED | Director workspace contains partner performance, goals, tasks and reports. |
-| Each executive assigned a neighborhood | PARTIAL | Property assignment and KML neighborhood ownership are present, but “attractive / opportunity score” per assigned neighborhood is not yet one consolidated executive workflow. |
-| P&L by business / office / partner | BLOCKED_SOURCE | Finance/margin/P&L is intentionally not fabricated. A Property Partners canonical financial source is required. |
-| Activity reports | PARTIAL | Management reports exist; access/view telemetry is not a canonical management metric yet. |
-| See whether users viewed accesses | BLOCKED_SOURCE / NEEDS_DECISION | No canonical per-user product-view event model exists. Requires explicit tracking scope and retention/privacy decision. |
-| Weekly management reporting | CONFIRMED | Generate/update the management report when the system’s source data is uploaded, normally once per week. Reports must reflect the newly uploaded canonical period and not run from stale data. |
+`one event per FOJA+NUMERO+FECHA+TOMO; exactly one residential primary asset; sum UF of event components; exclude remate and permuta`
 
-## Closing workflow
+This is the correct explanation for Pedro's warning that parking/storage can multiply apparent transaction counts.
 
-Requested stages:
-1. offer;
-2. seller / negotiation (2–3 days, maximum 7);
-3. current operation / inventory;
-4. promise;
-5. title study;
-6. escritura draft;
-7. signed escritura;
-8. CBRS registration;
-9. delivery (~4 months).
+For annual market intelligence, use the canonical aggregated Casa/Departamento metrics already persisted from this source. Do not recreate a second aggregation rule in UI code.
 
-Status: **CONFIRMED DESIGN; NOT YET MODELED AS A CANONICAL WORKFLOW**.
+## Valuation formulas from the original templates
 
-Confirmed sequence: offer → seller/negotiation → promise → title study → escritura draft → signed escritura → CBRS registration → delivery. The implementation should preserve the two business closing milestones described by Pedro as distinct tracked milestones, with stage ownership/auditability explicit in the model. Durations are operational targets unless a canonical PP rule says otherwise.
+### Casa
 
-## Immediate development order
+**Comparable weighted area**
 
-1. Complete and QA PR #235: Pedro market intelligence v2.
-2. Reconcile Portal full-snapshot coverage and Pedro’s 46 / 151 / 1,527 figures.
-3. Expose publication strategy/quintile position inside Property 360 once offer coverage is reliable.
-4. Model the closing lifecycle after stage ownership is confirmed.
-5. Connect P&L only after PP supplies a canonical financial source.
-6. Add user-view/activity tracking only after scope/retention is approved.
+`weighted_area = built_m2 + land_m2 / 4`
 
-## Confirmed product rules from follow-up
+**Comparable UF/m²**
 
-- Portal counts such as 46 / 151 / 1,527 are source/search-filter observations and must retain their filter + capture context instead of being confused with canonical PP inventory.
-- Publication recommendation: +5% over commercial valuation as the standard strategy.
-- Negotiation is a separate range from publication strategy and should be presented as a decision band, not silently folded into valuation.
-- Cheapest 20% of the relevant market cohort is an opportunity signal, not an automatic outlier deletion rule.
-- Comparable evidence: minimum 3; target/default maximum 5. >5 requires an explicit reason and evidence that quality/confidence improves.
-- Closing lifecycle sequence confirmed.
-- Weekly reports should be data-triggered after the weekly source upload.
-- Territory map direction: Leaflet + canonical PP KML/KMZ geometry.
+`price_uf / weighted_area`
+
+The template compares valuation/publication against:
+- CBRS max / average / min price;
+- CBRS max / average / min weighted UF/m²;
+- Portal max / average / min price;
+- Portal max / average / min weighted UF/m².
+
+### Departamento
+
+**Commercial value**
+
+`useful_m2 × applied_useful_uf_m2`
+
+**Portal comparison area**
+
+`useful_m2 + (total_m2 - useful_m2) / 2`
+
+The original template retains publication scenarios at 0%, 5% and 10%. Product policy may highlight +5% as Pedro's recommended standard, but must not delete the canonical 0/5/10 evidence ladder.
+
+## Comparable policy
+
+Canonical technical minimum: 3 selected comparables.
+
+Product guidance confirmed by Juan/Pedro:
+- 5 is the normal maximum reliable working sample.
+- More than 5 is allowed only with explicit justification that the additional evidence improves quality/confidence.
+- Do not silently delete observations only because they are outside a percentile.
+- The lowest 20% can be surfaced as an **opportunity signal** (“cazar la casa”), not as an automatic outlier-removal rule.
+
+This is an operational policy layered on the canonical valuation methodology; it is not a replacement formula.
+
+## Market intelligence already defined by canonical scope
+
+The product must expose, from the source model above:
+- single normalized market base;
+- deduplication and canonical identity;
+- neighborhood / homogeneous-area assignment;
+- property history;
+- comparables by neighborhood and homogeneous area;
+- market statistics;
+- sales velocity;
+- absorption;
+- offer vs sales;
+- historical evolution;
+- export/audit trail.
+
+The implementation should improve presentation and coverage of these capabilities, not invent a parallel intelligence methodology.
+
+## Pedro requirements mapped to canonical data
+
+| Pedro need | Canonical implementation rule |
+| --- | --- |
+| 3–4 year lines and deviations | Read persisted annual CBRS canonical metrics; no second transaction aggregation. |
+| MoM / YoY | Use verified monthly management periods with exact comparable month and same formula version. |
+| Houses / apartments separated | Use canonical property type after CBRS event aggregation. Parking/storage never enter these two series as primary transactions. |
+| Offer / sales / absorption | Offer comes from a proven full live Portal snapshot; sales from canonical CBRS/approved recent-sale source. Do not calculate absorption from a partial capture. |
+| Publication duration / DOM | Use listing lifecycle evidence, never infer from snapshot age alone. |
+| Map | Leaflet as basemap/interaction layer; Property Partners KML remains the geometry authority. |
+| Similar neighborhoods | Must be derived from canonical neighborhood/homogeneous-area evidence and documented criteria; no subjective list hardcoded in UI. |
+| Property 360 | Decision-first presentation over canonical property identity, lifecycle, comparables, valuation and evidence. |
+| Publication recommendation | Highlight +5% as standard recommendation while preserving 0/5/10 canonical scenario evidence. |
+| Opportunity band | Lowest 20% is a review/opportunity signal, not a deletion rule. |
+| Weekly reports | Regenerate after the weekly canonical management data upload; report period/source must remain traceable. |
+| Finance / P&L | Only after an approved PP financial source is connected. Do not infer from sales UF. |
+| Closing lifecycle | Model only from the confirmed PP stages and ownership rules; do not derive from market data. |
+
+## Work accepted in PR #235 after canonical reset
+
+Keep:
+- persisting Portal discovery metadata/filter/capture coverage;
+- Leaflet rendering over the existing canonical PP neighborhood geometry;
+- weekly report snapshot after a verified management upload;
+- warning when comparable sample exceeds five;
+- a source-authority panel that makes CBRS / Portal reference / KML universes explicit.
+
+Reverted/removed:
+- deletion of the canonical +10% publication scenario;
+- duplicate “Pedro intelligence” page and parallel metric model;
+- calculations that mixed partial live Portal evidence with canonical reference intelligence.
+
+## Release gate
+
+PR #235 remains DRAFT until:
+1. CI passes on the canonical-reset head;
+2. the source-authority panel is visually QA'd;
+3. Leaflet is visually QA'd against the same 19 PP neighborhoods;
+4. valuation regression confirms 0/5/10 scenarios and original Casa/Departamento formulas;
+5. no UI labels partial/live Portal data as a full market snapshot unless coverage is proven.
