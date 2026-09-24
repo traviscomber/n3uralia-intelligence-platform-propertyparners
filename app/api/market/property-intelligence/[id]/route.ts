@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
+import { hasDecisionGradeComparableSample, isVitacuraComparableAddress } from '@/lib/property360-comparables'
 
 const DAY_MS = 86_400_000
 const LEGACY_PREFIX = 'legacy-property:'
@@ -39,10 +40,6 @@ function boundedScore(value: number) {
   return Math.max(0, Math.min(1, value))
 }
 
-function isVitacuraAddress(value: unknown) {
-  const address = String(value ?? '').toLocaleLowerCase('es-CL')
-  return /(^|[\s,.-])vitacura([\s,.-]|$)/i.test(address)
-}
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -120,7 +117,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       const areaOk = candidateArea != null && candidateArea >= targetArea * 0.75 && candidateArea <= targetArea * 1.25
       const bedroomOk = property.bedrooms == null || bedrooms == null || Math.abs(Number(property.bedrooms) - bedrooms) <= 1
       const bathroomOk = property.bathrooms == null || bathrooms == null || Math.abs(Number(property.bathrooms) - bathrooms) <= 1
-      const geographyOk = isVitacuraAddress(candidate.normalized_address)
+      const geographyOk = isVitacuraComparableAddress(candidate.normalized_address)
       return areaOk && bedroomOk && bathroomOk && geographyOk
     })
   }
@@ -180,7 +177,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const medianUfM2 = percentile(ufM2Values, 0.5)
   const p75 = percentile(ufM2Values, 0.75)
   const medianSourceDom = percentile(domValues, 0.5)
-  const comparableDecisionEligible = comparableRows.length >= 3
+  const comparableDecisionEligible = hasDecisionGradeComparableSample(comparableRows.length)
   const decisionMedianUfM2 = comparableDecisionEligible ? medianUfM2 : null
   const decisionMedianSourceDom = comparableDecisionEligible ? medianSourceDom : null
   const impliedPriceAtMedian = decisionMedianUfM2 != null && area != null ? decisionMedianUfM2 * area : null
