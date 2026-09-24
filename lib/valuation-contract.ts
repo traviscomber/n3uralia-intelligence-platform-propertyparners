@@ -71,7 +71,7 @@ export type MarketSummary = {
 }
 
 export type PublicationScenario = {
-  upliftPct: 0 | 5 | 10
+  upliftPct: 0 | 5
   suggestedPriceUf: number
   suggestedUfM2: number
   varianceVsOfferMaxPct: number | null
