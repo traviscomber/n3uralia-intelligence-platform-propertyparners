@@ -120,9 +120,9 @@ export default function LeafletNeighborhoodsMap({ features, sourceLabel }: Props
       })
       mapRef.current = map
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        attribution: '&copy; OpenStreetMap contributors',
       }).addTo(map)
 
       const layers: LeafletLayer[] = []
@@ -134,7 +134,7 @@ export default function LeafletNeighborhoodsMap({ features, sourceLabel }: Props
             weight: feature.id === selectedId ? 2.4 : 1.4,
             opacity: 0.95,
             fillColor: '#d7332b',
-            fillOpacity: 0.08 + intensity * 0.34,
+            fillOpacity: 0.05 + intensity * 0.22,
           },
         })
         layer.bindTooltip(
@@ -231,6 +231,9 @@ export default function LeafletNeighborhoodsMap({ features, sourceLabel }: Props
         }
         .pp-map-tooltip:before {
           display: none !important;
+        }
+        .leaflet-tile-pane {
+          filter: grayscale(1) invert(1) brightness(0.34) contrast(1.25);
         }
         .leaflet-control-zoom a {
           background: #090b0b !important;
