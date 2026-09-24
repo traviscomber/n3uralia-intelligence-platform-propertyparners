@@ -70,3 +70,25 @@ test('Partner values are not inferred from office data', () => {
   const latest = getCanonicalManagementDashboardEntities()
   assert.equal(latest.some((entity) => entity.entityType === 'partner'), false)
 })
+
+
+test('published monthly and cumulative closing targets are preserved as independent facts', () => {
+  const expectedMonthly = [5.86, 4.63, 7.8, 7.33, 8.6, 8.8, 8.6, 8.2]
+  const expectedCumulative = [5.86, 10.49, 18.29, 25.61, 34.2, 43, 50.4, 58.6]
+  assert.deepEqual(periodsData.periods.map((period) => period.company.canonicalClosingTarget), expectedMonthly)
+  assert.deepEqual(periodsData.periods.map((period) => period.company.ytdCanonicalClosingTarget), expectedCumulative)
+
+  const july = periodsData.periods.find((period) => period.period === '2026-07')
+  assert.ok(july)
+  assert.equal(july.company.canonicalClosingTarget, 8.6)
+  assert.equal(july.company.ytdCanonicalClosingTarget, 50.4)
+  assert.equal(Number((july.company.ytdCanonicalClosingTarget - 43).toFixed(1)), 7.4)
+  assert.notEqual(july.company.canonicalClosingTarget, 7.4)
+})
+
+test('office monthly targets are fractional allocations and approximately reconcile to company target', () => {
+  for (const period of periodsData.periods) {
+    const officeTarget = period.offices.reduce((sum, office) => sum + (office.canonicalClosingTarget ?? 0), 0)
+    assert.ok(Math.abs(officeTarget - period.company.canonicalClosingTarget) <= 0.02, `${period.period}: ${officeTarget}`)
+  }
+})
