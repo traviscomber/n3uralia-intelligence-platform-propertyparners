@@ -86,14 +86,6 @@ function uf(value: number | null) {
 function number(value: number | null, digits = 0) {
   return value == null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits })
 }
-function identityLabel(value: string | null) {
-  if (!value) return 'Sin estado'
-  if (value === 'confirmed') return 'Identidad confirmada'
-  if (value === 'candidate') return 'Identidad candidata'
-  if (value === 'needs_review') return 'Identidad por revisar'
-  return value.replaceAll('_', ' ')
-}
-
 const ACTIVE_LEADS = new Set(['new', 'assigned', 'contacting', 'qualified', 'valuation', 'proposal'])
 
 function intelligenceState(item: OfferMapItem) {
@@ -259,8 +251,8 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
   return <div className="overflow-hidden border border-white/10 bg-[#111513] shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#171c19] px-4 py-3">
       <div className="flex items-center gap-1 border border-white/10 bg-[#0d110f] p-1 text-xs">
-        <button type="button" aria-pressed={mode === 'offer'} onClick={() => setMode('offer')} className={`min-h-8 px-3 ${mode === 'offer' ? 'bg-[#f0ece4] text-[#111513]' : 'text-[var(--n3-text-muted)]'}`}>Oferta</button>
-        <button type="button" aria-pressed={mode === 'intelligence'} onClick={() => setMode('intelligence')} className={`min-h-8 px-3 ${mode === 'intelligence' ? 'bg-[#f0ece4] text-[#111513]' : 'text-[var(--n3-text-muted)]'}`}>Inteligencia PP</button>
+        <button type="button" aria-pressed={mode === 'offer'} onClick={() => { setMode('offer'); setIntelligenceFilter('all') }} className={`min-h-8 px-3 ${mode === 'offer' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)] hover:text-white'}`}>Oferta</button>
+        <button type="button" aria-pressed={mode === 'intelligence'} onClick={() => setMode('intelligence')} className={`min-h-8 px-3 ${mode === 'intelligence' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)] hover:text-white'}`}>Inteligencia PP</button>
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--n3-text-muted)]">
         <span><strong className="text-[var(--n3-text-light)]">{intelligenceCounts.leads}</strong> leads activos</span>
@@ -292,7 +284,7 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
       <div className="flex items-end text-xs text-[var(--n3-text-muted)]"><strong className="mr-1 text-[var(--n3-text-light)]">{filtered.length}</strong> visibles</div>
     </div>
 
-    <div className="grid gap-4 border-b border-white/10 bg-[#171c19] px-4 py-3 sm:grid-cols-[minmax(220px,0.8fr)_minmax(0,2fr)] sm:items-end">
+    {mode === 'intelligence' ? <div className="grid gap-4 border-b border-white/10 bg-[#171c19] px-4 py-3 sm:grid-cols-[minmax(220px,0.8fr)_minmax(0,2fr)] sm:items-end">
       <label className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Inteligencia PP
         <select value={intelligenceFilter} onChange={(event) => setIntelligenceFilter(event.target.value)} className="mt-1 min-h-10 w-full border border-white/15 bg-[#202622] px-2 text-xs normal-case tracking-normal text-[var(--n3-text-light)]">
           <option value="all">Toda la oferta</option>
@@ -310,17 +302,15 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
       </label>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--n3-text-muted)]">
         <span>Señal PP basada sólo en trazabilidad canónica.</span>
-        {mode === 'intelligence' ? <>
-          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#2a938b]" /> Lead</span>
-          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#607fc5]" /> Valorización</span>
-          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#b28a2e]" /> Revisar</span>
-          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#b84a44]" /> +90 días</span>
-        </> : null}
+        <span className="inline-flex items-center gap-1.5"><i aria-hidden="true" className="h-2 w-2 rounded-full bg-[#2a938b]" /> Lead</span>
+        <span className="inline-flex items-center gap-1.5"><i aria-hidden="true" className="h-2 w-2 rounded-full bg-[#607fc5]" /> Valorización</span>
+        <span className="inline-flex items-center gap-1.5"><i aria-hidden="true" className="h-2 w-2 rounded-full bg-[#b28a2e]" /> Revisar</span>
+        <span className="inline-flex items-center gap-1.5"><i aria-hidden="true" className="h-2 w-2 rounded-full bg-[#b84a44]" /> +90 días</span>
       </div>
-    </div>
+    </div> : null}
 
-    <div className="grid min-h-[620px] lg:grid-cols-[minmax(280px,32%)_minmax(0,68%)]">
-      <aside className="max-h-[72vh] overflow-y-auto border-b border-white/10 bg-[#131815] lg:border-b-0 lg:border-r lg:border-white/10">
+    <div className="grid lg:min-h-[620px] lg:grid-cols-[minmax(280px,32%)_minmax(0,68%)]">
+      <aside className="max-h-[42vh] overflow-y-auto border-b border-white/10 bg-[#131815] lg:max-h-[72vh] lg:border-b-0 lg:border-r lg:border-white/10">
         {filtered.map((item) => {
           const active = item.propertyId === selectedId
           return <button
@@ -348,17 +338,17 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
             <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
               {item.lead && ACTIVE_LEADS.has(item.lead.status) ? <span className="border border-[#2a938b]/60 px-1.5 py-0.5 text-[#74d6cf]">Lead · {item.lead.status}</span> : null}
               {item.valuation ? <span className="border border-[#607fc5]/60 px-1.5 py-0.5 text-[#b3c8ff]">Valorización · {item.valuation.status}</span> : null}
-              {item.hasActiveAssignment ? <span className="border border-white/15 px-1.5 py-0.5 text-[#56615b]">Asignada</span> : null}
-              {item.territoryDirector ? <span className="border border-white/15 px-1.5 py-0.5 text-[#56615b]">{item.territoryDirector.name}</span> : null}
+              {item.hasActiveAssignment ? <span className="border border-white/15 px-1.5 py-0.5 text-[var(--n3-text-muted)]">Asignada</span> : null}
+              {item.territoryDirector ? <span className="border border-white/15 px-1.5 py-0.5 text-[var(--n3-text-muted)]">{item.territoryDirector.name}</span> : null}
             </div>
           </button>
         })}
         {!filtered.length ? <div className="p-6 text-sm text-[var(--n3-text-muted)]">No hay propiedades que cumplan estos filtros.</div> : null}
       </aside>
 
-      <div className="relative min-h-[620px] bg-[#d8d6cf]">
+      <div className="relative min-h-[420px] bg-[#d8d6cf] lg:min-h-[620px]">
         {error ? <div className="flex h-full min-h-[620px] items-center justify-center p-8 text-sm text-[#58635d]">No fue posible cargar la base cartográfica.</div> : <>
-          <div ref={hostRef} className="h-[72vh] min-h-[620px] w-full" aria-label="Mapa de propiedades vigentes en Vitacura" />
+          <div ref={hostRef} className="h-[58vh] min-h-[420px] w-full lg:h-[72vh] lg:min-h-[620px]" aria-label="Mapa de propiedades vigentes en Vitacura" />
           {!filtered.length ? <div className="pp-map-light-overlay absolute inset-0 z-[450] flex items-center justify-center p-8 text-center">
             <div>
               <p className="text-sm font-semibold text-[#18201c]">Sin propiedades para estos filtros</p>
@@ -381,13 +371,13 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
               <p className="mt-1 text-xs text-[#657069]">{selected.neighborhood || 'Vitacura'} · {intelligenceLabel(selected)}</p>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-white/10 pt-3 text-xs">
+          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-black/10 pt-3 text-xs">
             <div><span className="block text-[#6f7873]">Precio</span><strong className="mt-1 block text-base text-[#18201c]">{uf(selected.priceUf)}</strong></div>
             <div><span className="block text-[#6f7873]">UF/m²</span><strong className="mt-1 block text-base text-[#18201c]">{number(selected.priceUfM2, 1)}</strong></div>
             <div><span className="block text-[#6f7873]">Construidos</span><strong className="mt-1 block text-[#18201c]">{number(selected.builtAreaM2)} m²</strong></div>
             <div><span className="block text-[#6f7873]">Publicada</span><strong className="mt-1 block text-[#18201c]">{selected.daysPublished == null ? '—' : `${selected.daysPublished} días`}</strong></div>
           </div>
-          <div className="mt-4 grid gap-2 border-t border-white/10 pt-3 text-[11px] text-[#56615b] sm:grid-cols-2">
+          <div className="mt-4 grid gap-2 border-t border-black/10 pt-3 text-[11px] text-[#56615b] sm:grid-cols-2">
             <div><span className="text-[#778079]">Lead PP</span><p className="mt-0.5 text-[#26302b]">{selected.lead ? `${selected.lead.status} · ${selected.lead.priority}` : 'Sin lead'}</p></div>
             <div><span className="text-[#778079]">Valorización</span><p className="mt-0.5 text-[#26302b]">{selected.valuation ? selected.valuation.status : 'Sin valorización'}</p></div>
             <div><span className="text-[#778079]">Director territorial</span><p className="mt-0.5 text-[#26302b]">{selected.territoryDirector?.name || 'Sin asignar'}</p></div>
