@@ -6,32 +6,9 @@ import { useParams } from 'next/navigation'
 import { ArrowLeft,RefreshCw } from 'lucide-react'
 import { WorkspaceHeader,WorkspaceShell,DataStatusBar } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
-import { AugustBoardReading } from '@/components/management/august-board-reading'
+import { AugustBoardReading, type AugustBoardEntity } from '@/components/management/august-board-reading'
 
 type Point={period:string;closings:number;salesUf:number;target:number|null;compliancePct:number|null;managementScore:number|null;portfolioScore:number|null;followUpScore:number|null;conversionScore:number|null;stock:number|null;activeLeads:number|null;requirements:number|null;scheduledVisits:number|null;realizedVisits:number|null;visitExecutionPct:number|null}
-type AugustBoardEntity={
-  name:string
-  classification:string
-  sale:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
-  ytd:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
-  scores:{management:number;portfolio:number;followUp:number;conversion:number}
-  indicators:{
-    portfolio:{stock:number;stockTarget:number;stockCompliancePct:number;requirements:number;requirementsExpected:number;requirementsCompliancePct:number;pricing:{lte105:number;lte110:number;gt110:number;score:number}}
-    followUp:{classified:number;active:number;activeA:number;stale90:number;stale90Pct:number;staleA15:number;staleA15Pct:number}
-    conversion:{realizedVisits:number;visitTarget:number;visitTargetPct:number;scheduledVisits:number;visitExecutionPct:number;tc6mPct:number}
-  }
-  subscores:{
-    portfolio:{metaPortfolio:number;requirementsByType:number;priceQuality:number}
-    followUp:{classifiedLeads:number;managed90:number;managedA15:number}
-    conversion:{visitsToTarget:number;visitExecution:number;tc6m:number}
-  }
-  scoreEvolution:{management:number[];portfolio:number[];followUp:number[];conversion:number[]}
-  subscoreEvolution:{
-    portfolio:{metaPortfolio:number[];requirementsByType:number[];priceQuality:number[]}
-    followUp:{classifiedLeads:number[];managed90:number[];managedA15:number[]}
-    conversion:{visitsToTarget:number[];visitExecution:number[];tc6m:number[]}
-  }
-}
 type Payload={
  office:{name:string;slug:string}
  augustBoard:AugustBoardEntity
