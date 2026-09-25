@@ -89,7 +89,7 @@ begin
     from public.property_prospect_leads l
     where l.neighborhood_id = p_neighborhood_id
       and l.status in ('new','assigned','contacting','qualified','valuation','proposal')
-      and l.director_key <> p_director_key
+      and l.director_key is distinct from p_director_key
     for update
   ),
   updated as (
