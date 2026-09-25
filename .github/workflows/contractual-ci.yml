@@ -57,6 +57,9 @@ jobs:
       - name: Verify SECURITY DEFINER contract
         run: pnpm security:secdef-contract
 
+      - name: Verify prospect event trigger hardening
+        run: node --import tsx --test tests/prospect-event-trigger-security.test.ts
+
       - name: Lint
         run: pnpm lint
 
