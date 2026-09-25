@@ -38,6 +38,7 @@ type LeafletMarker = {
 }
 type LeafletMap = {
   fitBounds(bounds: LeafletBounds, options?: Record<string, unknown>): void
+  panTo(latlng: [number, number], options?: Record<string, unknown>): void
   remove(): void
   invalidateSize(): void
 }
@@ -129,6 +130,7 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef(new Map<string, LeafletMarker>())
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [error, setError] = useState(false)
   const [neighborhood, setNeighborhood] = useState('all')
   const [minUf, setMinUf] = useState('')
@@ -226,21 +228,24 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
   useEffect(() => {
     for (const [propertyId, marker] of markerRefs.current.entries()) {
       const active = propertyId === selectedId
+      const hovered = propertyId === hoveredId
       const item = filtered.find((row) => row.propertyId === propertyId)
       const palette = item ? markerPalette(item, mode) : { color: '#d7332b', fillColor: '#d7332b' }
       marker.setStyle({
-        radius: active ? 8 : 6,
-        color: active ? '#ffffff' : palette.color,
-        weight: active ? 2.2 : 1.4,
+        radius: active ? 8 : hovered ? 7 : mode === 'intelligence' ? 5 : 6,
+        color: active || hovered ? '#ffffff' : palette.color,
+        weight: active ? 2.2 : hovered ? 1.8 : 1.2,
         fillColor: palette.fillColor,
-        fillOpacity: active ? 0.96 : 0.82,
+        fillOpacity: active ? 0.96 : hovered ? 0.92 : mode === 'intelligence' ? 0.72 : 0.82,
       })
-      if (active) marker.bringToFront()
+      if (active || hovered) marker.bringToFront()
     }
-  }, [selectedId, filtered, mode])
+  }, [selectedId, hoveredId, filtered, mode])
 
   function select(propertyId: string) {
     setSelectedId(propertyId)
+    const item = filtered.find((row) => row.propertyId === propertyId)
+    if (item) mapRef.current?.panTo([item.latitude, item.longitude], { animate: true })
     markerRefs.current.get(propertyId)?.bringToFront()
   }
 
@@ -254,14 +259,14 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
   return <div className="overflow-hidden border border-white/10 bg-[#111513] shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#171c19] px-4 py-3">
       <div className="flex items-center gap-1 border border-white/10 bg-[#0d110f] p-1 text-xs">
-        <button type="button" onClick={() => setMode('offer')} className={`min-h-8 px-3 ${mode === 'offer' ? 'bg-[#f0ece4] text-[#111513]' : 'text-[var(--n3-text-muted)]'}`}>Oferta</button>
-        <button type="button" onClick={() => setMode('intelligence')} className={`min-h-8 px-3 ${mode === 'intelligence' ? 'bg-[#f0ece4] text-[#111513]' : 'text-[var(--n3-text-muted)]'}`}>Inteligencia PP</button>
+        <button type="button" aria-pressed={mode === 'offer'} onClick={() => setMode('offer')} className={`min-h-8 px-3 ${mode === 'offer' ? 'bg-[#f0ece4] text-[#111513]' : 'text-[var(--n3-text-muted)]'}`}>Oferta</button>
+        <button type="button" aria-pressed={mode === 'intelligence'} onClick={() => setMode('intelligence')} className={`min-h-8 px-3 ${mode === 'intelligence' ? 'bg-[#f0ece4] text-[#111513]' : 'text-[var(--n3-text-muted)]'}`}>Inteligencia PP</button>
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--n3-text-muted)]">
-        <span><strong className="text-[#18201c]">{intelligenceCounts.leads}</strong> leads activos</span>
-        <span><strong className="text-[#18201c]">{intelligenceCounts.valuations}</strong> valorizadas</span>
-        <span><strong className="text-[#18201c]">{intelligenceCounts.identityReview}</strong> revisar identidad</span>
-        <span><strong className="text-[#18201c]">{intelligenceCounts.highDom}</strong> +90 días</span>
+        <span><strong className="text-[var(--n3-text-light)]">{intelligenceCounts.leads}</strong> leads activos</span>
+        <span><strong className="text-[var(--n3-text-light)]">{intelligenceCounts.valuations}</strong> valorizadas</span>
+        <span><strong className="text-[var(--n3-text-light)]">{intelligenceCounts.identityReview}</strong> revisar identidad</span>
+        <span><strong className="text-[var(--n3-text-light)]">{intelligenceCounts.highDom}</strong> +90 días</span>
       </div>
     </div>
 
@@ -273,10 +278,10 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
         </select>
       </label>
       <label className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">UF mín.
-        <input value={minUf} onChange={(event) => setMinUf(event.target.value)} inputMode="numeric" className="mt-1 min-h-10 w-full border border-white/15 bg-[#202622] px-2 text-xs normal-case tracking-normal" placeholder="Ej. 15000" />
+        <input type="number" min="0" value={minUf} onChange={(event) => setMinUf(event.target.value)} inputMode="numeric" className="mt-1 min-h-10 w-full border border-white/15 bg-[#202622] px-2 text-xs normal-case tracking-normal" placeholder="Ej. 15000" />
       </label>
       <label className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">UF máx.
-        <input value={maxUf} onChange={(event) => setMaxUf(event.target.value)} inputMode="numeric" className="mt-1 min-h-10 w-full border border-white/15 bg-[#202622] px-2 text-xs normal-case tracking-normal" placeholder="Ej. 35000" />
+        <input type="number" min="0" value={maxUf} onChange={(event) => setMaxUf(event.target.value)} inputMode="numeric" className="mt-1 min-h-10 w-full border border-white/15 bg-[#202622] px-2 text-xs normal-case tracking-normal" placeholder="Ej. 35000" />
       </label>
       <label className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Dormitorios
         <select value={bedrooms} onChange={(event) => setBedrooms(event.target.value)} className="mt-1 min-h-10 w-full border border-white/15 bg-[#202622] px-2 text-xs normal-case tracking-normal text-[var(--n3-text-light)]">
@@ -303,7 +308,15 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
           <option value="territory_missing">Sin director territorial</option>
         </select>
       </label>
-      <p className="text-[11px] leading-5 text-[var(--n3-text-muted)]">La capa PP usa sólo trazabilidad canónica. No genera un score de oportunidad artificial ni mezcla señales CRM con ventas registrales.</p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--n3-text-muted)]">
+        <span>Señal PP basada sólo en trazabilidad canónica.</span>
+        {mode === 'intelligence' ? <>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#2a938b]" /> Lead</span>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#607fc5]" /> Valorización</span>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#b28a2e]" /> Revisar</span>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#b84a44]" /> +90 días</span>
+        </> : null}
+      </div>
     </div>
 
     <div className="grid min-h-[620px] lg:grid-cols-[minmax(280px,32%)_minmax(0,68%)]">
@@ -314,7 +327,9 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
             key={item.propertyId}
             type="button"
             onClick={() => select(item.propertyId)}
-            className={`block w-full border-b border-white/[0.07] px-4 py-3 text-left transition-colors ${active ? 'bg-[#242b27]' : 'hover:bg-white/[0.035]'}`}
+            onMouseEnter={() => setHoveredId(item.propertyId)}
+            onMouseLeave={() => setHoveredId(null)}
+            className={`block w-full border-b border-white/[0.07] px-4 py-3 text-left transition-colors focus-visible:bg-[#242b27] ${active ? 'bg-[#242b27]' : 'hover:bg-white/[0.035]'}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -342,14 +357,22 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
       </aside>
 
       <div className="relative min-h-[620px] bg-[#d8d6cf]">
-        {error ? <div className="flex h-full min-h-[620px] items-center justify-center p-8 text-sm text-[var(--n3-text-muted)]">No fue posible cargar la base cartográfica.</div> : <div ref={hostRef} className="h-[72vh] min-h-[620px] w-full" aria-label="Mapa de casas vigentes en Vitacura" />}
+        {error ? <div className="flex h-full min-h-[620px] items-center justify-center p-8 text-sm text-[#58635d]">No fue posible cargar la base cartográfica.</div> : <>
+          <div ref={hostRef} className="h-[72vh] min-h-[620px] w-full" aria-label="Mapa de propiedades vigentes en Vitacura" />
+          {!filtered.length ? <div className="pp-map-light-overlay absolute inset-0 z-[450] flex items-center justify-center p-8 text-center">
+            <div>
+              <p className="text-sm font-semibold text-[#18201c]">Sin propiedades para estos filtros</p>
+              <p className="mt-1 text-xs text-[#657069]">Ajusta barrio, precio, dormitorios o la señal de Inteligencia PP.</p>
+            </div>
+          </div> : null}
+        </>}
 
-        <div className="pointer-events-none absolute left-4 top-4 z-[500] border border-black/10 bg-[#f2efe8]/95 px-3 py-2 backdrop-blur-sm">
+        <div className="pp-map-light-overlay pointer-events-none absolute left-4 top-4 z-[500] border px-3 py-2 backdrop-blur-sm">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[#a72b25]">Oferta PP · Vitacura</p>
           <p className="mt-1 text-xs text-[#3e4742]">{mode === 'intelligence' ? 'Capa operacional Property Partners' : 'Mapa y lista sincronizados'}</p>
         </div>
 
-        {selected ? <div className="absolute bottom-4 right-4 z-[500] w-[min(390px,calc(100%-2rem))] border border-black/10 bg-[#f4f1e9]/95 p-4 text-[#18201c] shadow-[0_16px_50px_rgba(0,0,0,0.22)] backdrop-blur-md">
+        {selected ? <div className="pp-map-light-surface absolute bottom-4 right-4 z-[500] w-[min(390px,calc(100%-2rem))] border p-4 shadow-[0_16px_50px_rgba(0,0,0,0.18)] backdrop-blur-md">
           <div className="flex items-start gap-3">
             <MapPin size={15} className="mt-0.5 shrink-0 text-[#b33a33]" />
             <div className="min-w-0">
@@ -371,9 +394,9 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
             <div><span className="text-[#778079]">Asignación individual</span><p className="mt-0.5 text-[#26302b]">{selected.hasActiveAssignment ? 'Activa' : 'No registrada'}</p></div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href={`/dashboard/properties/${selected.propertyId}`} className="inline-flex min-h-9 items-center border border-[#d7332b] px-3 text-xs font-semibold text-white hover:bg-[#d7332b]/10">Property 360</Link>
+            <Link href={`/dashboard/properties/${selected.propertyId}`} className="inline-flex min-h-9 items-center border border-[#a72b25] bg-[#a72b25] px-3 text-xs font-semibold text-white hover:bg-[#8f302b]">Property 360</Link>
             <Link href="/dashboard/valuation" className="inline-flex min-h-9 items-center border border-black/15 px-3 text-xs text-[#26302b] hover:bg-black/[0.04]">Valorizador</Link>
-            <Link href="/dashboard/properties/prospects" className="inline-flex min-h-9 items-center border border-white/15 px-3 text-xs text-[#26302b] hover:bg-white/[0.04]">Leads</Link>
+            <Link href="/dashboard/properties/prospects" className="inline-flex min-h-9 items-center border border-black/15 px-3 text-xs text-[#26302b] hover:bg-black/[0.04]">Leads</Link>
             {selected.sourceUrl ? <a href={selected.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1 px-2 text-xs text-[#b33a33]">Portal <ExternalLink size={12} /></a> : null}
           </div>
         </div> : null}
