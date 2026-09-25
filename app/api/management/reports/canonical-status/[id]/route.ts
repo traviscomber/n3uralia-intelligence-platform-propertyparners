@@ -46,7 +46,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   const tags = Array.isArray(document.tags) ? document.tags.filter((tag): tag is string => typeof tag === 'string') : []
   const parsed = parseCanonicalReportContent(document.content)
-  if (!tags.includes('canonical') || !tags.includes('n3uralia-client-report') || tags.includes('superseded') || !supportedReportType(parsed)) {
+  if (!parsed || !tags.includes('canonical') || !tags.includes('n3uralia-client-report') || tags.includes('superseded') || !supportedReportType(parsed)) {
     return NextResponse.json({ error: 'El documento no corresponde a un informe canónico revisable.' }, { status: 422 })
   }
 
