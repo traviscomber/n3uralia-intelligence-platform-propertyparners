@@ -22,16 +22,29 @@ export async function GET(request: Request) {
     const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 50), 1), 100)
     const allowedStatus = ['candidate_high', 'candidate_medium', 'confirmed', 'rejected'].includes(status) ? status : 'candidate_high'
 
-    const { data: matches, error } = await admin
-      .from('market_property_matches')
-      .select('id,left_entity_id,right_entity_id,score,status,evidence,contradictions,reviewed_by,reviewed_at,created_at')
-      .eq('left_entity_type', 'property')
-      .eq('right_entity_type', 'property')
-      .eq('status', allowedStatus)
-      .order('score', { ascending: false })
-      .limit(limit)
+    const [{ data: matches, error, count }, ...countResults] = await Promise.all([
+      admin
+        .from('market_property_matches')
+        .select('id,left_entity_id,right_entity_id,score,status,evidence,contradictions,reviewed_by,reviewed_at,created_at', { count: 'exact' })
+        .eq('left_entity_type', 'property')
+        .eq('right_entity_type', 'property')
+        .eq('status', allowedStatus)
+        .order('score', { ascending: false })
+        .limit(limit),
+      ...['candidate_high', 'candidate_medium', 'confirmed', 'rejected'].map((queueStatus) =>
+        admin
+          .from('market_property_matches')
+          .select('id', { count: 'exact', head: true })
+          .eq('left_entity_type', 'property')
+          .eq('right_entity_type', 'property')
+          .eq('status', queueStatus),
+      ),
+    ])
 
-    if (error) return NextResponse.json({ error: 'No fue posible consultar candidatos de identidad.' }, { status: 500 })
+    if (error || countResults.some((result) => result.error)) {
+      return NextResponse.json({ error: 'No fue posible consultar candidatos de identidad.' }, { status: 500 })
+    }
+    const [highCount, mediumCount, confirmedCount, rejectedCount] = countResults.map((result) => result.count ?? 0)
 
     const ids = [...new Set((matches ?? []).flatMap((item) => [item.left_entity_id, item.right_entity_id]))]
     const { data: properties, error: propertyError } = ids.length
@@ -42,6 +55,14 @@ export async function GET(request: Request) {
     const propertyById = new Map((properties ?? []).map((property) => [property.id, property]))
     return NextResponse.json({
       status: allowedStatus,
+      total: count ?? 0,
+      summary: {
+        candidateHigh: highCount,
+        candidateMedium: mediumCount,
+        pending: highCount + mediumCount,
+        confirmed: confirmedCount,
+        rejected: rejectedCount,
+      },
       rows: (matches ?? []).map((match) => ({
         ...match,
         left: propertyById.get(match.left_entity_id) ?? null,
