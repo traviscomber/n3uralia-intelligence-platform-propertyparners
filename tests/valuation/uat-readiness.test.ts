@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { valuationUatReadiness } from '../lib/valuation-uat-readiness'
+import { valuationUatReadiness } from '../../lib/valuation-uat-readiness'
 
 test('current canonical review case is UAT-ready only with property linkage, condition and 3 accepted comparables', () => {
   const ready = valuationUatReadiness({
