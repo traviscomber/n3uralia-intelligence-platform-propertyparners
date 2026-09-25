@@ -73,7 +73,7 @@ El paquete final sólo puede congelarse después de:
 - identificación del receptor técnico autorizado;
 - definición de custodia/titularidad de servicios de terceros;
 - commit y deployment aceptados;
-- restore drill aislado;
+- remediación del baseline de reconstrucción y nuevo restore drill aislado;
 - reconstrucción limpia del commit aceptado.
 
 Después se debe:
@@ -92,7 +92,22 @@ Después se debe:
 
 Un build exitoso o un rollback de Vercel **no** constituyen restore drill.
 
-El ejercicio válido requiere un entorno aislado de base de datos y debe verificar como mínimo:
+### Ejecución 25 septiembre 2026
+
+Se creó un Supabase Branch aislado autorizado:
+
+- nombre: `restore-drill-2026-09-25`;
+- branch id: `e1e75d42-111b-431c-8b78-771c497fc932`;
+- project ref: `edmlaieqasplgpskpjpg`;
+- costo confirmado: US$0,01344/hora.
+
+Resultado: **FAIL / MIGRATIONS_FAILED** antes del smoke de aplicación.
+
+La prueba reveló que el historial productivo no es replayable desde una base vacía en el orden registrado. La primera migración `20260711005604 add_neighborhood_fields_seed_vitacura_v2` intenta alterar/sembrar `neighborhoods` y `market_data`; migraciones inmediatamente posteriores dependen además de `vitacura_prc_zones` y `properties`, mientras el historial de bootstrap estructural relevante aparece después. Esto confirma drift histórico real y obliga a crear una estrategia de baseline/reconstrucción limpia antes de repetir el drill.
+
+No se modificó producción. El branch fallido fue eliminado inmediatamente después de capturar la evidencia para detener el costo horario.
+
+El ejercicio válido completo sigue requiriendo:
 
 - migraciones desde cero;
 - RLS y funciones privilegiadas;
