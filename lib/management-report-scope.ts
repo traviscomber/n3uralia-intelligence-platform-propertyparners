@@ -12,3 +12,12 @@ export function metricsForManagementReportScope<T extends { entity_id: string }>
 ): T[] {
   return entityId === null ? metrics : metrics.filter((metric) => metric.entity_id === entityId)
 }
+
+
+export function managementReportTypeForEntity(entityType: string | null | undefined, global = false) {
+  if (global) return 'monthly'
+  const normalized = String(entityType ?? '').trim().toLowerCase()
+  if (normalized === 'office' || normalized === 'branch') return 'office'
+  if (normalized === 'partner' || normalized === 'agent' || normalized === 'seller') return 'partner'
+  return 'executive'
+}
