@@ -96,7 +96,7 @@ export default function ProspectManagementPage(){
         {data.candidates.map((item:any)=><Link key={item.property.id} href={`/dashboard/properties/${item.property.id}`} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1.5fr)_180px_180px_120px] sm:items-center">
           <div><strong className="text-sm">{item.property.normalized_address||'Propiedad'}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.property.property_type||'—'} · publicación {date(item.listing.published_at||item.listing.observed_at)}</p></div>
           <div><span className="text-xs text-[var(--n3-text-muted)]">Barrio</span><p className="mt-1">{item.neighborhood?.name||'—'}</p></div>
-          <div><span className="text-xs text-[var(--n3-text-muted)]">Director/a</span><p className="mt-1">{item.director?.full_name||'—'}</p></div>
+          <div><span className="text-xs text-[var(--n3-text-muted)]">Director/a</span><p className={`mt-1 ${item.needsDirector ? 'text-[#f0c96a]' : ''}`}>{item.director?.full_name||'Sin asignar · abrir ficha'}</p></div>
           <div><span className="text-xs text-[var(--n3-text-muted)]">Precio</span><p className="mt-1">{item.listing.price_uf==null?'—':`UF ${Number(item.listing.price_uf).toLocaleString('es-CL')}`}</p></div>
         </Link>)}
         {!data.candidates.length?<p className="py-6 text-sm text-[var(--n3-text-muted)]">No hay publicaciones con barrio/director territorial pendientes de lead dentro del alcance actual.</p>:null}
