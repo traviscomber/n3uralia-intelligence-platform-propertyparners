@@ -181,7 +181,7 @@ export async function POST(request: Request) {
     }
 
     const authorizationDb = createServiceClient()
-    let resolvedSourcePropertyId = resolvedSourcePropertyId
+    let resolvedSourcePropertyId = payload.sourcePropertyId?.trim() || null
     let verifiedAssignment: {
       id: string
       property_id: string
