@@ -91,13 +91,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     || hasCapability(scope.role, 'valuations.office.read')
     || hasCapability(scope.role, 'valuations.self.read')
 
-  const [assignmentResult, assignmentHistoryResult, valuationResult] = subjectLegacyId
-    ? await Promise.all([
+  const [assignmentResult, assignmentHistoryResult, valuationResult] = await Promise.all([
         canReadProperties
           ? supabase
               .from('property_assignments')
               .select('id,property_id,assigned_to,assignment_role,status,notes,assigned_at,ended_at,updated_at')
-              .eq('property_id', subjectLegacyId)
+              .eq('property_id', property.id)
               .order('assigned_at', { ascending: false })
               .limit(20)
           : Promise.resolve({ data: [], error: null }),
@@ -113,12 +112,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           ? supabase
               .from('valuation_cases')
               .select('id,subject_property_id,requested_by,status,valuation_date,estimated_value_uf,low_value_uf,high_value_uf,confidence,methodology_version,version_number,created_at,updated_at,reviewed_at,approved_at,issued_at')
-              .eq('subject_property_id', subjectLegacyId)
+              .eq('subject_property_id', property.id)
               .order('created_at', { ascending: false })
               .limit(20)
           : Promise.resolve({ data: [], error: null }),
       ])
-    : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }]
 
   if (assignmentResult.error || assignmentHistoryResult.error || valuationResult.error) {
     return NextResponse.json({ error: 'No fue posible completar la operación interna vinculada.' }, { status: 500 })
