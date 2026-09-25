@@ -136,6 +136,22 @@ export function Property360InternalOperations({ data }: { data: Property360Inter
   const assignment = data.currentAssignment
   const valuation = data.latestValuation
   const prospect = data.prospect
+  const coverageItems = [
+    { label: 'Asignación', value: coverageLabel(data.coverage.assignments) },
+    { label: 'Valorización', value: coverageLabel(data.coverage.valuations) },
+    { label: 'Lead', value: data.coverage.crmActivity === 'available' ? 'Disponible' : 'No informado' },
+  ]
+  const nextAction = prospect
+    ? prospect.status === 'won' || prospect.status === 'lost' || prospect.status === 'archived'
+      ? 'Lead cerrado: revisar resultado y trazabilidad final.'
+      : prospect.nextFollowUpAt
+        ? `Próximo seguimiento: ${date(prospect.nextFollowUpAt)}.`
+        : 'Definir próximo seguimiento para mantener trazabilidad operativa.'
+    : valuation
+      ? 'La propiedad tiene valorización, pero aún no un lead de prospección.'
+      : assignment
+        ? 'Responsable asignado; evaluar valorización o creación de lead según oportunidad.'
+        : 'Sin operación interna registrada para esta propiedad.'
 
   return <section className="mt-7">
     <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
@@ -170,6 +186,16 @@ export function Property360InternalOperations({ data }: { data: Property360Inter
         </p>
         {prospect ? <Link href="/dashboard/properties/prospects" className="mt-3 inline-flex text-xs text-[var(--n3-teal-soft)]">Abrir seguimiento →</Link> : null}
       </div>
+    </div>
+
+    <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
+      {coverageItems.map((item) => <div key={item.label} className="bg-[var(--n3-deep)] px-4 py-3">
+        <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{item.label}</span>
+        <strong className="mt-1 block text-sm">{item.value}</strong>
+      </div>)}
+    </div>
+    <div className="mt-3 border-l-2 border-[#d7332b] pl-3 text-xs leading-5 text-[var(--n3-text-muted)]">
+      <span className="font-medium text-[var(--n3-text-light)]">Próxima acción:</span> {nextAction}
     </div>
 
     {prospect ? <div className="mt-5 border-t border-[var(--n3-line)] pt-3">
