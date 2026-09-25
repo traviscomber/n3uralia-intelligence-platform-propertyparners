@@ -10,6 +10,7 @@ import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/c
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 import { Property360InternalOperations, type Property360InternalOperationsData } from '@/components/market/property360-internal-operations'
 import { Property360LifecycleTimeline, type PropertyLifecycleEvent } from '@/components/market/property360-lifecycle-timeline'
+import { Property360ProspectWorkflow } from '@/components/market/property360-prospect-workflow'
 
 type Comparable = {
   propertyId: string
@@ -201,6 +202,11 @@ export default function PropertyIntelligencePage() {
     </section>
 
     {data.decisionTrace?.length ? <DecisionTrace items={data.decisionTrace} title="Trazabilidad de recomendación" /> : null}
+
+    <Property360ProspectWorkflow
+      propertyId={data.property.id}
+      valuationHref={`/dashboard/valuation?quickLookup=1&propertyId=${encodeURIComponent(data.property.id)}&propertyType=${encodeURIComponent(data.property.propertyType || 'Casa')}&address=${encodeURIComponent(data.property.address || '')}&neighborhood=${encodeURIComponent(data.property.neighborhood || '')}&usefulAreaM2=${data.property.areaM2 ?? ''}&builtAreaM2=${data.property.areaM2 ?? ''}&bedrooms=${data.property.bedrooms ?? ''}&bathrooms=${data.property.bathrooms ?? ''}&parkingSpaces=${data.property.parkingSpaces ?? ''}`}
+    />
 
     <Property360InternalOperations data={data.internalOperations} />
 
