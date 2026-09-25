@@ -73,6 +73,7 @@ export default async function PropertiesPage() {
       eyebrow="Propiedades"
       title="Mi cartera"
       meta={staleAssignments ? `${staleAssignments} requieren verificar vigencia` : assignments.length ? 'Sin alertas de vigencia' : 'Sin asignaciones activas'}
+      actions={[{ label: 'Prospección', href: '/dashboard/properties/prospects' }]}
     />
 
     <MetricStrip items={[
