@@ -19,52 +19,97 @@ export type AugustBoardEntity = {
   scoreEvolution:{management:number[];portfolio:number[];followUp:number[];conversion:number[]}
 }
 
+const MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago']
 const nf0=new Intl.NumberFormat('es-CL',{maximumFractionDigits:0})
 const nf1=new Intl.NumberFormat('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})
 const n=(v:number,d=0)=>d?nf1.format(v):nf0.format(v)
 const pct=(v:number)=>`${nf1.format(v)}%`
+const signed=(v:number)=>`${v>0?'+':''}${n(v,1)}`
 
 function scoreTone(value:number){
   if(value>=70)return 'text-[#78d59a]'
   if(value>=50)return 'text-[#f0c96a]'
   return 'text-[#ff8d87]'
 }
-
+function scoreDot(value:number){
+  if(value>=70)return 'bg-[#78d59a]'
+  if(value>=50)return 'bg-[#f0c96a]'
+  return 'bg-[#ff8d87]'
+}
 function scoreBand(value:number){
   if(value>=70)return 'En estándar'
   if(value>=50)return 'A mejorar'
   return 'Crítico'
 }
+function complianceTone(value:number){
+  if(value>=100)return 'text-[#78d59a]'
+  if(value>=90)return 'text-[#f0c96a]'
+  return 'text-[#ff8d87]'
+}
 
-function ScoreMeter({label,value,weight,delta}:{label:string;value:number;weight:string;delta:number|null}){
-  const width=Math.max(0,Math.min(100,value))
-  return <div className="border-t border-[var(--n3-line)] py-4">
-    <div className="flex items-end justify-between gap-4">
-      <div><p className="text-xs text-[var(--n3-text-muted)]">{label} · {weight}</p><p className={`mt-1 text-2xl font-semibold tabular-nums ${scoreTone(value)}`}>{n(value,1)}</p></div>
-      <div className="text-right"><p className="text-xs text-[var(--n3-text-muted)]">{scoreBand(value)}</p><p className="mt-1 text-xs tabular-nums text-[var(--n3-text-muted)]">{delta==null?'Sin comparación':`${delta>0?'+':''}${n(delta,1)} vs Jul`}</p></div>
+function Sparkline({values,label}:{values:number[];label:string}){
+  const width=176
+  const height=46
+  const min=Math.min(...values)
+  const max=Math.max(...values)
+  const spread=Math.max(1,max-min)
+  const points=values.map((value,index)=>{
+    const x=(index/(values.length-1))*width
+    const y=height-4-((value-min)/spread)*(height-8)
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  return <div className="mt-3">
+    <svg role="img" aria-label={label} viewBox={`0 0 ${width} ${height}`} className="h-11 w-full overflow-visible text-[var(--n3-text-muted)]">
+      <line x1="0" y1={height-4} x2={width} y2={height-4} stroke="currentColor" strokeOpacity=".16"/>
+      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke"/>
+      {values.map((value,index)=>{
+        const x=(index/(values.length-1))*width
+        const y=height-4-((value-min)/spread)*(height-8)
+        return <circle key={index} cx={x} cy={y} r={index===values.length-1?2.8:1.5} fill="currentColor" opacity={index===values.length-1?1:.5}/>
+      })}
+    </svg>
+    <div className="mt-1 flex justify-between text-[9px] uppercase tracking-[.08em] text-[var(--n3-text-muted)]">
+      {MONTHS.map(month=><span key={month}>{month}</span>)}
     </div>
-    <div className="mt-3 h-1.5 overflow-hidden bg-white/[0.05]"><div className="h-full bg-current opacity-70" style={{width:`${width}%`}} /></div>
   </div>
 }
 
-function Dimension({title,score,rows}:{title:string;score:number;rows:Array<{label:string,value:string,score:number}>}){
-  return <div className="border-t border-[var(--n3-line)] pt-4">
-    <div className="flex items-end justify-between"><h3 className="text-sm font-semibold">{title}</h3><strong className={`text-lg tabular-nums ${scoreTone(score)}`}>{n(score,1)}</strong></div>
-    <div className="mt-3 divide-y divide-[var(--n3-line)]">
-      {rows.map(row=><div key={row.label} className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 py-3 text-sm">
-        <div><p className="text-[var(--n3-text-muted)]">{row.label}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.value}</p></div>
-        <strong className={`tabular-nums ${scoreTone(row.score)}`}>{n(row.score,1)}</strong>
-      </div>)}
+function ScoreDimension({label,weight,value,values}:{label:string;weight:string;value:number;values:number[]}){
+  const previous=values.at(-2) ?? value
+  const delta=value-previous
+  return <article className="border-t border-[var(--n3-line)] py-5">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className={`h-1.5 w-1.5 rounded-full ${scoreDot(value)}`}/>
+          <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">{label} · {weight}</p>
+        </div>
+        <strong className={`mt-2 block text-3xl font-semibold tabular-nums ${scoreTone(value)}`}>{n(value,1)}</strong>
+      </div>
+      <div className="text-right">
+        <p className="text-xs text-[var(--n3-text-muted)]">{scoreBand(value)}</p>
+        <p className={`mt-1 text-xs tabular-nums ${delta<0?'text-[#ff8d87]':delta>0?'text-[#78d59a]':'text-[var(--n3-text-muted)]'}`}>{signed(delta)} vs Jul</p>
+      </div>
+    </div>
+    <Sparkline values={values} label={`Evolución Ene-Ago de ${label}`}/>
+  </article>
+}
+
+function Lever({label,evidence,score}:{label:string;evidence:string;score:number}){
+  return <div className="grid min-h-20 grid-cols-[minmax(0,1fr)_auto] gap-4 border-t border-[var(--n3-line)] py-3">
+    <div className="min-w-0">
+      <p className="text-sm font-medium text-[var(--n3-text-light)]">{label}</p>
+      <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{evidence}</p>
+    </div>
+    <div className="text-right">
+      <strong className={`text-xl tabular-nums ${scoreTone(score)}`}>{n(score,1)}</strong>
+      <p className="mt-1 text-[10px] uppercase tracking-[.1em] text-[var(--n3-text-muted)]">{scoreBand(score)}</p>
     </div>
   </div>
 }
 
 export function AugustBoardReading({entity,sourceFile}:{entity:AugustBoardEntity;sourceFile:string}){
-  const mgmtDelta=entity.scoreEvolution.management.at(-1)!-entity.scoreEvolution.management.at(-2)!
-  const portfolioDelta=entity.scoreEvolution.portfolio.at(-1)!-entity.scoreEvolution.portfolio.at(-2)!
-  const followDelta=entity.scoreEvolution.followUp.at(-1)!-entity.scoreEvolution.followUp.at(-2)!
-  const conversionDelta=entity.scoreEvolution.conversion.at(-1)!-entity.scoreEvolution.conversion.at(-2)!
-
+  const managementDelta=entity.scoreEvolution.management.at(-1)!-entity.scoreEvolution.management.at(-2)!
   const weakest=[
     {label:'Cartera',value:entity.scores.portfolio},
     {label:'Seguimiento',value:entity.scores.followUp},
@@ -72,81 +117,118 @@ export function AugustBoardReading({entity,sourceFile}:{entity:AugustBoardEntity
   ].sort((a,b)=>a.value-b.value)[0]
 
   return <section className="mt-6">
-    <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cierre Agosto · lectura ejecutiva</p>
-        <h2 className="mt-1 text-xl font-medium text-[var(--n3-text-light)]">{entity.name}</h2>
-      </div>
-      <p className="text-xs text-[var(--n3-text-muted)]">{sourceFile}</p>
-    </div>
+    <header className="relative overflow-hidden border-y border-[var(--n3-line)] bg-[var(--n3-deep)] px-4 py-5 sm:px-6 sm:py-7">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-px bg-[var(--n3-line)] sm:right-[30%]"/>
+      <div className="relative grid gap-7 lg:grid-cols-[minmax(0,1.45fr)_minmax(260px,.55fr)] lg:items-end">
+        <div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[var(--n3-teal-soft)]">SYS / CONTROL DE GESTIÓN</p>
+            <span className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">Cierre Agosto 2026</span>
+          </div>
+          <h2 className="mt-3 max-w-3xl text-[clamp(2rem,5vw,4.35rem)] font-medium leading-[.95] tracking-[-.045em] text-[var(--n3-text-light)]">{entity.name}</h2>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Mismos datos y fórmulas del Directorio. Ordenados para leer primero resultado, desviación y causa.</p>
 
-    <div className="grid gap-px bg-[var(--n3-line)] lg:grid-cols-[1.15fr_.85fr_.85fr_.85fr]">
-      <div className="bg-[var(--n3-deep)] p-5">
-        <p className="text-[10px] uppercase tracking-[.13em] text-[var(--n3-text-muted)]">01 · Resultado Agosto</p>
-        <div className="mt-3 flex items-baseline gap-2"><strong className="text-4xl font-semibold tabular-nums">{n(entity.sale.closings,1)}</strong><span className="text-sm text-[var(--n3-text-muted)]">cierres</span></div>
-        <p className="mt-2 text-sm">{n(entity.sale.salesUf)} UF</p>
-        <p className="mt-3 text-xs text-[var(--n3-text-muted)]">Meta {n(entity.sale.closingTarget,1)} · <span className={scoreTone(entity.sale.closingCompliancePct>=100?100:entity.sale.closingCompliancePct)}>{pct(entity.sale.closingCompliancePct)} cierres</span> · {pct(entity.sale.salesUfCompliancePct)} UF</p>
-      </div>
-      <div className="bg-[var(--n3-deep)] p-5">
-        <p className="text-[10px] uppercase tracking-[.13em] text-[var(--n3-text-muted)]">02 · Acumulado Ene–Ago</p>
-        <strong className="mt-3 block text-3xl font-semibold tabular-nums">{n(entity.ytd.closings,1)}</strong>
-        <p className="mt-2 text-sm">{n(entity.ytd.salesUf)} UF</p>
-        <p className="mt-3 text-xs text-[var(--n3-text-muted)]">{pct(entity.ytd.closingCompliancePct)} cierres · {pct(entity.ytd.salesUfCompliancePct)} UF</p>
-      </div>
-      <div className="bg-[var(--n3-deep)] p-5">
-        <p className="text-[10px] uppercase tracking-[.13em] text-[var(--n3-text-muted)]">03 · Calidad Gestión</p>
-        <strong className={`mt-3 block text-3xl font-semibold tabular-nums ${scoreTone(entity.scores.management)}`}>{n(entity.scores.management,1)}</strong>
-        <p className="mt-2 text-sm">{entity.classification}</p>
-        <p className="mt-3 text-xs text-[var(--n3-text-muted)]">{mgmtDelta>0?'+':''}{n(mgmtDelta,1)} vs julio</p>
-      </div>
-      <div className="bg-[var(--n3-deep)] p-5">
-        <p className="text-[10px] uppercase tracking-[.13em] text-[var(--n3-text-muted)]">04 · Principal brecha</p>
-        <strong className={`mt-3 block text-2xl font-semibold ${scoreTone(weakest.value)}`}>{weakest.label}</strong>
-        <p className="mt-2 text-sm tabular-nums">{n(weakest.value,1)} pts</p>
-        <p className="mt-3 text-xs text-[var(--n3-text-muted)]">Menor de las 3 dimensiones del modelo</p>
-      </div>
-    </div>
+          <div className="mt-7 flex flex-wrap items-end gap-x-8 gap-y-5">
+            <div>
+              <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">Venta Agosto</p>
+              <div className="mt-1 flex items-baseline gap-2">
+                <strong className="text-[clamp(3.2rem,8vw,6rem)] font-semibold leading-none tracking-[-.06em] tabular-nums">{n(entity.sale.closings,1)}</strong>
+                <span className="text-sm text-[var(--n3-text-muted)]">cierres</span>
+              </div>
+            </div>
+            <div className="pb-1">
+              <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">UF Agosto</p>
+              <strong className="mt-2 block text-xl font-semibold tabular-nums">{n(entity.sale.salesUf)} UF</strong>
+            </div>
+            <div className="pb-1">
+              <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">Cumplimiento</p>
+              <strong className={`mt-2 block text-xl font-semibold tabular-nums ${complianceTone(entity.sale.closingCompliancePct)}`}>{pct(entity.sale.closingCompliancePct)}</strong>
+            </div>
+          </div>
+        </div>
 
-    <div className="mt-7 grid gap-6 lg:grid-cols-[.8fr_1.2fr]">
-      <div>
-        <p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Por qué</p>
-        <h3 className="mt-1 text-lg font-medium">Las 3 dimensiones</h3>
-        <div className="mt-3">
-          <ScoreMeter label="Cartera" value={entity.scores.portfolio} weight="40%" delta={portfolioDelta}/>
-          <ScoreMeter label="Seguimiento" value={entity.scores.followUp} weight="30%" delta={followDelta}/>
-          <ScoreMeter label="Conversión" value={entity.scores.conversion} weight="30%" delta={conversionDelta}/>
+        <div className="border-t border-[var(--n3-line)] pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+          <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">Calidad Gestión</p>
+          <div className="mt-2 flex items-end justify-between gap-4">
+            <strong className={`text-5xl font-semibold tracking-[-.04em] tabular-nums ${scoreTone(entity.scores.management)}`}>{n(entity.scores.management,1)}</strong>
+            <span className="pb-1 text-xs text-[var(--n3-text-muted)]">{entity.classification}</span>
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-[var(--n3-line)] pt-3 text-xs">
+            <span className="text-[var(--n3-text-muted)]">vs julio</span>
+            <strong className={managementDelta<0?'text-[#ff8d87]':managementDelta>0?'text-[#78d59a]':'text-[var(--n3-text-muted)]'}>{signed(managementDelta)} pts</strong>
+          </div>
+          <div className="mt-3 flex items-center justify-between text-xs">
+            <span className="text-[var(--n3-text-muted)]">Principal brecha</span>
+            <strong className={scoreTone(weakest.value)}>{weakest.label} · {n(weakest.value,1)}</strong>
+          </div>
         </div>
       </div>
+    </header>
 
-      <div>
-        <p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Qué lo explica</p>
-        <h3 className="mt-1 text-lg font-medium">9 palancas del mismo modelo</h3>
-        <div className="mt-3 grid gap-5 xl:grid-cols-3">
-          <Dimension title="Cartera" score={entity.scores.portfolio} rows={[
-            {label:'Meta cartera',value:`${n(entity.indicators.portfolio.stock)} / ${n(entity.indicators.portfolio.stockTarget)} propiedades`,score:entity.subscores.portfolio.metaPortfolio},
-            {label:'Reqs x Tipo Prop',value:`${n(entity.indicators.portfolio.requirements)} / ${n(entity.indicators.portfolio.requirementsExpected)} esperados`,score:entity.subscores.portfolio.requirementsByType},
-            {label:'Calidad Precio',value:`≤1.05: ${n(entity.indicators.portfolio.pricing.lte105)} · ≤1.10: ${n(entity.indicators.portfolio.pricing.lte110)} · >1.10: ${n(entity.indicators.portfolio.pricing.gt110)}`,score:entity.subscores.portfolio.priceQuality},
-          ]}/>
-          <Dimension title="Seguimiento" score={entity.scores.followUp} rows={[
-            {label:'% Leads Clasif',value:`${n(entity.indicators.followUp.classified)} / ${n(entity.indicators.followUp.active)} activos`,score:entity.subscores.followUp.classifiedLeads},
-            {label:'% Leads c-g90',value:`${n(entity.indicators.followUp.stale90)} sin gestión 90d · ${pct(entity.indicators.followUp.stale90Pct)}`,score:entity.subscores.followUp.managed90},
-            {label:'%LeadsA c-g15',value:`${n(entity.indicators.followUp.staleA15)} / ${n(entity.indicators.followUp.activeA)} · ${pct(entity.indicators.followUp.staleA15Pct)} sin gestión`,score:entity.subscores.followUp.managedA15},
-          ]}/>
-          <Dimension title="Conversión" score={entity.scores.conversion} rows={[
-            {label:'Vis Realiz/Meta',value:`${n(entity.indicators.conversion.realizedVisits)} / ${n(entity.indicators.conversion.visitTarget)}`,score:entity.subscores.conversion.visitsToTarget},
-            {label:'%Vis realizad/agend',value:`${n(entity.indicators.conversion.realizedVisits)} / ${n(entity.indicators.conversion.scheduledVisits)}`,score:entity.subscores.conversion.visitExecution},
-            {label:'TC 6m/leads tot',value:`${pct(entity.indicators.conversion.tc6mPct)} tasa conversión`,score:entity.subscores.conversion.tc6m},
-          ]}/>
-        </div>
+    <section className="grid gap-px border-b border-[var(--n3-line)] bg-[var(--n3-line)] md:grid-cols-3">
+      <div className="bg-[var(--n3-black)] px-4 py-4 sm:px-5">
+        <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">Meta mensual</p>
+        <p className="mt-2 text-lg font-semibold tabular-nums">{n(entity.sale.closingTarget,1)} cierres · {n(entity.sale.salesUfTarget)} UF</p>
+        <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{pct(entity.sale.closingCompliancePct)} cierres · {pct(entity.sale.salesUfCompliancePct)} UF</p>
       </div>
+      <div className="bg-[var(--n3-black)] px-4 py-4 sm:px-5">
+        <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">Acumulado Ene–Ago</p>
+        <p className="mt-2 text-lg font-semibold tabular-nums">{n(entity.ytd.closings,1)} cierres · {n(entity.ytd.salesUf)} UF</p>
+        <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{pct(entity.ytd.closingCompliancePct)} cierres · {pct(entity.ytd.salesUfCompliancePct)} UF</p>
+      </div>
+      <div className="bg-[var(--n3-black)] px-4 py-4 sm:px-5">
+        <p className="text-[10px] uppercase tracking-[.14em] text-[var(--n3-text-muted)]">Fuente</p>
+        <p className="mt-2 text-sm font-medium">{sourceFile}</p>
+        <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Sin reinterpretar fórmulas ni umbrales</p>
+      </div>
+    </section>
+
+    <div className="mt-9 grid gap-8 lg:grid-cols-[.72fr_1.28fr]">
+      <section>
+        <p className="text-[10px] uppercase tracking-[.17em] text-[var(--n3-text-muted)]">02 / Evolución</p>
+        <h3 className="mt-1 text-xl font-medium">Qué cambió</h3>
+        <div className="mt-4">
+          <ScoreDimension label="Cartera" weight="40%" value={entity.scores.portfolio} values={entity.scoreEvolution.portfolio}/>
+          <ScoreDimension label="Seguimiento" weight="30%" value={entity.scores.followUp} values={entity.scoreEvolution.followUp}/>
+          <ScoreDimension label="Conversión" weight="30%" value={entity.scores.conversion} values={entity.scoreEvolution.conversion}/>
+        </div>
+      </section>
+
+      <section>
+        <p className="text-[10px] uppercase tracking-[.17em] text-[var(--n3-text-muted)]">03 / Diagnóstico</p>
+        <h3 className="mt-1 text-xl font-medium">Qué explica el resultado</h3>
+        <div className="mt-4 grid gap-6 xl:grid-cols-3">
+          <div>
+            <div className="flex items-end justify-between border-b border-[var(--n3-line)] pb-3"><span className="text-sm font-semibold">Cartera</span><strong className={`text-xl ${scoreTone(entity.scores.portfolio)}`}>{n(entity.scores.portfolio,1)}</strong></div>
+            <Lever label="Meta cartera" evidence={`${n(entity.indicators.portfolio.stock)} / ${n(entity.indicators.portfolio.stockTarget)} propiedades`} score={entity.subscores.portfolio.metaPortfolio}/>
+            <Lever label="Reqs x Tipo Prop" evidence={`${n(entity.indicators.portfolio.requirements)} / ${n(entity.indicators.portfolio.requirementsExpected)} esperados`} score={entity.subscores.portfolio.requirementsByType}/>
+            <Lever label="Calidad Precio" evidence={`≤1.05: ${n(entity.indicators.portfolio.pricing.lte105)} · ≤1.10: ${n(entity.indicators.portfolio.pricing.lte110)} · >1.10: ${n(entity.indicators.portfolio.pricing.gt110)}`} score={entity.subscores.portfolio.priceQuality}/>
+          </div>
+          <div>
+            <div className="flex items-end justify-between border-b border-[var(--n3-line)] pb-3"><span className="text-sm font-semibold">Seguimiento</span><strong className={`text-xl ${scoreTone(entity.scores.followUp)}`}>{n(entity.scores.followUp,1)}</strong></div>
+            <Lever label="% Leads Clasif" evidence={`${n(entity.indicators.followUp.classified)} / ${n(entity.indicators.followUp.active)} activos`} score={entity.subscores.followUp.classifiedLeads}/>
+            <Lever label="% Leads c-g90" evidence={`${n(entity.indicators.followUp.stale90)} sin gestión 90d · ${pct(entity.indicators.followUp.stale90Pct)}`} score={entity.subscores.followUp.managed90}/>
+            <Lever label="%LeadsA c-g15" evidence={`${n(entity.indicators.followUp.staleA15)} / ${n(entity.indicators.followUp.activeA)} · ${pct(entity.indicators.followUp.staleA15Pct)} sin gestión`} score={entity.subscores.followUp.managedA15}/>
+          </div>
+          <div>
+            <div className="flex items-end justify-between border-b border-[var(--n3-line)] pb-3"><span className="text-sm font-semibold">Conversión</span><strong className={`text-xl ${scoreTone(entity.scores.conversion)}`}>{n(entity.scores.conversion,1)}</strong></div>
+            <Lever label="Vis Realiz/Meta" evidence={`${n(entity.indicators.conversion.realizedVisits)} / ${n(entity.indicators.conversion.visitTarget)}`} score={entity.subscores.conversion.visitsToTarget}/>
+            <Lever label="%Vis realizad/agend" evidence={`${n(entity.indicators.conversion.realizedVisits)} / ${n(entity.indicators.conversion.scheduledVisits)}`} score={entity.subscores.conversion.visitExecution}/>
+            <Lever label="TC 6m/leads tot" evidence={`${pct(entity.indicators.conversion.tc6mPct)} tasa conversión`} score={entity.subscores.conversion.tc6m}/>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <details className="mt-7 border-t border-[var(--n3-line)] pt-4">
-      <summary className="cursor-pointer text-xs font-semibold text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver detalle exacto del informe</summary>
-      <div className="mt-4 grid gap-5 lg:grid-cols-3 text-sm">
-        <div><p className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Cartera</p><p className="mt-2">Cartera actual <strong className="float-right">{n(entity.indicators.portfolio.stock)} / {n(entity.indicators.portfolio.stockTarget)}</strong></p><p className="mt-2">Requerimientos <strong className="float-right">{n(entity.indicators.portfolio.requirements)} / {n(entity.indicators.portfolio.requirementsExpected)}</strong></p><p className="mt-2">Pricing score <strong className="float-right">{n(entity.indicators.portfolio.pricing.score,1)}</strong></p></div>
-        <div><p className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Seguimiento</p><p className="mt-2">Clasificados <strong className="float-right">{n(entity.indicators.followUp.classified)} / {n(entity.indicators.followUp.active)}</strong></p><p className="mt-2">Sin gestión 90d <strong className="float-right">{n(entity.indicators.followUp.stale90)}</strong></p><p className="mt-2">A sin gestión 15d <strong className="float-right">{n(entity.indicators.followUp.staleA15)}</strong></p></div>
-        <div><p className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Conversión</p><p className="mt-2">Visitas / meta <strong className="float-right">{n(entity.indicators.conversion.realizedVisits)} / {n(entity.indicators.conversion.visitTarget)}</strong></p><p className="mt-2">Realizadas / agendadas <strong className="float-right">{n(entity.indicators.conversion.realizedVisits)} / {n(entity.indicators.conversion.scheduledVisits)}</strong></p><p className="mt-2">TC 6 meses <strong className="float-right">{pct(entity.indicators.conversion.tc6mPct)}</strong></p></div>
+    <details className="group mt-9 border-y border-[var(--n3-line)] py-4">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-xs font-semibold uppercase tracking-[.12em] text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)] focus-visible:outline-none">
+        <span>04 / Evidencia exacta del Directorio</span>
+        <span aria-hidden="true" className="text-lg font-normal transition-transform group-open:rotate-45">+</span>
+      </summary>
+      <div className="mt-5 grid gap-6 border-t border-[var(--n3-line)] pt-5 lg:grid-cols-3 text-sm">
+        <div><p className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Cartera</p><p className="mt-3">Cartera actual <strong className="float-right">{n(entity.indicators.portfolio.stock)} / {n(entity.indicators.portfolio.stockTarget)}</strong></p><p className="mt-2">Requerimientos <strong className="float-right">{n(entity.indicators.portfolio.requirements)} / {n(entity.indicators.portfolio.requirementsExpected)}</strong></p><p className="mt-2">Pricing score <strong className="float-right">{n(entity.indicators.portfolio.pricing.score,1)}</strong></p></div>
+        <div><p className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Seguimiento</p><p className="mt-3">Clasificados <strong className="float-right">{n(entity.indicators.followUp.classified)} / {n(entity.indicators.followUp.active)}</strong></p><p className="mt-2">Sin gestión 90d <strong className="float-right">{n(entity.indicators.followUp.stale90)}</strong></p><p className="mt-2">A sin gestión 15d <strong className="float-right">{n(entity.indicators.followUp.staleA15)}</strong></p></div>
+        <div><p className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Conversión</p><p className="mt-3">Visitas / meta <strong className="float-right">{n(entity.indicators.conversion.realizedVisits)} / {n(entity.indicators.conversion.visitTarget)}</strong></p><p className="mt-2">Realizadas / agendadas <strong className="float-right">{n(entity.indicators.conversion.realizedVisits)} / {n(entity.indicators.conversion.scheduledVisits)}</strong></p><p className="mt-2">TC 6 meses <strong className="float-right">{pct(entity.indicators.conversion.tc6mPct)}</strong></p></div>
       </div>
     </details>
   </section>
