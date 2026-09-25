@@ -158,6 +158,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   const priceHistory = history.filter((row) => row.price_uf != null).map((row) => ({ observedAt: row.observed_at, priceUf: Number(row.price_uf), status: row.status, sourceListingId: row.source_listing_id }))
   const distinctPrices = [...new Set(priceHistory.map((row) => row.priceUf))]
+  const firstPrice = priceHistory[0]?.priceUf ?? null
+  const latestPrice = priceHistory.at(-1)?.priceUf ?? null
 
   const lifecycleTimeline = [
     property.first_seen_at ? {
@@ -378,8 +380,6 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       + comparableDomCoverage * 0.15,
   )
 
-  const firstPrice = priceHistory[0]?.priceUf ?? null
-  const latestPrice = priceHistory.at(-1)?.priceUf ?? null
   const priceChangePct = firstPrice != null && latestPrice != null && firstPrice > 0 ? (latestPrice / firstPrice - 1) * 100 : null
   const sequentialPriceChanges = priceHistory.slice(1).map((row, index) => {
     const previous = priceHistory[index]?.priceUf
