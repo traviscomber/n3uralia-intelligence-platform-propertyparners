@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
+import { hasCapability } from '@/lib/access-control'
 import { createServiceClient } from '@/lib/supabase/service'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 import { hasDecisionGradeComparableSample, isVitacuraComparableAddress } from '@/lib/property360-comparables'
@@ -42,8 +43,9 @@ function boundedScore(value: number) {
 
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
+  let scope: Awaited<ReturnType<typeof requireCapability>>
   try {
-    await requireCapability('market.read')
+    scope = await requireCapability('market.read')
   } catch (error) {
     return accessErrorResponse(error)
   }
@@ -81,6 +83,63 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const matches = matchResult.data ?? []
   const neighborhood = neighborhoodResult.data ?? null
   const legacySubject = legacySubjectResult.data ?? null
+
+  const canReadProperties = hasCapability(scope.role, 'properties.global.read')
+    || hasCapability(scope.role, 'properties.office.read')
+    || hasCapability(scope.role, 'properties.self.read')
+  const canReadValuations = hasCapability(scope.role, 'valuations.global.read')
+    || hasCapability(scope.role, 'valuations.office.read')
+    || hasCapability(scope.role, 'valuations.self.read')
+
+  const [assignmentResult, assignmentHistoryResult, valuationResult] = subjectLegacyId
+    ? await Promise.all([
+        canReadProperties
+          ? supabase
+              .from('property_assignments')
+              .select('id,property_id,assigned_to,assignment_role,status,notes,assigned_at,ended_at,updated_at')
+              .eq('property_id', subjectLegacyId)
+              .order('assigned_at', { ascending: false })
+              .limit(20)
+          : Promise.resolve({ data: [], error: null }),
+        canReadProperties
+          ? supabase
+              .from('property_assignment_history')
+              .select('id,assignment_id,property_id,assigned_to,action,created_at')
+              .eq('property_id', subjectLegacyId)
+              .order('created_at', { ascending: false })
+              .limit(30)
+          : Promise.resolve({ data: [], error: null }),
+        canReadValuations
+          ? supabase
+              .from('valuation_cases')
+              .select('id,subject_property_id,requested_by,status,valuation_date,estimated_value_uf,low_value_uf,high_value_uf,confidence,methodology_version,version_number,created_at,updated_at,reviewed_at,approved_at,issued_at')
+              .eq('subject_property_id', subjectLegacyId)
+              .order('created_at', { ascending: false })
+              .limit(20)
+          : Promise.resolve({ data: [], error: null }),
+      ])
+    : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }]
+
+  if (assignmentResult.error || assignmentHistoryResult.error || valuationResult.error) {
+    return NextResponse.json({ error: 'No fue posible completar la operación interna vinculada.' }, { status: 500 })
+  }
+
+  const assignmentRows = assignmentResult.data ?? []
+  const assignmentHistoryRows = assignmentHistoryResult.data ?? []
+  const valuationRows = valuationResult.data ?? []
+  const visibleAssignments = assignmentRows.filter((row) => !row.assigned_to || scope.visibleProfileIds.includes(String(row.assigned_to)))
+  const visibleAssignmentHistory = assignmentHistoryRows.filter((row) => !row.assigned_to || scope.visibleProfileIds.includes(String(row.assigned_to)))
+  const visibleValuations = valuationRows.filter((row) => !row.requested_by || scope.visibleProfileIds.includes(String(row.requested_by)))
+  const profileIds = [...new Set(visibleAssignments.map((row) => row.assigned_to).filter((value): value is string => Boolean(value)))]
+  const profileResult = profileIds.length
+    ? await supabase.from('profiles').select('id,full_name,role,team').in('id', profileIds)
+    : { data: [], error: null }
+  if (profileResult.error) return NextResponse.json({ error: 'No fue posible completar responsables internos.' }, { status: 500 })
+  const profileById = new Map((profileResult.data ?? []).map((profile) => [String(profile.id), profile]))
+
+  const currentAssignment = visibleAssignments.find((row) => row.status === 'active' && !row.ended_at) ?? visibleAssignments[0] ?? null
+  const latestValuation = visibleValuations[0] ?? null
+
   const currentListing = listings.find((item) => ['active', 'observed'].includes(String(item.status))) ?? listings[0] ?? null
   const area = numberOrNull(property.useful_area_m2) ?? numberOrNull(property.built_area_m2)
   const currentPrice = numberOrNull(currentListing?.price_uf)
@@ -323,6 +382,67 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       sourceReportedDom,
       sourceReportedDomOrigin,
       description: legacySubject?.description ?? null,
+    },
+    internalOperations: {
+      linked: Boolean(subjectLegacyId),
+      legacyPropertyId: subjectLegacyId,
+      permissions: {
+        canReadProperties,
+        canReadValuations,
+      },
+      coverage: {
+        assignments: !subjectLegacyId ? 'not_linked' : !canReadProperties ? 'restricted' : assignmentRows.length > visibleAssignments.length ? 'restricted' : visibleAssignments.length ? 'available' : 'not_informed',
+        valuations: !subjectLegacyId ? 'not_linked' : !canReadValuations ? 'restricted' : valuationRows.length > visibleValuations.length ? 'restricted' : visibleValuations.length ? 'available' : 'not_informed',
+        crmActivity: 'not_linked',
+      },
+      currentAssignment: currentAssignment ? {
+        id: currentAssignment.id,
+        assignedTo: currentAssignment.assigned_to,
+        assignedToName: currentAssignment.assigned_to ? profileById.get(String(currentAssignment.assigned_to))?.full_name ?? null : null,
+        assignedToRole: currentAssignment.assigned_to ? profileById.get(String(currentAssignment.assigned_to))?.role ?? null : null,
+        team: currentAssignment.assigned_to ? profileById.get(String(currentAssignment.assigned_to))?.team ?? null : null,
+        assignmentRole: currentAssignment.assignment_role,
+        status: currentAssignment.status,
+        notes: currentAssignment.notes,
+        assignedAt: currentAssignment.assigned_at,
+        endedAt: currentAssignment.ended_at,
+        updatedAt: currentAssignment.updated_at,
+      } : null,
+      assignmentHistory: visibleAssignmentHistory.slice(0, 8).map((row) => ({
+        id: row.id,
+        assignmentId: row.assignment_id,
+        assignedTo: row.assigned_to,
+        action: row.action,
+        createdAt: row.created_at,
+      })),
+      latestValuation: latestValuation ? {
+        id: latestValuation.id,
+        status: latestValuation.status,
+        valuationDate: latestValuation.valuation_date,
+        estimatedValueUf: numberOrNull(latestValuation.estimated_value_uf),
+        lowValueUf: numberOrNull(latestValuation.low_value_uf),
+        highValueUf: numberOrNull(latestValuation.high_value_uf),
+        confidence: latestValuation.confidence,
+        methodologyVersion: latestValuation.methodology_version,
+        versionNumber: latestValuation.version_number,
+        createdAt: latestValuation.created_at,
+        updatedAt: latestValuation.updated_at,
+        reviewedAt: latestValuation.reviewed_at,
+        approvedAt: latestValuation.approved_at,
+        issuedAt: latestValuation.issued_at,
+      } : null,
+      valuations: visibleValuations.slice(0, 8).map((row) => ({
+        id: row.id,
+        status: row.status,
+        valuationDate: row.valuation_date,
+        estimatedValueUf: numberOrNull(row.estimated_value_uf),
+        confidence: row.confidence,
+        methodologyVersion: row.methodology_version,
+        versionNumber: row.version_number,
+        createdAt: row.created_at,
+        issuedAt: row.issued_at,
+      })),
+      limitation: 'Leads, visitas, ofertas, feedback y cierres por propiedad sólo se incorporarán cuando exista evidencia CRM canónica enlazada a este identificador.',
     },
     currentMarket: {
       listingId: currentListing?.id ?? null,
