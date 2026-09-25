@@ -1,0 +1,887 @@
+{
+  "source": {
+    "file": "Ago_Directorio.pptx",
+    "sha256": "395e5d942d575bf17939cef99567cfa6ef3f2c6b85bb9d1af43a7b2c20ea2f74",
+    "title": "Control de Gestión Cierre Agosto",
+    "subtitle": "Reporte CEO — Enero a Agosto 2026",
+    "period": "2026-08"
+  },
+  "scoring": {
+    "formula": "Calidad Gestión = 0.4×Calidad Cartera + 0.3×Calidad Seguim + 0.3×Calidad Conversión",
+    "scoreThresholds": {
+      "redBelow": 50,
+      "yellowBelow": 70,
+      "greenAtLeast": 70
+    }
+  },
+  "entities": [
+    {
+      "name": "Property Partners Vitacura",
+      "slug": "property-partners-vitacura",
+      "classification": "Desarrollo",
+      "sale": {
+        "closings": 8,
+        "closingTarget": 8.2,
+        "closingCompliancePct": 98,
+        "salesUf": 141650,
+        "salesUfTarget": 130488,
+        "salesUfCompliancePct": 109
+      },
+      "ytd": {
+        "closings": 50.5,
+        "closingTarget": 58.6,
+        "closingCompliancePct": 86,
+        "salesUf": 920786,
+        "salesUfTarget": 954867,
+        "salesUfCompliancePct": 96
+      },
+      "scores": {
+        "management": 67.4,
+        "portfolio": 65.8,
+        "followUp": 69.8,
+        "conversion": 67.3
+      },
+      "indicators": {
+        "portfolio": {
+          "stock": 324,
+          "stockTarget": 541,
+          "stockCompliancePct": 60,
+          "requirements": 468,
+          "requirementsExpected": 590,
+          "requirementsCompliancePct": 79,
+          "pricing": {
+            "lte105": 132,
+            "lte110": 77,
+            "gt110": 84,
+            "score": 58.2
+          }
+        },
+        "followUp": {
+          "classified": 808,
+          "active": 1228,
+          "activeA": 90,
+          "stale90": 230,
+          "stale90Pct": 19,
+          "staleA15": 34,
+          "staleA15Pct": 38
+        },
+        "conversion": {
+          "realizedVisits": 189,
+          "visitTarget": 434,
+          "visitTargetPct": 43.5,
+          "scheduledVisits": 324,
+          "visitExecutionPct": 58.3,
+          "tc6mPct": 4.1
+        }
+      },
+      "subscores": {
+        "portfolio": {
+          "metaPortfolio": 59.9,
+          "requirementsByType": 79.3,
+          "priceQuality": 58.2
+        },
+        "followUp": {
+          "classifiedLeads": 65.8,
+          "managed90": 81.3,
+          "managedA15": 62.2
+        },
+        "conversion": {
+          "visitsToTarget": 43.5,
+          "visitExecution": 58.3,
+          "tc6m": 100.1
+        }
+      },
+      "scoreEvolution": {
+        "management": [
+          60.8,
+          57,
+          64.5,
+          60.9,
+          66.1,
+          63.3,
+          68.5,
+          67.4
+        ],
+        "portfolio": [
+          79.8,
+          73.3,
+          81.7,
+          76.7,
+          68.9,
+          68,
+          70.5,
+          65.8
+        ],
+        "followUp": [
+          42.2,
+          42.2,
+          45,
+          46.2,
+          64.4,
+          59.4,
+          68.5,
+          69.8
+        ],
+        "conversion": [
+          54.1,
+          50.2,
+          61.2,
+          54.4,
+          64.1,
+          61,
+          65.8,
+          67.3
+        ]
+      },
+      "subscoreEvolution": {
+        "portfolio": {
+          "metaPortfolio": [
+            98.1,
+            94.3,
+            84.5,
+            75.8,
+            65.5,
+            60,
+            63.8,
+            59.9
+          ],
+          "requirementsByType": [
+            81.7,
+            65.5,
+            100,
+            94.5,
+            83.3,
+            86.4,
+            91,
+            79.3
+          ],
+          "priceQuality": [
+            59.8,
+            60.1,
+            60.6,
+            59.8,
+            57.9,
+            57.6,
+            56.6,
+            58.2
+          ]
+        },
+        "followUp": {
+          "classifiedLeads": [
+            17.4,
+            17.4,
+            21.1,
+            20,
+            50.7,
+            30.2,
+            64.8,
+            65.8
+          ],
+          "managed90": [
+            43.4,
+            43.4,
+            43.1,
+            39.8,
+            69.4,
+            85.1,
+            88.3,
+            81.3
+          ],
+          "managedA15": [
+            65.8,
+            65.8,
+            70.9,
+            78.7,
+            73.1,
+            62.9,
+            52.3,
+            62.2
+          ]
+        },
+        "conversion": {
+          "visitsToTarget": [
+            62.8,
+            57.1,
+            70.2,
+            59.1,
+            57.8,
+            46,
+            41.2,
+            43.5
+          ],
+          "visitExecution": [
+            65.3,
+            60.9,
+            69,
+            60.1,
+            63.3,
+            60.6,
+            56.2,
+            58.3
+          ],
+          "tc6m": [
+            34.3,
+            32.7,
+            44.2,
+            44,
+            71.1,
+            76.6,
+            100.1,
+            100.1
+          ]
+        }
+      }
+    },
+    {
+      "name": "Santa María",
+      "slug": "santa-maria",
+      "classification": "Desarrollo",
+      "sale": {
+        "closings": 3.5,
+        "closingTarget": 2.3,
+        "closingCompliancePct": 152,
+        "salesUf": 76800,
+        "salesUfTarget": 50945,
+        "salesUfCompliancePct": 151
+      },
+      "ytd": {
+        "closings": 13.5,
+        "closingTarget": 18.8,
+        "closingCompliancePct": 72,
+        "salesUf": 296683,
+        "salesUfTarget": 387006,
+        "salesUfCompliancePct": 77
+      },
+      "scores": {
+        "management": 67.4,
+        "portfolio": 65.1,
+        "followUp": 68.4,
+        "conversion": 69.5
+      },
+      "indicators": {
+        "portfolio": {
+          "stock": 134,
+          "stockTarget": 220,
+          "stockCompliancePct": 61,
+          "requirements": 150,
+          "requirementsExpected": 185,
+          "requirementsCompliancePct": 81,
+          "pricing": {
+            "lte105": 51,
+            "lte110": 19,
+            "gt110": 44,
+            "score": 53.1
+          }
+        },
+        "followUp": {
+          "classified": 325,
+          "active": 532,
+          "activeA": 33,
+          "stale90": 88,
+          "stale90Pct": 17,
+          "staleA15": 13,
+          "staleA15Pct": 39
+        },
+        "conversion": {
+          "realizedVisits": 65,
+          "visitTarget": 128,
+          "visitTargetPct": 50.7,
+          "scheduledVisits": 94,
+          "visitExecutionPct": 69.1,
+          "tc6mPct": 2.5
+        }
+      },
+      "subscores": {
+        "portfolio": {
+          "metaPortfolio": 60.9,
+          "requirementsByType": 81.2,
+          "priceQuality": 53.1
+        },
+        "followUp": {
+          "classifiedLeads": 61.1,
+          "managed90": 83.5,
+          "managedA15": 60.6
+        },
+        "conversion": {
+          "visitsToTarget": 50.7,
+          "visitExecution": 69.1,
+          "tc6m": 88.8
+        }
+      },
+      "scoreEvolution": {
+        "management": [
+          61.8,
+          55.4,
+          62.2,
+          59.1,
+          63.5,
+          56,
+          63.1,
+          67.4
+        ],
+        "portfolio": [
+          78,
+          70.9,
+          79.4,
+          77.3,
+          68,
+          60.3,
+          62.9,
+          65.1
+        ],
+        "followUp": [
+          38.8,
+          38.8,
+          42,
+          39.3,
+          58.5,
+          51.1,
+          65.7,
+          68.4
+        ],
+        "conversion": [
+          63.1,
+          51.2,
+          59.5,
+          54.6,
+          62.3,
+          55.1,
+          60.8,
+          69.5
+        ]
+      },
+      "subscoreEvolution": {
+        "portfolio": {
+          "metaPortfolio": [
+            95.4,
+            90.6,
+            85.5,
+            76.3,
+            66.8,
+            60.7,
+            67.3,
+            60.9
+          ],
+          "requirementsByType": [
+            82,
+            64.7,
+            97.6,
+            100,
+            81.7,
+            66.3,
+            69.7,
+            81.2
+          ],
+          "priceQuality": [
+            56.6,
+            57.5,
+            54.9,
+            55.6,
+            55.6,
+            53.8,
+            51.6,
+            53.1
+          ]
+        },
+        "followUp": {
+          "classifiedLeads": [
+            14.1,
+            14.1,
+            17.2,
+            16,
+            37.7,
+            23.4,
+            54.3,
+            61.1
+          ],
+          "managed90": [
+            36.3,
+            36.3,
+            34.1,
+            37,
+            71.2,
+            75.4,
+            81.9,
+            83.5
+          ],
+          "managedA15": [
+            66.1,
+            66.1,
+            74.6,
+            65,
+            66.7,
+            54.5,
+            61,
+            60.6
+          ]
+        },
+        "conversion": {
+          "visitsToTarget": [
+            87.9,
+            59.4,
+            76.3,
+            70.9,
+            62.9,
+            50.6,
+            48.9,
+            50.7
+          ],
+          "visitExecution": [
+            74.1,
+            68.3,
+            72.7,
+            62,
+            74.8,
+            70.2,
+            70.1,
+            69.1
+          ],
+          "tc6m": [
+            27.3,
+            25.9,
+            29.4,
+            31,
+            49.1,
+            44.6,
+            63.3,
+            88.8
+          ]
+        }
+      }
+    },
+    {
+      "name": "Nueva Costanera",
+      "slug": "nueva-costanera",
+      "classification": "Desarrollo",
+      "sale": {
+        "closings": 2,
+        "closingTarget": 2.8,
+        "closingCompliancePct": 71,
+        "salesUf": 26650,
+        "salesUfTarget": 42746,
+        "salesUfCompliancePct": 62
+      },
+      "ytd": {
+        "closings": 20.5,
+        "closingTarget": 20.9,
+        "closingCompliancePct": 98,
+        "salesUf": 377403,
+        "salesUfTarget": 339681,
+        "salesUfCompliancePct": 111
+      },
+      "scores": {
+        "management": 67.5,
+        "portfolio": 69.1,
+        "followUp": 66.4,
+        "conversion": 66.6
+      },
+      "indicators": {
+        "portfolio": {
+          "stock": 95,
+          "stockTarget": 157,
+          "stockCompliancePct": 61,
+          "requirements": 165,
+          "requirementsExpected": 182,
+          "requirementsCompliancePct": 91,
+          "pricing": {
+            "lte105": 32,
+            "lte110": 36,
+            "gt110": 21,
+            "score": 56.2
+          }
+        },
+        "followUp": {
+          "classified": 294,
+          "active": 373,
+          "activeA": 33,
+          "stale90": 105,
+          "stale90Pct": 28,
+          "staleA15": 17,
+          "staleA15Pct": 52
+        },
+        "conversion": {
+          "realizedVisits": 62,
+          "visitTarget": 131,
+          "visitTargetPct": 47.2,
+          "scheduledVisits": 118,
+          "visitExecutionPct": 52.5,
+          "tc6mPct": 5.5
+        }
+      },
+      "subscores": {
+        "portfolio": {
+          "metaPortfolio": 60.5,
+          "requirementsByType": 90.5,
+          "priceQuality": 56.2
+        },
+        "followUp": {
+          "classifiedLeads": 78.8,
+          "managed90": 71.8,
+          "managedA15": 48.5
+        },
+        "conversion": {
+          "visitsToTarget": 47.2,
+          "visitExecution": 52.5,
+          "tc6m": 100.1
+        }
+      },
+      "scoreEvolution": {
+        "management": [
+          55.7,
+          55.3,
+          64.9,
+          61.3,
+          61.5,
+          64.7,
+          63.8,
+          67.5
+        ],
+        "portfolio": [
+          75.5,
+          72.9,
+          82.5,
+          75.5,
+          66,
+          66.4,
+          66.8,
+          69.1
+        ],
+        "followUp": [
+          41.8,
+          41.8,
+          44.1,
+          48.3,
+          62.6,
+          64.1,
+          66.4,
+          66.4
+        ],
+        "conversion": [
+          43.2,
+          45.4,
+          62.3,
+          55.2,
+          54.5,
+          63,
+          57.2,
+          66.6
+        ]
+      },
+      "subscoreEvolution": {
+        "portfolio": {
+          "metaPortfolio": [
+            100,
+            100,
+            83.6,
+            74.1,
+            64,
+            56.1,
+            65.5,
+            60.5
+          ],
+          "requirementsByType": [
+            71.7,
+            62.7,
+            100,
+            91.5,
+            81.2,
+            88.6,
+            80.4,
+            90.5
+          ],
+          "priceQuality": [
+            54.9,
+            56.1,
+            63.9,
+            61,
+            52.8,
+            54.7,
+            54.5,
+            56.2
+          ]
+        },
+        "followUp": {
+          "classifiedLeads": [
+            21.6,
+            21.6,
+            25.8,
+            24.3,
+            61,
+            41.6,
+            83.8,
+            78.8
+          ],
+          "managed90": [
+            36.4,
+            36.4,
+            37.1,
+            31.9,
+            52.9,
+            90.9,
+            89.8,
+            71.8
+          ],
+          "managedA15": [
+            67.3,
+            67.3,
+            69.6,
+            88.8,
+            74,
+            60,
+            25.5,
+            48.5
+          ]
+        },
+        "conversion": {
+          "visitsToTarget": [
+            41.1,
+            51.2,
+            73,
+            54.4,
+            43.2,
+            36,
+            30.6,
+            47.2
+          ],
+          "visitExecution": [
+            58.8,
+            55.6,
+            69.9,
+            63.2,
+            54.2,
+            52.9,
+            41,
+            52.5
+          ],
+          "tc6m": [
+            29.6,
+            29.6,
+            43.9,
+            48,
+            66.1,
+            100.1,
+            100.1,
+            100.1
+          ]
+        }
+      }
+    },
+    {
+      "name": "Lo Beltrán",
+      "slug": "lo-beltran",
+      "classification": "Potencial",
+      "sale": {
+        "closings": 2.5,
+        "closingTarget": 3.1,
+        "closingCompliancePct": 81,
+        "salesUf": 38200,
+        "salesUfTarget": 36797,
+        "salesUfCompliancePct": 104
+      },
+      "ytd": {
+        "closings": 16.5,
+        "closingTarget": 18.9,
+        "closingCompliancePct": 87,
+        "salesUf": 246700,
+        "salesUfTarget": 228180,
+        "salesUfCompliancePct": 108
+      },
+      "scores": {
+        "management": 67.9,
+        "portfolio": 64.4,
+        "followUp": 76.8,
+        "conversion": 63.6
+      },
+      "indicators": {
+        "portfolio": {
+          "stock": 95,
+          "stockTarget": 164,
+          "stockCompliancePct": 58,
+          "requirements": 153,
+          "requirementsExpected": 223,
+          "requirementsCompliancePct": 69,
+          "pricing": {
+            "lte105": 49,
+            "lte110": 22,
+            "gt110": 19,
+            "score": 66.7
+          }
+        },
+        "followUp": {
+          "classified": 189,
+          "active": 323,
+          "activeA": 24,
+          "stale90": 37,
+          "stale90Pct": 11,
+          "staleA15": 4,
+          "staleA15Pct": 17
+        },
+        "conversion": {
+          "realizedVisits": 62,
+          "visitTarget": 175,
+          "visitTargetPct": 35.5,
+          "scheduledVisits": 112,
+          "visitExecutionPct": 55.4,
+          "tc6mPct": 5.1
+        }
+      },
+      "subscores": {
+        "portfolio": {
+          "metaPortfolio": 57.9,
+          "requirementsByType": 68.5,
+          "priceQuality": 66.7
+        },
+        "followUp": {
+          "classifiedLeads": 58.5,
+          "managed90": 88.5,
+          "managedA15": 83.3
+        },
+        "conversion": {
+          "visitsToTarget": 35.5,
+          "visitExecution": 55.4,
+          "tc6m": 100.1
+        }
+      },
+      "scoreEvolution": {
+        "management": [
+          66.2,
+          62.5,
+          68.3,
+          62.7,
+          74.8,
+          70.2,
+          74,
+          67.9
+        ],
+        "portfolio": [
+          84.2,
+          76.3,
+          81.1,
+          75,
+          72.6,
+          76,
+          74.4,
+          64.4
+        ],
+        "followUp": [
+          48.4,
+          48.4,
+          53.2,
+          51.7,
+          75.8,
+          67.9,
+          80.5,
+          76.8
+        ],
+        "conversion": [
+          59.9,
+          58.1,
+          66.5,
+          57.2,
+          76.9,
+          65,
+          66.9,
+          63.6
+        ]
+      },
+      "subscoreEvolution": {
+        "portfolio": {
+          "metaPortfolio": [
+            90.9,
+            92.4,
+            83.9,
+            77,
+            65.5,
+            63.2,
+            57.7,
+            57.9
+          ],
+          "requirementsByType": [
+            92.8,
+            69.4,
+            93,
+            83.6,
+            86.8,
+            100,
+            100,
+            68.5
+          ],
+          "priceQuality": [
+            68.8,
+            67.1,
+            66.3,
+            64.4,
+            65.4,
+            64.7,
+            65.5,
+            66.7
+          ]
+        },
+        "followUp": {
+          "classifiedLeads": [
+            14.9,
+            14.9,
+            20.2,
+            20,
+            55,
+            30.8,
+            57.8,
+            58.5
+          ],
+          "managed90": [
+            73.2,
+            73.2,
+            74.5,
+            61.9,
+            95.9,
+            95.7,
+            98.4,
+            88.5
+          ],
+          "managedA15": [
+            57.1,
+            57.1,
+            65,
+            73.3,
+            76.5,
+            77.1,
+            85.3,
+            83.3
+          ]
+        },
+        "conversion": {
+          "visitsToTarget": [
+            60.9,
+            61.4,
+            59.7,
+            52.7,
+            68.7,
+            52,
+            43.2,
+            35.5
+          ],
+          "visitExecution": [
+            59.8,
+            59.7,
+            63.1,
+            55,
+            61.8,
+            59.5,
+            57.4,
+            55.4
+          ],
+          "tc6m": [
+            58.9,
+            53.3,
+            76.5,
+            64.1,
+            100.1,
+            83.3,
+            100.1,
+            100.1
+          ]
+        }
+      }
+    }
+  ]
+}

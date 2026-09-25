@@ -122,6 +122,37 @@ function officeEntity(period: CanonicalPeriod, office: OfficeSnapshot): Dashboar
       metric('follow_up_score', 'Seguimiento', 'score', office.followUpScore ?? null, sourceName, sourceReference, period.period, 70),
       metric('conversion', 'Conversión', 'score', office.conversionScore ?? null, sourceName, sourceReference, period.period, 70),
     ].filter((item) => item.value !== null),
+    evolution: canonicalPeriods
+      .map((item) => {
+        const historicalOffice = item.offices.find((candidate) => candidate.name === office.name)
+        if (!historicalOffice) return null
+        return {
+          period: item.period,
+          sales: historicalOffice.creditedClosings,
+          salesTarget: historicalOffice.canonicalClosingTarget ?? null,
+          salesUf: historicalOffice.creditedSalesUf,
+          cumulativeSales: null,
+          cumulativeSalesTarget: null,
+          metrics: {
+            management_credited_sales: historicalOffice.creditedClosings,
+            management_credited_sales_uf: historicalOffice.creditedSalesUf,
+            management_score: historicalOffice.managementScore ?? null,
+            portfolio_score: historicalOffice.portfolioScore ?? null,
+            follow_up_score: historicalOffice.followUpScore ?? null,
+            conversion: historicalOffice.conversionScore ?? null,
+            stock: historicalOffice.stock ?? null,
+            leads: historicalOffice.leads ?? null,
+            active_leads_snapshot: historicalOffice.activeLeads ?? null,
+            requirements: historicalOffice.requirements ?? null,
+            scheduled_visits: historicalOffice.scheduledVisits ?? null,
+            realized_visits: historicalOffice.realizedVisits ?? null,
+          },
+          targets: {
+            management_credited_sales: historicalOffice.canonicalClosingTarget ?? null,
+          },
+        }
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item)),
   }
 }
 
