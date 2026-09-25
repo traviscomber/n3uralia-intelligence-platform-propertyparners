@@ -5,6 +5,7 @@ import { requireAnyPageCapability } from '@/lib/access-guards'
 import { createServiceClient } from '@/lib/supabase/service'
 
 const MAX_LISTINGS = 500
+const QUERY_CHUNK_SIZE = 100
 
 function numeric(value: unknown) {
   if (value == null) return null
@@ -37,8 +38,8 @@ export default async function MarketOfferMapPage() {
 
   const propertyIds = [...new Set((listings ?? []).map((row) => String(row.property_id)).filter(Boolean))]
   const properties: any[] = []
-  for (let index = 0; index < propertyIds.length; index += 50) {
-    const ids = propertyIds.slice(index, index + 50)
+  for (let index = 0; index < propertyIds.length; index += QUERY_CHUNK_SIZE) {
+    const ids = propertyIds.slice(index, index + QUERY_CHUNK_SIZE)
     const { data, error } = await db
       .from('market_properties')
       .select('id,normalized_address,latitude,longitude,neighborhood_id,built_area_m2,land_area_m2,bedrooms,bathrooms,identity_status,first_seen_at,last_seen_at')
@@ -73,8 +74,8 @@ export default async function MarketOfferMapPage() {
   const leads: any[] = []
   const valuations: any[] = []
   const assignments: any[] = []
-  for (let index = 0; index < propertyIds.length; index += 50) {
-    const ids = propertyIds.slice(index, index + 50)
+  for (let index = 0; index < propertyIds.length; index += QUERY_CHUNK_SIZE) {
+    const ids = propertyIds.slice(index, index + QUERY_CHUNK_SIZE)
     const [leadResult, valuationResult, assignmentResult] = await Promise.all([
       db.from('property_prospect_leads')
         .select('id,property_id,status,priority,director_key,next_follow_up_at,updated_at')
@@ -106,8 +107,8 @@ export default async function MarketOfferMapPage() {
 
   const territoryAssignments: any[] = []
   if (neighborhoodIds.length) {
-    for (let index = 0; index < neighborhoodIds.length; index += 50) {
-      const ids = neighborhoodIds.slice(index, index + 50)
+    for (let index = 0; index < neighborhoodIds.length; index += QUERY_CHUNK_SIZE) {
+      const ids = neighborhoodIds.slice(index, index + QUERY_CHUNK_SIZE)
       const { data, error } = await db.from('market_neighborhood_director_assignments')
         .select('neighborhood_id,director_key')
         .in('neighborhood_id', ids)
