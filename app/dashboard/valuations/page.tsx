@@ -18,6 +18,12 @@ type ValuationCase = {
   condition_status: string | null
   condition_score: number | null
   warnings: string[] | null
+  accepted_comparable_count: number
+  uat_readiness: {
+    ready: boolean
+    stage: 'not_ready' | 'review_ready' | 'approved' | 'issued'
+    blockers: string[]
+  }
   updated_at: string
 }
 
@@ -67,13 +73,18 @@ export default function ValuationRegistryPage() {
     return (status === 'all' || item.status === status) && text.includes(query.trim().toLowerCase())
   }), [cases, query, status])
 
-  const nextReview = cases.find((item) => item.status === 'review')
-  const nextDraft = cases.find((item) => item.status === 'draft')
+  const uatReadyReview = cases.find((item) => item.status === 'review' && item.uat_readiness?.ready)
+  const nextReview = uatReadyReview
+  const nextDraft = cases.find((item) => item.status === 'draft' && item.uat_readiness?.ready)
+  const uatReadyCount = cases.filter((item) => item.uat_readiness?.ready).length
+  const reviewBlockedCount = cases.filter((item) => item.status === 'review' && !item.uat_readiness?.ready).length
   const unlinkedCount = cases.filter((item) => !item.subject_property_id).length
   const conditionBlockedCount = cases.filter((item) => item.condition_status === 'not_evaluable').length
   const actionCount = counts.review + counts.draft + unlinkedCount + conditionBlockedCount
   const actionMetrics = [
-    ...(counts.review > 0 ? [{ label: 'En revisión', value: counts.review, tone: 'warning' as const }] : []),
+    { label: 'Listas para UAT', value: uatReadyCount, tone: uatReadyCount ? 'success' as const : 'warning' as const },
+    ...(reviewBlockedCount > 0 ? [{ label: 'Review no apta UAT', value: reviewBlockedCount, tone: 'warning' as const }] : []),
+    ...(counts.review > 0 ? [{ label: 'En revisión', value: counts.review }] : []),
     ...(counts.draft > 0 ? [{ label: 'Borradores', value: counts.draft }] : []),
     ...(unlinkedCount > 0 ? [{ label: 'Sin vínculo', value: unlinkedCount, tone: 'warning' as const }] : []),
     ...(conditionBlockedCount > 0 ? [{ label: 'Estado no evaluable', value: conditionBlockedCount, tone: 'danger' as const }] : []),
@@ -130,7 +141,18 @@ export default function ValuationRegistryPage() {
             ) : null}
           </div>
         </section>
-      ) : null}
+      ) : (
+        <section className="mt-7 max-w-5xl border-y border-[var(--n3-line)] py-5">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Siguiente acción UAT</p>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold">Preparar un caso canónico desde una Ficha 360</p>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">Los expedientes históricos en revisión no cumplen el ciclo UAT actual. El caso debe estar vinculado a una propiedad, tener condición evaluable y al menos 3 comparables aceptados.</p>
+            </div>
+            <Link href="/dashboard/properties/prospects" className="inline-flex min-h-11 shrink-0 items-center justify-center border border-[var(--n3-line)] px-4 text-xs font-semibold hover:border-[#d7332b]">Abrir prospección</Link>
+          </div>
+        </section>
+      )}
 
       <details className="mt-9 border-t border-[var(--n3-line)] pt-4">
         <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
@@ -153,7 +175,8 @@ export default function ValuationRegistryPage() {
               <Link key={item.id} href={`/dashboard/valuations/${item.id}`} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-medium sm:truncate">{item.address || 'Sin dirección'}</p>
-                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}{!item.subject_property_id ? ' · sin vínculo operacional' : ''}{item.condition_status === 'not_evaluable' ? ' · estado no evaluable' : ''}</p>
+                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'} · {item.accepted_comparable_count ?? 0} comparables aceptados</p>
+                  <p className={`mt-1 text-[11px] ${item.uat_readiness?.ready ? 'text-[#9fd0c8]' : 'text-[#f0c96a]'}`}>{item.uat_readiness?.ready ? 'Apto para ciclo UAT actual' : `No apto UAT · ${item.uat_readiness?.blockers?.join(' · ') || 'evidencia insuficiente'}`}</p>
                 </div>
                 <span className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{statusLabels[item.status] || item.status}</span>
                 <span className="text-sm font-medium tabular-nums">{item.estimated_value_uf == null ? '—' : `${money.format(item.estimated_value_uf)} UF`}</span>
@@ -167,9 +190,9 @@ export default function ValuationRegistryPage() {
 
       <DataStatusBar
         cutoff={cases.length ? new Date(cases[0].updated_at).toLocaleString('es-CL') : '—'}
-        coverage={`${cases.length - unlinkedCount} de ${cases.length} expedientes vinculados a propiedad`}
-        issues={unlinkedCount + conditionBlockedCount}
-        status={unlinkedCount > 0 || conditionBlockedCount > 0 ? 'partial' : cases.length ? 'ready' : 'blocked'}
+        coverage={`${uatReadyCount} de ${cases.length} expedientes aptos para el ciclo UAT actual`}
+        issues={cases.length - uatReadyCount}
+        status={uatReadyCount > 0 ? 'ready' : cases.length ? 'partial' : 'blocked'}
       />
     </WorkspaceShell>
   )
