@@ -178,6 +178,51 @@ export async function POST(request: Request) {
       }
     }
 
+    let resolvedSubjectPropertyId = resolvedSubjectPropertyId
+    let assignmentEvidence: Record<string, unknown> | null = null
+
+    if (payload.propertyAssignmentId) {
+      const { data: assignment, error: assignmentError } = await supabase
+        .from('property_assignments')
+        .select('id,assigned_to,property_id,status,assignment_role,assigned_at')
+        .eq('id', payload.propertyAssignmentId)
+        .maybeSingle()
+
+      if (assignmentError) {
+        console.error('VALUATION_DRAFT_ASSIGNMENT_LOAD_FAILED', { code: assignmentError.code ?? 'UNKNOWN' })
+        return NextResponse.json({ error: 'No pudimos verificar la asignación de la propiedad.' }, { status: 422 })
+      }
+      if (!assignment || assignment.assigned_to !== scope.profileId || assignment.status !== 'active') {
+        return NextResponse.json({ error: 'La asignación no pertenece al perfil autenticado o ya no está activa.' }, { status: 403 })
+      }
+      if (resolvedSubjectPropertyId && assignment.property_id !== resolvedSubjectPropertyId) {
+        return NextResponse.json({ error: 'La propiedad no corresponde a la asignación indicada.' }, { status: 400 })
+      }
+      resolvedSubjectPropertyId = assignment.property_id
+      assignmentEvidence = {
+        propertyAssignmentId: assignment.id,
+        sourcePropertyId: assignment.property_id,
+        assignmentRole: assignment.assignment_role,
+        assignedAt: assignment.assigned_at,
+      }
+    } else if (resolvedSubjectPropertyId && scope.scope === 'self') {
+      return NextResponse.json({ error: 'Para vincular una propiedad se requiere una asignación activa.' }, { status: 403 })
+    }
+
+    if (resolvedSubjectPropertyId) {
+      const { data: property, error: propertyError } = await supabase
+        .from('market_properties')
+        .select('id')
+        .eq('id', resolvedSubjectPropertyId)
+        .maybeSingle()
+
+      if (propertyError) {
+        console.error('VALUATION_DRAFT_PROPERTY_LOAD_FAILED', { code: propertyError.code ?? 'UNKNOWN' })
+        return NextResponse.json({ error: 'No pudimos verificar la propiedad vinculada.' }, { status: 422 })
+      }
+      if (!property) return NextResponse.json({ error: 'La propiedad vinculada no existe en el inventario operacional.' }, { status: 400 })
+    }
+
     const comparables = Array.isArray(payload.comparables) ? payload.comparables : []
     const championRecommendation = buildChampionHouseRecommendation(payload.subject, comparables as ChampionComparable[])
     const qualitativeFactors = payload.qualitativeFactors ?? emptyFactors
@@ -226,8 +271,9 @@ export async function POST(request: Request) {
       portalComparableCount: result.portalSummary.count,
       cbrsComparableCount: result.cbrsSummary.count,
       selectedComparableCount,
-      subjectPropertyId: payload.sourcePropertyId ?? null,
+      subjectPropertyId: resolvedSubjectPropertyId,
       propertyAssignmentId: payload.propertyAssignmentId ?? null,
+      assignment: assignmentEvidence,
       rateAnchor,
       subjectCoordinatesPresent: payload.subject.latitude !== undefined && payload.subject.longitude !== undefined,
       comparableDistanceCoveragePct: Number((distanceCoverage * 100).toFixed(1)),
@@ -238,7 +284,8 @@ export async function POST(request: Request) {
       draft: true,
       selectedComparableCount,
       propertyAssignmentId: payload.propertyAssignmentId ?? null,
-      subjectPropertyId: payload.sourcePropertyId ?? null,
+      assignment: assignmentEvidence,
+      subjectPropertyId: resolvedSubjectPropertyId,
       finalWizardComplete: false,
       ...championEvidence,
     }
@@ -261,7 +308,7 @@ export async function POST(request: Request) {
       ? {
           ...buildValuationReportPayload(payload.subject, comparables, qualitativeFactors, result),
           methodologyVersion,
-          subjectPropertyId: payload.sourcePropertyId ?? null,
+          subjectPropertyId: resolvedSubjectPropertyId,
           decision: {
             rateAnchor,
             rateConfirmedByValuer: true,
@@ -297,7 +344,7 @@ export async function POST(request: Request) {
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
       .insert({
-        subject_property_id: payload.sourcePropertyId?.trim() || null,
+        subject_property_id: resolvedSubjectPropertyId,
         requested_by: scope.profileId,
         status: 'draft',
         valuation_date: new Date().toISOString().slice(0, 10),
