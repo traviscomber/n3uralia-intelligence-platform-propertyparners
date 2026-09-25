@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { canLinkValuationProperty } from '../lib/valuation-property-link-access'
+import { canLinkValuationProperty } from '../../lib/valuation-property-link-access'
 
 test('global valuation scope can link a canonical property', () => {
   assert.equal(canLinkValuationProperty({
