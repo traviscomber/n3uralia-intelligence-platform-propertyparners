@@ -1,3 +1,5 @@
+import { propertyPartnersMonthKey } from '@/lib/property-partners-time'
+
 export type ManagementReportTrigger = 'cron' | 'manual'
 export type CronAuthorizationFailure = 'missing_secret' | 'missing_authorization' | 'invalid_authorization' | null
 
@@ -13,8 +15,13 @@ export function getCronAuthorizationFailure(authorization: string | null, cronSe
 }
 
 export function previousMonthBounds(now = new Date()) {
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0))
+  const currentPeriod = propertyPartnersMonthKey(now)
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(currentPeriod)) {
+    throw new Error('No fue posible resolver el mes calendario de Property Partners.')
+  }
+  const [year, month] = currentPeriod.split('-').map(Number)
+  const start = new Date(Date.UTC(year, month - 2, 1))
+  const end = new Date(Date.UTC(year, month - 1, 0))
   return {
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
@@ -23,10 +30,9 @@ export function previousMonthBounds(now = new Date()) {
 
 export function isClosedMonthlyPeriod(period: string, now = new Date()) {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return false
-  const [year, month] = period.split('-').map(Number)
-  const periodStart = new Date(Date.UTC(year, month - 1, 1))
-  const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
-  return periodStart < currentMonthStart
+  const currentPeriod = propertyPartnersMonthKey(now)
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(currentPeriod)) return false
+  return period < currentPeriod
 }
 
 export function assertClosedMonthlyPeriod(period: string, now = new Date()) {
