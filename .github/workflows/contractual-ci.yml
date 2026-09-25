@@ -144,6 +144,9 @@ jobs:
       - name: Verify management report scheduling
         run: pnpm management:reports:verify
 
+      - name: Verify contractual report automation
+        run: node --import tsx --test tests/management-contract-automation.test.ts
+
       - name: Verify approved management metric overlay
         run: pnpm management:persisted:verify
 
