@@ -20,7 +20,7 @@ export default async function MarketOfferMapPage() {
     .from('market_current_listings')
     .select('property_id,source_listing_id,title,raw_address,normalized_address,latitude,longitude,price_uf,price_uf_m2,published_at,observed_at,url,status,operation', { count: 'exact' })
     .in('status', ['active', 'observed'])
-    .in('operation', ['sale', 'venta', 'sell'])
+    .eq('operation', 'Venta')
     .not('property_id', 'is', null)
     .order('observed_at', { ascending: false })
     .limit(MAX_LISTINGS)
