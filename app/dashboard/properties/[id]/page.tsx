@@ -9,6 +9,7 @@ import { OperationalState } from '@/components/ui/operational-state'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
 import { Property360InternalOperations, type Property360InternalOperationsData } from '@/components/market/property360-internal-operations'
+import { Property360LifecycleTimeline, type PropertyLifecycleEvent } from '@/components/market/property360-lifecycle-timeline'
 
 type Comparable = {
   propertyId: string
@@ -69,6 +70,9 @@ type Intelligence = {
     distinctPriceCount: number
     observations: number
     transactions: number
+    timeline: PropertyLifecycleEvent[]
+    commercialClosureLinked: boolean
+    commercialClosureNote: string
   }
   comparables: {
     count: number
@@ -199,6 +203,12 @@ export default function PropertyIntelligencePage() {
     {data.decisionTrace?.length ? <DecisionTrace items={data.decisionTrace} title="Trazabilidad de recomendación" /> : null}
 
     <Property360InternalOperations data={data.internalOperations} />
+
+    <Property360LifecycleTimeline
+      events={data.lifecycle.timeline}
+      commercialClosureLinked={data.lifecycle.commercialClosureLinked}
+      commercialClosureNote={data.lifecycle.commercialClosureNote}
+    />
 
     <section className="mt-7">
       <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Tiempo y trazabilidad</h2></div>
