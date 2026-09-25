@@ -80,10 +80,14 @@ export type CeoValuationSnapshot = {
 
 export type CeoDelivery = {
   recipient: string | null
-  status: 'draft' | 'sent' | 'resent' | 'acknowledged'
+  status: 'draft' | 'review' | 'approved' | 'sent' | 'resent' | 'acknowledged'
   purpose: string
   paymentStatus: 'not_applicable' | 'pending' | 'received'
   deliveredAt: string | null
+  reviewedAt?: string | null
+  reviewedBy?: string | null
+  approvedAt?: string | null
+  approvedBy?: string | null
 }
 
 export type CanonicalCeoIntelligenceInput = {
