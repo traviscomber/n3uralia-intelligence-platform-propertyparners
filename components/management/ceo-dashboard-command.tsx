@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Download, FileText, RefreshCw } from 'lucide-react'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { getDecisionThreshold } from '@/lib/management-decision-policy'
-import { AugustBoardReading } from '@/components/management/august-board-reading'
+import { AugustBoardReading, type AugustBoardEntity } from '@/components/management/august-board-reading'
 
 type Point = {
   period: string
@@ -22,19 +22,6 @@ type Summary = {
   generatedAt?: string
   entities: Entity[]
   dataLayers?: { approvedMetricCount?: number; errors?: string[] }
-}
-type AugustBoardEntity = {
-  name:string
-  slug:string
-  classification:string
-  sale:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
-  ytd:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
-  scores:{management:number;portfolio:number;followUp:number;conversion:number}
-  subscores:{
-    portfolio:{metaPortfolio:number;requirementsByType:number;priceQuality:number}
-    followUp:{classifiedLeads:number;managed90:number;managedA15:number}
-    conversion:{visitsToTarget:number;visitExecution:number;tc6m:number}
-  }
 }
 type AugustBoard = {
   source:{file:string;sha256:string;title:string;subtitle:string;period:string}
