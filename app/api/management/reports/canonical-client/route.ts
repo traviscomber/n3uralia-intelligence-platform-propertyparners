@@ -16,7 +16,7 @@ export const maxDuration = 300
 
 const STATUSES = new Set(['complete', 'partial', 'pending_client', 'pending_n3uralia'])
 const EVIDENCE_STATUSES = new Set(['verified', 'partial', 'pending_client', 'pending_n3uralia'])
-const DELIVERY_STATUSES = new Set(['draft', 'sent', 'resent', 'acknowledged'])
+const DELIVERY_STATUSES = new Set(['draft', 'review', 'approved', 'sent', 'resent', 'acknowledged'])
 const PAYMENT_STATUSES = new Set(['not_applicable', 'pending', 'received'])
 const REPORTIN_VERSION = '1.0'
 
