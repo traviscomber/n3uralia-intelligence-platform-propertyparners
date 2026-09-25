@@ -22,6 +22,23 @@ type Summary = {
   entities: Entity[]
   dataLayers?: { approvedMetricCount?: number; errors?: string[] }
 }
+type AugustBoardEntity = {
+  name:string
+  slug:string
+  classification:string
+  sale:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
+  ytd:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
+  scores:{management:number;portfolio:number;followUp:number;conversion:number}
+  subscores:{
+    portfolio:{metaPortfolio:number;requirementsByType:number;priceQuality:number}
+    followUp:{classifiedLeads:number;managed90:number;managedA15:number}
+    conversion:{visitsToTarget:number;visitExecution:number;tc6m:number}
+  }
+}
+type AugustBoard = {
+  source:{file:string;sha256:string;title:string;subtitle:string;period:string}
+  entities:AugustBoardEntity[]
+}
 type Operations = { valuations: { review: number }; assignments: { paused: number }; market: { properties: number; confirmed: number }; tasks: { overdue: number; urgent: number }; errors: string[]; generatedAt: string }
 type Action = { label: string; value: string; detail?: string; href: string; priority: number; critical: boolean }
 type Risk = 'high' | 'medium' | 'low' | 'unknown'
@@ -60,6 +77,7 @@ function sumThrough(points: Point[] | undefined, period: string, key: 'sales' | 
 export function CeoDashboardCommand() {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [operations, setOperations] = useState<Operations | null>(null)
+  const [augustBoard, setAugustBoard] = useState<AugustBoard | null>(null)
   const [period, setPeriod] = useState('')
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
@@ -67,10 +85,14 @@ export function CeoDashboardCommand() {
   async function load() {
     setLoading(true); setFailed(false)
     try {
-      const [a, b] = await Promise.all([fetch('/api/management/summary', { cache: 'no-store' }), fetch('/api/management/ceo-operations', { cache: 'no-store' })])
-      if (!a.ok || !b.ok) throw new Error('LOAD_FAILED')
-      const [summaryData, operationsData] = await Promise.all([a.json(), b.json()])
-      setSummary(summaryData); setOperations(operationsData)
+      const [a, b, c] = await Promise.all([
+        fetch('/api/management/summary', { cache: 'no-store' }),
+        fetch('/api/management/ceo-operations', { cache: 'no-store' }),
+        fetch('/api/management/august-board', { cache: 'no-store' }),
+      ])
+      if (!a.ok || !b.ok || !c.ok) throw new Error('LOAD_FAILED')
+      const [summaryData, operationsData, boardData] = await Promise.all([a.json(), b.json(), c.json()])
+      setSummary(summaryData); setOperations(operationsData); setAugustBoard(boardData)
     } catch { setFailed(true) } finally { setLoading(false) }
   }
 
@@ -82,6 +104,7 @@ export function CeoDashboardCommand() {
 
   const selected = company?.evolution?.find((item) => item.period === period)
   const selectedMetrics = selected?.metrics ?? {}
+  const augustCompany = augustBoard?.entities.find((item) => item.slug === 'property-partners-vitacura') ?? null
   const compliance = ratio(selected?.sales, selected?.salesTarget)
   const cumulativeSales = selected?.cumulativeSales ?? sumThrough(company?.evolution, period, 'sales')
   const cumulativeSalesTarget = selected?.cumulativeSalesTarget ?? sumThrough(company?.evolution, period, 'salesTarget')
@@ -232,6 +255,27 @@ export function CeoDashboardCommand() {
   return <WorkspaceShell>
     <WorkspaceHeader controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }, { label: 'Informe', href: `/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`, primary: true, icon: <FileText size={14} /> }, { label: 'Exportar', onClick: exportData, icon: <Download size={14} />, ariaLabel: 'Exportar' }]} />
     <MetricStrip items={[{ label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail }, { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) }, { label: 'UF', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined }, { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) }]} />
+
+    {period === '2026-08' && augustCompany ? <section className="mt-5">
+      <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cierre Agosto · Directorio</p>
+          <h2 className="mt-1 text-lg font-medium">Venta, acumulado y scores que mira Pedro</h2>
+        </div>
+        <span className="text-xs text-[var(--n3-text-muted)]">{augustBoard?.source.file}</span>
+      </div>
+      <div className="grid gap-px bg-[var(--n3-line)] md:grid-cols-4">
+        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Venta Ago</span><strong className="mt-2 block text-xl">{n(augustCompany.sale.closings,1)} cierres</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{uf(augustCompany.sale.salesUf)} · {pct(augustCompany.sale.closingCompliancePct)} ci · {pct(augustCompany.sale.salesUfCompliancePct)} UF</p></div>
+        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Acum. Ene–Ago</span><strong className="mt-2 block text-xl">{n(augustCompany.ytd.closings,1)} cierres</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{uf(augustCompany.ytd.salesUf)} · {pct(augustCompany.ytd.closingCompliancePct)} ci · {pct(augustCompany.ytd.salesUfCompliancePct)} UF</p></div>
+        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Calidad Gestión</span><strong className="mt-2 block text-xl">{n(augustCompany.scores.management,1)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{augustCompany.classification}</p></div>
+        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Mix de score</span><strong className="mt-2 block text-sm">C {n(augustCompany.scores.portfolio,1)} · S {n(augustCompany.scores.followUp,1)} · V {n(augustCompany.scores.conversion,1)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">40% · 30% · 30%</p></div>
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><span className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Cartera</span><p className="mt-2">Meta cartera <strong className="float-right">{n(augustCompany.subscores.portfolio.metaPortfolio,1)}</strong></p><p className="mt-2">Reqs x Tipo Prop <strong className="float-right">{n(augustCompany.subscores.portfolio.requirementsByType,1)}</strong></p><p className="mt-2">Calidad Precio <strong className="float-right">{n(augustCompany.subscores.portfolio.priceQuality,1)}</strong></p></div>
+        <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><span className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Seguimiento</span><p className="mt-2">% Leads Clasif <strong className="float-right">{n(augustCompany.subscores.followUp.classifiedLeads,1)}</strong></p><p className="mt-2">% Leads c-g90 <strong className="float-right">{n(augustCompany.subscores.followUp.managed90,1)}</strong></p><p className="mt-2">%LeadsA c-g15 <strong className="float-right">{n(augustCompany.subscores.followUp.managedA15,1)}</strong></p></div>
+        <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><span className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Conversión</span><p className="mt-2">Vis Realiz/Meta <strong className="float-right">{n(augustCompany.subscores.conversion.visitsToTarget,1)}</strong></p><p className="mt-2">%Vis realizad/agend <strong className="float-right">{n(augustCompany.subscores.conversion.visitExecution,1)}</strong></p><p className="mt-2">TC 6m/leads tot <strong className="float-right">{n(augustCompany.subscores.conversion.tc6m,1)}</strong></p></div>
+      </div>
+    </section> : null}
 
     <section className="mt-5">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Señales y acciones</h2><span className={`text-xs tabular-nums ${critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{critical ? `${critical} críticas` : `${actions.length} activas`}</span></div>
