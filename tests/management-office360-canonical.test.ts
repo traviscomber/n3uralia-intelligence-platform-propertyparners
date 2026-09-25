@@ -53,3 +53,16 @@ test('latest Office 360 values reconcile to Pedro August authority', () => {
 test('Office 360 does not manufacture office-level 2025 YoY', () => {
   assert.ok(periods.every((period)=>period.period.startsWith('2026-')))
 })
+
+
+test('canonical office entities expose Jan-Aug evolution for CEO drill-down', async () => {
+  const mod = await import('../lib/management-canonical-periods')
+  const entities = mod.getCanonicalManagementDashboardEntities()
+  for (const officeName of offices) {
+    const office = entities.find((entity) => entity.entityType === 'branch' && entity.name === officeName)
+    assert.ok(office, `missing ${officeName}`)
+    assert.equal(office?.evolution?.length, 8)
+    assert.equal(office?.evolution?.at(-1)?.period, '2026-08')
+    assert.equal(office?.evolution?.at(-1)?.metrics?.management_credited_sales, office?.evolution?.at(-1)?.sales)
+  }
+})
