@@ -8,6 +8,7 @@ import { DecisionTrace } from '@/components/intelligence/decision-trace'
 import { OperationalState } from '@/components/ui/operational-state'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
+import { Property360InternalOperations, type Property360InternalOperationsData } from '@/components/market/property360-internal-operations'
 
 type Comparable = {
   propertyId: string
@@ -47,6 +48,7 @@ type Intelligence = {
     sourceReportedDomOrigin: string | null
     description: string | null
   }
+  internalOperations: Property360InternalOperationsData
   currentMarket: {
     status: string | null
     priceUf: number | null
@@ -195,6 +197,8 @@ export default function PropertyIntelligencePage() {
     </section>
 
     {data.decisionTrace?.length ? <DecisionTrace items={data.decisionTrace} title="Trazabilidad de recomendación" /> : null}
+
+    <Property360InternalOperations data={data.internalOperations} />
 
     <section className="mt-7">
       <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Tiempo y trazabilidad</h2></div>
