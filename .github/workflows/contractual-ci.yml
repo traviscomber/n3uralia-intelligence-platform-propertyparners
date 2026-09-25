@@ -135,6 +135,21 @@ jobs:
       - name: Verify Office 360 canonical management contract
         run: node --import tsx --test tests/management-office360-canonical.test.ts
 
+      - name: Verify score uplift integration contracts
+        run: >-
+          node --import tsx --test
+          tests/management-canonical-monthly-snapshot.test.ts
+          tests/management-report-timezone.test.ts
+          tests/prospect-overview-source.test.ts
+          tests/prospect-territory-coverage.test.ts
+          tests/prospect-event-trigger-security.test.ts
+          tests/prospect-territory-atomicity.test.ts
+          tests/market-identity-queue-truth.test.ts
+          tests/valuation/uat-readiness.test.ts
+          tests/valuation/property-link-access.test.ts
+          tests/valuation/property-link-route.test.ts
+
+
       - name: Verify canonical valuation source authority
         run: node --import tsx --test tests/valuation/canonical-source-authority.test.ts
 
