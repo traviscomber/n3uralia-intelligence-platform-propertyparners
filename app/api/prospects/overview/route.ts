@@ -40,7 +40,26 @@ export async function GET() {
 
   const visibleDirectors = (directors ?? []).filter((item) => scope.scope === 'global' || !scope.team || item.office_name === scope.team)
   const directorKeys = visibleDirectors.map((item) => item.director_key)
-  if (!directorKeys.length) return NextResponse.json({ directors: [], leads: [], candidates: [], performance: [], summary: { leads:0,active:0,overdue:0,valuations:0,won:0 } })
+  if (!directorKeys.length) return NextResponse.json({
+    directors: [],
+    leads: [],
+    candidates: [],
+    performance: [],
+    territoryCoverage: [],
+    territorySummary: {
+      neighborhoods: 0,
+      mappedNeighborhoods: 0,
+      unmappedNeighborhoods: 0,
+      coveragePct: null,
+      eligiblePublished: 0,
+      uncoveredPublished: 0,
+      directorDriftLeads: 0,
+      candidateUniverseTruncated: false,
+      candidateUniverseCount: 0,
+    },
+    summary: { leads:0,active:0,overdue:0,valuations:0,won:0 },
+    generatedAt: new Date().toISOString(),
+  })
 
   const [leadResult, territoryResult] = await Promise.all([
     db.from('property_prospect_leads')
@@ -136,7 +155,6 @@ export async function GET() {
       .select('property_id,source_listing_id,url,status,operation,observed_at,published_at,price_uf')
       .in('property_id', ids)
       .in('status',['active','observed'])
-      .in('operation',['venta'])
       .order('observed_at',{ascending:false})
     if (listingChunk.error) return NextResponse.json({ error: 'No fue posible cargar publicaciones candidatas.' }, { status:500 })
     candidateListingRows.push(...(listingChunk.data ?? []))
@@ -146,7 +164,11 @@ export async function GET() {
   const territoryByNeighborhood = new Map((territoryResult.data ?? []).map((item)=>[item.neighborhood_id,item]))
   const candidatePropertyById = new Map(candidateProperties.map((item)=>[item.id,item]))
   const listingByProperty = new Map<string, any>()
-  for(const listing of candidateListingRows) if(!listingByProperty.has(listing.property_id)) listingByProperty.set(listing.property_id,listing)
+  for(const listing of candidateListingRows) {
+    const operation = String(listing.operation ?? '').toLowerCase()
+    if (!['sale','venta','sell'].includes(operation)) continue
+    if(!listingByProperty.has(listing.property_id)) listingByProperty.set(listing.property_id,listing)
+  }
 
   const eligibleProperties = candidateProperties.filter((property) => listingByProperty.has(property.id))
   const territoryCoverage = buildProspectTerritoryCoverage({
