@@ -26,6 +26,8 @@ const nf1=new Intl.NumberFormat('es-CL',{minimumFractionDigits:1,maximumFraction
 const n=(v:number,d=0)=>d?nf1.format(v):nf0.format(v)
 const pct=(v:number)=>`${nf1.format(v)}%`
 const signed=(v:number)=>`${v>0?'+':''}${n(v,1)}`
+const gap=(actual:number,target:number)=>actual-target
+const direction=(delta:number)=>delta>0?'sube':delta<0?'baja':'se mantiene'
 
 function scoreTone(value:number){
   if(value>=70)return 'text-[#78d59a]'
@@ -78,6 +80,9 @@ function Sparkline({values,label}:{values:number[];label:string}){
 function ScoreDimension({label,weight,value,values}:{label:string;weight:string;value:number;values:number[]}){
   const previous=values.at(-2) ?? value
   const delta=value-previous
+  const explanation=delta===0
+    ? `${label} se mantiene en ${n(value,1)} puntos frente a julio. Su peso en Calidad Gestión es ${weight}.`
+    : `${label} ${direction(delta)} ${n(Math.abs(delta),1)} puntos frente a julio, hasta ${n(value,1)}. Su peso en Calidad Gestión es ${weight}.`
   return <article className="border-t border-[var(--n3-line)] py-5">
     <div className="flex items-start justify-between gap-4">
       <div>
@@ -93,6 +98,7 @@ function ScoreDimension({label,weight,value,values}:{label:string;weight:string;
       </div>
     </div>
     <Sparkline values={values} label={`Evolución Ene-Ago de ${label}`}/>
+    <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]"><span className="font-medium text-[var(--n3-text-light)]">Lectura:</span> {explanation} Clasificación: {scoreBand(value)}.</p>
   </article>
 }
 
@@ -116,6 +122,10 @@ export function AugustBoardReading({entity,sourceFile}:{entity:AugustBoardEntity
     {label:'Seguimiento',value:entity.scores.followUp},
     {label:'Conversión',value:entity.scores.conversion},
   ].sort((a,b)=>a.value-b.value)[0]
+  const closingGap=gap(entity.sale.closings,entity.sale.closingTarget)
+  const ufGap=gap(entity.sale.salesUf,entity.sale.salesUfTarget)
+  const ytdClosingGap=gap(entity.ytd.closings,entity.ytd.closingTarget)
+  const ytdUfGap=gap(entity.ytd.salesUf,entity.ytd.salesUfTarget)
 
   return <section className="mt-6">
     <header className="relative overflow-hidden border-y border-[var(--n3-line)] bg-[var(--n3-deep)] px-4 py-5 sm:px-6 sm:py-7">
@@ -182,6 +192,34 @@ export function AugustBoardReading({entity,sourceFile}:{entity:AugustBoardEntity
         <p className="mt-2 text-sm font-medium">{sourceFile}</p>
         <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Sin reinterpretar fórmulas ni umbrales</p>
       </div>
+    </section>
+
+    <section className="mt-7 border-y border-[var(--n3-line)] py-5">
+      <p className="text-[10px] uppercase tracking-[.17em] text-[var(--n3-text-muted)]">01 / Lectura ejecutiva</p>
+      <h3 className="mt-1 text-xl font-medium">Qué significan los resultados</h3>
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Cierres del mes</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-light)]">{n(entity.sale.closings,1)} de {n(entity.sale.closingTarget,1)} cierres: {pct(entity.sale.closingCompliancePct)} de la meta.</p>
+          <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{closingGap===0?'Meta exacta.':closingGap>0?`${n(closingGap,1)} cierres sobre la meta.`:`Faltaron ${n(Math.abs(closingGap),1)} cierres para la meta.`}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-[.12em] text-[var(--n3-text-muted)]">UF del mes</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-light)]">{n(entity.sale.salesUf)} UF versus {n(entity.sale.salesUfTarget)} UF: {pct(entity.sale.salesUfCompliancePct)}.</p>
+          <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{ufGap===0?'Meta exacta.':ufGap>0?`${n(ufGap)} UF sobre la meta.`:`Brecha de ${n(Math.abs(ufGap))} UF bajo la meta.`}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Calidad de gestión</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-light)]">{n(entity.scores.management,1)} puntos, {scoreBand(entity.scores.management).toLowerCase()}.</p>
+          <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{managementDelta===0?'Sin variación frente a julio.':`${direction(managementDelta)} ${n(Math.abs(managementDelta),1)} puntos frente a julio.`} La principal brecha es {weakest.label.toLowerCase()} ({n(weakest.value,1)}).</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Acumulado Ene–Ago</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-light)]">{n(entity.ytd.closings,1)} cierres y {n(entity.ytd.salesUf)} UF.</p>
+          <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{ytdClosingGap===0?'Cierres acumulados en meta.':ytdClosingGap>0?`${n(ytdClosingGap,1)} cierres sobre meta acumulada.`:`Brecha acumulada de ${n(Math.abs(ytdClosingGap),1)} cierres.`} {ytdUfGap===0?'UF acumuladas en meta.':ytdUfGap>0?`${n(ytdUfGap)} UF sobre meta acumulada.`:`Brecha acumulada de ${n(Math.abs(ytdUfGap))} UF.`}</p>
+        </div>
+      </div>
+      <p className="mt-4 border-t border-[var(--n3-line)] pt-3 text-xs leading-5 text-[var(--n3-text-muted)]">Lectura descriptiva calculada sólo desde los valores y metas del Directorio. No cambia fórmulas, ponderaciones ni umbrales.</p>
     </section>
 
     <div className="mt-9 grid gap-8 lg:grid-cols-[.72fr_1.28fr]">
