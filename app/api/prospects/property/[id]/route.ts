@@ -134,55 +134,26 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'La dirección seleccionada está fuera del alcance de oficina.' }, { status: 403 })
     }
 
-    const { data: previous } = await db
-      .from('market_neighborhood_director_assignments')
-      .select('id,director_key')
-      .eq('neighborhood_id', property.neighborhood_id)
-      .eq('active', true)
-      .is('valid_to', null)
-      .maybeSingle()
+    const { data: assignmentResult, error: assignmentError } = await db.rpc(
+      'assign_property_neighborhood_director_v1',
+      {
+        p_neighborhood_id: property.neighborhood_id,
+        p_director_key: directorKey,
+        p_actor_id: scope.profileId,
+        p_reason: text(body.reason) || null,
+        p_source: 'property-360',
+      },
+    )
 
-    if (previous?.director_key !== directorKey) {
-      if (previous) {
-        const { error } = await db.from('market_neighborhood_director_assignments').update({
-          active: false,
-          valid_to: new Date().toISOString().slice(0, 10),
-          updated_at: new Date().toISOString(),
-        }).eq('id', previous.id)
-        if (error) return NextResponse.json({ error: 'No fue posible cerrar la asignación territorial anterior.' }, { status: 422 })
-      }
-
-      const { error } = await db.from('market_neighborhood_director_assignments').insert({
-        neighborhood_id: property.neighborhood_id,
-        director_key: directorKey,
-        assignment_reason: text(body.reason) || null,
-        source: 'property-360',
-        assigned_by: scope.profileId,
+    if (assignmentError) {
+      console.error('PROPERTY_TERRITORY_ASSIGNMENT_FAILED', {
+        code: assignmentError.code,
+        neighborhoodId: property.neighborhood_id,
       })
-      if (error) return NextResponse.json({ error: 'No fue posible asignar el barrio.' }, { status: 422 })
+      return NextResponse.json({ error: 'No fue posible actualizar el director territorial de forma atómica.' }, { status: 422 })
     }
 
-    const { data: existingLead } = await db.from('property_prospect_leads').select('*').eq('property_id', property.id).maybeSingle()
-    if (existingLead && existingLead.director_key !== directorKey) {
-      const previousDirector = existingLead.director_key
-      const { error: updateError } = await db.from('property_prospect_leads').update({
-        director_key: directorKey,
-        assigned_at: new Date().toISOString(),
-        updated_by: scope.profileId,
-        updated_at: new Date().toISOString(),
-      }).eq('id', existingLead.id)
-      if (updateError) return NextResponse.json({ error: 'El barrio fue asignado, pero no se pudo actualizar el lead existente.' }, { status: 422 })
-      await db.from('property_prospect_events').insert({
-        lead_id: existingLead.id,
-        property_id: property.id,
-        event_type: 'director_reassigned',
-        actor_id: scope.profileId,
-        note: text(body.reason) || null,
-        metadata: { fromDirectorKey: previousDirector, toDirectorKey: directorKey, neighborhoodId: property.neighborhood_id },
-      })
-    }
-
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, assignment: assignmentResult })
   }
 
   if (action === 'create_lead') {
