@@ -72,7 +72,7 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
   if (!latest) return NextResponse.json({ error:'No existe serie canónica para esta oficina.' },{status:404})
 
   const db = createServiceClient()
-  const [directorResult, neighborhoodResult] = await Promise.all([
+  const [directorResult, neighborhoodResult, companyResult] = await Promise.all([
     db.from('property_director_directory')
       .select('director_key,full_name,role,office_name,profile_id,source,source_effective_date')
       .eq('office_name',officeName)
@@ -83,8 +83,14 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
       .select('id,name')
       .order('name')
       .limit(100),
+    db.from('management_entities')
+      .select('id,name')
+      .eq('entity_type','company')
+      .eq('name','Property Partners Vitacura')
+      .eq('active',true)
+      .maybeSingle(),
   ])
-  if (directorResult.error || neighborhoodResult.error) {
+  if (directorResult.error || neighborhoodResult.error || companyResult.error) {
     return NextResponse.json({ error:'No fue posible cargar el territorio operativo.' },{status:500})
   }
 
@@ -127,6 +133,19 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
   const firstContactHours=leads.map((item)=>hoursBetween(item.assigned_at,item.first_contact_at)).filter((v):v is number=>v!=null)
   const wonHours=won.map((item)=>hoursBetween(item.assigned_at,item.won_at)).filter((v):v is number=>v!=null)
 
+  const historicalResult=companyResult.data
+    ? await db.from('management_metric_values')
+        .select('metric_code,value,source_name,source_reference,formula_version,quality_status,evaluation_status')
+        .eq('entity_id',companyResult.data.id)
+        .eq('period_start','2025-01-01')
+        .eq('period_end','2025-12-31')
+        .in('metric_code',['sales','sales_uf','leads','requirements','scheduled_visits','realized_visits'])
+        .eq('quality_status','verified')
+        .eq('evaluation_status','evaluable')
+    : {data:[],error:null}
+  if(historicalResult.error) return NextResponse.json({error:'No fue posible cargar el baseline histórico 2025.'},{status:500})
+  const historicalByCode=new Map((historicalResult.data??[]).map((item)=>[item.metric_code,item]))
+
   const neighborhoodById=new Map((neighborhoodResult.data??[]).map((item)=>[item.id,item]))
   const territories=(territoryResult.data??[]).map((item)=>({
     ...item,
@@ -144,11 +163,22 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
     territories.length===0 ? {key:'territory',severity:'warning',label:'Territorio sin asignar',detail:'No existen barrios activos asignados a la dirección de esta oficina.'} : null,
   ].filter(Boolean)
 
+  const historicalValue=(code:string)=>n(historicalByCode.get(code)?.value)
+  const historyRows=historicalResult.data??[]
   const company2025Context = {
-    available: true,
+    available: historyRows.length > 0,
     scope: 'company_only',
     note: 'El baseline 2025 está validado a nivel compañía. No se publica YoY por oficina hasta cerrar el contrato de atribución histórica de sub-sucursal/partner.',
-    totals: { sales:61, salesUf:919970, leads:4023, requirements:4594, scheduledVisits:3619, realizedVisits:2252 },
+    totals: {
+      sales: historicalValue('sales'),
+      salesUf: historicalValue('sales_uf'),
+      leads: historicalValue('leads'),
+      requirements: historicalValue('requirements'),
+      scheduledVisits: historicalValue('scheduled_visits'),
+      realizedVisits: historicalValue('realized_visits'),
+    },
+    provenance: [...new Set(historyRows.map((item)=>item.source_name).filter(Boolean))],
+    formulaVersions: [...new Set(historyRows.map((item)=>item.formula_version).filter((value)=>value!=null))],
   }
 
   return NextResponse.json({
