@@ -8,8 +8,32 @@ import { MetricStrip,WorkspaceHeader,WorkspaceShell,DataStatusBar } from '@/comp
 import { OperationalState } from '@/components/ui/operational-state'
 
 type Point={period:string;closings:number;salesUf:number;target:number|null;compliancePct:number|null;managementScore:number|null;portfolioScore:number|null;followUpScore:number|null;conversionScore:number|null;stock:number|null;activeLeads:number|null;requirements:number|null;scheduledVisits:number|null;realizedVisits:number|null;visitExecutionPct:number|null}
+type AugustBoardEntity={
+  name:string
+  classification:string
+  sale:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
+  ytd:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
+  scores:{management:number;portfolio:number;followUp:number;conversion:number}
+  indicators:{
+    portfolio:{stock:number;stockTarget:number;stockCompliancePct:number;requirements:number;requirementsExpected:number;requirementsCompliancePct:number;pricing:{lte105:number;lte110:number;gt110:number;score:number}}
+    followUp:{classified:number;active:number;activeA:number;stale90:number;stale90Pct:number;staleA15:number;staleA15Pct:number}
+    conversion:{realizedVisits:number;visitTarget:number;visitTargetPct:number;scheduledVisits:number;visitExecutionPct:number;tc6mPct:number}
+  }
+  subscores:{
+    portfolio:{metaPortfolio:number;requirementsByType:number;priceQuality:number}
+    followUp:{classifiedLeads:number;managed90:number;managedA15:number}
+    conversion:{visitsToTarget:number;visitExecution:number;tc6m:number}
+  }
+  scoreEvolution:{management:number[];portfolio:number[];followUp:number[];conversion:number[]}
+  subscoreEvolution:{
+    portfolio:{metaPortfolio:number[];requirementsByType:number[];priceQuality:number[]}
+    followUp:{classifiedLeads:number[];managed90:number[];managedA15:number[]}
+    conversion:{visitsToTarget:number[];visitExecution:number[];tc6m:number[]}
+  }
+}
 type Payload={
  office:{name:string;slug:string}
+ augustBoard:AugustBoardEntity
  authority:{file:string;sha256:string;period:string}
  latest:Point
  previous:Point|null
@@ -75,6 +99,68 @@ export default function Office360Page(){
    {label:'Conversión',value:n(l.conversionScore,1),tone:l.conversionScore!=null&&l.conversionScore>=70?'success':'warning'},
   ]}/>
 
+  <section className="mt-6">
+   <div className="border-b border-[var(--n3-line)] pb-3">
+    <p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Cierre Agosto · según Directorio</p>
+    <h2 className="mt-1 text-lg font-medium">Venta Ago y acumulado Ene–Ago</h2>
+   </div>
+   <div className="mt-3 grid gap-px bg-[var(--n3-line)] md:grid-cols-4">
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Venta Ago</span><strong className="mt-2 block text-xl">{n(data.augustBoard.sale.closings,1)} cierres</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{n(data.augustBoard.sale.salesUf)} UF</p></div>
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Cumplimiento Ago</span><strong className="mt-2 block text-xl">{pct(data.augustBoard.sale.closingCompliancePct)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{pct(data.augustBoard.sale.salesUfCompliancePct)} UF</p></div>
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Acumulado Ene–Ago</span><strong className="mt-2 block text-xl">{n(data.augustBoard.ytd.closings,1)} cierres</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{n(data.augustBoard.ytd.salesUf)} UF</p></div>
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Cumplimiento acumulado</span><strong className="mt-2 block text-xl">{pct(data.augustBoard.ytd.closingCompliancePct)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{pct(data.augustBoard.ytd.salesUfCompliancePct)} UF</p></div>
+   </div>
+  </section>
+
+  <section className="mt-7">
+   <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Scores Ago</p><h2 className="mt-1 text-lg font-medium">{data.augustBoard.classification}</h2></div>
+   <div className="mt-3 grid gap-px bg-[var(--n3-line)] sm:grid-cols-4">
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Calidad Gestión</span><strong className="mt-2 block text-xl">{n(data.augustBoard.scores.management,1)}</strong></div>
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Cartera · 40%</span><strong className="mt-2 block text-xl">{n(data.augustBoard.scores.portfolio,1)}</strong></div>
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Seguimiento · 30%</span><strong className="mt-2 block text-xl">{n(data.augustBoard.scores.followUp,1)}</strong></div>
+    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Conversión · 30%</span><strong className="mt-2 block text-xl">{n(data.augustBoard.scores.conversion,1)}</strong></div>
+   </div>
+  </section>
+
+  <section className="mt-7">
+   <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Indicadores Ene–Ago</p><h2 className="mt-1 text-lg font-medium">Qué explica el score</h2></div>
+   <div className="mt-3 grid gap-5 xl:grid-cols-3">
+    <div className="border-t border-[var(--n3-line)] pt-3">
+     <h3 className="text-sm font-semibold">Calidad de Cartera</h3>
+     <div className="mt-3 space-y-3 text-sm">
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">Cartera actual</span><strong>{n(data.augustBoard.indicators.portfolio.stock)} / {n(data.augustBoard.indicators.portfolio.stockTarget)} · {pct(data.augustBoard.indicators.portfolio.stockCompliancePct)}</strong></div>
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">Requerimientos</span><strong>{n(data.augustBoard.indicators.portfolio.requirements)} / {n(data.augustBoard.indicators.portfolio.requirementsExpected)} · {pct(data.augustBoard.indicators.portfolio.requirementsCompliancePct)}</strong></div>
+      <div><span className="text-[var(--n3-text-muted)]">Pricing</span><p className="mt-1 font-medium">≤1.05: {n(data.augustBoard.indicators.portfolio.pricing.lte105)} · ≤1.10: {n(data.augustBoard.indicators.portfolio.pricing.lte110)} · &gt;1.10: {n(data.augustBoard.indicators.portfolio.pricing.gt110)}</p></div>
+     </div>
+    </div>
+    <div className="border-t border-[var(--n3-line)] pt-3">
+     <h3 className="text-sm font-semibold">Calidad de Seguimiento</h3>
+     <div className="mt-3 space-y-3 text-sm">
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">Leads clasif./activos</span><strong>{n(data.augustBoard.indicators.followUp.classified)} / {n(data.augustBoard.indicators.followUp.active)}</strong></div>
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">Leads sin gestión 90d</span><strong>{n(data.augustBoard.indicators.followUp.stale90)} · {pct(data.augustBoard.indicators.followUp.stale90Pct)}</strong></div>
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">Leads A sin gestión 15d</span><strong>{n(data.augustBoard.indicators.followUp.staleA15)} / {n(data.augustBoard.indicators.followUp.activeA)} · {pct(data.augustBoard.indicators.followUp.staleA15Pct)}</strong></div>
+     </div>
+    </div>
+    <div className="border-t border-[var(--n3-line)] pt-3">
+     <h3 className="text-sm font-semibold">Calidad de Conversión</h3>
+     <div className="mt-3 space-y-3 text-sm">
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">Visitas realizadas</span><strong>{n(data.augustBoard.indicators.conversion.realizedVisits)} / {n(data.augustBoard.indicators.conversion.visitTarget)} · {pct(data.augustBoard.indicators.conversion.visitTargetPct)}</strong></div>
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">Realizadas / agendadas</span><strong>{n(data.augustBoard.indicators.conversion.realizedVisits)} / {n(data.augustBoard.indicators.conversion.scheduledVisits)} · {pct(data.augustBoard.indicators.conversion.visitExecutionPct)}</strong></div>
+      <div className="flex justify-between gap-4"><span className="text-[var(--n3-text-muted)]">TC 6 meses</span><strong>{pct(data.augustBoard.indicators.conversion.tc6mPct)}</strong></div>
+     </div>
+    </div>
+   </div>
+  </section>
+
+  <section className="mt-7">
+   <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Subscores Agosto</p><h2 className="mt-1 text-lg font-medium">Las nueve palancas del modelo</h2></div>
+   <div className="mt-3 grid gap-5 xl:grid-cols-3">
+    <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><h3 className="font-semibold">Cartera</h3><p className="mt-2 text-[var(--n3-text-muted)]">Meta cartera <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.portfolio.metaPortfolio,1)}</strong></p><p className="mt-2 text-[var(--n3-text-muted)]">Reqs x Tipo Prop <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.portfolio.requirementsByType,1)}</strong></p><p className="mt-2 text-[var(--n3-text-muted)]">Calidad Precio <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.portfolio.priceQuality,1)}</strong></p></div>
+    <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><h3 className="font-semibold">Seguimiento</h3><p className="mt-2 text-[var(--n3-text-muted)]">% Leads Clasif <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.followUp.classifiedLeads,1)}</strong></p><p className="mt-2 text-[var(--n3-text-muted)]">% Leads c-g90 <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.followUp.managed90,1)}</strong></p><p className="mt-2 text-[var(--n3-text-muted)]">%LeadsA c-g15 <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.followUp.managedA15,1)}</strong></p></div>
+    <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><h3 className="font-semibold">Conversión</h3><p className="mt-2 text-[var(--n3-text-muted)]">Vis Realiz/Meta <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.conversion.visitsToTarget,1)}</strong></p><p className="mt-2 text-[var(--n3-text-muted)]">%Vis realizad/agend <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.conversion.visitExecution,1)}</strong></p><p className="mt-2 text-[var(--n3-text-muted)]">TC 6m/leads tot <strong className="float-right text-[var(--n3-text-light)]">{n(data.augustBoard.subscores.conversion.tc6m,1)}</strong></p></div>
+   </div>
+  </section>
+
   <section className="mt-6 grid gap-px bg-[var(--n3-line)] md:grid-cols-4">
    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Cartera</span><strong className="mt-2 block text-xl">{n(l.stock)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Score {n(l.portfolioScore,1)}</p></div>
    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Leads activos</span><strong className="mt-2 block text-xl">{n(l.activeLeads)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Requerimientos {n(l.requirements)}</p></div>
@@ -116,9 +202,9 @@ export default function Office360Page(){
     <Link href="/dashboard/properties/prospects" className="mt-4 inline-flex text-xs font-semibold text-[var(--n3-teal-soft)]">Gestionar territorio y leads →</Link>
    </div>
    <div>
-    <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Histórico 2025</p><h2 className="mt-1 text-lg font-medium">Contexto corporativo validado</h2></div>
-    <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">{data.historicalContext.note}</p>
-    <div className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><span className="text-xs text-[var(--n3-text-muted)]">Cierres compañía</span><strong className="mt-1 block">{n(data.historicalContext.totals.sales)}</strong></div><div><span className="text-xs text-[var(--n3-text-muted)]">UF compañía</span><strong className="mt-1 block">{n(data.historicalContext.totals.salesUf)}</strong></div><div><span className="text-xs text-[var(--n3-text-muted)]">Leads</span><strong className="mt-1 block">{n(data.historicalContext.totals.leads)}</strong></div><div><span className="text-xs text-[var(--n3-text-muted)]">Visitas realizadas</span><strong className="mt-1 block">{n(data.historicalContext.totals.realizedVisits)}</strong></div></div>
+    <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Fuente</p><h2 className="mt-1 text-lg font-medium">Directorio Agosto</h2></div>
+    <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La lectura principal de esta ficha replica la estructura y los indicadores de Ago_Directorio.pptx. El histórico 2025 queda como evidencia secundaria y no reemplaza el cierre agosto.</p>
+    <div className="mt-4 text-xs text-[var(--n3-text-muted)]">SHA-256 · {data.authority.sha256}</div>
    </div>
   </section>
 
