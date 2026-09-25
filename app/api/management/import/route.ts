@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { managementReportEntityScopes, metricsForManagementReportScope } from '@/lib/management-report-scope'
+import { managementReportEntityScopes, managementReportTypeForEntity, metricsForManagementReportScope } from '@/lib/management-report-scope'
 
 type QualityStatus = 'verified' | 'provisional' | 'missing' | 'rejected' | 'not_applicable' | 'not_evaluable'
 type EvaluationStatus = 'evaluable' | 'missing_source' | 'not_applicable' | 'not_evaluable' | 'rejected'
@@ -340,7 +340,7 @@ export async function POST(request: Request) {
       if (entityId === null) {
         const companyMetrics = companyEntity ? metricsForManagementReportScope(allMetrics, companyEntity.id) : []
         return {
-          reportType: 'monthly',
+          reportType: managementReportTypeForEntity(null, true),
           entityId: null,
           scope: { type: 'global', id: null, name: 'Property Partners Vitacura' },
           metrics: companyMetrics,
@@ -353,7 +353,7 @@ export async function POST(request: Request) {
       }
       const entity = allEntities.find((item) => item.id === entityId)
       return {
-        reportType: entity?.entity_type === 'partner' ? 'partner' : entity?.entity_type === 'office' ? 'office' : 'executive',
+        reportType: managementReportTypeForEntity(entity?.entity_type),
         entityId,
         scope: { type: entity?.entity_type ?? 'entity', id: entityId, name: entity?.name ?? entityId },
         metrics: metricsForManagementReportScope(allMetrics, entityId),
