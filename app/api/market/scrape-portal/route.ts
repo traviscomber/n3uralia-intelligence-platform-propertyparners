@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { requireExecutiveAccess } from '@/lib/api-access'
 import { collectPortalVitacura } from '@/lib/portal-inmobiliario-collector'
-import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'\nimport { evaluatePortalSnapshotPolicy } from '@/lib/portal-snapshot-policy'
+import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { evaluatePortalSnapshotPolicy } from '@/lib/portal-snapshot-policy'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
