@@ -69,13 +69,8 @@ export function DirectorDashboardV3() {
       .map((entity)=>({entity,value:metric(entity,'sales')?.value??null}))
       .filter((item): item is {entity:Entity;value:number}=>item.value!=null)
       .sort((a,b)=>b.value-a.value)
-    let previous:number|null=null
-    let rank=0
-    return new Map(ranked.map((item,index)=>{
-      if(previous===null||item.value!==previous) rank=index+1
-      previous=item.value
-      return [item.entity.id,rank]
-    }))
+    const rankByValue=new Map([...new Set(ranked.map((item)=>item.value))].map((value,index)=>[value,index+1]))
+    return new Map(ranked.map((item)=>[item.entity.id,rankByValue.get(item.value)??null]))
   },[partners])
   const openTasks=tasks.filter((task)=>['open','in_progress'].includes(task.status))
   const overdueTasks=openTasks.filter(isOverdue)
