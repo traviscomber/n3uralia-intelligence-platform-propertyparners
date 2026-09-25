@@ -99,6 +99,9 @@ jobs:
       - name: Verify market identity
         run: pnpm market:identity:verify
 
+      - name: Verify identity queue totals
+        run: node --import tsx --test tests/market-identity-queue-truth.test.ts
+
       - name: Verify contractual market imports
         run: pnpm market:contract:verify
 
