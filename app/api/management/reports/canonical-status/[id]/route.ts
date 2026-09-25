@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoleAccess } from '@/lib/api-access'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { parseCanonicalReportContent } from '@/lib/canonical-report-delivery'
+import { formatCanonicalReportPeriod, isCanonicalReportArtifactEligible, parseCanonicalReportContent } from '@/lib/canonical-report-delivery'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,7 +46,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   const tags = Array.isArray(document.tags) ? document.tags.filter((tag): tag is string => typeof tag === 'string') : []
   const parsed = parseCanonicalReportContent(document.content)
-  if (!tags.includes('canonical') || !tags.includes('n3uralia-client-report') || !supportedReportType(parsed)) {
+  if (!tags.includes('canonical') || !tags.includes('n3uralia-client-report') || tags.includes('superseded') || !supportedReportType(parsed)) {
     return NextResponse.json({ error: 'El documento no corresponde a un informe canónico revisable.' }, { status: 422 })
   }
 
@@ -60,6 +60,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
   if (!nextStatusAllowed(currentStatus, nextStatus)) {
     return NextResponse.json({ error: 'Transición de estado no permitida.' }, { status: 409 })
+  }
+  if (nextStatus === 'approved') {
+    const period = formatCanonicalReportPeriod(parsed)
+    if (period === 'Sin período' || !isCanonicalReportArtifactEligible(parsed, { docType: document.doc_type, tags })) {
+      return NextResponse.json({ error: 'El informe no cumple los requisitos mínimos de entrega: período y artefacto canónico válido.' }, { status: 422 })
+    }
   }
 
   if (currentStatus === nextStatus) {
@@ -102,7 +108,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   })
   if (auditError) {
     console.error('CANONICAL_REPORT_STATUS_AUDIT_FAILED', { reportId: id, code: auditError.code })
-    return NextResponse.json({ error: 'El estado cambió, pero no fue posible registrar la auditoría.' }, { status: 500 })
+    const { error: rollbackError } = await supabase
+      .from('knowledge_documents')
+      .update({ content: document.content, tags })
+      .eq('id', id)
+    if (rollbackError) console.error('CANONICAL_REPORT_STATUS_ROLLBACK_FAILED', { reportId: id, code: rollbackError.code })
+    return NextResponse.json({ error: rollbackError ? 'Falló la auditoría y no fue posible revertir el cambio; requiere revisión administrativa.' : 'No fue posible registrar la auditoría; el cambio fue revertido.' }, { status: 500 })
   }
 
   return NextResponse.json({ id: updated.id, status: nextStatus, changedAt: now })
