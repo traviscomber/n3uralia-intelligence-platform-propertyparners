@@ -22,11 +22,15 @@ export type CanonicalContractItem = {
 
 export type CanonicalDelivery = {
   recipient: string | null
-  status: 'draft' | 'sent' | 'resent' | 'acknowledged'
+  status: 'draft' | 'review' | 'approved' | 'sent' | 'resent' | 'acknowledged'
   purpose: string
   paymentMilestonePercent: number | null
   paymentStatus: 'not_applicable' | 'pending' | 'received'
   deliveredAt: string | null
+  reviewedAt?: string | null
+  reviewedBy?: string | null
+  approvedAt?: string | null
+  approvedBy?: string | null
 }
 
 export type CanonicalClientReportInput = {
