@@ -43,7 +43,9 @@ type ReportsResponse = {
 }
 
 const reportLabels: Record<string, string> = {
+  management: 'Gestión',
   executive: 'Ejecutivo',
+  director: 'Dirección',
   office: 'Oficina',
   partner: 'Partner',
   monthly: 'Mensual',
