@@ -382,10 +382,28 @@ export default async function MarketPage() {
           <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué nos dice el mercado</h2>
         </div>
         <MetricStrip items={[
-          { label: 'Oferta activa', value: number(market.activeInventory) },
-          { label: 'Ventas confirmadas', value: number(market.confirmedSales), tone: market.confirmedSales === null || market.confirmedSales === 0 ? 'warning' : 'default' },
-          { label: 'Días en mercado', value: market.medianDaysOnMarket === null ? '—' : number(market.medianDaysOnMarket) },
-          { label: 'Absorción', value: percent(market.absorptionRate) },
+          {
+            label: 'Oferta activa',
+            value: market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—',
+            detail: market.latestIngestionFullSnapshot ? 'Snapshot completo verificado' : 'Captura parcial · no publicable como total',
+            tone: market.latestIngestionFullSnapshot ? 'default' : 'warning',
+          },
+          {
+            label: 'Ventas confirmadas',
+            value: number(market.confirmedSales),
+            detail: market.confirmedSales === null && market.latestCbrsHouseSaleDate ? `Último CBRS ${shortDate(market.latestCbrsHouseSaleDate)}` : undefined,
+            tone: market.confirmedSales === null ? 'warning' : 'default',
+          },
+          {
+            label: 'Días en mercado',
+            value: market.medianDaysOnMarket === null ? '—' : number(market.medianDaysOnMarket),
+            detail: market.medianDaysOnMarket === null ? 'Sin cierre temporal confirmable' : undefined,
+          },
+          {
+            label: 'Absorción',
+            value: percent(market.absorptionRate),
+            detail: market.absorptionRate === null ? 'Requiere ventas confirmadas y período comparable' : undefined,
+          },
         ]} />
 
         <details className="mt-4 border-t border-[var(--n3-line)] pt-3">

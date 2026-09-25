@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, FileText, RefreshCw } from 'lucide-react'
-import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 import { formatPropertyPartnersDate, propertyPartnersMonthKey } from '@/lib/property-partners-time'
 
@@ -130,10 +130,10 @@ export default function ManagementOperationsPage() {
       />
 
       <MetricStrip items={[
-        { label: 'Cargas', value: currentRuns.length },
-        { label: 'Filas incorporadas', value: inserted },
-        { label: 'Observaciones', value: rejected, tone: rejected ? 'warning' : 'success' },
-        { label: 'Reportes', value: currentReports.length, tone: currentReports.length ? 'success' : 'default' },
+        { label: 'Cargas', value: currentRuns.length || '—', detail: currentRuns.length ? undefined : 'Sin evidencia del período' },
+        { label: 'Filas incorporadas', value: currentRuns.length ? inserted : '—', detail: currentRuns.length ? undefined : 'No evaluable sin carga' },
+        { label: 'Observaciones', value: currentRuns.length ? rejected : '—', detail: currentRuns.length ? undefined : 'No evaluable sin carga', tone: currentRuns.length ? (rejected ? 'warning' : 'success') : 'default' },
+        { label: 'Reportes', value: currentRuns.length ? currentReports.length : '—', detail: currentRuns.length && !currentReports.length ? 'Cierre pendiente' : undefined, tone: currentReports.length ? 'success' : 'default' },
       ]} />
 
       <section className="mt-7 max-w-5xl">
@@ -166,6 +166,13 @@ export default function ManagementOperationsPage() {
           {advancedOpen ? <div className="border border-[var(--n3-line)] p-4"><label htmlFor="management-json" className="mb-2 block text-xs text-[var(--n3-text-muted)]">JSON de importación</label><textarea id="management-json" value={rows} onChange={(event) => setRows(event.target.value)} className="min-h-40 w-full border border-[var(--n3-line)] bg-transparent p-3 font-mono text-xs" /><button disabled={busy} onClick={() => void importRows()} className="mt-3 min-h-11 bg-[var(--primary)] px-4 text-sm font-semibold text-white disabled:opacity-50">Importar JSON</button></div> : null}
         </div>
       </details>
+
+      <DataStatusBar
+        cutoff={currentRuns[0]?.created_at ? new Date(currentRuns[0].created_at).toLocaleString('es-CL') : '—'}
+        coverage={currentRuns.length ? `${inserted} filas incorporadas · ${currentRuns.length} carga${currentRuns.length === 1 ? '' : 's'}` : 'Sin evidencia cargada para el período'}
+        issues={currentRuns.length === 0 ? 1 : rejected}
+        status={currentRuns.length === 0 ? 'blocked' : rejected > 0 ? 'partial' : 'ready'}
+      />
     </WorkspaceShell>
   )
 }

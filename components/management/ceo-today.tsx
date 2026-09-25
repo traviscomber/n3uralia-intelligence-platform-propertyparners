@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, RefreshCw } from 'lucide-react'
-import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 import { formatPropertyPartnersPeriod } from '@/lib/property-partners-time'
 import { getDecisionThreshold } from '@/lib/management-decision-policy'
@@ -32,15 +32,16 @@ type Operations = {
   valuations: { review: number }
   assignments: { paused: number }
   market: {
-    neighborhoodTotal: number
-    neighborhoodResolved: number
-    neighborhoodExceptions: number
+    neighborhoodTotal: number | null
+    neighborhoodResolved: number | null
+    neighborhoodExceptions: number | null
     canonicalProperties: number | null
     confirmedDuplicates: number | null
     logicalProperties: number | null
   }
   tasks: { overdue: number; urgent: number }
   generatedAt: string
+  errors: string[]
 }
 
 type Priority = { label: string; detail: string; href: string; critical?: boolean }
@@ -93,7 +94,7 @@ export function CeoToday() {
 
   const priorities = useMemo<Priority[]>(() => {
     const items: Priority[] = []
-    if (operations?.market.neighborhoodExceptions) {
+    if (operations?.market.neighborhoodExceptions != null && operations.market.neighborhoodExceptions > 0) {
       items.push({
         label: 'Excepciones territoriales',
         detail: `${n(operations.market.neighborhoodExceptions)} caso${operations.market.neighborhoodExceptions === 1 ? '' : 's'} sin evidencia suficiente para resolución automática`,
@@ -151,7 +152,21 @@ export function CeoToday() {
         ? 'El negocio está cerca de la meta; conviene concentrarse en las excepciones operativas.'
         : 'El negocio está bajo la meta y requiere atención en las prioridades señaladas.'
 
-  const reviewCount = operations.valuations.review + operations.market.neighborhoodExceptions
+  const reviewCount = operations.market.neighborhoodExceptions == null
+    ? operations.valuations.review
+    : operations.valuations.review + operations.market.neighborhoodExceptions
+  const marketCoverage = operations.market.neighborhoodTotal != null && operations.market.neighborhoodResolved != null && operations.market.neighborhoodTotal > 0
+    ? operations.market.neighborhoodResolved / operations.market.neighborhoodTotal * 100
+    : null
+  const cutoff = snapshot.sourceCutoffAt
+    ? new Date(snapshot.sourceCutoffAt).toLocaleString('es-CL')
+    : new Date(operations.generatedAt).toLocaleString('es-CL')
+  const dataIssues = operations.errors.length + (snapshot.sourceCutoffAt ? 0 : 1)
+  const dataStatus = operations.errors.length
+    ? 'partial'
+    : snapshot.sourceCutoffAt
+      ? 'ready'
+      : 'partial'
 
   return (
     <WorkspaceShell>
@@ -176,8 +191,8 @@ export function CeoToday() {
       <section className="mt-8 max-w-5xl border-y border-[var(--n3-line)] py-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Inteligencia de mercado</p>
-            <h2 className="mt-1 text-base font-semibold text-[var(--n3-text-light)]">Base consolidada para decisión</h2>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Mercado · Casas</p>
+            <h2 className="mt-1 text-base font-semibold text-[var(--n3-text-light)]">Cobertura canónica para decisión</h2>
           </div>
           <Link href="/dashboard/market" className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)]">
             Abrir mercado <ArrowRight size={14} />
@@ -186,7 +201,7 @@ export function CeoToday() {
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <div>
             <p className="text-2xl font-semibold tabular-nums">{n(operations.market.canonicalProperties)}</p>
-            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">registros canónicos</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">filas canónicas casa</p>
           </div>
           <div>
             <p className="text-2xl font-semibold tabular-nums text-[var(--n3-teal-soft)]">{operations.market.confirmedDuplicates == null ? '—' : `−${n(operations.market.confirmedDuplicates)}`}</p>
@@ -194,8 +209,16 @@ export function CeoToday() {
           </div>
           <div>
             <p className="text-2xl font-semibold tabular-nums">{n(operations.market.logicalProperties)}</p>
-            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">propiedades lógicas</p>
+            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">casas lógicas deduplicadas</p>
           </div>
+        </div>
+      </section>
+
+      <section className="mt-5 max-w-5xl border-t border-[var(--n3-line)] pt-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div><span className="text-xs text-[var(--n3-text-muted)]">Cobertura territorial</span><strong className="mt-1 block text-sm">{marketCoverage == null ? '—' : `${n(marketCoverage, 1)}%`}</strong></div>
+          <div><span className="text-xs text-[var(--n3-text-muted)]">Fuente comercial</span><strong className="mt-1 block text-sm">{snapshot.goalSource || 'Fuente verificada'}</strong></div>
+          <div><span className="text-xs text-[var(--n3-text-muted)]">Corte fuente</span><strong className="mt-1 block text-sm">{cutoff}</strong></div>
         </div>
       </section>
 
@@ -222,6 +245,13 @@ export function CeoToday() {
           <p className="text-sm font-medium">No hay pendientes prioritarios.</p>
         </section>
       )}
+
+      <DataStatusBar
+        cutoff={cutoff}
+        coverage={`Casas lógicas ${n(operations.market.logicalProperties)} · duplicados confirmados ${n(operations.market.confirmedDuplicates)}`}
+        issues={dataIssues}
+        status={dataStatus}
+      />
     </WorkspaceShell>
   )
 }

@@ -73,11 +73,13 @@ export default async function PropertiesPage() {
       eyebrow="Propiedades"
       title="Mi cartera"
       meta={staleAssignments ? `${staleAssignments} requieren verificar vigencia` : assignments.length ? 'Sin alertas de vigencia' : 'Sin asignaciones activas'}
+      actions={[{ label: 'Prospección', href: '/dashboard/properties/prospects' }]}
     />
 
     <MetricStrip items={[
       { label: 'Asignadas', value: n(assignments.length) },
       { label: 'Identidad confirmada', value: n(confirmedIdentity), tone: assignments.length && pendingIdentity === 0 ? 'success' : 'default' },
+      { label: 'Identidad pendiente', value: n(pendingIdentity), tone: pendingIdentity > 0 ? 'warning' : 'success' },
       { label: 'Revisar vigencia', value: n(staleAssignments), tone: staleAssignments > 0 ? 'warning' : 'success' },
     ]} />
 
@@ -96,6 +98,8 @@ export default async function PropertiesPage() {
           {assignments.map((assignment) => {
             const property = assignment.market_properties[0] ?? null
             const area = property?.useful_area_m2 ?? property?.built_area_m2 ?? null
+            const ageDays = property?.last_seen_at ? propertyPartnersCalendarDayAge(property.last_seen_at) : null
+            const freshness = ageDays === null ? 'Sin evidencia' : ageDays === 0 ? 'Hoy' : ageDays <= 7 ? `${ageDays} d` : `Revisar · ${ageDays} d`
             const content = <>
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -107,7 +111,8 @@ export default async function PropertiesPage() {
               <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                 <div><dt className="text-[var(--n3-text-muted)]">Asignación</dt><dd className="mt-1 text-[var(--n3-text-light)]">{assignmentRole(assignment.assignment_role)}</dd></div>
                 <div><dt className="text-[var(--n3-text-muted)]">Identidad</dt><dd className="mt-1 text-[var(--n3-text-light)]">{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</dd></div>
-                <div className="col-span-2"><dt className="text-[var(--n3-text-muted)]">Última evidencia</dt><dd className="mt-1 text-[var(--n3-text-light)]">{formatDate(property?.last_seen_at ?? null)}</dd></div>
+                <div><dt className="text-[var(--n3-text-muted)]">Vigencia</dt><dd className={`mt-1 ${ageDays === null || ageDays > 7 ? 'text-[#f0c96a]' : 'text-[var(--n3-text-light)]'}`}>{freshness}</dd></div>
+                <div><dt className="text-[var(--n3-text-muted)]">Corte</dt><dd className="mt-1 text-[var(--n3-text-light)]">{formatDate(property?.last_seen_at ?? null)}</dd></div>
               </dl>
             </>
             return property ? <Link key={assignment.id} href={`/dashboard/properties/${property.id}`} className="block min-h-11 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{content}</Link> : <article key={assignment.id} className="py-4">{content}</article>
@@ -120,10 +125,12 @@ export default async function PropertiesPage() {
             <tbody>{assignments.map((assignment) => {
               const property = assignment.market_properties[0] ?? null
               const area = property?.useful_area_m2 ?? property?.built_area_m2 ?? null
+              const ageDays = property?.last_seen_at ? propertyPartnersCalendarDayAge(property.last_seen_at) : null
+              const freshness = ageDays === null ? 'Sin evidencia' : ageDays === 0 ? 'Hoy' : ageDays <= 7 ? `${ageDays} d` : `Revisar · ${ageDays} d`
               return <tr key={assignment.id} className="border-t border-[var(--n3-line)]">
                 <td className="p-3"><p className="font-medium">{property?.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}{property?.bedrooms != null ? ` · ${property.bedrooms} dorm.` : ''}{area != null ? ` · ${area} m²` : ''}</p></td>
                 <td className="p-3 text-[var(--n3-text-muted)]">{assignmentRole(assignment.assignment_role)}</td>
-                <td className="p-3"><p>{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Evidencia {formatDate(property?.last_seen_at ?? null)}</p></td>
+                <td className="p-3"><p>{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</p><p className={`mt-1 text-xs ${ageDays === null || ageDays > 7 ? 'text-[#f0c96a]' : 'text-[var(--n3-text-muted)]'}`}>{freshness} · {formatDate(property?.last_seen_at ?? null)}</p></td>
                 <td className="p-3 text-right">{property ? <Link href={`/dashboard/properties/${property.id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--n3-teal-soft)]">Abrir propiedad</Link> : null}</td>
               </tr>
             })}</tbody>

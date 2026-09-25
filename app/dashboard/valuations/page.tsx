@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Plus, RefreshCw } from 'lucide-react'
-import { MetricStrip, WorkspaceField, WorkspaceHeader, WorkspaceSelect, WorkspaceShell } from '@/components/ui/workspace'
+import { DataStatusBar, MetricStrip, WorkspaceField, WorkspaceHeader, WorkspaceSelect, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 
 type ValuationCase = {
@@ -14,6 +14,10 @@ type ValuationCase = {
   property_type: string | null
   estimated_value_uf: number | null
   confidence: string | null
+  subject_property_id: string | null
+  condition_status: string | null
+  condition_score: number | null
+  warnings: string[] | null
   updated_at: string
 }
 
@@ -65,10 +69,14 @@ export default function ValuationRegistryPage() {
 
   const nextReview = cases.find((item) => item.status === 'review')
   const nextDraft = cases.find((item) => item.status === 'draft')
-  const actionCount = counts.review + counts.draft
+  const unlinkedCount = cases.filter((item) => !item.subject_property_id).length
+  const conditionBlockedCount = cases.filter((item) => item.condition_status === 'not_evaluable').length
+  const actionCount = counts.review + counts.draft + unlinkedCount + conditionBlockedCount
   const actionMetrics = [
     ...(counts.review > 0 ? [{ label: 'En revisión', value: counts.review, tone: 'warning' as const }] : []),
     ...(counts.draft > 0 ? [{ label: 'Borradores', value: counts.draft }] : []),
+    ...(unlinkedCount > 0 ? [{ label: 'Sin vínculo', value: unlinkedCount, tone: 'warning' as const }] : []),
+    ...(conditionBlockedCount > 0 ? [{ label: 'Estado no evaluable', value: conditionBlockedCount, tone: 'danger' as const }] : []),
     { label: 'Aprobadas', value: counts.approved },
     { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' as const : 'default' as const },
   ]
@@ -145,7 +153,7 @@ export default function ValuationRegistryPage() {
               <Link key={item.id} href={`/dashboard/valuations/${item.id}`} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-medium sm:truncate">{item.address || 'Sin dirección'}</p>
-                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}</p>
+                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}{!item.subject_property_id ? ' · sin vínculo operacional' : ''}{item.condition_status === 'not_evaluable' ? ' · estado no evaluable' : ''}</p>
                 </div>
                 <span className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{statusLabels[item.status] || item.status}</span>
                 <span className="text-sm font-medium tabular-nums">{item.estimated_value_uf == null ? '—' : `${money.format(item.estimated_value_uf)} UF`}</span>
@@ -156,6 +164,13 @@ export default function ValuationRegistryPage() {
           </div>
         </div>
       </details>
+
+      <DataStatusBar
+        cutoff={cases.length ? new Date(cases[0].updated_at).toLocaleString('es-CL') : '—'}
+        coverage={`${cases.length - unlinkedCount} de ${cases.length} expedientes vinculados a propiedad`}
+        issues={unlinkedCount + conditionBlockedCount}
+        status={unlinkedCount > 0 || conditionBlockedCount > 0 ? 'partial' : cases.length ? 'ready' : 'blocked'}
+      />
     </WorkspaceShell>
   )
 }

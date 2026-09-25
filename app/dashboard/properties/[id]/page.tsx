@@ -8,6 +8,9 @@ import { DecisionTrace } from '@/components/intelligence/decision-trace'
 import { OperationalState } from '@/components/ui/operational-state'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
+import { Property360InternalOperations, type Property360InternalOperationsData } from '@/components/market/property360-internal-operations'
+import { Property360LifecycleTimeline, type PropertyLifecycleEvent } from '@/components/market/property360-lifecycle-timeline'
+import { Property360ProspectWorkflow } from '@/components/market/property360-prospect-workflow'
 
 type Comparable = {
   propertyId: string
@@ -47,6 +50,7 @@ type Intelligence = {
     sourceReportedDomOrigin: string | null
     description: string | null
   }
+  internalOperations: Property360InternalOperationsData
   currentMarket: {
     status: string | null
     priceUf: number | null
@@ -67,6 +71,9 @@ type Intelligence = {
     distinctPriceCount: number
     observations: number
     transactions: number
+    timeline: PropertyLifecycleEvent[]
+    commercialClosureLinked: boolean
+    commercialClosureNote: string
   }
   comparables: {
     count: number
@@ -195,6 +202,19 @@ export default function PropertyIntelligencePage() {
     </section>
 
     {data.decisionTrace?.length ? <DecisionTrace items={data.decisionTrace} title="Trazabilidad de recomendación" /> : null}
+
+    <Property360ProspectWorkflow
+      propertyId={data.property.id}
+      valuationHref={`/dashboard/valuation?quickLookup=1&propertyId=${encodeURIComponent(data.property.id)}&propertyType=${encodeURIComponent(data.property.propertyType || 'Casa')}&address=${encodeURIComponent(data.property.address || '')}&neighborhood=${encodeURIComponent(data.property.neighborhood || '')}&usefulAreaM2=${data.property.areaM2 ?? ''}&builtAreaM2=${data.property.areaM2 ?? ''}&bedrooms=${data.property.bedrooms ?? ''}&bathrooms=${data.property.bathrooms ?? ''}&parkingSpaces=${data.property.parkingSpaces ?? ''}`}
+    />
+
+    <Property360InternalOperations data={data.internalOperations} />
+
+    <Property360LifecycleTimeline
+      events={data.lifecycle.timeline}
+      commercialClosureLinked={data.lifecycle.commercialClosureLinked}
+      commercialClosureNote={data.lifecycle.commercialClosureNote}
+    />
 
     <section className="mt-7">
       <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Tiempo y trazabilidad</h2></div>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { canUnlockV2Features } from '@/lib/v2-feature-access'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 import {
@@ -101,7 +102,7 @@ export async function GET() {
     const supabase = await createClient()
     let query = supabase
       .from('valuation_cases')
-      .select('id,status,valuation_date,subject_property_id,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,condition_status,condition_score,condition_version,version_number,created_at,updated_at')
+      .select('id,status,valuation_date,subject_property_id,address,neighborhood,property_type,estimated_value_uf,low_value_uf,high_value_uf,confidence,condition_status,condition_score,condition_version,version_number,warnings,created_at,updated_at')
       .eq('property_type', 'Casa')
       .order('updated_at', { ascending: false })
       .limit(50)
@@ -399,6 +400,52 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La valorización fue creada, pero no pudimos registrar su trazabilidad.', caseId: valuationCase.id }, { status: 422 })
     }
 
+    let prospectTraceLinked = false
+    if (valuationCase.subject_property_id) {
+      const auditDb = createServiceClient()
+      const { data: prospectLead, error: prospectLeadError } = await auditDb
+        .from('property_prospect_leads')
+        .select('id,status')
+        .eq('property_id', valuationCase.subject_property_id)
+        .maybeSingle()
+
+      if (!prospectLeadError && prospectLead) {
+        const terminal = ['won', 'lost', 'archived'].includes(String(prospectLead.status))
+        if (!terminal) {
+          const { error: prospectUpdateError } = await auditDb
+            .from('property_prospect_leads')
+            .update({
+              status: 'valuation',
+              updated_by: scope.profileId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', prospectLead.id)
+
+          const { error: prospectEventError } = await auditDb
+            .from('property_prospect_events')
+            .insert({
+              lead_id: prospectLead.id,
+              property_id: valuationCase.subject_property_id,
+              event_type: 'valuation_linked',
+              actor_id: scope.profileId,
+              from_status: prospectLead.status,
+              to_status: 'valuation',
+              metadata: {
+                valuationCaseId: valuationCase.id,
+                estimatedValueUf: result.adjustedValueUf,
+                methodologyVersion: result.methodologyVersion,
+              },
+            })
+
+          prospectTraceLinked = !prospectUpdateError && !prospectEventError
+          if (prospectUpdateError) logDatabaseFailure('PROSPECT_VALUATION_STATUS_LINK_FAILED', prospectUpdateError)
+          if (prospectEventError) logDatabaseFailure('PROSPECT_VALUATION_EVENT_LINK_FAILED', prospectEventError)
+        }
+      } else if (prospectLeadError) {
+        logDatabaseFailure('PROSPECT_VALUATION_LOOKUP_FAILED', prospectLeadError)
+      }
+    }
+
     return NextResponse.json({
       caseId: valuationCase.id,
       subjectPropertyId: valuationCase.subject_property_id,
@@ -407,6 +454,7 @@ export async function POST(request: Request) {
       conditionResult,
       status,
       assignmentVerified: Boolean(assignmentEvidence),
+      prospectTraceLinked,
       decision,
     }, { status: 201 })
   } catch (error) {
