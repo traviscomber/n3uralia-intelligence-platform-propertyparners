@@ -24,7 +24,7 @@ test('requesting full snapshot does not override insufficient coverage evidence'
     requestedFullSnapshot: true,
     pagesVisited: 3,
     discoveredListingUrls: 120,
-    validListingRows: 118,
+    validListingRows: 117,
     failedListingDetails: 0,
     discoveryExhausted: true,
     discoveryCapped: false,
