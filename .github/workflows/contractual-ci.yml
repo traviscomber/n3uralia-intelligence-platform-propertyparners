@@ -144,6 +144,9 @@ jobs:
       - name: Verify management report scheduling
         run: pnpm management:reports:verify
 
+      - name: Verify Property Partners reporting timezone boundary
+        run: node --import tsx --test tests/management-report-timezone.test.ts
+
       - name: Verify contractual report automation
         run: node --import tsx --test tests/management-contract-automation.test.ts
 
