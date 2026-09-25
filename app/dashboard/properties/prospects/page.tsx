@@ -15,6 +15,27 @@ type Overview = {
   }>
   leads:Array<any>
   candidates:Array<any>
+  territoryCoverage:Array<{
+    neighborhood:{id:string;name:string;micro_neighborhood?:string|null}
+    eligiblePublished:number
+    leads:number
+    unconverted:number
+    director:{director_key:string;full_name:string;office_name:string}|null
+    representativePropertyId:string|null
+    needsDirector:boolean
+    directorDriftLeads:number
+  }>
+  territorySummary:{
+    neighborhoods:number
+    mappedNeighborhoods:number
+    unmappedNeighborhoods:number
+    coveragePct:number|null
+    eligiblePublished:number
+    uncoveredPublished:number
+    directorDriftLeads:number
+    candidateUniverseTruncated:boolean
+    candidateUniverseCount:number
+  }
   generatedAt:string
 }
 
@@ -57,6 +78,30 @@ export default function ProspectManagementPage(){
       {label:'Con valorización',value:data.summary.valuations},
       {label:'Ganados',value:data.summary.won,tone:data.summary.won?'success':'default'},
     ]}/>
+
+    <section className="mt-7">
+      <div className="flex flex-col gap-3 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
+        <div><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cobertura territorial</p><h2 className="mt-1 text-lg font-medium">Barrios con casas publicadas elegibles</h2></div>
+        <span className="text-xs text-[var(--n3-text-muted)]">{pct(data.territorySummary.coveragePct)} de barrios con director/a</span>
+      </div>
+      <MetricStrip items={[
+        {label:'Casas elegibles',value:data.territorySummary.eligiblePublished},
+        {label:'Barrios cubiertos',value:`${data.territorySummary.mappedNeighborhoods}/${data.territorySummary.neighborhoods}`},
+        {label:'Casas sin director territorial',value:data.territorySummary.uncoveredPublished,tone:data.territorySummary.uncoveredPublished?'warning':'success'},
+        {label:'Leads con desalineación',value:data.territorySummary.directorDriftLeads,tone:data.territorySummary.directorDriftLeads?'warning':'success'},
+      ]}/>
+      {data.territorySummary.candidateUniverseTruncated ? <p className="mt-3 border border-[#a77a22] px-4 py-3 text-xs text-[#f6c453]">La cobertura está limitada a {data.territorySummary.candidateUniverseCount} casas del universo operativo. No se interpreta como cobertura completa.</p> : null}
+      <div className="mt-3 divide-y divide-[var(--n3-line)]">
+        {data.territoryCoverage.map(row=><div key={row.neighborhood.id} className="grid gap-2 py-4 sm:grid-cols-[minmax(0,1.4fr)_120px_120px_200px_auto] sm:items-center">
+          <div><strong className="text-sm">{row.neighborhood.name}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.neighborhood.micro_neighborhood || 'Barrio contractual'}</p></div>
+          <div><span className="text-xs text-[var(--n3-text-muted)]">Publicadas</span><p className="mt-1">{row.eligiblePublished}</p></div>
+          <div><span className="text-xs text-[var(--n3-text-muted)]">Sin convertir</span><p className="mt-1">{row.unconverted}</p></div>
+          <div><span className="text-xs text-[var(--n3-text-muted)]">Director/a</span><p className={`mt-1 ${row.needsDirector?'text-[#f0c96a]':''}`}>{row.director?.full_name || 'Sin asignar'}</p>{row.directorDriftLeads?<p className="mt-1 text-[11px] text-[#f0c96a]">{row.directorDriftLeads} lead(s) no coinciden con el territorio actual</p>:null}</div>
+          <div>{row.representativePropertyId?<Link href={`/dashboard/properties/${row.representativePropertyId}`} className="inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs font-semibold hover:border-[#d7332b]">{row.needsDirector?'Asignar barrio':'Abrir ficha 360'}</Link>:null}</div>
+        </div>)}
+        {!data.territoryCoverage.length?<p className="py-6 text-sm text-[var(--n3-text-muted)]">No hay casas publicadas elegibles con barrio canónico dentro del alcance actual.</p>:null}
+      </div>
+    </section>
 
     <section className="mt-7">
       <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Rendimiento</p><h2 className="mt-1 text-lg font-medium">Por director/a</h2></div>
