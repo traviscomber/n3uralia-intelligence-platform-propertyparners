@@ -104,7 +104,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           ? supabase
               .from('property_assignment_history')
               .select('id,assignment_id,property_id,assigned_to,action,created_at')
-              .eq('property_id', subjectLegacyId)
+              .eq('property_id', property.id)
               .order('created_at', { ascending: false })
               .limit(30)
           : Promise.resolve({ data: [], error: null }),
