@@ -59,6 +59,20 @@ export async function PartnerPerformanceSummary() {
   const salesCompliance = sales !== null && salesTarget ? (sales / salesTarget) * 100 : null
   const maySales = partner.sales?.salesCount?.['2026-05'] ?? null
   const momSales = sales != null && maySales != null && maySales !== 0 ? ((sales / maySales) - 1) * 100 : null
+  const peers = canonical.partners
+    .map((item) => ({ item, sales: Number((item as unknown as PartnerMetricView).salesSummary?.currentSalesCount ?? NaN) }))
+    .filter((entry) => Number.isFinite(entry.sales))
+    .sort((a,b) => b.sales - a.sales)
+  let previousSales: number | null = null
+  let currentRank = 0
+  const ranking = new Map<string, number>()
+  peers.forEach((entry, index) => {
+    if (previousSales === null || entry.sales !== previousSales) currentRank = index + 1
+    previousSales = entry.sales
+    ranking.set(normalize((entry.item as unknown as {name?:string}).name), currentRank)
+  })
+  const personalRank = ranking.get(profileName) ?? null
+  const personalProductivity = sales
   const cards = [
     ['Cierres junio', number(sales), `Meta: ${number(salesTarget)} · cumplimiento ${variation(salesCompliance)}`],
     ['MoM · cierres', variation(momSales), `Mayo ${number(maySales)} → junio ${number(sales)}`],
@@ -95,9 +109,9 @@ export async function PartnerPerformanceSummary() {
     <section>
       <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cobertura contractual personal</p><h2 className="mt-1 text-lg font-semibold">Lo disponible y lo que requiere definición PP</h2></div>
       <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Captaciones</p><strong className="mt-2 block text-xl">Sin dato oficial</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">No se sustituye por stock ni variación neta. Falta fuente atribuible por partner.</p></article>
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Productividad</p><strong className="mt-2 block text-xl">Pendiente definición</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Falta fórmula y ponderaciones oficiales de Property Partners.</p></article>
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Ranking personal</p><strong className="mt-2 block text-xl">Pendiente regla</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">No se publica posición oficial sin criterio, desempate y vigencia aprobados.</p></article>
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Captaciones</p><strong className="mt-2 block text-xl">Según fuente del período</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Los Excel canónicos permiten atribución por agente. Si esta ficha no trae el dato, se mantiene n/d y no se reemplaza por stock.</p></article>
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Productividad personal</p><strong className="mt-2 block text-xl">{number(personalProductivity)}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Cierres acreditados del período por ejecutiva; la unidad personal equivale a sus cierres acreditados.</p></article>
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Ranking de cierres</p><strong className="mt-2 block text-xl">{personalRank == null ? 'n/d' : '#' + personalRank}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Ordenado por cierres canónicos del mismo corte; los empates comparten posición.</p></article>
         <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Alertas</p><strong className="mt-2 block text-xl">Operativas</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Tareas y alertas personales están disponibles en el detalle operativo con alcance RLS.</p></article>
       </div>
     </section>
