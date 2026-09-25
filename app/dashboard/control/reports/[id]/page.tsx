@@ -54,9 +54,19 @@ type CanonicalComparisons = {
   yoy?: {
     status?: string
     period?: string
+    source?: string | null
+    dimension?: string | null
     closures?: ComparisonMetric
-    creditedUf?: ComparisonMetric
+    salesUf?: ComparisonMetric
   }
+  operationalYoyYtd?: {
+    status?: string
+    periodStart?: string
+    periodEnd?: string
+    source?: string | null
+    closures?: ComparisonMetric
+    salesUf?: ComparisonMetric
+  } | null
 }
 
 type ReportSnapshot = {
@@ -154,6 +164,8 @@ export default function PrintableManagementReportPage() {
   const momClosures = comparisons?.mom?.metrics?.closures
   const momDelta = momClosures?.delta?.value
   const yoyClosures = comparisons?.yoy?.closures
+  const yoySalesUf = comparisons?.yoy?.salesUf
+  const yoyYtd = comparisons?.operationalYoyYtd
   const creditedUf = company.volumenUfAcreditado ?? company.volumenUfBruto
   const periodLabel = typeof report.snapshot.period === 'object'
     ? report.snapshot.period?.label ?? report.period_start.slice(0, 7)
@@ -213,10 +225,29 @@ export default function PrintableManagementReportPage() {
             <p className="mt-2 text-xs text-neutral-600">{format(ytd?.closures)} / {format(ytd?.target)} cierres</p>
           </div>
         </div>
-        <div className="mt-3 border-l-4 border-[#d7332b] bg-neutral-100 px-4 py-3 text-sm">
-          {comparisons?.yoy?.status === 'exact'
-            ? <>YoY {comparisons.yoy.period}: <strong>{signed(yoyClosures?.delta?.value)}</strong> en cierres acreditados ({format(yoyClosures?.previous)} → {format(yoyClosures?.current)}).</>
-            : <>YoY mensual: la fuente CRM 2025 está verificada a nivel anual, pero el mes equivalente aún no está canonicalizado fila-a-fila. No se infiere un YoY mensual desde el agregado anual.</>}
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <div className="border-l-4 border-[#d7332b] bg-neutral-100 px-4 py-4 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">YoY mensual · operación corporativa</p>
+            {comparisons?.yoy?.status === 'exact_operational'
+              ? <div className="mt-2">
+                  <p className="text-2xl font-semibold">{signed(yoyClosures?.delta?.value)} <span className="text-sm font-normal text-neutral-500">cierres</span></p>
+                  <p className="mt-1 text-neutral-700">{format(yoyClosures?.previous)} → {format(yoyClosures?.current)} vs {comparisons.yoy.period}</p>
+                  <p className="mt-1 text-neutral-600">{signed(yoySalesUf?.delta?.value)} UF · {format(yoySalesUf?.previous,0)} → {format(yoySalesUf?.current,0)} UF</p>
+                  <p className="mt-2 text-xs text-neutral-500">Comparación operacional. El crédito de gestión 2025 no existe como dimensión histórica equivalente.</p>
+                </div>
+              : <p className="mt-2 text-neutral-600">Sin período comparable canonicalizado. No se infiere YoY desde agregados incompatibles.</p>}
+          </div>
+          <div className="border-l-4 border-black bg-neutral-100 px-4 py-4 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">YoY acumulado · operación corporativa</p>
+            {yoyYtd?.status === 'exact_operational'
+              ? <div className="mt-2">
+                  <p className="text-2xl font-semibold">{signed(yoyYtd.closures?.delta?.value)} <span className="text-sm font-normal text-neutral-500">cierres YTD</span></p>
+                  <p className="mt-1 text-neutral-700">{format(yoyYtd.closures?.previous)} → {format(yoyYtd.closures?.current)} cierres</p>
+                  <p className="mt-1 text-neutral-600">{signed(yoyYtd.salesUf?.delta?.value)} UF · {format(yoyYtd.salesUf?.previous,0)} → {format(yoyYtd.salesUf?.current,0)} UF</p>
+                  <p className="mt-2 text-xs text-neutral-500">Mismo corte acumulado del año anterior.</p>
+                </div>
+              : <p className="mt-2 text-neutral-600">Sin acumulado comparable canonicalizado para el período.</p>}
+          </div>
         </div>
       </section>
 
