@@ -83,7 +83,9 @@ function filenamePart(value: string) {
 
 function reportTypeLabel(reportType: string) {
   const labels: Record<string, string> = {
+    management: 'Reporte de gestión',
     executive: 'Reporte ejecutivo',
+    director: 'Reporte de dirección',
     office: 'Reporte de oficina',
     partner: 'Reporte individual',
     monthly: 'Reporte mensual',

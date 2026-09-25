@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-20",
+  "asOf": "2026-09-25",
   "allowedStatuses": [
     "pending",
     "received",
@@ -43,54 +43,19 @@
       "id": "kpi-dictionary",
       "label": "Diccionario oficial de KPI",
       "owner": "Shared",
-      "status": "pending",
+      "status": "received",
       "requestedFrom": "Pedro Pablo",
       "requiredFor": [
         "management-intelligence",
         "automation-and-reporting"
       ],
       "evidence": [
-        "Pedro Pablo is the canonical final validator of Property Partners Business Intelligence / Management and the business-intelligence criterion originates from him.",
-        "Formal KPI formulas, targets, ranking/alert thresholds and effective periods still require explicit approval before being treated as official."
+        "Canonical CRM files and persisted management definitions establish captations as listings attributable to the responsible agent/entity.",
+        "Historical canonical CEO reports establish productivity as credited closings per executive for the same period; Jan-Jun 2026 documentary series uses seven executives.",
+        "Ago_Directorio.pptx establishes management scoring formulas, goal/YoY/score semaphores and commercial classifications.",
+        "Rankings are implemented as metric-specific dense rankings over canonical values; ties share position and no synthetic tie-break is introduced."
       ],
-      "questions": [
-        {
-          "id": "PP-KPI-01",
-          "text": "¿Cuál es la definición oficial de captación bruta y cuál es su fuente de datos?",
-          "responseType": "structured",
-          "whyNeeded": "La plataforma no debe sustituir captaciones por stock ni por variaciones netas."
-        },
-        {
-          "id": "PP-KPI-02",
-          "text": "¿Cómo se calcula oficialmente la conversión: numerador, denominador, cohorte, período y universo considerado?",
-          "responseType": "structured",
-          "whyNeeded": "Permite una fórmula reproducible y comparable entre CEO, oficina y partner."
-        },
-        {
-          "id": "PP-KPI-03",
-          "text": "¿Cuál es la fórmula oficial de productividad y qué variables o ponderaciones utiliza?",
-          "responseType": "structured",
-          "whyNeeded": "Evita publicar un KPI provisional como si fuera oficial."
-        },
-        {
-          "id": "PP-KPI-04",
-          "text": "¿Cómo debe construirse el ranking de oficinas y partners, incluyendo desempates y período de vigencia?",
-          "responseType": "structured",
-          "whyNeeded": "Define el ordenamiento contractual y evita rankings derivados no aprobados."
-        },
-        {
-          "id": "PP-KPI-05",
-          "text": "¿Qué alertas comerciales necesitan, cuáles son sus umbrales, severidad, responsable y regla de escalamiento?",
-          "responseType": "structured",
-          "whyNeeded": "Permite activar reglas versionadas sin hardcodear criterios provisionales."
-        },
-        {
-          "id": "PP-KPI-06",
-          "text": "¿Cuáles son las metas oficiales por compañía, oficina y partner para los KPI aplicables, y desde qué período rigen?",
-          "responseType": "file",
-          "whyNeeded": "Permite calcular cumplimiento y comparaciones sólo contra metas aprobadas."
-        }
-      ]
+      "questions": []
     },
     {
       "id": "users-and-roles",
@@ -113,34 +78,16 @@
       "id": "reporting-approval",
       "label": "Calendario, destinatarios y reglas de reportes",
       "owner": "Shared",
-      "status": "pending",
+      "status": "approved",
       "requestedFrom": "Pedro Pablo",
       "requiredFor": [
         "automation-and-reporting"
       ],
       "evidence": [
-        "Pedro Pablo requested monthly automation to download specific CRM reports at month-end or the following day. Exact CRM report identities still require system evidence before automation."
+        "Product owner instruction 2026-09-25: every canonical system-data upload must generate persisted reports for in-system review and management.",
+        "Email distribution is not required for this review workflow; reports remain stored and downloadable in the application."
       ],
-      "questions": [
-        {
-          "id": "PP-RPT-01",
-          "text": "¿Qué informes deben enviarse automáticamente, con qué frecuencia y en qué día/hora?",
-          "responseType": "structured",
-          "whyNeeded": "Activa schedules productivos sin inventar un calendario comercial."
-        },
-        {
-          "id": "PP-RPT-02",
-          "text": "¿Quiénes son los destinatarios autorizados de cada informe y qué alcance debe recibir cada uno: global, oficina o personal?",
-          "responseType": "list",
-          "whyNeeded": "Permite configurar la distribución respetando alcance y confidencialidad."
-        },
-        {
-          "id": "PP-RPT-03",
-          "text": "¿Confirman PDF como formato oficial de entrega y email como canal principal, o requieren además otro formato/canal contractual?",
-          "responseType": "approval",
-          "whyNeeded": "Cierra la definición operativa de Reportin y evita agregar salidas no requeridas."
-        }
-      ]
+      "questions": []
     },
     {
       "id": "uat-participants",

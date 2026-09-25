@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getManagementReportDeliveryConfiguration } from '@/lib/management-report-delivery'
 
-const reportTypes = new Set(['executive', 'office', 'partner', 'monthly', 'cumulative'])
+const reportTypes = new Set(['management', 'executive', 'director', 'office', 'partner', 'monthly', 'cumulative'])
 const allowedRoles = new Set(['admin', 'ceo', 'director', 'subdirector'])
 
 function validDate(value: unknown) {

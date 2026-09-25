@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-20",
+  "asOf": "2026-09-25",
   "status": "assembled",
   "allowedStatuses": [
     "draft",
@@ -160,6 +160,16 @@
       "section": "security-and-custody",
       "artifact": "docs/SUPABASE_PRODUCTION_SCHEMA_BASELINE_2026-09-20.md",
       "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/canonical/CONTRACTUAL_HANDOVER_READINESS_2026-09-24.md",
+      "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/canonical/CONTRACTUAL_CLOSEOUT_EXECUTION_2026-09-25.md",
+      "status": "included"
     }
   ],
   "excludedPatterns": [
@@ -189,9 +199,11 @@
     "clientTransferAuthorized": false,
     "notes": [
       "Documentation and package inventory are complete by required section.",
-      "docs/FINAL_CLOSEOUT_2026-09-20.md is the current executive closeout record.",
-      "Final delivery artifact/checksum remains intentionally deferred until the accepted commit and authorized receiver are fixed.",
-      "Restore drill remains pending in issue #217; normal CI success is not restore evidence."
+      "docs/canonical/CONTRACTUAL_CLOSEOUT_EXECUTION_2026-09-25.md is the current technical closeout execution record.",
+      "KPI evidence and in-system report generation rules were reconciled against canonical Property Partners sources.",
+      "Final delivery artifact/checksum remains intentionally deferred until UAT fixes the accepted commit and an authorized receiver is identified.",
+      "Training remains not scheduled and cannot be marked complete without attendance evidence or formal waiver.",
+      "Restore drill remains pending and must run in an isolated environment; CI/build success is not restore evidence."
     ]
   }
 }

@@ -30,6 +30,9 @@ type PartnerMetricView = {
     cumulativeSalesUf: number | null
     currentTargetSalesCount?: number | null
   }
+  sales?: {
+    salesCount?: Record<string, number | null>
+  }
   scores: { followUp: number | null; conversion: number | null }
 }
 
@@ -54,8 +57,26 @@ export async function PartnerPerformanceSummary() {
   const sales = partner.salesSummary.currentSalesCount
   const salesTarget = partner.salesSummary.currentTargetSalesCount ?? null
   const salesCompliance = sales !== null && salesTarget ? (sales / salesTarget) * 100 : null
+  const maySales = partner.sales?.salesCount?.['2026-05'] ?? null
+  const momSales = sales != null && maySales != null && maySales !== 0 ? ((sales / maySales) - 1) * 100 : null
+  const peers = canonical.partners
+    .map((item) => ({ item, sales: Number((item as unknown as PartnerMetricView).salesSummary?.currentSalesCount ?? NaN) }))
+    .filter((entry) => Number.isFinite(entry.sales))
+    .sort((a,b) => b.sales - a.sales)
+  let previousSales: number | null = null
+  let currentRank = 0
+  const ranking = new Map<string, number>()
+  peers.forEach((entry, index) => {
+    if (previousSales === null || entry.sales !== previousSales) currentRank = index + 1
+    previousSales = entry.sales
+    ranking.set(normalize((entry.item as unknown as {name?:string}).name), currentRank)
+  })
+  const personalRank = ranking.get(profileName) ?? null
+  const personalProductivity = sales
   const cards = [
     ['Cierres junio', number(sales), `Meta: ${number(salesTarget)} · cumplimiento ${variation(salesCompliance)}`],
+    ['MoM · cierres', variation(momSales), `Mayo ${number(maySales)} → junio ${number(sales)}`],
+    ['YoY · cierres', variation(annual?.salesCountYoy), annual?.comparisonPeriod ? `Base ${annual.comparisonPeriod}` : 'Sin período comparable explícito'],
     ['Venta junio', number(partner.salesSummary.currentSalesUf, ' UF'), `YoY ${variation(annual?.salesUfYoy)}`],
     ['Cierres acumulados', number(partner.salesSummary.cumulativeSalesCount), `YoY ${variation(annual?.cumulativeSalesCountYoy)}`],
     ['Venta acumulada', number(partner.salesSummary.cumulativeSalesUf, ' UF'), `YoY ${variation(annual?.cumulativeSalesUfYoy)}`],
@@ -85,6 +106,15 @@ export async function PartnerPerformanceSummary() {
   return <section className="mx-auto mt-8 max-w-7xl space-y-5">
     <div className="border-b border-[var(--n3-line)] pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Lectura contractual personal</p><h1 className="mt-2 text-2xl font-semibold">Metas, evolución y calidad comercial</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Una sola lectura personal con valores, metas y comparaciones del período. No mezcla métricas de otras ejecutivas.</p></div>
     <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-3">{cards.map(([label, value, detail]) => <article key={label} className="bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-2xl font-semibold">{value}</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{detail}</p></article>)}</div>
+    <section>
+      <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cobertura contractual personal</p><h2 className="mt-1 text-lg font-semibold">Lo disponible y lo que requiere definición PP</h2></div>
+      <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Captaciones</p><strong className="mt-2 block text-xl">Según fuente del período</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Los Excel canónicos permiten atribución por agente. Si esta ficha no trae el dato, se mantiene n/d y no se reemplaza por stock.</p></article>
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Productividad personal</p><strong className="mt-2 block text-xl">{number(personalProductivity)}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Cierres acreditados del período por ejecutiva; la unidad personal equivale a sus cierres acreditados.</p></article>
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Ranking de cierres</p><strong className="mt-2 block text-xl">{personalRank == null ? 'n/d' : '#' + personalRank}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Ordenado por cierres canónicos del mismo corte; los empates comparten posición.</p></article>
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Alertas</p><strong className="mt-2 block text-xl">Operativas</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Tareas y alertas personales están disponibles en el detalle operativo con alcance RLS.</p></article>
+      </div>
+    </section>
     <details className="border-t border-[var(--n3-line)] pt-4">
       <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver trazabilidad y fuente</summary>
       <div className="mt-5 space-y-4">

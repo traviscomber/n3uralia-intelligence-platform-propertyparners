@@ -4,7 +4,7 @@
   "commit": "31bb6c462a0aec51c500c73eef00deab3d0ee6ca",
   "deployment": "https://ppartnersgroup.app",
   "deploymentId": "dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp",
-  "asOf": "2026-09-20",
+  "asOf": "2026-09-25",
   "checks": {
     "build": "passed",
     "securityBoundaries": "passed",
@@ -17,7 +17,9 @@
     "reportDeliveryWorker": "passed"
   },
   "criticalFindings": [],
-  "highFindings": [],
+  "highFindings": [
+    "Isolated Supabase restore drill on 2026-09-25 failed with MIGRATIONS_FAILED because the recorded production migration ledger is not replayable from an empty database in historical order."
+  ],
   "evidence": [
     "Production baseline 31bb6c462a0aec51c500c73eef00deab3d0ee6ca is served by ppartnersgroup.app through Vercel deployment dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp READY on 2026-09-20.",
     "PR #219 passed Contractual modules CI, N3uralia IP Boundaries, Supabase migration-history guard and Vercel preview before merge.",
@@ -29,6 +31,8 @@
     "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md",
     "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md",
     "docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md",
-    "Backup/recovery remains pending because no isolated restore drill has been executed; this is tracked in issue #217 and is not inferred from rollback documentation."
+    "Restore drill attempted 2026-09-25 on isolated Supabase branch restore-drill-2026-09-25; branch reached MIGRATIONS_FAILED before application smoke. Production was untouched and the failed branch was deleted after evidence capture.",
+    "Root evidence: production migration 20260711005604 alters/seeds neighborhoods and market_data before later bootstrap/history entries establish the dependent base objects; subsequent early migrations also depend on vitacura_prc_zones and properties.",
+    "Backup/recovery remains pending until a clean baseline/reconstruction strategy is implemented and a second isolated restore drill passes."
   ]
 }

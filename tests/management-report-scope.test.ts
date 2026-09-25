@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import {
   managementReportEntityScopes,
   metricsForManagementReportScope,
+  managementReportTypeForEntity,
 } from '../lib/management-report-scope'
 
 test('global management leaders receive global plus entity report scopes', () => {
@@ -24,4 +25,14 @@ test('entity report snapshots include only metrics from that entity', () => {
   ]
   assert.deepEqual(metricsForManagementReportScope(metrics, 'a').map((row) => row.id), ['1', '3'])
   assert.deepEqual(metricsForManagementReportScope(metrics, null).map((row) => row.id), ['1', '2', '3'])
+})
+
+
+test('canonical uploads map report scope to persistent review report types', () => {
+  assert.equal(managementReportTypeForEntity(null, true), 'monthly')
+  assert.equal(managementReportTypeForEntity('office'), 'office')
+  assert.equal(managementReportTypeForEntity('branch'), 'office')
+  assert.equal(managementReportTypeForEntity('partner'), 'partner')
+  assert.equal(managementReportTypeForEntity('seller'), 'partner')
+  assert.equal(managementReportTypeForEntity('company'), 'executive')
 })

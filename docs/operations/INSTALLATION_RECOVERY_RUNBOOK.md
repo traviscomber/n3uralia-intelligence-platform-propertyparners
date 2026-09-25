@@ -74,13 +74,22 @@ La aplicación local queda disponible en `http://localhost:3000`.
 
 ### 5.1 Proyecto nuevo
 
-1. Crear un proyecto Supabase en la organización autorizada.
-2. Guardar URL, anon key y service role key en el gestor de secretos.
-3. Instalar o ejecutar Supabase CLI.
-4. Vincular el proyecto.
-5. Aplicar las migraciones en el orden lexicográfico de `supabase/migrations`.
+> Estado 25-09-2026: el replay histórico completo **no es un procedimiento válido** para este proyecto.
 
-Ejemplo:
+El restore drill aislado `restore-drill-2026-09-25` falló con `MIGRATIONS_FAILED`. El historial Supabase productivo contiene dependencias históricas fuera de orden: por ejemplo, `20260711005604 add_neighborhood_fields_seed_vitacura_v2` altera y siembra `neighborhoods` / `market_data` antes de que el historial limpio pueda garantizar esos objetos.
+
+Por lo tanto:
+
+1. no ejecutar `supabase db push` contra un proyecto vacío usando toda la historia legacy;
+2. no editar ni reordenar migraciones ya aplicadas en producción;
+3. generar y versionar un **baseline limpio de reconstrucción** equivalente al fingerprint productivo;
+4. aplicar luego únicamente las migraciones posteriores al baseline;
+5. probar ese baseline en un Supabase Branch/proyecto aislado;
+6. verificar fingerprint, RLS, funciones privilegiadas y smoke de aplicación antes de declararlo recuperable.
+
+Hasta que exista y pase ese baseline, la reconstrucción desde cero permanece bloqueada y `backupRecovery` no puede pasar a `passed`.
+
+El flujo CLI siguiente queda reservado para el baseline reparado, no para la historia legacy:
 
 ```bash
 npx supabase@latest login
