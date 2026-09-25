@@ -97,16 +97,25 @@ export function CeoDashboardCommand() {
     const realized = metric(point, 'realized_visits')
     const stock = metric(point, 'stock')
     const suspended = metric(point, 'suspended_listings')
+    const managementScore = metric(point, 'management_score')
+    const portfolioScore = metric(point, 'portfolio_score')
     const followUp = metric(point, 'follow_up_score')
+    const conversionScore = metric(point, 'conversion')
     const credited = metric(point, 'management_credited_sales')
     const creditedUf = metric(point, 'management_credited_sales_uf')
     const visitRate = ratio(realized, scheduled)
     const staleRatio = ratio(stale90, active)
     const suspendedRatio = ratio(suspended, stock)
-    const hasRiskEvidence = staleRatio != null || visitRate != null || suspendedRatio != null || followUp != null
+    const hasRiskEvidence = staleRatio != null || visitRate != null || suspendedRatio != null || portfolioScore != null || followUp != null || conversionScore != null
+    const scoreDimensions = [
+      { key: 'Cartera', value: portfolioScore },
+      { key: 'Seguimiento', value: followUp },
+      { key: 'Conversión', value: conversionScore },
+    ].filter((item): item is { key: string; value: number } => item.value != null)
+    const weakest = [...scoreDimensions].sort((a, b) => a.value - b.value)[0] ?? null
 
     let risk: Risk = 'unknown'
-    let action = 'Revisar evidencia'
+    let action = weakest ? `Revisar ${weakest.key.toLowerCase()}` : 'Revisar evidencia'
     let riskScore = -1
 
     if (staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical) { risk = 'high'; action = 'Intervenir backlog'; riskScore = 100 + staleRatio }
@@ -231,7 +240,7 @@ export function CeoDashboardCommand() {
 
     <section className="mt-5">
       <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Oficinas</h2>
-      <div className="mt-2 overflow-x-auto border-t border-[var(--n3-line)]"><table className="w-full min-w-[760px] border-collapse text-left"><thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.11em] text-[var(--n3-text-muted)]"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-3 py-3 font-medium">Resultado</th><th className="px-3 py-3 font-medium">Pipeline</th><th className="px-3 py-3 font-medium">Ejecución</th><th className="px-3 py-3 font-medium">Riesgo</th><th className="px-3 py-3 text-right font-medium">Acción</th></tr></thead><tbody>{offices.map((item) => <tr key={item.id} className="border-b border-[var(--n3-line)] text-sm"><td className="py-3 pr-4 font-medium">{item.name}</td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{item.sales == null ? '—' : `${n(item.sales, Number.isInteger(item.sales) ? 0 : 1)} cierres corporativos`}</span><span className="block text-xs text-[var(--n3-text-muted)]">{uf(item.salesUf)}</span>{item.credited != null ? <span className="mt-1 block text-xs text-[var(--n3-text-muted)]">{n(item.credited, Number.isInteger(item.credited) ? 0 : 1)} crédito gestión{item.creditedUf != null ? ` · ${uf(item.creditedUf)}` : ''}</span> : null}</td><td className="px-3 py-3 tabular-nums"><span className="block">{item.stale90 == null ? (item.active == null ? '—' : `${n(item.active)} activos`) : `${n(item.stale90)} >90d`}</span>{item.staleRatio != null ? <span className="block text-xs text-[var(--n3-text-muted)]">{pct(item.staleRatio)} del activo</span> : null}</td><td className="px-3 py-3 tabular-nums"><span className="block">{item.visitRate == null ? '—' : pct(item.visitRate)}</span>{item.scheduled != null && item.realized != null ? <span className="block text-xs text-[var(--n3-text-muted)]">{n(item.realized)} / {n(item.scheduled)} visitas</span> : null}</td><td className={`px-3 py-3 font-semibold ${riskClass(item.risk)}`}>{riskLabel(item.risk)}</td><td className="px-3 py-3 text-right"><Link href={`/dashboard/control/offices/${officeSlug(item.name)}`} className="inline-flex items-center gap-1 font-medium hover:text-[var(--n3-text-light)]">Office 360<ArrowRight size={13} /></Link></td></tr>)}</tbody></table></div>
+      <div className="mt-2 overflow-x-auto border-t border-[var(--n3-line)]"><table className="w-full min-w-[900px] border-collapse text-left"><thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.11em] text-[var(--n3-text-muted)]"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-3 py-3 font-medium">Resultado</th><th className="px-3 py-3 font-medium">Cartera</th><th className="px-3 py-3 font-medium">Seguimiento</th><th className="px-3 py-3 font-medium">Conversión</th><th className="px-3 py-3 font-medium">Principal brecha</th><th className="px-3 py-3 text-right font-medium">Detalle</th></tr></thead><tbody>{offices.map((item) => <tr key={item.id} className="border-b border-[var(--n3-line)] text-sm"><td className="py-3 pr-4"><span className="block font-medium">{item.name}</span><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">Gestión {n(item.managementScore,1)}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{item.credited == null ? (item.sales == null ? '—' : n(item.sales,1)) : n(item.credited,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.creditedUf != null ? uf(item.creditedUf) : uf(item.salesUf)}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.portfolioScore,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.stock == null ? 'Sin stock' : `${n(item.stock)} propiedades`}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.followUp,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.active == null ? '—' : `${n(item.active)} leads activos`}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.conversionScore,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.visitRate == null ? '—' : `${pct(item.visitRate)} visitas`}</span></td><td className="px-3 py-3"><span className={`font-semibold ${item.weakest?.value != null && item.weakest.value < 70 ? 'text-[#f0c96a]' : riskClass(item.risk)}`}>{item.weakest ? item.weakest.key : riskLabel(item.risk)}</span><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">{item.weakest ? `${n(item.weakest.value,1)} pts` : item.action}</span></td><td className="px-3 py-3 text-right"><Link href={`/dashboard/control/offices/${officeSlug(item.name)}`} className="inline-flex items-center gap-1 font-medium hover:text-[var(--n3-text-light)]">Office 360<ArrowRight size={13} /></Link></td></tr>)}</tbody></table></div>
     </section>
 
     <DataStatusBar cutoff={freshness} coverage={coverageLabel} issues={operations.errors.length + dataLayerIssues + (approvedMetricCount === 0 ? 1 : 0)} status={dataStatus} />
