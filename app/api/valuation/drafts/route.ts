@@ -224,6 +224,22 @@ export async function POST(request: Request) {
       }
       if (!linkedProperty) return NextResponse.json({ error: 'La propiedad vinculada no existe.' }, { status: 400 })
 
+      if (scope.scope === 'self' && !verifiedAssignment) {
+        const { data: selfAssignment, error: selfAssignmentError } = await authorizationDb
+          .from('property_assignments')
+          .select('id,property_id,assigned_to,status,assignment_role,assigned_at')
+          .eq('property_id', resolvedSourcePropertyId)
+          .eq('assigned_to', scope.profileId)
+          .eq('status', 'active')
+          .limit(1)
+          .maybeSingle()
+        if (selfAssignmentError) {
+          console.error('VALUATION_DRAFT_SELF_ASSIGNMENT_LOOKUP_FAILED', { code: selfAssignmentError.code ?? 'UNKNOWN' })
+          return NextResponse.json({ error: 'No pudimos verificar la asignación individual.' }, { status: 422 })
+        }
+        verifiedAssignment = selfAssignment ?? null
+      }
+
       let territoryOffice: string | null = null
       if (scope.scope === 'office' && linkedProperty.neighborhood_id) {
         const { data: territory, error: territoryError } = await authorizationDb
