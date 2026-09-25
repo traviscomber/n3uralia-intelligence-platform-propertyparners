@@ -58,9 +58,7 @@ export async function GET() {
     propertyIds.length
       ? db.from('market_properties').select('id,normalized_address,property_type,neighborhood_id,identity_status,last_seen_at').in('id', propertyIds)
       : Promise.resolve({ data: [], error: null }),
-    neighborhoodIds.length
-      ? db.from('market_neighborhoods').select('id,name,micro_neighborhood,assignment_status').in('id', neighborhoodIds)
-      : Promise.resolve({ data: [], error: null }),
+    db.from('market_neighborhoods').select('id,name,micro_neighborhood,assignment_status').order('name').limit(100),
     propertyIds.length
       ? db.from('valuation_cases').select('id,subject_property_id,status,estimated_value_uf,valuation_date,created_at,issued_at').in('subject_property_id', propertyIds).order('created_at', { ascending:false })
       : Promise.resolve({ data: [], error: null }),
