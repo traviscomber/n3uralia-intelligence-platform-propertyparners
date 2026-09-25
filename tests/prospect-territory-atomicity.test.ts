@@ -9,6 +9,7 @@ test('territory reassignment is transactional, locked and propagates active lead
   assert.match(sql, /pg_advisory_xact_lock/i)
   assert.match(sql, /for update/i)
   assert.match(sql, /status in \('new','assigned','contacting','qualified','valuation','proposal'\)/i)
+  assert.match(sql, /director_key is distinct from p_director_key/i)
   assert.match(sql, /event_type[\s\S]*director_reassigned/i)
   assert.match(sql, /grant execute on function[\s\S]*to service_role/i)
   assert.match(sql, /revoke execute on function[\s\S]*from authenticated/i)
