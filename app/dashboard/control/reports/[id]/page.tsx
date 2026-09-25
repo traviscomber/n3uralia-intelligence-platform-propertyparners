@@ -215,9 +215,9 @@ export default function PrintableManagementReportPage() {
             {salesTarget?.target != null && !salesTarget.officialForScoring ? <p className="mt-2 text-xs font-medium text-[#a62721]">Referencia documental · no scoring oficial</p> : null}
           </div>
           <div className="border border-black p-5">
-            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Variación MoM</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">MoM · cierres acreditados</p>
             <p className="mt-3 font-serif text-4xl">{comparisons?.mom?.status === 'exact' ? signed(momDelta) : 'n/d'}</p>
-            <p className="mt-2 text-xs text-neutral-600">{comparisons?.mom?.status === 'exact' ? `${format(momClosures?.previous)} → ${format(momClosures?.current)} cierres` : 'Sin mes anterior canónico comparable'}</p>
+            <p className="mt-2 text-xs text-neutral-600">{comparisons?.mom?.status === 'exact' ? `${format(momClosures?.previous)} → ${format(momClosures?.current)} cierres vs ${comparisons.mom.previousPeriod}` : 'Sin mes anterior canónico comparable'}</p>
           </div>
           <div className="border border-black p-5">
             <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Acumulado YTD</p>
