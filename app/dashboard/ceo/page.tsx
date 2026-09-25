@@ -1,5 +1,5 @@
-import { CeoToday } from '@/components/management/ceo-today'
+import { CeoDashboardCommand } from '@/components/management/ceo-dashboard-command'
 
 export default function CeoDashboard() {
-  return <CeoToday />
+  return <CeoDashboardCommand />
 }
