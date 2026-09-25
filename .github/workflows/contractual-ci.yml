@@ -132,6 +132,9 @@ jobs:
       - name: Verify Jan-Aug canonical management periods
         run: node --import tsx --test tests/management-canonical-periods.test.ts
 
+      - name: Verify Office 360 canonical management contract
+        run: node --import tsx --test tests/management-office360-canonical.test.ts
+
       - name: Verify canonical valuation source authority
         run: node --import tsx --test tests/valuation/canonical-source-authority.test.ts
 
