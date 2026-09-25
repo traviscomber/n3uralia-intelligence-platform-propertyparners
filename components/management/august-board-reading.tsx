@@ -1,6 +1,6 @@
 'use client'
 
-type AugustBoardEntity = {
+export type AugustBoardEntity = {
   name:string
   classification:string
   sale:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
