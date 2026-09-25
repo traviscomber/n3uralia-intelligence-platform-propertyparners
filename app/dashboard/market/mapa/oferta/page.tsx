@@ -27,7 +27,7 @@ export default async function MarketOfferMapPage() {
 
   if (listingError) {
     return <WorkspaceShell>
-      <WorkspaceHeader eyebrow="Mercado · Portal" title="Oferta en mapa" meta="Vitacura" actions={[
+      <WorkspaceHeader eyebrow="Mercado · Inteligencia PP" title="Oferta en mapa" meta="Vitacura" actions={[
         { label: 'Territorio', href: '/dashboard/market/mapa' },
         { label: 'Volver a Mercado', href: '/dashboard/market' },
       ]} />
@@ -70,8 +70,77 @@ export default async function MarketOfferMapPage() {
     </WorkspaceShell>
   }
 
+  const leads: any[] = []
+  const valuations: any[] = []
+  const assignments: any[] = []
+  for (let index = 0; index < propertyIds.length; index += 50) {
+    const ids = propertyIds.slice(index, index + 50)
+    const [leadResult, valuationResult, assignmentResult] = await Promise.all([
+      db.from('property_prospect_leads')
+        .select('id,property_id,status,priority,director_key,next_follow_up_at,updated_at')
+        .in('property_id', ids)
+        .order('updated_at', { ascending: false }),
+      db.from('valuation_cases')
+        .select('id,subject_property_id,status,confidence,estimated_value_uf,updated_at')
+        .in('subject_property_id', ids)
+        .order('updated_at', { ascending: false }),
+      db.from('property_assignments')
+        .select('id,property_id,assignment_role,status,assigned_at')
+        .in('property_id', ids)
+        .eq('status', 'active')
+        .order('assigned_at', { ascending: false }),
+    ])
+    if (leadResult.error || valuationResult.error || assignmentResult.error) {
+      return <WorkspaceShell>
+        <WorkspaceHeader eyebrow="Mercado · Inteligencia PP" title="Oferta en mapa" meta="Vitacura" actions={[
+          { label: 'Territorio', href: '/dashboard/market/mapa' },
+          { label: 'Volver a Mercado', href: '/dashboard/market' },
+        ]} />
+        <div className="mt-5"><OperationalState kind="error" title="No fue posible cargar la inteligencia PP" description="La oferta está disponible, pero faltó parte de la trazabilidad operacional." /></div>
+      </WorkspaceShell>
+    }
+    leads.push(...(leadResult.data ?? []))
+    valuations.push(...(valuationResult.data ?? []))
+    assignments.push(...(assignmentResult.data ?? []))
+  }
+
+  const territoryAssignments: any[] = []
+  if (neighborhoodIds.length) {
+    for (let index = 0; index < neighborhoodIds.length; index += 50) {
+      const ids = neighborhoodIds.slice(index, index + 50)
+      const { data, error } = await db.from('market_neighborhood_director_assignments')
+        .select('neighborhood_id,director_key')
+        .in('neighborhood_id', ids)
+        .eq('active', true)
+        .is('valid_to', null)
+      if (error) {
+        return <WorkspaceShell>
+          <WorkspaceHeader eyebrow="Mercado · Inteligencia PP" title="Oferta en mapa" meta="Vitacura" actions={[
+            { label: 'Territorio', href: '/dashboard/market/mapa' },
+            { label: 'Volver a Mercado', href: '/dashboard/market' },
+          ]} />
+          <div className="mt-5"><OperationalState kind="error" title="No fue posible cargar los responsables territoriales" description="La oferta está disponible, pero faltó la asignación territorial vigente." /></div>
+        </WorkspaceShell>
+      }
+      territoryAssignments.push(...(data ?? []))
+    }
+  }
+
+  const directorKeys = [...new Set(territoryAssignments.map((row) => row.director_key).filter(Boolean))]
+  const { data: directors } = directorKeys.length
+    ? await db.from('property_director_directory').select('director_key,full_name,office_name').in('director_key', directorKeys).eq('active', true)
+    : { data: [] }
+
   const propertyById = new Map(properties.map((row) => [String(row.id), row]))
   const neighborhoodById = new Map((neighborhoods ?? []).map((row) => [String(row.id), String(row.name)]))
+  const leadByProperty = new Map<string, any>()
+  for (const row of leads) if (!leadByProperty.has(String(row.property_id))) leadByProperty.set(String(row.property_id), row)
+  const valuationByProperty = new Map<string, any>()
+  for (const row of valuations) if (!valuationByProperty.has(String(row.subject_property_id))) valuationByProperty.set(String(row.subject_property_id), row)
+  const assignmentByProperty = new Map<string, any>()
+  for (const row of assignments) if (!assignmentByProperty.has(String(row.property_id))) assignmentByProperty.set(String(row.property_id), row)
+  const territoryByNeighborhood = new Map(territoryAssignments.map((row) => [String(row.neighborhood_id), row]))
+  const directorByKey = new Map((directors ?? []).map((row) => [String(row.director_key), row]))
   const seen = new Set<string>()
 
   const items: OfferMapItem[] = []
@@ -91,6 +160,11 @@ export default async function MarketOfferMapPage() {
     const daysPublished = firstSeenAt && observedAt
       ? Math.max(0, Math.floor((new Date(observedAt).getTime() - new Date(firstSeenAt).getTime()) / 86400000))
       : null
+    const lead = leadByProperty.get(propertyId) ?? null
+    const valuation = valuationByProperty.get(propertyId) ?? null
+    const assignment = assignmentByProperty.get(propertyId) ?? null
+    const territory = property.neighborhood_id ? territoryByNeighborhood.get(String(property.neighborhood_id)) ?? null : null
+    const director = territory?.director_key ? directorByKey.get(String(territory.director_key)) ?? null : null
 
     items.push({
       propertyId,
@@ -110,6 +184,24 @@ export default async function MarketOfferMapPage() {
       identityStatus: property.identity_status ? String(property.identity_status) : null,
       observedAt,
       sourceUrl: listing.url ? String(listing.url) : null,
+      lead: lead ? {
+        id: String(lead.id),
+        status: String(lead.status),
+        priority: String(lead.priority ?? 'normal'),
+        nextFollowUpAt: lead.next_follow_up_at ? String(lead.next_follow_up_at) : null,
+      } : null,
+      valuation: valuation ? {
+        id: String(valuation.id),
+        status: String(valuation.status),
+        confidence: valuation.confidence ? String(valuation.confidence) : null,
+        estimatedValueUf: numeric(valuation.estimated_value_uf),
+      } : null,
+      hasActiveAssignment: Boolean(assignment),
+      territoryDirector: director ? {
+        key: String(director.director_key),
+        name: String(director.full_name),
+        office: director.office_name ? String(director.office_name) : null,
+      } : null,
     })
   }
 
@@ -119,7 +211,7 @@ export default async function MarketOfferMapPage() {
     <WorkspaceHeader
       eyebrow="Mercado · Portal"
       title="Oferta en mapa"
-      meta="Vitacura · inventario vigente georreferenciado"
+      meta="Vitacura · oferta vigente + trazabilidad operacional"
       actions={[
         { label: 'Territorio', href: '/dashboard/market/mapa', primary: true },
         { label: 'Lista de oferta', href: '/dashboard/market/oferta' },
