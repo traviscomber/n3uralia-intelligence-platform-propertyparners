@@ -530,15 +530,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       description: legacySubject?.description ?? null,
     },
     internalOperations: {
-      linked: Boolean(subjectLegacyId),
+      linked: Boolean(subjectLegacyId || currentAssignment || latestValuation || prospectLead),
       legacyPropertyId: subjectLegacyId,
       permissions: {
         canReadProperties,
         canReadValuations,
       },
       coverage: {
-        assignments: !subjectLegacyId ? 'not_linked' : !canReadProperties ? 'restricted' : assignmentRows.length > visibleAssignments.length ? 'restricted' : visibleAssignments.length ? 'available' : 'not_informed',
-        valuations: !subjectLegacyId ? 'not_linked' : !canReadValuations ? 'restricted' : valuationRows.length > visibleValuations.length ? 'restricted' : visibleValuations.length ? 'available' : 'not_informed',
+        assignments: !canReadProperties ? 'restricted' : assignmentRows.length > visibleAssignments.length ? 'restricted' : visibleAssignments.length ? 'available' : 'not_informed',
+        valuations: !canReadValuations ? 'restricted' : valuationRows.length > visibleValuations.length ? 'restricted' : visibleValuations.length ? 'available' : 'not_informed',
         crmActivity: prospectLead ? 'available' : 'not_informed',
       },
       currentAssignment: currentAssignment ? {
