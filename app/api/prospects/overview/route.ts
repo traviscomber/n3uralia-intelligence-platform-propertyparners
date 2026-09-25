@@ -114,13 +114,11 @@ export async function GET() {
   })
 
   const mappedNeighborhoodIds = new Set((territoryResult.data ?? []).map((item) => item.neighborhood_id))
-  const candidateListingsResult = mappedNeighborhoodIds.size
-    ? await db.from('market_current_listings')
-        .select('property_id,source_listing_id,url,status,operation,observed_at,published_at,price_uf')
-        .in('status',['active','observed'])
-        .order('observed_at',{ascending:false})
-        .limit(250)
-    : { data: [], error: null }
+  const candidateListingsResult = await db.from('market_current_listings')
+    .select('property_id,source_listing_id,url,status,operation,observed_at,published_at,price_uf')
+    .in('status',['active','observed'])
+    .order('observed_at',{ascending:false})
+    .limit(250)
   if (candidateListingsResult.error) return NextResponse.json({ error: 'No fue posible cargar publicaciones candidatas.' }, { status:500 })
 
   const leadPropertySet = new Set(propertyIds)
@@ -138,16 +136,18 @@ export async function GET() {
   const candidates = candidatePropertyIds
     .map((id)=>{
       const property=candidatePropertyById.get(id)
-      if(!property || !property.neighborhood_id || !mappedNeighborhoodIds.has(property.neighborhood_id) || leadPropertySet.has(id)) return null
-      const territory=territoryByNeighborhood.get(property.neighborhood_id)
+      if(!property || !property.neighborhood_id || leadPropertySet.has(id)) return null
+      const territory=territoryByNeighborhood.get(property.neighborhood_id) ?? null
       const listing=listingByProperty.get(id)
-      if(!territory || !listing) return null
+      if(!listing) return null
+      if(scope.scope !== 'global' && (!territory || !directorKeys.includes(territory.director_key))) return null
       return {
         property,
         neighborhood: neighborhoodById.get(property.neighborhood_id) ?? null,
-        director: directorByKey.get(territory.director_key) ?? null,
+        director: territory ? directorByKey.get(territory.director_key) ?? null : null,
         territory,
         listing,
+        needsDirector: !territory,
       }
     })
     .filter(Boolean)
