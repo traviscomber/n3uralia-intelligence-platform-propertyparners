@@ -47,15 +47,14 @@ type LeafletApi = {
   circleMarker(latlng: [number, number], options?: Record<string, unknown>): LeafletMarker
   featureGroup(layers: LeafletMarker[]): { getBounds(): LeafletBounds }
 }
-declare global { interface Window { L?: LeafletApi } }
-
 const LEAFLET_VERSION = '1.9.4'
 const SCRIPT_ID = 'pp-leaflet-js'
 const STYLE_ID = 'pp-leaflet-css'
 
 function ensureLeaflet() {
   if (typeof window === 'undefined') return Promise.reject(new Error('browser_required'))
-  if (window.L) return Promise.resolve(window.L)
+  const leafletWindow = window as typeof window & { L?: LeafletApi }
+  if (leafletWindow.L) return Promise.resolve(leafletWindow.L)
   if (!document.getElementById(STYLE_ID)) {
     const link = document.createElement('link')
     link.id = STYLE_ID
@@ -66,7 +65,7 @@ function ensureLeaflet() {
   return new Promise<LeafletApi>((resolve, reject) => {
     const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null
     if (existing) {
-      existing.addEventListener('load', () => window.L ? resolve(window.L) : reject(new Error('leaflet_missing')))
+      existing.addEventListener('load', () => leafletWindow.L ? resolve(leafletWindow.L) : reject(new Error('leaflet_missing')))
       existing.addEventListener('error', () => reject(new Error('leaflet_load_failed')))
       return
     }
@@ -74,7 +73,7 @@ function ensureLeaflet() {
     script.id = SCRIPT_ID
     script.src = `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`
     script.async = true
-    script.onload = () => window.L ? resolve(window.L) : reject(new Error('leaflet_missing'))
+    script.onload = () => leafletWindow.L ? resolve(leafletWindow.L) : reject(new Error('leaflet_missing'))
     script.onerror = () => reject(new Error('leaflet_load_failed'))
     document.head.appendChild(script)
   })
