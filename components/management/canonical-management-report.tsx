@@ -12,23 +12,26 @@ function StatusBadge({ value, type }: { value: number; type: 'goal' | 'yoy' }) {
 }
 
 export function CanonicalManagementReport() {
+  const cover = canonical.pages.find((page) => page.page === 1)
   const sales = canonical.pages.find((page) => page.page === 4)
   const evolution = canonical.pages.find((page) => page.page === 5)
 
-  if (!sales?.monthly || !sales.cumulative || !evolution?.months || !evolution.series) return null
+  if (!cover || !sales?.monthly || !sales.cumulative || !evolution?.months || !evolution.series) return null
 
   const monthly = sales.monthly
   const cumulative = sales.cumulative
   const months = evolution.months
   const series = evolution.series
+  const reportMonth = new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    .format(new Date(`${monthly.period}-01T12:00:00Z`))
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
       <header className="rounded-2xl bg-black px-6 py-10 text-white">
-        <p className="text-sm uppercase tracking-[0.2em] text-white/60">Fuente canónica · Junio 2026</p>
-        <h1 className="mt-3 text-3xl font-semibold">Control de Gestión Cierre Junio</h1>
-        <p className="mt-2 text-white/80">Reporte CEO — Enero a Junio 2026</p>
-        <p className="mt-1 text-sm text-white/60">Julio 2026 | Cierre Junio — Acumulado Ene-Jun</p>
+        <p className="text-sm uppercase tracking-[0.2em] text-white/60">Fuente canónica · {reportMonth}</p>
+        <h1 className="mt-3 text-3xl font-semibold">{cover.title}</h1>
+        <p className="mt-2 text-white/80">{cover.subtitle}</p>
+        <p className="mt-1 text-sm text-white/60">{cover.caption}</p>
       </header>
 
       <section className="rounded-2xl border bg-background p-6">
@@ -61,12 +64,12 @@ export function CanonicalManagementReport() {
       <section className="space-y-4">
         <div>
           <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground">PL Real Estate SpA</p>
-          <h2 className="text-2xl font-semibold">Venta Junio</h2>
+          <h2 className="text-2xl font-semibold">{sales.title}</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
-            ['Cierres junio', monthly.closings.actual, monthly.closings.goal, monthly.closings.compliancePercent, monthly.closings.yoyPercent],
-            ['UF junio', monthly.salesUf.actual, monthly.salesUf.goal, monthly.salesUf.compliancePercent, monthly.salesUf.yoyPercent],
+            ['Cierres del mes', monthly.closings.actual, monthly.closings.goal, monthly.closings.compliancePercent, monthly.closings.yoyPercent],
+            ['UF del mes', monthly.salesUf.actual, monthly.salesUf.goal, monthly.salesUf.compliancePercent, monthly.salesUf.yoyPercent],
             ['Cierres acumulados', cumulative.closings.actual, cumulative.closings.goal, cumulative.closings.compliancePercent, cumulative.closings.yoyPercent],
             ['UF acumuladas', cumulative.salesUf.actual, cumulative.salesUf.goal, cumulative.salesUf.compliancePercent, cumulative.salesUf.yoyPercent],
           ].map(([label, actual, goal, compliance, yoy]) => (
@@ -79,8 +82,8 @@ export function CanonicalManagementReport() {
                 <StatusBadge value={Number(compliance)} type="goal" />
               </div>
               <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                <span>{Number(yoy) > 0 ? '+' : ''}{Number(yoy)}% AA</span>
-                <StatusBadge value={Number(yoy)} type="yoy" />
+                <span>{yoy == null ? 'AA: —' : `${Number(yoy) > 0 ? '+' : ''}${Number(yoy)}% AA`}</span>
+                {yoy == null ? null : <StatusBadge value={Number(yoy)} type="yoy" />}
               </div>
             </article>
           ))}
@@ -122,7 +125,7 @@ export function CanonicalManagementReport() {
 
       <section className="rounded-2xl border bg-background p-6">
         <h2 className="text-xl font-semibold">Definiciones pendientes</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Estos puntos permanecen explícitamente abiertos y no se convierten en reglas operativas hasta su validación.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Sólo permanecen abiertos los puntos que el reporte de agosto no define explícitamente. No se completan por inferencia.</p>
         <ol className="mt-4 grid gap-2 text-sm md:grid-cols-2">
           {canonical.pendingDefinitions.map((item, index) => (
             <li key={item} className="rounded-lg bg-muted/50 p-3"><span className="font-medium">{index + 1}.</span> {item}</li>

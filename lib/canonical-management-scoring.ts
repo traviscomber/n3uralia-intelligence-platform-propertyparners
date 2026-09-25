@@ -1,9 +1,16 @@
-export const CANONICAL_MANAGEMENT_FORMULA_VERSION = 2
+export const CANONICAL_MANAGEMENT_FORMULA_VERSION = 3
+export const PREVIOUS_CANONICAL_MANAGEMENT_FORMULA_VERSION = 2
 export const HISTORICAL_MANAGEMENT_FORMULA_VERSION = 1
 
 export type ScoreValue = number | null
 export type ScoreEvaluationState = 'evaluable' | 'not_evaluable' | 'inconsistent_source'
-export type CanonicalScoringMode = 'canonical_v2' | 'historical_v1'
+export type CanonicalScoringMode = 'canonical_v3' | 'canonical_v2' | 'historical_v1'
+export const MANAGEMENT_TRAFFIC_LIGHTS = {
+  goalCompliance: { redBelow: 90, yellowFrom: 90, greenFrom: 100 },
+  yoyGrowth: { redBelow: 0, yellowFrom: 0, greenFrom: 20 },
+  score: { redBelow: 50, yellowFrom: 50, greenFrom: 70 },
+} as const
+
 export type ManagementCategory =
   | 'Estrella'
   | 'Potencial'
@@ -99,11 +106,12 @@ export function roundScoreForDisplay(value: ScoreValue, decimals = 1): ScoreValu
 
 function resolveMode(policy: CanonicalScoringPolicy): CanonicalScoringMode {
   if (policy.mode) return policy.mode
-  return policy.conversionCap === 'formula' ? 'historical_v1' : 'canonical_v2'
+  return policy.conversionCap === 'formula' ? 'historical_v1' : 'canonical_v3'
 }
 
 function finalizeScore(value: number, mode: CanonicalScoringMode, capAt100: boolean): number {
   if (mode === 'canonical_v2') return clampScore(value)
+  if (mode === 'canonical_v3') return capAt100 ? Math.min(Math.max(value, 0), 100) : Math.max(value, 0)
   return legacyRound(capAt100 ? Math.min(value, 100) : value)
 }
 
@@ -219,9 +227,9 @@ function closeRateScore(
   if (leads < 0) return invalidSource('negative_denominator', closings, leads)
 
   const conversionPercent = (closings / leads) * 100
-  const score = mode === 'historical_v1'
-    ? Math.min(conversionPercent, 2.86) * 35
-    : Math.min(conversionPercent / 2.86, 1) * 100
+  const score = mode === 'canonical_v2'
+    ? Math.min(conversionPercent / 2.86, 1) * 100
+    : Math.min(conversionPercent, 2.86) * 35
 
   return evaluated(finalizeScore(score, mode, mode === 'canonical_v2'), closings, leads)
 }
@@ -266,9 +274,11 @@ export function calculateCanonicalManagementScores(
   policy: CanonicalScoringPolicy = {},
 ): CanonicalManagementResult {
   const mode = resolveMode(policy)
-  const formulaVersion = mode === 'canonical_v2'
+  const formulaVersion = mode === 'canonical_v3'
     ? CANONICAL_MANAGEMENT_FORMULA_VERSION
-    : HISTORICAL_MANAGEMENT_FORMULA_VERSION
+    : mode === 'canonical_v2'
+      ? PREVIOUS_CANONICAL_MANAGEMENT_FORMULA_VERSION
+      : HISTORICAL_MANAGEMENT_FORMULA_VERSION
 
   const portfolio = {
     stock: targetScore(inputs.stock, inputs.stockTarget, mode),
@@ -279,7 +289,7 @@ export function calculateCanonicalManagementScores(
   portfolio.score = average([portfolio.stock.score, portfolio.requirements.score, portfolio.pricing.score], mode)
 
   const followUp = {
-    classified: ratioScore(inputs.classifiedLeads, inputs.activeLeads, mode, mode === 'canonical_v2'),
+    classified: ratioScore(inputs.classifiedLeads, inputs.activeLeads, mode, mode !== 'historical_v1'),
     managed90: complementScore(inputs.stale90Leads, inputs.activeLeads, mode),
     managed15A: complementScore(inputs.stale15ALeads, inputs.activeALeads, mode),
     score: null as ScoreValue,
@@ -288,7 +298,7 @@ export function calculateCanonicalManagementScores(
 
   const conversion = {
     visitsToTarget: targetScore(inputs.realizedVisits, inputs.visitsTarget, mode),
-    visitsPerformed: ratioScore(inputs.realizedVisits, inputs.scheduledVisits, mode, mode === 'canonical_v2'),
+    visitsPerformed: ratioScore(inputs.realizedVisits, inputs.scheduledVisits, mode, mode !== 'historical_v1'),
     closeRate: closeRateScore(inputs, mode),
     score: null as ScoreValue,
   }

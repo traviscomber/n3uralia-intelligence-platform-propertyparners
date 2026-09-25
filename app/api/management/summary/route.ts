@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getManagementEntities, type ManagementEntity } from '@/lib/presentations-2026'
+import { getCanonicalManagementDashboardEntities, getLatestCanonicalManagementPeriod } from '@/lib/management-canonical-periods'
 import { getCanonicalPortfolioComparison, parseCanonicalSalesComparison } from '@/lib/canonical-commercial-comparisons'
 import {
   overlayApprovedManagementMetrics,
@@ -286,11 +287,13 @@ export async function GET() {
 
   const role = normalize(profile.role)
   const canonical = getManagementEntities()
+  const latestCanonicalPeriod = getLatestCanonicalManagementPeriod()
+  const latestCanonicalEntities = getCanonicalManagementDashboardEntities(latestCanonicalPeriod)
   let entities: DashboardEntity[] = []
   let scopeLabel = 'Ámbito sin configurar'
 
   if (role === 'admin' || role === 'ceo') {
-    entities = [toPayloadEntity(canonical.company, 'company'), ...canonical.branches.map((item) => toPayloadEntity(item, 'branch')), ...canonical.partners.map((item) => toPayloadEntity(item, 'partner'))]
+    entities = latestCanonicalEntities
     scopeLabel = 'Compañía completa'
   } else if (role === 'director' || role === 'subdirector') {
     const team = normalize(profile.team)
@@ -392,11 +395,13 @@ export async function GET() {
     alerts: isDirector ? buildDirectorAlerts(entities) : [],
     operational,
     accesses,
-    periodLabel: periodLabel(overlay.stats.latestPeriodEnd),
+    periodLabel: periodLabel(overlay.stats.latestPeriodEnd ?? (latestCanonicalPeriod ? `${latestCanonicalPeriod.period}-01` : null)),
     generatedAt: new Date().toISOString(),
     dataProvenance: persistedCount
       ? `${persistedCount} valores persistidos, reconciliados y aprobados reemplazan sus métricas documentales equivalentes. Las métricas sin aprobación conservan el corte documental 2026 con su fuente visible.`
-      : 'Presentaciones canónicas 2026, bases comparables 2025 contenidas en las mismas tablas y registros operativos visibles mediante RLS. No existen valores persistidos aprobados para sustituir este corte.',
+      : latestCanonicalPeriod
+        ? `Fuente documental canónica vigente: ${latestCanonicalPeriod.authority.file} (${latestCanonicalPeriod.period}). Las métricas Partner no se infieren cuando la fuente vigente no las publica.`
+        : 'Presentaciones canónicas 2026, bases comparables 2025 contenidas en las mismas tablas y registros operativos visibles mediante RLS. No existen valores persistidos aprobados para sustituir este corte.',
     dataLayers: {
       mode: overlay.stats.mode,
       approvedMetricCount: persistedCount,

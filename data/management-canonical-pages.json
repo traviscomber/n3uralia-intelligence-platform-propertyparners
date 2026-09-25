@@ -1,17 +1,64 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "2.0.0",
   "status": "canonical",
-  "approvedAt": "2026-07-31",
+  "approvedAt": "2026-09-24",
   "source": {
-    "file": "Jun_Directorio_5.pptx",
-    "canonicalCorpus": "data/presentations-2026.json",
-    "period": "2026-01-01/2026-06-30",
-    "reportIssued": "2026-07"
+    "file": "Ago_Directorio.pptx",
+    "sha256": "395e5d942d575bf17939cef99567cfa6ef3f2c6b85bb9d1af43a7b2c20ea2f74",
+    "period": "2026-01-01/2026-08-31",
+    "reportIssued": "2026-09",
+    "authority": "Pedro — Directorio"
   },
   "scope": {
-    "deck": "Jun_Directorio_5.pptx",
-    "pages": [1, 2, 3, 4, 5],
-    "entity": "PL Real Estate SpA"
+    "deck": "Ago_Directorio.pptx",
+    "pages": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38
+    ],
+    "entity": "PL Real Estate Spa",
+    "applicationEntity": "Property Partners Vitacura",
+    "offices": [
+      "Santa María",
+      "Nueva Costanera",
+      "Lo Beltrán"
+    ],
+    "partnerLevelAvailable": false
   },
   "definitions": {
     "managementScore": {
@@ -28,95 +75,156 @@
         "key": "portfolioGoal",
         "label": "Meta cartera",
         "formula": "min(portfolio / goal, 1) * 100",
-        "meaning": "Cumplimiento de la meta de propiedades"
+        "meaning": "Cumple meta props"
       },
       {
         "key": "requirementsByPropertyType",
-        "label": "Requerimientos por tipo de propiedad",
+        "label": "Reqs x Tipo Prop",
         "formula": "min(requirementRatio, 1) * 100",
-        "meaning": "Requerimientos frente al benchmark"
+        "meaning": "Reqs vs benchmark"
       },
       {
         "key": "priceQuality",
-        "label": "Calidad de precio",
+        "label": "Calidad Precio",
         "formula": "ratio <= 1.05 ? 100 : ratio <= 1.10 ? 50 : 0",
-        "meaning": "Precio publicado frente a valorización"
+        "meaning": "Pricing vs valorización"
       }
     ],
     "followUpQuality": [
       {
         "key": "classifiedLeads",
-        "label": "% leads clasificados",
+        "label": "% Leads Clasif",
         "formula": "classifiedLeads / activeLeads * 100",
-        "meaning": "Disciplina de clasificación de leads"
+        "meaning": "Clasifica leads"
       },
       {
         "key": "leadsManagedWithin90Days",
-        "label": "% leads sin abandono de 90 días",
+        "label": "% Leads c-g90",
         "formula": "(1 - unmanaged90DayLeads / activeLeads) * 100",
-        "meaning": "Leads activos no abandonados"
+        "meaning": "Leads no abandonados"
       },
       {
         "key": "priorityLeadsManagedWithin15Days",
-        "label": "% leads A contactados en 15 días",
+        "label": "%LeadsA c-g15",
         "formula": "(1 - unmanaged15DayPriorityLeads / priorityClients) * 100",
-        "meaning": "Atención oportuna de leads prioritarios"
+        "meaning": "Leads A contactados"
       }
     ],
     "conversionQuality": [
       {
         "key": "completedVisitsGoal",
-        "label": "Visitas realizadas frente a meta",
+        "label": "Vis Realiz/Meta",
         "formula": "min(completedVisits / visitGoal, 1) * 100",
-        "meaning": "Cumplimiento de meta de visitas"
+        "meaning": "Cumple meta visitas"
       },
       {
         "key": "completedScheduledVisits",
-        "label": "% visitas realizadas/agendadas",
+        "label": "%Vis realizad/agend",
         "formula": "completedVisits / scheduledVisits * 100",
-        "meaning": "Cumplimiento de agenda"
+        "meaning": "Cumple agenda"
       },
       {
         "key": "sixMonthCloseRate",
-        "label": "Tasa de cierre 6 meses/leads totales",
+        "label": "TC 6m/leads tot",
         "formula": "min(sixMonthCloseRatePercent, 2.86) * 35",
-        "meaning": "Conversión de oportunidades en negocios"
+        "meaning": "Cierra negocios"
       }
     ],
     "trafficLights": {
       "goalCompliance": [
-        { "status": "red", "condition": "value < 90" },
-        { "status": "yellow", "condition": "value >= 90 && value < 100" },
-        { "status": "green", "condition": "value >= 100" }
+        {
+          "status": "red",
+          "condition": "value < 90"
+        },
+        {
+          "status": "yellow",
+          "condition": "value >= 90 && value < 100"
+        },
+        {
+          "status": "green",
+          "condition": "value >= 100"
+        }
       ],
       "yearOverYearGrowth": [
-        { "status": "red", "condition": "value < 0" },
-        { "status": "yellow", "condition": "value >= 0 && value < 20" },
-        { "status": "green", "condition": "value >= 20" }
+        {
+          "status": "red",
+          "condition": "value < 0"
+        },
+        {
+          "status": "yellow",
+          "condition": "value >= 0 && value < 20"
+        },
+        {
+          "status": "green",
+          "condition": "value >= 20"
+        }
       ],
       "qualityScore": [
-        { "status": "red", "condition": "value < 50" },
-        { "status": "yellow", "condition": "value >= 50 && value < 70" },
-        { "status": "green", "condition": "value >= 70" }
+        {
+          "status": "red",
+          "condition": "value < 50"
+        },
+        {
+          "status": "yellow",
+          "condition": "value >= 50 && value < 70"
+        },
+        {
+          "status": "green",
+          "condition": "value >= 70"
+        }
       ]
     },
     "personClassifications": [
-      { "key": "star", "label": "Estrella", "condition": "portfolio >= 70 && followUp >= 70 && conversion >= 70" },
-      { "key": "potential", "label": "Potencial", "condition": "oneScore >= 70 && remainingScores >= 50" },
-      { "key": "capturer", "label": "Captador", "condition": "portfolio >= 70" },
-      { "key": "seller", "label": "Vendedor", "condition": "conversion >= 70" },
-      { "key": "persistent", "label": "Perseverante", "condition": "followUp >= 70" },
-      { "key": "risk", "label": "Riesgo", "condition": "atLeastTwoScores < 30" },
-      { "key": "development", "label": "Desarrollo", "condition": "fallback" }
-    ]
+      {
+        "key": "star",
+        "label": "Estrella",
+        "condition": "portfolio >= 70 && followUp >= 70 && conversion >= 70"
+      },
+      {
+        "key": "potential",
+        "label": "Potencial",
+        "condition": "oneScore >= 70 && remainingScores >= 50"
+      },
+      {
+        "key": "capturer",
+        "label": "Captador",
+        "condition": "portfolio >= 70"
+      },
+      {
+        "key": "seller",
+        "label": "Vendedor",
+        "condition": "conversion >= 70"
+      },
+      {
+        "key": "persistent",
+        "label": "Perseverante",
+        "condition": "followUp >= 70"
+      },
+      {
+        "key": "risk",
+        "label": "Riesgo",
+        "condition": "atLeastTwoScores < 30"
+      },
+      {
+        "key": "development",
+        "label": "Desarrollo",
+        "condition": "fallback"
+      }
+    ],
+    "semanticSeparation": {
+      "boardClosings": "management_credited_sales",
+      "boardSalesUf": "management_credited_sales_uf",
+      "operationalClosings": "sales",
+      "operationalSalesUf": "sales_uf"
+    }
   },
   "pages": [
     {
       "page": 1,
       "type": "cover",
-      "title": "Control de Gestión Cierre Junio",
-      "subtitle": "Reporte CEO — Enero a Junio 2026",
-      "caption": "Julio 2026 | Cierre Junio — Acumulado Ene-Jun",
+      "title": "Control de Gestión Cierre Agosto",
+      "subtitle": "Reporte CEO — Enero a Agosto 2026",
+      "caption": "Septiembre 2026 | Cierre Agosto — Acumulado Ene-Ago",
       "background": "#000000"
     },
     {
@@ -128,29 +236,47 @@
     {
       "page": 3,
       "type": "section-cover",
-      "title": "PL Real Estate SpA",
+      "title": "PL Real Estate Spa",
       "background": "#000000"
     },
     {
       "page": 4,
       "type": "sales-summary",
-      "title": "PL Real Estate — Venta Jun",
+      "title": "PL Real Estate — Venta Ago",
       "background": "#F0F0F0",
       "monthly": {
-        "period": "2026-06",
-        "closings": { "actual": 7, "goal": 8.8, "compliancePercent": 80, "priorYear": 6, "yoyPercent": 17 },
-        "salesUf": { "actual": 135600, "goal": 130830, "compliancePercent": 104, "priorYear": 74350, "yoyPercent": 82 }
+        "period": "2026-08",
+        "closings": {
+          "actual": 8,
+          "goal": 8.2,
+          "compliancePercent": 98,
+          "priorYear": null,
+          "yoyPercent": null
+        },
+        "salesUf": {
+          "actual": 141650,
+          "goal": 130488,
+          "compliancePercent": 109,
+          "priorYear": null,
+          "yoyPercent": null
+        }
       },
       "cumulative": {
-        "period": "2026-01/2026-06",
-        "closings": { "actual": 33, "goal": 43, "compliancePercent": 77, "priorYear": 30, "yoyPercent": 10 },
-        "salesUf": { "actual": 620870, "goal": 687075, "compliancePercent": 90, "priorYear": 388820, "yoyPercent": 60 }
-      },
-      "derived": {
-        "monthlyAverageTicketUf": 19371.43,
-        "monthlyPriorYearAverageTicketUf": 12391.67,
-        "cumulativeAverageTicketUf": 18814.24,
-        "cumulativePriorYearAverageTicketUf": 12960.67
+        "period": "2026-01/2026-08",
+        "closings": {
+          "actual": 50.5,
+          "goal": 58.6,
+          "compliancePercent": 86,
+          "priorYear": null,
+          "yoyPercent": null
+        },
+        "salesUf": {
+          "actual": 920786,
+          "goal": 954867,
+          "compliancePercent": 96,
+          "priorYear": null,
+          "yoyPercent": null
+        }
       }
     },
     {
@@ -158,31 +284,277 @@
       "type": "sales-evolution",
       "title": "PL Real Estate — Evolución Venta",
       "background": "#F0F0F0",
-      "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+      "months": [
+        "Ene",
+        "Feb",
+        "Mar",
+        "Abr",
+        "May",
+        "Jun",
+        "Jul",
+        "Ago"
+      ],
       "series": {
-        "monthlyClosings": [4, 3, 7, 8, 4, 7],
-        "monthlySalesUf": [103150, 48800, 155970, 107500, 69850, 135600],
-        "monthlyClosingGoals": [5.86, 4.63, 7.8, 7.33, 8.6, 8.8],
-        "monthlySalesUfGoals": [99306, 77955, 131874, 118087, 129023, 130830],
-        "cumulativeClosings": [4, 7, 14, 22, 26, 33],
-        "cumulativeSalesUf": [103150, 151950, 307920, 415420, 485270, 620870],
-        "cumulativeClosingGoals": [5.86, 10.49, 18.29, 25.61, 34.2, 43],
-        "cumulativeSalesUfGoals": [99306, 177261, 309135, 427222, 556245, 687075],
-        "cumulativeClosingCompliancePercent": [68, 67, 77, 86, 76, 77],
-        "cumulativeSalesUfCompliancePercent": [104, 86, 100, 97, 87, 90]
+        "monthlyClosings": [
+          4,
+          3,
+          7,
+          8,
+          4,
+          7,
+          9.5,
+          8
+        ],
+        "monthlySalesUf": [
+          103150,
+          48800,
+          155970,
+          107500,
+          69850,
+          135600,
+          158266,
+          141650
+        ],
+        "monthlyClosingGoals": [
+          5.86,
+          4.63,
+          7.8,
+          7.33,
+          8.6,
+          8.8,
+          8.6,
+          8.2
+        ],
+        "monthlySalesUfGoals": [
+          99306,
+          77955,
+          131874,
+          118087,
+          129023,
+          130830,
+          137304,
+          130488
+        ],
+        "cumulativeClosings": [
+          4,
+          7,
+          14,
+          22,
+          26,
+          33,
+          42.5,
+          50.5
+        ],
+        "cumulativeSalesUf": [
+          103150,
+          151950,
+          307920,
+          415420,
+          485270,
+          620870,
+          779136,
+          920786
+        ],
+        "cumulativeClosingGoals": [
+          5.86,
+          10.49,
+          18.29,
+          25.61,
+          34.2,
+          43,
+          50.4,
+          58.6
+        ],
+        "cumulativeSalesUfGoals": [
+          99306,
+          177261,
+          309135,
+          427222,
+          556245,
+          687075,
+          824379,
+          954867
+        ],
+        "cumulativeClosingCompliancePercent": [
+          68,
+          67,
+          77,
+          86,
+          76,
+          77,
+          84,
+          86
+        ],
+        "cumulativeSalesUfCompliancePercent": [
+          104,
+          86,
+          100,
+          97,
+          87,
+          90,
+          95,
+          96
+        ]
+      }
+    }
+  ],
+  "entities": [
+    {
+      "name": "PL Real Estate Spa",
+      "applicationName": "Property Partners Vitacura",
+      "entityType": "company",
+      "classification": "Desarrollo",
+      "august": {
+        "creditedClosings": 8,
+        "creditedSalesUf": 141650,
+        "closingGoal": 8.2,
+        "salesUfGoal": 130488,
+        "managementScore": 67.4,
+        "portfolioScore": 65.8,
+        "followUpScore": 69.8,
+        "conversionScore": 67.3,
+        "stock": 324,
+        "stockGoal": 541,
+        "requirements": 468,
+        "requirementsReference": 590,
+        "pricingBands": {
+          "atOrBelow105": 132,
+          "between105And110": 77,
+          "above110": 84
+        },
+        "activeLeads": 1228,
+        "classifiedLeads": 808,
+        "stale90Leads": 230,
+        "activeALeads": 90,
+        "stale15ALeads": 34,
+        "realizedVisits": 189,
+        "visitsGoal": 434,
+        "scheduledVisits": 324,
+        "closeRate6m": {
+          "closings": 50.5,
+          "leadBase": 1228,
+          "percent": 4.1
+        }
+      }
+    },
+    {
+      "name": "Santa María",
+      "entityType": "office",
+      "classification": "Desarrollo",
+      "august": {
+        "creditedClosings": 3.5,
+        "creditedSalesUf": 76800,
+        "closingGoal": 2.3,
+        "salesUfGoal": 50945,
+        "managementScore": 67.4,
+        "portfolioScore": 65.1,
+        "followUpScore": 68.4,
+        "conversionScore": 69.5,
+        "stock": 134,
+        "stockGoal": 220,
+        "requirements": 150,
+        "requirementsReference": 185,
+        "pricingBands": {
+          "atOrBelow105": 51,
+          "between105And110": 19,
+          "above110": 44
+        },
+        "activeLeads": 532,
+        "classifiedLeads": 325,
+        "stale90Leads": 88,
+        "activeALeads": 33,
+        "stale15ALeads": 13,
+        "realizedVisits": 65,
+        "visitsGoal": 128,
+        "scheduledVisits": 94,
+        "closeRate6m": {
+          "closings": 13.5,
+          "leadBase": 532,
+          "percent": 2.5
+        }
+      }
+    },
+    {
+      "name": "Nueva Costanera",
+      "entityType": "office",
+      "classification": "Desarrollo",
+      "august": {
+        "creditedClosings": 2,
+        "creditedSalesUf": 26650,
+        "closingGoal": 2.8,
+        "salesUfGoal": 42746,
+        "managementScore": 67.5,
+        "portfolioScore": 69.1,
+        "followUpScore": 66.4,
+        "conversionScore": 66.6,
+        "stock": 95,
+        "stockGoal": 157,
+        "requirements": 165,
+        "requirementsReference": 182,
+        "pricingBands": {
+          "atOrBelow105": 32,
+          "between105And110": 36,
+          "above110": 21
+        },
+        "activeLeads": 373,
+        "classifiedLeads": 294,
+        "stale90Leads": 105,
+        "activeALeads": 33,
+        "stale15ALeads": 17,
+        "realizedVisits": 62,
+        "visitsGoal": 131,
+        "scheduledVisits": 118,
+        "closeRate6m": {
+          "closings": 20.5,
+          "leadBase": 373,
+          "percent": 5.5
+        }
+      }
+    },
+    {
+      "name": "Lo Beltrán",
+      "entityType": "office",
+      "classification": "Potencial",
+      "august": {
+        "creditedClosings": 2.5,
+        "creditedSalesUf": 38200,
+        "closingGoal": 3.1,
+        "salesUfGoal": 36797,
+        "managementScore": 67.9,
+        "portfolioScore": 64.4,
+        "followUpScore": 76.8,
+        "conversionScore": 63.6,
+        "stock": 95,
+        "stockGoal": 164,
+        "requirements": 153,
+        "requirementsReference": 223,
+        "pricingBands": {
+          "atOrBelow105": 49,
+          "between105And110": 22,
+          "above110": 19
+        },
+        "activeLeads": 323,
+        "classifiedLeads": 189,
+        "stale90Leads": 37,
+        "activeALeads": 24,
+        "stale15ALeads": 4,
+        "realizedVisits": 62,
+        "visitsGoal": 175,
+        "scheduledVisits": 112,
+        "closeRate6m": {
+          "closings": 16.5,
+          "leadBase": 323,
+          "percent": 5.1
+        }
       }
     }
   ],
   "pendingDefinitions": [
-    "Definir el benchmark exacto del ratio de requerimientos por tipo de propiedad.",
-    "Definir la fuente oficial de valorización usada para calidad de precio.",
-    "Confirmar la interpretación operacional de leads sin gestión durante 90 días.",
-    "Confirmar la interpretación operacional de leads A sin gestión durante 15 días.",
-    "Confirmar si 2,86% es una meta corporativa fija de conversión a seis meses.",
-    "Definir prioridad cuando una persona cumple más de una clasificación.",
-    "Definir las reglas específicas de la clasificación Desarrollo.",
-    "Definir el evento exacto que constituye un cierre.",
-    "Definir la atribución de UF en operaciones compartidas.",
-    "Documentar la metodología de construcción de metas mensuales."
+    "Publicar la tabla exacta de benchmark de requerimientos por tipología usada por Pedro.",
+    "Documentar la fuente y versión de valorización usada para Calidad Precio.",
+    "Definir la prioridad entre múltiples clasificaciones especializadas fuera de Estrella/Potencial.",
+    "Documentar el evento jurídico/operacional exacto que constituye cierre para la capa operacional CRM.",
+    "Documentar la regla de atribución de créditos fraccionarios cuando una operación es compartida.",
+    "Partner: no existen métricas en este reporte; requiere una fuente canónica separada."
   ]
 }

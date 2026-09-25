@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { accessErrorResponse, requireCapability } from '@/lib/access-guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import type { DecisionTraceItem } from '@/lib/intelligence-decision-trace'
+import { hasDecisionGradeComparableSample, isVitacuraComparableAddress } from '@/lib/property360-comparables'
 
 const DAY_MS = 86_400_000
 const LEGACY_PREFIX = 'legacy-property:'
@@ -38,6 +39,7 @@ function legacyId(canonicalKey: unknown) {
 function boundedScore(value: number) {
   return Math.max(0, Math.min(1, value))
 }
+
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -115,7 +117,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       const areaOk = candidateArea != null && candidateArea >= targetArea * 0.75 && candidateArea <= targetArea * 1.25
       const bedroomOk = property.bedrooms == null || bedrooms == null || Math.abs(Number(property.bedrooms) - bedrooms) <= 1
       const bathroomOk = property.bathrooms == null || bathrooms == null || Math.abs(Number(property.bathrooms) - bathrooms) <= 1
-      return areaOk && bedroomOk && bathroomOk
+      const geographyOk = isVitacuraComparableAddress(candidate.normalized_address)
+      return areaOk && bedroomOk && bathroomOk && geographyOk
     })
   }
 
@@ -174,9 +177,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const medianUfM2 = percentile(ufM2Values, 0.5)
   const p75 = percentile(ufM2Values, 0.75)
   const medianSourceDom = percentile(domValues, 0.5)
-  const impliedPriceAtMedian = medianUfM2 != null && area != null ? medianUfM2 * area : null
-  const priceVsMedianPct = currentUfM2 != null && medianUfM2 != null && medianUfM2 !== 0 ? (currentUfM2 / medianUfM2 - 1) * 100 : null
-  const domVsMedianMultiple = sourceReportedDom != null && medianSourceDom != null && medianSourceDom > 0 ? sourceReportedDom / medianSourceDom : null
+  const comparableDecisionEligible = hasDecisionGradeComparableSample(comparableRows.length)
+  const decisionMedianUfM2 = comparableDecisionEligible ? medianUfM2 : null
+  const decisionMedianSourceDom = comparableDecisionEligible ? medianSourceDom : null
+  const impliedPriceAtMedian = decisionMedianUfM2 != null && area != null ? decisionMedianUfM2 * area : null
+  const priceVsMedianPct = currentUfM2 != null && decisionMedianUfM2 != null && decisionMedianUfM2 !== 0 ? (currentUfM2 / decisionMedianUfM2 - 1) * 100 : null
+  const domVsMedianMultiple = sourceReportedDom != null && decisionMedianSourceDom != null && decisionMedianSourceDom > 0 ? sourceReportedDom / decisionMedianSourceDom : null
 
   const comparableFreshRows = comparableRows.filter((row) => {
     const age = daysBetween(String(row.observedAt ?? ''), nowIso)
@@ -250,8 +256,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       id: `property:${property.id}:price-position`,
       domain: 'market',
       title: 'Posición de precio',
-      evidenceStatus: medianUfM2 != null ? 'external_market' : 'non_evaluable',
-      evidenceLabel: priceVsMedianPct == null ? 'No existe una mediana comparable suficiente para posicionar el precio.' : `UF/m² sujeto comparado con mediana de ${comparableRows.length} comparables: ${priceVsMedianPct.toFixed(1)}%.`,
+      evidenceStatus: comparableDecisionEligible && decisionMedianUfM2 != null ? 'external_market' : 'non_evaluable',
+      evidenceLabel: !comparableDecisionEligible
+        ? `Muestra insuficiente: ${comparableRows.length} comparables válidos; el mínimo decisional es 3.`
+        : priceVsMedianPct == null
+          ? 'No existe una mediana comparable suficiente para posicionar el precio.'
+          : `UF/m² sujeto comparado con mediana de ${comparableRows.length} comparables: ${priceVsMedianPct.toFixed(1)}%.`,
       source: 'Mercado externo normalizado',
       sourceReference: neighborhood?.name ?? null,
       cutoff: currentListing?.observed_at ?? property.last_seen_at ?? null,
@@ -346,13 +356,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     },
     comparables: {
       count: comparableRows.length,
+      minimumRequired: 3,
+      decisionEligible: comparableDecisionEligible,
       sourceDomCoverage: domValues.length,
       priceUfM2: { p25, median: medianUfM2, p75 },
-      medianSourceReportedDom: medianSourceDom,
+      medianSourceReportedDom: decisionMedianSourceDom,
       impliedPriceAtMedian,
       priceVsMedianPct,
       domVsMedianMultiple,
-      methodology: 'Misma tipología y barrio contractual, superficie útil (o construida si falta) ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
+      methodology: 'Misma tipología y barrio contractual, comuna Vitacura verificada en la dirección normalizada, superficie útil (o construida si falta) ±25%, dormitorios/baños ±1; una publicación vigente más reciente por property_id. Los matches candidatos no se fusionan hasta confirmación humana. El DOM reportado se conserva como evidencia de fuente y no reemplaza el lifecycle canónico.',
       quality: {
         score: Number(comparableQualityScore.toFixed(3)),
         label: comparableQualityScore >= 0.8 ? 'high' : comparableQualityScore >= 0.6 ? 'medium' : 'low',

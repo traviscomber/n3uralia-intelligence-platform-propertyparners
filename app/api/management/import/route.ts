@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { managementReportEntityScopes, metricsForManagementReportScope } from '@/lib/management-report-scope'
 
 type QualityStatus = 'verified' | 'provisional' | 'missing' | 'rejected' | 'not_applicable' | 'not_evaluable'
 type EvaluationStatus = 'evaluable' | 'missing_source' | 'not_applicable' | 'not_evaluable' | 'rejected'
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
   const metricCodes = [...new Set(rows.map((row) => row.metricCode))]
 
   const [{ data: entities, error: entityError }, { data: definitions, error: definitionError }] = await Promise.all([
-    supabase.from('management_entities').select('id').in('id', entityIds),
+    supabase.from('management_entities').select('id,name,entity_type').in('id', entityIds),
     supabase.from('management_metric_definitions').select('code,active,formula_version').in('code', metricCodes),
   ])
 
@@ -120,6 +121,7 @@ export async function POST(request: Request) {
   }
 
   const knownEntities = new Set((entities ?? []).map((entity) => entity.id))
+  const entityById = new Map((entities ?? []).map((entity) => [entity.id, entity]))
   const definitionMap = new Map((definitions ?? []).map((definition) => [definition.code, definition]))
   const warnings: Array<{ index: number; code: string; detail: string }> = []
 
@@ -182,7 +184,7 @@ export async function POST(request: Request) {
 
   const { data: imported, error: importError } = await supabase.from('management_metric_values').upsert(payload, {
     onConflict: 'entity_id,metric_code,period_start,period_end,source_name',
-  }).select('id')
+  }).select('id,entity_id,metric_code,period_start,period_end,value,source_name,source_reference,quality_status,evaluation_status,formula_version,source_cutoff_at')
 
   if (importError) {
     console.error('[management-import] metric upsert failed', { code: importError.code, runId: run.id })
@@ -220,6 +222,75 @@ export async function POST(request: Request) {
     console.error('[management-import] alert evaluation failed', { code: alertError.code, runId: run.id })
   }
 
+  let reportGenerationFailed = false
+  const importedMetrics = imported ?? []
+  const reportEntityIds = managementReportEntityScopes(role, entityIds)
+
+  const { data: existingReports, error: existingReportError } = await supabase
+    .from('management_report_runs')
+    .select('id,entity_id')
+    .eq('report_type', 'executive')
+    .eq('period_start', periodStart)
+    .eq('period_end', periodEnd)
+    .contains('snapshot', { sourceImportRunId: run.id })
+
+  const reportRunIds: string[] = []
+
+  if (existingReportError) {
+    reportGenerationFailed = true
+    console.error('[management-import] weekly report dedupe lookup failed', { code: existingReportError.code, runId: run.id })
+  } else {
+    const existingByEntity = new Map((existingReports ?? []).map((report) => [report.entity_id ?? '__global__', report.id]))
+    const missingReports = reportEntityIds
+      .filter((entityId) => !existingByEntity.has(entityId ?? '__global__'))
+      .map((entityId) => {
+        const metrics = metricsForManagementReportScope(importedMetrics, entityId)
+        return {
+          report_type: 'executive',
+          entity_id: entityId,
+          period_start: periodStart,
+          period_end: periodEnd,
+          status: 'generated',
+          generated_by: user.id,
+          snapshot: {
+            trigger: 'weekly_source_upload',
+            sourceImportRunId: run.id,
+            sourceName,
+            sourceReference: body?.sourceReference ?? null,
+            generatedAt: new Date().toISOString(),
+            scope: entityId === null
+              ? { type: 'global', id: null, name: 'Property Partners Vitacura' }
+              : {
+                  type: entityById.get(entityId)?.entity_type ?? 'entity',
+                  id: entityId,
+                  name: entityById.get(entityId)?.name ?? entityId,
+                },
+            rowsReceived: rows.filter((row) => entityId === null || row.entityId === entityId).length,
+            rowsImported: metrics.length,
+            warnings: warnings.filter((warning) => entityId === null || rows[warning.index]?.entityId === entityId),
+            alertEvaluation: alerts?.[0] ?? null,
+            metrics,
+          },
+        }
+      })
+
+    for (const report of existingReports ?? []) reportRunIds.push(report.id)
+
+    if (missingReports.length) {
+      const { data: createdReports, error: reportError } = await supabase
+        .from('management_report_runs')
+        .insert(missingReports)
+        .select('id')
+
+      if (reportError) {
+        reportGenerationFailed = true
+        console.error('[management-import] weekly report generation failed', { code: reportError.code, runId: run.id })
+      } else {
+        reportRunIds.push(...(createdReports ?? []).map((report) => report.id))
+      }
+    }
+  }
+
   return NextResponse.json({
     runId: run.id,
     status,
@@ -227,6 +298,9 @@ export async function POST(request: Request) {
     warnings,
     alerts: alerts?.[0] ?? null,
     alertEvaluationFailed: Boolean(alertError),
+    reportRunId: reportRunIds[0] ?? null,
+    reportRunIds,
+    reportGenerationFailed,
   })
 }
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   CANONICAL_MANAGEMENT_FORMULA_VERSION,
   HISTORICAL_MANAGEMENT_FORMULA_VERSION,
+  PREVIOUS_CANONICAL_MANAGEMENT_FORMULA_VERSION,
   calculateCanonicalManagementScores,
   roundScoreForDisplay,
 } from '../lib/canonical-management-scoring'
@@ -33,13 +34,13 @@ const base = {
 
 const canonical = calculateCanonicalManagementScores(base)
 assert.equal(canonical.formulaVersion, CANONICAL_MANAGEMENT_FORMULA_VERSION)
-assert.equal(canonical.scoringMode, 'canonical_v2')
+assert.equal(canonical.scoringMode, 'canonical_v3')
 assert.equal(canonical.components.portfolio.stock.score, 80)
 assert.equal(canonical.components.portfolio.requirements.score, 90)
 assert.equal(canonical.components.portfolio.pricing.score, 90)
 approximatelyEqual(canonical.scores.portfolio, 260 / 3)
 approximatelyEqual(canonical.scores.followUp, 260 / 3)
-assert.equal(canonical.components.conversion.closeRate.score, 100)
+assert.equal(canonical.components.conversion.closeRate.score, 100.1)
 assert.equal(canonical.classification.value, 'Estrella')
 assert.equal(canonical.classification.status, 'resolved')
 
@@ -104,6 +105,12 @@ const unresolved = calculateCanonicalManagementScores({
 assert.equal(unresolved.classification.status, 'blocked')
 assert.deepEqual(unresolved.classification.candidates.sort(), ['Perseverante', 'Vendedor'].sort())
 
+
+const previousCanonical = calculateCanonicalManagementScores(base, { mode: 'canonical_v2' })
+assert.equal(previousCanonical.formulaVersion, PREVIOUS_CANONICAL_MANAGEMENT_FORMULA_VERSION)
+assert.equal(previousCanonical.scoringMode, 'canonical_v2')
+assert.equal(previousCanonical.components.conversion.closeRate.score, 100)
+
 const historical = calculateCanonicalManagementScores(base, { mode: 'historical_v1' })
 assert.equal(historical.formulaVersion, HISTORICAL_MANAGEMENT_FORMULA_VERSION)
 assert.equal(historical.scoringMode, 'historical_v1')
@@ -132,4 +139,4 @@ assert.equal(roundScoreForDisplay(63.32), 63.3)
 assert.equal(roundScoreForDisplay(69.96), 70)
 assert.throws(() => roundScoreForDisplay(50, 7), RangeError)
 
-console.log('Canonical management scoring v2 verified: exact thresholds, hard cap, evaluability, historical replay and display rounding.')
+console.log('Canonical management scoring v3 verified against Pedro August report; v2 and historical v1 remain replayable.')

@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { requireExecutiveAccess } from '@/lib/api-access'
 import { collectPortalVitacura } from '@/lib/portal-inmobiliario-collector'
 import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { evaluatePortalSnapshotPolicy } from '@/lib/portal-snapshot-policy'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -75,15 +76,16 @@ export async function POST(req: NextRequest) {
 
     const normalized = normalizePortalListingRows(collection.rows)
     const validRows = normalized.filter((row) => row.source_listing_id && row.url)
-    const validCoverage = collection.listingUrls.length > 0
-      ? validRows.length / collection.listingUrls.length
-      : 0
-    const fullSnapshotEligible = collection.discovery.exhausted
-      && !collection.discovery.capped
-      && collection.listingUrls.length >= 30
-      && collection.failures.length === 0
-      && validCoverage >= 0.98
-    const fullSnapshot = requestedFullSnapshot && fullSnapshotEligible
+    const snapshotPolicy = evaluatePortalSnapshotPolicy({
+      requestedFullSnapshot,
+      pagesVisited: collection.discovery.pagesVisited,
+      discoveredListingUrls: collection.listingUrls.length,
+      validListingRows: validRows.length,
+      failedListingDetails: collection.failures.length,
+      discoveryExhausted: collection.discovery.exhausted,
+      discoveryCapped: collection.discovery.capped,
+    })
+    const { validCoverage, fullSnapshotEligible, fullSnapshot } = snapshotPolicy
     const summary = {
       datasetKind,
       searchPages: collection.searchUrls.length,
@@ -142,6 +144,65 @@ export async function POST(req: NextRequest) {
         { error: 'Ya existe una ingestión de este dataset en ejecución. Intente nuevamente cuando finalice.' },
         { status: 409 },
       )
+    }
+
+    const runId = pipelineResult?.run_id ?? null
+    if (runId) {
+      const { data: persistedRun, error: persistedRunError } = await supabase
+        .from('market_ingestion_runs')
+        .select('metadata')
+        .eq('id', runId)
+        .maybeSingle()
+
+      if (persistedRunError) {
+        logPortalFailure('PORTAL_DISCOVERY_METADATA_READ_FAILED', persistedRunError)
+      } else {
+        const existingMetadata = persistedRun?.metadata && typeof persistedRun.metadata === 'object' && !Array.isArray(persistedRun.metadata)
+          ? persistedRun.metadata as Record<string, unknown>
+          : {}
+
+        const { error: discoveryMetadataError } = await supabase
+          .from('market_ingestion_runs')
+          .update({
+            metadata: {
+              ...existingMetadata,
+              pipeline: 'unit_portal_listing_v2',
+              source_id: pipelineResult?.source_id ?? existingMetadata.source_id ?? null,
+              observed_at: collection.observedAt,
+              full_snapshot: fullSnapshot,
+              requested_full_snapshot: requestedFullSnapshot,
+              portal_reported_count: collection.discovery.reportedResultCount,
+              search_filters: {
+                commune: 'vitacura-metropolitana',
+                operation: 'venta',
+                dataset_kind: datasetKind,
+              },
+              search_pages: collection.discovery.pagesVisited,
+              raw_listing_candidates: collection.discovery.rawListingCandidates,
+              duplicate_listing_candidates: collection.discovery.duplicateListingCandidates,
+              unique_listings_discovered: collection.discovery.uniqueListings,
+              discovered_listing_urls: collection.listingUrls.length,
+              parsed_listing_details: collection.rows.length,
+              valid_listing_rows: validRows.length,
+              failed_listing_details: collection.failures.length,
+              valid_coverage: validCoverage,
+              discovery_exhausted: collection.discovery.exhausted,
+              discovery_capped: collection.discovery.capped,
+              full_snapshot_eligible: fullSnapshotEligible,
+              linked_listings: Number(pipelineResult?.linked ?? existingMetadata.linked_listings ?? 0),
+              unlinked_listings: Number(pipelineResult?.unlinked ?? existingMetadata.unlinked_listings ?? 0),
+              new_listings: Number(pipelineResult?.new ?? existingMetadata.new_listings ?? 0),
+              updated_listings: Number(pipelineResult?.updated ?? existingMetadata.updated_listings ?? 0),
+              unchanged_listings: Number(pipelineResult?.unchanged ?? existingMetadata.unchanged_listings ?? 0),
+              removed_listings: Number(pipelineResult?.removed ?? existingMetadata.removed_listings ?? 0),
+            },
+          })
+          .eq('id', runId)
+
+        if (discoveryMetadataError) {
+          logPortalFailure('PORTAL_DISCOVERY_METADATA_PERSIST_FAILED', discoveryMetadataError)
+        }
+      }
     }
 
     return NextResponse.json({

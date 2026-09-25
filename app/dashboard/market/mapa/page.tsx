@@ -1,6 +1,6 @@
 import { OperationalState } from '@/components/ui/operational-state'
-import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
-import VitacuraNeighborhoodsMap, { type MapFeature, type MapGeometry } from '@/components/market/vitacura-neighborhoods-map'
+import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import LeafletNeighborhoodsMap, { type MapFeature, type MapGeometry } from '@/components/market/leaflet-neighborhoods-map'
 import { requireAnyPageCapability } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
@@ -109,14 +109,14 @@ export default async function VitacuraMapPage() {
         </div>
       ) : null}
 
-      <MetricStrip items={[
-        { label: 'Barrios', value: features.length },
-        { label: 'Casas asignadas', value: totalProperties.toLocaleString('es-CL') },
-        { label: 'Fuente', value: snapshot.sourceFile ?? 'KML canónico', detail: sourceDate ? `Importado el ${sourceDate}` : undefined },
-      ]} />
+      <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-[var(--n3-line)] py-3 text-xs">
+        <div><span className="text-[var(--n3-text-muted)]">Barrios</span> <strong className="ml-2 tabular-nums text-[var(--n3-text-light)]">{features.length}</strong></div>
+        <div><span className="text-[var(--n3-text-muted)]">Casas asignadas</span> <strong className="ml-2 tabular-nums text-[var(--n3-text-light)]">{totalProperties.toLocaleString('es-CL')}</strong></div>
+        <div className="min-w-0"><span className="text-[var(--n3-text-muted)]">Fuente</span> <strong className="ml-2 font-medium text-[var(--n3-text-light)]">{snapshot.sourceFile ?? 'KML canónico'}</strong>{sourceDate ? <span className="ml-2 text-[var(--n3-text-muted)]">· {sourceDate}</span> : null}</div>
+      </div>
 
-      <section className="mt-8">
-        <VitacuraNeighborhoodsMap features={features} sourceLabel={sourceLabel} />
+      <section className="mt-4 min-w-0">
+        <LeafletNeighborhoodsMap features={features} sourceLabel={sourceLabel} />
       </section>
     </WorkspaceShell>
   )
