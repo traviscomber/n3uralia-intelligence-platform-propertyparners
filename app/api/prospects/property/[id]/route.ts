@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { accessErrorResponse, requireCapability, requireAnyCapability } from '@/lib/access-guards'
 import { hasCapability } from '@/lib/access-control'
 import { createServiceClient } from '@/lib/supabase/service'
+import { canLinkValuationProperty } from '@/lib/valuation-property-link-access'
 
 const OPEN_LISTING_STATUSES = new Set(['active', 'observed'])
 const LEAD_STATUSES = new Set(['new','assigned','contacting','qualified','valuation','proposal','won','lost','archived'])
@@ -38,7 +39,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const property = await loadProperty(db, id)
   if (!property) return NextResponse.json({ error: 'Propiedad no encontrada.' }, { status: 404 })
 
-  const [neighborhoodResult, directorsResult, territoryResult, leadResult, listingResult] = await Promise.all([
+  const [neighborhoodResult, directorsResult, territoryResult, leadResult, listingResult, selfAssignmentResult] = await Promise.all([
     property.neighborhood_id
       ? db.from('market_neighborhoods').select('id,name,micro_neighborhood,assignment_status').eq('id', property.neighborhood_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
@@ -48,9 +49,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       : Promise.resolve({ data: null, error: null }),
     db.from('property_prospect_leads').select('*').eq('property_id', property.id).maybeSingle(),
     db.from('market_current_listings').select('source_listing_id,url,status,operation,observed_at,published_at,price_uf').eq('property_id', property.id).order('observed_at', { ascending: false }).limit(10),
+    scope.scope === 'self'
+      ? db.from('property_assignments').select('id').eq('property_id', property.id).eq('assigned_to', scope.profileId).eq('status', 'active').limit(1).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ])
 
-  const failure = [neighborhoodResult.error, directorsResult.error, territoryResult.error, leadResult.error, listingResult.error].find(Boolean)
+  const failure = [neighborhoodResult.error, directorsResult.error, territoryResult.error, leadResult.error, listingResult.error, selfAssignmentResult.error].find(Boolean)
   if (failure) return NextResponse.json({ error: 'No fue posible cargar la gestión comercial de la propiedad.' }, { status: 500 })
 
   const lead = leadResult.data ?? null
@@ -64,6 +68,17 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const territoryDirector = territory ? directorByKey.get(territory.director_key) ?? null : null
   const leadDirector = lead ? directorByKey.get(lead.director_key) ?? null : null
   const currentListing = (listingResult.data ?? []).find((item) => OPEN_LISTING_STATUSES.has(String(item.status))) ?? listingResult.data?.[0] ?? null
+  const canCreateValuation = canLinkValuationProperty({
+    scope: scope.scope,
+    scopeTeam: scope.team,
+    territoryOffice: territoryDirector?.office_name ?? null,
+    hasActiveSelfAssignment: Boolean(selfAssignmentResult.data),
+  }) && (
+    hasCapability(scope.role, 'valuations.self.create')
+    || hasCapability(scope.role, 'valuations.office.review')
+    || hasCapability(scope.role, 'valuations.global.approve')
+  )
+
   const publishedLeadEligible = Boolean(
     property.neighborhood_id
     && currentListing
@@ -88,9 +103,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     publishedLeadEligible,
     permissions: {
       canManage: canManage(scope),
-      canCreateValuation: hasCapability(scope.role, 'valuations.self.create')
-        || hasCapability(scope.role, 'valuations.office.review')
-        || hasCapability(scope.role, 'valuations.global.approve'),
+      canCreateValuation,
     },
     directors: visibleDirectors,
     territoryAssignment: territory ? { ...territory, director: territoryDirector } : null,
@@ -134,55 +147,26 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'La dirección seleccionada está fuera del alcance de oficina.' }, { status: 403 })
     }
 
-    const { data: previous } = await db
-      .from('market_neighborhood_director_assignments')
-      .select('id,director_key')
-      .eq('neighborhood_id', property.neighborhood_id)
-      .eq('active', true)
-      .is('valid_to', null)
-      .maybeSingle()
+    const { data: assignmentResult, error: assignmentError } = await db.rpc(
+      'assign_property_neighborhood_director_v1',
+      {
+        p_neighborhood_id: property.neighborhood_id,
+        p_director_key: directorKey,
+        p_actor_id: scope.profileId,
+        p_reason: text(body.reason) || null,
+        p_source: 'property-360',
+      },
+    )
 
-    if (previous?.director_key !== directorKey) {
-      if (previous) {
-        const { error } = await db.from('market_neighborhood_director_assignments').update({
-          active: false,
-          valid_to: new Date().toISOString().slice(0, 10),
-          updated_at: new Date().toISOString(),
-        }).eq('id', previous.id)
-        if (error) return NextResponse.json({ error: 'No fue posible cerrar la asignación territorial anterior.' }, { status: 422 })
-      }
-
-      const { error } = await db.from('market_neighborhood_director_assignments').insert({
-        neighborhood_id: property.neighborhood_id,
-        director_key: directorKey,
-        assignment_reason: text(body.reason) || null,
-        source: 'property-360',
-        assigned_by: scope.profileId,
+    if (assignmentError) {
+      console.error('PROPERTY_TERRITORY_ASSIGNMENT_FAILED', {
+        code: assignmentError.code,
+        neighborhoodId: property.neighborhood_id,
       })
-      if (error) return NextResponse.json({ error: 'No fue posible asignar el barrio.' }, { status: 422 })
+      return NextResponse.json({ error: 'No fue posible actualizar el director territorial de forma atómica.' }, { status: 422 })
     }
 
-    const { data: existingLead } = await db.from('property_prospect_leads').select('*').eq('property_id', property.id).maybeSingle()
-    if (existingLead && existingLead.director_key !== directorKey) {
-      const previousDirector = existingLead.director_key
-      const { error: updateError } = await db.from('property_prospect_leads').update({
-        director_key: directorKey,
-        assigned_at: new Date().toISOString(),
-        updated_by: scope.profileId,
-        updated_at: new Date().toISOString(),
-      }).eq('id', existingLead.id)
-      if (updateError) return NextResponse.json({ error: 'El barrio fue asignado, pero no se pudo actualizar el lead existente.' }, { status: 422 })
-      await db.from('property_prospect_events').insert({
-        lead_id: existingLead.id,
-        property_id: property.id,
-        event_type: 'director_reassigned',
-        actor_id: scope.profileId,
-        note: text(body.reason) || null,
-        metadata: { fromDirectorKey: previousDirector, toDirectorKey: directorKey, neighborhoodId: property.neighborhood_id },
-      })
-    }
-
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, assignment: assignmentResult })
   }
 
   if (action === 'create_lead') {

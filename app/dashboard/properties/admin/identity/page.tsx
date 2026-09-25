@@ -30,7 +30,7 @@ type Match = {
   right: Property | null
 }
 
-type Payload = { status: string; rows: Match[] }
+type Payload = { status: string; total: number; summary: { candidateHigh:number; candidateMedium:number; pending:number; confirmed:number; rejected:number }; rows: Match[] }
 
 const nf = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 })
 function area(property: Property | null) { return property?.useful_area_m2 ?? property?.built_area_m2 ?? null }
@@ -90,10 +90,11 @@ export default function PropertyIdentityReviewPage() {
     {error ? <div role="alert" className="mt-4 border border-[#ff8d87]/40 px-4 py-3 text-sm text-[#ff8d87]">No fue posible completar la última operación. La confirmación exige MFA nivel 2 y permisos de gestión.</div> : null}
 
     <MetricStrip items={[
-      { label: 'Cola actual', value: rows.length },
-      { label: 'Nivel', value: high ? 'Alta' : 'Media', tone: high ? 'warning' : 'default' },
-      { label: 'Confirmación', value: 'Humana' },
-      { label: 'Fusión automática', value: 'Desactivada', tone: 'success' },
+      { label: high ? 'Pendientes alta' : 'Pendientes media', value: data?.total ?? 0, tone: (data?.total ?? 0) ? 'warning' : 'success' },
+      { label: 'Pendientes totales', value: data?.summary.pending ?? 0, tone: (data?.summary.pending ?? 0) ? 'warning' : 'success' },
+      { label: 'Confirmados', value: data?.summary.confirmed ?? 0, tone: (data?.summary.confirmed ?? 0) ? 'success' : 'default' },
+      { label: 'Rechazados', value: data?.summary.rejected ?? 0 },
+      { label: 'Visibles ahora', value: rows.length },
     ]} />
 
     <div className="mt-5 flex gap-2">
@@ -117,7 +118,7 @@ export default function PropertyIdentityReviewPage() {
     </section>
 
     <p className="mt-6 text-xs leading-5 text-[var(--n3-text-muted)]">Confirmar un match registra una equivalencia revisada entre dos identidades contractuales. No borra registros, no modifica publicaciones y no confirma por sí solo la identidad maestra de ninguna propiedad.</p>
-    <DataStatusBar cutoff="Revisión actual" coverage={`${rows.length} candidatos visibles`} issues={rows.filter((row) => Object.keys(row.contradictions || {}).length > 0).length} status={rows.length ? 'partial' : 'ready'} />
+    <DataStatusBar cutoff="Revisión actual" coverage={`${rows.length} de ${data?.total ?? 0} candidatos del nivel visibles · ${data?.summary.pending ?? 0} pendientes totales`} issues={data?.summary.pending ?? 0} status={(data?.summary.pending ?? 0) ? 'partial' : 'ready'} />
   </WorkspaceShell>
 }
 

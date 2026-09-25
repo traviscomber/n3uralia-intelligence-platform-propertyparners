@@ -91,7 +91,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     || hasCapability(scope.role, 'valuations.office.read')
     || hasCapability(scope.role, 'valuations.self.read')
 
-  const [assignmentResult, assignmentHistoryResult, valuationResult] = await Promise.all([
+  const [assignmentResult, assignmentHistoryResult, valuationResult, prospectLeadResult] = await Promise.all([
         canReadProperties
           ? supabase
               .from('property_assignments')
@@ -104,7 +104,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           ? supabase
               .from('property_assignment_history')
               .select('id,assignment_id,property_id,assigned_to,action,created_at')
-              .eq('property_id', subjectLegacyId)
+              .eq('property_id', property.id)
               .order('created_at', { ascending: false })
               .limit(30)
           : Promise.resolve({ data: [], error: null }),
@@ -116,15 +116,21 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
               .order('created_at', { ascending: false })
               .limit(20)
           : Promise.resolve({ data: [], error: null }),
+        supabase
+          .from('property_prospect_leads')
+          .select('id,status,priority,director_key,assigned_at,first_contact_at,last_follow_up_at,next_follow_up_at,won_at,lost_at,latest_note,updated_at')
+          .eq('property_id', property.id)
+          .maybeSingle(),
       ])
 
-  if (assignmentResult.error || assignmentHistoryResult.error || valuationResult.error) {
+  if (assignmentResult.error || assignmentHistoryResult.error || valuationResult.error || prospectLeadResult.error) {
     return NextResponse.json({ error: 'No fue posible completar la operación interna vinculada.' }, { status: 500 })
   }
 
   const assignmentRows = assignmentResult.data ?? []
   const assignmentHistoryRows = assignmentHistoryResult.data ?? []
   const valuationRows = valuationResult.data ?? []
+  const prospectLead = prospectLeadResult.data ?? null
   const visibleAssignments = assignmentRows.filter((row) => !row.assigned_to || scope.visibleProfileIds.includes(String(row.assigned_to)))
   const visibleAssignmentHistory = assignmentHistoryRows.filter((row) => !row.assigned_to || scope.visibleProfileIds.includes(String(row.assigned_to)))
   const visibleValuations = valuationRows.filter((row) => !row.requested_by || scope.visibleProfileIds.includes(String(row.requested_by)))
@@ -140,6 +146,29 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   const currentAssignment = visibleAssignments.find((row) => row.status === 'active' && !row.ended_at) ?? visibleAssignments[0] ?? null
   const latestValuation = visibleValuations[0] ?? null
+
+  const [prospectEventsResult, prospectDirectorResult] = await Promise.all([
+    prospectLead
+      ? supabase
+          .from('property_prospect_events')
+          .select('id,event_type,from_status,to_status,note,occurred_at')
+          .eq('lead_id', prospectLead.id)
+          .order('occurred_at', { ascending: false })
+          .limit(8)
+      : Promise.resolve({ data: [], error: null }),
+    prospectLead?.director_key
+      ? supabase
+          .from('property_director_directory')
+          .select('director_key,full_name,role,office_name')
+          .eq('director_key', prospectLead.director_key)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ])
+  if (prospectEventsResult.error || prospectDirectorResult.error) {
+    return NextResponse.json({ error: 'No fue posible completar la trazabilidad comercial de la propiedad.' }, { status: 500 })
+  }
+  const prospectDirector = prospectDirectorResult.data ?? null
+  const prospectEvents = prospectEventsResult.data ?? []
 
   const currentListing = listings.find((item) => ['active', 'observed'].includes(String(item.status))) ?? listings[0] ?? null
   const area = numberOrNull(property.useful_area_m2) ?? numberOrNull(property.built_area_m2)
@@ -501,16 +530,16 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       description: legacySubject?.description ?? null,
     },
     internalOperations: {
-      linked: Boolean(subjectLegacyId),
+      linked: Boolean(subjectLegacyId || currentAssignment || latestValuation || prospectLead),
       legacyPropertyId: subjectLegacyId,
       permissions: {
         canReadProperties,
         canReadValuations,
       },
       coverage: {
-        assignments: !subjectLegacyId ? 'not_linked' : !canReadProperties ? 'restricted' : assignmentRows.length > visibleAssignments.length ? 'restricted' : visibleAssignments.length ? 'available' : 'not_informed',
-        valuations: !subjectLegacyId ? 'not_linked' : !canReadValuations ? 'restricted' : valuationRows.length > visibleValuations.length ? 'restricted' : visibleValuations.length ? 'available' : 'not_informed',
-        crmActivity: 'not_linked',
+        assignments: !canReadProperties ? 'restricted' : assignmentRows.length > visibleAssignments.length ? 'restricted' : visibleAssignments.length ? 'available' : 'not_informed',
+        valuations: !canReadValuations ? 'restricted' : valuationRows.length > visibleValuations.length ? 'restricted' : visibleValuations.length ? 'available' : 'not_informed',
+        crmActivity: prospectLead ? 'available' : 'not_informed',
       },
       currentAssignment: currentAssignment ? {
         id: currentAssignment.id,
@@ -548,6 +577,24 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         approvedAt: latestValuation.approved_at,
         issuedAt: latestValuation.issued_at,
       } : null,
+      prospect: prospectLead ? {
+        id: prospectLead.id,
+        status: prospectLead.status,
+        priority: prospectLead.priority,
+        directorKey: prospectLead.director_key,
+        directorName: prospectDirector?.full_name ?? null,
+        directorRole: prospectDirector?.role ?? null,
+        officeName: prospectDirector?.office_name ?? null,
+        assignedAt: prospectLead.assigned_at,
+        firstContactAt: prospectLead.first_contact_at,
+        lastFollowUpAt: prospectLead.last_follow_up_at,
+        nextFollowUpAt: prospectLead.next_follow_up_at,
+        wonAt: prospectLead.won_at,
+        lostAt: prospectLead.lost_at,
+        latestNote: prospectLead.latest_note,
+        updatedAt: prospectLead.updated_at,
+        events: prospectEvents,
+      } : null,
       valuations: visibleValuations.slice(0, 8).map((row) => ({
         id: row.id,
         status: row.status,
@@ -559,7 +606,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         createdAt: row.created_at,
         issuedAt: row.issued_at,
       })),
-      limitation: 'Leads, visitas, ofertas, feedback y cierres por propiedad sólo se incorporarán cuando exista evidencia CRM canónica enlazada a este identificador.',
+      limitation: prospectLead ? 'El lead y su seguimiento están enlazados directamente al property_id canónico. Visitas, ofertas, feedback y cierres internos permanecen fuera hasta contar con evidencia CRM por propiedad equivalente.' : 'Aún no existe un lead Property Partners para esta propiedad. Visitas, ofertas, feedback y cierres internos sólo se incorporarán cuando exista evidencia CRM canónica enlazada a este identificador.',
     },
     currentMarket: {
       listingId: currentListing?.id ?? null,

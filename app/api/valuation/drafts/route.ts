@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 import { canUnlockV2Features } from '@/lib/v2-feature-access'
+import { canLinkValuationProperty } from '@/lib/valuation-property-link-access'
 import {
   buildValuationReportPayload,
   calculateCanonicalComparableUfM2,
@@ -178,6 +180,105 @@ export async function POST(request: Request) {
       }
     }
 
+    const authorizationDb = createServiceClient()
+    let resolvedSourcePropertyId = payload.sourcePropertyId?.trim() || null
+    let verifiedAssignment: {
+      id: string
+      property_id: string
+      assigned_to: string
+      assignment_role: string | null
+      assigned_at: string | null
+    } | null = null
+
+    if (payload.propertyAssignmentId) {
+      const { data: assignment, error: assignmentError } = await authorizationDb
+        .from('property_assignments')
+        .select('id,property_id,assigned_to,status,assignment_role,assigned_at')
+        .eq('id', payload.propertyAssignmentId)
+        .maybeSingle()
+
+      if (assignmentError) {
+        console.error('VALUATION_DRAFT_ASSIGNMENT_LOOKUP_FAILED', { code: assignmentError.code ?? 'UNKNOWN' })
+        return NextResponse.json({ error: 'No pudimos verificar la asignación operacional.' }, { status: 422 })
+      }
+      if (!assignment || assignment.status !== 'active' || assignment.assigned_to !== scope.profileId) {
+        return NextResponse.json({ error: 'La asignación individual no pertenece al perfil autenticado o ya no está activa.' }, { status: 403 })
+      }
+      if (resolvedSourcePropertyId && resolvedSourcePropertyId !== assignment.property_id) {
+        return NextResponse.json({ error: 'La propiedad no corresponde a la asignación indicada.' }, { status: 400 })
+      }
+      resolvedSourcePropertyId = assignment.property_id
+      verifiedAssignment = assignment
+    }
+
+    if (resolvedSourcePropertyId) {
+      const { data: linkedProperty, error: propertyError } = await authorizationDb
+        .from('market_properties')
+        .select('id,neighborhood_id,property_type')
+        .eq('id', resolvedSourcePropertyId)
+        .maybeSingle()
+
+      if (propertyError) {
+        console.error('VALUATION_DRAFT_PROPERTY_LOOKUP_FAILED', { code: propertyError.code ?? 'UNKNOWN' })
+        return NextResponse.json({ error: 'No pudimos verificar la propiedad operacional.' }, { status: 422 })
+      }
+      if (!linkedProperty) return NextResponse.json({ error: 'La propiedad vinculada no existe.' }, { status: 400 })
+
+      if (scope.scope === 'self' && !verifiedAssignment) {
+        const { data: selfAssignment, error: selfAssignmentError } = await authorizationDb
+          .from('property_assignments')
+          .select('id,property_id,assigned_to,status,assignment_role,assigned_at')
+          .eq('property_id', resolvedSourcePropertyId)
+          .eq('assigned_to', scope.profileId)
+          .eq('status', 'active')
+          .limit(1)
+          .maybeSingle()
+        if (selfAssignmentError) {
+          console.error('VALUATION_DRAFT_SELF_ASSIGNMENT_LOOKUP_FAILED', { code: selfAssignmentError.code ?? 'UNKNOWN' })
+          return NextResponse.json({ error: 'No pudimos verificar la asignación individual.' }, { status: 422 })
+        }
+        verifiedAssignment = selfAssignment ?? null
+      }
+
+      let territoryOffice: string | null = null
+      if (scope.scope === 'office' && linkedProperty.neighborhood_id) {
+        const { data: territory, error: territoryError } = await authorizationDb
+          .from('market_neighborhood_director_assignments')
+          .select('director_key')
+          .eq('neighborhood_id', linkedProperty.neighborhood_id)
+          .eq('active', true)
+          .is('valid_to', null)
+          .maybeSingle()
+        if (territoryError) {
+          console.error('VALUATION_DRAFT_TERRITORY_LOOKUP_FAILED', { code: territoryError.code ?? 'UNKNOWN' })
+          return NextResponse.json({ error: 'No pudimos verificar el territorio de la propiedad.' }, { status: 422 })
+        }
+        if (territory?.director_key) {
+          const { data: director, error: directorError } = await authorizationDb
+            .from('property_director_directory')
+            .select('office_name')
+            .eq('director_key', territory.director_key)
+            .eq('active', true)
+            .maybeSingle()
+          if (directorError) {
+            console.error('VALUATION_DRAFT_DIRECTOR_LOOKUP_FAILED', { code: directorError.code ?? 'UNKNOWN' })
+            return NextResponse.json({ error: 'No pudimos verificar la dirección responsable.' }, { status: 422 })
+          }
+          territoryOffice = director?.office_name ?? null
+        }
+      }
+
+      const authorized = canLinkValuationProperty({
+        scope: scope.scope,
+        scopeTeam: scope.team,
+        territoryOffice,
+        hasActiveSelfAssignment: Boolean(verifiedAssignment),
+      })
+      if (!authorized) {
+        return NextResponse.json({ error: 'La propiedad está fuera del alcance autorizado para esta valorización.' }, { status: 403 })
+      }
+    }
+
     const comparables = Array.isArray(payload.comparables) ? payload.comparables : []
     const championRecommendation = buildChampionHouseRecommendation(payload.subject, comparables as ChampionComparable[])
     const qualitativeFactors = payload.qualitativeFactors ?? emptyFactors
@@ -226,8 +327,8 @@ export async function POST(request: Request) {
       portalComparableCount: result.portalSummary.count,
       cbrsComparableCount: result.cbrsSummary.count,
       selectedComparableCount,
-      subjectPropertyId: payload.sourcePropertyId ?? null,
-      propertyAssignmentId: payload.propertyAssignmentId ?? null,
+      subjectPropertyId: resolvedSourcePropertyId,
+      propertyAssignmentId: verifiedAssignment?.id ?? null,
       rateAnchor,
       subjectCoordinatesPresent: payload.subject.latitude !== undefined && payload.subject.longitude !== undefined,
       comparableDistanceCoveragePct: Number((distanceCoverage * 100).toFixed(1)),
@@ -237,8 +338,8 @@ export async function POST(request: Request) {
     } : {
       draft: true,
       selectedComparableCount,
-      propertyAssignmentId: payload.propertyAssignmentId ?? null,
-      subjectPropertyId: payload.sourcePropertyId ?? null,
+      propertyAssignmentId: verifiedAssignment?.id ?? null,
+      subjectPropertyId: resolvedSourcePropertyId,
       finalWizardComplete: false,
       ...championEvidence,
     }
@@ -261,7 +362,7 @@ export async function POST(request: Request) {
       ? {
           ...buildValuationReportPayload(payload.subject, comparables, qualitativeFactors, result),
           methodologyVersion,
-          subjectPropertyId: payload.sourcePropertyId ?? null,
+          subjectPropertyId: resolvedSourcePropertyId,
           decision: {
             rateAnchor,
             rateConfirmedByValuer: true,
@@ -291,13 +392,13 @@ export async function POST(request: Request) {
         }
 
     const warnings = complete && result
-      ? [...result.warnings, ...(!payload.sourcePropertyId ? ['La valorización no está vinculada a una propiedad operacional y no puede alimentar pricing.'] : [])]
+      ? [...result.warnings, ...(!resolvedSourcePropertyId ? ['La valorización no está vinculada a una propiedad operacional y no puede alimentar pricing.'] : [])]
       : ['Borrador incompleto: no publicable ni enviable a revisión.']
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
       .insert({
-        subject_property_id: payload.sourcePropertyId?.trim() || null,
+        subject_property_id: resolvedSourcePropertyId,
         requested_by: scope.profileId,
         status: 'draft',
         valuation_date: new Date().toISOString().slice(0, 10),

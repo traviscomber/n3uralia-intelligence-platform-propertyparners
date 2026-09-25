@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getManagementAutomationReadiness } from '@/lib/management-automation-readiness'
+import { buildCanonicalMonthlySnapshot } from '@/lib/management-canonical-monthly-snapshot'
 import {
   advanceSchedule,
   previousMonthBounds,
@@ -66,6 +67,55 @@ export async function runDueManagementReports(options: RunOptions) {
   const alerts = alertsResult.data ?? []
   const schedules = schedulesResult.data ?? []
   const results: Array<Record<string, unknown>> = []
+
+  const canonicalPeriod = period.start.slice(0, 7)
+  const canonicalSnapshot = buildCanonicalMonthlySnapshot(canonicalPeriod, now.toISOString(), options.trigger)
+  let canonicalArchive: Record<string, unknown> | null = null
+
+  if (canonicalSnapshot) {
+    const existingCanonical = await supabase
+      .from('management_report_runs')
+      .select('id')
+      .eq('report_type', 'monthly')
+      .is('entity_id', null)
+      .eq('period_start', period.start)
+      .eq('period_end', period.end)
+      .contains('snapshot', { schemaVersion: 'canonical-monthly-report-v1' })
+      .limit(1)
+
+    if (existingCanonical.error) throw new Error(existingCanonical.error.message)
+
+    if (existingCanonical.data?.[0]?.id) {
+      canonicalArchive = {
+        reportId: existingCanonical.data[0].id,
+        status: 'already_generated',
+        period: canonicalPeriod,
+      }
+    } else {
+      const insertPayload: Record<string, unknown> = {
+        report_type: 'monthly',
+        entity_id: null,
+        period_start: period.start,
+        period_end: period.end,
+        status: 'generated',
+        snapshot: canonicalSnapshot,
+      }
+      if (options.actorId) insertPayload.generated_by = options.actorId
+
+      const createdCanonical = await supabase
+        .from('management_report_runs')
+        .insert(insertPayload)
+        .select('id')
+        .single()
+
+      if (createdCanonical.error) throw new Error(createdCanonical.error.message)
+      canonicalArchive = {
+        reportId: createdCanonical.data.id,
+        status: 'generated',
+        period: canonicalPeriod,
+      }
+    }
+  }
 
   for (const schedule of schedules) {
     let reportQuery = supabase
@@ -184,6 +234,7 @@ export async function runDueManagementReports(options: RunOptions) {
     schedulesDue: schedules.length,
     schedulesProcessed: results.filter((result) => result.status !== 'failed').length,
     schedulesFailed: results.filter((result) => result.status === 'failed').length,
+    canonicalArchive,
     results,
   }
 }

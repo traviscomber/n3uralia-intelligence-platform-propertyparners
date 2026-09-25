@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { canUnlockV2Features } from '@/lib/v2-feature-access'
+import { valuationUatReadiness } from '@/lib/valuation-uat-readiness'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 import {
   buildValuationReportPayload,
@@ -115,7 +116,48 @@ export async function GET() {
       logDatabaseFailure('VALUATION_CASES_LIST_FAILED', error)
       return NextResponse.json({ error: 'No pudimos cargar las valorizaciones.' }, { status: 500 })
     }
-    return NextResponse.json({ cases: data ?? [] })
+
+    const cases = data ?? []
+    const caseIds = cases.map((item) => item.id)
+    const acceptedComparableCount = new Map<string, number>()
+
+    if (caseIds.length) {
+      const { data: comparables, error: comparableError } = await supabase
+        .from('valuation_comparables')
+        .select('valuation_case_id')
+        .in('valuation_case_id', caseIds)
+        .eq('selected', true)
+        .eq('match_status', 'accepted')
+
+      if (comparableError) {
+        logDatabaseFailure('VALUATION_CASES_COMPARABLE_COVERAGE_FAILED', comparableError)
+        return NextResponse.json({ error: 'No pudimos verificar la cobertura de comparables.' }, { status: 500 })
+      }
+
+      for (const comparable of comparables ?? []) {
+        acceptedComparableCount.set(
+          comparable.valuation_case_id,
+          (acceptedComparableCount.get(comparable.valuation_case_id) ?? 0) + 1,
+        )
+      }
+    }
+
+    return NextResponse.json({
+      cases: cases.map((item) => {
+        const count = acceptedComparableCount.get(item.id) ?? 0
+        return {
+          ...item,
+          accepted_comparable_count: count,
+          uat_readiness: valuationUatReadiness({
+            status: item.status,
+            propertyType: item.property_type,
+            subjectPropertyId: item.subject_property_id,
+            conditionStatus: item.condition_status,
+            acceptedComparableCount: count,
+          }),
+        }
+      }),
+    })
   } catch (error) {
     return accessErrorResponse(error)
   }
