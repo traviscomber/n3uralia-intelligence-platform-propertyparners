@@ -70,7 +70,7 @@ export async function GET() {
   const propertyById = new Map((propertiesResult.data ?? []).map((item) => [item.id,item]))
   const neighborhoodById = new Map((neighborhoodsResult.data ?? []).map((item) => [item.id,item]))
   const directorByKey = new Map(visibleDirectors.map((item) => [item.director_key,item]))
-  const valuationsByProperty = new Map<string, typeof valuationsResult.data>()
+  const valuationsByProperty = new Map<string, any[]>()
   for (const valuation of valuationsResult.data ?? []) {
     const list = valuationsByProperty.get(valuation.subject_property_id) ?? []
     list.push(valuation)
@@ -132,7 +132,7 @@ export async function GET() {
 
   const territoryByNeighborhood = new Map((territoryResult.data ?? []).map((item)=>[item.neighborhood_id,item]))
   const candidatePropertyById = new Map((candidatePropertiesResult.data ?? []).map((item)=>[item.id,item]))
-  const listingByProperty = new Map<string,(typeof candidateListingsResult.data)[number]>()
+  const listingByProperty = new Map<string, any>()
   for(const listing of candidateListingsResult.data ?? []) if(!listingByProperty.has(listing.property_id)) listingByProperty.set(listing.property_id,listing)
 
   const candidates = candidatePropertyIds
