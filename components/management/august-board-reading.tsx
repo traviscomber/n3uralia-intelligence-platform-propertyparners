@@ -2,6 +2,7 @@
 
 export type AugustBoardEntity = {
   name:string
+  slug?:string
   classification:string
   sale:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
   ytd:{closings:number;closingTarget:number;closingCompliancePct:number;salesUf:number;salesUfTarget:number;salesUfCompliancePct:number}
