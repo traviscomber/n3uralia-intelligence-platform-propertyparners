@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getCanonicalManagementPeriods } from '@/lib/management-canonical-periods'
+import { getAugustBoardEntityBySlug } from '@/lib/management-august-board'
 
 const OFFICE_BY_SLUG: Record<string,string> = {
   'santa-maria':'Santa María',
@@ -38,6 +39,8 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
   const { slug } = await context.params
   const officeName = OFFICE_BY_SLUG[slug]
   if (!officeName) return NextResponse.json({ error:'Oficina no encontrada.' },{status:404})
+  const augustBoard = getAugustBoardEntityBySlug(slug)
+  if (!augustBoard) return NextResponse.json({ error:'La oficina no está definida en la autoridad de agosto.' },{status:404})
   if (scope.scope === 'office' && scope.team && scope.team !== officeName) {
     return NextResponse.json({ error:'Fuera del alcance de oficina.' },{status:403})
   }
@@ -184,6 +187,7 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
   return NextResponse.json({
     office:{name:officeName,slug},
     authority:{file:latest.authority.file,sha256:latest.authority.sha256,period:latest.period},
+    augustBoard,
     latest,
     previous,
     series,
