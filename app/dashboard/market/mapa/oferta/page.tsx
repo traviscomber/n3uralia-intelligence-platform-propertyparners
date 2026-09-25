@@ -45,7 +45,7 @@ export default async function MarketOfferMapPage() {
       .in('id', ids)
     if (error) {
       return <WorkspaceShell>
-        <WorkspaceHeader eyebrow="Mercado · Portal" title="Oferta en mapa" meta="Vitacura" actions={[
+        <WorkspaceHeader eyebrow="Mercado · Inteligencia PP" title="Oferta en mapa" meta="Vitacura" actions={[
           { label: 'Territorio', href: '/dashboard/market/mapa' },
           { label: 'Volver a Mercado', href: '/dashboard/market' },
         ]} />
@@ -62,7 +62,7 @@ export default async function MarketOfferMapPage() {
 
   if (neighborhoodError) {
     return <WorkspaceShell>
-      <WorkspaceHeader eyebrow="Mercado · Portal" title="Oferta en mapa" meta="Vitacura" actions={[
+      <WorkspaceHeader eyebrow="Mercado · Inteligencia PP" title="Oferta en mapa" meta="Vitacura" actions={[
         { label: 'Territorio', href: '/dashboard/market/mapa' },
         { label: 'Volver a Mercado', href: '/dashboard/market' },
       ]} />
@@ -209,7 +209,7 @@ export default async function MarketOfferMapPage() {
 
   return <WorkspaceShell>
     <WorkspaceHeader
-      eyebrow="Mercado · Portal"
+      eyebrow="Mercado · Inteligencia PP"
       title="Oferta en mapa"
       meta="Vitacura · oferta vigente + trazabilidad operacional"
       actions={[
@@ -221,11 +221,12 @@ export default async function MarketOfferMapPage() {
 
     <section className="mt-5 border-y border-[var(--n3-line)] py-3 text-xs">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-        <div><span className="text-[var(--n3-text-muted)]">Oferta consultada</span> <strong className="ml-2 tabular-nums">{totalCurrent.toLocaleString('es-CL')}</strong></div>
+        <div><span className="text-[var(--n3-text-muted)]">Universo vigente</span> <strong className="ml-2 tabular-nums">{totalCurrent.toLocaleString('es-CL')}</strong></div>
+        <div><span className="text-[var(--n3-text-muted)]">Muestra cargada</span> <strong className="ml-2 tabular-nums">{Math.min(totalCurrent, MAX_LISTINGS).toLocaleString('es-CL')}</strong></div>
         <div><span className="text-[var(--n3-text-muted)]">Georreferenciadas</span> <strong className="ml-2 tabular-nums">{items.length.toLocaleString('es-CL')}</strong></div>
         <div><span className="text-[var(--n3-text-muted)]">Fuente</span> <strong className="ml-2">Portal Inmobiliario · identidad PP</strong></div>
       </div>
-      {totalCurrent > MAX_LISTINGS ? <p className="mt-2 text-[11px] text-[var(--n3-text-muted)]">La vista usa las {MAX_LISTINGS.toLocaleString('es-CL')} publicaciones vigentes más recientes; el total superior conserva el universo observado.</p> : null}
+      {totalCurrent > MAX_LISTINGS ? <p className="mt-2 text-[11px] text-[var(--n3-text-muted)]">El mapa trabaja con las {MAX_LISTINGS.toLocaleString('es-CL')} publicaciones vigentes más recientes; el universo completo se mantiene informado por separado.</p> : null}
     </section>
 
     {items.length ? (
