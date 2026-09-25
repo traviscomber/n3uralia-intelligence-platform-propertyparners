@@ -66,3 +66,31 @@ test('canonical office entities expose Jan-Aug evolution for CEO drill-down', as
     assert.equal(office?.evolution?.at(-1)?.metrics?.management_credited_sales, office?.evolution?.at(-1)?.sales)
   }
 })
+
+
+test('August board extract preserves Pedro report semantics and values', async () => {
+  const mod = await import('../lib/management-august-board')
+  const board = mod.getAugustBoard()
+  assert.equal(board.source.file, 'Ago_Directorio.pptx')
+  assert.equal(board.source.period, '2026-08')
+  assert.equal(board.scoring.formula, 'Calidad Gestión = 0.4×Calidad Cartera + 0.3×Calidad Seguim + 0.3×Calidad Conversión')
+
+  const company = mod.getAugustBoardCompany()
+  assert.equal(company?.sale.closings, 8)
+  assert.equal(company?.sale.salesUf, 141650)
+  assert.equal(company?.ytd.closings, 50.5)
+  assert.equal(company?.ytd.salesUf, 920786)
+  assert.deepEqual(company?.scores, { management:67.4, portfolio:65.8, followUp:69.8, conversion:67.3 })
+
+  const santaMaria = mod.getAugustBoardEntityBySlug('santa-maria')
+  assert.equal(santaMaria?.sale.closingCompliancePct, 152)
+  assert.equal(santaMaria?.indicators.conversion.tc6mPct, 2.5)
+
+  const nuevaCostanera = mod.getAugustBoardEntityBySlug('nueva-costanera')
+  assert.equal(nuevaCostanera?.indicators.followUp.staleA15Pct, 52)
+  assert.equal(nuevaCostanera?.subscores.followUp.managedA15, 48.5)
+
+  const loBeltran = mod.getAugustBoardEntityBySlug('lo-beltran')
+  assert.equal(loBeltran?.classification, 'Potencial')
+  assert.equal(loBeltran?.indicators.conversion.visitTargetPct, 35.5)
+})
