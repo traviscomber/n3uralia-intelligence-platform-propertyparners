@@ -57,7 +57,7 @@ export default function Office360Page(){
  const closingsDelta=delta(l.closings,p?.closings)
  const critical=data.signals.filter(s=>s.severity==='critical').length
 
- return <WorkspaceShell>
+ return <WorkspaceShell contentClassName="max-w-[1480px]">
   <WorkspaceHeader
    eyebrow="Office 360 · Control de gestión"
    title={data.office.name}

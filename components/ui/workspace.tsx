@@ -11,8 +11,8 @@ export type WorkspaceAction = {
   ariaLabel?: string
 }
 
-export function WorkspaceShell({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`min-h-full bg-[var(--n3-black)] px-0 py-1 text-[var(--n3-text-light)] sm:px-2 sm:py-3 md:px-3 md:py-5 ${className}`}><div className="mx-auto w-full max-w-[1180px]">{children}</div></div>
+export function WorkspaceShell({ children, className = '', contentClassName = 'max-w-[1180px]' }: { children: ReactNode; className?: string; contentClassName?: string }) {
+  return <div className={`min-h-full bg-[var(--n3-black)] px-0 py-1 text-[var(--n3-text-light)] sm:px-2 sm:py-3 md:px-3 md:py-5 ${className}`}><div className={`mx-auto w-full ${contentClassName}`}>{children}</div></div>
 }
 
 export function WorkspaceHeader({ eyebrow, title, meta, controls, actions = [] }: { eyebrow?: string; title?: string; meta?: ReactNode; controls?: ReactNode; actions?: WorkspaceAction[] }) {
