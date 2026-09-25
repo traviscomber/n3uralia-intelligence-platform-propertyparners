@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Download, FileText, RefreshCw } from 'lucide-react'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { getDecisionThreshold } from '@/lib/management-decision-policy'
+import { AugustBoardReading } from '@/components/management/august-board-reading'
 
 type Point = {
   period: string
@@ -254,28 +255,9 @@ export function CeoDashboardCommand() {
 
   return <WorkspaceShell>
     <WorkspaceHeader controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }, { label: 'Informe', href: `/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`, primary: true, icon: <FileText size={14} /> }, { label: 'Exportar', onClick: exportData, icon: <Download size={14} />, ariaLabel: 'Exportar' }]} />
-    <MetricStrip items={[{ label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail }, { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) }, { label: 'UF', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined }, { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) }]} />
-
-    {period === '2026-08' && augustCompany ? <section className="mt-5">
-      <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cierre Agosto · Directorio</p>
-          <h2 className="mt-1 text-lg font-medium">Venta, acumulado y scores que mira Pedro</h2>
-        </div>
-        <span className="text-xs text-[var(--n3-text-muted)]">{augustBoard?.source.file}</span>
-      </div>
-      <div className="grid gap-px bg-[var(--n3-line)] md:grid-cols-4">
-        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Venta Ago</span><strong className="mt-2 block text-xl">{n(augustCompany.sale.closings,1)} cierres</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{uf(augustCompany.sale.salesUf)} · {pct(augustCompany.sale.closingCompliancePct)} ci · {pct(augustCompany.sale.salesUfCompliancePct)} UF</p></div>
-        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Acum. Ene–Ago</span><strong className="mt-2 block text-xl">{n(augustCompany.ytd.closings,1)} cierres</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{uf(augustCompany.ytd.salesUf)} · {pct(augustCompany.ytd.closingCompliancePct)} ci · {pct(augustCompany.ytd.salesUfCompliancePct)} UF</p></div>
-        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Calidad Gestión</span><strong className="mt-2 block text-xl">{n(augustCompany.scores.management,1)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{augustCompany.classification}</p></div>
-        <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Mix de score</span><strong className="mt-2 block text-sm">C {n(augustCompany.scores.portfolio,1)} · S {n(augustCompany.scores.followUp,1)} · V {n(augustCompany.scores.conversion,1)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">40% · 30% · 30%</p></div>
-      </div>
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><span className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Cartera</span><p className="mt-2">Meta cartera <strong className="float-right">{n(augustCompany.subscores.portfolio.metaPortfolio,1)}</strong></p><p className="mt-2">Reqs x Tipo Prop <strong className="float-right">{n(augustCompany.subscores.portfolio.requirementsByType,1)}</strong></p><p className="mt-2">Calidad Precio <strong className="float-right">{n(augustCompany.subscores.portfolio.priceQuality,1)}</strong></p></div>
-        <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><span className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Seguimiento</span><p className="mt-2">% Leads Clasif <strong className="float-right">{n(augustCompany.subscores.followUp.classifiedLeads,1)}</strong></p><p className="mt-2">% Leads c-g90 <strong className="float-right">{n(augustCompany.subscores.followUp.managed90,1)}</strong></p><p className="mt-2">%LeadsA c-g15 <strong className="float-right">{n(augustCompany.subscores.followUp.managedA15,1)}</strong></p></div>
-        <div className="border-t border-[var(--n3-line)] pt-3 text-sm"><span className="text-xs uppercase tracking-[.12em] text-[var(--n3-text-muted)]">Conversión</span><p className="mt-2">Vis Realiz/Meta <strong className="float-right">{n(augustCompany.subscores.conversion.visitsToTarget,1)}</strong></p><p className="mt-2">%Vis realizad/agend <strong className="float-right">{n(augustCompany.subscores.conversion.visitExecution,1)}</strong></p><p className="mt-2">TC 6m/leads tot <strong className="float-right">{n(augustCompany.subscores.conversion.tc6m,1)}</strong></p></div>
-      </div>
-    </section> : null}
+    {period === '2026-08' && augustCompany
+      ? <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
+      : <MetricStrip items={[{ label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail }, { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) }, { label: 'UF', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined }, { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) }]} />}
 
     <section className="mt-5">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Señales y acciones</h2><span className={`text-xs tabular-nums ${critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{critical ? `${critical} críticas` : `${actions.length} activas`}</span></div>
