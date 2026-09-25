@@ -130,7 +130,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const visibleAssignments = assignmentRows.filter((row) => !row.assigned_to || scope.visibleProfileIds.includes(String(row.assigned_to)))
   const visibleAssignmentHistory = assignmentHistoryRows.filter((row) => !row.assigned_to || scope.visibleProfileIds.includes(String(row.assigned_to)))
   const visibleValuations = valuationRows.filter((row) => !row.requested_by || scope.visibleProfileIds.includes(String(row.requested_by)))
-  const profileIds = [...new Set(visibleAssignments.map((row) => row.assigned_to).filter((value): value is string => Boolean(value)))]
+  const profileIds = [...new Set([
+    ...visibleAssignments.map((row) => row.assigned_to),
+    ...visibleAssignmentHistory.map((row) => row.assigned_to),
+  ].filter((value): value is string => Boolean(value)))]
   const profileResult = profileIds.length
     ? await supabase.from('profiles').select('id,full_name,role,team').in('id', profileIds)
     : { data: [], error: null }
@@ -157,6 +160,122 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   const priceHistory = history.filter((row) => row.price_uf != null).map((row) => ({ observedAt: row.observed_at, priceUf: Number(row.price_uf), status: row.status, sourceListingId: row.source_listing_id }))
   const distinctPrices = [...new Set(priceHistory.map((row) => row.priceUf))]
+
+  const lifecycleTimeline = [
+    property.first_seen_at ? {
+      id: `market:first-seen:${property.id}`,
+      occurredAt: property.first_seen_at,
+      type: 'market_observed',
+      domain: 'market',
+      label: 'Primera evidencia observada',
+      detail: 'La plataforma observó por primera vez esta identidad de propiedad.',
+      valueUf: null,
+      href: currentListing?.url ?? legacySubject?.source_url ?? null,
+    } : null,
+    lifecycle?.first_published_at ? {
+      id: `market:first-published:${property.id}`,
+      occurredAt: lifecycle.first_published_at,
+      type: 'listing_published',
+      domain: 'market',
+      label: 'Publicación observada',
+      detail: 'Inicio publicado según el lifecycle canónico disponible.',
+      valueUf: firstPrice,
+      href: currentListing?.url ?? legacySubject?.source_url ?? null,
+    } : null,
+    ...priceHistory.reduce<Array<Record<string, unknown>>>((events, row, index) => {
+      const previous = index > 0 ? priceHistory[index - 1] : null
+      if (!previous || previous.priceUf === row.priceUf) return events
+      const changePct = previous.priceUf > 0 ? (row.priceUf / previous.priceUf - 1) * 100 : null
+      events.push({
+        id: `market:price:${row.sourceListingId}:${row.observedAt}`,
+        occurredAt: row.observedAt,
+        type: 'price_changed',
+        domain: 'market',
+        label: changePct != null && changePct < 0 ? 'Precio publicado reducido' : 'Precio publicado actualizado',
+        detail: changePct == null ? 'Cambio de precio observado.' : `${changePct > 0 ? '+' : ''}${changePct.toFixed(1)}% respecto de la observación previa.`,
+        valueUf: row.priceUf,
+        href: currentListing?.url ?? legacySubject?.source_url ?? null,
+      })
+      return events
+    }, []),
+    lifecycle?.removed_at ? {
+      id: `market:removed:${property.id}`,
+      occurredAt: lifecycle.removed_at,
+      type: 'listing_removed',
+      domain: 'market',
+      label: 'Publicación retirada',
+      detail: 'Retiro observado por el lifecycle de mercado. No implica por sí solo una venta.',
+      valueUf: latestPrice,
+      href: null,
+    } : null,
+    ...transactions.map((transaction) => ({
+      id: `registry:transaction:${transaction.id}`,
+      occurredAt: transaction.transaction_date,
+      type: 'registered_sale',
+      domain: 'registry',
+      label: 'Venta registral confirmada',
+      detail: 'Transacción vinculada en la fuente registral. No se interpreta automáticamente como cierre comercial Property Partners.',
+      valueUf: numberOrNull(transaction.price_uf),
+      href: null,
+    })),
+    ...visibleAssignmentHistory.map((row) => ({
+      id: `internal:assignment:${row.id}`,
+      occurredAt: row.created_at,
+      type: 'assignment',
+      domain: 'internal',
+      label: row.action === 'created' ? 'Propiedad asignada' : 'Asignación actualizada',
+      detail: row.assigned_to
+        ? `${profileById.get(String(row.assigned_to))?.full_name ?? 'Responsable visible'} · ${row.action}`
+        : `Cambio de asignación · ${row.action}`,
+      valueUf: null,
+      href: null,
+    })),
+    ...visibleValuations.flatMap((row) => [
+      row.created_at ? {
+        id: `internal:valuation-created:${row.id}`,
+        occurredAt: row.created_at,
+        type: 'valuation_created',
+        domain: 'internal',
+        label: 'Valorización creada',
+        detail: `${row.methodology_version ?? 'Metodología PP'} · versión ${row.version_number ?? 1}`,
+        valueUf: numberOrNull(row.estimated_value_uf),
+        href: `/dashboard/valuations/${row.id}`,
+      } : null,
+      row.reviewed_at ? {
+        id: `internal:valuation-reviewed:${row.id}`,
+        occurredAt: row.reviewed_at,
+        type: 'valuation_reviewed',
+        domain: 'internal',
+        label: 'Valorización revisada',
+        detail: 'El expediente registró revisión interna.',
+        valueUf: numberOrNull(row.estimated_value_uf),
+        href: `/dashboard/valuations/${row.id}`,
+      } : null,
+      row.approved_at ? {
+        id: `internal:valuation-approved:${row.id}`,
+        occurredAt: row.approved_at,
+        type: 'valuation_approved',
+        domain: 'internal',
+        label: 'Valorización aprobada',
+        detail: 'El expediente registró aprobación.',
+        valueUf: numberOrNull(row.estimated_value_uf),
+        href: `/dashboard/valuations/${row.id}`,
+      } : null,
+      row.issued_at ? {
+        id: `internal:valuation-issued:${row.id}`,
+        occurredAt: row.issued_at,
+        type: 'valuation_issued',
+        domain: 'internal',
+        label: 'Valorización emitida',
+        detail: 'Existe versión emitida del expediente.',
+        valueUf: numberOrNull(row.estimated_value_uf),
+        href: `/dashboard/valuations/${row.id}`,
+      } : null,
+    ]),
+  ]
+    .filter((event): event is NonNullable<typeof event> => Boolean(event?.occurredAt))
+    .sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt)))
+    .slice(0, 30)
 
   const targetArea = area
   let comparableProperties: Array<Record<string, unknown>> = []
@@ -473,6 +592,9 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       distinctPriceCount: distinctPrices.length,
       observations: history.length,
       transactions: transactions.length,
+      timeline: lifecycleTimeline,
+      commercialClosureLinked: false,
+      commercialClosureNote: 'Una transacción registral confirma una venta en la fuente registral, pero el cierre comercial interno de Property Partners permanece no enlazado hasta contar con evidencia CRM por propiedad.',
     },
     comparables: {
       count: comparableRows.length,
