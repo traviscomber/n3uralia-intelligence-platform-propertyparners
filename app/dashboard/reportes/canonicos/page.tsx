@@ -18,8 +18,9 @@ type CanonicalDocumentRow = { id:string; title:string; content:string; doc_type:
 type ReportRecord = { id:string; title:string; kind:string; period:string; status:string; createdAt:string; pdfUrl:string|null; downloadUrl:string|null; sourceCount:number; model:string|null; promptVersion:string|null; costUsd:number|null }
 function formatDate(value:string){return formatPropertyPartnersDateTime(value)}
 function isClientCanonical(document:CanonicalDocumentRow){const tags=document.tags??[];return !tags.includes('reportin-test')&&!tags.includes('qa')&&!tags.includes('mock')&&!tags.includes('demo')&&!tags.includes('fixture')}
+const DELIVERABLE_STATUSES=new Set(['Aprobado','Enviado','Reenviado','Acusado recibo','Registrado'])
 function hasArtifact(report:ReportRecord){return Boolean(report.pdfUrl||report.downloadUrl)}
-function isDeliverable(report:ReportRecord){return report.period!=='Sin período'&&hasArtifact(report)}
+function isDeliverable(report:ReportRecord){return report.period!=='Sin período'&&hasArtifact(report)&&DELIVERABLE_STATUSES.has(report.status)}
 
 export default async function CanonicalClientReportsPage(){
   await requirePageCapability('reports.global.read')
