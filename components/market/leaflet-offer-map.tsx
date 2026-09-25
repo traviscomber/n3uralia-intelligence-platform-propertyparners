@@ -123,7 +123,13 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
   useEffect(() => {
     let cancelled = false
     const host = hostRef.current
-    if (!host || !filtered.length) return
+    if (!host) return
+    if (!filtered.length) {
+      mapRef.current?.remove()
+      mapRef.current = null
+      markerRefs.current.clear()
+      return
+    }
 
     void ensureLeaflet().then((L) => {
       if (cancelled || !hostRef.current) return
@@ -139,13 +145,12 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
 
       const markers: LeafletMarker[] = []
       for (const item of filtered) {
-        const active = item.propertyId === selectedId
         const marker = L.circleMarker([item.latitude, item.longitude], {
-          radius: active ? 8 : 6,
-          color: active ? '#ffffff' : '#d7332b',
-          weight: active ? 2.2 : 1.4,
+          radius: 6,
+          color: '#d7332b',
+          weight: 1.4,
           fillColor: '#d7332b',
-          fillOpacity: active ? 0.95 : 0.78,
+          fillOpacity: 0.78,
         })
         marker.bindTooltip(
           `<strong>${uf(item.priceUf)}</strong><br/>${item.neighborhood ?? 'Vitacura'} · ${number(item.builtAreaM2)} m²`,
@@ -169,7 +174,21 @@ export default function LeafletOfferMap({ items }: { items: OfferMapItem[] }) {
       mapRef.current = null
       markerRefs.current.clear()
     }
-  }, [filtered, selectedId])
+  }, [filtered])
+
+  useEffect(() => {
+    for (const [propertyId, marker] of markerRefs.current.entries()) {
+      const active = propertyId === selectedId
+      marker.setStyle({
+        radius: active ? 8 : 6,
+        color: active ? '#ffffff' : '#d7332b',
+        weight: active ? 2.2 : 1.4,
+        fillColor: '#d7332b',
+        fillOpacity: active ? 0.95 : 0.78,
+      })
+      if (active) marker.bringToFront()
+    }
+  }, [selectedId])
 
   function select(propertyId: string) {
     setSelectedId(propertyId)
