@@ -108,6 +108,9 @@ jobs:
       - name: Verify valuation workflow
         run: pnpm valuation:workflow:verify
 
+      - name: Verify valuation draft canonical subject linkage
+        run: node --import tsx --test tests/valuation/draft-canonical-subject.test.ts
+
       - name: Verify property condition assessment
         run: pnpm valuation:condition:verify
 
