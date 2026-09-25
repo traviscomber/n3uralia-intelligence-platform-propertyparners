@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-20",
+  "asOf": "2026-09-24",
   "status": "assembled",
   "allowedStatuses": [
     "draft",
@@ -160,6 +160,11 @@
       "section": "security-and-custody",
       "artifact": "docs/SUPABASE_PRODUCTION_SCHEMA_BASELINE_2026-09-20.md",
       "status": "included"
+    },
+    {
+      "section": "quality-and-acceptance",
+      "artifact": "docs/canonical/CONTRACTUAL_HANDOVER_READINESS_2026-09-24.md",
+      "status": "included"
     }
   ],
   "excludedPatterns": [
@@ -189,8 +194,9 @@
     "clientTransferAuthorized": false,
     "notes": [
       "Documentation and package inventory are complete by required section.",
-      "docs/FINAL_CLOSEOUT_2026-09-20.md is the current executive closeout record.",
+      "docs/canonical/CONTRACTUAL_HANDOVER_READINESS_2026-09-24.md is the current contractual handover readiness record.",
       "Final delivery artifact/checksum remains intentionally deferred until the accepted commit and authorized receiver are fixed.",
+      "Training remains not scheduled and cannot be marked complete without attendance evidence or formal waiver.",
       "Restore drill remains pending in issue #217; normal CI success is not restore evidence."
     ]
   }
