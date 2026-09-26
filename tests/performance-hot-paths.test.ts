@@ -28,7 +28,7 @@ test('seller account route is reachable and speculative prefetch is disabled', (
   assert.match(topbar, /href="\/dashboard\/cuenta"[\s\S]{0,120}prefetch=\{false\}/)
   assert.match(valuations, /href=\{\`\/dashboard\/valuations\/\$\{item\.id\}\`\}[\s\S]{0,80}prefetch=\{false\}/)
   assert.match(properties, /href=\{\`\/dashboard\/properties\/\$\{property\.id\}\`\}[\s\S]{0,80}prefetch=\{false\}/)
-  assert.match(market, /href=\{\`\/dashboard\/properties\/\$\{property\.id\}\`\}[\s\S]{0,80}prefetch=\{false\}/)
+  assert.match(market, /href=\{item\.href\}[\s\S]{0,120}prefetch=\{false\}/)
 })
 
 test('seller scope avoids visibility RPC fan-out', () => {
