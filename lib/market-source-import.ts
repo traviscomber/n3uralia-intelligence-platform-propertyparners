@@ -32,6 +32,7 @@ export type NormalizedPortalListingRow = {
   raw_useful_area?: unknown
   raw_total_area?: unknown
   normalization_flags?: string[]
+  uf_clp_at_observation?: number | null
   canonical_reference?: boolean
 }
 
@@ -274,6 +275,7 @@ export function applyPortalUfConversion(rows: NormalizedPortalListingRow[], ufCl
       ...row,
       price_uf: converted,
       price_uf_m2: row.useful_area_m2 && row.useful_area_m2 > 0 ? converted / row.useful_area_m2 : row.price_uf_m2,
+      uf_clp_at_observation: ufClp,
       normalization_flags: flags,
     }
   })
