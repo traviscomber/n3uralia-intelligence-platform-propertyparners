@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { readFileSync } from 'node:fs'
 
 test('prospect automation only creates leads from confirmed territory and current canonical identity', () => {
-  const sql = readFileSync('supabase/migrations/20260926141000_auto_prospect_leads_from_confirmed_territory.sql', 'utf8')
+  const sql = readFileSync('supabase/migrations/20260926142500_scope_auto_prospects_to_live_portal_houses.sql', 'utf8')
   assert.match(sql, /join public\.market_neighborhood_director_assignments/i)
   assert.match(sql, /t\.active/i)
   assert.match(sql, /t\.valid_to is null/i)
