@@ -63,11 +63,11 @@ export const DIRECTOR_NAVIGATION: NavigationSection[] = [
     ],
   },
   {
-    label: 'Administración',
+    label: 'Gestión de oficina',
     items: [
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.office.read'] },
-      { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.office.manage'] },
-      { label: 'Asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.office.assign'] },
+      { label: 'Operación', href: '/dashboard/control/operations', anyCapabilities: ['management.office.read'] },
+      { label: 'Metas y seguimiento', href: '/dashboard/control/admin', anyCapabilities: ['management.office.manage'] },
+      { label: 'Cartera y asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.office.assign'] },
     ],
   },
 ]
