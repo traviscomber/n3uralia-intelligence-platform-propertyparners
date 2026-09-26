@@ -47,7 +47,7 @@ test('nearby-place barrio inference requires multi-POI consensus and never rewri
   assert.match(sql,/confidence.*0\.95/i)
   assert.match(sql,/matched_places>=3/)
   assert.ok(sql.includes("coalesce(r.min_confidence,0)>=0.98"))
-  assert.match(sql,/support_sum,0\)>=15/)
+  assert.ok(sql.includes("coalesce(r.support_sum,0)>=15"))
   assert.match(sql,/portal_nearby_poi_consensus_v1/)
   assert.doesNotMatch(sql,/update public\.management_source_records/i)
   assert.doesNotMatch(sql,/update public\.market_neighborhoods/i)
