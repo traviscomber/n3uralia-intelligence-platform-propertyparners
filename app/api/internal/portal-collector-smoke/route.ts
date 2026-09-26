@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 export async function GET() {
-  if (process.env.VERCEL_GIT_COMMIT_REF !== 'fix/portal-full-snapshot-reconciliation-v2') {
+  if (process.env.VERCEL_GIT_COMMIT_REF !== 'fix/portal-daily-intelligence-sweep') {
     return new NextResponse(null, { status: 404 })
   }
 
