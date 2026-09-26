@@ -22,7 +22,7 @@ type InventoryRun = {
 }
 
 export default async function MarketOfferPage() {
-  await requireAnyPageCapability(['market.manage_sources', 'management.global.read', 'management.office.read'])
+  await requireAnyPageCapability(['market.read'])
 
   const supabase = createServiceClient()
   const { data: recentRuns, error: runError } = await supabase
@@ -75,7 +75,7 @@ export default async function MarketOfferPage() {
         eyebrow="Mercado · Portal"
         title="Casas en oferta"
         meta="Vitacura · inventario diario completo"
-        actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
+        actions={[{ label: 'Mapa', href: '/dashboard/market/mapa' }, { label: 'Volver a Mercado', href: '/dashboard/market' }]}
       />
 
       <section className="mt-6 border-y border-[var(--n3-line)] py-5">
