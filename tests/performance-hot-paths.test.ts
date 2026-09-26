@@ -5,11 +5,15 @@ import { canAccessDashboardPath } from '../lib/dashboard-access'
 
 test('hot auth path uses claims without Auth user-record round trips', () => {
   const proxy = readFileSync('lib/supabase/proxy.ts', 'utf8')
+  const proxyEntry = readFileSync('proxy.ts', 'utf8')
   const layout = readFileSync('app/dashboard/layout.tsx', 'utf8')
 
   assert.match(proxy, /auth\.getClaims\(\)/)
   assert.doesNotMatch(proxy, /auth\.getUser\(\)/)
   assert.match(proxy, /isPublicPage \|\| pathname === '\/auth\/error'/)
+  assert.match(proxyEntry, /'\/dashboard\/:path\*'/)
+  assert.match(proxyEntry, /'\/api\/:path\*'/)
+  assert.doesNotMatch(proxyEntry, /\/\(\(\?!_next\/static/)
   assert.match(layout, /auth\.getClaims\(\)/)
   assert.doesNotMatch(layout, /auth\.getUser\(\)/)
 })
