@@ -104,3 +104,12 @@ test('near-boundary KML signal stays advisory and requires strong geometric sepa
   assert.match(sql,/else false/)
   assert.doesNotMatch(sql,/decision='resolved_by_system'/)
 })
+
+
+test('Portal nearby enrichment never clicks dynamic tabs in the production collector', () => {
+  const collector = readFileSync('lib/portal-inmobiliario-collector.ts','utf8')
+  assert.match(collector,/aria-controls/)
+  assert.match(collector,/capturePortalNearbyPlaces/)
+  assert.doesNotMatch(collector,/control\.click\(\)/)
+  assert.doesNotMatch(collector,/dispatchEvent\(new MouseEvent/)
+})
