@@ -44,7 +44,7 @@ test('nearby-place barrio inference requires multi-POI consensus and never rewri
   const sql = readFileSync('supabase/migrations/20260926200000_portal_nearby_poi_neighborhood_intelligence.sql','utf8')
   assert.match(sql,/market_neighborhood_learned_poi_aliases_v1/)
   assert.match(sql,/total_rows>=4/)
-  assert.match(sql,/confidence.*0\.95/i)
+  assert.ok(sql.includes("support_rows::numeric/nullif(total_rows,0)>=0.95"))
   assert.match(sql,/matched_places>=3/)
   assert.ok(sql.includes("coalesce(r.min_confidence,0)>=0.98"))
   assert.ok(sql.includes("coalesce(r.support_sum,0)>=15"))
