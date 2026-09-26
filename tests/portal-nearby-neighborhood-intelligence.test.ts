@@ -73,3 +73,13 @@ test('daily market refresh prioritizes missing coordinates and uses the second c
   assert.match(route,/refresh_market_neighborhood_learning_v1/)
   assert.match(vercel,/market-refresh\?details_only=1/)
 })
+
+
+test('secondary territory signals cannot auto-resolve and learned aliases train only from point-in-KML truth', () => {
+  const sql = readFileSync('supabase/migrations/20260926204500_harden_secondary_neighborhood_signals.sql','utf8')
+  assert.match(sql,/resolution_kind is distinct from 'point_in_kml'/)
+  assert.match(sql,/sig\.resolution_kind='point_in_kml'/)
+  assert.match(sql,/training_truth','point_in_kml'/)
+  assert.match(sql,/support_rows::numeric\/nullif\(total_rows,0\)>=0\.98/)
+  assert.doesNotMatch(sql,/decision='resolved_by_system'[\s\S]{0,500}accepted_memory/)
+})
