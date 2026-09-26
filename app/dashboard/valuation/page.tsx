@@ -699,6 +699,7 @@ export default function ValuationPage() {
               <NumberField label="UF/m² terreno" value={subject.landRateUfM2} onChange={(value) => { updateSubject('landRateUfM2', value); setRateAnchor(value === undefined ? null : 'manual') }} suffix="UF/m²" step={0.1} min={0} />
             </div>
           </details>
+          <p className="text-xs text-[var(--n3-text-muted)]">Origen de la tasa: {rateAnchorLabel(rateAnchor)}.</p>
         </div>}
       </div></IntelligencePanel>
 
@@ -709,7 +710,7 @@ export default function ValuationPage() {
       <IntelligencePanel eyebrow="Paso 5 · Revisión" title={result && selectedComparables.length >= 3 ? 'Listo para revisión' : 'Revisión final'} description="Una vista simple del valor, la evidencia utilizada y la decisión profesional."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="border border-[var(--n3-line)] p-4 xl:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType} · ROL {subject.rol || 'no disponible'}</p></div>
         <div className="border border-[var(--n3-line)] p-4"><FieldLabel>Evidencia</FieldLabel><strong className="text-xl">{selectedComparables.length}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{cbrsEvidence.count} ventas · {portalEvidence.count} ofertas</p></div>
-        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor comercial</FieldLabel><strong className="text-xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : 'Tasa profesional aplicada sobre construcción y terreno'}</p></div>
+        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor comercial</FieldLabel><strong className="text-xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia Champion v5 confirmada por la ejecutiva' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
       </div>
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
