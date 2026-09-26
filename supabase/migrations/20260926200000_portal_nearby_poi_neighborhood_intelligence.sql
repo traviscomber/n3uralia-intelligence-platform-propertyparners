@@ -42,6 +42,7 @@ begin
     where l.source_id=(select id from source)
       and l.status in ('active','observed')
       and sig.neighborhood_id is not null
+      and sig.resolution_kind='point_in_kml'
       and jsonb_typeof(l.raw_payload->'nearby_places')='array'
   ), places as (
     select
@@ -335,7 +336,7 @@ begin
       when poi.neighborhood_id is not null then
         'Portal publica ' || poi.matched_places::text || ' puntos cercanos que convergen en ' || poi.neighborhood_name ||
         ' · confianza mínima histórica ' || round((poi.confidence*100)::numeric,1)::text ||
-        '%. ' || case when poi.high_confidence then 'Consenso fuerte: puede confirmarse.' else 'Señal de apoyo: revisar antes de confirmar.' end
+        '%. Señal secundaria: sólo prioriza revisión; no autoriza resolución automática.'
       when coalesce(learned.conflict,false) then
         'La inteligencia aprendida encontró patrones históricos que apuntan a más de un barrio. Se mantiene abierto y sin escritura canónica.'
       when learned.neighborhood_id is not null then
@@ -344,12 +345,12 @@ begin
       else 'La evidencia disponible todavía no converge en un único barrio KML.'
     end,
     case
-      when sig.neighborhood_id is not null then (
+      when sig.neighborhood_id is not null
+       and sig.resolution_kind='point_in_kml' then (
         ll.property_id is null
         or mp.neighborhood_id is null
         or mp.neighborhood_id is not distinct from sig.neighborhood_id
       )
-      when poi.neighborhood_id is not null then coalesce(poi.high_confidence,false)
       else false
     end,
     ll.observed_at
