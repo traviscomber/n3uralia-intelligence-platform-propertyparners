@@ -1,5 +1,5 @@
 import type { Browser, Page } from 'puppeteer-core'
-import { parse, type HTMLElement } from 'node-html-parser'
+import { parse, type HTMLElement as ParserHTMLElement } from 'node-html-parser'
 import type { MarketImportInputRow } from '@/lib/market-import'
 import type { PortalDatasetKind } from '@/lib/market-source-import'
 import { launchServerlessBrowser } from '@/lib/serverless-browser'
@@ -238,16 +238,16 @@ function deepFind(source: unknown, keys: string[]): unknown {
   return undefined
 }
 
-function firstPrimaryTitle(root: HTMLElement) {
+function firstPrimaryTitle(root: ParserHTMLElement) {
   return text(root.querySelector('h1')?.text)
     || text(root.querySelector('meta[property="og:title"]')?.getAttribute('content'))
 }
 
-function primaryPriceTitle(root: HTMLElement, fallback: string | null) {
+function primaryPriceTitle(root: ParserHTMLElement, fallback: string | null) {
   return text(root.querySelector('meta[property="og:title"]')?.getAttribute('content')) || fallback
 }
 
-function extractPrimarySpecs(root: HTMLElement) {
+function extractPrimarySpecs(root: ParserHTMLElement) {
   const specs = new Map<string, string>()
   for (const row of root.querySelectorAll('.andes-table__row')) {
     const columns = row.querySelectorAll('.andes-table__column')
@@ -275,11 +275,11 @@ function specInteger(specs: Map<string, string>, max: number, ...labels: string[
   return boundedInteger(specValue(specs, ...labels), 0, max)
 }
 
-function normalizedBodyText(root: HTMLElement) {
+function normalizedBodyText(root: ParserHTMLElement) {
   return text(root.querySelector('body')?.textContent || root.textContent) || ''
 }
 
-function primaryListingText(root: HTMLElement, title: string | null) {
+function primaryListingText(root: ParserHTMLElement, title: string | null) {
   const body = normalizedBodyText(root)
   const start = title ? body.indexOf(title) : -1
   const fromTitle = start >= 0 ? body.slice(start + title!.length) : body
@@ -314,7 +314,7 @@ function cleanAddress(value: string | null) {
   return cleaned.length >= 4 && cleaned.length <= 260 ? cleaned : null
 }
 
-function extractVisiblePrimaryFacts(root: HTMLElement, title: string | null) {
+function extractVisiblePrimaryFacts(root: ParserHTMLElement, title: string | null) {
   const body = normalizedBodyText(root)
   const primary = primaryListingText(root, title)
   const usefulArea = regexArea(body, [
@@ -346,7 +346,7 @@ function extractVisiblePrimaryFacts(root: HTMLElement, title: string | null) {
   return { usefulArea, totalArea, landArea, bedrooms, bathrooms, parkingSpaces, address }
 }
 
-function parsePrimaryPrice(root: HTMLElement, title: string | null, jsonLd: unknown[]) {
+function parsePrimaryPrice(root: ParserHTMLElement, title: string | null, jsonLd: unknown[]) {
   const titleUf = title?.match(/(?:^|[-·|])\s*UF\s*([\d.]+(?:,\d+)?)/i) || title?.match(/UF\s*([\d.]+(?:,\d+)?)/i)
   if (titleUf) {
     const amount = localizedNumeric(titleUf[1])
@@ -499,7 +499,7 @@ function extractPrimaryAddress(jsonLd: unknown[]) {
   return cleanAddress(text(deepFind(addressObject, ['streetAddress'])) || text(deepFind(addressObject, ['name'])))
 }
 
-function extractVisibleLocation(root: HTMLElement) {
+function extractVisibleLocation(root: ParserHTMLElement) {
   const selectors = [
     '.ui-vip-location__subtitle .ui-pdp-media__title',
     '.ui-vip-location__subtitle',
