@@ -183,33 +183,53 @@ where not exists (
 );
 
 create or replace view public.management_history_coverage_v1 as
-with periods as (
+with classified as (
   select
     entity_id,
-    date_trunc('month',period_start)::date as period_month,
+    period_start,
+    period_end,
+    metric_code,
+    source_name,
+    quality_status,
+    evaluation_status,
+    case
+      when period_start=date_trunc('month',period_start)::date
+       and period_end=(date_trunc('month',period_start)+interval '1 month - 1 day')::date
+      then 'monthly'
+      else 'aggregate'
+    end as period_grain
+  from public.management_metric_values
+  where period_start>=date '2025-01-01'
+), grouped as (
+  select
+    entity_id,
+    period_start,
+    period_end,
+    period_grain,
     count(*) filter(where quality_status='verified' and evaluation_status='evaluable')::int as verified_metrics,
     count(distinct metric_code) filter(where quality_status='verified' and evaluation_status='evaluable')::int as verified_metric_codes,
     array_agg(distinct source_name order by source_name) as sources
-  from public.management_metric_values
-  where period_start>=date '2025-01-01'
-  group by entity_id,date_trunc('month',period_start)::date
+  from classified
+  group by entity_id,period_start,period_end,period_grain
 )
 select
-  p.entity_id,
+  g.entity_id,
   e.name as entity_name,
   e.entity_type,
-  p.period_month,
-  p.verified_metrics,
-  p.verified_metric_codes,
-  p.sources,
+  g.period_start,
+  g.period_end,
+  g.period_grain,
+  g.verified_metrics,
+  g.verified_metric_codes,
+  g.sources,
   case
-    when p.period_month<date '2026-01-01' and p.verified_metric_codes<=2 then 'historical_partial'
-    when p.verified_metric_codes>=8 then 'operationally_complete'
+    when g.period_grain='aggregate' then 'historical_aggregate'
+    when g.period_start<date '2026-01-01' and g.verified_metric_codes<=2 then 'historical_partial'
+    when g.verified_metric_codes>=8 then 'operationally_complete'
     else 'partial'
   end as coverage_status
-from periods p
-join public.management_entities e on e.id=p.entity_id;
-
+from grouped g
+join public.management_entities e on e.id=g.entity_id;
 revoke all on public.management_history_coverage_v1 from public,anon;
 grant select on public.management_history_coverage_v1 to authenticated,service_role;
 
