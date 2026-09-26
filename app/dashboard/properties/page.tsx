@@ -57,8 +57,8 @@ export default async function PropertiesPage(){
 
     return <WorkspaceShell>
       <WorkspaceHeader
-        eyebrow="Pilar 04 · Propiedades"
-        title="Propiedades por resolver"
+        eyebrow="Gestión · Propiedades"
+        title="Propiedades por revisar"
         meta={rows.length?`${rows.length} caso${rows.length===1?'':'s'} requiere${rows.length===1?'':'n'} intervención`:'Sin excepciones territoriales'}
         actions={[
           {label:'Leads',href:'/dashboard/properties/prospects'},
@@ -68,7 +68,7 @@ export default async function PropertiesPage(){
 
       <MetricStrip items={[
         {label:'Casas observadas',value:n(active)},
-        {label:'Barrio resuelto',value:n(resolved),tone:active>0&&resolved===active?'success':'default'},
+        {label:'Clasificadas por barrio',value:n(resolved),tone:active>0&&resolved===active?'success':'default'},
         {label:'Por resolver',value:n(rows.length),tone:rows.length?'warning':'success'},
       ]}/>
 
@@ -77,8 +77,8 @@ export default async function PropertiesPage(){
       <section className="mt-7">
         <div className="border-b border-[var(--n3-line)] pb-3">
           <p className="text-[10px] uppercase tracking-[0.14em] text-[#ff8d87]">Bandeja de revisión</p>
-          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Sólo propiedades que requieren una decisión humana</h2>
-          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Patrón tipo inbox: pendientes a la izquierda, evidencia y acción a la derecha. Al confirmar el barrio, el caso sale de la bandeja y continúa automáticamente hacia Leads/Ficha 360.</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Sólo casos que requieren una decisión humana</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Revisa la evidencia disponible y confirma el barrio cuando corresponda. Una vez resuelto, el caso sale de esta bandeja y continúa hacia Leads/Ficha 360.</p>
         </div>
         <PropertyReviewInbox initialRows={rows}/>
       </section>
