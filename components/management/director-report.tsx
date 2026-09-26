@@ -38,7 +38,7 @@ export function DirectorReport() {
 
   return <IntelligencePage>
     <div className="print-hidden flex flex-wrap items-center justify-between gap-3"><Link href="/dashboard/director" className="border border-[var(--n3-line)] px-4 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Volver a Hoy</Link><PrintReportButton/></div>
-    <IntelligenceHeader eyebrow="Informe de la oficina" title={`Oficina ${payload?.scopeLabel ?? ''}`} description={`Resumen de resultados, equipo y pendientes. Corte: ${period}.`} meta={<div className="text-xs text-[var(--n3-text-muted)]">ID {generatedId}</div>} />
+    <IntelligenceHeader eyebrow="Informe de la oficina" title={`Oficina ${payload?.scopeLabel ?? ''}`} description={`Resumen de resultados, equipo y pendientes. Corte: ${period}.`} />
     {error ? <div role="alert" className="border border-[#d7332b] p-5 text-[#ff766f]">{error}</div> : null}
     {!payload && !error ? <div role="status" className="border border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">Generando reporte…</div> : null}
     {payload ? <>
