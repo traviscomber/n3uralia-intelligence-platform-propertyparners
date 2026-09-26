@@ -110,7 +110,10 @@ export function Property360ProspectWorkflow({
       if(!res.ok) throw new Error(payload.error || 'No fue posible guardar.')
       await load()
       setNote('')
-      setMessage('Guardado.')
+      const createdLeads = Number(payload?.assignment?.createdLeads ?? 0)
+      setMessage(createdLeads > 0
+        ? `Territorio guardado. ${createdLeads} lead${createdLeads === 1 ? '' : 's'} elegible${createdLeads === 1 ? '' : 's'} creado${createdLeads === 1 ? '' : 's'} automáticamente para el barrio.`
+        : 'Guardado.')
     }catch(e){ setMessage(e instanceof Error ? e.message : 'No fue posible guardar.') }
     finally{ setSaving(false) }
   }
@@ -158,6 +161,7 @@ export function Property360ProspectWorkflow({
           </select>
         </label>
         <button disabled={!directorKey||saving||!data.neighborhood} onClick={()=>void mutate({action:'assign_director',directorKey,reason:'Asignación territorial desde Property 360'})} className="mt-3 min-h-10 border border-[var(--n3-line)] px-4 text-xs font-semibold disabled:opacity-40">Guardar director/a del barrio</button>
+        <p className="mt-2 text-[11px] leading-4 text-[var(--n3-text-muted)]">La asignación es territorial: las propiedades publicadas, vinculadas y elegibles de este barrio se convierten en leads con esa dirección responsable. No se asignan por ejecutiva.</p>
         {canCreateLead ? <button disabled={saving} onClick={()=>void mutate({action:'create_lead',priority:'normal'})} className="ml-2 mt-3 min-h-10 bg-[#d7332b] px-4 text-xs font-semibold text-white disabled:opacity-40">Crear lead PP</button> : null}
       </div>
 
@@ -178,7 +182,7 @@ export function Property360ProspectWorkflow({
             <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} maxLength={1000} className="mt-1 w-full border border-[var(--n3-line)] bg-black px-3 py-2 text-sm" placeholder="Resultado del contacto, hipótesis, próximo paso…" />
           </label>
           <button disabled={saving} onClick={()=>void mutate({action:'follow_up',status,note,nextFollowUpAt:nextFollowUpAt ? new Date(nextFollowUpAt).toISOString() : null})} className="mt-3 min-h-10 bg-[#d7332b] px-4 text-xs font-semibold text-white disabled:opacity-40">Registrar seguimiento</button>
-        </> : <p className="mt-3 text-sm text-[var(--n3-text-muted)]">Crea el lead después de asignar el barrio para habilitar seguimiento y rendimiento.</p>}
+        </> : <p className="mt-3 text-sm text-[var(--n3-text-muted)]">Al confirmar el director/a del barrio, el sistema crea automáticamente los leads elegibles y habilita seguimiento y rendimiento.</p>}
       </div>
     </div> : null}
 
