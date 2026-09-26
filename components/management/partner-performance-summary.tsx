@@ -48,7 +48,7 @@ export async function PartnerPerformanceSummary() {
   })
 
   if (!rawPartner) {
-    return <section className="mx-auto mt-8 max-w-7xl border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]"><h1 className="sr-only">Desempeño personal</h1><p>No existe una ficha canónica vinculada de forma inequívoca a este perfil. No se presentan métricas inferidas.</p></section>
+    return <section className="mx-auto mt-8 max-w-7xl border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]"><h1 className="sr-only">Desempeño personal</h1><p>No encontramos resultados personales vinculados a tu perfil para este período.</p></section>
   }
 
   const partner = rawPartner as unknown as PartnerMetricView
@@ -111,7 +111,7 @@ export async function PartnerPerformanceSummary() {
       <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
         <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Captaciones</p><strong className="mt-2 block text-xl">Según fuente del período</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Si el dato no está disponible para este período, no se estima.</p></article>
         <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Productividad personal</p><strong className="mt-2 block text-xl">{number(personalProductivity)}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Cierres registrados para este período.</p></article>
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Ranking de cierres</p><strong className="mt-2 block text-xl">{personalRank == null ? 'n/d' : '#' + personalRank}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Posición según cierres del mismo período; los empates comparten lugar.</p></article>
+        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Ranking de cierres</p><strong className="mt-2 block text-xl">{personalRank == null ? '—' : '#' + personalRank}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Posición según cierres del mismo período; los empates comparten lugar.</p></article>
         <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Alertas</p><strong className="mt-2 block text-xl">Operativas</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Tus tareas aparecen en la vista principal.</p></article>
       </div>
     </details>
@@ -119,7 +119,7 @@ export async function PartnerPerformanceSummary() {
       <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver trazabilidad y fuente</summary>
       <div className="mt-5 space-y-4">
         <DecisionTrace items={trace} title="Trazabilidad de desempeño personal" />
-        <div className="border-l-2 border-[var(--primary)] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">Fuente: {source.deck} · lámina {source.slide} · {source.title}. Período principal: junio de 2026; acumulado enero–junio de 2026. Comparación YoY contra 2025 cuando la tabla canónica contiene base explícita.</div>
+        <div className="border-l-2 border-[var(--primary)] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">Fuente: {source.deck} · lámina {source.slide} · {source.title}. Período principal: junio de 2026; acumulado enero–junio de 2026. Comparación anual contra 2025 cuando existe una base de comparación disponible.</div>
       </div>
     </details>
   </section>
