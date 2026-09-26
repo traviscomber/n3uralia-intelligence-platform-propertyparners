@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Building2, ChartNoAxesCombined, Map, ScanSearch } from 'lucide-react'
+import { ArrowRight, BarChart3, Building2, Map, Search } from 'lucide-react'
 import VitacuraTerritoryLanding from '@/components/public/vitacura-territory-landing'
 import { VITACURA_PUBLIC_TERRITORY } from '@/lib/vitacura-public-territory'
 
@@ -9,7 +9,7 @@ const shortcuts = [
     label: 'Mercado',
     description: 'Oferta, evidencia y señales del mercado de Vitacura.',
     href: '/dashboard/market',
-    icon: ChartNoAxesCombined,
+    icon: BarChart3,
   },
   {
     label: 'Mapa',
@@ -27,7 +27,7 @@ const shortcuts = [
     label: 'Valorizaciones',
     description: 'Expedientes, comparables y revisión profesional.',
     href: '/dashboard/valuations',
-    icon: ScanSearch,
+    icon: Search,
   },
 ] as const
 
