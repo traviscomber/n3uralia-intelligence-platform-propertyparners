@@ -24,6 +24,7 @@ jobs:
     timeout-minutes: 30
     env:
       QA_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.base_url || 'https://ppartnersgroup.app' }}
+      QA_RELEASE_BASE_URL: https://n3uralia-intelligence-platform.vercel.app
       QA_EXPECTED_SHA: ${{ github.sha }}
       QA_OUTPUT_DIR: artifacts/visual-qa
       QA_PROVISIONER_URL: https://orfncinmhymhhoxbxgjb.supabase.co/functions/v1/qalito-release-qa
@@ -51,14 +52,14 @@ jobs:
         shell: bash
         run: |
           node <<'NODE'
-          const baseUrl = process.env.QA_BASE_URL
+          const releaseBaseUrl = process.env.QA_RELEASE_BASE_URL
           const expectedSha = process.env.QA_EXPECTED_SHA
           const maxAttempts = 60
           const delayMs = 10_000
 
           for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
             try {
-              const response = await fetch(`${baseUrl}/api/release`, {
+              const response = await fetch(`${releaseBaseUrl}/api/release`, {
                 headers: { 'cache-control': 'no-cache' },
               })
               if (response.ok) {
@@ -77,7 +78,7 @@ jobs:
             if (attempt < maxAttempts) await new Promise((resolve) => setTimeout(resolve, delayMs))
           }
 
-          console.error(`Production did not expose expected commit ${expectedSha} at ${baseUrl} within the verification window.`)
+          console.error(`Production did not expose expected commit ${expectedSha} at ${releaseBaseUrl} within the verification window.`)
           process.exit(1)
           NODE
 
