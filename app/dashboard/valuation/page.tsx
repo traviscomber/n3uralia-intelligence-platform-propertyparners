@@ -256,9 +256,9 @@ function SecondOpinionPanel({ opinion }: { opinion: ValuationSecondOpinion }) {
     positive: 'border-[#5f8f82]/45 bg-[#0a1210]',
   }
 
-  return <aside aria-label="Segunda opinión no vinculante" className="border border-[#5f8f82]/55 bg-[#0b1211]">
+  return <aside aria-label="Lectura de apoyo no vinculante" className="border border-[#5f8f82]/55 bg-[#0b1211]">
     <div className="flex flex-wrap items-start justify-between gap-3 p-5">
-      <div><FieldLabel>No vinculante</FieldLabel><h3 className="text-base font-semibold">Segunda opinión</h3></div>
+      <div><FieldLabel>Apoyo a la decisión · no vinculante</FieldLabel><h3 className="text-base font-semibold">Lectura de la evidencia</h3></div>
       <div className="border border-[var(--n3-line)] px-3 py-2 text-right"><FieldLabel>Cobertura</FieldLabel><strong className="text-sm">{opinion.coverage}</strong></div>
     </div>
     <div className="grid gap-2 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
@@ -471,7 +471,7 @@ export default function ValuationPage() {
     <IntelligenceHeader
       eyebrow="Módulo II · Valorización"
       title="Valorizador Property Partners"
-      description="Datos, mercado y criterio Property Partners."
+      description="Busca la propiedad, revisa la evidencia de mercado y confirma el valor con criterio Property Partners."
       actions={[{ label: 'Registro de valorizaciones', href: '/dashboard/valuations' }, { label: 'Inteligencia de mercado', href: '/dashboard/market' }]}
       meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">property-partners-valuation-v2</div>}
     />
@@ -516,17 +516,22 @@ export default function ValuationPage() {
     </section> : null}
 
     {step === 3 ? <section className="space-y-4">
-      <IntelligencePanel eyebrow="Paso 3 · Mercado" title="Comparables" description="El sistema propone. Property Partners decide."><div className="flex flex-wrap items-center justify-between gap-3 p-5">
+      <IntelligencePanel eyebrow="Paso 3 · Mercado" title="Evidencia de mercado" description="Revisa ventas registradas y oferta observada. Selecciona los comparables que realmente representan esta propiedad."><div className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div><p className="text-sm font-semibold">{subject.address}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType}</p></div>
         <button type="button" disabled={suggesting} onClick={() => void suggestComparables()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{suggesting ? 'Analizando…' : comparables.length ? 'Actualizar análisis' : 'Analizar mercado'}</button>
       </div></IntelligencePanel>
 
       {(cbrsBenchmark || portalBenchmark) ? <MetricGrid>
-        <MetricCard label="Ventas CBRS" value={cbrsBenchmark ? cbrsBenchmark.transactions.toLocaleString('es-CL') : '—'} detail={cbrsBenchmark ? `Mediana ${benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
-        <MetricCard label="Oferta Portal" value={portalBenchmark ? portalBenchmark.listing_count.toLocaleString('es-CL') : '—'} detail={portalBenchmark ? `Mediana ${benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
-        <MetricCard label="Seleccionados" value={selectedComparables.length.toLocaleString('es-CL')} detail="Selección humana." />
-        <MetricCard label="Cobertura de evidencia" value={quality.label} detail={quality.reason} />
+        <MetricCard label="Ventas reales · CBRS" value={cbrsBenchmark ? cbrsBenchmark.transactions.toLocaleString('es-CL') : '—'} detail={cbrsBenchmark ? `Mediana del barrio ${benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin referencia disponible'} />
+        <MetricCard label="Oferta observada · Portal" value={portalBenchmark ? portalBenchmark.listing_count.toLocaleString('es-CL') : '—'} detail={portalBenchmark ? `Mediana publicada ${benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin referencia disponible'} />
+        <MetricCard label="Comparables elegidos" value={selectedComparables.length.toLocaleString('es-CL')} detail={selectedComparables.length >= 3 ? 'Muestra mínima completa.' : `Faltan ${Math.max(0, 3 - selectedComparables.length)} para completar la muestra mínima.`} />
+        <MetricCard label="Estado de la muestra" value={quality.label} detail={quality.reason} />
       </MetricGrid> : null}
+
+      {comparables.length ? <div className={`border px-4 py-3 text-sm ${selectedComparables.length >= 3 ? 'border-[#5f8f82]/50 bg-[#0a1210] text-[#c8e0da]' : 'border-[#c4ae70]/40 bg-[#17140c] text-[#e0c87f]'}`}>
+        <strong>{selectedComparables.length >= 3 ? 'Muestra lista para decidir.' : 'Todavía falta evidencia seleccionada.'}</strong>
+        <span className="ml-2 text-xs opacity-80">{selectedComparables.length >= 3 ? 'Puedes avanzar cuando hayas documentado por qué representa cada comparable.' : 'Elige al menos 3 comparables válidos antes de continuar.'}</span>
+      </div> : null}
 
       {selectedComparables.length ? <div className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
         <div className="grid gap-4 md:grid-cols-4">
@@ -551,14 +556,14 @@ export default function ValuationPage() {
         const isOutlier = methodologySummary.outlierIds.includes(item.id)
         return <div key={item.id} className={`border ${item.selected ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'} bg-[#0c1111]`}>
           <div className="flex flex-wrap items-center gap-4 p-4">
-            <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Referencia' : 'Usar'}</label>
-            <div className="min-w-[220px] flex-1"><p className="text-sm font-semibold">{item.address || 'Comparable sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.sourceType} · {item.transactionDate || (suggested.observedAt ? `observado ${formatObservedAt(suggested.observedAt)}` : 'fecha no disponible')}</p></div>
+            <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Solo referencia' : 'Usar como comparable'}</label>
+            <div className="min-w-[220px] flex-1"><p className="text-sm font-semibold">{item.address || 'Comparable sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.sourceType === 'CBRS' ? 'Venta registrada' : item.sourceType === 'Portal' || item.sourceType === 'TocToc' ? 'Oferta publicada' : item.sourceType} · {item.transactionDate || (suggested.observedAt ? `observado ${formatObservedAt(suggested.observedAt)}` : 'fecha no disponible')}</p></div>
             <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m²` : ''}</p></div>
-            <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />similitud {Math.round(item.similarityScore * 100)}%</div>
+            <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />coincidencia {Math.round(item.similarityScore * 100)}%</div>
           </div>
           {isOutlier ? <div className="border-t border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-xs text-[#e0c87f]">Revisar: este valor se aleja más de 25% de la mediana seleccionada.</div> : null}
           {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Referencia sin superficie canónica completa.</div> : null}
-          {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona y superficie comparable." /></div> : null}
+          {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona, tamaño y programa similares." /></div> : null}
           <details className="border-t border-[var(--n3-line)]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">{manual ? 'Completar' : 'Detalles'}</summary><div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-4">
             <label className="block"><FieldLabel>Fuente</FieldLabel><select value={item.sourceType} onChange={(event) => updateComparable(index, { sourceType: event.target.value as ValuationComparable['sourceType'] })} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Portal</option><option>TocToc</option><option>CBRS</option><option>Cliente</option></select></label>
             <TextField label="Referencia / URL" value={item.sourceReference} onChange={(value) => updateComparable(index, { sourceReference: value })} />
@@ -575,20 +580,20 @@ export default function ValuationPage() {
       })}</div>
 
       <div className="flex flex-wrap gap-2"><button type="button" onClick={() => addComparable('CBRS')} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs hover:border-[#d7332b]"><Plus size={14} />Venta manual</button><button type="button" onClick={() => addComparable('Portal')} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs hover:border-[#d7332b]"><Plus size={14} />Oferta manual</button></div>
-      {suggestionNotes.length ? <details className="border border-[var(--n3-line)] bg-[#0c1111]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">Metodología</summary><div className="border-t border-[var(--n3-line)] p-4 text-xs leading-6 text-[var(--n3-text-muted)]">{suggestionNotes.join(' ')}</div></details> : null}
+      {suggestionNotes.length ? <details className="border border-[var(--n3-line)] bg-[#0c1111]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">Cómo se eligieron estas referencias</summary><div className="border-t border-[var(--n3-line)] p-4 text-xs leading-6 text-[var(--n3-text-muted)]">{suggestionNotes.join(' ')}</div></details> : null}
     </section> : null}
 
     {step === 4 ? <section className="space-y-4">
       <MetricGrid>
-        <MetricCard label="Pilar 1 · Oferta" value={portalEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(portalEvidence.medianUfM2)} · benchmark ${portalBenchmark ? benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
-        <MetricCard label="Pilar 2 · Ventas" value={cbrsEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(cbrsEvidence.medianUfM2)} · benchmark ${cbrsBenchmark ? benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
-        <MetricCard label="Pilar 3 · Método PP" value="Aplicado" detail={subject.propertyType === 'Departamento' ? 'm² útiles × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
-        <MetricCard label="Comparables" value={selectedComparables.length.toLocaleString('es-CL')} detail="Confirmados por el valorizador." />
+        <MetricCard label="Oferta seleccionada" value={portalEvidence.count.toLocaleString('es-CL')} detail={`Mediana ${formatUfM2(portalEvidence.medianUfM2)} · mercado ${portalBenchmark ? benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
+        <MetricCard label="Ventas seleccionadas" value={cbrsEvidence.count.toLocaleString('es-CL')} detail={`Mediana ${formatUfM2(cbrsEvidence.medianUfM2)} · mercado ${cbrsBenchmark ? benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
+        <MetricCard label="Método Property Partners" value="Aplicado" detail={subject.propertyType === 'Departamento' ? 'm² útiles + terraza ponderada × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
+        <MetricCard label="Muestra confirmada" value={selectedComparables.length.toLocaleString('es-CL')} detail="Comparables elegidos y trazables." />
       </MetricGrid>
 
       <SecondOpinionPanel opinion={secondOpinion} />
 
-      <IntelligencePanel eyebrow="Paso 4 · Decisión" title="Confirma la tasa profesional" description="Property Partners confirma la tasa."><div className="p-5">
+      <IntelligencePanel eyebrow="Paso 4 · Decisión" title="Define el valor" description="La evidencia orienta la decisión. Property Partners confirma la tasa profesional final."><div className="p-5">
         {subject.propertyType === 'Departamento' ? <>
           <div className="flex flex-wrap gap-2">
             <button type="button" disabled={!cbrsEvidence.medianUfM2} onClick={() => adoptDepartmentRate('cbrs_median', cbrsEvidence.medianUfM2)} className="border border-[var(--n3-line)] px-3 py-2 text-xs disabled:opacity-40 hover:border-[#d7332b]">Usar mediana CBRS</button>
@@ -601,14 +606,14 @@ export default function ValuationPage() {
         </> : <div className="grid gap-4 md:grid-cols-2"><NumberField label="UF/m² construcción adoptado" value={subject.builtRateUfM2} onChange={(value) => updateSubject('builtRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} /><NumberField label="UF/m² terreno adoptado" value={subject.landRateUfM2} onChange={(value) => updateSubject('landRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} /></div>}
       </div></IntelligencePanel>
 
-      <IntelligencePanel eyebrow="Resultado" title={result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : 'Pendiente de confirmar tasa'} description={result ? `Valor comercial canónico · ${result.commercialUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²` : 'Confirma una tasa.'}>{result ? <div className="grid gap-3 p-5 md:grid-cols-3">{result.publicationScenarios.map((scenario) => <div key={scenario.upliftPct} className={`border p-4 ${scenario.upliftPct === 5 ? 'border-[var(--n3-teal)] bg-[#0a1210]' : 'border-[var(--n3-line)]'}`}><FieldLabel>Publicación · margen {scenario.upliftPct}%{scenario.upliftPct === 5 ? ' · recomendado PP' : ''}</FieldLabel><strong className="text-xl">{scenario.suggestedPriceUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{scenario.suggestedUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</p></div>)}</div> : <div className="p-5 text-sm text-[var(--n3-text-muted)]">Pendiente de tasa.</div>}</IntelligencePanel>
+      <IntelligencePanel eyebrow="Resultado para revisión" title={result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : 'Pendiente de confirmar tasa'} description={result ? `Valor comercial estimado · ${result.commercialUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado` : 'Confirma una tasa para obtener el valor comercial y los escenarios de publicación.'}>{result ? <div className="grid gap-3 p-5 md:grid-cols-3">{result.publicationScenarios.map((scenario) => <div key={scenario.upliftPct} className={`border p-4 ${scenario.upliftPct === 5 ? 'border-[var(--n3-teal)] bg-[#0a1210]' : 'border-[var(--n3-line)]'}`}><FieldLabel>{scenario.upliftPct === 0 ? 'Valor comercial' : `Publicación · margen ${scenario.upliftPct}%`}{scenario.upliftPct === 5 ? ' · escenario estándar' : ''}</FieldLabel><strong className="text-xl">{scenario.suggestedPriceUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{scenario.suggestedUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</p></div>)}</div> : <div className="p-5 text-sm text-[var(--n3-text-muted)]">Pendiente de tasa.</div>}</IntelligencePanel>
     </section> : null}
 
     {step === 5 ? <section className="space-y-4">
-      <IntelligencePanel eyebrow="Paso 5 · Revisión" title="Revisión final" description="Resumen del expediente."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+      <IntelligencePanel eyebrow="Paso 5 · Revisión" title={result && selectedComparables.length >= 3 ? 'Listo para revisión' : 'Revisión final'} description="Una vista simple del valor, la evidencia utilizada y la decisión profesional."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="border border-[var(--n3-line)] p-4 xl:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType} · ROL {subject.rol || 'no disponible'}</p></div>
         <div className="border border-[var(--n3-line)] p-4"><FieldLabel>Evidencia</FieldLabel><strong className="text-xl">{selectedComparables.length}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{cbrsEvidence.count} ventas · {portalEvidence.count} ofertas</p></div>
-        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor comercial</FieldLabel><strong className="text-xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : 'Tasas construcción + terreno'}</p></div>
+        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor comercial</FieldLabel><strong className="text-xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : 'Tasa profesional aplicada sobre construcción y terreno'}</p></div>
       </div>
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
