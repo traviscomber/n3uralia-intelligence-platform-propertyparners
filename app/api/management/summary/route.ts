@@ -394,7 +394,7 @@ export async function GET() {
   const historyRows = historyCoverageResult.data ?? []
   const historyCoverage = {
     monthly2025Periods: historyRows.filter((row) => row.period_grain === 'monthly' && String(row.period_start).startsWith('2025-')).length,
-    completeMonthly2025Periods: historyRows.filter((row) => row.period_grain === 'monthly' && String(row.period_start).startsWith('2025-') && row.coverage_status === 'operationally_complete').length,
+    baselineMonthly2025Periods: historyRows.filter((row) => row.period_grain === 'monthly' && String(row.period_start).startsWith('2025-') && row.coverage_status === 'historical_operational_baseline').length,
     annual2025MetricCodes: historyRows
       .filter((row) => row.period_grain === 'aggregate' && String(row.period_start).startsWith('2025-'))
       .reduce((max, row) => Math.max(max, Number(row.verified_metric_codes ?? 0)), 0),
@@ -404,7 +404,7 @@ export async function GET() {
       .map((row) => String(row.period_start).slice(0, 7))
       .sort()
       .at(-1) ?? null,
-    note: '2025 conserva ventas/UF mensuales y métricas operativas agregadas anuales; no se fabrican aperturas mensuales sin replay de los Excel fuente.',
+    note: '2025 conserva 12 meses verificados de ventas/UF, leads, requerimientos y visitas; stock, captaciones y suspendidas permanecen como contexto anual cuando no existe apertura mensual autoritativa.',
   }
 
   const persistedCount = overlay.stats.approvedMetricCount
