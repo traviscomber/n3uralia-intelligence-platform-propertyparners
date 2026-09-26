@@ -65,8 +65,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         decisions: frozenDecisions,
         permissions: {
           canEditComparables: false,
+          canReview: false,
           canApprove: false,
           canIssue: false,
+          ownsCase: valuationCase.requested_by === scope.profileId,
         },
         documentStatus: 'issued',
         snapshot: {
@@ -95,8 +97,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       decisions: decisions || [],
       permissions: {
         canEditComparables: valuationCase.status === 'draft' && (ownsCase || canReview || canApprove),
+        canReview,
         canApprove,
         canIssue: canApprove,
+        ownsCase,
       },
       documentStatus: 'preview',
       snapshot: null,
