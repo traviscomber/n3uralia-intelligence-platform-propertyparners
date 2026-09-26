@@ -165,6 +165,9 @@ jobs:
       - name: Verify canonical valuation source authority
         run: node --import tsx --test tests/valuation/canonical-source-authority.test.ts
 
+      - name: Verify Portal nearby-place neighborhood intelligence
+        run: node --import tsx --test tests/portal-nearby-neighborhood-intelligence.test.ts
+
       - name: Verify Portal snapshot publication policy
         run: node --import tsx --test tests/portal-snapshot-policy.test.ts
 

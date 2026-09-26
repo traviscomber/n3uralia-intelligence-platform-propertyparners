@@ -406,13 +406,13 @@ async function loadCurrentListingState(
     .eq('code', sourceCode)
     .maybeSingle()
   if (sourceError) throw sourceError
-  const byId = new Map<string, { propertyId: string | null; observedAt: string | null }>()
+  const byId = new Map<string, { propertyId: string | null; observedAt: string | null; latitude: number | null; longitude: number | null }>()
   if (!source?.id) return { sourceId: null, byId }
 
   for (let offset = 0; ; offset += 1000) {
     const { data, error } = await supabase
       .from('market_current_listings')
-      .select('source_listing_id,property_id,observed_at')
+      .select('source_listing_id,property_id,observed_at,latitude,longitude')
       .eq('source_id', source.id)
       .range(offset, offset + 999)
     if (error) throw error
@@ -421,6 +421,8 @@ async function loadCurrentListingState(
         byId.set(String(row.source_listing_id), {
           propertyId: row.property_id ? String(row.property_id) : null,
           observedAt: row.observed_at ? String(row.observed_at) : null,
+          latitude: typeof row.latitude === 'number' ? row.latitude : row.latitude != null ? Number(row.latitude) : null,
+          longitude: typeof row.longitude === 'number' ? row.longitude : row.longitude != null ? Number(row.longitude) : null,
         })
       }
     }
@@ -445,13 +447,25 @@ async function drainLatestInventoryDetails(args: {
 
   const snapshotStartedAt = new Date(String(latest.started_at)).getTime()
   const absent = inventory.filter((item) => !current.byId.has(item.sourceRecordId))
+  const missingGeo = inventory.filter((item) => {
+    const state = current.byId.get(item.sourceRecordId)
+    return Boolean(state) && (state!.latitude == null || state!.longitude == null)
+  })
   const staleUnlinked = inventory.filter((item) => {
     const state = current.byId.get(item.sourceRecordId)
     if (!state || state.propertyId !== null) return false
     const observedAt = state.observedAt ? new Date(state.observedAt).getTime() : 0
     return observedAt < snapshotStartedAt
   })
-  const queue = [...absent, ...staleUnlinked]
+
+  // Territory is higher-value than identity recency here: first recover missing
+  // coordinates, then fill absent detail rows, then refresh stale unlinked rows.
+  // De-duplicate by listing id so one Portal request can satisfy multiple needs.
+  const queueById = new Map<string, (typeof inventory)[number]>()
+  for (const item of [...missingGeo, ...absent, ...staleUnlinked]) {
+    if (!queueById.has(item.sourceRecordId)) queueById.set(item.sourceRecordId, item)
+  }
+  const queue = [...queueById.values()]
   const chunkSize = 18
   let processed = 0
   let parsed = 0
@@ -503,6 +517,7 @@ async function drainLatestInventoryDetails(args: {
     inventory: inventory.length,
     currentBefore: current.byId.size,
     absentBefore: absent.length,
+    missingGeoBefore: missingGeo.length,
     staleUnlinkedBefore: staleUnlinked.length,
     queued: queue.length,
     processed,
@@ -550,6 +565,8 @@ export async function GET(request: Request) {
       })
       const { data: intelligenceRefresh, error: intelligenceError } = await supabase
         .rpc('refresh_market_listing_property_match_candidates_v1')
+      const { data: neighborhoodRefresh, error: neighborhoodError } = await supabase
+        .rpc('refresh_market_neighborhood_learning_v1')
       const { data: prospectRefresh, error: prospectError } = await supabase
         .rpc('refresh_property_prospect_leads_v1')
 
@@ -579,7 +596,7 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({
-        ok: detailDrain.ingestionFailures === 0 && !intelligenceError && !prospectError,
+        ok: detailDrain.ingestionFailures === 0 && !intelligenceError && !neighborhoodError && !prospectError,
         mode: 'details_only',
         datasetKind: 'portal_houses',
         ...detailDrain,
@@ -588,11 +605,15 @@ export async function GET(request: Request) {
           error: intelligenceError?.message ?? null,
           identityState,
         },
+        neighborhood: {
+          refresh: neighborhoodRefresh ?? null,
+          error: neighborhoodError?.message ?? null,
+        },
         prospects: {
           refresh: prospectRefresh ?? null,
           error: prospectError?.message ?? null,
         },
-      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError && !prospectError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError && !neighborhoodError && !prospectError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
     } catch (cause) {
       const failureMessage = cause instanceof Error ? cause.message : String(cause)
       console.error('[market-refresh] detail drain failed', { failureMessage })
@@ -669,7 +690,20 @@ export async function GET(request: Request) {
         continue
       }
 
-      const detailUrls = rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
+      const currentState = await loadCurrentListingState(supabase, datasetKind)
+      const missingGeoUrls = inventory.listingUrls.filter((listingUrl) => {
+        const listingId = portalListingIdFromUrl(listingUrl, datasetKind)
+        if (!listingId) return false
+        const state = currentState.byId.get(listingId)
+        return !state || state.latitude == null || state.longitude == null
+      })
+      const missingGeoSet = new Set(missingGeoUrls)
+      const rotatedRemainder = rotatedDetailBatch(
+        inventory.listingUrls.filter((listingUrl) => !missingGeoSet.has(listingUrl)),
+        inventory.observedAt,
+      )
+      const detailUrls = [...missingGeoUrls, ...rotatedRemainder].slice(0, MAX_DETAIL_LISTINGS_PER_RUN)
+
       const details = await collectPortalListingDetails({
         datasetKind,
         listingUrls: detailUrls,
@@ -742,6 +776,8 @@ export async function GET(request: Request) {
 
   let identityIntelligence: unknown = null
   let identityIntelligenceError: string | null = null
+  let neighborhoodLearning: unknown = null
+  let neighborhoodLearningError: string | null = null
   let prospectPipeline: unknown = null
   let prospectPipelineError: string | null = null
 
@@ -749,6 +785,10 @@ export async function GET(request: Request) {
     const identityResult = await supabase.rpc('refresh_market_listing_property_match_candidates_v1')
     identityIntelligence = identityResult.data ?? null
     identityIntelligenceError = identityResult.error?.message ?? null
+
+    const learningResult = await supabase.rpc('refresh_market_neighborhood_learning_v1')
+    neighborhoodLearning = learningResult.data ?? null
+    neighborhoodLearningError = learningResult.error?.message ?? null
 
     const prospectResult = await supabase.rpc('refresh_property_prospect_leads_v1')
     prospectPipeline = prospectResult.data ?? null
@@ -758,6 +798,7 @@ export async function GET(request: Request) {
   const ok = completeInventories === DATASETS.length
     && totalFailures === 0
     && !identityIntelligenceError
+    && !neighborhoodLearningError
     && !prospectPipelineError
 
   return NextResponse.json(
@@ -776,6 +817,10 @@ export async function GET(request: Request) {
       identityIntelligence: {
         refresh: identityIntelligence,
         error: identityIntelligenceError,
+      },
+      neighborhoodLearning: {
+        refresh: neighborhoodLearning,
+        error: neighborhoodLearningError,
       },
       prospectPipeline: {
         refresh: prospectPipeline,
