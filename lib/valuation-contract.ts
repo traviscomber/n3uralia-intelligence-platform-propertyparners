@@ -101,9 +101,8 @@ export type ValuationResult = {
   justification: string
 }
 
-const round = (value: number, digits = 2) => Number(value.toFixed(digits))
 const positive = (value: number | undefined) => Number.isFinite(value) && Number(value) > 0 ? Number(value) : 0
-const ratioVariance = (value: number, benchmark: number | null) => benchmark && benchmark > 0 ? round(value / benchmark - 1, 4) : null
+const ratioVariance = (value: number, benchmark: number | null) => benchmark && benchmark > 0 ? value / benchmark - 1 : null
 const MIN_SELECTED_COMPARABLES = 3
 
 function median(values: number[]) {
@@ -131,14 +130,14 @@ function summarize(values: Array<{ priceUf: number; ufM2: number }>): MarketSumm
   const unit = values.map((item) => item.ufM2)
   return {
     count: values.length,
-    minPriceUf: round(Math.min(...prices)),
-    averagePriceUf: round(prices.reduce((sum, value) => sum + value, 0) / prices.length),
-    medianPriceUf: round(median(prices) ?? 0),
-    maxPriceUf: round(Math.max(...prices)),
-    minUfM2: round(Math.min(...unit)),
-    averageUfM2: round(unit.reduce((sum, value) => sum + value, 0) / unit.length),
-    medianUfM2: round(median(unit) ?? 0),
-    maxUfM2: round(Math.max(...unit)),
+    minPriceUf: Math.min(...prices),
+    averagePriceUf: prices.reduce((sum, value) => sum + value, 0) / prices.length,
+    medianPriceUf: median(prices) ?? 0,
+    maxPriceUf: Math.max(...prices),
+    minUfM2: Math.min(...unit),
+    averageUfM2: unit.reduce((sum, value) => sum + value, 0) / unit.length,
+    medianUfM2: median(unit) ?? 0,
+    maxUfM2: Math.max(...unit),
   }
 }
 
@@ -148,7 +147,7 @@ export function calculateCanonicalComparableUfM2(item: ValuationComparable): num
 
   if (item.propertyType === 'Casa') {
     const weightedArea = positive(item.builtAreaM2) + positive(item.landAreaM2) / 4
-    return weightedArea > 0 ? round(price / weightedArea) : 0
+    return weightedArea > 0 ? price / weightedArea : 0
   }
 
   if (item.sourceType === 'CBRS') {
@@ -156,13 +155,13 @@ export function calculateCanonicalComparableUfM2(item: ValuationComparable): num
     // built_area_m2. Until the source semantics are audited, use the available
     // registered area for arithmetic without relabeling it as definitively useful.
     const registeredArea = positive(item.usefulAreaM2) || positive(item.builtAreaM2)
-    return registeredArea > 0 ? round(price / registeredArea) : 0
+    return registeredArea > 0 ? price / registeredArea : 0
   }
 
   const useful = positive(item.usefulAreaM2)
   const total = positive(item.totalAreaM2)
   const weightedArea = useful > 0 && total >= useful ? useful + (total - useful) / 2 : 0
-  return weightedArea > 0 ? round(price / weightedArea) : 0
+  return weightedArea > 0 ? price / weightedArea : 0
 }
 
 function calculateCommercialValue(subject: ValuationSubject) {
@@ -171,8 +170,8 @@ function calculateCommercialValue(subject: ValuationSubject) {
     const rate = positive(subject.usefulRateUfM2)
     if (!useful || !rate) throw new Error('Departamento: se requieren m² útiles y UF/m² útil de valorización.')
     return {
-      valueUf: round(useful * rate),
-      commercialUfM2: round(rate),
+      valueUf: useful * rate,
+      commercialUfM2: rate,
       comparisonAreaM2: useful + positive(subject.terraceAreaM2) / 2,
     }
   }
@@ -185,7 +184,7 @@ function calculateCommercialValue(subject: ValuationSubject) {
   const valueUf = built * builtRate + land * landRate
   const comparisonAreaM2 = built + land / 4
   if (comparisonAreaM2 <= 0) throw new Error('Casa: la superficie ponderada debe ser mayor que cero.')
-  return { valueUf: round(valueUf), commercialUfM2: round(valueUf / comparisonAreaM2), comparisonAreaM2 }
+  return { valueUf, commercialUfM2: valueUf / comparisonAreaM2, comparisonAreaM2 }
 }
 
 export function calculateContractualValuation(
@@ -212,8 +211,8 @@ export function calculateContractualValuation(
   const portalSummary = summarize(portalValues)
   const cbrsSummary = summarize(cbrsValues)
   const publicationScenarios: PublicationScenario[] = ([0, 5, 10] as const).map((upliftPct) => {
-    const suggestedPriceUf = round(commercial.valueUf / (1 - upliftPct / 100))
-    const suggestedUfM2 = commercial.comparisonAreaM2 > 0 ? round(suggestedPriceUf / commercial.comparisonAreaM2) : 0
+    const suggestedPriceUf = commercial.valueUf / (1 - upliftPct / 100)
+    const suggestedUfM2 = commercial.comparisonAreaM2 > 0 ? suggestedPriceUf / commercial.comparisonAreaM2 : 0
     return {
       upliftPct,
       suggestedPriceUf,
