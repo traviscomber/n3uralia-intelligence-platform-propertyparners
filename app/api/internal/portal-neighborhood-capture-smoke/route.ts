@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { collectPortalListingDetails } from '@/lib/portal-inmobiliario-collector'
-import { createServiceClient } from '@/lib/supabase/service'
 
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
@@ -10,23 +9,24 @@ export async function GET(request:NextRequest){
   if(process.env.VERCEL_GIT_COMMIT_REF!=='feat/portal-nearby-neighborhood-intelligence'){
     return new NextResponse(null,{status:404})
   }
-  const ids=(request.nextUrl.searchParams.get('ids')||'')
-    .split(',').map((value)=>value.trim()).filter(Boolean).slice(0,24)
-  if(!ids.length) return NextResponse.json({error:'ids required'},{status:400})
 
-  const db=createServiceClient()
-  const {data,error}=await db
-    .from('market_current_listings')
-    .select('source_listing_id,url')
-    .in('source_listing_id',ids)
-    .in('status',['active','observed'])
-  if(error) return NextResponse.json({error:'listing lookup failed'},{status:500})
-  const urlById=new Map((data||[]).filter((row)=>row.url).map((row)=>[row.source_listing_id,row.url as string]))
-  const ordered=ids.flatMap((id)=>urlById.has(id)?[urlById.get(id)!]:[])
-  const capture=await collectPortalListingDetails({datasetKind:'portal_houses',listingUrls:ordered,waitMs:250})
+  const encoded=request.nextUrl.searchParams.get('urls')||''
+  if(!encoded) return NextResponse.json({error:'urls required'},{status:400})
+
+  let urls:string[]=[]
+  try{
+    const decoded=Buffer.from(encoded,'base64url').toString('utf8')
+    const parsed=JSON.parse(decoded)
+    if(Array.isArray(parsed)) urls=parsed.filter((value):value is string=>typeof value==='string'&&value.startsWith('https://www.portalinmobiliario.com/')).slice(0,12)
+  }catch{
+    return NextResponse.json({error:'invalid urls payload'},{status:400})
+  }
+
+  if(!urls.length) return NextResponse.json({error:'no valid urls'},{status:400})
+
+  const capture=await collectPortalListingDetails({datasetKind:'portal_houses',listingUrls:urls,waitMs:250})
   return NextResponse.json({
-    requested:ids.length,
-    found:ordered.length,
+    requested:urls.length,
     captured:capture.rows.length,
     failures:capture.failures,
     rows:capture.rows.map((row)=>({
