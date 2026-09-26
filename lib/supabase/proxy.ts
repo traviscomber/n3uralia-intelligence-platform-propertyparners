@@ -13,6 +13,15 @@ function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // Public pages and the access-error screen expose no authenticated
+  // business data and do not need a Supabase Auth round trip. Session refresh
+  // occurs on the next protected request.
+  const isLandingPage = pathname === '/'
+  const isPublicPage = isLandingPage || pathname.startsWith('/about') || pathname.startsWith('/contact')
+  if (isPublicPage || pathname === '/auth/error') {
+    return NextResponse.next({ request })
+  }
+
   // These two endpoints are intentionally public and expose no authenticated
   // business records. /api/release returns deployment identity for CI, while
   // the valuation endpoint returns aggregate market statistics only.
@@ -59,9 +68,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     const isAuthPath = pathname.startsWith('/auth')
-    const isLandingPage = pathname === '/'
     const isLegacyMarketingPath = pathname === '/es' || pathname.startsWith('/es/')
-    const isPublicPath = isLandingPage || pathname.startsWith('/about') || pathname.startsWith('/contact')
 
     // API consumers must receive a machine-readable authentication error instead
     // of an HTML login page with a misleading 200 response.
@@ -83,7 +90,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Allow public access to landing page and public routes.
-    if (!userId && !isAuthPath && !isPublicPath) {
+    if (!userId && !isAuthPath) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       return clearSupabaseAuthCookies(request, NextResponse.redirect(url))
