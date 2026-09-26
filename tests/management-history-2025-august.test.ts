@@ -60,3 +60,9 @@ test('CEO company evolution exposes 2025 baseline while office evolution remains
   assert.equal(company.evolution?.filter((point) => point.period.startsWith('2025-')).length, 12)
   assert.equal(offices.every((office) => office.evolution?.every((point) => point.period.startsWith('2026-'))), true)
 })
+
+
+test('history coverage view preserves underlying management RLS', () => {
+  const sql = readFileSync('supabase/migrations/20260926220600_secure_management_history_coverage.sql','utf8')
+  assert.match(sql,/security_invoker\s*=\s*true/)
+})
