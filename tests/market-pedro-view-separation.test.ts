@@ -6,7 +6,7 @@ test('Market keeps Pedro market decisions separate from management and Property 
   const market = readFileSync('app/dashboard/market/page.tsx', 'utf8')
   const layout = readFileSync('app/dashboard/market/layout.tsx', 'utf8')
 
-  assert.match(market, /Oferta actual/)
+  assert.match(market, /Casas hoy/)
   assert.match(market, /Oferta vs ventas/)
   assert.match(market, /Evolución 4 años/)
   assert.match(market, /Mapa KML/)
