@@ -32,6 +32,7 @@ export type NormalizedPortalListingRow = {
   raw_useful_area?: unknown
   raw_total_area?: unknown
   normalization_flags?: string[]
+  uf_clp_at_observation?: number | null
   canonical_reference?: boolean
 }
 
@@ -167,19 +168,26 @@ function canonicalPortalPrice(row: MarketImportInputRow) {
 export function normalizePortalListingRows(rows: MarketImportInputRow[], datasetKind: PortalDatasetKind = 'portal_apartments'): NormalizedPortalListingRow[] {
   return rows.map((row) => {
     const price = canonicalPortalPrice(row)
-    const rawUsefulArea = pick(row, ['useful_area_m2', 'superficie_util', 'utiles_m2', 'm2_util', 'm2_util_card'])
+    const rawUsefulArea = pick(row, ['useful_area_m2', 'superficie_util', 'utiles_m2', 'm2_util'])
+    const rawCardArea = pick(row, ['m2_util_card'])
     const rawTotalArea = pick(row, ['built_area_m2', 'superficie_construida', 'construidos_m2', 'm2_total'])
     const areaCeiling = datasetKind === 'portal_projects' ? 500 : datasetKind === 'portal_houses' ? 2500 : 1000
-    const usefulArea = boundedNumber(rawUsefulArea, 15, areaCeiling)
+    const usefulAreaInput = rawUsefulArea ?? (datasetKind === 'portal_houses' ? undefined : rawCardArea)
+    const usefulArea = boundedNumber(usefulAreaInput, 15, areaCeiling)
     const rawBuilt = number(rawTotalArea)
-    const builtArea = datasetKind === 'portal_projects'
+    let builtArea = datasetKind === 'portal_projects'
       ? null
       : rawBuilt != null && rawBuilt >= 15 && rawBuilt <= 2500
         ? rawBuilt
         : null
     const flags = [...price.flags]
-    if (number(rawUsefulArea) != null && usefulArea == null) flags.push('useful_area_out_of_range')
+    if (number(usefulAreaInput) != null && usefulArea == null) flags.push('useful_area_out_of_range')
+    if (datasetKind === 'portal_houses' && rawUsefulArea == null && number(rawCardArea) != null) flags.push('house_card_area_semantics_unresolved')
     if (datasetKind === 'portal_projects' && rawBuilt != null) flags.push('project_total_area_field_not_trusted')
+    if (datasetKind === 'portal_apartments' && builtArea != null && usefulArea != null && (builtArea < usefulArea || builtArea > usefulArea * 2.5)) {
+      flags.push('apartment_total_area_inconsistent_with_useful_area')
+      builtArea = null
+    }
 
     const rawLat = number(pick(row, ['latitude', 'latitud', 'lat']))
     const rawLon = number(pick(row, ['longitude', 'longitud', 'lng', 'lon']))
@@ -220,7 +228,7 @@ export function normalizePortalListingRows(rows: MarketImportInputRow[], dataset
       photos_count: integer(pick(row, ['fotos_count', 'photos_count'])),
       photo_urls: photos,
       raw_price: price.raw,
-      raw_useful_area: rawUsefulArea,
+      raw_useful_area: rawUsefulArea ?? rawCardArea,
       raw_total_area: rawTotalArea,
       normalization_flags: flags,
       canonical_reference: false,
@@ -252,4 +260,23 @@ export function normalizeCbrsTransactionRows(rows: MarketImportInputRow[]): Norm
     bathrooms: integer(pick(row, ['bathrooms', 'banos'])),
     parking_spaces: integer(pick(row, ['parking_spaces', 'estacionamientos', 'parking'])),
   }))
+}
+
+
+export function applyPortalUfConversion(rows: NormalizedPortalListingRow[], ufClp: number | null) {
+  if (!ufClp || !Number.isFinite(ufClp) || ufClp <= 0) return rows
+
+  return rows.map((row) => {
+    if (row.price_uf != null || row.price_clp == null || row.price_clp <= 0) return row
+    const converted = row.price_clp / ufClp
+    const flags = (row.normalization_flags ?? []).filter((flag) => flag !== 'price_interpreted_clp_by_magnitude')
+    flags.push('price_converted_clp_to_uf_daily_indicator')
+    return {
+      ...row,
+      price_uf: converted,
+      price_uf_m2: row.useful_area_m2 && row.useful_area_m2 > 0 ? converted / row.useful_area_m2 : row.price_uf_m2,
+      uf_clp_at_observation: ufClp,
+      normalization_flags: flags,
+    }
+  })
 }

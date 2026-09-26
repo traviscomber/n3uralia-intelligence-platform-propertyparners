@@ -146,14 +146,14 @@ function buildChampionHouseRecommendation(subject: ValuationSubject, comparables
   const spread = comparableSpread(sample)
 
   return {
-    recommendedRateUfM2: Number(recommendedRate.toFixed(2)),
-    recommendedBuiltRateUfM2: Number(recommendedRate.toFixed(2)),
-    recommendedLandRateUfM2: Number((recommendedRate / 4).toFixed(2)),
-    recommendedEstimatedValueUf: Math.round(recommendedRate * weightedArea),
+    recommendedRateUfM2: recommendedRate,
+    recommendedBuiltRateUfM2: recommendedRate,
+    recommendedLandRateUfM2: recommendedRate / 4,
+    recommendedEstimatedValueUf: recommendedRate * weightedArea,
     comparableCount: sample.length,
     strictComparableCount: strict.length,
-    averageSimilarity: Number(averageSimilarity.toFixed(3)),
-    comparableSpread: Number(spread.toFixed(3)),
+    averageSimilarity,
+    comparableSpread: spread,
     evidenceGate,
     recommendationMethod: 'champion_v5_geo50_mean30_median20_similarity_squared',
   }

@@ -24,8 +24,8 @@ type Decision = { id:string; action:string; reason:string|null; created_at:strin
 type Permissions = { canEditComparables:boolean; canApprove:boolean; canIssue:boolean }
 type Payload = { valuationCase:ValuationCase; comparables:Comparable[]; decisions:Decision[]; permissions:Permissions; error?:string }
 
-const nf = new Intl.NumberFormat('es-CL',{ maximumFractionDigits:0 })
-const n1 = new Intl.NumberFormat('es-CL',{ maximumFractionDigits:1 })
+const nf = new Intl.NumberFormat('es-CL',{ maximumFractionDigits:6 })
+const n1 = new Intl.NumberFormat('es-CL',{ maximumFractionDigits:6 })
 const statusLabels:Record<string,string> = { draft:'Borrador',review:'En revisión',approved:'Aprobada',issued:'Emitida' }
 const confidenceLabels:Record<string,string> = { low:'Baja',medium:'Media',high:'Alta' }
 const matchStatusLabels:Record<string,string> = { accepted:'Aceptado',rejected:'Excluido',candidate_high:'Candidato alto',candidate_medium:'Candidato medio',pending:'Pendiente' }

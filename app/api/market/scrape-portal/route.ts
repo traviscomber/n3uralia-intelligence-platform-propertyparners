@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { requireExecutiveAccess } from '@/lib/api-access'
 import { collectPortalVitacura } from '@/lib/portal-inmobiliario-collector'
-import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { applyPortalUfConversion, normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { fetchUfClpForDate } from '@/lib/chilean-uf'
 import { evaluatePortalSnapshotPolicy } from '@/lib/portal-snapshot-policy'
 
 export const dynamic = 'force-dynamic'
@@ -74,7 +75,8 @@ export async function POST(req: NextRequest) {
       waitMs,
     })
 
-    const normalized = normalizePortalListingRows(collection.rows)
+    const ufClp = await fetchUfClpForDate(collection.observedAt)
+    const normalized = applyPortalUfConversion(normalizePortalListingRows(collection.rows, datasetKind), ufClp)
     const validRows = normalized.filter((row) => row.source_listing_id && row.url)
     const snapshotPolicy = evaluatePortalSnapshotPolicy({
       requestedFullSnapshot,
@@ -98,6 +100,7 @@ export async function POST(req: NextRequest) {
       requestedFullSnapshot,
       fullSnapshotEligible,
       fullSnapshot,
+      ufClp,
     }
 
     if (requestedFullSnapshot && !fullSnapshotEligible) {

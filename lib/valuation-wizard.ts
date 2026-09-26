@@ -3,11 +3,11 @@ import type { ValuationSubject } from './valuation-contract'
 export type ValuationWizardStep = 1 | 2 | 3 | 4 | 5
 
 export const VALUATION_WIZARD_STEPS: Array<{ step: ValuationWizardStep; label: string; shortLabel: string }> = [
-  { step: 1, label: 'Identificar propiedad', shortLabel: 'Propiedad' },
-  { step: 2, label: 'Completar estado actual', shortLabel: 'Estado actual' },
-  { step: 3, label: 'Analizar mercado', shortLabel: 'Mercado' },
-  { step: 4, label: 'Decisión de valorización', shortLabel: 'Decisión' },
-  { step: 5, label: 'Revisar y guardar', shortLabel: 'Revisión' },
+  { step: 1, label: 'Buscar propiedad', shortLabel: 'Propiedad' },
+  { step: 2, label: 'Confirmar datos', shortLabel: 'Datos' },
+  { step: 3, label: 'Elegir comparables', shortLabel: 'Comparables' },
+  { step: 4, label: 'Definir valor', shortLabel: 'Valor' },
+  { step: 5, label: 'Revisar y guardar', shortLabel: 'Revisar' },
 ]
 
 function positive(value: number | undefined) {

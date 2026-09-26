@@ -81,8 +81,8 @@ type Payload = {
   error?: string
 }
 
-const number = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 })
-const integer = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
+const number = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 6 })
+const economic = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 6 })
 const statusLabels: Record<string, string> = { draft: 'Borrador', review: 'En revisión', approved: 'Aprobada', issued: 'Emitida' }
 
 function available(value: unknown) {
@@ -90,7 +90,7 @@ function available(value: unknown) {
 }
 
 function uf(value: number | null | undefined) {
-  return value == null ? 'No disponible' : `UF ${integer.format(value)}`
+  return value == null ? 'No disponible' : `UF ${economic.format(value)}`
 }
 
 function decimal(value: number | null | undefined, suffix = '') {

@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import canonical from '../../data/canonical/valuation-intelligence.json'
 import {
   apartmentOfferWeightedUfM2,
@@ -26,7 +28,9 @@ test('canonical valuation source hashes and universes are fixed', () => {
 test('canonical publication ladder is 0/5/10 using margin inversion', () => {
   assert.deepEqual(canonical.methodology.publication.scenariosPct, [0, 5, 10])
   const scenarios = calculatePublicationScenarios(15890, 253.5)
-  assert.deepEqual(scenarios.map((item) => item.publicationUf), [15890, 16726, 17656])
+  assert.equal(scenarios[0].publicationUf, 15890)
+  assert.ok(Math.abs(scenarios[1].publicationUf - (15890 / 0.95)) < 1e-12)
+  assert.ok(Math.abs(scenarios[2].publicationUf - (15890 / 0.9)) < 1e-12)
 })
 
 test('canonical house and apartment mathematics reproduce source rules', () => {
@@ -54,4 +58,13 @@ test('advanced intelligence remains advisory and cannot own canonical price', ()
   assert.ok(canonical.canonicalVsAdvisory.advisoryOrShadow.includes('ML shadow predictions'))
   assert.ok(canonical.canonicalVsAdvisory.advisoryOrShadow.includes('topography evidence'))
   assert.match(canonical.canonicalVsAdvisory.guardrail, /must not silently overwrite/i)
+})
+
+
+test('persisted Champion evidence preserves full economic precision', () => {
+  const draftRoute = readFileSync(resolve(process.cwd(), 'app/api/valuation/drafts/route.ts'), 'utf8')
+  assert.doesNotMatch(draftRoute, /recommendedRate\.toFixed\(/)
+  assert.doesNotMatch(draftRoute, /recommendedEstimatedValueUf:\s*Math\.round\(/)
+  assert.match(draftRoute, /recommendedRateUfM2:\s*recommendedRate/)
+  assert.match(draftRoute, /recommendedEstimatedValueUf:\s*recommendedRate \* weightedArea/)
 })

@@ -95,7 +95,7 @@ test('Report payload keeps only selected comparables and preserves traceability'
   assert.equal(payload.comparables.length, 1)
   assert.equal(payload.comparables[0].sourceReference, 'ROL 499-8')
   assert.equal(payload.comparables[0].transactionDate, '2026-01-06')
-  assert.equal(payload.comparables[0].canonicalUfM2, 104.35)
+  assert.ok(Math.abs(payload.comparables[0].canonicalUfM2 - (16800 / 161)) < 1e-12)
 })
 
 test('Unknown property facts remain undefined rather than fabricated zeroes', () => {

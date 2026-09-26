@@ -11,10 +11,12 @@ import {
   type NormalizedMarketImportRow,
 } from '@/lib/market-import'
 import {
+  applyPortalUfConversion,
   normalizeCbrsTransactionRows,
   normalizePortalListingRows,
   type PortalDatasetKind,
 } from '@/lib/market-source-import'
+import { fetchUfClpForDate } from '@/lib/chilean-uf'
 
 export const dynamic = 'force-dynamic'
 
@@ -164,13 +166,14 @@ export async function POST(req: NextRequest) {
     if (!inputRows.length) return NextResponse.json({ error: 'No encontramos filas para importar.' }, { status: 400 })
 
     if (kind === 'portal_listings') {
-      const normalized = normalizePortalListingRows(inputRows, portalDatasetKind).map((row) => canonicalReference
+      const ufClp = await fetchUfClpForDate(observedAt)
+      const normalized = applyPortalUfConversion(normalizePortalListingRows(inputRows, portalDatasetKind), ufClp).map((row) => canonicalReference
         ? { ...row, status: 'observed', canonical_reference: true }
         : row)
       const validRows = normalized.filter((row) => row.source_listing_id && row.url)
       const skipped = normalized.length - validRows.length
       const preview = normalized.slice(0, 12)
-      const summary = { rows: normalized.length, valid: validRows.length, skipped, datasetKind: portalDatasetKind, fullSnapshot, canonicalReference }
+      const summary = { rows: normalized.length, valid: validRows.length, skipped, datasetKind: portalDatasetKind, fullSnapshot, canonicalReference, ufClp }
 
       if (mode === 'preview') {
         return NextResponse.json({ kind, mode, fileName, source: sourceLabel, sourceSystem: 'portal_inmobiliario', observedAt, summary, preview, message: canonicalReference ? 'Vista previa canónica de Portal lista. Se guardará como evidencia observada, no como inventario activo.' : 'Vista previa de Portal lista. Las filas sin identificador o URL serán rechazadas.' })

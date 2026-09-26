@@ -49,16 +49,18 @@ test('Navidad 1427: 227 útiles, 53 terraza y 70 UF/m² produce 15.890 UF', () =
 
   assert.equal(result.commercialValueUf, 15890)
   assert.equal(result.effectiveAreaM2, 253.5)
-  assert.equal(result.commercialWeightedUfM2, 62.7)
-  assert.deepEqual(result.scenarios.map((scenario) => scenario.publicationUf), [15890, 16726, 17656])
+  assert.ok(Math.abs(result.commercialWeightedUfM2 - (15890 / 253.5)) < 1e-12)
+  assert.equal(result.scenarios[0].publicationUf, 15890)
+  assert.ok(Math.abs(result.scenarios[1].publicationUf - (15890 / 0.95)) < 1e-12)
+  assert.ok(Math.abs(result.scenarios[2].publicationUf - (15890 / 0.9)) < 1e-12)
 })
 
 test('Publication scenarios use margin inversion, not multiplication', () => {
   const scenarios = calculatePublicationScenarios(15890, 253.5)
   assert.deepEqual(scenarios.map((scenario) => scenario.margin), [0, 0.05, 0.1])
-  assert.equal(scenarios[1].publicationUf, Math.round(15890 / 0.95))
-  assert.equal(scenarios[2].publicationUf, Math.round(15890 / 0.9))
-  assert.notEqual(scenarios[1].publicationUf, Math.round(15890 * 1.05))
+  assert.ok(Math.abs(scenarios[1].publicationUf - (15890 / 0.95)) < 1e-12)
+  assert.ok(Math.abs(scenarios[2].publicationUf - (15890 / 0.9)) < 1e-12)
+  assert.notEqual(scenarios[1].publicationUf, 15890 * 1.05)
 })
 
 test('Casa uses built area plus 25 percent of land area', () => {
@@ -97,6 +99,8 @@ test('Contractual valuation recalculates from selected comparables only', () => 
   assert.equal(result.baseUfM2, 70)
   assert.equal(result.baseValueUf, 15890)
   assert.equal(result.adjustedValueUf, 15890)
+  assert.ok(Math.abs(result.publicationScenarios[1].suggestedPriceUf - (15890 / 0.95)) < 1e-12)
+  assert.ok(Math.abs(result.publicationScenarios[1].suggestedUfM2 - ((15890 / 0.95) / 253.5)) < 1e-12)
 })
 
 test('Contractual valuation requires at least three selected comparables', () => {

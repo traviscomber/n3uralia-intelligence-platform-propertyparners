@@ -92,15 +92,31 @@ type SuggestedComparable = ValuationComparable & {
   areaSemantics?: string
 }
 
+type HouseRecommendation = {
+  weightedRateUfM2: number
+  builtRateUfM2: number
+  landRateUfM2: number
+  estimatedValueUf: number
+  comparableCount: number
+  strictComparableCount: number
+  averageSimilarity: number
+  comparableSpread: number
+  confidence: 'high' | 'medium' | 'low'
+  evidenceGate: string
+  nonBinding: boolean
+  method: string
+}
+
 type SuggestResponse = {
   neighborhood: string
   suggestions: SuggestedComparable[]
   cbrsBenchmark: CbrsBenchmark | null
   portalBenchmark: PortalBenchmark | null
+  houseRecommendation?: HouseRecommendation | null
   notes: string[]
 }
 
-type RateAnchor = 'cbrs_median' | 'cbrs_average' | 'portal_median' | 'portal_average' | 'manual' | null
+type RateAnchor = 'cbrs_median' | 'cbrs_average' | 'portal_median' | 'portal_average' | 'champion_v5' | 'manual' | null
 
 type EvidenceStats = {
   count: number
@@ -212,13 +228,13 @@ function evidenceQuality(cbrs: EvidenceStats, portal: EvidenceStats) {
 }
 
 function formatUfM2(value: number | null | undefined) {
-  return value == null ? '—' : `${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²`
+  return value == null ? '—' : `${value.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m²`
 }
 
 function benchmarkValue(value: number | string | null | undefined, suffix = '') {
   const parsed = Number(value)
   if (!Number.isFinite(parsed) || parsed <= 0) return '—'
-  return `${parsed.toLocaleString('es-CL', { maximumFractionDigits: 1 })}${suffix}`
+  return `${parsed.toLocaleString('es-CL', { maximumFractionDigits: 6 })}${suffix}`
 }
 
 function formatObservedAt(value: string | null | undefined) {
@@ -233,18 +249,19 @@ function rateAnchorLabel(anchor: RateAnchor) {
     cbrs_average: 'Promedio CBRS seleccionado',
     portal_median: 'Mediana Portal seleccionada',
     portal_average: 'Promedio Portal seleccionado',
+    champion_v5: 'Referencia Champion v5 confirmada',
     manual: 'Definido por valorizador',
   }
   return anchor ? labels[anchor] : 'Pendiente de confirmación'
 }
 
 function Stepper({ step, onBackTo }: { step: ValuationWizardStep; onBackTo: (step: ValuationWizardStep) => void }) {
-  return <div className="grid gap-2 md:grid-cols-5">{VALUATION_WIZARD_STEPS.map((item) => {
+  return <div className="grid grid-cols-5 gap-1.5 md:gap-2">{VALUATION_WIZARD_STEPS.map((item) => {
     const active = item.step === step
     const completed = item.step < step
-    return <button key={item.step} type="button" disabled={!completed} onClick={() => completed && onBackTo(item.step)} className={`flex items-center gap-3 border px-3 py-3 text-left transition ${active ? 'border-[#d7332b] bg-[#130d0d]' : completed ? 'border-[var(--n3-line)] bg-[#0c1111] hover:border-[#d7332b]' : 'border-[var(--n3-line)] bg-[#080d0d] opacity-55'}`}>
+    return <button key={item.step} type="button" aria-label={`Paso ${item.step}: ${item.label}`} aria-current={active ? 'step' : undefined} disabled={!completed} onClick={() => completed && onBackTo(item.step)} className={`flex min-h-11 items-center justify-center gap-2 border px-1.5 py-2 text-center transition md:justify-start md:px-3 md:py-3 md:text-left ${active ? 'border-[#d7332b] bg-[#130d0d]' : completed ? 'border-[var(--n3-line)] bg-[#0c1111] hover:border-[#d7332b]' : 'border-[var(--n3-line)] bg-[#080d0d] opacity-55'}`}>
       <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${active ? 'bg-[#d7332b] text-white' : completed ? 'bg-[#24302f] text-[#9fd0c8]' : 'bg-[#151919] text-[var(--n3-text-muted)]'}`}>{completed ? <Check size={14} /> : item.step}</span>
-      <span><span className="block text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Paso {item.step}</span><strong className="mt-0.5 block text-xs">{item.shortLabel}</strong></span>
+      <span className="hidden md:block"><span className="block text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Paso {item.step}</span><strong className="mt-0.5 block text-xs">{item.shortLabel}</strong></span>
     </button>
   })}</div>
 }
@@ -256,9 +273,9 @@ function SecondOpinionPanel({ opinion }: { opinion: ValuationSecondOpinion }) {
     positive: 'border-[#5f8f82]/45 bg-[#0a1210]',
   }
 
-  return <aside aria-label="Segunda opinión no vinculante" className="border border-[#5f8f82]/55 bg-[#0b1211]">
+  return <aside aria-label="Lectura de apoyo no vinculante" className="border border-[#5f8f82]/55 bg-[#0b1211]">
     <div className="flex flex-wrap items-start justify-between gap-3 p-5">
-      <div><FieldLabel>No vinculante</FieldLabel><h3 className="text-base font-semibold">Segunda opinión</h3></div>
+      <div><FieldLabel>Apoyo a la decisión · no vinculante</FieldLabel><h3 className="text-base font-semibold">Lectura de la evidencia</h3></div>
       <div className="border border-[var(--n3-line)] px-3 py-2 text-right"><FieldLabel>Cobertura</FieldLabel><strong className="text-sm">{opinion.coverage}</strong></div>
     </div>
     <div className="grid gap-2 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
@@ -289,6 +306,7 @@ export default function ValuationPage() {
   const [rateAnchor, setRateAnchor] = useState<RateAnchor>(null)
   const [cbrsBenchmark, setCbrsBenchmark] = useState<CbrsBenchmark | null>(null)
   const [portalBenchmark, setPortalBenchmark] = useState<PortalBenchmark | null>(null)
+  const [houseRecommendation, setHouseRecommendation] = useState<HouseRecommendation | null>(null)
   const [suggestionNotes, setSuggestionNotes] = useState<string[]>([])
   const [suggesting, setSuggesting] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -331,6 +349,17 @@ export default function ValuationPage() {
     () => comparables.filter((item) => item.selected && item.priceUf > 0 && calculateCanonicalComparableUfM2(item) > 0),
     [comparables],
   )
+  const recommendedComparableIds = useMemo(() => comparables
+    .filter((item) => {
+      const suggested = item as SuggestedComparable
+      return item.sourceType === 'CBRS' &&
+        !item.id.startsWith('cmp-') &&
+        (suggested.quality === 'canonical' || suggested.quality === 'usable') &&
+        item.priceUf > 0 &&
+        calculateCanonicalComparableUfM2(item) > 0
+    })
+    .slice(0, 3)
+    .map((item) => item.id), [comparables])
   const cbrsEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'CBRS')), [selectedComparables])
   const portalEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc')), [selectedComparables])
   const quality = useMemo(() => evidenceQuality(cbrsEvidence, portalEvidence), [cbrsEvidence, portalEvidence])
@@ -352,6 +381,16 @@ export default function ValuationPage() {
 
   function addComparable(sourceType: ValuationComparable['sourceType']) {
     setComparables((current) => [...current, blankComparable(current.length + 1, subject.propertyType, sourceType)])
+  }
+
+  function useRecommendedComparables() {
+    if (recommendedComparableIds.length < 3) return
+    const recommended = new Set(recommendedComparableIds)
+    setComparables((current) => current.map((item) => ({
+      ...item,
+      selected: recommended.has(item.id) ? true : item.selected,
+    })))
+    setMessage('Seleccionamos 3 ventas recomendadas. Revísalas antes de continuar.')
   }
 
   function goNext() {
@@ -395,6 +434,7 @@ export default function ValuationPage() {
           landAreaM2: subject.landAreaM2,
           bedrooms: subject.bedrooms,
           bathrooms: subject.bathrooms,
+          constructionYear: subject.constructionYear,
           latitude: subject.latitude,
           longitude: subject.longitude,
         }),
@@ -408,6 +448,7 @@ export default function ValuationPage() {
       setComparables((current) => [...current, ...fresh])
       setCbrsBenchmark(payload.cbrsBenchmark)
       setPortalBenchmark(payload.portalBenchmark)
+      setHouseRecommendation(payload.houseRecommendation ?? null)
       setSuggestionNotes(payload.notes || [])
       setMessage(fresh.length ? `${fresh.length} referencias encontradas.` : 'Sin referencias nuevas.')
     } catch (error) {
@@ -419,8 +460,32 @@ export default function ValuationPage() {
 
   function adoptDepartmentRate(anchor: Exclude<RateAnchor, 'manual' | null>, value: number | null) {
     if (!value || value <= 0) return
-    updateSubject('usefulRateUfM2', Number(value.toFixed(2)))
+    updateSubject('usefulRateUfM2', value)
     setRateAnchor(anchor)
+  }
+
+  function adoptHouseRecommendation() {
+    if (!houseRecommendation) return
+    updateSubject('builtRateUfM2', houseRecommendation.builtRateUfM2)
+    updateSubject('landRateUfM2', houseRecommendation.landRateUfM2)
+    setRateAnchor('champion_v5')
+    setMessage('Referencia aplicada. Puedes ajustarla manualmente si corresponde.')
+  }
+
+  function draftProfessionalJustification() {
+    if (selectedComparables.length < 3) return
+    const sales = selectedComparables.filter((item) => item.sourceType === 'CBRS').length
+    const offers = selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc').length
+    const range = summarizeEvidence(selectedComparables)
+    const parts = [
+      `Se revisaron ${selectedComparables.length} comparables seleccionados (${sales} ventas registradas${offers ? ` y ${offers} ofertas observadas` : ''}) del mercado relevante.`,
+      range.medianUfM2 ? `La mediana de la muestra es ${range.medianUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m².` : '',
+      subject.propertyType === 'Casa'
+        ? 'La decisión considera superficie construida, terreno, año, programa, recencia y ubicación, manteniendo la tasa final bajo criterio profesional de Property Partners.'
+        : 'La decisión considera superficie útil, terraza cuando corresponde, recencia, ubicación y evidencia seleccionada, manteniendo la tasa final bajo criterio profesional de Property Partners.',
+      currentStateNotes.trim() ? `Estado actual informado: ${currentStateNotes.trim()}` : '',
+    ].filter(Boolean)
+    setProfessionalJustification(parts.join(' '))
   }
 
   async function saveDraft() {
@@ -471,7 +536,7 @@ export default function ValuationPage() {
     <IntelligenceHeader
       eyebrow="Módulo II · Valorización"
       title="Valorizador Property Partners"
-      description="Datos, mercado y criterio Property Partners."
+      description="Busca la propiedad, revisa la evidencia de mercado y confirma el valor con criterio Property Partners."
       actions={[{ label: 'Registro de valorizaciones', href: '/dashboard/valuations' }, { label: 'Inteligencia de mercado', href: '/dashboard/market' }]}
       meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">property-partners-valuation-v2</div>}
     />
@@ -501,32 +566,46 @@ export default function ValuationPage() {
           {subject.propertyType === 'Departamento' ? <>
             <NumberField label="M² útiles confirmados" value={subject.usefulAreaM2} onChange={(value) => updateSubject('usefulAreaM2', value)} suffix="m²" step={0.1} min={0} />
             <NumberField label="M² terraza / uso y goce" value={subject.terraceAreaM2} onChange={(value) => updateSubject('terraceAreaM2', value)} suffix="m²" step={0.1} min={0} />
-            <NumberField label="Piso" value={subject.floorNumber} onChange={(value) => updateSubject('floorNumber', value)} />
           </> : <>
             <NumberField label="M² construidos" value={subject.builtAreaM2} onChange={(value) => updateSubject('builtAreaM2', value)} suffix="m²" step={0.1} min={0} />
             <NumberField label="M² terreno" value={subject.landAreaM2} onChange={(value) => updateSubject('landAreaM2', value)} suffix="m²" step={0.1} min={0} />
           </>}
           <NumberField label="Dormitorios" value={subject.bedrooms} onChange={(value) => updateSubject('bedrooms', value)} min={0} />
           <NumberField label="Baños" value={subject.bathrooms} onChange={(value) => updateSubject('bathrooms', value)} min={0} />
-          <NumberField label="Estacionamientos" value={subject.parkingSpaces} onChange={(value) => updateSubject('parkingSpaces', value)} min={0} />
+          <NumberField label="Año construcción" value={subject.constructionYear} onChange={(value) => updateSubject('constructionYear', value)} min={1800} max={new Date().getFullYear()} />
         </div>
-        <div className="mt-5"><TextAreaField label="Estado y atributos" value={currentStateNotes} onChange={setCurrentStateNotes} placeholder="Ej.: remodelación completa, cocina integrada, bodega grande, quincho, parrillas, orientación, vista, estado de conservación, terraza de uso y goce, etc." /></div>
+        <details className="mt-5 border border-[var(--n3-line)] bg-[#080d0d]">
+          <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-[var(--n3-text-muted)]">Agregar detalles opcionales</summary>
+          <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
+            <NumberField label="Estacionamientos" value={subject.parkingSpaces} onChange={(value) => updateSubject('parkingSpaces', value)} min={0} />
+            {subject.propertyType === 'Departamento' ? <NumberField label="Piso" value={subject.floorNumber} onChange={(value) => updateSubject('floorNumber', value)} /> : <div />}
+            <div className="md:col-span-2"><TextAreaField label="Estado y atributos" value={currentStateNotes} onChange={setCurrentStateNotes} placeholder="Ej.: remodelación, cocina integrada, bodega, quincho, orientación, vista o estado de conservación." /></div>
+          </div>
+        </details>
       </div></IntelligencePanel>
       <MethodologyNote>Los atributos quedan trazados. No alteran el valor automáticamente.</MethodologyNote>
     </section> : null}
 
     {step === 3 ? <section className="space-y-4">
-      <IntelligencePanel eyebrow="Paso 3 · Mercado" title="Comparables" description="El sistema propone. Property Partners decide."><div className="flex flex-wrap items-center justify-between gap-3 p-5">
+      <IntelligencePanel eyebrow="Paso 3 · Mercado" title="Evidencia de mercado" description="Revisa ventas registradas y oferta observada. Selecciona los comparables que realmente representan esta propiedad."><div className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div><p className="text-sm font-semibold">{subject.address}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType}</p></div>
-        <button type="button" disabled={suggesting} onClick={() => void suggestComparables()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{suggesting ? 'Analizando…' : comparables.length ? 'Actualizar análisis' : 'Analizar mercado'}</button>
+        <div className="flex flex-wrap gap-2">
+          {recommendedComparableIds.length >= 3 && selectedComparables.length < 3 ? <button type="button" onClick={useRecommendedComparables} className="inline-flex items-center gap-2 border border-[#5f8f82]/60 bg-[#0a1210] px-4 py-2.5 text-xs font-semibold text-[#c8e0da]"><Check size={14} />Usar 3 recomendados</button> : null}
+          <button type="button" disabled={suggesting} onClick={() => void suggestComparables()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{suggesting ? 'Analizando…' : comparables.length ? 'Actualizar análisis' : 'Analizar mercado'}</button>
+        </div>
       </div></IntelligencePanel>
 
       {(cbrsBenchmark || portalBenchmark) ? <MetricGrid>
-        <MetricCard label="Ventas CBRS" value={cbrsBenchmark ? cbrsBenchmark.transactions.toLocaleString('es-CL') : '—'} detail={cbrsBenchmark ? `Mediana ${benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
-        <MetricCard label="Oferta Portal" value={portalBenchmark ? portalBenchmark.listing_count.toLocaleString('es-CL') : '—'} detail={portalBenchmark ? `Mediana ${benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin benchmark'} />
-        <MetricCard label="Seleccionados" value={selectedComparables.length.toLocaleString('es-CL')} detail="Selección humana." />
-        <MetricCard label="Cobertura de evidencia" value={quality.label} detail={quality.reason} />
+        <MetricCard label="Ventas reales · CBRS" value={cbrsBenchmark ? cbrsBenchmark.transactions.toLocaleString('es-CL') : '—'} detail={cbrsBenchmark ? `Mediana del barrio ${benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin referencia disponible'} />
+        <MetricCard label="Oferta observada · Portal" value={portalBenchmark ? portalBenchmark.listing_count.toLocaleString('es-CL') : '—'} detail={portalBenchmark ? `Mediana publicada ${benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²')}` : 'Sin referencia disponible'} />
+        <MetricCard label="Comparables elegidos" value={selectedComparables.length.toLocaleString('es-CL')} detail={selectedComparables.length >= 3 ? 'Muestra mínima completa.' : `Faltan ${Math.max(0, 3 - selectedComparables.length)} para completar la muestra mínima.`} />
+        <MetricCard label="Estado de la muestra" value={quality.label} detail={quality.reason} />
       </MetricGrid> : null}
+
+      {comparables.length ? <div className={`border px-4 py-3 text-sm ${selectedComparables.length >= 3 ? 'border-[#5f8f82]/50 bg-[#0a1210] text-[#c8e0da]' : 'border-[#c4ae70]/40 bg-[#17140c] text-[#e0c87f]'}`}>
+        <strong>{selectedComparables.length >= 3 ? 'Muestra lista para decidir.' : 'Todavía falta evidencia seleccionada.'}</strong>
+        <span className="ml-2 text-xs opacity-80">{selectedComparables.length >= 3 ? 'Puedes avanzar cuando hayas documentado por qué representa cada comparable.' : 'Elige al menos 3 comparables válidos antes de continuar.'}</span>
+      </div> : null}
 
       {selectedComparables.length ? <div className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
         <div className="grid gap-4 md:grid-cols-4">
@@ -549,16 +628,17 @@ export default function ValuationPage() {
         const sourceArea = item.propertyType === 'Casa' ? item.builtAreaM2 : (item.builtAreaM2 ?? item.usefulAreaM2)
         const manual = item.id.startsWith('cmp-')
         const isOutlier = methodologySummary.outlierIds.includes(item.id)
-        return <div key={item.id} className={`border ${item.selected ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'} bg-[#0c1111]`}>
+        const recommended = recommendedComparableIds.includes(item.id)
+        return <div key={item.id} className={`border ${item.selected ? 'border-[#d7332b]' : recommended ? 'border-[#5f8f82]/60' : 'border-[var(--n3-line)]'} bg-[#0c1111]`}>
           <div className="flex flex-wrap items-center gap-4 p-4">
-            <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Referencia' : 'Usar'}</label>
-            <div className="min-w-[220px] flex-1"><p className="text-sm font-semibold">{item.address || 'Comparable sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.sourceType} · {item.transactionDate || (suggested.observedAt ? `observado ${formatObservedAt(suggested.observedAt)}` : 'fecha no disponible')}</p></div>
-            <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m²` : ''}</p></div>
-            <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />similitud {Math.round(item.similarityScore * 100)}%</div>
+            <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Solo referencia' : 'Usar como comparable'}{recommended && !referenceOnly ? <span className="border border-[#5f8f82]/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-[#9fd0c8]">Sugerido</span> : null}</label>
+            <div className="min-w-[220px] flex-1"><p className="text-sm font-semibold">{item.address || 'Comparable sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.sourceType === 'CBRS' ? 'Venta registrada' : item.sourceType === 'Portal' || item.sourceType === 'TocToc' ? 'Oferta publicada' : item.sourceType} · {item.transactionDate || (suggested.observedAt ? `observado ${formatObservedAt(suggested.observedAt)}` : 'fecha no disponible')}</p></div>
+            <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m²` : ''}</p></div>
+            <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />coincidencia {Math.round(item.similarityScore * 100)}%</div>
           </div>
           {isOutlier ? <div className="border-t border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-xs text-[#e0c87f]">Revisar: este valor se aleja más de 25% de la mediana seleccionada.</div> : null}
           {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Referencia sin superficie canónica completa.</div> : null}
-          {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona y superficie comparable." /></div> : null}
+          {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona, tamaño y programa similares." /></div> : null}
           <details className="border-t border-[var(--n3-line)]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">{manual ? 'Completar' : 'Detalles'}</summary><div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-4">
             <label className="block"><FieldLabel>Fuente</FieldLabel><select value={item.sourceType} onChange={(event) => updateComparable(index, { sourceType: event.target.value as ValuationComparable['sourceType'] })} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Portal</option><option>TocToc</option><option>CBRS</option><option>Cliente</option></select></label>
             <TextField label="Referencia / URL" value={item.sourceReference} onChange={(value) => updateComparable(index, { sourceReference: value })} />
@@ -575,20 +655,20 @@ export default function ValuationPage() {
       })}</div>
 
       <div className="flex flex-wrap gap-2"><button type="button" onClick={() => addComparable('CBRS')} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs hover:border-[#d7332b]"><Plus size={14} />Venta manual</button><button type="button" onClick={() => addComparable('Portal')} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs hover:border-[#d7332b]"><Plus size={14} />Oferta manual</button></div>
-      {suggestionNotes.length ? <details className="border border-[var(--n3-line)] bg-[#0c1111]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">Metodología</summary><div className="border-t border-[var(--n3-line)] p-4 text-xs leading-6 text-[var(--n3-text-muted)]">{suggestionNotes.join(' ')}</div></details> : null}
+      {suggestionNotes.length ? <details className="border border-[var(--n3-line)] bg-[#0c1111]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">Cómo se eligieron estas referencias</summary><div className="border-t border-[var(--n3-line)] p-4 text-xs leading-6 text-[var(--n3-text-muted)]">{suggestionNotes.join(' ')}</div></details> : null}
     </section> : null}
 
     {step === 4 ? <section className="space-y-4">
       <MetricGrid>
-        <MetricCard label="Pilar 1 · Oferta" value={portalEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(portalEvidence.medianUfM2)} · benchmark ${portalBenchmark ? benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
-        <MetricCard label="Pilar 2 · Ventas" value={cbrsEvidence.count.toLocaleString('es-CL')} detail={`Mediana seleccionada ${formatUfM2(cbrsEvidence.medianUfM2)} · benchmark ${cbrsBenchmark ? benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
-        <MetricCard label="Pilar 3 · Método PP" value="Aplicado" detail={subject.propertyType === 'Departamento' ? 'm² útiles × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
-        <MetricCard label="Comparables" value={selectedComparables.length.toLocaleString('es-CL')} detail="Confirmados por el valorizador." />
+        <MetricCard label="Oferta seleccionada" value={portalEvidence.count.toLocaleString('es-CL')} detail={`Mediana ${formatUfM2(portalEvidence.medianUfM2)} · mercado ${portalBenchmark ? benchmarkValue(portalBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
+        <MetricCard label="Ventas seleccionadas" value={cbrsEvidence.count.toLocaleString('es-CL')} detail={`Mediana ${formatUfM2(cbrsEvidence.medianUfM2)} · mercado ${cbrsBenchmark ? benchmarkValue(cbrsBenchmark.median_uf_m2, ' UF/m²') : '—'}`} />
+        <MetricCard label="Método Property Partners" value="Aplicado" detail={subject.propertyType === 'Departamento' ? 'm² útiles + terraza ponderada × UF/m² confirmado' : 'construcción × tasa + terreno × tasa'} />
+        <MetricCard label="Muestra confirmada" value={selectedComparables.length.toLocaleString('es-CL')} detail="Comparables elegidos y trazables." />
       </MetricGrid>
 
       <SecondOpinionPanel opinion={secondOpinion} />
 
-      <IntelligencePanel eyebrow="Paso 4 · Decisión" title="Confirma la tasa profesional" description="Property Partners confirma la tasa."><div className="p-5">
+      <IntelligencePanel eyebrow="Paso 4 · Decisión" title="Define el valor" description="La evidencia orienta la decisión. Property Partners confirma la tasa profesional final."><div className="p-5">
         {subject.propertyType === 'Departamento' ? <>
           <div className="flex flex-wrap gap-2">
             <button type="button" disabled={!cbrsEvidence.medianUfM2} onClick={() => adoptDepartmentRate('cbrs_median', cbrsEvidence.medianUfM2)} className="border border-[var(--n3-line)] px-3 py-2 text-xs disabled:opacity-40 hover:border-[#d7332b]">Usar mediana CBRS</button>
@@ -598,34 +678,62 @@ export default function ValuationPage() {
           </div>
           <div className="mt-5 max-w-sm"><NumberField label="UF/m² adoptado" value={subject.usefulRateUfM2} onChange={(value) => { updateSubject('usefulRateUfM2', value); setRateAnchor(value === undefined ? null : 'manual') }} suffix="UF/m²" step={0.1} min={0} /></div>
           <p className="mt-3 text-xs text-[var(--n3-text-muted)]">Origen de la decisión: {rateAnchorLabel(rateAnchor)}.</p>
-        </> : <div className="grid gap-4 md:grid-cols-2"><NumberField label="UF/m² construcción adoptado" value={subject.builtRateUfM2} onChange={(value) => updateSubject('builtRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} /><NumberField label="UF/m² terreno adoptado" value={subject.landRateUfM2} onChange={(value) => updateSubject('landRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} /></div>}
+        </> : <div className="space-y-4">
+          {houseRecommendation ? <div className="border border-[#5f8f82]/50 bg-[#0a1210] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <FieldLabel>Referencia sugerida por la evidencia</FieldLabel>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <strong className="text-xl">{houseRecommendation.weightedRateUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</strong>
+                  <span className="text-xs text-[var(--n3-text-muted)]">~{houseRecommendation.estimatedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</span>
+                </div>
+                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{houseRecommendation.comparableCount} comparables compatibles · confianza {houseRecommendation.confidence === 'high' ? 'alta' : houseRecommendation.confidence === 'medium' ? 'media' : 'baja'} · no vinculante.</p>
+              </div>
+              <button type="button" onClick={adoptHouseRecommendation} className="bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Usar esta referencia</button>
+            </div>
+          </div> : <div className="border border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-sm text-[#e0c87f]">No hay una referencia automática suficientemente robusta. Revisa los comparables y define la tasa profesional.</div>}
+          <details className="border border-[var(--n3-line)] bg-[#080d0d]" open={!houseRecommendation}>
+            <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ajustar tasa manualmente</summary>
+            <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
+              <NumberField label="UF/m² construcción" value={subject.builtRateUfM2} onChange={(value) => { updateSubject('builtRateUfM2', value); setRateAnchor(value === undefined ? null : 'manual') }} suffix="UF/m²" step={0.1} min={0} />
+              <NumberField label="UF/m² terreno" value={subject.landRateUfM2} onChange={(value) => { updateSubject('landRateUfM2', value); setRateAnchor(value === undefined ? null : 'manual') }} suffix="UF/m²" step={0.1} min={0} />
+            </div>
+          </details>
+          <p className="text-xs text-[var(--n3-text-muted)]">Origen de la tasa: {rateAnchorLabel(rateAnchor)}.</p>
+        </div>}
       </div></IntelligencePanel>
 
-      <IntelligencePanel eyebrow="Resultado" title={result ? `${Math.round(result.adjustedValueUf).toLocaleString('es-CL')} UF` : 'Pendiente de confirmar tasa'} description={result ? `Valor comercial canónico · ${result.commercialUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²` : 'Confirma una tasa.'}>{result ? <div className="grid gap-3 p-5 md:grid-cols-3">{result.publicationScenarios.map((scenario) => <div key={scenario.upliftPct} className={`border p-4 ${scenario.upliftPct === 5 ? 'border-[var(--n3-teal)] bg-[#0a1210]' : 'border-[var(--n3-line)]'}`}><FieldLabel>Publicación · margen {scenario.upliftPct}%{scenario.upliftPct === 5 ? ' · recomendado PP' : ''}</FieldLabel><strong className="text-xl">{Math.round(scenario.suggestedPriceUf).toLocaleString('es-CL')} UF</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{scenario.suggestedUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m² ponderado</p></div>)}</div> : <div className="p-5 text-sm text-[var(--n3-text-muted)]">Pendiente de tasa.</div>}</IntelligencePanel>
+      <IntelligencePanel eyebrow="Resultado para revisión" title={result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : 'Pendiente de confirmar tasa'} description={result ? `Valor comercial estimado · ${result.commercialUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado` : 'Confirma una tasa para obtener el valor comercial y los escenarios de publicación.'}>{result ? <div className="grid gap-3 p-5 md:grid-cols-3">{result.publicationScenarios.map((scenario) => <div key={scenario.upliftPct} className={`border p-4 ${scenario.upliftPct === 5 ? 'border-[var(--n3-teal)] bg-[#0a1210]' : 'border-[var(--n3-line)]'}`}><FieldLabel>{scenario.upliftPct === 0 ? 'Valor comercial' : `Publicación · margen ${scenario.upliftPct}%`}{scenario.upliftPct === 5 ? ' · escenario estándar' : ''}</FieldLabel><strong className="text-xl">{scenario.suggestedPriceUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{scenario.suggestedUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</p></div>)}</div> : <div className="p-5 text-sm text-[var(--n3-text-muted)]">Pendiente de tasa.</div>}</IntelligencePanel>
     </section> : null}
 
     {step === 5 ? <section className="space-y-4">
-      <IntelligencePanel eyebrow="Paso 5 · Revisión" title="Revisión final" description="Resumen del expediente."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+      <IntelligencePanel eyebrow="Paso 5 · Revisión" title={result && selectedComparables.length >= 3 ? 'Listo para revisión' : 'Revisión final'} description="Una vista simple del valor, la evidencia utilizada y la decisión profesional."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="border border-[var(--n3-line)] p-4 xl:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType} · ROL {subject.rol || 'no disponible'}</p></div>
         <div className="border border-[var(--n3-line)] p-4"><FieldLabel>Evidencia</FieldLabel><strong className="text-xl">{selectedComparables.length}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{cbrsEvidence.count} ventas · {portalEvidence.count} ofertas</p></div>
-        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor comercial</FieldLabel><strong className="text-xl">{result ? `${Math.round(result.adjustedValueUf).toLocaleString('es-CL')} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : 'Tasas construcción + terreno'}</p></div>
+        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor comercial</FieldLabel><strong className="text-xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia Champion v5 confirmada por la ejecutiva' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
       </div>
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
       <SecondOpinionPanel opinion={secondOpinion} />
-      <IntelligencePanel eyebrow="Criterio profesional" title="Justificación del valorizador" description="Fundamenta evidencia y tasa."><div className="p-5"><TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables; la remodelación integral y la terraza de uso y goce sustentan una posición en la parte alta del rango observado..." /></div></IntelligencePanel>
+      <IntelligencePanel eyebrow="Criterio profesional" title="Justificación del valorizador" description="Deja una explicación breve de la evidencia y la tasa elegida."><div className="p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-[var(--n3-text-muted)]">Debe quedar revisada por la ejecutiva antes de enviar.</p>
+          <button type="button" disabled={selectedComparables.length < 3} onClick={draftProfessionalJustification} className="border border-[var(--n3-line)] px-3 py-2 text-xs font-medium disabled:opacity-40 hover:border-[#d7332b]">Crear borrador con la evidencia</button>
+        </div>
+        <TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables..." />
+      </div></IntelligencePanel>
       <MethodologyNote>Portal: oferta. CBRS: ventas. Property Partners decide.</MethodologyNote>
     </section> : null}
 
     {message ? <div role="status" className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm text-[#ff9a93]">{message}</div> : null}
 
-    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-4 backdrop-blur">
-      <div className="flex items-center justify-between gap-3">
-        <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold disabled:opacity-30"><ArrowLeft size={14} />Anterior</button>
+    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-3 backdrop-blur md:py-4">
+      <div className="flex items-center justify-between gap-1.5 md:gap-3">
+        <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-30 md:gap-2 md:px-4"><ArrowLeft size={14} /><span className="hidden sm:inline">Anterior</span></button>
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
-        <div className="flex items-center gap-2">
-          {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold disabled:opacity-50"><Save size={14} />{saving ? 'Guardando…' : 'Guardar borrador'}</button> : null}
-          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Continuar <ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex items-center gap-2 bg-[#d7332b] px-5 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? 'Guardando…' : 'Guardar borrador'}</button>}
+        <div className="flex items-center gap-1.5 md:gap-2">
+          {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
+          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar'}</button>}
         </div>
       </div>
     </div>
