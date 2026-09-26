@@ -483,91 +483,51 @@ async function hydratePortalLocationSection(page: Page) {
 
 async function capturePortalNearbyPlaces(page: Page): Promise<PortalNearbyPlace[]> {
   const labels = ['Transporte', 'Educación', 'Áreas verdes', 'Comercios']
-  const all: PortalNearbyPlace[] = []
+  try {
+    const sections = await page.evaluate((wantedLabels) => {
+      const normalize = (value: string | null | undefined) => String(value ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
 
-  for (const label of labels) {
-    try {
-      const rawPlaces = await page.evaluate(async (tabLabel) => {
-        const normalize = (value: string | null | undefined) => String(value ?? '')
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .toLowerCase()
-        const wanted = normalize(tabLabel)
-        const candidates = Array.from(document.querySelectorAll('button,[role="tab"],a'))
-        const control = candidates.find((element) => normalize(element.textContent) === wanted) as HTMLElement | undefined
-        if (!control) return []
-
-        control.click()
-        await new Promise((resolve) => setTimeout(resolve, 280))
-
-        const controlledId = control.getAttribute('aria-controls')
+      const controls = Array.from(document.querySelectorAll('button,[role="tab"],a'))
+      return wantedLabels.map((label) => {
+        const wanted = normalize(label)
+        const control = controls.find((element) => normalize(element.textContent) === wanted)
+        const controlledId = control?.getAttribute('aria-controls')
         const controlled = controlledId ? document.getElementById(controlledId) : null
-        const visiblePanels = Array.from(document.querySelectorAll('[role="tabpanel"]')).filter((element) => {
-          const html = element as HTMLElement
-          const style = window.getComputedStyle(html)
-          return !html.hidden
-            && html.getAttribute('aria-hidden') !== 'true'
-            && style.display !== 'none'
-            && style.visibility !== 'hidden'
-        })
-        const panel = controlled ?? visiblePanels[0] ?? null
-        if (!panel) return []
+        if (controlled) {
+          return { label, text: String(controlled.textContent ?? '') }
+        }
 
-        const leafTexts = Array.from(panel.querySelectorAll('*'))
-          .filter((element) => element.children.length === 0)
-          .map((element) => String(element.textContent ?? '').replace(/\s+/g, ' ').trim())
-          .filter(Boolean)
+        const candidates = Array.from(document.querySelectorAll('section,div'))
+          .filter((element) => {
+            const value = normalize(element.textContent)
+            return value.includes(wanted)
+              && value.length >= wanted.length + 20
+              && value.length <= 6000
+          })
+          .sort((a,b) => (a.textContent?.length ?? 0) - (b.textContent?.length ?? 0))
 
-        const uniqueTexts = leafTexts.filter((value, index, values) => values.indexOf(value) === index)
-        const distancePattern = /(?:(\d+)\s*mins?\s*[-–·]\s*)?([\d.,]+)\s*metros?/i
-        const distances = uniqueTexts
-          .map((value) => ({ value, match: value.match(distancePattern) }))
-          .filter((item): item is { value: string; match: RegExpMatchArray } => Boolean(item.match))
+        return { label, text: String(candidates[0]?.textContent ?? '') }
+      })
+    }, labels)
 
-        const ignored = new Set([
-          'paraderos','metro','transporte','educacion','areas verdes','comercios',
-          'colegios','universidades','jardines infantiles','parques','plazas','tiendas',
-          'supermercados','malls',
-        ])
-        const names = uniqueTexts.filter((value) => {
-          const normalized = normalize(value)
-          return value.length >= 3
-            && value.length <= 140
-            && !distancePattern.test(value)
-            && !ignored.has(normalized)
-        })
-
-        return distances.map((item, index) => ({
-          name: names[index] ?? null,
-          walk: item.match[1] ? Number.parseInt(item.match[1], 10) : null,
-          distance: Number.parseFloat(item.match[2].replace(/\./g, '').replace(',', '.')),
-        })).filter((item) => item.name && Number.isFinite(item.distance))
-      }, label)
-
-      const category = nearbyCategory(label)
-      for (const place of rawPlaces) {
-        if (!place.name || place.distance <= 0 || place.distance > 5_000) continue
-        all.push({
-          category,
-          name: place.name,
-          walk_minutes: place.walk != null && place.walk >= 0 && place.walk <= 180 ? place.walk : null,
-          distance_m: Math.round(place.distance),
-        })
-      }
-    } catch {
-      // Nearby context is enrichment only. A failed tab must not fail the listing.
-    }
+    const all = sections.flatMap((section) =>
+      extractPortalNearbyPlacesFromText(section.text, section.label),
+    )
+    const seen = new Set<string>()
+    return all.filter((place) => {
+      const key = normalizeLabel(place.category + ':' + place.name + ':' + place.distance_m)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    }).slice(0,80)
+  } catch {
+    return []
   }
-
-  const seen = new Set<string>()
-  return all.filter((place) => {
-    const key = normalizeLabel(place.category + ':' + place.name + ':' + place.distance_m)
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  }).slice(0, 80)
 }
 
 function extractPrimaryAddress(jsonLd: unknown[]) {
