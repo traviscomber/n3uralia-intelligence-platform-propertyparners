@@ -81,17 +81,23 @@ begin
       wrong_count,
       case when sample_size>0 then correct_count::numeric/sample_size else null end as precision,
       case when sample_size>0 then
-        (
-          (
-            correct_count::numeric/sample_size
-            + (1.96*1.96)/(2*sample_size)
-            - 1.96*sqrt(
-              (correct_count::numeric/sample_size)*(1-correct_count::numeric/sample_size)/sample_size
-              + (1.96*1.96)/(4*sample_size*sample_size)
+        greatest(
+          0::numeric,
+          least(
+            1::numeric,
+            (
+              (
+                correct_count::numeric/sample_size
+                + (1.96*1.96)/(2*sample_size)
+                - 1.96*sqrt(
+                  (correct_count::numeric/sample_size)*(1-correct_count::numeric/sample_size)/sample_size
+                  + (1.96*1.96)/(4*sample_size*sample_size)
+                )
+              )
+              /
+              (1 + (1.96*1.96)/sample_size)
             )
           )
-          /
-          (1 + (1.96*1.96)/sample_size)
         )
         else null end as wilson_lower_95
     from combined
