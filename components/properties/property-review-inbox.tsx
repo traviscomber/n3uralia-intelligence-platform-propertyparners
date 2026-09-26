@@ -33,6 +33,8 @@ const RESOLUTION_LABELS: Record<string,string> = {
   territorial_evidence:'Evidencia territorial cruzada',
   learned_address_alias_v1:'Patrón territorial aprendido',
   learned_address_alias_conflict:'Patrón aprendido en conflicto',
+  portal_nearby_poi_consensus_v1:'Puntos cercanos Portal',
+  portal_nearby_poi_conflict:'Puntos cercanos en conflicto',
   manual:'Sin resolución automática',
 }
 
