@@ -1,26 +1,11 @@
 import Link from 'next/link'
-import { AlertTriangle, ExternalLink, MapPinned, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { PropertyReviewInbox, type PropertyReviewRow } from '@/components/properties/property-review-inbox'
 import { OperationalState } from '@/components/ui/operational-state'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { formatPropertyPartnersDate, propertyPartnersCalendarDayAge } from '@/lib/property-partners-time'
-
-type QueueRow = {
-  review_id: string | null
-  source_listing_id: string
-  raw_address: string | null
-  title: string | null
-  url: string | null
-  classification: string | null
-  proposed_neighborhood_name: string | null
-  resolution_kind: string
-  reason: string
-  can_decide: boolean
-  observed_at: string | null
-}
 
 type TerritoryProgress = {
   portal_current_houses: number | null
@@ -50,56 +35,17 @@ type AssignedProperty = {
   }>
 }
 
-const RESOLUTION_LABELS: Record<string,string> = {
-  accepted_memory:'Memoria territorial',
-  point_in_kml:'Coordenada KML',
-  direct_kml:'Coincidencia KML',
-  unique_kml_candidate:'Candidato KML único',
-  validated_rule:'Regla territorial validada',
-  cbrs_street_consensus:'Consenso histórico CBRS',
-  territorial_evidence:'Evidencia territorial cruzada',
-  manual:'Sin resolución automática',
-}
-
-function n(value:number){return value.toLocaleString('es-CL')}
-function formatDate(value:string|null){return value?formatPropertyPartnersDate(value):'—'}
-function assignmentRole(value:string){if(value==='owner')return'Principal';if(value==='co_broker')return'Compartida';if(value==='support')return'Apoyo';return value}
-function evidenceLabel(kind:string){return RESOLUTION_LABELS[kind]??'Evidencia territorial'}
-
-function TerritoryExceptionCard({row}:{row:QueueRow}){
-  return <article className="grid gap-4 py-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(210px,0.5fr)] lg:items-center">
-    <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#ff8d87]"><AlertTriangle size={12}/> Excepción territorial</span>
-        <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{evidenceLabel(row.resolution_kind)}</span>
-      </div>
-      <p className="mt-2 text-sm font-medium leading-6 text-[var(--n3-text-light)]">{row.raw_address||row.title||'Dirección no disponible'}</p>
-      {row.title&&row.raw_address?<p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.title}</p>:null}
-      <p className="mt-2 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">{row.reason}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--n3-text-muted)]">
-        <span>MLC-{row.source_listing_id}</span>
-        {row.url?<Link href={row.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-[var(--n3-accent)] hover:underline">Ver aviso <ExternalLink size={12}/></Link>:null}
-      </div>
-    </div>
-    <div className="border-l border-[var(--n3-line)] pl-4">
-      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Estado</p>
-      <p className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">Pendiente de barrio</p>
-      {row.proposed_neighborhood_name?<p className="mt-2 flex items-start gap-1 text-[11px] leading-4 text-[var(--n3-text-muted)]"><MapPinned size={12} className="mt-0.5 shrink-0"/> Señal actual: {row.proposed_neighborhood_name}. No se publica hasta despejar el conflicto.</p>:null}
-    </div>
-  </article>
-}
-
 export default async function PropertiesPage(){
   const scope=await requireUserScope()
   const managerView=hasCapability(scope.role,'properties.global.assign')||hasCapability(scope.role,'properties.office.assign')
 
   if(managerView){
-    const db=createServiceClient()
+    const db=await createClient()
     const [queueResult,territoryResult]=await Promise.all([
       db.rpc('get_ceo_market_neighborhood_queue_v1'),
       db.rpc('get_market_house_territory_progress_v1').maybeSingle(),
     ])
-    const rows=(queueResult.data??[]) as QueueRow[]
+    const rows=(queueResult.data??[]) as PropertyReviewRow[]
     const territory=territoryResult.data as TerritoryProgress|null
     const active=Number(territory?.portal_current_houses??0)
     const resolved=Number(territory?.exact_kml_houses??0)
@@ -124,21 +70,13 @@ export default async function PropertiesPage(){
 
       {errors.length?<div className="mt-5"><OperationalState kind="error" title="No fue posible consultar todo el estado territorial" description="La cola mantiene únicamente casos verificables; no se interpretan faltantes como cero."/></div>:null}
 
-      <section className="mt-8">
+      <section className="mt-7">
         <div className="border-b border-[var(--n3-line)] pb-3">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[#ff8d87]">Sólo excepciones</p>
-          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Casos que el sistema no clasificó automáticamente por barrio</h2>
-          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Las propiedades con barrio resuelto salen de esta cola y continúan automáticamente hacia Leads/Ficha 360. Esta vista no funciona como inventario general.</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#ff8d87]">Bandeja de revisión</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Sólo propiedades que requieren una decisión humana</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Patrón tipo inbox: pendientes a la izquierda, evidencia y acción a la derecha. Al confirmar el barrio, el caso sale de la bandeja y continúa automáticamente hacia Leads/Ficha 360.</p>
         </div>
-        {rows.length?<div className="divide-y divide-[var(--n3-line)]">{rows.map(row=><TerritoryExceptionCard key={row.source_listing_id} row={row}/>)}</div>
-          :<OperationalState compact kind="success" title="Cola territorial vacía" description="Todas las propiedades observadas con evidencia suficiente están clasificadas y continúan fuera de esta vista."/>}
-      </section>
-
-      <section className="mt-8 border-t border-[var(--n3-line)] pt-4">
-        <div className="flex items-start gap-2 text-xs leading-5 text-[var(--n3-text-muted)]">
-          <ShieldCheck size={15} className="mt-0.5 shrink-0 text-[var(--n3-accent)]"/>
-          <p>Flujo operativo: Portal → identidad → barrio. Sólo si el barrio no puede resolverse con evidencia suficiente aparece aquí. Al resolverse, la propiedad deja esta cola y sigue a Leads según la autoridad territorial vigente.</p>
-        </div>
+        <PropertyReviewInbox initialRows={rows}/>
       </section>
 
       <DataStatusBar
