@@ -302,7 +302,7 @@ Rules:
 - does not give Pedro Pablo unrestricted database credentials;
 - does not allow arbitrary inserts through the gateway.
 
-The current Pedro Pablo workspace displays proposals but **does not yet expose the execution/confirmation CTA**. Server-side execution exists and remains intentionally separated until the UI confirmation flow is completed and verified.
+The current Pedro Pablo workspace exposes the governed execution flow for authorized roles: **Prepare task → preview with zero writes → explicit human confirmation → create audited task**. The server regenerates the current proposal before preview/execution, rejects stale or forged proposal IDs, and never accepts an arbitrary task payload from the browser.
 
 ### Core safety boundary
 
