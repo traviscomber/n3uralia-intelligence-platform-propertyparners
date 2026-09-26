@@ -78,17 +78,20 @@ async function resolveVisibleEntityIds(): Promise<string[]> {
 
 export async function getUserScope(): Promise<UserScope> {
   const supabase = await createClient()
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
+  const userId = claimsError ? null : String(claimsData?.claims?.sub || '') || null
+  if (!userId) throw new AuthenticationRequiredError()
+
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser()
-
   if (userError || !user) throw new AuthenticationRequiredError()
 
   const { data: rawProfile, error: profileError } = await supabase
     .from('profiles')
     .select('id,full_name,role,team,avatar_url,created_at')
-    .eq('id', user.id)
+    .eq('id', userId)
     .maybeSingle()
 
   const role = normalizeRole(rawProfile?.role)
@@ -97,32 +100,36 @@ export async function getUserScope(): Promise<UserScope> {
   const profile: Profile = { ...rawProfile, role }
   const access = createAccessContext(profile)
 
-  const { data: rawEntity, error: entityError } = await supabase
-    .from('management_entities')
-    .select('id,name,profile_id,parent_id,metadata')
-    .eq('profile_id', profile.id)
-    .maybeSingle()
-
-  if (entityError) throw new Error(`Unable to resolve management entity: ${entityError.message}`)
-  const entity = (rawEntity as ManagementEntity | null) || null
-
+  let entity: ManagementEntity | null = null
   let parent: ManagementEntity | null = null
-  if (entity?.parent_id) {
-    const { data, error } = await supabase
+
+  // Global roles do not need entity/office resolution for authorization.
+  // Self scope is the authenticated profile itself, so avoid the expensive
+  // current_user_visible_profile_ids() RPC entirely for sellers.
+  if (access.scope !== 'global') {
+    const { data: rawEntity, error: entityError } = await supabase
       .from('management_entities')
       .select('id,name,profile_id,parent_id,metadata')
-      .eq('id', entity.parent_id)
+      .eq('profile_id', profile.id)
       .maybeSingle()
-    if (error) throw new Error(`Unable to resolve office entity: ${error.message}`)
-    parent = (data as ManagementEntity | null) || null
+
+    if (entityError) throw new Error(`Unable to resolve management entity: ${entityError.message}`)
+    entity = (rawEntity as ManagementEntity | null) || null
+
+    if (entity?.parent_id) {
+      const { data, error } = await supabase
+        .from('management_entities')
+        .select('id,name,profile_id,parent_id,metadata')
+        .eq('id', entity.parent_id)
+        .maybeSingle()
+      if (error) throw new Error(`Unable to resolve office entity: ${error.message}`)
+      parent = (data as ManagementEntity | null) || null
+    }
   }
 
   const office = officeFromEntity(entity, parent)
-  // Global roles are never row-filtered by management entity IDs. Keeping this
-  // dependency out of their scope construction also prevents an auxiliary RPC
-  // drift from taking down unrelated global workflows such as valuation reads.
   const [visibleProfileIds, visibleEntityIds] = await Promise.all([
-    resolveVisibleProfileIds(),
+    access.scope === 'self' ? Promise.resolve([profile.id]) : resolveVisibleProfileIds(),
     access.scope === 'global' ? Promise.resolve([]) : resolveVisibleEntityIds(),
   ])
 
