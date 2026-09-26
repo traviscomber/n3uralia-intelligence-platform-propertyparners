@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { readFileSync } from 'node:fs'
+import { getCanonicalManagementDashboardEntities } from '../lib/management-canonical-periods'
 
 test('2025 monthly baseline preserves six verified company metrics without fabricating monthly stock/captations/suspensions', () => {
   const sql = readFileSync('supabase/migrations/20260926220500_backfill_2025_monthly_management_events.sql','utf8')
@@ -39,4 +40,23 @@ test('August board backfill reconciles office credits exactly to company authori
   assert.match(sql,/Lo Beltrán','management_credited_sales',2\.5/)
   assert.match(sql,/Property Partners Vitacura','management_credited_sales_uf',141650/)
   assert.match(sql,/verified_source_value_not_auto_approved/)
+})
+
+
+test('CEO company evolution exposes 2025 baseline while office evolution remains source-bounded to 2026', () => {
+  const entities = getCanonicalManagementDashboardEntities()
+  const company = entities.find((entity) => entity.entityType === 'company')
+  const offices = entities.filter((entity) => entity.entityType === 'branch')
+  assert.ok(company)
+
+  const july2025 = company.evolution?.find((point) => point.period === '2025-07')
+  assert.ok(july2025)
+  assert.equal(july2025.sales, 5)
+  assert.equal(july2025.metrics?.leads, 423)
+  assert.equal(july2025.metrics?.requirements, 546)
+  assert.equal(july2025.metrics?.scheduled_visits, 386)
+  assert.equal(july2025.metrics?.realized_visits, 239)
+
+  assert.equal(company.evolution?.filter((point) => point.period.startsWith('2025-')).length, 12)
+  assert.equal(offices.every((office) => office.evolution?.every((point) => point.period.startsWith('2026-'))), true)
 })
