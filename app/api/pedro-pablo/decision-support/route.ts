@@ -607,19 +607,34 @@ export async function POST(request: NextRequest) {
   const proposals = buildProposals(response)
   const scope = await requireUserScope()
   const canCreateTask = hasCapability(scope.role, 'tasks.global.manage') || hasCapability(scope.role, 'tasks.office.manage')
+  const directorSupport = scope.role === 'director' || scope.role === 'subdirector'
+  const assistantProfile = directorSupport
+    ? {
+        id: 'property-partners-director-support-v1',
+        purpose: 'Apoyar a dirección con el conocimiento senior compartido del asistente de Pedro Pablo, limitado a su oficina, permisos y evidencia autorizada.',
+        tone: PEDRO_PABLO_EXECUTIVE_PROFILE.communication.tone,
+        answerOrder: PEDRO_PABLO_EXECUTIVE_PROFILE.preferredAnswerOrder,
+        opinionPolicy: 'evidence-only-no-personal-opinion' as const,
+        missingDataPolicy: 'state-unavailable-do-not-infer' as const,
+        knowledgeSource: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
+        supportMode: 'shared-senior-knowledge-role-scoped',
+      }
+    : {
+        id: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
+        purpose: PEDRO_PABLO_EXECUTIVE_PROFILE.purpose,
+        tone: PEDRO_PABLO_EXECUTIVE_PROFILE.communication.tone,
+        answerOrder: PEDRO_PABLO_EXECUTIVE_PROFILE.preferredAnswerOrder,
+        opinionPolicy: 'evidence-only-no-personal-opinion' as const,
+        missingDataPolicy: 'state-unavailable-do-not-infer' as const,
+        knowledgeSource: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
+        supportMode: 'executive',
+      }
 
   return NextResponse.json({
     ...response,
     proposals,
     suggestedQuestions,
-    assistantProfile: {
-      id: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
-      purpose: PEDRO_PABLO_EXECUTIVE_PROFILE.purpose,
-      tone: PEDRO_PABLO_EXECUTIVE_PROFILE.communication.tone,
-      answerOrder: PEDRO_PABLO_EXECUTIVE_PROFILE.preferredAnswerOrder,
-      opinionPolicy: 'evidence-only-no-personal-opinion',
-      missingDataPolicy: 'state-unavailable-do-not-infer',
-    },
+    assistantProfile,
     availableConfirmedActions: canCreateTask ? ['create_task'] : [],
     proposalPolicy: 'pedro-pablo-proposal-contract-v4-reports-aware',
     executionPolicy: 'human-confirmation-required',
