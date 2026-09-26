@@ -62,7 +62,7 @@ export async function PartnerOperationalWorkspace() {
   const [assignmentsResult, valuationsResult, tasksResult] = await Promise.all([
     supabase.from('property_assignments').select('id,assignment_role,status,assigned_at,notes,market_properties(id,normalized_address,neighborhood_id,property_type,useful_area_m2,built_area_m2,bedrooms,bathrooms,parking_spaces)').eq('assigned_to', scope.profileId).eq('status', 'active').order('assigned_at', { ascending: false }).limit(12),
     supabase.from('valuation_cases').select('id,status,address,updated_at,version_number').eq('requested_by', scope.profileId).order('updated_at', { ascending: false }).limit(12),
-    supabase.from('management_tasks').select('id,title,status,due_date,priority').eq('assigned_to', scope.profileId).order('due_date', { ascending: true, nullsFirst: false }).limit(12),
+    supabase.from('management_tasks').select('id,title,status,due_date,priority').eq('assigned_to', scope.profileId).in('status', ['open','in_progress']).order('due_date', { ascending: true, nullsFirst: false }).limit(12),
   ])
   const assignments = (assignmentsResult.data ?? []) as AssignmentRow[]
   const valuations = (valuationsResult.data ?? []) as ValuationRow[]
