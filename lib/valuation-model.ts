@@ -37,10 +37,6 @@ function finiteNonNegative(value: number) {
   return Number.isFinite(value) && value >= 0 ? value : 0
 }
 
-function round(value: number, decimals = 1) {
-  const factor = 10 ** decimals
-  return Math.round(value * factor) / factor
-}
 
 export function calculatePublicationScenarios(commercialValueUf: number, effectiveAreaM2: number): ValuationScenario[] {
   const value = finiteNonNegative(commercialValueUf)
@@ -49,8 +45,8 @@ export function calculatePublicationScenarios(commercialValueUf: number, effecti
     const publicationUf = value / (1 - margin)
     return {
       margin,
-      publicationUf: Math.round(publicationUf),
-      weightedUfM2: area > 0 ? round(publicationUf / area) : 0,
+      publicationUf,
+      weightedUfM2: area > 0 ? publicationUf / area : 0,
     }
   })
 }
@@ -65,12 +61,12 @@ export function calculateDeterministicValuation(input: ValuationInput): Determin
     const commercialValue = builtValue + landValue
     return {
       propertyType: input.propertyType,
-      effectiveAreaM2: round(effectiveArea),
-      commercialValueUf: Math.round(commercialValue),
-      commercialWeightedUfM2: effectiveArea > 0 ? round(commercialValue / effectiveArea) : 0,
+      effectiveAreaM2: effectiveArea,
+      commercialValueUf: commercialValue,
+      commercialWeightedUfM2: effectiveArea > 0 ? commercialValue / effectiveArea : 0,
       componentValues: [
-        { label: 'Construcción', valueUf: Math.round(builtValue) },
-        { label: 'Terreno', valueUf: Math.round(landValue) },
+        { label: 'Construcción', valueUf: builtValue },
+        { label: 'Terreno', valueUf: landValue },
       ],
       scenarios: calculatePublicationScenarios(commercialValue, effectiveArea),
       method: 'Plantilla Casas: construcción x UF/m² + terreno x UF/m²; comparación ponderada con terreno al 25%.',
@@ -83,10 +79,10 @@ export function calculateDeterministicValuation(input: ValuationInput): Determin
   const effectiveArea = usefulArea + terraceArea / 2
   return {
     propertyType: input.propertyType,
-    effectiveAreaM2: round(effectiveArea),
-    commercialValueUf: Math.round(commercialValue),
-    commercialWeightedUfM2: effectiveArea > 0 ? round(commercialValue / effectiveArea) : 0,
-    componentValues: [{ label: 'Superficie útil', valueUf: Math.round(commercialValue) }],
+    effectiveAreaM2: effectiveArea,
+    commercialValueUf: commercialValue,
+    commercialWeightedUfM2: effectiveArea > 0 ? commercialValue / effectiveArea : 0,
+    componentValues: [{ label: 'Superficie útil', valueUf: commercialValue }],
     scenarios: calculatePublicationScenarios(commercialValue, effectiveArea),
     method: 'Plantilla Departamentos: superficie útil x UF/m² aplicado; comparación ponderada con terraza al 50%.',
   }
