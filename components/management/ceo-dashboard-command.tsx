@@ -21,6 +21,14 @@ type Entity = { id: string; name: string; entityType: string; evolution?: Point[
 type Summary = {
   generatedAt?: string
   entities: Entity[]
+  historyCoverage?: {
+    monthly2025Periods?: number
+    completeMonthly2025Periods?: number
+    annual2025MetricCodes?: number
+    completeMonthly2026Periods?: number
+    latestVerifiedPeriod?: string | null
+    note?: string
+  }
   dataLayers?: { approvedMetricCount?: number; errors?: string[] }
 }
 type AugustBoard = {
@@ -243,7 +251,11 @@ export function CeoDashboardCommand() {
       ? 'blocked'
       : identityCoverage < 100 ? 'partial' : 'ready'
   const creditedDetail = usesCommercialCredit ? `${n(selectedMetrics.management_credited_sales, 1)} crédito gestión` : undefined
-  const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)}`
+  const history = summary.historyCoverage
+  const historyLabel = history
+    ? `Histórico 2025: ${n(history.monthly2025Periods)} meses ventas/UF + ${n(history.annual2025MetricCodes)} métricas anuales · 2026: ${n(history.completeMonthly2026Periods)} meses operativos`
+    : 'Histórico —'
+  const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)} · ${historyLabel}`
 
   return <WorkspaceShell contentClassName="max-w-[1480px]">
     <WorkspaceHeader eyebrow="Control Tower" title="Cierre de gestión" controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }, { label: 'Informe', href: `/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`, primary: true, icon: <FileText size={14} /> }, { label: 'Exportar', onClick: exportData, icon: <Download size={14} />, ariaLabel: 'Exportar' }]} />
