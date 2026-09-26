@@ -21,6 +21,7 @@ function assignmentRole(value:string){if(value==='owner')return'Principal';if(va
 
 type AssignedProperty = {
   id: string
+  assigned_to: string
   assignment_role: string
   status: string
   assigned_at: string
@@ -41,9 +42,10 @@ type AssignedProperty = {
 
 export default async function PropertiesPage(){
   const scope=await requireUserScope()
-  const managerView=hasCapability(scope.role,'properties.global.assign')||hasCapability(scope.role,'properties.office.assign')
+  const globalManagerView=hasCapability(scope.role,'properties.global.assign')
+  const officeManagerView=!globalManagerView&&hasCapability(scope.role,'properties.office.assign')
 
-  if(managerView){
+  if(globalManagerView){
     const db=await createClient()
     const [queueResult,territoryResult]=await Promise.all([
       db.rpc('get_ceo_market_neighborhood_queue_v1'),
@@ -89,6 +91,51 @@ export default async function PropertiesPage(){
         issues={rows.length+(errors.length?1:0)}
         status={errors.length?'blocked':rows.length?'partial':'ready'}
       />
+    </WorkspaceShell>
+  }
+
+  if(officeManagerView){
+    const supabase=await createClient()
+    const [assignmentResult,profileResult]=await Promise.all([
+      supabase.from('property_assignments')
+        .select('id,assigned_to,assignment_role,status,assigned_at,notes,market_properties(id,normalized_address,property_type,useful_area_m2,built_area_m2,bedrooms,bathrooms,parking_spaces,identity_status,last_seen_at)')
+        .in('assigned_to',scope.visibleProfileIds).eq('status','active').order('assigned_at',{ascending:false}),
+      supabase.from('profiles').select('id,full_name').in('id',scope.visibleProfileIds),
+    ])
+    const assignments=(assignmentResult.data||[]) as AssignedProperty[]
+    const profileNames=new Map((profileResult.data||[]).map(profile=>[profile.id,profile.full_name||'Sin nombre']))
+    const confirmedIdentity=assignments.filter(a=>a.market_properties[0]?.identity_status==='confirmed').length
+    const staleAssignments=assignments.filter(a=>{const p=a.market_properties[0];if(!p?.last_seen_at)return true;const age=propertyPartnersCalendarDayAge(p.last_seen_at);return age===null||age>7}).length
+    const issues=(assignmentResult.error?1:0)+(profileResult.error?1:0)+(assignments.length-confirmedIdentity)+staleAssignments
+
+    return <WorkspaceShell>
+      <WorkspaceHeader
+        eyebrow="Dirección · Propiedades"
+        title={scope.officeName?\`Cartera de \${scope.officeName}\`:'Cartera de la oficina'}
+        meta={issues?\`\${issues} señales requieren revisión\`:'Sin pendientes relevantes'}
+        actions={[
+          {label:'Leads',href:'/dashboard/properties/prospects'},
+          {label:'Mercado',href:'/dashboard/market'},
+        ]}
+      />
+      <MetricStrip items={[
+        {label:'Asignaciones activas',value:n(assignments.length)},
+        {label:'Identidad confirmada',value:n(confirmedIdentity),tone:assignments.length&&confirmedIdentity===assignments.length?'success':'default'},
+        {label:'Revisar vigencia',value:n(staleAssignments),tone:staleAssignments?'warning':'success'},
+      ]}/>
+      <section className="mt-7 max-w-6xl">
+        <div className="border-b border-[var(--n3-line)] pb-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Equipo</p>
+          <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Propiedades asignadas a la oficina</h2>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Sólo cartera visible para tu alcance de dirección. Prioriza identidad pendiente y publicaciones cuya vigencia requiere revisión.</p>
+        </div>
+        {assignmentResult.error||profileResult.error
+          ? <div className="mt-5"><OperationalState kind="error" title="No fue posible consultar toda la cartera de la oficina" description="No se muestran datos fuera del alcance autorizado."/></div>
+          : assignments.length
+            ? <div className="divide-y divide-[var(--n3-line)] border-b border-[var(--n3-line)]">{assignments.map(assignment=>{const property=assignment.market_properties[0]??null;const area=property?.useful_area_m2??property?.built_area_m2??null;const ageDays=property?.last_seen_at?propertyPartnersCalendarDayAge(property.last_seen_at):null;const freshness=ageDays===null?'Sin evidencia':ageDays===0?'Hoy':ageDays<=7?\`\${ageDays} d\`:\`Revisar · \${ageDays} d\`;return <Link key={assignment.id} href={property?\`/dashboard/properties/\${property.id}\`:'#'} className="grid gap-3 py-4 md:grid-cols-[minmax(0,1.4fr)_170px_130px_auto] md:items-center"><div><p className="text-sm font-semibold">{property?.normalized_address||'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type||'Sin tipo'}{property?.bedrooms!=null?\` · \${property.bedrooms} dorm.\`:''}{area!=null?\` · \${area} m²\`:''}</p></div><span className="text-xs text-[var(--n3-text-muted)]">{profileNames.get(assignment.assigned_to)||'Equipo'}</span><span className={\`text-xs \${ageDays===null||ageDays>7?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}\`}>{freshness}</span><span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir</span></Link>})}</div>
+            : <OperationalState kind="empty" title="Sin propiedades asignadas" description="No existen asignaciones activas para los perfiles visibles de tu oficina."/>}
+      </section>
+      <details className="mt-8 max-w-6xl"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Estado de datos</summary><DataStatusBar cutoff="Corte live" coverage={assignments.length?\`\${confirmedIdentity} de \${assignments.length} asignaciones con identidad confirmada\`:'Sin asignaciones activas'} issues={issues} status={issues?'partial':'ready'}/></details>
     </WorkspaceShell>
   }
 
