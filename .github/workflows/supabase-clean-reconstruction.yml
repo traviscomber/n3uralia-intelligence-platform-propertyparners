@@ -7,7 +7,11 @@ on:
     paths:
       - "supabase/migrations/**"
       - "config/production-schema-fingerprint.json"
+      - "config/supabase-recovery-contract.json"
+      - "scripts/verify-supabase-recovery-contract.mjs"
+      - "supabase/reconstruction/**"
       - ".github/workflows/supabase-clean-reconstruction.yml"
+      - ".github/workflows/supabase-baseline-capture.yml"
   push:
     branches: [main]
     paths:
@@ -46,6 +50,9 @@ jobs:
           if (!x.captureMethod || x.captureMethod !== 'catalog-hash') throw new Error('Unknown fingerprint capture method')
           console.log('Production schema fingerprint contract verified.')
           NODE
+
+      - name: Verify recovery contract
+        run: node scripts/verify-supabase-recovery-contract.mjs
 
       - name: Guard immutable migration history
         shell: bash

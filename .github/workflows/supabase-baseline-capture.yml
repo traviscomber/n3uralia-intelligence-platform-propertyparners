@@ -1,0 +1,59 @@
+name: Supabase reconstruction baseline capture
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture schema-only recovery baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_CLI_VERSION: "2.117.0"
+      BASELINE_FILE: artifacts/recovery/production-schema.sql
+      BASELINE_MANIFEST: artifacts/recovery/manifest.json
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify recovery contract
+        run: node scripts/verify-supabase-recovery-contract.mjs
+
+      - name: Require authorized database URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "SUPABASE_DB_URL repository secret is required for schema-only baseline capture." >&2
+            exit 1
+          fi
+
+      - name: Capture public and private schema only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/recovery
+          npx --yes "supabase@${SUPABASE_CLI_VERSION}" db dump             --db-url "${SUPABASE_DB_URL}"             --schema public,private             > "${BASELINE_FILE}"
+
+      - name: Verify artifact and write manifest
+        run: node scripts/verify-supabase-recovery-contract.mjs --artifact
+
+      - name: Upload recovery baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: property-partners-schema-baseline
+          path: |
+            artifacts/recovery/production-schema.sql
+            artifacts/recovery/manifest.json
+          if-no-files-found: error
+          retention-days: 7
