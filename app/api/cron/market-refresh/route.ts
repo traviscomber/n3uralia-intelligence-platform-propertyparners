@@ -550,6 +550,8 @@ export async function GET(request: Request) {
       })
       const { data: intelligenceRefresh, error: intelligenceError } = await supabase
         .rpc('refresh_market_listing_property_match_candidates_v1')
+      const { data: prospectSync, error: prospectSyncError } = await supabase
+        .rpc('sync_property_prospect_leads_v1')
 
       const sourceCode = 'portal-inmobiliario-vitacura-portal-houses'
       const { data: source } = await supabase
@@ -577,7 +579,7 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({
-        ok: detailDrain.ingestionFailures === 0 && !intelligenceError,
+        ok: detailDrain.ingestionFailures === 0 && !intelligenceError && !prospectSyncError,
         mode: 'details_only',
         datasetKind: 'portal_houses',
         ...detailDrain,
@@ -586,7 +588,11 @@ export async function GET(request: Request) {
           error: intelligenceError?.message ?? null,
           identityState,
         },
-      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+        prospectSync: {
+          result: prospectSync ?? null,
+          error: prospectSyncError?.message ?? null,
+        },
+      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError && !prospectSyncError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
     } catch (cause) {
       const failureMessage = cause instanceof Error ? cause.message : String(cause)
       console.error('[market-refresh] detail drain failed', { failureMessage })
@@ -734,7 +740,13 @@ export async function GET(request: Request) {
     }
   }
 
-  const ok = completeInventories === DATASETS.length && totalFailures === 0
+  const { data: prospectSync, error: prospectSyncError } = await supabase
+    .rpc('sync_property_prospect_leads_v1')
+  if (prospectSyncError) {
+    console.error('[market-refresh] prospect sync failed', { message: prospectSyncError.message })
+  }
+
+  const ok = completeInventories === DATASETS.length && totalFailures === 0 && !prospectSyncError
 
   return NextResponse.json(
     {
@@ -749,6 +761,10 @@ export async function GET(request: Request) {
       expectedDatasets: DATASETS.length,
       totalFailures,
       detailEnrichmentFailures,
+      prospectSync: {
+        result: prospectSync ?? null,
+        error: prospectSyncError?.message ?? null,
+      },
       runtimeMs: Date.now() - startedAt,
       results,
     },
