@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { applyPortalUfConversion, normalizePortalListingRows } from '../lib/market-source-import'
+import { applyPortalUfConversion, normalizePortalListingRows } from '../../lib/market-source-import'
 
 test('house card area remains raw evidence instead of canonical built/useful area', () => {
   const [row] = normalizePortalListingRows([{
