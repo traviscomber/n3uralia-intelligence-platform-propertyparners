@@ -307,11 +307,15 @@ export async function GET() {
     scopeLabel = partner ? `${partner.name} · ${partner.branch ?? profile.team ?? 'Sin sucursal'}` : `${profile.full_name ?? 'Partner'} · sin ficha documental vinculada`
   } else return NextResponse.json({ error: 'Rol no autorizado.' }, { status: 403 })
 
-  const [persistedEntitiesResult, definitionsResult, approvedValuesResult, goalsResult] = await Promise.all([
+  const [persistedEntitiesResult, definitionsResult, approvedValuesResult, goalsResult, historyCoverageResult] = await Promise.all([
     supabase.from('management_entities').select('id,entity_type,name,parent_id,profile_id').eq('active', true).order('name'),
     supabase.from('management_metric_definitions').select('code,label,unit,methodology,formula_version').eq('active', true).order('sort_order'),
     supabase.from('management_approved_metric_values').select('*').order('period_end', { ascending: true }),
     supabase.from('management_goals').select('entity_id,metric_code,period_start,period_end,target_value,status,approved_at,source_name').order('period_end', { ascending: true }),
+    supabase.from('management_history_coverage_v1')
+      .select('entity_name,entity_type,period_start,period_end,period_grain,verified_metric_codes,coverage_status')
+      .eq('entity_type','company')
+      .order('period_start', { ascending: true }),
   ])
 
   const approvedValues = (approvedValuesResult.data ?? []) as ApprovedMetricValue[]
@@ -333,6 +337,7 @@ export async function GET() {
     definitionsResult.error?.message,
     approvedValuesResult.error?.message,
     goalsResult.error?.message,
+    historyCoverageResult.error?.message,
     sourceValuesError,
   ].filter((message): message is string => Boolean(message))
 
@@ -386,6 +391,22 @@ export async function GET() {
 
   const payloadEntities = entities as PayloadEntity[]
   const qualityNotes = [...new Set(payloadEntities.flatMap((entity) => entity.commercialCoverage?.yoy.qualityNotes ?? []))]
+  const historyRows = historyCoverageResult.data ?? []
+  const historyCoverage = {
+    monthly2025Periods: historyRows.filter((row) => row.period_grain === 'monthly' && String(row.period_start).startsWith('2025-')).length,
+    completeMonthly2025Periods: historyRows.filter((row) => row.period_grain === 'monthly' && String(row.period_start).startsWith('2025-') && row.coverage_status === 'operationally_complete').length,
+    annual2025MetricCodes: historyRows
+      .filter((row) => row.period_grain === 'aggregate' && String(row.period_start).startsWith('2025-'))
+      .reduce((max, row) => Math.max(max, Number(row.verified_metric_codes ?? 0)), 0),
+    completeMonthly2026Periods: historyRows.filter((row) => row.period_grain === 'monthly' && String(row.period_start).startsWith('2026-') && row.coverage_status === 'operationally_complete').length,
+    latestVerifiedPeriod: historyRows
+      .filter((row) => row.period_grain === 'monthly')
+      .map((row) => String(row.period_start).slice(0, 7))
+      .sort()
+      .at(-1) ?? null,
+    note: '2025 conserva ventas/UF mensuales y métricas operativas agregadas anuales; no se fabrican aperturas mensuales sin replay de los Excel fuente.',
+  }
+
   const persistedCount = overlay.stats.approvedMetricCount
 
   return NextResponse.json({
@@ -402,6 +423,7 @@ export async function GET() {
       : latestCanonicalPeriod
         ? `Fuente documental canónica vigente: ${latestCanonicalPeriod.authority.file} (${latestCanonicalPeriod.period}). Las métricas Partner no se infieren cuando la fuente vigente no las publica.`
         : 'Presentaciones canónicas 2026, bases comparables 2025 contenidas en las mismas tablas y registros operativos visibles mediante RLS. No existen valores persistidos aprobados para sustituir este corte.',
+    historyCoverage,
     dataLayers: {
       mode: overlay.stats.mode,
       approvedMetricCount: persistedCount,
