@@ -79,67 +79,45 @@ export default async function DashboardHome() {
 
   if (role === 'admin') {
     const territoryPending = (market.pendingUniqueTerritorySuggestions ?? 0) + (market.ambiguousTerritorySuggestions ?? 0) + (market.unmatchedTerritoryHouses ?? 0)
-    const hasPriority = territoryPending > 0 || (operations.valuationDrafts ?? 0) > 0 || (operations.managementAlerts ?? 0) > 0
+    const valuationDrafts = operations.valuationDrafts ?? 0
+    const managementAlerts = operations.managementAlerts ?? 0
+    const hasPriority = territoryPending > 0 || valuationDrafts > 0 || managementAlerts > 0
 
     return (
-      <div className="mx-auto max-w-[1400px] space-y-7 pb-16">
+      <div className="mx-auto max-w-[1100px] space-y-7 pb-16">
         <header className="border-b border-[var(--n3-line)] pb-6 pt-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff766f]">Administración · operación global</p>
-          <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">Qué requiere atención hoy</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Pendientes operativos, datos por revisar y accesos de soporte. La administración coordina; no reemplaza las decisiones comerciales de dirección.</p>
-            </div>
-            <p className="text-xs leading-5 text-[var(--n3-text-muted)]">Mercado: {freshnessLabel(market.freshnessStatus, market.observationAgeDays)}<br />Corte: {formatDate(market.latestObservedAt)}</p>
-          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff766f]">Administración</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">Qué hacer hoy</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Revisa sólo lo pendiente. El resto queda disponible cuando lo necesites.</p>
+          <p className="mt-3 text-xs text-[var(--n3-text-muted)]">Datos al {formatDate(market.latestObservedAt)}</p>
         </header>
 
-        {market.error || operations.error ? <PublicErrorNotice code="DATA_UNAVAILABLE" title="Resumen administrativo incompleto" compact /> : null}
+        {market.error || operations.error ? <PublicErrorNotice code="DATA_UNAVAILABLE" title="Hay información que no se pudo cargar" compact /> : null}
 
-        <section className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
-          <Link href="/dashboard/properties" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Por resolver</p>
-            <p className="mt-3 text-4xl font-semibold">{market.missingNeighborhoods ?? '—'}</p>
-            <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Propiedades sin barrio confirmado.</p>
-          </Link>
-          <Link href="/dashboard/properties" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Ubicación por revisar</p>
-            <p className="mt-3 text-4xl font-semibold">{territoryPending}</p>
-            <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Sugerencias, ambigüedades y casos sin coincidencia territorial.</p>
-          </Link>
-          <Link href="/dashboard/valuations" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Valorizaciones en preparación</p>
-            <p className="mt-3 text-4xl font-semibold">{operations.valuationDrafts ?? '—'}</p>
-            <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Borradores todavía no enviados a revisión.</p>
-          </Link>
-          <Link href="/dashboard/control/admin" className="bg-[#0c1111] p-5 transition-colors hover:bg-[#101717]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Alertas abiertas</p>
-            <p className="mt-3 text-4xl font-semibold">{operations.managementAlerts ?? '—'}</p>
-            <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Excepciones que requieren revisión o seguimiento.</p>
-          </Link>
-        </section>
-
-        {hasPriority ? <section>
-          <div className="mb-3"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Prioridades</p><h2 className="mt-2 text-xl font-semibold">Resolver antes de administrar detalle</h2></div>
-          <div className="divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
-            {territoryPending > 0 ? <Link href="/dashboard/properties" className="grid min-h-16 gap-1 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Revisar propiedades con ubicación pendiente</span><span className="text-xs text-[var(--n3-text-muted)]">{territoryPending} casos →</span></Link> : null}
-            {(operations.valuationDrafts ?? 0) > 0 ? <Link href="/dashboard/valuations?status=draft" className="grid min-h-16 gap-1 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Ver valorizaciones aún en preparación</span><span className="text-xs text-[var(--n3-text-muted)]">{operations.valuationDrafts} borradores →</span></Link> : null}
-            {(operations.managementAlerts ?? 0) > 0 ? <Link href="/dashboard/control/admin" className="grid min-h-16 gap-1 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Revisar alertas de gestión</span><span className="text-xs text-[var(--n3-text-muted)]">{operations.managementAlerts} abiertas →</span></Link> : null}
+        <section aria-labelledby="admin-priorities-title">
+          <div className="mb-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Pendientes</p>
+            <h2 id="admin-priorities-title" className="mt-2 text-xl font-semibold">{hasPriority ? 'Por revisar' : 'Todo al día'}</h2>
           </div>
-        </section> : null}
-
-        <section>
-          <div className="mb-3"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Operación</p><h2 className="mt-2 text-xl font-semibold">Herramientas administrativas</h2></div>
-          <div className="grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
-            <Link href="/dashboard/properties/admin" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717]">Cartera y asignaciones</Link>
-            <Link href="/dashboard/control/admin" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717]">Metas y alertas</Link>
-            <Link href="/dashboard/market/fuentes" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717]">Datos y fuentes</Link>
-            <Link href="/dashboard/settings" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717]">Usuarios</Link>
-          </div>
+          {hasPriority ? <div className="divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
+            {territoryPending > 0 ? <Link href="/dashboard/properties" className="grid min-h-16 gap-1 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Ubicación de propiedades</span><span className="text-xs text-[var(--n3-text-muted)]">{territoryPending} por revisar →</span></Link> : null}
+            {valuationDrafts > 0 ? <Link href="/dashboard/valuations?status=draft" className="grid min-h-16 gap-1 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Valorizaciones en preparación</span><span className="text-xs text-[var(--n3-text-muted)]">{valuationDrafts} pendientes →</span></Link> : null}
+            {managementAlerts > 0 ? <Link href="/dashboard/control/admin" className="grid min-h-16 gap-1 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Alertas de gestión</span><span className="text-xs text-[var(--n3-text-muted)]">{managementAlerts} pendientes →</span></Link> : null}
+          </div> : <div role="status" className="border-y border-[var(--n3-line)] py-6 text-sm text-[var(--n3-text-muted)]">No hay pendientes operativos en este momento.</div>}
         </section>
 
         <details className="border-t border-[var(--n3-line)] pt-3">
-          <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver estado de datos</summary>
+          <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Otras tareas</summary>
+          <div className="mt-3 grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2">
+            <Link href="/dashboard/properties/admin" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Cartera y asignaciones</Link>
+            <Link href="/dashboard/control/admin" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Metas y alertas</Link>
+            <Link href="/dashboard/market/fuentes" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Datos y fuentes</Link>
+            <Link href="/dashboard/settings" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Usuarios</Link>
+          </div>
+        </details>
+
+        <details className="border-t border-[var(--n3-line)] pt-3">
+          <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver datos de respaldo</summary>
           <div className="mt-3 grid gap-4 text-xs text-[var(--n3-text-muted)] sm:grid-cols-2 lg:grid-cols-4">
             <div><p className="uppercase tracking-[0.12em]">Inventario activo</p><p className="mt-1 text-lg text-[var(--n3-text-light)]">{n(market.activeInventory)}</p></div>
             <div><p className="uppercase tracking-[0.12em]">Ventas confirmadas</p><p className="mt-1 text-lg text-[var(--n3-text-light)]">{n(market.confirmedSales)}</p></div>
