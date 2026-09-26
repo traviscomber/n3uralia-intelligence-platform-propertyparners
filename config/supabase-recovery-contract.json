@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "projectRef": "orfncinmhymhhoxbxgjb",
+  "asOf": "2026-09-25",
+  "repoBaselineLastMigration": "20260925125000",
+  "remoteLedgerLastMigration": "20260925135338",
+  "ledgerStatus": "repair-required",
+  "mismatches": [
+    {
+      "repoVersion": "20260925124700",
+      "repoName": "harden_prospect_event_trigger",
+      "appliedVersion": "20260925135325",
+      "appliedName": "harden_prospect_event_trigger",
+      "schemaVerified": true,
+      "schemaVerifiedAt": "2026-09-25"
+    },
+    {
+      "repoVersion": "20260925125000",
+      "repoName": "atomic_neighborhood_director_assignment",
+      "appliedVersion": "20260925135338",
+      "appliedName": "atomic_neighborhood_director_assignment",
+      "schemaVerified": true,
+      "schemaVerifiedAt": "2026-09-25"
+    }
+  ],
+  "baseline": {
+    "status": "pending-capture",
+    "file": "supabase/reconstruction/production-schema.sql",
+    "sha256": null,
+    "sourceSchemas": ["public", "private"],
+    "containsProductionRows": false,
+    "captureWorkflow": ".github/workflows/supabase-baseline-capture.yml",
+    "requiredSecret": "SUPABASE_DB_URL",
+    "capturedFromCommit": null
+  },
+  "restoreStatus": "blocked-until-ledger-repair-and-baseline-replay"
+}

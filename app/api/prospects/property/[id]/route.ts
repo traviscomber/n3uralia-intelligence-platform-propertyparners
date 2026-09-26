@@ -238,7 +238,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const nextStatus = text(body.status) || lead.status
     if (!LEAD_STATUSES.has(nextStatus)) return NextResponse.json({ error: 'Estado inválido.' }, { status: 400 })
     const note = text(body.note)
-    const nextFollowUpAt = text(body.nextFollowUpAt) || null
+    const terminalStatus = ['won','lost','archived'].includes(nextStatus)
+    const nextFollowUpProvided = Object.prototype.hasOwnProperty.call(body, 'nextFollowUpAt')
+    const nextFollowUpAt = terminalStatus
+      ? null
+      : nextFollowUpProvided
+        ? text(body.nextFollowUpAt) || null
+        : lead.next_follow_up_at
     const now = new Date().toISOString()
     const eventType = nextStatus === 'won' ? 'won' : nextStatus === 'lost' ? 'lost' : nextStatus !== lead.status ? 'status_changed' : 'follow_up'
 
