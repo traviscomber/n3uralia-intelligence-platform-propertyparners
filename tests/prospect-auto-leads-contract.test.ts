@@ -8,6 +8,7 @@ test('prospect automation only creates leads from confirmed territory and curren
   assert.match(sql, /t\.active/i)
   assert.match(sql, /t\.valid_to is null/i)
   assert.match(sql, /l\.property_id is not null/i)
+  assert.match(sql, /portal-inmobiliario-vitacura-portal-houses/i)
   assert.match(sql, /l\.status in \('active','observed'\)/i)
   assert.match(sql, /on conflict \(property_id\) do nothing/i)
   assert.match(sql, /property_prospect_events/i)
