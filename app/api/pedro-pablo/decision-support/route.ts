@@ -11,7 +11,7 @@ type Evidence = {
   source: string
   reference?: string | null
   cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports'
+  domain?: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'market'
 }
 
 type LegacyAction = { label: string; href: string }
@@ -52,7 +52,7 @@ type ReportContext = {
 }
 
 type ProposalPriority = 'critical' | 'high' | 'medium' | 'low'
-type ProposalDomain = 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'cross-domain'
+type ProposalDomain = 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'market' | 'cross-domain'
 type ProposalKind = 'review' | 'follow_up' | 'verify' | 'prepare'
 
 type ActionProposal = {
@@ -77,6 +77,7 @@ function inferDomain(action: LegacyAction): ProposalDomain {
   if (action.href.includes('/valuations')) return 'valuations'
   if (action.href.includes('/properties')) return 'properties'
   if (action.href.includes('/reportes')) return 'reports'
+  if (action.href.includes('/market')) return 'market'
   if (action.href.includes('/control')) return 'management'
   return 'cross-domain'
 }
@@ -109,6 +110,7 @@ function proposalReason(response: BaseResponse, domain: ProposalDomain) {
   if (domain === 'valuations') return 'Hay un caso de valorización visible que requiere revisión dentro del alcance autorizado.'
   if (domain === 'properties') return 'La evidencia visible muestra identidad o vigencia pendiente de verificación.'
   if (domain === 'reports') return 'La telemetría autorizada de reportes muestra un estado que requiere revisión operativa.'
+  if (domain === 'market') return 'El snapshot completo de mercado muestra un cambio diario verificable que requiere revisión.'
   if (domain === 'management') return 'La evidencia visible muestra una prioridad, tarea o brecha de gestión que requiere revisión.'
   return 'La propuesta deriva de evidencia autorizada y de la política de priorización vigente.'
 }
