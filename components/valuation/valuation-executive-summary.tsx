@@ -44,10 +44,18 @@ function text(value: unknown) {
 }
 
 function confidenceLabel(value: string | null | undefined) {
-  if (value === 'high') return 'Alta'
-  if (value === 'medium') return 'Media'
-  if (value === 'low') return 'Baja'
+  if (value === 'high' || value === 'strong') return 'Alta'
+  if (value === 'medium' || value === 'moderate') return 'Media'
+  if (value === 'low' || value === 'weak') return 'Baja'
   return 'No disponible'
+}
+
+function historicalSaleLabel(value: string | null) {
+  if (!value) return 'No disponible'
+  const date = value.split('|').find((part) => /^\d{4}-\d{2}-\d{2}$/.test(part))
+  if (!date) return 'Referencia histórica identificada'
+  const parsed = new Date(`${date}T12:00:00Z`)
+  return Number.isNaN(parsed.getTime()) ? 'Referencia histórica identificada' : `Venta registrada · ${parsed.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}`
 }
 
 export function ValuationExecutiveSummary({ valuationId }: { valuationId: string }) {
@@ -105,9 +113,9 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
 
   if (!valuation || !summary) return null
 
-  const range = valuation.low_value_uf != null && valuation.high_value_uf != null
+  const range = summary.contractualRangeDefined && valuation.low_value_uf != null && valuation.high_value_uf != null
     ? `UF ${integer.format(Number(valuation.low_value_uf))} — ${integer.format(Number(valuation.high_value_uf))}`
-    : 'No disponible'
+    : 'Sin rango adicional definido'
   const prcLabel = prcZones.length ? prcZones.map((zone) => [zone.zona, zone.subzona].filter(Boolean).join(' · ')).join(' / ') : 'Pendiente de capa PRC'
   const elevation = numberValue(topography?.elevationM)
   const slopePct = numberValue(topography?.slopePct)
@@ -132,22 +140,22 @@ export function ValuationExecutiveSummary({ valuationId }: { valuationId: string
         </div>
 
         <dl className="mt-5 grid gap-px bg-neutral-300 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Modelo champion</dt><dd className="mt-2 text-xl font-semibold">{summary.recommendedValue ? `UF ${integer.format(summary.recommendedValue)}` : 'No disponible'}</dd>{summary.recommendedRate ? <p className="mt-1 text-xs text-neutral-500">{decimal.format(summary.recommendedRate)} UF/m² ponderado</p> : null}</div>
-          <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Confirmado PP</dt><dd className="mt-2 text-xl font-semibold">{summary.confirmedValue ? `UF ${integer.format(summary.confirmedValue)}` : 'No disponible'}</dd>{summary.deltaPct != null ? <p className="mt-1 text-xs text-neutral-500">{summary.deltaPct >= 0 ? '+' : ''}{decimal.format(summary.deltaPct)}% vs champion</p> : null}</div>
-          <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Rango defendible</dt><dd className="mt-2 text-base font-semibold">{range}</dd></div>
+          <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Referencia del modelo</dt><dd className="mt-2 text-xl font-semibold">{summary.recommendedValue ? `UF ${integer.format(summary.recommendedValue)}` : 'No disponible'}</dd>{summary.recommendedRate ? <p className="mt-1 text-xs text-neutral-500">{decimal.format(summary.recommendedRate)} UF/m² ponderado</p> : null}</div>
+          <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Confirmado PP</dt><dd className="mt-2 text-xl font-semibold">{summary.confirmedValue ? `UF ${integer.format(summary.confirmedValue)}` : 'No disponible'}</dd>{summary.deltaPct != null ? <p className="mt-1 text-xs text-neutral-500">{summary.deltaPct >= 0 ? '+' : ''}{decimal.format(summary.deltaPct)}% vs referencia modelo</p> : null}</div>
+          <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Rango adicional</dt><dd className="mt-2 text-base font-semibold">{range}</dd></div>
           <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Evidencia</dt><dd className="mt-2 text-xl font-semibold">{acceptedCount} comparables</dd><p className="mt-1 text-xs text-neutral-500">{summary.strictCount != null ? `${summary.strictCount} físicamente compatibles` : 'Compatibilidad no disponible'}</p></div>
         </dl>
 
         <div className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
           <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Rango contractual</p><p className="mt-1 font-semibold">{summary.contractualRangeDefined ? range : 'Pendiente de regla PP'}</p></div>
-          <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Backtest</p><p className="mt-1 font-semibold">{summary.backtestMapePct == null ? 'No disponible' : `MAPE ${decimal.format(summary.backtestMapePct)}%`}</p><p className="mt-1 text-xs text-neutral-500">Confiabilidad {summary.backtestReliability || 'no informada'}</p></div>
-          <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Holdout sujeto</p><p className="mt-1 break-all font-semibold">{summary.holdoutEventKey || 'No disponible'}</p><p className="mt-1 text-xs text-neutral-500">{summary.holdoutExcluded ? 'Excluido del cálculo; validación externa.' : 'Exclusión no confirmada.'}</p></div>
+          <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Validación histórica</p><p className="mt-1 font-semibold">{summary.backtestMapePct == null ? 'No disponible' : `Error medio ${decimal.format(summary.backtestMapePct)}%`}</p><p className="mt-1 text-xs text-neutral-500">Confiabilidad {confidenceLabel(summary.backtestReliability)}</p></div>
+          <div className="border border-neutral-300 p-3"><p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Venta histórica del sujeto</p><p className="mt-1 font-semibold">{historicalSaleLabel(summary.holdoutEventKey)}</p><p className="mt-1 text-xs text-neutral-500">{summary.holdoutExcluded ? 'Se usa sólo para validar el resultado; no entra al cálculo.' : 'Estado de exclusión no confirmado.'}</p></div>
         </div>
 
         <div className="mt-5 grid gap-4 text-sm lg:grid-cols-4">
-          <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Selección</div><p className="mt-2 font-semibold">Barrio PP + compatibilidad física</p><p className="mt-1 text-xs leading-5 text-neutral-600">Gate: {summary.gate || 'metodología histórica / no disponible'}.</p></div>
+          <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Selección</div><p className="mt-2 font-semibold">Barrio PP + compatibilidad física</p><p className="mt-1 text-xs leading-5 text-neutral-600">Control: {summary.gate || 'metodología histórica / no disponible'}.</p></div>
           <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Condición física</div><p className="mt-2 font-semibold">{valuation.condition_status ? `${valuation.condition_status}${valuation.condition_score != null ? ` · ${decimal.format(Number(valuation.condition_score))}/5` : ''}` : 'No evaluada'}</p><p className="mt-1 text-xs leading-5 text-neutral-600">Transformación: {summary.transformationStatus === 'verified' ? 'verificada' : summary.transformationStatus === 'weak_evidence' ? 'requiere revisión' : 'sin evidencia verificada'}.</p></div>
-          <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Topografía</div><p className="mt-2 font-semibold">{topographyLabel}</p><p className="mt-1 text-xs leading-5 text-neutral-600">Variable estructural en observación. No modifica el Champion ni aplica ajustes automáticos.</p>{topography?.available && topography.sourceName ? <p className="mt-2 text-[10px] text-neutral-500">{topography.sourceName}{topography.sourceVersion ? ` · ${topography.sourceVersion}` : ''}</p> : null}</div>
+          <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Topografía</div><p className="mt-2 font-semibold">{topographyLabel}</p><p className="mt-1 text-xs leading-5 text-neutral-600">Variable estructural en observación. No modifica automáticamente el valor.</p>{topography?.available && topography.sourceName ? <p className="mt-2 text-[10px] text-neutral-500">{topography.sourceName}{topography.sourceVersion ? ` · ${topography.sourceVersion}` : ''}</p> : null}</div>
           <div className="border border-neutral-300 p-4"><div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Normativa PRC</div><p className="mt-2 font-semibold">{prcLabel}</p><p className="mt-1 text-xs leading-5 text-neutral-600">La zonificación es evidencia contextual; la información oficial predial corresponde a certificados DOM.</p></div>
         </div>
       </div>
