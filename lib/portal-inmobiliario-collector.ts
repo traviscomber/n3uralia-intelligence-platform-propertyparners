@@ -34,6 +34,13 @@ export type PortalCollectionResult = PortalDiscoveryResult & {
   failures: Array<{ url: string; error: string }>
 }
 
+export type PortalNearbyPlace = {
+  category: 'transport' | 'education' | 'green_areas' | 'commerce' | 'unknown'
+  name: string
+  walk_minutes: number | null
+  distance_m: number | null
+}
+
 const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
 const DEFAULT_COMMUNE = 'vitacura-metropolitana'
 
@@ -363,11 +370,127 @@ function parsePrimaryPrice(root: HTMLElement, title: string | null, jsonLd: unkn
   return { price_uf: null, price_clp: null }
 }
 
-function extractPrimaryGeo(jsonLd: unknown[]) {
-  const latitude = numeric(deepFind(jsonLd, ['latitude']))
-  const longitude = numeric(deepFind(jsonLd, ['longitude']))
-  const valid = latitude != null && longitude != null && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
+function embeddedCoordinate(html: string, keys: string[]) {
+  const decoded = decodeEmbeddedMarkup(html)
+  for (const key of keys) {
+    const patterns = [
+      new RegExp('"' + key + '"\\s*:\\s*"(-?\\d{2,3}(?:\\.\\d+)?)"', 'i'),
+      new RegExp('"' + key + '"\\s*:\\s*(-?\\d{2,3}(?:\\.\\d+)?)', 'i'),
+    ]
+    for (const pattern of patterns) {
+      const match = decoded.match(pattern)
+      const value = match?.[1] ? Number.parseFloat(match[1]) : Number.NaN
+      if (Number.isFinite(value)) return value
+    }
+  }
+  return null
+}
+
+function extractPrimaryGeo(jsonLd: unknown[], html: string) {
+  const jsonLatitude = numeric(deepFind(jsonLd, ['latitude']))
+  const jsonLongitude = numeric(deepFind(jsonLd, ['longitude']))
+  const latitude = jsonLatitude ?? embeddedCoordinate(html, ['latitude', 'lat'])
+  const longitude = jsonLongitude ?? embeddedCoordinate(html, ['longitude', 'lng', 'lon'])
+  const valid = latitude != null && longitude != null
+    && latitude > -34 && latitude < -32
+    && longitude > -72 && longitude < -69
   return valid ? { latitude, longitude } : { latitude: null, longitude: null }
+}
+
+function nearbyCategory(value: string): PortalNearbyPlace['category'] {
+  const normalized = normalizeLabel(value)
+  if (/transporte|paraderos?|metro|bus/.test(normalized)) return 'transport'
+  if (/educacion|colegios?|universidad|jardin/.test(normalized)) return 'education'
+  if (/areas verdes|parques?|plazas?/.test(normalized)) return 'green_areas'
+  if (/comercios?|tiendas?|supermercado/.test(normalized)) return 'commerce'
+  return 'unknown'
+}
+
+export function extractPortalNearbyPlacesFromText(input: string, categoryLabel = ''): PortalNearbyPlace[] {
+  const lines = input
+    .split(/\n+/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+  const category = nearbyCategory(categoryLabel)
+  const ignored = new Set([
+    'transporte','educacion','educación','areas verdes','áreas verdes','comercios',
+    'paraderos','son los puntos mas cercanos al inmueble en un rango de 2km.',
+    'son los puntos más cercanos al inmueble en un rango de 2km.',
+  ])
+  const output: PortalNearbyPlace[] = []
+  for (let index = 0; index < lines.length; index += 1) {
+    const distanceMatch = lines[index].match(/(?:(\d+)\s*mins?\s*[-–·]\s*)?([\d.,]+)\s*metros?/i)
+    if (!distanceMatch) continue
+    let name: string | null = null
+    for (let back = index - 1; back >= Math.max(0, index - 3); back -= 1) {
+      const candidate = lines[back]
+      if (candidate.length < 3 || ignored.has(normalizeLabel(candidate))) continue
+      if (/^\d+\s*mins?/i.test(candidate) || /metros?$/i.test(candidate)) continue
+      name = candidate
+      break
+    }
+    if (!name) continue
+    const walk = distanceMatch[1] ? Number.parseInt(distanceMatch[1], 10) : null
+    const distance = localizedNumeric(distanceMatch[2])
+    if (distance == null || distance <= 0 || distance > 5_000) continue
+    output.push({
+      category,
+      name,
+      walk_minutes: walk != null && walk >= 0 && walk <= 180 ? walk : null,
+      distance_m: Math.round(distance),
+    })
+  }
+  const seen = new Set<string>()
+  return output.filter((place) => {
+    const key = normalizeLabel(place.category + ':' + place.name + ':' + place.distance_m)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  }).slice(0, 40)
+}
+
+async function capturePortalNearbyPlaces(page: Page): Promise<PortalNearbyPlace[]> {
+  const labels = ['Transporte', 'Educación', 'Áreas verdes', 'Comercios']
+  const all: PortalNearbyPlace[] = []
+  for (const label of labels) {
+    try {
+      const sectionText = await page.evaluate(async (tabLabel) => {
+        const normalize = (value: string | null | undefined) => String(value ?? '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase()
+        const wanted = normalize(tabLabel)
+        const candidates = Array.from(document.querySelectorAll('button,[role="tab"],a'))
+        const control = candidates.find((element) => normalize(element.textContent) === wanted) as HTMLElement | undefined
+        if (control) {
+          control.click()
+          await new Promise((resolve) => setTimeout(resolve, 180))
+        }
+        const markers = Array.from(document.querySelectorAll('body *')).filter((element) =>
+          normalize(element.textContent).includes('puntos mas cercanos al inmueble')
+        )
+        let node = markers.sort((a,b) => (a.textContent?.length ?? 0) - (b.textContent?.length ?? 0))[0] as HTMLElement | undefined
+        for (let depth = 0; node && depth < 5; depth += 1) {
+          const value = node.innerText || node.textContent || ''
+          if (value.length >= 80 && value.length <= 9000 && normalize(value).includes(wanted)) return value
+          node = node.parentElement ?? undefined
+        }
+        return document.body.innerText
+      }, label)
+      all.push(...extractPortalNearbyPlacesFromText(sectionText, label))
+    } catch {
+      // Nearby context is enrichment only. A failed tab must not fail the listing.
+    }
+  }
+  const seen = new Set<string>()
+  return all.filter((place) => {
+    const key = normalizeLabel(place.category + ':' + place.name + ':' + place.distance_m)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  }).slice(0, 80)
 }
 
 function extractPrimaryAddress(jsonLd: unknown[]) {
@@ -404,7 +527,12 @@ function inferPropertyType(datasetKind: PortalDatasetKind) {
   return 'Departamento'
 }
 
-export function parsePortalListing(html: string, url: string, datasetKind: PortalDatasetKind): MarketImportInputRow {
+export function parsePortalListing(
+  html: string,
+  url: string,
+  datasetKind: PortalDatasetKind,
+  nearbyPlaces: PortalNearbyPlace[] = [],
+): MarketImportInputRow {
   const root = parse(html)
   const jsonLd = flattenJsonLd(collectJsonLd(html))
   const title = firstPrimaryTitle(root)
@@ -412,7 +540,7 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
   const visible = extractVisiblePrimaryFacts(root, title)
   const price = parsePrimaryPrice(root, primaryPriceTitle(root, title), jsonLd)
   const listingId = portalListingIdFromUrl(url, datasetKind) || text(deepFind(jsonLd, ['productID', 'sku', 'identifier'])) || ''
-  const geo = extractPrimaryGeo(jsonLd)
+  const geo = extractPrimaryGeo(jsonLd, html)
   const address = cleanAddress(extractPrimaryAddress(jsonLd) || extractVisibleLocation(root) || visible.address)
   const totalArea = specArea(specs, 'Superficie total', 'Superficie construida') || visible.totalArea
   const usefulArea = specArea(specs, 'Superficie útil', 'Superficie util', 'Superficie cubierta') || visible.usefulArea
@@ -445,6 +573,8 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
     parking_spaces: parkingSpaces,
     construction_year: constructionYear,
     published_at: publishedAt,
+    nearby_places: nearbyPlaces.length ? nearbyPlaces : extractPortalNearbyPlacesFromText(normalizedBodyText(root)),
+    nearby_place_names: (nearbyPlaces.length ? nearbyPlaces : extractPortalNearbyPlacesFromText(normalizedBodyText(root))).map((place) => place.name),
   }
 }
 
@@ -617,8 +747,9 @@ export async function collectPortalListingDetails(options: {
           await configurePage(page)
           await gotoWithRetry(page, url, 'Portal listing')
           await waitForPrimaryDetail(page, waitMs)
+          const nearbyPlaces = await capturePortalNearbyPlaces(page)
           const html = await page.content()
-          const row = parsePortalListing(html, url, options.datasetKind)
+          const row = parsePortalListing(html, url, options.datasetKind, nearbyPlaces)
           if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
           const parsedPriceUf = numeric(row.price_uf)
           if (parsedPriceUf != null && parsedPriceUf > 0 && parsedPriceUf < 100) throw new Error('Implausible UF price after normalization')
@@ -670,8 +801,9 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
         if (!response?.ok()) throw new Error(`Listing returned HTTP ${response?.status() ?? 'unknown'}`)
         await waitForPrimaryDetail(page, waitMs)
+        const nearbyPlaces = await capturePortalNearbyPlaces(page)
         const html = await page.content()
-        const row = parsePortalListing(html, url, options.datasetKind)
+        const row = parsePortalListing(html, url, options.datasetKind, nearbyPlaces)
         if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
         const parsedPriceUf = numeric(row.price_uf)
         if (parsedPriceUf != null && parsedPriceUf > 0 && parsedPriceUf < 100) throw new Error('Implausible UF price after normalization')
