@@ -233,8 +233,8 @@ function buildDirectorAlerts(entities: DashboardEntity[]): DirectorAlert[] {
           id: `${entity.id}:${code}`,
           severity: value < 50 ? 'critical' : 'warning',
           status: 'open',
-          title: `${label} bajo umbral`,
-          detail: `Score ${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })}. Objetivo operativo: 70 puntos. Brecha: ${(70 - value).toFixed(1)} puntos.`,
+          title: `${label} requiere atención`,
+          detail: `Resultado ${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })} de 70. Faltan ${(70 - value).toFixed(1)} puntos para el objetivo.`,
           entityName: entity.name,
           createdAt: '2026-06-30T23:59:59.000Z',
         }]
@@ -249,7 +249,7 @@ function buildDirectorAlerts(entities: DashboardEntity[]): DirectorAlert[] {
           severity: sales.compliance < 60 ? 'critical' : 'warning',
           status: 'open',
           title: 'Meta de cierres en riesgo',
-          detail: `Cumplimiento: ${sales.compliance.toFixed(1)}%. Meta: ${sales.target?.toLocaleString('es-CL') ?? 'n/d'} cierres.`,
+          detail: `Cumplimiento: ${sales.compliance.toFixed(1)}%. Meta: ${sales.target?.toLocaleString('es-CL') ?? '—'} cierres.`,
           entityName: entity.name,
           createdAt: sales.periodEnd ? `${sales.periodEnd}T23:59:59.000Z` : '2026-06-30T23:59:59.000Z',
         })
@@ -260,7 +260,7 @@ function buildDirectorAlerts(entities: DashboardEntity[]): DirectorAlert[] {
           severity: stock.compliance < 60 ? 'critical' : 'warning',
           status: 'open',
           title: 'Cartera bajo meta',
-          detail: `Stock actual: ${stock.value?.toLocaleString('es-CL') ?? 'n/d'} de ${stock.target?.toLocaleString('es-CL') ?? 'n/d'}. Cumplimiento: ${stock.compliance.toFixed(1)}%.`,
+          detail: `Cartera actual: ${stock.value?.toLocaleString('es-CL') ?? '—'} de ${stock.target?.toLocaleString('es-CL') ?? '—'}. Cumplimiento: ${stock.compliance.toFixed(1)}%.`,
           entityName: entity.name,
           createdAt: stock.periodEnd ? `${stock.periodEnd}T23:59:59.000Z` : '2026-06-30T23:59:59.000Z',
         })
@@ -376,12 +376,12 @@ export async function GET() {
   }
 
   const accesses = isDirector ? [
-    { label: 'Valorizaciones', href: '/dashboard/valuations', permission: 'manage', detail: 'Revisar y aprobar casos dentro de la sucursal.' },
-    { label: 'Asignar propiedades', href: '/dashboard/properties/admin', permission: 'manage', detail: 'Asignar cartera a ejecutivas bajo alcance.' },
-    { label: 'Control de gestión', href: '/dashboard/control', permission: 'read', detail: 'Consultar metas, métricas y alertas de la oficina.' },
-    { label: 'Metas y alertas', href: '/dashboard/control/admin', permission: 'manage', detail: 'Administrar seguimiento operativo de la sucursal.' },
-    { label: 'Inteligencia de mercado', href: '/dashboard/market', permission: 'read', detail: 'Consultar evidencia de mercado disponible.' },
-    { label: 'Reportes', href: '/dashboard/reportes/autonomos', permission: 'read', detail: 'Consultar reportes autorizados para dirección.' },
+    { label: 'Valorizaciones', href: '/dashboard/valuations', permission: 'manage', detail: 'Revisar expedientes y devolverlos con observaciones cuando corresponda.' },
+    { label: 'Cartera y asignaciones', href: '/dashboard/properties/admin', permission: 'manage', detail: 'Distribuir propiedades entre las personas visibles de tu oficina.' },
+    { label: 'Operación', href: '/dashboard/control', permission: 'read', detail: 'Revisar resultados, metas y pendientes de la oficina.' },
+    { label: 'Metas y seguimiento', href: '/dashboard/control/admin', permission: 'manage', detail: 'Actualizar metas y organizar el seguimiento del equipo.' },
+    { label: 'Mercado', href: '/dashboard/market', permission: 'read', detail: 'Consultar oferta, tendencias y referencias disponibles.' },
+    { label: 'Informes', href: '/dashboard/reportes/autonomos', permission: 'read', detail: 'Consultar informes disponibles para tu oficina.' },
   ] : []
 
   const payloadEntities = entities as PayloadEntity[]
