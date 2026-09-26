@@ -181,7 +181,7 @@ export function PropertyReviewInbox({initialRows}:Props){
         <h2 className="mt-3 text-2xl font-medium leading-tight text-[var(--n3-text-light)]">{selected.raw_address||selected.title||'Dirección no disponible'}</h2>
         {selected.title&&selected.raw_address?<p className="mt-2 text-sm text-[var(--n3-text-muted)]">{selected.title}</p>:null}
 
-        <div className="sticky top-0 z-20 -mx-5 mt-5 border-y border-[var(--n3-line)] bg-[color:var(--n3-black)]/95 px-5 py-3 backdrop-blur lg:-mx-7 lg:px-7">
+        <div className="sticky top-0 z-20 -mx-5 mt-5 border-y border-[var(--n3-line)] bg-[var(--n3-black)] px-5 py-3 backdrop-blur lg:-mx-7 lg:px-7">
           <div className="flex flex-wrap items-center gap-2">
             {selected.can_decide&&selected.review_id&&selected.proposed_neighborhood_id?<button
               onClick={()=>void act('add_to_intelligence')}
