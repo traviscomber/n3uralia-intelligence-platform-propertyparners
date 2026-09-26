@@ -58,8 +58,8 @@ as $function$
     )
   ), rolled as (
     select
-      max(id) filter(where rn=1) as neighborhood_id,
-      max(name) filter(where rn=1) as neighborhood_name,
+      (array_agg(id order by rn) filter(where rn=1))[1] as neighborhood_id,
+      (array_agg(name order by rn) filter(where rn=1))[1] as neighborhood_name,
       max(distance_m) filter(where rn=1) as distance_m,
       max(distance_m) filter(where rn=2) as second_distance_m
     from ranked
