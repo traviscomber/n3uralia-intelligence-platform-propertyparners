@@ -150,6 +150,71 @@ function rotatedDetailBatch(urls: string[], observedAt: string) {
   )
 }
 
+async function reconcileRemovedListings(
+  supabase: ReturnType<typeof getServiceClient>,
+  datasetKind: PortalDatasetKind,
+  observedAt: string,
+  currentIds: Set<string>,
+) {
+  const sourceCode = `portal-inmobiliario-vitacura-${datasetKind.replaceAll('_', '-')}`
+  const { data: source, error: sourceError } = await supabase
+    .from('market_sources')
+    .select('id')
+    .eq('code', sourceCode)
+    .maybeSingle()
+  if (sourceError) throw sourceError
+  if (!source?.id) return 0
+
+  const removedRows: Array<Record<string, unknown>> = []
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase
+      .from('market_current_listings')
+      .select('source_id,source_listing_id,property_id,operation,url,title,raw_address,normalized_address,latitude,longitude,price_clp,price_uf,price_uf_m2,published_at,raw_payload')
+      .eq('source_id', source.id)
+      .in('status', ['active', 'observed'])
+      .range(offset, offset + 999)
+    if (error) throw error
+
+    for (const row of data ?? []) {
+      if (!row.source_listing_id || currentIds.has(String(row.source_listing_id))) continue
+      removedRows.push({
+        source_id: row.source_id,
+        source_listing_id: row.source_listing_id,
+        property_id: row.property_id,
+        operation: row.operation,
+        status: 'removed',
+        url: row.url,
+        title: row.title,
+        raw_address: row.raw_address,
+        normalized_address: row.normalized_address,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        price_clp: row.price_clp,
+        price_uf: row.price_uf,
+        price_uf_m2: row.price_uf_m2,
+        published_at: row.published_at,
+        observed_at: observedAt,
+        removed_at: observedAt,
+        raw_payload: {
+          ...(row.raw_payload && typeof row.raw_payload === 'object' ? row.raw_payload as Record<string, unknown> : {}),
+          inventory_reconciliation: {
+            status: 'removed',
+            verified_at: observedAt,
+            source: 'portal_inventory_discovery_v1',
+          },
+        },
+      })
+    }
+    if ((data ?? []).length < 1000) break
+  }
+
+  for (let offset = 0; offset < removedRows.length; offset += 250) {
+    const { error } = await supabase.from('market_listings').insert(removedRows.slice(offset, offset + 250))
+    if (error) throw error
+  }
+  return removedRows.length
+}
+
 async function persistInventoryRun(args: {
   supabase: ReturnType<typeof getServiceClient>
   datasetKind: PortalDatasetKind
@@ -177,6 +242,9 @@ async function persistInventoryRun(args: {
   const previousIds = fullSnapshot ? await loadInventoryIds(supabase, previousRunId) : new Set<string>()
   const newListings = fullSnapshot ? [...currentIds].filter((id) => !previousIds.has(id)).length : 0
   const removedListings = fullSnapshot ? [...previousIds].filter((id) => !currentIds.has(id)).length : 0
+  const reconciledRemovedListings = fullSnapshot
+    ? await reconcileRemovedListings(supabase, datasetKind, observedAt, currentIds)
+    : 0
   const unchangedListings = fullSnapshot ? [...currentIds].filter((id) => previousIds.has(id)).length : 0
   const sourceFile = `portal-inventory-${datasetKind}-${observedAt}.json`
   const sourceSha256 = createHash('sha256').update([...currentIds].sort().join('\n')).digest('hex')
@@ -300,6 +368,7 @@ async function persistInventoryRun(args: {
     newListings,
     removedListings,
     unchangedListings,
+    reconciledRemovedListings,
   }
 }
 
@@ -337,18 +406,23 @@ async function loadCurrentListingState(
     .eq('code', sourceCode)
     .maybeSingle()
   if (sourceError) throw sourceError
-  if (!source?.id) return { sourceId: null, byId: new Map<string, string | null>() }
+  const byId = new Map<string, { propertyId: string | null; observedAt: string | null }>()
+  if (!source?.id) return { sourceId: null, byId }
 
-  const byId = new Map<string, string | null>()
   for (let offset = 0; ; offset += 1000) {
     const { data, error } = await supabase
       .from('market_current_listings')
-      .select('source_listing_id,property_id')
+      .select('source_listing_id,property_id,observed_at')
       .eq('source_id', source.id)
       .range(offset, offset + 999)
     if (error) throw error
     for (const row of data ?? []) {
-      if (row.source_listing_id) byId.set(String(row.source_listing_id), row.property_id ? String(row.property_id) : null)
+      if (row.source_listing_id) {
+        byId.set(String(row.source_listing_id), {
+          propertyId: row.property_id ? String(row.property_id) : null,
+          observedAt: row.observed_at ? String(row.observed_at) : null,
+        })
+      }
     }
     if ((data ?? []).length < 1000) break
   }
@@ -369,9 +443,15 @@ async function drainLatestInventoryDetails(args: {
     loadCurrentListingState(supabase, datasetKind),
   ])
 
+  const snapshotStartedAt = new Date(String(latest.started_at)).getTime()
   const absent = inventory.filter((item) => !current.byId.has(item.sourceRecordId))
-  const unlinked = inventory.filter((item) => current.byId.has(item.sourceRecordId) && current.byId.get(item.sourceRecordId) === null)
-  const queue = [...absent, ...unlinked]
+  const staleUnlinked = inventory.filter((item) => {
+    const state = current.byId.get(item.sourceRecordId)
+    if (!state || state.propertyId !== null) return false
+    const observedAt = state.observedAt ? new Date(state.observedAt).getTime() : 0
+    return observedAt < snapshotStartedAt
+  })
+  const queue = [...absent, ...staleUnlinked]
   const chunkSize = 18
   let processed = 0
   let parsed = 0
@@ -423,7 +503,7 @@ async function drainLatestInventoryDetails(args: {
     inventory: inventory.length,
     currentBefore: current.byId.size,
     absentBefore: absent.length,
-    unlinkedBefore: unlinked.length,
+    staleUnlinkedBefore: staleUnlinked.length,
     queued: queue.length,
     processed,
     parsed,
@@ -443,14 +523,10 @@ export async function GET(request: Request) {
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
-  const previewBranchBypass = url.searchParams.get('preview_branch') === '1'
-    && process.env.VERCEL_ENV === 'preview'
-    && process.env.VERCEL_GIT_COMMIT_REF === 'fix/portal-daily-intelligence-sweep'
-
-  if (force && !previewBranchBypass) {
+  if (force) {
     const access = await requireExecutiveAccess()
     if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
-  } else if (!force) {
+  } else {
     if (!authorized(request)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     if (!detailsOnly && !scheduledWindow()) {
       return NextResponse.json({
