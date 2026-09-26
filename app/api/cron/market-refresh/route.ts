@@ -408,9 +408,10 @@ async function loadCurrentListingState(
     .eq('code', sourceCode)
     .maybeSingle()
   if (sourceError) throw sourceError
-  if (!source?.id) return { sourceId: null, byId: new Map<string, string | null>() }
-
   const byId = new Map<string, { propertyId: string | null; observedAt: string | null }>()
+  if (!source?.id) return { sourceId: null, byId }
+
+
   for (let offset = 0; ; offset += 1000) {
     const { data, error } = await supabase
       .from('market_current_listings')
