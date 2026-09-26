@@ -3,7 +3,6 @@ import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 
 import {
   buildPedroPabloTaskDraft,
-  type PedroPabloActionProposal,
   type PedroPabloDecisionSupportResponse,
 } from '@/lib/pedro-pablo-action-gateway-contract'
 
