@@ -24,6 +24,13 @@ type Overview = {
     representativePropertyId:string|null
     needsDirector:boolean
     directorDriftLeads:number
+    suggestion?:{
+      directorKey:string|null
+      directorName:string|null
+      officeName:string|null
+      confidence:'high'|'medium'|'unresolved'
+      reason:string
+    }|null
   }>
   territorySummary:{
     neighborhoods:number
@@ -96,8 +103,14 @@ export default function ProspectManagementPage(){
           <div><strong className="text-sm">{row.neighborhood.name}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.neighborhood.micro_neighborhood || 'Barrio contractual'}</p></div>
           <div><span className="text-xs text-[var(--n3-text-muted)]">Publicadas</span><p className="mt-1">{row.eligiblePublished}</p></div>
           <div><span className="text-xs text-[var(--n3-text-muted)]">Sin convertir</span><p className="mt-1">{row.unconverted}</p></div>
-          <div><span className="text-xs text-[var(--n3-text-muted)]">Director/a</span><p className={`mt-1 ${row.needsDirector?'text-[#f0c96a]':''}`}>{row.director?.full_name || 'Sin asignar'}</p>{row.directorDriftLeads?<p className="mt-1 text-[11px] text-[#f0c96a]">{row.directorDriftLeads} lead(s) no coinciden con el territorio actual</p>:null}</div>
-          <div>{row.representativePropertyId?<Link href={`/dashboard/properties/${row.representativePropertyId}`} className="inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs font-semibold hover:border-[#d7332b]">{row.needsDirector?'Asignar barrio':'Abrir ficha 360'}</Link>:null}</div>
+          <div>
+            <span className="text-xs text-[var(--n3-text-muted)]">Director/a</span>
+            <p className={`mt-1 ${row.needsDirector?'text-[#f0c96a]':''}`}>{row.director?.full_name || 'Sin asignar'}</p>
+            {row.needsDirector && row.suggestion?.directorName ? <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Sugerencia {row.suggestion.confidence === 'high' ? 'directa' : 'por evidencia'}: {row.suggestion.directorName}{row.suggestion.officeName ? ` · ${row.suggestion.officeName}` : ''}</p> : null}
+            {row.needsDirector && !row.suggestion?.directorName && row.suggestion?.officeName ? <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Oficina sugerida: {row.suggestion.officeName} · requiere confirmación de director/a</p> : null}
+            {row.directorDriftLeads?<p className="mt-1 text-[11px] text-[#f0c96a]">{row.directorDriftLeads} lead(s) no coinciden con el territorio actual</p>:null}
+          </div>
+          <div>{row.representativePropertyId?<Link href={`/dashboard/properties/${row.representativePropertyId}`} className="inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs font-semibold hover:border-[#d7332b]">{row.needsDirector?(row.suggestion?.directorName?'Confirmar sugerencia':'Asignar barrio'):'Abrir ficha 360'}</Link>:null}</div>
         </div>)}
         {!data.territoryCoverage.length?<p className="py-6 text-sm text-[var(--n3-text-muted)]">No hay casas publicadas elegibles con barrio canónico dentro del alcance actual.</p>:null}
       </div>
