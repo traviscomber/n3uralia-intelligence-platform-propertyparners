@@ -374,7 +374,7 @@ async function drainLatestInventoryDetails(args: {
   const absent = inventory.filter((item) => !current.byId.has(item.sourceRecordId))
   const unlinked = inventory.filter((item) => current.byId.has(item.sourceRecordId) && current.byId.get(item.sourceRecordId) === null)
   const queue = [...absent, ...unlinked]
-  const chunkSize = 72
+  const chunkSize = 18
   let processed = 0
   let parsed = 0
   let accepted = 0
