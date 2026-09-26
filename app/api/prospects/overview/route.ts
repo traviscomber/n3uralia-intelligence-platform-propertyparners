@@ -4,7 +4,6 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { buildProspectTerritoryCoverage } from '@/lib/prospect-territory-coverage'
 
 const ACTIVE = new Set(['new','assigned','contacting','qualified','valuation','proposal'])
-const MAX_CANDIDATE_PROPERTIES = 500
 
 function chunkIds<T>(items: T[], size: number) {
   const chunks: T[][] = []
@@ -138,27 +137,36 @@ export async function GET() {
     }
   })
 
-  const candidatePropertiesResult = await db.from('market_properties')
-    .select('id,normalized_address,property_type,neighborhood_id,identity_status,last_seen_at', { count: 'exact' })
-    .eq('property_type', 'Casa')
-    .not('neighborhood_id', 'is', null)
-    .order('last_seen_at', { ascending: false })
-    .limit(MAX_CANDIDATE_PROPERTIES)
+  const { data: portalSource, error: portalSourceError } = await db
+    .from('market_sources')
+    .select('id')
+    .eq('code', 'portal-inmobiliario-vitacura-portal-houses')
+    .maybeSingle()
+  if (portalSourceError || !portalSource?.id) {
+    return NextResponse.json({ error:'No fue posible resolver la fuente live de Portal.' },{status:500})
+  }
+
+  const candidateListingsResult = await db.from('market_current_listings')
+    .select('property_id,source_listing_id,url,status,operation,observed_at,published_at,price_uf')
+    .eq('source_id', portalSource.id)
+    .not('property_id', 'is', null)
+    .in('status',['active','observed'])
+    .order('observed_at',{ascending:false})
+    .limit(2000)
+  if (candidateListingsResult.error) return NextResponse.json({ error:'No fue posible cargar el inventario live vinculado.' },{status:500})
+
+  const candidateListingRows = candidateListingsResult.data ?? []
+  const candidatePropertyIds = [...new Set(candidateListingRows.map((item) => item.property_id).filter(Boolean))]
+  const candidatePropertiesResult = candidatePropertyIds.length
+    ? await db.from('market_properties')
+        .select('id,normalized_address,property_type,neighborhood_id,identity_status,last_seen_at')
+        .in('id', candidatePropertyIds)
+        .eq('property_type', 'Casa')
+        .not('neighborhood_id', 'is', null)
+    : { data: [], error: null }
   if (candidatePropertiesResult.error) return NextResponse.json({ error:'No fue posible resolver las casas publicadas.' },{status:500})
 
   const candidateProperties = candidatePropertiesResult.data ?? []
-  const candidatePropertyIds = candidateProperties.map((item) => item.id)
-  const candidateListingRows: any[] = []
-
-  for (const ids of chunkIds(candidatePropertyIds, 50)) {
-    const listingChunk = await db.from('market_current_listings')
-      .select('property_id,source_listing_id,url,status,operation,observed_at,published_at,price_uf')
-      .in('property_id', ids)
-      .in('status',['active','observed'])
-      .order('observed_at',{ascending:false})
-    if (listingChunk.error) return NextResponse.json({ error: 'No fue posible cargar publicaciones candidatas.' }, { status:500 })
-    candidateListingRows.push(...(listingChunk.data ?? []))
-  }
 
   const leadPropertySet = new Set(propertyIds)
   const territoryByNeighborhood = new Map((territoryResult.data ?? []).map((item)=>[item.neighborhood_id,item]))
@@ -192,8 +200,8 @@ export async function GET() {
     eligiblePublished: visibleCoverageRows.reduce((sum, row) => sum + row.eligiblePublished, 0),
     uncoveredPublished: visibleCoverageRows.filter((row) => row.needsDirector).reduce((sum, row) => sum + row.eligiblePublished, 0),
     directorDriftLeads: visibleCoverageRows.reduce((sum, row) => sum + row.directorDriftLeads, 0),
-    candidateUniverseTruncated: (candidatePropertiesResult.count ?? 0) > candidateProperties.length,
-    candidateUniverseCount: candidatePropertiesResult.count ?? candidateProperties.length,
+    candidateUniverseTruncated: false,
+    candidateUniverseCount: candidatePropertyIds.length,
   }
 
   const candidates = eligibleProperties
