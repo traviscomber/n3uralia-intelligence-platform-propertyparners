@@ -67,8 +67,9 @@ const starterSections = [
   },
 ] as const
 
-export function PedroPabloFloatingChat() {
+export function PedroPabloFloatingChat({ role, team }: { role: string | null; team: string | null }) {
   const pathname = usePathname()
+  const isDirectorSupport = role === 'director' || role === 'subdirector'
   const [open, setOpen] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -76,22 +77,62 @@ export function PedroPabloFloatingChat() {
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const valuationCaseId = useMemo(() => pathname.match(/^\/dashboard\/valuations\/([^/]+)/)?.[1] ?? null, [pathname])
-  const contextualStarterSections = useMemo(() => valuationCaseId ? [
-    {
-      label: 'Esta valorización',
-      prompts: [
-        '¿Por qué este valor es defendible?',
-        '¿Qué comparables sostienen mejor este valor?',
-      ],
-    },
-    {
-      label: 'Antes de enviar',
-      prompts: [
-        '¿Qué debo revisar antes de enviarla a dirección?',
-        '¿Hay alguna alerta importante en este expediente?',
-      ],
-    },
-  ] as const : starterSections, [valuationCaseId])
+  const contextualStarterSections = useMemo(() => {
+    if (valuationCaseId) {
+      return isDirectorSupport ? [
+        {
+          label: 'Esta valorización',
+          prompts: [
+            '¿Qué debo validar antes de aceptar este expediente?',
+            '¿Qué comparables requieren más atención?',
+          ],
+        },
+        {
+          label: 'Apoyo de dirección',
+          prompts: [
+            '¿Hay una razón objetiva para devolver esta valorización?',
+            '¿Qué evidencia respalda el valor propuesto?',
+          ],
+        },
+      ] as const : [
+        {
+          label: 'Esta valorización',
+          prompts: [
+            '¿Por qué este valor es defendible?',
+            '¿Qué comparables sostienen mejor este valor?',
+          ],
+        },
+        {
+          label: 'Antes de enviar',
+          prompts: [
+            '¿Qué debo revisar antes de enviarla a dirección?',
+            '¿Hay alguna alerta importante en este expediente?',
+          ],
+        },
+      ] as const
+    }
+
+    if (isDirectorSupport) {
+      return [
+        {
+          label: 'Valorizaciones de mi oficina',
+          prompts: [
+            '¿Qué valorizaciones requieren mi atención?',
+            '¿Qué expedientes tienen evidencia débil o alertas?',
+          ],
+        },
+        {
+          label: 'Partners y seguimiento',
+          prompts: [
+            '¿Qué tareas o devoluciones están pendientes?',
+            '¿Qué requiere atención hoy en mi oficina?',
+          ],
+        },
+      ] as const
+    }
+
+    return starterSections
+  }, [valuationCaseId, isDirectorSupport])
 
   useEffect(() => {
     if (!open) return
@@ -207,8 +248,8 @@ export function PedroPabloFloatingChat() {
                     <Sparkles size={12} aria-hidden="true" />
                     Asistente IA complementario
                   </div>
-                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">Asistente de IA</div>
-                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">Property Partners · apoyo contextual</div>
+                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">{isDirectorSupport ? 'Asistente de Dirección' : 'Asistente de IA'}</div>
+                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">{isDirectorSupport ? `Property Partners · criterio senior compartido${team ? ` · ${team}` : ''}` : 'Property Partners · apoyo contextual'}</div>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -248,8 +289,12 @@ export function PedroPabloFloatingChat() {
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
                     {valuationCaseId
-                      ? 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.'
-                      : 'Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.'}
+                      ? (isDirectorSupport
+                        ? 'Estoy viendo este expediente contigo. Uso el mismo conocimiento senior y evidencia canónica para ayudarte a validar comparables, alertas y fundamento antes de aceptar o devolver.'
+                        : 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.')
+                      : (isDirectorSupport
+                        ? 'Comparto el conocimiento senior del asistente de Pedro Pablo, pero aplicado sólo a tu oficina y a tus permisos. Puedo ayudarte a priorizar revisiones, detectar evidencia débil y preparar devoluciones objetivas.'
+                        : 'Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.')}
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -357,7 +402,7 @@ export function PedroPabloFloatingChat() {
                 <Send size={17} aria-hidden="true" />
               </button>
             </form>
-            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. El asistente no sustituye los flujos contractuales. Las acciones sensibles siguen requiriendo confirmación humana.</p>
+            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. {isDirectorSupport ? 'El asistente comparte conocimiento senior, pero sólo ve el alcance autorizado de dirección.' : 'El asistente no sustituye los flujos contractuales.'} Las acciones sensibles siguen requiriendo confirmación humana.</p>
           </footer>
         </section>
       ) : null}
