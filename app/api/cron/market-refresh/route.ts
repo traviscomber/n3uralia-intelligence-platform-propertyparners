@@ -550,6 +550,8 @@ export async function GET(request: Request) {
       })
       const { data: intelligenceRefresh, error: intelligenceError } = await supabase
         .rpc('refresh_market_listing_property_match_candidates_v1')
+      const { data: prospectRefresh, error: prospectError } = await supabase
+        .rpc('refresh_property_prospect_leads_v1')
 
       const sourceCode = 'portal-inmobiliario-vitacura-portal-houses'
       const { data: source } = await supabase
@@ -577,7 +579,7 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({
-        ok: detailDrain.ingestionFailures === 0 && !intelligenceError,
+        ok: detailDrain.ingestionFailures === 0 && !intelligenceError && !prospectError,
         mode: 'details_only',
         datasetKind: 'portal_houses',
         ...detailDrain,
@@ -586,7 +588,11 @@ export async function GET(request: Request) {
           error: intelligenceError?.message ?? null,
           identityState,
         },
-      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+        prospects: {
+          refresh: prospectRefresh ?? null,
+          error: prospectError?.message ?? null,
+        },
+      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError && !prospectError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
     } catch (cause) {
       const failureMessage = cause instanceof Error ? cause.message : String(cause)
       console.error('[market-refresh] detail drain failed', { failureMessage })
@@ -734,7 +740,25 @@ export async function GET(request: Request) {
     }
   }
 
-  const ok = completeInventories === DATASETS.length && totalFailures === 0
+  let identityIntelligence: unknown = null
+  let identityIntelligenceError: string | null = null
+  let prospectPipeline: unknown = null
+  let prospectPipelineError: string | null = null
+
+  if (completeInventories === DATASETS.length) {
+    const identityResult = await supabase.rpc('refresh_market_listing_property_match_candidates_v1')
+    identityIntelligence = identityResult.data ?? null
+    identityIntelligenceError = identityResult.error?.message ?? null
+
+    const prospectResult = await supabase.rpc('refresh_property_prospect_leads_v1')
+    prospectPipeline = prospectResult.data ?? null
+    prospectPipelineError = prospectResult.error?.message ?? null
+  }
+
+  const ok = completeInventories === DATASETS.length
+    && totalFailures === 0
+    && !identityIntelligenceError
+    && !prospectPipelineError
 
   return NextResponse.json(
     {
@@ -749,6 +773,14 @@ export async function GET(request: Request) {
       expectedDatasets: DATASETS.length,
       totalFailures,
       detailEnrichmentFailures,
+      identityIntelligence: {
+        refresh: identityIntelligence,
+        error: identityIntelligenceError,
+      },
+      prospectPipeline: {
+        refresh: prospectPipeline,
+        error: prospectPipelineError,
+      },
       runtimeMs: Date.now() - startedAt,
       results,
     },
