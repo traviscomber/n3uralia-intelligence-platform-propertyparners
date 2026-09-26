@@ -127,7 +127,11 @@ export async function getUserScope(): Promise<UserScope> {
   const office = officeFromEntity(entity, parent)
   const [visibleProfileIds, visibleEntityIds] = await Promise.all([
     access.scope === 'self' ? Promise.resolve([profile.id]) : resolveVisibleProfileIds(),
-    access.scope === 'global' ? Promise.resolve([]) : resolveVisibleEntityIds(),
+    access.scope === 'global'
+      ? Promise.resolve([])
+      : access.scope === 'self'
+        ? Promise.resolve(entity?.id ? [entity.id] : [])
+        : resolveVisibleEntityIds(),
   ])
 
   return {
