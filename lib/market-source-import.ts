@@ -253,3 +253,21 @@ export function normalizeCbrsTransactionRows(rows: MarketImportInputRow[]): Norm
     parking_spaces: integer(pick(row, ['parking_spaces', 'estacionamientos', 'parking'])),
   }))
 }
+
+
+export function applyPortalUfConversion(rows: NormalizedPortalListingRow[], ufClp: number | null) {
+  if (!ufClp || !Number.isFinite(ufClp) || ufClp <= 0) return rows
+
+  return rows.map((row) => {
+    if (row.price_uf != null || row.price_clp == null || row.price_clp <= 0) return row
+    const converted = row.price_clp / ufClp
+    const flags = (row.normalization_flags ?? []).filter((flag) => flag !== 'price_interpreted_clp_by_magnitude')
+    flags.push('price_converted_clp_to_uf_daily_indicator')
+    return {
+      ...row,
+      price_uf: converted,
+      price_uf_m2: row.useful_area_m2 && row.useful_area_m2 > 0 ? converted / row.useful_area_m2 : row.price_uf_m2,
+      normalization_flags: flags,
+    }
+  })
+}
