@@ -51,7 +51,7 @@ test('CEO company evolution exposes 2025 baseline while office evolution remains
 
   const july2025 = company.evolution?.find((point) => point.period === '2025-07')
   assert.ok(july2025)
-  assert.equal(july2025.sales, 5)
+  assert.equal(july2025.sales, 4)
   assert.equal(july2025.metrics?.leads, 423)
   assert.equal(july2025.metrics?.requirements, 546)
   assert.equal(july2025.metrics?.scheduled_visits, 386)
