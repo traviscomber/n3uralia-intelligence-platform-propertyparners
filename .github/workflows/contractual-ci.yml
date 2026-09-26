@@ -216,6 +216,10 @@ jobs:
       - name: Verify application performance hot paths
         run: node --import tsx --test tests/performance-hot-paths.test.ts
 
+      - name: Verify internal Vitacura landing
+        run: node --import tsx --test tests/internal-landing.test.ts
+
+
 
       - name: Build application
         run: pnpm build
