@@ -154,6 +154,7 @@ jobs:
         run: >-
           node --import tsx --test
           tests/learned-neighborhood-alias-resolver.test.ts
+          tests/learned-neighborhood-review-advisory.test.ts
           tests/property-territory-groups.test.ts
           tests/management-decision-evidence-layer.test.ts
           tests/n3uralia-intelligence-freshness.test.ts
