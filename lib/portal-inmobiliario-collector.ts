@@ -463,9 +463,9 @@ async function capturePortalNearbyPlaces(page: Page): Promise<PortalNearbyPlace[
           .toLowerCase()
         const wanted = normalize(tabLabel)
         const candidates = Array.from(document.querySelectorAll('button,[role="tab"],a'))
-        const control = candidates.find((element) => normalize(element.textContent) === wanted) as HTMLElement | undefined
+        const control = candidates.find((element) => normalize(element.textContent) === wanted)
         if (control) {
-          control.click()
+          control.dispatchEvent(new MouseEvent('click', { bubbles: true }))
           await new Promise((resolve) => setTimeout(resolve, 180))
         }
         const markers = Array.from(document.querySelectorAll('body *')).filter((element) =>
