@@ -246,10 +246,10 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">
                     <Sparkles size={12} aria-hidden="true" />
-                    Asistente IA complementario
+                    Apoyo para la decisión
                   </div>
                   <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">{isDirectorSupport ? 'Asistente de Dirección' : 'Asistente de IA'}</div>
-                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">{isDirectorSupport ? `Property Partners · criterio senior compartido${team ? ` · ${team}` : ''}` : 'Property Partners · apoyo contextual'}</div>
+                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">{isDirectorSupport ? `Property Partners · criterio senior${team ? ` · ${team}` : ''}` : 'Property Partners · apoyo contextual'}</div>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -274,7 +274,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><Database size={11} aria-hidden="true" />Datos canónicos</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><Database size={11} aria-hidden="true" />Datos verificados</span>
               <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><ShieldCheck size={11} aria-hidden="true" />Control humano</span>
             </div>
           </header>
@@ -290,10 +290,10 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                   <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
                     {valuationCaseId
                       ? (isDirectorSupport
-                        ? 'Estoy viendo este expediente contigo. Uso el mismo conocimiento senior y evidencia canónica para ayudarte a validar comparables, alertas y fundamento antes de aceptar o devolver.'
+                        ? 'Estoy revisando este expediente contigo. Puedo ayudarte a validar comparables, detectar alertas y decidir si corresponde aceptar o devolver.'
                         : 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.')
                       : (isDirectorSupport
-                        ? 'Comparto el conocimiento senior del asistente de Pedro Pablo, pero aplicado sólo a tu oficina y a tus permisos. Puedo ayudarte a priorizar revisiones, detectar evidencia débil y preparar devoluciones objetivas.'
+                        ? 'Puedo ayudarte a priorizar lo pendiente de tu oficina, revisar valorizaciones y preparar devoluciones con razones objetivas.'
                         : 'Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.')}
                   </p>
                 </div>
@@ -329,8 +329,6 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                       {message.role === 'assistant' && message.routing ? (
                         <div className="mb-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
                           <span>{message.confidence === 'high' ? 'Confianza alta' : 'Confianza media'}</span>
-                          <span aria-hidden="true">/</span>
-                          <span>{message.routing.route === 'full-agentic' ? 'FullAgentic' : 'FastTrack'}</span>
                         </div>
                       ) : null}
                       {message.role === 'assistant' && message.title ? <div className="mb-1 font-semibold">{message.title}</div> : null}
@@ -366,7 +364,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 {loading ? (
                   <div className="flex justify-start">
                     <div className="rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3.5 py-3 text-sm text-[var(--n3-text-muted)]">
-                      Analizando evidencia autorizada…
+                      Revisando información…
                     </div>
                   </div>
                 ) : null}
@@ -390,7 +388,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 onKeyDown={onComposerKeyDown}
                 rows={2}
                 maxLength={800}
-                placeholder="Pregunta al Asistente de IA…"
+                placeholder="Pregunta sobre tu oficina o un expediente…"
                 className="min-h-[54px] max-h-36 flex-1 resize-none rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 py-2 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
               />
               <button
@@ -402,7 +400,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 <Send size={17} aria-hidden="true" />
               </button>
             </form>
-            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. {isDirectorSupport ? 'El asistente comparte conocimiento senior, pero sólo ve el alcance autorizado de dirección.' : 'El asistente no sustituye los flujos contractuales.'} Las acciones sensibles siguen requiriendo confirmación humana.</p>
+            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. {isDirectorSupport ? 'Sólo utilizo información disponible para tu oficina.' : 'El asistente no sustituye los flujos contractuales.'} Las decisiones y cambios siguen bajo tu control.</p>
           </footer>
         </section>
       ) : null}
