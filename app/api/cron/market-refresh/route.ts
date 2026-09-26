@@ -474,12 +474,45 @@ export async function GET(request: Request) {
         datasetKind: 'portal_houses',
         startedAt,
       })
+      const { data: intelligenceRefresh, error: intelligenceError } = await supabase
+        .rpc('refresh_market_listing_property_match_candidates_v1')
+
+      const sourceCode = 'portal-inmobiliario-vitacura-portal-houses'
+      const { data: source } = await supabase
+        .from('market_sources')
+        .select('id')
+        .eq('code', sourceCode)
+        .maybeSingle()
+
+      let identityState = { live: 0, linked: 0, unlinked: 0, strongCandidates: 0, mediumCandidates: 0 }
+      if (source?.id) {
+        const [{ count: live }, { count: linked }, { count: unlinked }, { count: strongCandidates }, { count: mediumCandidates }] = await Promise.all([
+          supabase.from('market_current_listings').select('id', { count: 'exact', head: true }).eq('source_id', source.id).in('status', ['active','observed']),
+          supabase.from('market_current_listings').select('id', { count: 'exact', head: true }).eq('source_id', source.id).in('status', ['active','observed']).not('property_id', 'is', null),
+          supabase.from('market_current_listings').select('id', { count: 'exact', head: true }).eq('source_id', source.id).in('status', ['active','observed']).is('property_id', null),
+          supabase.from('market_property_matches').select('id', { count: 'exact', head: true }).eq('left_entity_type','listing').eq('right_entity_type','property').eq('status','candidate_high'),
+          supabase.from('market_property_matches').select('id', { count: 'exact', head: true }).eq('left_entity_type','listing').eq('right_entity_type','property').eq('status','candidate_medium'),
+        ])
+        identityState = {
+          live: live ?? 0,
+          linked: linked ?? 0,
+          unlinked: unlinked ?? 0,
+          strongCandidates: strongCandidates ?? 0,
+          mediumCandidates: mediumCandidates ?? 0,
+        }
+      }
+
       return NextResponse.json({
-        ok: detailDrain.ingestionFailures === 0,
+        ok: detailDrain.ingestionFailures === 0 && !intelligenceError,
         mode: 'details_only',
         datasetKind: 'portal_houses',
         ...detailDrain,
-      }, { status: detailDrain.ingestionFailures === 0 ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+        intelligence: {
+          refresh: intelligenceRefresh ?? null,
+          error: intelligenceError?.message ?? null,
+          identityState,
+        },
+      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
     } catch (cause) {
       const failureMessage = cause instanceof Error ? cause.message : String(cause)
       console.error('[market-refresh] detail drain failed', { failureMessage })
