@@ -63,6 +63,10 @@ create unique index if not exists property_territory_group_one_primary_director_
 on public.property_territory_group_director_assignments(group_id)
 where active and valid_to is null and assignment_role='primary';
 
+create unique index if not exists property_territory_group_one_current_person_idx
+on public.property_territory_group_director_assignments(group_id,director_key)
+where active and valid_to is null;
+
 insert into public.property_territory_groups(group_key,name,source,source_effective_date)
 values
   ('santa-maria','Santa María','pedro-pablo-territory-report',date '2026-09-26'),
@@ -75,39 +79,93 @@ set name=excluded.name,
     active=true,
     updated_at=now();
 
-with current_assignments(group_key,director_key) as (
-  values
-    ('santa-maria','maria-luz-barbosa'),
-    ('lo-beltran','isabel-steverlynck'),
-    ('nueva-costanera','claudia-stark')
-),
-resolved as (
-  select g.id as group_id,c.director_key
-  from current_assignments c
-  join public.property_territory_groups g on g.group_key=c.group_key
+with ranked_people as (
+  select
+    g.id as group_id,
+    g.group_key,
+    d.director_key,
+    row_number() over (
+      partition by g.id
+      order by
+        case when lower(coalesce(d.role,''))='director' then 0 else 1 end,
+        d.full_name,
+        d.director_key
+    ) as routing_rank
+  from public.property_territory_groups g
   join public.property_director_directory d
-    on d.director_key=c.director_key
+    on lower(extensions.unaccent(btrim(d.office_name)))=
+       lower(extensions.unaccent(btrim(g.name)))
    and d.active
+  where g.active
+),
+desired as (
+  select
+    group_id,
+    director_key,
+    case when routing_rank=1 then 'primary' else 'secondary' end as assignment_role
+  from ranked_people
 )
 insert into public.property_territory_group_director_assignments(
   group_id,director_key,assignment_role,source,assignment_reason
 )
 select
-  r.group_id,
-  r.director_key,
-  'primary',
-  'pedro-pablo-territory-report',
-  'Responsable vigente del grupo territorial; la membresía de barrios permanece independiente de la persona.'
-from resolved r
+  d.group_id,
+  d.director_key,
+  d.assignment_role,
+  'canonical-property-director-directory',
+  'Responsabilidad vigente derivada del grupo territorial; el barrio pertenece al grupo y la persona puede cambiar.'
+from desired d
 where not exists (
   select 1
   from public.property_territory_group_director_assignments a
-  where a.group_id=r.group_id
-    and a.director_key=r.director_key
-    and a.assignment_role='primary'
+  where a.group_id=d.group_id
+    and a.director_key=d.director_key
     and a.active
     and a.valid_to is null
 );
+
+create or replace view public.property_territory_group_staff_v1
+with (security_invoker=true)
+as
+select
+  g.id as group_id,
+  g.group_key,
+  g.name as group_name,
+  a.assignment_role,
+  a.director_key,
+  d.full_name,
+  d.role as directory_role,
+  d.office_name,
+  a.valid_from,
+  a.valid_to,
+  a.active,
+  a.source
+from public.property_territory_groups g
+join public.property_territory_group_director_assignments a
+  on a.group_id=g.id
+join public.property_director_directory d
+  on d.director_key=a.director_key
+where g.active;
+
+revoke all on public.property_territory_group_staff_v1 from public,anon;
+grant select on public.property_territory_group_staff_v1 to authenticated,service_role;
+
+create or replace view public.management_source_records_territory_v1
+with (security_invoker=true)
+as
+select
+  r.*,
+  g.id as territory_group_id,
+  g.group_key as territory_group_key,
+  g.name as territory_group_name
+from public.management_source_records r
+join public.property_territory_groups g
+  on lower(extensions.unaccent(btrim(r.office_name)))=
+     lower(extensions.unaccent(btrim(g.name)))
+ and g.active;
+
+revoke all on public.management_source_records_territory_v1 from public,anon;
+grant select on public.management_source_records_territory_v1 to authenticated,service_role;
 
 create or replace function public.get_current_property_territory_assignment_v1(p_neighborhood_id uuid)
 returns table (
@@ -210,15 +268,27 @@ begin
     and active
     and valid_to is null;
 
-  insert into public.property_territory_group_director_assignments(
-    group_id,director_key,assignment_role,source,assignment_reason,assigned_by,created_at,updated_at
-  ) values (
-    v_group_id,p_director_key,'primary',
-    nullif(btrim(coalesce(p_source,'')),''),
-    nullif(btrim(coalesce(p_reason,'')),''),
-    p_actor_id,v_now,v_now
-  )
+  update public.property_territory_group_director_assignments
+  set assignment_role='primary',updated_at=v_now,assigned_by=p_actor_id,
+      assignment_reason=nullif(btrim(coalesce(p_reason,'')),''),
+      source=nullif(btrim(coalesce(p_source,'')),'')
+  where group_id=v_group_id
+    and director_key=p_director_key
+    and active
+    and valid_to is null
   returning id into v_assignment_id;
+
+  if v_assignment_id is null then
+    insert into public.property_territory_group_director_assignments(
+      group_id,director_key,assignment_role,source,assignment_reason,assigned_by,created_at,updated_at
+    ) values (
+      v_group_id,p_director_key,'primary',
+      nullif(btrim(coalesce(p_source,'')),''),
+      nullif(btrim(coalesce(p_reason,'')),''),
+      p_actor_id,v_now,v_now
+    )
+    returning id into v_assignment_id;
+  end if;
 
   with neighborhood_scope as (
     select gn.neighborhood_id
