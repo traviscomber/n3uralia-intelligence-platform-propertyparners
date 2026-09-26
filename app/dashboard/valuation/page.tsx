@@ -116,7 +116,7 @@ type SuggestResponse = {
   notes: string[]
 }
 
-type RateAnchor = 'cbrs_median' | 'cbrs_average' | 'portal_median' | 'portal_average' | 'manual' | null
+type RateAnchor = 'cbrs_median' | 'cbrs_average' | 'portal_median' | 'portal_average' | 'champion_v5' | 'manual' | null
 
 type EvidenceStats = {
   count: number
@@ -249,6 +249,7 @@ function rateAnchorLabel(anchor: RateAnchor) {
     cbrs_average: 'Promedio CBRS seleccionado',
     portal_median: 'Mediana Portal seleccionada',
     portal_average: 'Promedio Portal seleccionado',
+    champion_v5: 'Referencia Champion v5 confirmada',
     manual: 'Definido por valorizador',
   }
   return anchor ? labels[anchor] : 'Pendiente de confirmación'
@@ -467,6 +468,24 @@ export default function ValuationPage() {
     if (!houseRecommendation) return
     updateSubject('builtRateUfM2', houseRecommendation.builtRateUfM2)
     updateSubject('landRateUfM2', houseRecommendation.landRateUfM2)
+    setRateAnchor('champion_v5')
+    setMessage('Referencia aplicada. Puedes ajustarla manualmente si corresponde.')
+  }
+
+  function draftProfessionalJustification() {
+    if (selectedComparables.length < 3) return
+    const sales = selectedComparables.filter((item) => item.sourceType === 'CBRS').length
+    const offers = selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc').length
+    const range = summarizeEvidence(selectedComparables)
+    const parts = [
+      `Se revisaron ${selectedComparables.length} comparables seleccionados (${sales} ventas registradas${offers ? ` y ${offers} ofertas observadas` : ''}) del mercado relevante.`,
+      range.medianUfM2 ? `La mediana de la muestra es ${range.medianUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m².` : '',
+      subject.propertyType === 'Casa'
+        ? 'La decisión considera superficie construida, terreno, año, programa, recencia y ubicación, manteniendo la tasa final bajo criterio profesional de Property Partners.'
+        : 'La decisión considera superficie útil, terraza cuando corresponde, recencia, ubicación y evidencia seleccionada, manteniendo la tasa final bajo criterio profesional de Property Partners.',
+      currentStateNotes.trim() ? `Estado actual informado: ${currentStateNotes.trim()}` : '',
+    ].filter(Boolean)
+    setProfessionalJustification(parts.join(' '))
   }
 
   async function saveDraft() {
@@ -676,8 +695,8 @@ export default function ValuationPage() {
           <details className="border border-[var(--n3-line)] bg-[#080d0d]" open={!houseRecommendation}>
             <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ajustar tasa manualmente</summary>
             <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
-              <NumberField label="UF/m² construcción" value={subject.builtRateUfM2} onChange={(value) => updateSubject('builtRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} />
-              <NumberField label="UF/m² terreno" value={subject.landRateUfM2} onChange={(value) => updateSubject('landRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} />
+              <NumberField label="UF/m² construcción" value={subject.builtRateUfM2} onChange={(value) => { updateSubject('builtRateUfM2', value); setRateAnchor(value === undefined ? null : 'manual') }} suffix="UF/m²" step={0.1} min={0} />
+              <NumberField label="UF/m² terreno" value={subject.landRateUfM2} onChange={(value) => { updateSubject('landRateUfM2', value); setRateAnchor(value === undefined ? null : 'manual') }} suffix="UF/m²" step={0.1} min={0} />
             </div>
           </details>
         </div>}
@@ -695,7 +714,13 @@ export default function ValuationPage() {
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
       <SecondOpinionPanel opinion={secondOpinion} />
-      <IntelligencePanel eyebrow="Criterio profesional" title="Justificación del valorizador" description="Fundamenta evidencia y tasa."><div className="p-5"><TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables; la remodelación integral y la terraza de uso y goce sustentan una posición en la parte alta del rango observado..." /></div></IntelligencePanel>
+      <IntelligencePanel eyebrow="Criterio profesional" title="Justificación del valorizador" description="Deja una explicación breve de la evidencia y la tasa elegida."><div className="p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-[var(--n3-text-muted)]">Debe quedar revisada por la ejecutiva antes de enviar.</p>
+          <button type="button" disabled={selectedComparables.length < 3} onClick={draftProfessionalJustification} className="border border-[var(--n3-line)] px-3 py-2 text-xs font-medium disabled:opacity-40 hover:border-[#d7332b]">Crear borrador con la evidencia</button>
+        </div>
+        <TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables..." />
+      </div></IntelligencePanel>
       <MethodologyNote>Portal: oferta. CBRS: ventas. Property Partners decide.</MethodologyNote>
     </section> : null}
 
