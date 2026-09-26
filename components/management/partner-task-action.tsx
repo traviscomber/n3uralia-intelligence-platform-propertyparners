@@ -33,8 +33,8 @@ export function PartnerTaskAction({ taskId, status }: { taskId: string; status: 
   }
 
   return <div className="mt-3 flex flex-wrap items-center gap-2">
-    {status === 'open' ? <button disabled={loading} onClick={() => void update('in_progress')} className="border border-[var(--n3-line)] px-3 py-1.5 text-xs font-semibold disabled:opacity-50">Iniciar</button> : null}
-    {status !== 'done' && status !== 'dismissed' ? <button disabled={loading} onClick={() => void update('done')} className="border border-[#d7332b] px-3 py-1.5 text-xs font-semibold text-[#ff766f] disabled:opacity-50">Completar</button> : null}
+    {status === 'open' ? <button disabled={loading} onClick={() => void update('in_progress')} className="border border-[var(--n3-line)] px-3 py-1.5 text-xs font-semibold disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Iniciar</button> : null}
+    {status !== 'done' && status !== 'dismissed' ? <button disabled={loading} onClick={() => void update('done')} className="border border-[#d7332b] px-3 py-1.5 text-xs font-semibold text-[#ff766f] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Completar</button> : null}
     {error ? <span className="text-xs text-[#ff766f]">{error}</span> : null}
   </div>
 }
