@@ -169,8 +169,7 @@ begin
   end if;
   return;
 end;
-$function$
-
+$function$;
 
 comment on function private.resolve_market_neighborhood_signal_v2(uuid) is
 'Canonical territory resolver. Priority: unique Portal coordinate in canonical KML, accepted exact-address memory, validated territorial evidence, direct KML text, unique candidates, validated rules and CBRS street consensus.';
