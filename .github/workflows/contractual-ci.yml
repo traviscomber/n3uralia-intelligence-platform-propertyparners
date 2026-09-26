@@ -167,6 +167,10 @@ jobs:
       - name: Verify integrated market workspace
         run: node --import tsx --test tests/market-workspace.test.ts
 
+      - name: Verify Pedro market view separation
+        run: node --import tsx --test tests/market-pedro-view-separation.test.ts
+
+
 
       - name: Verify management report scheduling
         run: pnpm management:reports:verify
