@@ -413,7 +413,7 @@ export async function POST(request: Request) {
       const latitude = num(item.latitude) || undefined
       const longitude = num(item.longitude) || undefined
       const distanceMeters = payload.latitude && payload.longitude && latitude && longitude ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude)) : undefined
-      const sourceReportedUfM2 = num(item.price_uf_m2) || (useful > 0 ? Number((price / useful).toFixed(2)) : 0)
+      const sourceReportedUfM2 = num(item.price_uf_m2) || (useful > 0 ? price / useful : 0)
       return {
         id: `auto-${item.id}`,
         sourceType: 'Portal' as const,
@@ -430,7 +430,7 @@ export async function POST(request: Request) {
         priceUf: price,
         priceUfM2: 0,
         sourceReportedUfM2: sourceReportedUfM2 || undefined,
-        similarityScore: Number(scorePortal(payload, item).toFixed(4)),
+        similarityScore: scorePortal(payload, item),
         selected: false,
         adjustmentPct: 0,
         adjustmentNotes: 'Oferta Portal real dentro del mismo barrio KML PP. Se mantiene como referencia hasta certificar todas las superficies canónicas requeridas.',
@@ -475,9 +475,9 @@ export async function POST(request: Request) {
           builtAreaM2: built,
           landAreaM2: land || undefined,
           priceUf: price,
-          priceUfM2: Number((price / weightedArea).toFixed(2)),
-          similarityScore: Number(Math.min(1, rankingScore).toFixed(4)),
-          rankingScore: Number(rankingScore.toFixed(4)),
+          priceUfM2: price / weightedArea,
+          similarityScore: Math.min(1, rankingScore),
+          rankingScore,
           strictPhysicalCompatibility,
           selected: false,
           adjustmentPct: 0,
@@ -521,14 +521,14 @@ export async function POST(request: Request) {
             ? 'high'
             : sample.length >= 4 && spread <= 0.5 ? 'medium' : 'low'
           return {
-            weightedRateUfM2: Number(championRate.toFixed(2)),
-            builtRateUfM2: Number(championRate.toFixed(2)),
-            landRateUfM2: Number((championRate / 4).toFixed(2)),
-            estimatedValueUf: Math.round(championRate * weightedArea),
+            weightedRateUfM2: championRate,
+            builtRateUfM2: championRate,
+            landRateUfM2: championRate / 4,
+            estimatedValueUf: championRate * weightedArea,
             comparableCount: sample.length,
             strictComparableCount: strictPhysicalCount,
-            averageSimilarity: Number(averageSimilarity.toFixed(3)),
-            comparableSpread: Number(spread.toFixed(3)),
+            averageSimilarity,
+            comparableSpread: spread,
             confidence,
             evidenceGate: sampleDecision.gate,
             nonBinding: true,
