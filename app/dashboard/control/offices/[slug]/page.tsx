@@ -59,9 +59,9 @@ export default function Office360Page(){
 
  return <WorkspaceShell contentClassName="max-w-[1480px]">
   <WorkspaceHeader
-   eyebrow="Office 360 · Control de gestión"
+   eyebrow="Dirección · Office 360"
    title={data.office.name}
-   meta={`${data.authority.period} · autoridad ${data.authority.file}`}
+   meta={`${data.authority.period} · corte verificado`}
    actions={[
     {label:'Control',href:'/dashboard/control',icon:<ArrowLeft size={14}/>},
     {label:'Prospección',href:'/dashboard/properties/prospects'},
@@ -75,7 +75,7 @@ export default function Office360Page(){
    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Cartera</span><strong className="mt-2 block text-xl">{n(l.stock)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Score {n(l.portfolioScore,1)}</p></div>
    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Leads activos</span><strong className="mt-2 block text-xl">{n(l.activeLeads)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Requerimientos {n(l.requirements)}</p></div>
    <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">Visitas</span><strong className="mt-2 block text-xl">{n(l.realizedVisits)} / {n(l.scheduledVisits)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{pct(l.visitExecutionPct)} ejecución</p></div>
-   <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">UF acreditadas</span><strong className="mt-2 block text-xl">{n(l.salesUf)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Fuente Pedro · Directorio</p></div>
+   <div className="bg-[var(--n3-deep)] p-4"><span className="text-xs text-[var(--n3-text-muted)]">UF acreditadas</span><strong className="mt-2 block text-xl">{n(l.salesUf)}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Cierre comercial verificado</p></div>
   </section>
 
   <section className="mt-7 grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
@@ -112,9 +112,9 @@ export default function Office360Page(){
     <Link href="/dashboard/properties/prospects" className="mt-4 inline-flex text-xs font-semibold text-[var(--n3-teal-soft)]">Gestionar territorio y leads →</Link>
    </div>
    <div>
-    <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Fuente</p><h2 className="mt-1 text-lg font-medium">Directorio Agosto</h2></div>
-    <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La lectura principal de esta ficha replica la estructura y los indicadores de Ago_Directorio.pptx. El histórico 2025 queda como evidencia secundaria y no reemplaza el cierre agosto.</p>
-    <div className="mt-4 text-xs text-[var(--n3-text-muted)]">SHA-256 · {data.authority.sha256}</div>
+    <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[.16em] text-[var(--n3-text-muted)]">Trazabilidad</p><h2 className="mt-1 text-lg font-medium">Fuente del corte</h2></div>
+    <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La vista utiliza el corte canónico vigente de dirección. El histórico se mantiene como evidencia secundaria y no reemplaza el período aprobado.</p>
+    <div className="mt-4 text-xs text-[var(--n3-text-muted)]">Identificador de evidencia · {data.authority.sha256.slice(0, 12)}…</div>
    </div>
   </section>
 
