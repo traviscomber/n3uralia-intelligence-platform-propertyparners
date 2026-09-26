@@ -792,9 +792,17 @@ export async function collectPortalListingDetails(options: {
           await configurePage(page)
           await gotoWithRetry(page, url, 'Portal listing')
           await waitForPrimaryDetail(page, waitMs)
-          const nearbyPlaces = await capturePortalNearbyPlaces(page)
+
+          // Coordinates are the strongest and cheapest territorial signal. Parse the
+          // primary document first and only pay the dynamic nearby-tab cost when the
+          // listing does not expose a usable map point.
           const html = await page.content()
-          const row = parsePortalListing(html, url, options.datasetKind, nearbyPlaces)
+          let row = parsePortalListing(html, url, options.datasetKind)
+          if (row.latitude == null || row.longitude == null) {
+            const nearbyPlaces = await capturePortalNearbyPlaces(page)
+            if (nearbyPlaces.length) row = parsePortalListing(html, url, options.datasetKind, nearbyPlaces)
+          }
+
           if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
           const parsedPriceUf = numeric(row.price_uf)
           if (parsedPriceUf != null && parsedPriceUf > 0 && parsedPriceUf < 100) throw new Error('Implausible UF price after normalization')
