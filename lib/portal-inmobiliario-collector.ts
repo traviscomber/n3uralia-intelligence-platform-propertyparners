@@ -449,6 +449,38 @@ export function extractPortalNearbyPlacesFromText(input: string, categoryLabel =
   }).slice(0, 40)
 }
 
+async function hydratePortalLocationSection(page: Page) {
+  try {
+    await page.evaluate(async () => {
+      const normalize = (value: string | null | undefined) => String(value ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+
+      const candidates = Array.from(document.querySelectorAll('section,div,h2,h3'))
+        .filter((element) => {
+          const label = normalize(element.textContent)
+          return label === 'ubicacion'
+            || label === 'ubicación'
+            || label.includes('ubicacion y alrededores')
+            || label.includes('puntos cercanos')
+            || label === 'mapa'
+        })
+        .sort((a,b) => (a.textContent?.length ?? 0) - (b.textContent?.length ?? 0))
+
+      const target = candidates[0] as HTMLElement | undefined
+      if (target) target.scrollIntoView({ block: 'center' })
+      else window.scrollTo({ top: Math.floor(document.body.scrollHeight * 0.7) })
+
+      await new Promise((resolve) => setTimeout(resolve, 650))
+    })
+  } catch {
+    // Lazy-location hydration is best-effort only.
+  }
+}
+
 async function capturePortalNearbyPlaces(page: Page): Promise<PortalNearbyPlace[]> {
   const labels = ['Transporte', 'Educación', 'Áreas verdes', 'Comercios']
   const all: PortalNearbyPlace[] = []
@@ -799,8 +831,10 @@ export async function collectPortalListingDetails(options: {
           const html = await page.content()
           let row = parsePortalListing(html, url, options.datasetKind)
           if (row.latitude == null || row.longitude == null) {
+            await hydratePortalLocationSection(page)
             const nearbyPlaces = await capturePortalNearbyPlaces(page)
-            if (nearbyPlaces.length) row = parsePortalListing(html, url, options.datasetKind, nearbyPlaces)
+            const enrichedHtml = await page.content()
+            row = parsePortalListing(enrichedHtml, url, options.datasetKind, nearbyPlaces)
           }
 
           if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
@@ -854,9 +888,14 @@ export async function collectPortalVitacura(options: PortalCollectorOptions): Pr
         const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
         if (!response?.ok()) throw new Error(`Listing returned HTTP ${response?.status() ?? 'unknown'}`)
         await waitForPrimaryDetail(page, waitMs)
-        const nearbyPlaces = await capturePortalNearbyPlaces(page)
-        const html = await page.content()
-        const row = parsePortalListing(html, url, options.datasetKind, nearbyPlaces)
+        const initialHtml = await page.content()
+        let row = parsePortalListing(initialHtml, url, options.datasetKind)
+        if (row.latitude == null || row.longitude == null) {
+          await hydratePortalLocationSection(page)
+          const nearbyPlaces = await capturePortalNearbyPlaces(page)
+          const enrichedHtml = await page.content()
+          row = parsePortalListing(enrichedHtml, url, options.datasetKind, nearbyPlaces)
+        }
         if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
         const parsedPriceUf = numeric(row.price_uf)
         if (parsedPriceUf != null && parsedPriceUf > 0 && parsedPriceUf < 100) throw new Error('Implausible UF price after normalization')
