@@ -4,12 +4,27 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { buildProspectTerritoryCoverage } from '@/lib/prospect-territory-coverage'
 
 const ACTIVE = new Set(['new','assigned','contacting','qualified','valuation','proposal'])
-const MAX_CANDIDATE_PROPERTIES = 500
 
 function chunkIds<T>(items: T[], size: number) {
   const chunks: T[][] = []
   for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size))
   return chunks
+}
+
+function normalizePerson(value: string | null | undefined) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function samePerson(left: string, right: string) {
+  const a = normalizePerson(left).split(' ').filter(Boolean)
+  const b = normalizePerson(right).split(' ').filter(Boolean)
+  if (!a.length || !b.length) return false
+  return a[0] === b[0] && a[a.length - 1] === b[b.length - 1]
 }
 
 function hoursBetween(a: string | null, b: string | null) {
@@ -116,6 +131,91 @@ export async function GET() {
     }
   })
 
+  const [kmlTerritoriesResult, sellerOfficeEvidenceResult] = await Promise.all([
+    db.from('vitacura_market_neighborhoods')
+      .select('barrio_nombre,raw_properties')
+      .eq('fuente','Property Partners')
+      .eq('version','2026-08-12'),
+    db.from('management_source_records')
+      .select('seller_name,office_name')
+      .not('seller_name','is',null)
+      .not('office_name','is',null)
+      .limit(500),
+  ])
+  if (kmlTerritoriesResult.error || sellerOfficeEvidenceResult.error) {
+    return NextResponse.json({ error:'No fue posible cargar la evidencia territorial.' },{status:500})
+  }
+
+  const neighborhoodIdByName = new Map(
+    (neighborhoodsResult.data ?? []).map((item) => [normalizePerson(item.micro_neighborhood || item.name), item.id]),
+  )
+  const territorySuggestionByNeighborhood = new Map<string, {
+    directorKey: string | null
+    directorName: string | null
+    officeName: string | null
+    confidence: 'high' | 'medium' | 'unresolved'
+    reason: string
+    evidence: Record<string, unknown>
+  }>()
+
+  for (const row of kmlTerritoriesResult.data ?? []) {
+    const neighborhoodId = neighborhoodIdByName.get(normalizePerson(row.barrio_nombre))
+    if (!neighborhoodId) continue
+    const raw = row.raw_properties && typeof row.raw_properties === 'object' ? row.raw_properties as Record<string, unknown> : null
+    const partners = Array.isArray(raw?.partners) ? raw?.partners.filter((item): item is string => typeof item === 'string') : []
+
+    const exactDirector = visibleDirectors.find((director) => partners.some((partner) => samePerson(partner,director.full_name)))
+    if (exactDirector) {
+      territorySuggestionByNeighborhood.set(neighborhoodId,{
+        directorKey: exactDirector.director_key,
+        directorName: exactDirector.full_name,
+        officeName: exactDirector.office_name,
+        confidence:'high',
+        reason:'El KML contractual del barrio nombra directamente a una persona del directorio canónico.',
+        evidence:{source:'Barrios Vitacura.kml',partners,method:'exact-kml-partner-director'},
+      })
+      continue
+    }
+
+    const officeVotes = new Map<string,number>()
+    let totalVotes = 0
+    for (const evidence of sellerOfficeEvidenceResult.data ?? []) {
+      if (!evidence.seller_name || !evidence.office_name) continue
+      if (!partners.some((partner) => samePerson(partner,evidence.seller_name))) continue
+      officeVotes.set(evidence.office_name,(officeVotes.get(evidence.office_name) ?? 0)+1)
+      totalVotes += 1
+    }
+    const ranked = [...officeVotes.entries()].sort((a,b)=>b[1]-a[1])
+    const top = ranked[0]
+    if (!top || !totalVotes) {
+      territorySuggestionByNeighborhood.set(neighborhoodId,{
+        directorKey:null,directorName:null,officeName:null,confidence:'unresolved',
+        reason:'El KML define partners, pero no existe evidencia suficiente para resolver oficina/director sin inferir.',
+        evidence:{source:'Barrios Vitacura.kml',partners,method:'no-office-evidence'},
+      })
+      continue
+    }
+
+    const share = top[1] / totalVotes
+    const officeDirectors = visibleDirectors.filter((director)=>director.office_name===top[0])
+    if (share >= 0.75 && officeDirectors.length === 1) {
+      const director = officeDirectors[0]
+      territorySuggestionByNeighborhood.set(neighborhoodId,{
+        directorKey:director.director_key,directorName:director.full_name,officeName:top[0],confidence:'medium',
+        reason:'La evidencia operacional concentra al menos 75% de las apariciones de los partners KML en una oficina con un único director canónico.',
+        evidence:{source:'Barrios Vitacura.kml + management_source_records',partners,officeVotes:Object.fromEntries(ranked),share,method:'office-evidence-unique-director'},
+      })
+    } else {
+      territorySuggestionByNeighborhood.set(neighborhoodId,{
+        directorKey:null,directorName:null,officeName:top[0],confidence:'unresolved',
+        reason:officeDirectors.length > 1
+          ? 'La oficina sugerida tiene más de un director canónico; requiere confirmación humana.'
+          : 'La evidencia de oficina no alcanza el umbral de 75%; requiere confirmación humana.',
+        evidence:{source:'Barrios Vitacura.kml + management_source_records',partners,officeVotes:Object.fromEntries(ranked),share,method:'office-evidence-unresolved'},
+      })
+    }
+  }
+
   const performance = visibleDirectors.map((director) => {
     const rows = enrichedLeads.filter((lead) => lead.director_key === director.director_key)
     const firstContactHours = rows.map((lead) => hoursBetween(lead.assigned_at, lead.first_contact_at)).filter((value): value is number => value != null)
@@ -138,27 +238,36 @@ export async function GET() {
     }
   })
 
-  const candidatePropertiesResult = await db.from('market_properties')
-    .select('id,normalized_address,property_type,neighborhood_id,identity_status,last_seen_at', { count: 'exact' })
-    .eq('property_type', 'Casa')
-    .not('neighborhood_id', 'is', null)
-    .order('last_seen_at', { ascending: false })
-    .limit(MAX_CANDIDATE_PROPERTIES)
+  const { data: portalSource, error: portalSourceError } = await db
+    .from('market_sources')
+    .select('id')
+    .eq('code', 'portal-inmobiliario-vitacura-portal-houses')
+    .maybeSingle()
+  if (portalSourceError || !portalSource?.id) {
+    return NextResponse.json({ error:'No fue posible resolver la fuente live de Portal.' },{status:500})
+  }
+
+  const candidateListingsResult = await db.from('market_current_listings')
+    .select('property_id,source_listing_id,url,status,operation,observed_at,published_at,price_uf')
+    .eq('source_id', portalSource.id)
+    .not('property_id', 'is', null)
+    .in('status',['active','observed'])
+    .order('observed_at',{ascending:false})
+    .limit(2000)
+  if (candidateListingsResult.error) return NextResponse.json({ error:'No fue posible cargar el inventario live vinculado.' },{status:500})
+
+  const candidateListingRows = candidateListingsResult.data ?? []
+  const candidatePropertyIds = [...new Set(candidateListingRows.map((item) => item.property_id).filter(Boolean))]
+  const candidatePropertiesResult = candidatePropertyIds.length
+    ? await db.from('market_properties')
+        .select('id,normalized_address,property_type,neighborhood_id,identity_status,last_seen_at')
+        .in('id', candidatePropertyIds)
+        .eq('property_type', 'Casa')
+        .not('neighborhood_id', 'is', null)
+    : { data: [], error: null }
   if (candidatePropertiesResult.error) return NextResponse.json({ error:'No fue posible resolver las casas publicadas.' },{status:500})
 
   const candidateProperties = candidatePropertiesResult.data ?? []
-  const candidatePropertyIds = candidateProperties.map((item) => item.id)
-  const candidateListingRows: any[] = []
-
-  for (const ids of chunkIds(candidatePropertyIds, 50)) {
-    const listingChunk = await db.from('market_current_listings')
-      .select('property_id,source_listing_id,url,status,operation,observed_at,published_at,price_uf')
-      .in('property_id', ids)
-      .in('status',['active','observed'])
-      .order('observed_at',{ascending:false})
-    if (listingChunk.error) return NextResponse.json({ error: 'No fue posible cargar publicaciones candidatas.' }, { status:500 })
-    candidateListingRows.push(...(listingChunk.data ?? []))
-  }
 
   const leadPropertySet = new Set(propertyIds)
   const territoryByNeighborhood = new Map((territoryResult.data ?? []).map((item)=>[item.neighborhood_id,item]))
@@ -178,9 +287,13 @@ export async function GET() {
     neighborhoods: neighborhoodsResult.data ?? [],
     directors: visibleDirectors,
   })
+  const coverageRowsWithSuggestions = territoryCoverage.rows.map((row)=>({
+    ...row,
+    suggestion: territorySuggestionByNeighborhood.get(row.neighborhood.id) ?? null,
+  }))
   const visibleCoverageRows = scope.scope === 'global'
-    ? territoryCoverage.rows
-    : territoryCoverage.rows.filter((row) => row.territory && directorKeys.includes(row.territory.director_key))
+    ? coverageRowsWithSuggestions
+    : coverageRowsWithSuggestions.filter((row) => row.territory && directorKeys.includes(row.territory.director_key))
 
   const visibleCoverageSummary = {
     neighborhoods: visibleCoverageRows.length,
@@ -192,8 +305,8 @@ export async function GET() {
     eligiblePublished: visibleCoverageRows.reduce((sum, row) => sum + row.eligiblePublished, 0),
     uncoveredPublished: visibleCoverageRows.filter((row) => row.needsDirector).reduce((sum, row) => sum + row.eligiblePublished, 0),
     directorDriftLeads: visibleCoverageRows.reduce((sum, row) => sum + row.directorDriftLeads, 0),
-    candidateUniverseTruncated: (candidatePropertiesResult.count ?? 0) > candidateProperties.length,
-    candidateUniverseCount: candidatePropertiesResult.count ?? candidateProperties.length,
+    candidateUniverseTruncated: false,
+    candidateUniverseCount: candidatePropertyIds.length,
   }
 
   const candidates = eligibleProperties
@@ -211,6 +324,7 @@ export async function GET() {
         territory,
         listing,
         needsDirector: !territory,
+        suggestion: property.neighborhood_id ? territorySuggestionByNeighborhood.get(property.neighborhood_id) ?? null : null,
       }
     })
     .filter(Boolean)
