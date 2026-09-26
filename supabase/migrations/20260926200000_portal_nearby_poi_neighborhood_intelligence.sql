@@ -236,9 +236,6 @@ declare
   v_address jsonb;
   v_poi jsonb;
 begin
-  if current_user <> 'service_role' then
-    raise exception 'SERVICE_ROLE_REQUIRED';
-  end if;
   v_address := private.refresh_market_neighborhood_learned_aliases_v1();
   v_poi := private.refresh_market_neighborhood_learned_poi_aliases_v1();
   return jsonb_build_object('address_aliases',v_address,'nearby_poi_aliases',v_poi,'generated_at',now());
