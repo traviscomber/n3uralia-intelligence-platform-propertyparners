@@ -245,22 +245,160 @@ export function CeoDashboardCommand() {
   const creditedDetail = usesCommercialCredit ? `${n(selectedMetrics.management_credited_sales, 1)} crédito gestión` : undefined
   const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)}`
 
-  return <WorkspaceShell contentClassName="max-w-[1480px]">
-    <WorkspaceHeader eyebrow="Control Tower" title="Cierre de gestión" controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }, { label: 'Informe', href: `/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`, primary: true, icon: <FileText size={14} /> }, { label: 'Exportar', onClick: exportData, icon: <Download size={14} />, ariaLabel: 'Exportar' }]} />
-    {period === '2026-08' && augustCompany
-      ? <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
-      : <MetricStrip items={[{ label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail }, { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) }, { label: 'UF', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined }, { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) }]} />}
+  const priorityActions = actions.slice(0, 3)
+  const priorityOffices = offices.slice(0, 3)
 
-    <section className="mt-5">
-      <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Señales y acciones</h2><span className={`text-xs tabular-nums ${critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{critical ? `${critical} críticas` : `${actions.length} activas`}</span></div>
-      <div className="divide-y divide-[var(--n3-line)]">{actions.length ? actions.map((item) => <Link key={`${item.label}-${item.href}`} href={item.href} className="group grid min-h-14 grid-cols-[8px_minmax(0,1fr)_auto_auto] items-center gap-3 py-2 hover:bg-white/[0.025]"><span className={`h-2 w-2 rounded-full ${item.critical ? 'bg-[var(--primary)]' : 'bg-[#f0c96a]'}`} /><span className="min-w-0"><span className="block truncate text-sm font-medium">{item.label}</span>{item.detail ? <span className="block truncate text-xs text-[var(--n3-text-muted)]">{item.detail}</span> : null}</span><span className={`text-base font-semibold tabular-nums ${item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}`}>{item.value}</span><ArrowRight size={15} className="text-[var(--n3-text-muted)]" /></Link>) : <div className="py-4 text-sm text-[var(--n3-text-muted)]">Sin señales prioritarias</div>}</div>
+  return <WorkspaceShell contentClassName="max-w-[1320px]">
+    <WorkspaceHeader
+      eyebrow="CEO"
+      title="Hoy"
+      controls={<div>
+        <label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label>
+        <select
+          id="ceo-period"
+          value={period}
+          onChange={(event) => setPeriod(event.target.value)}
+          className="mt-1 block min-h-11 min-w-48 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+        >
+          {periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}
+        </select>
+      </div>}
+      meta={`Corte ${freshness}`}
+      actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }]}
+    />
+
+    <MetricStrip items={[
+      { label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail },
+      { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) },
+      { label: 'Venta', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined },
+      { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) },
+    ]} />
+
+    <section className="mt-6">
+      <div className="border-b border-[var(--n3-line)] pb-2">
+        <h2 className="text-sm font-semibold">Requiere decisión</h2>
+      </div>
+      <div className="divide-y divide-[var(--n3-line)]">
+        {priorityActions.length ? priorityActions.map((item) => (
+          <Link
+            key={`${item.label}-${item.href}`}
+            href={item.href}
+            className="group grid min-h-16 grid-cols-[8px_minmax(0,1fr)_auto_auto] items-center gap-3 py-3 hover:bg-white/[0.025]"
+          >
+            <span className={`h-2 w-2 rounded-full ${item.critical ? 'bg-[var(--primary)]' : 'bg-[#f0c96a]'}`} />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium">{item.label}</span>
+              {item.detail ? <span className="block truncate text-xs text-[var(--n3-text-muted)]">{item.detail}</span> : null}
+            </span>
+            <span className={`text-base font-semibold tabular-nums ${item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}`}>{item.value}</span>
+            <ArrowRight size={15} className="text-[var(--n3-text-muted)]" />
+          </Link>
+        )) : <div className="py-5 text-sm text-[var(--n3-text-muted)]">Nada requiere intervención inmediata.</div>}
+      </div>
     </section>
 
-    <section className="mt-5">
-      <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Oficinas</h2>
-      <div className="mt-2 overflow-x-auto border-t border-[var(--n3-line)]"><table className="w-full min-w-[900px] border-collapse text-left"><thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.11em] text-[var(--n3-text-muted)]"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-3 py-3 font-medium">Resultado</th><th className="px-3 py-3 font-medium">Cartera</th><th className="px-3 py-3 font-medium">Seguimiento</th><th className="px-3 py-3 font-medium">Conversión</th><th className="px-3 py-3 font-medium">Principal brecha</th><th className="px-3 py-3 text-right font-medium">Detalle</th></tr></thead><tbody>{offices.map((item) => <tr key={item.id} className="border-b border-[var(--n3-line)] text-sm"><td className="py-3 pr-4"><span className="block font-medium">{item.name}</span><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">Gestión {n(item.managementScore,1)}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{item.credited == null ? (item.sales == null ? '—' : n(item.sales,1)) : n(item.credited,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.creditedUf != null ? uf(item.creditedUf) : uf(item.salesUf)}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.portfolioScore,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.stock == null ? 'Sin stock' : `${n(item.stock)} propiedades`}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.followUp,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.active == null ? '—' : `${n(item.active)} leads activos`}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.conversionScore,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.visitRate == null ? '—' : `${pct(item.visitRate)} visitas`}</span></td><td className="px-3 py-3"><span className={`font-semibold ${item.weakest?.value != null && item.weakest.value < 70 ? 'text-[#f0c96a]' : riskClass(item.risk)}`}>{item.weakest ? item.weakest.key : riskLabel(item.risk)}</span><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">{item.weakest ? `${n(item.weakest.value,1)} pts` : item.action}</span></td><td className="px-3 py-3 text-right"><Link href={`/dashboard/control/offices/${officeSlug(item.name)}`} className="inline-flex items-center gap-1 font-medium hover:text-[var(--n3-text-light)]">Office 360<ArrowRight size={13} /></Link></td></tr>)}</tbody></table></div>
+    <section className="mt-6">
+      <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
+        <h2 className="text-sm font-semibold">Oficinas</h2>
+        <span className="text-xs text-[var(--n3-text-muted)]">Prioridad de hoy</span>
+      </div>
+      <div className="divide-y divide-[var(--n3-line)]">
+        {priorityOffices.map((item) => (
+          <Link
+            key={item.id}
+            href={`/dashboard/control/offices/${officeSlug(item.name)}`}
+            className="group grid min-h-16 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 py-3 hover:bg-white/[0.025]"
+          >
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium">{item.name}</span>
+              <span className="mt-1 block text-xs text-[var(--n3-text-muted)]">
+                {item.weakest ? `Brecha: ${item.weakest.key.toLowerCase()}` : item.action}
+              </span>
+            </span>
+            <span className="text-right">
+              <span className="block text-sm font-semibold tabular-nums">
+                {item.credited == null ? (item.sales == null ? '—' : n(item.sales, 1)) : n(item.credited, 1)}
+              </span>
+              <span className="block text-xs text-[var(--n3-text-muted)]">
+                {item.creditedUf != null ? uf(item.creditedUf) : uf(item.salesUf)}
+              </span>
+            </span>
+            <ArrowRight size={15} className="text-[var(--n3-text-muted)]" />
+          </Link>
+        ))}
+      </div>
     </section>
 
-    <DataStatusBar cutoff={freshness} coverage={coverageLabel} issues={operations.errors.length + dataLayerIssues + (approvedMetricCount === 0 ? 1 : 0)} status={dataStatus} />
+    <details className="mt-7 border-t border-[var(--n3-line)] pt-3">
+      <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+        Ver detalle
+      </summary>
+      <div className="mt-4 space-y-6">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`}
+            className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-3 text-xs font-medium"
+          >
+            <FileText size={14} /> Informe
+          </Link>
+          <button
+            type="button"
+            onClick={exportData}
+            className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-3 text-xs font-medium"
+          >
+            <Download size={14} /> Exportar
+          </button>
+        </div>
+
+        {period === '2026-08' && augustCompany
+          ? <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
+          : null}
+
+        <div>
+          <h3 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Todas las oficinas</h3>
+          <div className="mt-2 overflow-x-auto border-t border-[var(--n3-line)]">
+            <table className="w-full min-w-[760px] border-collapse text-left">
+              <thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.11em] text-[var(--n3-text-muted)]">
+                <tr>
+                  <th className="py-3 pr-4 font-medium">Oficina</th>
+                  <th className="px-3 py-3 font-medium">Resultado</th>
+                  <th className="px-3 py-3 font-medium">Principal brecha</th>
+                  <th className="px-3 py-3 text-right font-medium">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {offices.map((item) => (
+                  <tr key={item.id} className="border-b border-[var(--n3-line)] text-sm">
+                    <td className="py-3 pr-4"><span className="font-medium">{item.name}</span></td>
+                    <td className="px-3 py-3 tabular-nums">
+                      <span className="block font-semibold">{item.credited == null ? (item.sales == null ? '—' : n(item.sales, 1)) : n(item.credited, 1)}</span>
+                      <span className="block text-xs text-[var(--n3-text-muted)]">{item.creditedUf != null ? uf(item.creditedUf) : uf(item.salesUf)}</span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className={`font-medium ${item.weakest?.value != null && item.weakest.value < 70 ? 'text-[#f0c96a]' : riskClass(item.risk)}`}>
+                        {item.weakest ? item.weakest.key : riskLabel(item.risk)}
+                      </span>
+                      <span className="mt-1 block text-xs text-[var(--n3-text-muted)]">{item.weakest ? `${n(item.weakest.value,1)} pts` : item.action}</span>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <Link href={`/dashboard/control/offices/${officeSlug(item.name)}`} className="inline-flex items-center gap-1 font-medium hover:text-[var(--n3-text-light)]">
+                        Ver oficina <ArrowRight size={13} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <DataStatusBar
+          cutoff={freshness}
+          coverage={coverageLabel}
+          issues={operations.errors.length + dataLayerIssues + (approvedMetricCount === 0 ? 1 : 0)}
+          status={dataStatus}
+        />
+      </div>
+    </details>
   </WorkspaceShell>
 }
