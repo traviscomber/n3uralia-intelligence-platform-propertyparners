@@ -123,6 +123,9 @@ jobs:
       - name: Verify 2025 monthly management baseline
         run: pnpm exec tsx scripts/verify-management-baseline-2025-events.ts
 
+      - name: Verify sale-to-handover management calendar
+        run: node --import tsx --test tests/management-sale-handover-calendar.test.ts
+
       - name: Verify weekly report authorization scopes
         run: node --import tsx --test tests/management-report-scope.test.ts
 
