@@ -115,7 +115,8 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
       // "Live" means the current canonical Portal collectors only. Legacy
       // imports remain available as historical evidence but must not be
       // counted as today's Portal inventory.
-      const expectedSourceCode = `portal-inmobiliario-vitacura-${kind}`
+      const sourceSuffix = kind.replaceAll('_', '-')
+      const expectedSourceCode = `portal-inmobiliario-vitacura-${sourceSuffix}`
       if (sourceCode !== expectedSourceCode) continue
 
       const rawPayload = row.raw_payload && typeof row.raw_payload === 'object' ? row.raw_payload as Record<string, unknown> : null

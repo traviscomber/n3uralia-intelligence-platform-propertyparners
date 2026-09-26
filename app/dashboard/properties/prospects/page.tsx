@@ -62,11 +62,11 @@ export default function ProspectManagementPage(){
 
   return <WorkspaceShell>
     <WorkspaceHeader
-      eyebrow="Propiedades · Prospección"
-      title="Leads por barrio y dirección"
-      meta={`Corte ${date(data.generatedAt)} · publicación → lead → valorización → outcome`}
+      eyebrow="Pilar 04 · Ficha 360"
+      title="Cartera 360 · Propiedad, territorio y seguimiento"
+      meta={`Corte ${date(data.generatedAt)} · propiedad → responsable → seguimiento → valorización → resultado`}
       actions={[
-        {label:'Propiedades',href:'/dashboard/properties',icon:<ArrowLeft size={14}/>},
+        {label:'Asignaciones',href:'/dashboard/properties/admin',icon:<ArrowLeft size={14}/>},
         {label:'Actualizar',onClick:()=>void load(),icon:<RefreshCw size={14}/>}
       ]}
     />
@@ -100,25 +100,6 @@ export default function ProspectManagementPage(){
           <div>{row.representativePropertyId?<Link href={`/dashboard/properties/${row.representativePropertyId}`} className="inline-flex min-h-10 items-center border border-[var(--n3-line)] px-3 text-xs font-semibold hover:border-[#d7332b]">{row.needsDirector?'Asignar barrio':'Abrir ficha 360'}</Link>:null}</div>
         </div>)}
         {!data.territoryCoverage.length?<p className="py-6 text-sm text-[var(--n3-text-muted)]">No hay casas publicadas elegibles con barrio canónico dentro del alcance actual.</p>:null}
-      </div>
-    </section>
-
-    <section className="mt-7">
-      <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Rendimiento</p><h2 className="mt-1 text-lg font-medium">Por director/a</h2></div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-sm">
-          <thead className="border-b border-[var(--n3-line)] text-left text-xs text-[var(--n3-text-muted)]"><tr><th className="p-3">Director/a</th><th className="p-3">Leads</th><th className="p-3">Activos</th><th className="p-3">Valorizados</th><th className="p-3">Ganados</th><th className="p-3">Conv.</th><th className="p-3">Lead→Val.</th><th className="p-3">1er contacto</th><th className="p-3">Ciclo ganado</th><th className="p-3">Vencidos</th></tr></thead>
-          <tbody className="divide-y divide-[var(--n3-line)]">
-            {data.performance.map(row=><tr key={row.director.director_key}>
-              <td className="p-3"><strong>{row.director.full_name}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.director.office_name}</p></td>
-              <td className="p-3">{row.leads}</td><td className="p-3">{row.active}</td><td className="p-3">{row.valuationLeads}</td><td className="p-3">{row.won}</td>
-              <td className="p-3">{pct(row.conversionPct)}</td><td className="p-3">{pct(row.valuationRatePct)}</td>
-              <td className="p-3">{row.avgFirstContactHours==null?'—':`${nf.format(row.avgFirstContactHours)} h`}</td>
-              <td className="p-3">{row.avgWonCycleDays==null?'—':`${nf.format(row.avgWonCycleDays)} d`}</td>
-              <td className="p-3">{row.overdue}</td>
-            </tr>)}
-          </tbody>
-        </table>
       </div>
     </section>
 
