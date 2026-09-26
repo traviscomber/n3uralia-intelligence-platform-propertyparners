@@ -27,29 +27,38 @@ const listingUrls = [
   'https://www.portalinmobiliario.com/MLC-2074090859-estadio-croata-_JM',
 ]
 
-const result = await collectPortalListingDetails({
-  datasetKind: 'portal_houses',
-  listingUrls,
-  waitMs: 250,
-})
 
-const rows = result.rows.map((row) => ({
-  source_listing_id: row.source_listing_id,
-  latitude: row.latitude ?? null,
-  longitude: row.longitude ?? null,
-  address: row.address ?? null,
-  nearby_places: Array.isArray(row.nearby_places) ? row.nearby_places : [],
-}))
-
-const summary = {
-  requested: listingUrls.length,
-  captured: rows.length,
-  failed: result.failures.length,
-  withCoordinates: rows.filter((row) => row.latitude != null && row.longitude != null).length,
-  withNearbyPlaces: rows.filter((row) => row.nearby_places.length > 0).length,
-  totalNearbyPlaces: rows.reduce((sum, row) => sum + row.nearby_places.length, 0),
-  rows,
-  failures: result.failures,
+async function main() {
+  const result = await collectPortalListingDetails({
+    datasetKind: 'portal_houses',
+    listingUrls,
+    waitMs: 250,
+  })
+  
+  const rows = result.rows.map((row) => ({
+    source_listing_id: row.source_listing_id,
+    latitude: row.latitude ?? null,
+    longitude: row.longitude ?? null,
+    address: row.address ?? null,
+    nearby_places: Array.isArray(row.nearby_places) ? row.nearby_places : [],
+  }))
+  
+  const summary = {
+    requested: listingUrls.length,
+    captured: rows.length,
+    failed: result.failures.length,
+    withCoordinates: rows.filter((row) => row.latitude != null && row.longitude != null).length,
+    withNearbyPlaces: rows.filter((row) => row.nearby_places.length > 0).length,
+    totalNearbyPlaces: rows.reduce((sum, row) => sum + row.nearby_places.length, 0),
+    rows,
+    failures: result.failures,
+  }
+  
+  console.log('PORTAL_NEIGHBORHOOD_CAPTURE_RESULT=' + JSON.stringify(summary))
+  
 }
 
-console.log('PORTAL_NEIGHBORHOOD_CAPTURE_RESULT=' + JSON.stringify(summary))
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})
