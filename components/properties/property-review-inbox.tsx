@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, ExternalLink, MapPinned, ShieldCheck } from 'lucide-react'
+import { BrainCircuit, CheckCircle2, ExternalLink, MapPinned, ShieldCheck } from 'lucide-react'
 
 export type PropertyReviewRow = {
   review_id: string | null
@@ -62,6 +62,7 @@ export function PropertyReviewInbox({initialRows}:Props){
   const [filter,setFilter]=useState<'pending'|'today'|'old'>('pending')
   const [busy,setBusy]=useState(false)
   const [message,setMessage]=useState<string|null>(null)
+  const [completed,setCompleted]=useState<{row:PropertyReviewRow;propertyId:string|null;action:'confirm'|'add_to_intelligence'}|null>(null)
 
   const visible=useMemo(()=>rows.filter(row=>{
     const days=ageDays(row.observed_at)
@@ -74,7 +75,7 @@ export function PropertyReviewInbox({initialRows}:Props){
     ??visible[0]
     ??null
 
-  async function confirm(){
+  async function act(action:'confirm'|'add_to_intelligence'){
     if(!selected?.review_id||!selected.proposed_neighborhood_id||!selected.can_decide)return
     setBusy(true)
     setMessage(null)
@@ -85,6 +86,7 @@ export function PropertyReviewInbox({initialRows}:Props){
         body:JSON.stringify({
           reviewId:selected.review_id,
           proposedNeighborhoodId:selected.proposed_neighborhood_id,
+          action,
         }),
       })
       const payload=await response.json()
@@ -93,14 +95,22 @@ export function PropertyReviewInbox({initialRows}:Props){
           window.location.href='/auth/mfa?next=/dashboard/properties'
           return
         }
-        throw new Error(payload?.error||'No fue posible confirmar el barrio.')
+        throw new Error(payload?.error||'No fue posible completar la acción.')
       }
-      const next=rows.filter(row=>row.source_listing_id!==selected.source_listing_id)
+      const current=selected
+      const next=rows.filter(row=>row.source_listing_id!==current.source_listing_id)
       setRows(next)
+      setCompleted({
+        row:current,
+        propertyId:typeof payload?.propertyId==='string'?payload.propertyId:null,
+        action,
+      })
       setSelectedId(next[0]?.source_listing_id??null)
-      setMessage('Barrio confirmado. La propiedad salió de la bandeja y continúa al flujo operativo.')
+      setMessage(action==='add_to_intelligence'
+        ? 'Publicación agregada a la inteligencia. Quedó vinculada como identidad candidata y salió de la bandeja.'
+        : 'Barrio confirmado. La propiedad salió de la bandeja y continúa al flujo operativo.')
     }catch(error){
-      setMessage(error instanceof Error?error.message:'No fue posible confirmar el barrio.')
+      setMessage(error instanceof Error?error.message:'No fue posible completar la acción.')
     }finally{
       setBusy(false)
     }
@@ -140,7 +150,7 @@ export function PropertyReviewInbox({initialRows}:Props){
               <p className="line-clamp-2 text-sm font-medium leading-5 text-[var(--n3-text-light)]">{row.raw_address||row.title||'Dirección no disponible'}</p>
               <span className={`shrink-0 text-[10px] ${ageDays(row.observed_at)!==null&&ageDays(row.observed_at)!>=2?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{ageLabel(row.observed_at)}</span>
             </div>
-            <p className="mt-2 text-[11px] text-[var(--n3-text-muted)]">{statusLabel(row)}</p>
+            <p className="mt-2 line-clamp-1 text-[11px] text-[var(--n3-text-muted)]">{statusLabel(row)} · {row.reason}</p>
             {row.proposed_neighborhood_name?<p className="mt-1 text-xs text-[var(--n3-accent)]">{row.proposed_neighborhood_name}</p>:null}
           </button>
         })}
@@ -148,8 +158,21 @@ export function PropertyReviewInbox({initialRows}:Props){
       </div>
     </aside>
 
-    <section className="min-w-0 p-5 lg:p-7">
-      {selected?<div className="mx-auto max-w-4xl">
+    <section className="min-w-0 p-0">
+      {completed?<div className="border-b border-[var(--n3-line)] bg-[var(--n3-deep)] px-5 py-4 lg:px-7">
+        <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-semibold text-[var(--n3-accent)]"><CheckCircle2 size={14}/> Acción completada</p>
+            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{completed.action==='add_to_intelligence'?'La publicación ya está en la inteligencia PP.':'El barrio quedó confirmado.'}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {completed.propertyId?<Link href={`/dashboard/properties/${completed.propertyId}`} className="inline-flex min-h-10 items-center gap-2 bg-[#d7332b] px-4 text-xs font-semibold text-white"><BrainCircuit size={14}/> Abrir inteligencia 360</Link>:null}
+            <button onClick={()=>setCompleted(null)} className="min-h-10 border border-[var(--n3-line)] px-4 text-xs font-semibold">Siguiente pendiente</button>
+          </div>
+        </div>
+      </div>:null}
+
+      {selected?<div className="mx-auto max-w-4xl p-5 lg:p-7">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] uppercase tracking-[0.14em] text-[#ff8d87]">{statusLabel(selected)}</span>
           <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{RESOLUTION_LABELS[selected.resolution_kind]??'Evidencia territorial'}</span>
@@ -157,6 +180,23 @@ export function PropertyReviewInbox({initialRows}:Props){
 
         <h2 className="mt-3 text-2xl font-medium leading-tight text-[var(--n3-text-light)]">{selected.raw_address||selected.title||'Dirección no disponible'}</h2>
         {selected.title&&selected.raw_address?<p className="mt-2 text-sm text-[var(--n3-text-muted)]">{selected.title}</p>:null}
+
+        <div className="sticky top-0 z-20 -mx-5 mt-5 border-y border-[var(--n3-line)] bg-[var(--n3-black)] px-5 py-3 backdrop-blur lg:-mx-7 lg:px-7">
+          <div className="flex flex-wrap items-center gap-2">
+            {selected.can_decide&&selected.review_id&&selected.proposed_neighborhood_id?<button
+              onClick={()=>void act('add_to_intelligence')}
+              disabled={busy}
+              className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 text-xs font-semibold text-white disabled:opacity-50"
+            ><BrainCircuit size={14}/>{busy?'Procesando…':'Agregar a inteligencia'}</button>:<button disabled className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs font-semibold text-[var(--n3-text-muted)] opacity-60"><BrainCircuit size={14}/> Falta evidencia para agregar</button>}
+            {selected.can_decide&&selected.review_id&&selected.proposed_neighborhood_id?<button
+              onClick={()=>void act('confirm')}
+              disabled={busy}
+              className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs font-semibold text-[var(--n3-text-light)] disabled:opacity-50"
+            ><CheckCircle2 size={14}/> Confirmar barrio</button>:null}
+            {selected.url?<Link href={selected.url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs font-semibold text-[var(--n3-text-light)]">Ver Portal <ExternalLink size={13}/></Link>:null}
+          </div>
+          <p className="mt-2 text-[11px] leading-4 text-[var(--n3-text-muted)]">“Agregar a inteligencia” crea/vincula la propiedad canónica como identidad candidata; no auto-confirma identidad. Si el territorio ya tiene dirección responsable, el lead elegible se genera por el flujo automático.</p>
+        </div>
 
         <div className="mt-6 grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
           <div className="bg-[var(--n3-black)] p-4"><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">ID Portal</p><p className="mt-1 text-sm">MLC-{selected.source_listing_id}</p></div>
@@ -174,15 +214,7 @@ export function PropertyReviewInbox({initialRows}:Props){
         </section>
 
         <section className="mt-7 border-t border-[var(--n3-line)] pt-5">
-          <div className="flex flex-wrap items-center gap-3">
-            {selected.can_decide&&selected.review_id&&selected.proposed_neighborhood_id?<button
-              onClick={()=>void confirm()}
-              disabled={busy}
-              className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 text-xs font-semibold text-white disabled:opacity-50"
-            ><CheckCircle2 size={14}/>{busy?'Confirmando…':'Confirmar barrio'}</button>:null}
-            {selected.url?<Link href={selected.url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs font-semibold text-[var(--n3-text-light)]">Abrir aviso <ExternalLink size={13}/></Link>:null}
-          </div>
-          {!selected.can_decide?<div className="mt-4 flex items-start gap-2 text-xs leading-5 text-[var(--n3-text-muted)]"><ShieldCheck size={14} className="mt-0.5 shrink-0"/>La evidencia todavía no permite una confirmación segura. El caso permanece abierto hasta que exista una señal territorial determinística.</div>:null}
+          {!selected.can_decide?<div className="flex items-start gap-2 text-xs leading-5 text-[var(--n3-text-muted)]"><ShieldCheck size={14} className="mt-0.5 shrink-0"/>La evidencia todavía no permite una confirmación segura ni agregar la publicación a la inteligencia. El caso permanece abierto hasta que exista una señal territorial determinística.</div>:null}
           {message?<p className="mt-4 text-xs leading-5 text-[var(--n3-text-light)]">{message}</p>:null}
         </section>
       </div>:<div className="flex min-h-[500px] items-center justify-center text-sm text-[var(--n3-text-muted)]">No hay propiedades pendientes de revisión.</div>}
