@@ -21,6 +21,28 @@ const DETAIL_WAIT_MS = 300
 const MIN_COMPLETE_INVENTORY_LISTINGS = 30
 const DETAIL_RUNTIME_GUARD_MS = 210_000
 const RAW_INSERT_CHUNK = 400
+const CHILE_TIME_ZONE = 'America/Santiago'
+
+function chileClock(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: CHILE_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(now)
+  return {
+    hour: Number(parts.find((part) => part.type === 'hour')?.value ?? '-1'),
+    minute: Number(parts.find((part) => part.type === 'minute')?.value ?? '-1'),
+  }
+}
+
+function shouldRunNow(request: Request) {
+  const url = new URL(request.url)
+  if (url.searchParams.get('force') === '1') return true
+  const local = chileClock()
+  return local.hour === 7 && local.minute === 30
+}
+
 
 function authorized(request: Request) {
   const secret = process.env.CRON_SECRET
@@ -279,12 +301,225 @@ async function persistInventoryRun(args: {
     newListings,
     removedListings,
     unchangedListings,
+    newListingIds: fullSnapshot ? [...currentIds].filter((id) => !previousIds.has(id)) : [],
+    removedListingIds: fullSnapshot ? [...previousIds].filter((id) => !currentIds.has(id)) : [],
+  }
+}
+
+async function loadUnlinkedListingIds(
+  supabase: ReturnType<typeof getServiceClient>,
+  datasetKind: PortalDatasetKind,
+) {
+  const sourceCode = `portal-inmobiliario-vitacura-${datasetKind.replaceAll('_', '-')}`
+  const { data: source } = await supabase
+    .from('market_sources')
+    .select('id')
+    .eq('code', sourceCode)
+    .maybeSingle()
+  if (!source?.id) return new Set<string>()
+
+  const ids = new Set<string>()
+  for (let offset = 0; ; offset += 500) {
+    const { data, error } = await supabase
+      .from('market_current_listings')
+      .select('source_listing_id')
+      .eq('source_id', source.id)
+      .in('status', ['active', 'observed'])
+      .is('property_id', null)
+      .range(offset, offset + 499)
+    if (error) throw error
+    for (const row of data ?? []) {
+      if (row.source_listing_id) ids.add(String(row.source_listing_id))
+    }
+    if ((data ?? []).length < 500) break
+  }
+  return ids
+}
+
+function prioritizedDetailBatch(args: {
+  urls: string[]
+  datasetKind: PortalDatasetKind
+  observedAt: string
+  newListingIds: string[]
+  unlinkedListingIds: Set<string>
+}) {
+  const { urls, datasetKind, observedAt, newListingIds, unlinkedListingIds } = args
+  const byId = new Map<string, string>()
+  for (const url of urls) {
+    const id = portalListingIdFromUrl(url, datasetKind)
+    if (id) byId.set(id, url)
+  }
+
+  const priority: string[] = []
+  for (const id of newListingIds) {
+    const url = byId.get(id)
+    if (url) priority.push(url)
+  }
+  for (const id of unlinkedListingIds) {
+    const url = byId.get(id)
+    if (url && !priority.includes(url)) priority.push(url)
+  }
+
+  const rotated = rotatedDetailBatch(urls, observedAt)
+  for (const url of rotated) {
+    if (!priority.includes(url)) priority.push(url)
+  }
+  return priority.slice(0, MAX_DETAIL_LISTINGS_PER_RUN)
+}
+
+async function promoteListingsToProspects(
+  supabase: ReturnType<typeof getServiceClient>,
+  datasetKind: PortalDatasetKind,
+  sourceListingIds: string[],
+) {
+  if (!sourceListingIds.length) {
+    return { considered: 0, created: 0, existing: 0, unlinked: 0, missingNeighborhood: 0, missingDirector: 0 }
+  }
+
+  const sourceCode = `portal-inmobiliario-vitacura-${datasetKind.replaceAll('_', '-')}`
+  const { data: source, error: sourceError } = await supabase
+    .from('market_sources')
+    .select('id')
+    .eq('code', sourceCode)
+    .maybeSingle()
+  if (sourceError || !source?.id) {
+    return { considered: sourceListingIds.length, created: 0, existing: 0, unlinked: sourceListingIds.length, missingNeighborhood: 0, missingDirector: 0 }
+  }
+
+  const { data: listings, error: listingError } = await supabase
+    .from('market_current_listings')
+    .select('source_listing_id,property_id,url,status,operation')
+    .eq('source_id', source.id)
+    .in('source_listing_id', sourceListingIds)
+  if (listingError) throw listingError
+
+  const linked = (listings ?? []).filter((row) => row.property_id)
+  const unlinked = (listings ?? []).length - linked.length
+  const propertyIds = [...new Set(linked.map((row) => String(row.property_id)))]
+
+  const { data: properties, error: propertyError } = propertyIds.length
+    ? await supabase.from('market_properties').select('id,neighborhood_id').in('id', propertyIds)
+    : { data: [], error: null }
+  if (propertyError) throw propertyError
+
+  const propertyById = new Map((properties ?? []).map((row) => [String(row.id), row]))
+  const neighborhoodIds = [...new Set((properties ?? []).flatMap((row) => row.neighborhood_id ? [String(row.neighborhood_id)] : []))]
+
+  const { data: assignments, error: assignmentError } = neighborhoodIds.length
+    ? await supabase
+        .from('market_neighborhood_director_assignments')
+        .select('neighborhood_id,director_key')
+        .in('neighborhood_id', neighborhoodIds)
+        .eq('active', true)
+        .is('valid_to', null)
+    : { data: [], error: null }
+  if (assignmentError) throw assignmentError
+  const directorByNeighborhood = new Map((assignments ?? []).map((row) => [String(row.neighborhood_id), String(row.director_key)]))
+
+  const { data: existingLeads, error: leadError } = propertyIds.length
+    ? await supabase.from('property_prospect_leads').select('property_id').in('property_id', propertyIds)
+    : { data: [], error: null }
+  if (leadError) throw leadError
+  const existingPropertyIds = new Set((existingLeads ?? []).map((row) => String(row.property_id)))
+
+  const rows: Array<Record<string, unknown>> = []
+  let missingNeighborhood = 0
+  let missingDirector = 0
+  let existing = 0
+
+  for (const listing of linked) {
+    const propertyId = String(listing.property_id)
+    if (existingPropertyIds.has(propertyId)) {
+      existing += 1
+      continue
+    }
+    const property = propertyById.get(propertyId)
+    if (!property?.neighborhood_id) {
+      missingNeighborhood += 1
+      continue
+    }
+    const directorKey = directorByNeighborhood.get(String(property.neighborhood_id))
+    if (!directorKey) {
+      missingDirector += 1
+      continue
+    }
+    rows.push({
+      property_id: propertyId,
+      neighborhood_id: property.neighborhood_id,
+      director_key: directorKey,
+      source_listing_id: listing.source_listing_id,
+      source_url: listing.url,
+      lead_reason: 'Nueva publicación detectada automáticamente en Portal Inmobiliario durante la reconciliación diaria.',
+      status: 'assigned',
+      priority: 'normal',
+      created_by: null,
+      updated_by: null,
+    })
+  }
+
+  if (!rows.length) {
+    return { considered: sourceListingIds.length, created: 0, existing, unlinked, missingNeighborhood, missingDirector }
+  }
+
+  const { data: createdLeads, error: createError } = await supabase
+    .from('property_prospect_leads')
+    .insert(rows)
+    .select('id,property_id,director_key,neighborhood_id,source_listing_id,source_url')
+  if (createError) throw createError
+
+  const events = (createdLeads ?? []).flatMap((lead) => ([
+    {
+      lead_id: lead.id,
+      property_id: lead.property_id,
+      event_type: 'lead_created',
+      actor_id: null,
+      to_status: 'assigned',
+      note: 'Creado automáticamente desde la reconciliación diaria de Portal Inmobiliario.',
+      metadata: {
+        automation: 'market-refresh',
+        sourceListingId: lead.source_listing_id,
+        sourceUrl: lead.source_url,
+      },
+    },
+    {
+      lead_id: lead.id,
+      property_id: lead.property_id,
+      event_type: 'director_assigned',
+      actor_id: null,
+      to_status: 'assigned',
+      metadata: {
+        automation: 'market-refresh',
+        directorKey: lead.director_key,
+        neighborhoodId: lead.neighborhood_id,
+      },
+    },
+  ]))
+  if (events.length) {
+    const { error: eventError } = await supabase.from('property_prospect_events').insert(events)
+    if (eventError) throw eventError
+  }
+
+  return {
+    considered: sourceListingIds.length,
+    created: createdLeads?.length ?? 0,
+    existing,
+    unlinked,
+    missingNeighborhood,
+    missingDirector,
   }
 }
 
 export async function GET(request: Request) {
   if (!authorized(request)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+  if (!shouldRunNow(request)) {
+    return NextResponse.json({
+      ok: true,
+      skipped: true,
+      reason: 'outside_0730_america_santiago',
+      timeZone: CHILE_TIME_ZONE,
+    }, { headers: { 'Cache-Control': 'no-store' } })
   }
 
   const startedAt = Date.now()
@@ -354,7 +589,14 @@ export async function GET(request: Request) {
         continue
       }
 
-      const detailUrls = rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
+      const unlinkedListingIds = await loadUnlinkedListingIds(supabase, datasetKind)
+      const detailUrls = prioritizedDetailBatch({
+        urls: inventory.listingUrls,
+        datasetKind,
+        observedAt: inventory.observedAt,
+        newListingIds: persistedInventory.newListingIds,
+        unlinkedListingIds,
+      })
       const details = await collectPortalListingDetails({
         datasetKind,
         listingUrls: detailUrls,
@@ -406,6 +648,15 @@ export async function GET(request: Request) {
         detailResult = { ...detailResult, status: 'no_valid_rows' }
       }
 
+      const processedListingIds = detailUrls
+        .map((url) => portalListingIdFromUrl(url, datasetKind))
+        .filter((value): value is string => Boolean(value))
+      const prospectStatus = await promoteListingsToProspects(
+        supabase,
+        datasetKind,
+        processedListingIds,
+      )
+
       results.push({
         datasetKind,
         status: 'completed',
@@ -414,6 +665,10 @@ export async function GET(request: Request) {
         discovery: inventory.discovery,
         coverageRatio,
         detailStatus: detailResult,
+        intelligenceStatus: {
+          identityPriority: 'new_then_unlinked_then_rotation',
+          prospectPromotion: prospectStatus,
+        },
       })
     } catch (cause) {
       const failureCode = classifyCollectorFailure(cause)
