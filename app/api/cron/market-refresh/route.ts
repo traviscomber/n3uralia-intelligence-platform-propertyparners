@@ -106,19 +106,17 @@ async function latestCompleteInventoryRun(
   supabase: ReturnType<typeof getServiceClient>,
   datasetKind: PortalDatasetKind,
 ) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('market_ingestion_runs')
     .select('id,metadata,started_at')
     .eq('dataset_kind', datasetKind)
+    .eq('status', 'completed')
+    .contains('metadata', { pipeline: 'portal_inventory_discovery_v1', full_snapshot: true })
     .order('started_at', { ascending: false })
-    .limit(30)
+    .limit(1)
 
-  return (data ?? []).find((run) => {
-    const metadata = run.metadata && typeof run.metadata === 'object'
-      ? run.metadata as Record<string, unknown>
-      : null
-    return metadata?.pipeline === 'portal_inventory_discovery_v1' && metadata?.full_snapshot === true
-  }) ?? null
+  if (error) throw error
+  return data?.[0] ?? null
 }
 
 async function loadInventoryIds(
