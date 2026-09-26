@@ -111,8 +111,8 @@ export default async function PropertiesPage(){
     return <WorkspaceShell>
       <WorkspaceHeader
         eyebrow="Dirección · Propiedades"
-        title={scope.officeName?\`Cartera de \${scope.officeName}\`:'Cartera de la oficina'}
-        meta={issues?\`\${issues} señales requieren revisión\`:'Sin pendientes relevantes'}
+        title={scope.officeName?`Cartera de ${scope.officeName}`:'Cartera de la oficina'}
+        meta={issues?`${issues} señales requieren revisión`:'Sin pendientes relevantes'}
         actions={[
           {label:'Leads',href:'/dashboard/properties/prospects'},
           {label:'Mercado',href:'/dashboard/market'},
@@ -132,10 +132,10 @@ export default async function PropertiesPage(){
         {assignmentResult.error||profileResult.error
           ? <div className="mt-5"><OperationalState kind="error" title="No fue posible consultar toda la cartera de la oficina" description="No se muestran datos fuera del alcance autorizado."/></div>
           : assignments.length
-            ? <div className="divide-y divide-[var(--n3-line)] border-b border-[var(--n3-line)]">{assignments.map(assignment=>{const property=assignment.market_properties[0]??null;const area=property?.useful_area_m2??property?.built_area_m2??null;const ageDays=property?.last_seen_at?propertyPartnersCalendarDayAge(property.last_seen_at):null;const freshness=ageDays===null?'Sin evidencia':ageDays===0?'Hoy':ageDays<=7?\`\${ageDays} d\`:\`Revisar · \${ageDays} d\`;return <Link key={assignment.id} href={property?\`/dashboard/properties/\${property.id}\`:'#'} className="grid gap-3 py-4 md:grid-cols-[minmax(0,1.4fr)_170px_130px_auto] md:items-center"><div><p className="text-sm font-semibold">{property?.normalized_address||'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type||'Sin tipo'}{property?.bedrooms!=null?\` · \${property.bedrooms} dorm.\`:''}{area!=null?\` · \${area} m²\`:''}</p></div><span className="text-xs text-[var(--n3-text-muted)]">{profileNames.get(assignment.assigned_to)||'Equipo'}</span><span className={\`text-xs \${ageDays===null||ageDays>7?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}\`}>{freshness}</span><span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir</span></Link>})}</div>
+            ? <div className="divide-y divide-[var(--n3-line)] border-b border-[var(--n3-line)]">{assignments.map(assignment=>{const property=assignment.market_properties[0]??null;const area=property?.useful_area_m2??property?.built_area_m2??null;const ageDays=property?.last_seen_at?propertyPartnersCalendarDayAge(property.last_seen_at):null;const freshness=ageDays===null?'Sin evidencia':ageDays===0?'Hoy':ageDays<=7?`${ageDays} d`:`Revisar · ${ageDays} d`;return <Link key={assignment.id} href={property?`/dashboard/properties/${property.id}`:'#'} className="grid gap-3 py-4 md:grid-cols-[minmax(0,1.4fr)_170px_130px_auto] md:items-center"><div><p className="text-sm font-semibold">{property?.normalized_address||'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type||'Sin tipo'}{property?.bedrooms!=null?` · ${property.bedrooms} dorm.`:''}{area!=null?` · ${area} m²`:''}</p></div><span className="text-xs text-[var(--n3-text-muted)]">{profileNames.get(assignment.assigned_to)||'Equipo'}</span><span className={`text-xs ${ageDays===null||ageDays>7?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{freshness}</span><span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir</span></Link>})}</div>
             : <OperationalState kind="empty" title="Sin propiedades asignadas" description="No existen asignaciones activas para los perfiles visibles de tu oficina."/>}
       </section>
-      <details className="mt-8 max-w-6xl"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Estado de datos</summary><DataStatusBar cutoff="Corte live" coverage={assignments.length?\`\${confirmedIdentity} de \${assignments.length} asignaciones con identidad confirmada\`:'Sin asignaciones activas'} issues={issues} status={issues?'partial':'ready'}/></details>
+      <details className="mt-8 max-w-6xl"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Estado de datos</summary><DataStatusBar cutoff="Corte live" coverage={assignments.length?`${confirmedIdentity} de ${assignments.length} asignaciones con identidad confirmada`:'Sin asignaciones activas'} issues={issues} status={issues?'partial':'ready'}/></details>
     </WorkspaceShell>
   }
 
@@ -143,7 +143,7 @@ export default async function PropertiesPage(){
   const [observationResult,assignmentResult]=await Promise.all([
     supabase.from('market_current_listings').select('observed_at').order('observed_at',{ascending:false}).limit(1).maybeSingle(),
     supabase.from('property_assignments')
-      .select('id,assignment_role,status,assigned_at,notes,market_properties(id,normalized_address,property_type,useful_area_m2,built_area_m2,bedrooms,bathrooms,parking_spaces,identity_status,last_seen_at)')
+      .select('id,assigned_to,assignment_role,status,assigned_at,notes,market_properties(id,normalized_address,property_type,useful_area_m2,built_area_m2,bedrooms,bathrooms,parking_spaces,identity_status,last_seen_at)')
       .eq('assigned_to',scope.profileId).eq('status','active').order('assigned_at',{ascending:false}),
   ])
 
