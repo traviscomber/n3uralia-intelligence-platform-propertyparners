@@ -79,6 +79,7 @@ function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
 export default async function MarketPage() {
   const scope = await requireUserScope()
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
+  const canManageSources = hasCapability(scope.role, 'market.manage_sources')
   const [market, territory, portalReference, executiveResult, authorityResult] = await Promise.all([
     getOperationalMarketSnapshot(),
     getVitacuraNeighborhoodSnapshot(),
@@ -112,7 +113,7 @@ export default async function MarketPage() {
       ? 'ready'
       : 'partial'
 
-  const actions = [
+  const actions = canManageSources ? [
     market.freshnessStatus === 'stale' ? {
       label: 'Actualizar mercado',
       value: freshness(market.freshnessStatus, market.observationAgeDays),
@@ -169,7 +170,7 @@ export default async function MarketPage() {
       href: '/dashboard/market/reconciliacion',
       critical: false,
     } : null,
-  ].filter((item): item is NonNullable<typeof item> => Boolean(item))
+  ].filter((item): item is NonNullable<typeof item> => Boolean(item)) : []
 
   const primaryActions = actions.slice(0, 3)
   const secondaryActions = actions.slice(3)
