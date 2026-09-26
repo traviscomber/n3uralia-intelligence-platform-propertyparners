@@ -233,7 +233,6 @@ export function CeoDashboardCommand() {
   const dates = [summary.generatedAt, operations.generatedAt].map((value) => value ? new Date(value) : null).filter((value): value is Date => Boolean(value && !Number.isNaN(value.getTime())))
   const cutoff = dates.length ? new Date(Math.min(...dates.map((value) => value.getTime()))) : null
   const freshness = cutoff ? new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(cutoff) : '—'
-  const critical = actions.filter((item) => item.critical).length
   const identityCoverage = operations.market.properties > 0 ? operations.market.confirmed / operations.market.properties * 100 : null
   const approvedMetricCount = summary.dataLayers?.approvedMetricCount ?? 0
   const dataLayerIssues = summary.dataLayers?.errors?.length ?? 0
