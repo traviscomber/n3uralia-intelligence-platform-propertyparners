@@ -9,6 +9,7 @@ test('hot auth path uses claims without Auth user-record round trips', () => {
 
   assert.match(proxy, /auth\.getClaims\(\)/)
   assert.doesNotMatch(proxy, /auth\.getUser\(\)/)
+  assert.match(proxy, /isPublicPage \|\| pathname === '\/auth\/error'/)
   assert.match(layout, /auth\.getClaims\(\)/)
   assert.doesNotMatch(layout, /auth\.getUser\(\)/)
 })
