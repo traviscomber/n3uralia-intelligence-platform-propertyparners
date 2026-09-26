@@ -18,12 +18,12 @@ export const CEO_NAVIGATION: NavigationSection[] = [
   {
     label: 'Principal',
     items: [
-      { label: 'Hoy', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
-      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
-      { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
-      { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
+      { label: '01 · Control', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
+      { label: '02 · Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: '03 · Valorización', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
+      { label: '04 · Ficha 360', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
+      { label: '05 · Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
+      { label: 'Pedro Pablo', href: '/dashboard/pedro-pablo', anyCapabilities: ['dashboard.global.read'] },
     ],
   },
 ]
