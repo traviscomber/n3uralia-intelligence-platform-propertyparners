@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
   try {
@@ -12,8 +12,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'lat y lon requeridos' }, { status: 400 })
     }
 
-    const admin = createAdminClient()
-    const { data, error } = await admin.rpc('valuation_topography_lookup_v1', {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('valuation_topography_lookup_v1', {
       p_lat: lat,
       p_lon: lon,
       p_max_distance_m: 120,
