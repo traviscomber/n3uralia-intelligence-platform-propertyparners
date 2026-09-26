@@ -29,7 +29,7 @@ test('seller account route is reachable and speculative prefetch is disabled', (
 
 test('seller scope avoids visibility RPC fan-out', () => {
   const scope = readFileSync('lib/user-scope.ts', 'utf8')
-  assert.match(scope, /access\.scope === 'self' \? Promise\.resolve\(\[profile\.id\]\) : resolveVisibleProfileIds\(\)/)
+  assert.match(scope, /access\.scope === 'self' \? Promise\.resolve\(\[profile\.id\]\) : resolveVisibleProfileIds\(supabase\)/)
   assert.match(scope, /access\.scope === 'self'[\s\S]{0,160}Promise\.resolve\(entity\?\.id \? \[entity\.id\] : \[\]\)/)
 })
 
