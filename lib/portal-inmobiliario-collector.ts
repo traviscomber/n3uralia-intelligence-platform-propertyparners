@@ -463,6 +463,30 @@ async function configurePage(page: Page) {
   })
 }
 
+async function gotoWithRetry(page: Page, url: string, label: string, attempts = 3) {
+  let lastError: unknown = null
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
+      const status = response?.status() ?? null
+      if (status === 404) return { response, status, exhausted: true }
+      if (!response?.ok()) {
+        const error = new Error(`${label} returned HTTP ${status ?? 'unknown'}`)
+        if (status !== 403 && status !== 429 && status !== 500 && status !== 502 && status !== 503 && status !== 504) throw error
+        lastError = error
+      } else {
+        return { response, status, exhausted: false }
+      }
+    } catch (error) {
+      lastError = error
+    }
+    if (attempt < attempts) {
+      await new Promise((resolve) => setTimeout(resolve, 700 * attempt))
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(`${label} navigation failed`)
+}
+
 async function waitForPrimaryDetail(page: Page, waitMs: number) {
   await Promise.allSettled([
     page.waitForSelector('.andes-money-amount', { timeout: 4_000 }),
@@ -485,12 +509,10 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const page = await browser.newPage()
       try {
         await configurePage(page)
-        const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-        const status = response?.status() ?? null
+        const navigation = await gotoWithRetry(page, searchUrl, 'Portal search')
         // Portal returns 404 when pagination goes past the last available page.
         // Treat that as proven exhaustion; all other non-2xx responses remain failures.
-        if (status === 404) return { text: '', pageCandidates: [] }
-        if (!response?.ok()) throw new Error(`Portal search returned HTTP ${status ?? 'unknown'}`)
+        if (navigation.exhausted) return { text: '', pageCandidates: [] }
         if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
         const pageState = await page.evaluate(() => ({
           links: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href),
@@ -585,23 +607,31 @@ export async function collectPortalListingDetails(options: {
   const failures: Array<{ url: string; error: string }> = []
 
   try {
-    for (const url of options.listingUrls) {
-      const page = await browser.newPage()
-      try {
-        await configurePage(page)
-        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 })
-        if (!response?.ok()) throw new Error(`Listing returned HTTP ${response?.status() ?? 'unknown'}`)
-        await waitForPrimaryDetail(page, waitMs)
-        const html = await page.content()
-        const row = parsePortalListing(html, url, options.datasetKind)
-        if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
-        const parsedPriceUf = numeric(row.price_uf)
-        if (parsedPriceUf != null && parsedPriceUf > 0 && parsedPriceUf < 100) throw new Error('Implausible UF price after normalization')
-        rows.push(row)
-      } catch (error) {
-        failures.push({ url, error: error instanceof Error ? error.message : String(error) })
-      } finally {
-        await page.close()
+    const concurrency = 3
+    for (let start = 0; start < options.listingUrls.length; start += concurrency) {
+      const batch = options.listingUrls.slice(start, start + concurrency)
+      const results = await Promise.all(batch.map(async (url) => {
+        const page = await browser.newPage()
+        try {
+          await configurePage(page)
+          await gotoWithRetry(page, url, 'Portal listing')
+          await waitForPrimaryDetail(page, waitMs)
+          const html = await page.content()
+          const row = parsePortalListing(html, url, options.datasetKind)
+          if (!row.source_listing_id) throw new Error('Missing stable Portal listing identifier')
+          const parsedPriceUf = numeric(row.price_uf)
+          if (parsedPriceUf != null && parsedPriceUf > 0 && parsedPriceUf < 100) throw new Error('Implausible UF price after normalization')
+          return { row, failure: null as { url: string; error: string } | null }
+        } catch (error) {
+          return { row: null, failure: { url, error: error instanceof Error ? error.message : String(error) } }
+        } finally {
+          await page.close()
+        }
+      }))
+
+      for (const result of results) {
+        if (result.row) rows.push(result.row)
+        if (result.failure) failures.push(result.failure)
       }
     }
   } finally {
