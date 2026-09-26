@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import canonical from '../../data/canonical/valuation-intelligence.json'
 import {
   apartmentOfferWeightedUfM2,
@@ -56,4 +58,13 @@ test('advanced intelligence remains advisory and cannot own canonical price', ()
   assert.ok(canonical.canonicalVsAdvisory.advisoryOrShadow.includes('ML shadow predictions'))
   assert.ok(canonical.canonicalVsAdvisory.advisoryOrShadow.includes('topography evidence'))
   assert.match(canonical.canonicalVsAdvisory.guardrail, /must not silently overwrite/i)
+})
+
+
+test('persisted Champion evidence preserves full economic precision', () => {
+  const draftRoute = readFileSync(resolve(process.cwd(), 'app/api/valuation/drafts/route.ts'), 'utf8')
+  assert.doesNotMatch(draftRoute, /recommendedRate\.toFixed\(/)
+  assert.doesNotMatch(draftRoute, /recommendedEstimatedValueUf:\s*Math\.round\(/)
+  assert.match(draftRoute, /recommendedRateUfM2:\s*recommendedRate/)
+  assert.match(draftRoute, /recommendedEstimatedValueUf:\s*recommendedRate \* weightedArea/)
 })
