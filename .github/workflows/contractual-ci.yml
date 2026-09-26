@@ -227,6 +227,10 @@ jobs:
       - name: Verify internal Vitacura landing
         run: node --import tsx --test tests/internal-landing.test.ts
 
+      - name: Verify product view boundaries
+        run: node --import tsx --test tests/product-view-boundaries.test.ts
+
+
 
 
       - name: Build application
