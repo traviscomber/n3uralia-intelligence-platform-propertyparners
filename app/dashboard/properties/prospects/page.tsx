@@ -62,11 +62,11 @@ export default function ProspectManagementPage(){
 
   return <WorkspaceShell>
     <WorkspaceHeader
-      eyebrow="Propiedades · Prospección"
-      title="Leads por barrio y dirección"
-      meta={`Corte ${date(data.generatedAt)} · publicación → lead → valorización → outcome`}
+      eyebrow="Pilar 04 · Ficha 360"
+      title="Cartera 360 · Propiedad, territorio y seguimiento"
+      meta={`Corte ${date(data.generatedAt)} · propiedad → responsable → seguimiento → valorización → resultado`}
       actions={[
-        {label:'Propiedades',href:'/dashboard/properties',icon:<ArrowLeft size={14}/>},
+        {label:'Asignaciones',href:'/dashboard/properties/admin',icon:<ArrowLeft size={14}/>},
         {label:'Actualizar',onClick:()=>void load(),icon:<RefreshCw size={14}/>}
       ]}
     />
