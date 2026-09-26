@@ -103,25 +103,6 @@ export default function ProspectManagementPage(){
       </div>
     </section>
 
-    <section className="mt-7">
-      <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Rendimiento</p><h2 className="mt-1 text-lg font-medium">Por director/a</h2></div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-sm">
-          <thead className="border-b border-[var(--n3-line)] text-left text-xs text-[var(--n3-text-muted)]"><tr><th className="p-3">Director/a</th><th className="p-3">Leads</th><th className="p-3">Activos</th><th className="p-3">Valorizados</th><th className="p-3">Ganados</th><th className="p-3">Conv.</th><th className="p-3">Lead→Val.</th><th className="p-3">1er contacto</th><th className="p-3">Ciclo ganado</th><th className="p-3">Vencidos</th></tr></thead>
-          <tbody className="divide-y divide-[var(--n3-line)]">
-            {data.performance.map(row=><tr key={row.director.director_key}>
-              <td className="p-3"><strong>{row.director.full_name}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.director.office_name}</p></td>
-              <td className="p-3">{row.leads}</td><td className="p-3">{row.active}</td><td className="p-3">{row.valuationLeads}</td><td className="p-3">{row.won}</td>
-              <td className="p-3">{pct(row.conversionPct)}</td><td className="p-3">{pct(row.valuationRatePct)}</td>
-              <td className="p-3">{row.avgFirstContactHours==null?'—':`${nf.format(row.avgFirstContactHours)} h`}</td>
-              <td className="p-3">{row.avgWonCycleDays==null?'—':`${nf.format(row.avgWonCycleDays)} d`}</td>
-              <td className="p-3">{row.overdue}</td>
-            </tr>)}
-          </tbody>
-        </table>
-      </div>
-    </section>
-
     <section className="mt-8">
       <div className="flex items-end justify-between border-b border-[var(--n3-line)] pb-3"><div><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Pipeline</p><h2 className="mt-1 text-lg font-medium">Seguimiento activo</h2></div><span className="text-xs text-[var(--n3-text-muted)]">{data.leads.length} registros</span></div>
       <div className="divide-y divide-[var(--n3-line)]">
