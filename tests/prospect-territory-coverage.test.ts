@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildProspectTerritoryCoverage } from '../lib/prospect-territory-coverage'
 
-test('territory coverage counts every eligible property once and exposes missing director coverage', () => {
+test('territory coverage counts every eligible property once and exposes missing group coverage', () => {
   const result = buildProspectTerritoryCoverage({
     eligibleProperties: [
       { id: 'p1', neighborhood_id: 'n1' },
@@ -14,7 +14,7 @@ test('territory coverage counts every eligible property once and exposes missing
       { property_id: 'p1', neighborhood_id: 'n1', director_key: 'd1' },
     ],
     territories: [
-      { neighborhood_id: 'n1', director_key: 'd1' },
+      { neighborhood_id: 'n1', group_key: 'nueva-costanera', group_name: 'Nueva Costanera', director_key: 'd1' },
     ],
     neighborhoods: [
       { id: 'n1', name: 'Vitacura Centro' },
@@ -39,15 +39,21 @@ test('territory coverage counts every eligible property once and exposes missing
   assert.equal(n1.eligiblePublished, 2)
   assert.equal(n1.leads, 1)
   assert.equal(n1.unconverted, 1)
-  assert.equal(n1.needsDirector, false)
-  assert.equal(n2.needsDirector, true)
+  assert.equal(n1.needsGroup, false)
+  assert.equal(n1.territory?.group_name, 'Nueva Costanera')
+  assert.equal(n2.needsGroup, true)
 })
 
-test('territory coverage surfaces lead/director drift instead of hiding inconsistent responsibility', () => {
+test('territory coverage surfaces lead/director drift instead of hiding inconsistent group responsibility', () => {
   const result = buildProspectTerritoryCoverage({
     eligibleProperties: [{ id: 'p1', neighborhood_id: 'n1' }],
     leads: [{ property_id: 'p1', neighborhood_id: 'n1', director_key: 'old-director' }],
-    territories: [{ neighborhood_id: 'n1', director_key: 'new-director' }],
+    territories: [{
+      neighborhood_id: 'n1',
+      group_key: 'santa-maria',
+      group_name: 'Santa María',
+      director_key: 'new-director',
+    }],
     neighborhoods: [{ id: 'n1', name: 'Manquehue' }],
     directors: [{ director_key: 'new-director', full_name: 'Directora Nueva', office_name: 'Santa María' }],
   })
