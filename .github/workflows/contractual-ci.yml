@@ -63,6 +63,10 @@ jobs:
       - name: Verify executive dashboard comparisons
         run: node --import tsx --test tests/executive-dashboard-comparisons.test.ts
 
+      - name: Verify Pedro Pablo action gateway
+        run: node --import tsx --test tests/pedro-pablo-action-gateway.test.ts
+
+
       - name: Verify contractual closeout model
         run: pnpm contract:closeout:verify
 
