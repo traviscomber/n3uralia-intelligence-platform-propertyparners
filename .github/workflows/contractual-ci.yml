@@ -213,5 +213,9 @@ jobs:
       - name: Verify dashboard access
         run: pnpm access:verify
 
+      - name: Verify application performance hot paths
+        run: node --import tsx --test tests/performance-hot-paths.test.ts
+
+
       - name: Build application
         run: pnpm build
