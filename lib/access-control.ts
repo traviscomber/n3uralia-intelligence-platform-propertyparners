@@ -134,10 +134,10 @@ export function getBusinessHierarchyLevel(role: BusinessRole): BusinessHierarchy
 
 export function getRoleLabel(role: UserRole): string {
   if (role === 'ceo') return 'CEO'
-  if (role === 'director') return 'Director de Cuenta'
-  if (role === 'subdirector') return 'Subdirector de Cuenta'
+  if (role === 'director') return 'Dirección de Cuenta'
+  if (role === 'subdirector') return 'Subdirección de Cuenta'
   if (role === 'seller') return 'Partner'
-  return 'Administrador técnico'
+  return 'Administración'
 }
 
 export function getAccessScope(role: UserRole): AccessScope {

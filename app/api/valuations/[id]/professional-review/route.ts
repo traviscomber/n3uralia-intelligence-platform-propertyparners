@@ -138,9 +138,18 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       }
     }
 
+    const ownsCase = valuationCase.requested_by === scope.profileId
+    const canReview = scope.capabilities.includes('valuations.office.review')
+    const canApprove = scope.capabilities.includes('valuations.global.approve')
+
     return NextResponse.json({
       ...review,
       caseStatus: valuationCase.status,
+      permissions: {
+        ownsCase,
+        canReview,
+        canApprove,
+      },
       reviewGate: buildReviewGate(review, valuationCase.property_type, reliability),
     })
   } catch (error) {

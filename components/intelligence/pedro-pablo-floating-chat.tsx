@@ -1,6 +1,7 @@
 'use client'
 
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Bot, Database, RotateCcw, Send, ShieldCheck, Sparkles, X } from 'lucide-react'
 
 type Evidence = {
@@ -66,13 +67,72 @@ const starterSections = [
   },
 ] as const
 
-export function PedroPabloFloatingChat() {
+export function PedroPabloFloatingChat({ role, team }: { role: string | null; team: string | null }) {
+  const pathname = usePathname()
+  const isDirectorSupport = role === 'director' || role === 'subdirector'
   const [open, setOpen] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const valuationCaseId = useMemo(() => pathname.match(/^\/dashboard\/valuations\/([^/]+)/)?.[1] ?? null, [pathname])
+  const contextualStarterSections = useMemo(() => {
+    if (valuationCaseId) {
+      return isDirectorSupport ? [
+        {
+          label: 'Esta valorización',
+          prompts: [
+            '¿Qué debo validar antes de aceptar este expediente?',
+            '¿Qué comparables requieren más atención?',
+          ],
+        },
+        {
+          label: 'Apoyo de dirección',
+          prompts: [
+            '¿Hay una razón objetiva para devolver esta valorización?',
+            '¿Qué evidencia respalda el valor propuesto?',
+          ],
+        },
+      ] as const : [
+        {
+          label: 'Esta valorización',
+          prompts: [
+            '¿Por qué este valor es defendible?',
+            '¿Qué comparables sostienen mejor este valor?',
+          ],
+        },
+        {
+          label: 'Antes de enviar',
+          prompts: [
+            '¿Qué debo revisar antes de enviarla a dirección?',
+            '¿Hay alguna alerta importante en este expediente?',
+          ],
+        },
+      ] as const
+    }
+
+    if (isDirectorSupport) {
+      return [
+        {
+          label: 'Valorizaciones de mi oficina',
+          prompts: [
+            '¿Qué valorizaciones requieren mi atención?',
+            '¿Qué expedientes tienen evidencia débil o alertas?',
+          ],
+        },
+        {
+          label: 'Partners y seguimiento',
+          prompts: [
+            '¿Qué tareas o devoluciones están pendientes?',
+            '¿Qué requiere atención hoy en mi oficina?',
+          ],
+        },
+      ] as const
+    }
+
+    return starterSections
+  }, [valuationCaseId, isDirectorSupport])
 
   useEffect(() => {
     if (!open) return
@@ -109,7 +169,13 @@ export function PedroPabloFloatingChat() {
         credentials: 'include',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: query }),
+        body: JSON.stringify({
+          prompt: query,
+          pageContext: {
+            pathname,
+            valuationCaseId,
+          },
+        }),
       })
       const payload = await result.json()
       if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Asistente de IA.')
@@ -180,10 +246,10 @@ export function PedroPabloFloatingChat() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">
                     <Sparkles size={12} aria-hidden="true" />
-                    Asistente IA complementario
+                    Apoyo para la decisión
                   </div>
-                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">Asistente de IA</div>
-                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">Property Partners · apoyo contextual</div>
+                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">{isDirectorSupport ? 'Asistente de Dirección' : 'Asistente de IA'}</div>
+                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">{isDirectorSupport ? `Property Partners · criterio senior${team ? ` · ${team}` : ''}` : 'Property Partners · apoyo contextual'}</div>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -208,7 +274,7 @@ export function PedroPabloFloatingChat() {
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><Database size={11} aria-hidden="true" />Datos canónicos</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><Database size={11} aria-hidden="true" />Datos verificados</span>
               <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><ShieldCheck size={11} aria-hidden="true" />Control humano</span>
             </div>
           </header>
@@ -222,11 +288,17 @@ export function PedroPabloFloatingChat() {
                     ¿Qué quieres revisar?
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
-                    Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.
+                    {valuationCaseId
+                      ? (isDirectorSupport
+                        ? 'Estoy revisando este expediente contigo. Puedo ayudarte a validar comparables, detectar alertas y decidir si corresponde aceptar o devolver.'
+                        : 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.')
+                      : (isDirectorSupport
+                        ? 'Puedo ayudarte a priorizar lo pendiente de tu oficina, revisar valorizaciones y preparar devoluciones con razones objetivas.'
+                        : 'Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.')}
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {starterSections.map((section) => (
+                  {contextualStarterSections.map((section) => (
                     <div key={section.label} className="rounded-lg border border-[var(--n3-line)] p-3">
                       <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
                         {section.label}
@@ -257,8 +329,6 @@ export function PedroPabloFloatingChat() {
                       {message.role === 'assistant' && message.routing ? (
                         <div className="mb-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
                           <span>{message.confidence === 'high' ? 'Confianza alta' : 'Confianza media'}</span>
-                          <span aria-hidden="true">/</span>
-                          <span>{message.routing.route === 'full-agentic' ? 'FullAgentic' : 'FastTrack'}</span>
                         </div>
                       ) : null}
                       {message.role === 'assistant' && message.title ? <div className="mb-1 font-semibold">{message.title}</div> : null}
@@ -294,7 +364,7 @@ export function PedroPabloFloatingChat() {
                 {loading ? (
                   <div className="flex justify-start">
                     <div className="rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3.5 py-3 text-sm text-[var(--n3-text-muted)]">
-                      Analizando evidencia autorizada…
+                      Revisando información…
                     </div>
                   </div>
                 ) : null}
@@ -318,7 +388,7 @@ export function PedroPabloFloatingChat() {
                 onKeyDown={onComposerKeyDown}
                 rows={2}
                 maxLength={800}
-                placeholder="Pregunta al Asistente de IA…"
+                placeholder="Pregunta sobre tu oficina o un expediente…"
                 className="min-h-[54px] max-h-36 flex-1 resize-none rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 py-2 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
               />
               <button
@@ -330,7 +400,7 @@ export function PedroPabloFloatingChat() {
                 <Send size={17} aria-hidden="true" />
               </button>
             </form>
-            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. El asistente no sustituye los flujos contractuales. Las acciones sensibles siguen requiriendo confirmación humana.</p>
+            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. {isDirectorSupport ? 'Sólo utilizo información disponible para tu oficina.' : 'El asistente no sustituye los flujos contractuales.'} Las decisiones y cambios siguen bajo tu control.</p>
           </footer>
         </section>
       ) : null}

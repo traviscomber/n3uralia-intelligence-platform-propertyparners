@@ -58,7 +58,7 @@ export default async function DashboardHome() {
     : { data: null }
   const role = String(profile?.role || '').toLowerCase()
 
-  if (role === 'admin' || role === 'ceo') redirect('/dashboard/ceo')
+  if (role === 'ceo') redirect('/dashboard/ceo')
   if (role === 'director' || role === 'subdirector') redirect('/dashboard/director')
 
   const isSeller = role === 'seller'
@@ -76,6 +76,58 @@ export default async function DashboardHome() {
       ? supabase.from('valuation_cases').select('id,status', { count: 'exact' }).eq('requested_by', user.id)
       : Promise.resolve({ data: [], count: 0, error: null }),
   ])
+
+  if (role === 'admin') {
+    const territoryPending = (market.pendingUniqueTerritorySuggestions ?? 0) + (market.ambiguousTerritorySuggestions ?? 0) + (market.unmatchedTerritoryHouses ?? 0)
+    const valuationDrafts = operations.valuationDrafts ?? 0
+    const managementAlerts = operations.managementAlerts ?? 0
+    const hasPriority = territoryPending > 0 || valuationDrafts > 0 || managementAlerts > 0
+
+    return (
+      <div className="mx-auto max-w-[1100px] space-y-7 pb-16">
+        <header className="border-b border-[var(--n3-line)] pb-6 pt-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff766f]">Administración</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">Qué hacer hoy</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Revisa sólo lo pendiente. El resto queda disponible cuando lo necesites.</p>
+          <p className="mt-3 text-xs text-[var(--n3-text-muted)]">Datos al {formatDate(market.latestObservedAt)}</p>
+        </header>
+
+        {market.error || operations.error ? <PublicErrorNotice code="DATA_UNAVAILABLE" title="Hay información que no se pudo cargar" compact /> : null}
+
+        <section aria-labelledby="admin-priorities-title">
+          <div className="mb-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Pendientes</p>
+            <h2 id="admin-priorities-title" className="mt-2 text-xl font-semibold">{hasPriority ? 'Por revisar' : 'Todo al día'}</h2>
+          </div>
+          {hasPriority ? <div className="divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
+            {territoryPending > 0 ? <Link href="/dashboard/properties" className="grid min-h-16 gap-1 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Ubicación de propiedades</span><span className="text-xs text-[var(--n3-text-muted)]">{territoryPending} por revisar →</span></Link> : null}
+            {valuationDrafts > 0 ? <Link href="/dashboard/valuations?status=draft" className="grid min-h-16 gap-1 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Valorizaciones en preparación</span><span className="text-xs text-[var(--n3-text-muted)]">{valuationDrafts} pendientes →</span></Link> : null}
+            {managementAlerts > 0 ? <Link href="/dashboard/control/admin" className="grid min-h-16 gap-1 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><span className="text-sm font-medium">Alertas de gestión</span><span className="text-xs text-[var(--n3-text-muted)]">{managementAlerts} pendientes →</span></Link> : null}
+          </div> : <div role="status" className="border-y border-[var(--n3-line)] py-6 text-sm text-[var(--n3-text-muted)]">No hay pendientes operativos en este momento.</div>}
+        </section>
+
+        <details className="border-t border-[var(--n3-line)] pt-3">
+          <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Otras tareas</summary>
+          <div className="mt-3 grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-2">
+            <Link href="/dashboard/properties/admin" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Cartera y asignaciones</Link>
+            <Link href="/dashboard/control/admin" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Metas y alertas</Link>
+            <Link href="/dashboard/market/fuentes" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Datos y fuentes</Link>
+            <Link href="/dashboard/settings" className="bg-[#0c1111] p-5 text-sm font-medium hover:bg-[#101717] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Usuarios</Link>
+          </div>
+        </details>
+
+        <details className="border-t border-[var(--n3-line)] pt-3">
+          <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver datos de respaldo</summary>
+          <div className="mt-3 grid gap-4 text-xs text-[var(--n3-text-muted)] sm:grid-cols-2 lg:grid-cols-4">
+            <div><p className="uppercase tracking-[0.12em]">Inventario activo</p><p className="mt-1 text-lg text-[var(--n3-text-light)]">{n(market.activeInventory)}</p></div>
+            <div><p className="uppercase tracking-[0.12em]">Ventas confirmadas</p><p className="mt-1 text-lg text-[var(--n3-text-light)]">{n(market.confirmedSales)}</p></div>
+            <div><p className="uppercase tracking-[0.12em]">Valorizaciones</p><p className="mt-1 text-lg text-[var(--n3-text-light)]">{n(operations.valuationCases)}</p></div>
+            <div><p className="uppercase tracking-[0.12em]">Métricas cargadas</p><p className="mt-1 text-lg text-[var(--n3-text-light)]">{n(operations.managementMetrics)}</p></div>
+          </div>
+        </details>
+      </div>
+    )
+  }
 
   if (isSeller) {
     const valuationRows = valuationResult.data || []

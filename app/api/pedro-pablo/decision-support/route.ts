@@ -16,6 +16,47 @@ type Evidence = {
 
 type LegacyAction = { label: string; href: string }
 
+type ValuationPageComparable = {
+  id: string
+  address: string | null
+  source_type: string | null
+  price_uf: number | null
+  price_uf_m2: number | null
+  similarity_score: number | null
+  distance_meters: number | null
+  selected: boolean
+  match_status: string | null
+  contradictions?: string[] | null
+}
+
+type ValuationPageContext = {
+  valuationCase?: {
+    id: string
+    address: string | null
+    neighborhood: string | null
+    property_type: string | null
+    estimated_value_uf: number | null
+    confidence: string | null
+    justification: string | null
+    status: string | null
+  }
+  comparables?: ValuationPageComparable[]
+  error?: string
+}
+
+type ValuationReviewContext = {
+  evidence?: {
+    selectedComparables?: number
+    medianUfM2?: number | null
+    contradictions?: number
+  }
+  reviewGate?: {
+    mode?: string
+    reasons?: string[]
+  }
+  error?: string
+}
+
 type BaseResponse = {
   title: string
   answer: string
@@ -71,6 +112,134 @@ type ActionProposal = {
 
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+}
+
+function formatUf(value: number | null | undefined) {
+  return value == null || !Number.isFinite(Number(value))
+    ? 'sin valor disponible'
+    : `UF ${Number(value).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`
+}
+
+function median(values: number[]) {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+function valuationPageAnswer(
+  base: BaseResponse,
+  prompt: string,
+  caseId: string,
+  page: ValuationPageContext,
+  review: ValuationReviewContext | null,
+): BaseResponse | null {
+  const valuation = page.valuationCase
+  if (!valuation) return null
+
+  const normalized = normalize(prompt)
+  const isCurrentCaseQuestion = [
+    'este valor', 'esta valoriz', 'este expediente', 'comparab', 'defendible',
+    'antes de enviar', 'enviarla', 'enviarlo', 'alerta', 'revis', 'precio',
+    'por que', 'porque', 'valor',
+  ].some((term) => normalized.includes(term))
+  if (!isCurrentCaseQuestion) return null
+
+  const comparables = page.comparables ?? []
+  const accepted = comparables.filter((item) => item.selected && item.match_status === 'accepted')
+  const contradictionCount = accepted.reduce((total, item) => total + (item.contradictions?.length ?? 0), 0)
+  const medianUfM2 = review?.evidence?.medianUfM2 ?? median(
+    accepted.map((item) => Number(item.price_uf_m2)).filter((value) => Number.isFinite(value) && value > 0),
+  )
+  const topComparables = [...accepted]
+    .sort((a, b) => Number(b.similarity_score ?? 0) - Number(a.similarity_score ?? 0))
+    .slice(0, 3)
+
+  const evidence: Evidence[] = [
+    {
+      label: 'Expediente de valorización actual',
+      source: 'valuation_cases · alcance autorizado',
+      reference: caseId,
+      domain: 'valuations',
+    },
+    {
+      label: 'Comparables seleccionados',
+      source: 'valuation_comparables · alcance autorizado',
+      reference: `${accepted.length} aceptados`,
+      domain: 'valuations',
+    },
+  ]
+
+  const asksComparables = normalized.includes('comparab')
+  const asksReview = normalized.includes('antes de enviar') || normalized.includes('enviarla') || normalized.includes('enviarlo') || normalized.includes('alerta') || normalized.includes('revis')
+
+  if (asksComparables) {
+    const lines = topComparables.length
+      ? topComparables.map((item, index) => {
+          const rate = item.price_uf_m2 == null ? 'UF/m² no disponible' : `${Number(item.price_uf_m2).toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²`
+          const similarity = item.similarity_score == null ? 'coincidencia no disponible' : `${(Number(item.similarity_score) * 100).toLocaleString('es-CL', { maximumFractionDigits: 1 })}% coincidencia`
+          return `${index + 1}. ${item.address || 'Dirección no disponible'} · ${formatUf(item.price_uf)} · ${rate} · ${similarity}.`
+        })
+      : ['No hay comparables aceptados suficientes para explicar este valor todavía.']
+
+    return {
+      ...base,
+      title: 'Comparables que sostienen esta valorización',
+      answer: lines.join('\n'),
+      confidence: accepted.length >= 3 ? 'high' : 'medium',
+      evidence,
+      actions: [{ label: 'Abrir expediente', href: `/dashboard/valuations/${caseId}` }],
+    }
+  }
+
+  if (asksReview) {
+    const reasons = review?.reviewGate?.reasons ?? []
+    const checks = [
+      accepted.length >= 3
+        ? `Muestra: ${accepted.length} comparables aceptados.`
+        : `Muestra insuficiente: sólo ${accepted.length} comparables aceptados; se requieren al menos 3.`,
+      contradictionCount === 0
+        ? 'Evidencia: sin contradicciones en los comparables aceptados.'
+        : `Evidencia: ${contradictionCount} contradicción${contradictionCount === 1 ? '' : 'es'} por resolver.`,
+      valuation.justification?.trim()
+        ? 'Justificación profesional: registrada.'
+        : 'Justificación profesional: falta completar.',
+      valuation.confidence
+        ? `Confianza del expediente: ${valuation.confidence === 'high' ? 'alta' : valuation.confidence === 'medium' ? 'media' : 'baja'}.`
+        : 'Confianza del expediente: no disponible.',
+      ...reasons.slice(0, 2).map((reason) => `Control adicional: ${reason}.`),
+    ]
+
+    return {
+      ...base,
+      title: 'Qué revisar antes de enviar',
+      answer: checks.join('\n'),
+      confidence: accepted.length >= 3 && contradictionCount === 0 ? 'high' : 'medium',
+      evidence,
+      actions: [{ label: 'Volver al expediente', href: `/dashboard/valuations/${caseId}` }],
+    }
+  }
+
+  const support = [
+    `Valor actual: ${formatUf(valuation.estimated_value_uf)}.`,
+    `Evidencia: ${accepted.length} comparables aceptados${medianUfM2 == null ? '' : `, con mediana ${medianUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m²`}.`,
+    `Confianza: ${valuation.confidence === 'high' ? 'alta' : valuation.confidence === 'medium' ? 'media' : valuation.confidence === 'low' ? 'baja' : 'no disponible'}.`,
+    contradictionCount === 0
+      ? 'No hay contradicciones detectadas en los comparables aceptados.'
+      : `Hay ${contradictionCount} contradicción${contradictionCount === 1 ? '' : 'es'} que conviene resolver antes de usar el valor con el cliente.`,
+    valuation.justification?.trim()
+      ? 'La justificación profesional está registrada.'
+      : 'Falta dejar una justificación profesional antes de enviar.',
+  ]
+
+  return {
+    ...base,
+    title: 'Por qué este valor es defendible',
+    answer: support.join('\n'),
+    confidence: accepted.length >= 3 && contradictionCount === 0 ? 'high' : 'medium',
+    evidence,
+    actions: [{ label: 'Abrir expediente', href: `/dashboard/valuations/${caseId}` }],
+  }
 }
 
 function inferDomain(action: LegacyAction): ProposalDomain {
@@ -335,6 +504,10 @@ export async function POST(request: NextRequest) {
   }
 
   const prompt = typeof (body as { prompt?: unknown })?.prompt === 'string' ? (body as { prompt: string }).prompt.trim() : ''
+  const pageContext = (body as { pageContext?: { pathname?: unknown; valuationCaseId?: unknown } })?.pageContext
+  const valuationCaseId = typeof pageContext?.valuationCaseId === 'string' && /^[0-9a-f-]{36}$/i.test(pageContext.valuationCaseId)
+    ? pageContext.valuationCaseId
+    : null
   if (!prompt || prompt.length > 800) {
     return NextResponse.json({ error: 'La consulta debe contener entre 1 y 800 caracteres.' }, { status: 400 })
   }
@@ -351,7 +524,7 @@ export async function POST(request: NextRequest) {
       }
     : baseRouting
   const cookie = request.headers.get('cookie') ?? ''
-  const [baseResponse, reportsResponse] = await Promise.all([
+  const [baseResponse, reportsResponse, valuationPageResponse, valuationReviewResponse] = await Promise.all([
     fetch(new URL('/api/pedro-pablo', request.url), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', cookie },
@@ -362,6 +535,12 @@ export async function POST(request: NextRequest) {
       headers: { cookie },
       cache: 'no-store',
     }),
+    valuationCaseId
+      ? fetch(new URL(`/api/valuations/${valuationCaseId}/comparables`, request.url), { headers: { cookie }, cache: 'no-store' })
+      : Promise.resolve(null),
+    valuationCaseId
+      ? fetch(new URL(`/api/valuations/${valuationCaseId}/professional-review`, request.url), { headers: { cookie }, cache: 'no-store' })
+      : Promise.resolve(null),
   ])
 
   const payload = await baseResponse.json() as BaseResponse | { error?: string }
@@ -373,6 +552,12 @@ export async function POST(request: NextRequest) {
   const reportPayload = reportsResponse.ok
     ? await reportsResponse.json() as ReportContext
     : { available: false, reason: 'source_unavailable', summary: null, generatedAt: new Date().toISOString(), writesPerformed: 0 } as ReportContext
+  const valuationPagePayload = valuationPageResponse?.ok
+    ? await valuationPageResponse.json() as ValuationPageContext
+    : null
+  const valuationReviewPayload = valuationReviewResponse?.ok
+    ? await valuationReviewResponse.json() as ValuationReviewContext
+    : null
 
   let response = payload as BaseResponse
   response = isReportPrompt(normalize(prompt))
@@ -412,23 +597,44 @@ export async function POST(request: NextRequest) {
     response = seniorResponse(response, prompt, seniorExpertise)
   }
 
-  const suggestedQuestions = suggestedQuestionsForPrompt(prompt, seniorExpertise, scopeConflict)
+  if (!scopeConflict && valuationCaseId && valuationPagePayload) {
+    response = valuationPageAnswer(response, prompt, valuationCaseId, valuationPagePayload, valuationReviewPayload) ?? response
+  }
+
+  const suggestedQuestions = valuationCaseId
+    ? ['¿Qué comparables sostienen mejor este valor?', '¿Qué debo revisar antes de enviarla a dirección?', '¿Hay alguna alerta importante en este expediente?']
+    : suggestedQuestionsForPrompt(prompt, seniorExpertise, scopeConflict)
   const proposals = buildProposals(response)
   const scope = await requireUserScope()
   const canCreateTask = hasCapability(scope.role, 'tasks.global.manage') || hasCapability(scope.role, 'tasks.office.manage')
+  const directorSupport = scope.role === 'director' || scope.role === 'subdirector'
+  const assistantProfile = directorSupport
+    ? {
+        id: 'property-partners-director-support-v1',
+        purpose: 'Apoyar a dirección con el conocimiento senior compartido del asistente de Pedro Pablo, limitado a su oficina, permisos y evidencia autorizada.',
+        tone: PEDRO_PABLO_EXECUTIVE_PROFILE.communication.tone,
+        answerOrder: PEDRO_PABLO_EXECUTIVE_PROFILE.preferredAnswerOrder,
+        opinionPolicy: 'evidence-only-no-personal-opinion' as const,
+        missingDataPolicy: 'state-unavailable-do-not-infer' as const,
+        knowledgeSource: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
+        supportMode: 'shared-senior-knowledge-role-scoped',
+      }
+    : {
+        id: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
+        purpose: PEDRO_PABLO_EXECUTIVE_PROFILE.purpose,
+        tone: PEDRO_PABLO_EXECUTIVE_PROFILE.communication.tone,
+        answerOrder: PEDRO_PABLO_EXECUTIVE_PROFILE.preferredAnswerOrder,
+        opinionPolicy: 'evidence-only-no-personal-opinion' as const,
+        missingDataPolicy: 'state-unavailable-do-not-infer' as const,
+        knowledgeSource: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
+        supportMode: 'executive',
+      }
 
   return NextResponse.json({
     ...response,
     proposals,
     suggestedQuestions,
-    assistantProfile: {
-      id: PEDRO_PABLO_EXECUTIVE_PROFILE.id,
-      purpose: PEDRO_PABLO_EXECUTIVE_PROFILE.purpose,
-      tone: PEDRO_PABLO_EXECUTIVE_PROFILE.communication.tone,
-      answerOrder: PEDRO_PABLO_EXECUTIVE_PROFILE.preferredAnswerOrder,
-      opinionPolicy: 'evidence-only-no-personal-opinion',
-      missingDataPolicy: 'state-unavailable-do-not-infer',
-    },
+    assistantProfile,
     availableConfirmedActions: canCreateTask ? ['create_task'] : [],
     proposalPolicy: 'pedro-pablo-proposal-contract-v4-reports-aware',
     executionPolicy: 'human-confirmation-required',

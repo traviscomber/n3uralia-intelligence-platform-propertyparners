@@ -536,7 +536,7 @@ export default function ValuationPage() {
     <IntelligenceHeader
       eyebrow="Módulo II · Valorización"
       title="Valorizador Property Partners"
-      description="Busca la propiedad, revisa la evidencia de mercado y confirma el valor con criterio Property Partners."
+      description="Busca la propiedad y obtén un valor defendible para trabajar con el cliente. La evidencia queda disponible para revisar y ajustar cuando corresponda."
       actions={[{ label: 'Registro de valorizaciones', href: '/dashboard/valuations' }, { label: 'Inteligencia de mercado', href: '/dashboard/market' }]}
       meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">property-partners-valuation-v2</div>}
     />
@@ -682,14 +682,14 @@ export default function ValuationPage() {
           {houseRecommendation ? <div className="border border-[#5f8f82]/50 bg-[#0a1210] p-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <FieldLabel>Referencia sugerida por la evidencia</FieldLabel>
+                <FieldLabel>Valor sugerido para trabajar</FieldLabel>
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <strong className="text-xl">{houseRecommendation.weightedRateUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</strong>
-                  <span className="text-xs text-[var(--n3-text-muted)]">~{houseRecommendation.estimatedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</span>
+                  <strong className="text-3xl">{houseRecommendation.estimatedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF</strong>
+                  <span className="text-xs text-[var(--n3-text-muted)]">{houseRecommendation.weightedRateUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m² ponderado</span>
                 </div>
-                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{houseRecommendation.comparableCount} comparables compatibles · confianza {houseRecommendation.confidence === 'high' ? 'alta' : houseRecommendation.confidence === 'medium' ? 'media' : 'baja'} · no vinculante.</p>
+                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Calculado con {houseRecommendation.comparableCount} ventas compatibles · confianza {houseRecommendation.confidence === 'high' ? 'alta' : houseRecommendation.confidence === 'medium' ? 'media' : 'baja'}. Puedes usarlo o ajustarlo con criterio profesional.</p>
               </div>
-              <button type="button" onClick={adoptHouseRecommendation} className="bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Usar esta referencia</button>
+              <button type="button" onClick={adoptHouseRecommendation} className="bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Usar este valor</button>
             </div>
           </div> : <div className="border border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-sm text-[#e0c87f]">No hay una referencia automática suficientemente robusta. Revisa los comparables y define la tasa profesional.</div>}
           <details className="border border-[var(--n3-line)] bg-[#080d0d]" open={!houseRecommendation}>
@@ -703,21 +703,21 @@ export default function ValuationPage() {
         </div>}
       </div></IntelligencePanel>
 
-      <IntelligencePanel eyebrow="Resultado para revisión" title={result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : 'Pendiente de confirmar tasa'} description={result ? `Valor comercial estimado · ${result.commercialUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado` : 'Confirma una tasa para obtener el valor comercial y los escenarios de publicación.'}>{result ? <div className="grid gap-3 p-5 md:grid-cols-3">{result.publicationScenarios.map((scenario) => <div key={scenario.upliftPct} className={`border p-4 ${scenario.upliftPct === 5 ? 'border-[var(--n3-teal)] bg-[#0a1210]' : 'border-[var(--n3-line)]'}`}><FieldLabel>{scenario.upliftPct === 0 ? 'Valor comercial' : `Publicación · margen ${scenario.upliftPct}%`}{scenario.upliftPct === 5 ? ' · escenario estándar' : ''}</FieldLabel><strong className="text-xl">{scenario.suggestedPriceUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{scenario.suggestedUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</p></div>)}</div> : <div className="p-5 text-sm text-[var(--n3-text-muted)]">Pendiente de tasa.</div>}</IntelligencePanel>
+      <IntelligencePanel eyebrow="Valor para trabajar con el cliente" title={result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF` : 'Pendiente de confirmar valor'} description={result ? `Valor estimado de la propiedad · ${result.commercialUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m² ponderado` : 'Confirma el valor sugerido o ajústalo para obtener la valorización y el precio de publicación.'}>{result ? <div className="grid gap-3 p-5 md:grid-cols-3">{result.publicationScenarios.map((scenario) => <div key={scenario.upliftPct} className={`border p-4 ${scenario.upliftPct === 5 ? 'border-[var(--n3-teal)] bg-[#0a1210]' : 'border-[var(--n3-line)]'}`}><FieldLabel>{scenario.upliftPct === 0 ? 'Valor estimado' : scenario.upliftPct === 5 ? 'Precio sugerido de publicación' : `Publicación · margen ${scenario.upliftPct}%`}</FieldLabel><strong className="text-xl">{scenario.suggestedPriceUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{scenario.suggestedUfM2.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF/m² ponderado{scenario.upliftPct === 5 ? ' · escenario estándar PP' : ''}</p></div>)}</div> : <div className="p-5 text-sm text-[var(--n3-text-muted)]">Pendiente de tasa.</div>}</IntelligencePanel>
     </section> : null}
 
     {step === 5 ? <section className="space-y-4">
-      <IntelligencePanel eyebrow="Paso 5 · Revisión" title={result && selectedComparables.length >= 3 ? 'Listo para revisión' : 'Revisión final'} description="Una vista simple del valor, la evidencia utilizada y la decisión profesional."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+      <IntelligencePanel eyebrow="Paso 5 · Tu valorización" title={result && selectedComparables.length >= 3 ? 'Valor listo para trabajar' : 'Revisión final'} description="Confirma el valor que usarás con el cliente y deja la evidencia lista para dirección."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="border border-[var(--n3-line)] p-4 xl:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType} · ROL {subject.rol || 'no disponible'}</p></div>
         <div className="border border-[var(--n3-line)] p-4"><FieldLabel>Evidencia</FieldLabel><strong className="text-xl">{selectedComparables.length}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{cbrsEvidence.count} ventas · {portalEvidence.count} ofertas</p></div>
-        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor comercial</FieldLabel><strong className="text-xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia Champion v5 confirmada por la ejecutiva' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
+        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor sugerido</FieldLabel><strong className="text-2xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia Champion v5 confirmada por la ejecutiva' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
       </div>
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
       <SecondOpinionPanel opinion={secondOpinion} />
       <IntelligencePanel eyebrow="Criterio profesional" title="Justificación del valorizador" description="Deja una explicación breve de la evidencia y la tasa elegida."><div className="p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-[var(--n3-text-muted)]">Debe quedar revisada por la ejecutiva antes de enviar.</p>
+          <p className="text-xs text-[var(--n3-text-muted)]">La evidencia genera un borrador; revísalo antes de enviarlo a dirección.</p>
           <button type="button" disabled={selectedComparables.length < 3} onClick={draftProfessionalJustification} className="border border-[var(--n3-line)] px-3 py-2 text-xs font-medium disabled:opacity-40 hover:border-[#d7332b]">Crear borrador con la evidencia</button>
         </div>
         <TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables..." />
@@ -733,7 +733,7 @@ export default function ValuationPage() {
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
         <div className="flex items-center gap-1.5 md:gap-2">
           {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
-          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar'}</button>}
+          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización'}</button>}
         </div>
       </div>
     </div>

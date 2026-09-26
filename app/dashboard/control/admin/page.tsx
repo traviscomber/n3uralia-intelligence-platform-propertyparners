@@ -112,9 +112,9 @@ export default function ManagementAdminPage(){
       <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{alert.management_entities?.name??'Entidad'}{alert.detail?` · ${alert.detail}`:''}</p>
     </div>
     <div className="flex flex-wrap gap-2" aria-busy={saving}>
-      {alert.status==='open'?<button disabled={saving} onClick={()=>void updateAlert(alert.id,'acknowledge')} className="min-h-11 border border-[var(--n3-line)] px-4 text-xs font-medium disabled:opacity-40">Revisar</button>:null}
-      <button disabled={saving} onClick={()=>void updateAlert(alert.id,'resolve')} className="min-h-11 border border-[#78d59a]/35 px-4 text-xs font-medium text-[#78d59a] disabled:opacity-40">Resolver</button>
-      <button disabled={saving} onClick={()=>void updateAlert(alert.id,'dismiss')} className="min-h-11 border border-[var(--n3-line)] px-4 text-xs text-[var(--n3-text-muted)] disabled:opacity-40">Descartar</button>
+      {alert.status==='open'?<button disabled={saving} onClick={()=>void updateAlert(alert.id,'acknowledge')} className="min-h-11 border border-[var(--n3-line)] px-4 text-xs font-medium disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Revisar</button>:null}
+      <button disabled={saving} onClick={()=>void updateAlert(alert.id,'resolve')} className="min-h-11 border border-[#78d59a]/35 px-4 text-xs font-medium text-[#78d59a] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78d59a]">Resolver</button>
+      <button disabled={saving} onClick={()=>void updateAlert(alert.id,'dismiss')} className="min-h-11 border border-[var(--n3-line)] px-4 text-xs text-[var(--n3-text-muted)] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Descartar</button>
     </div>
   </article>
 

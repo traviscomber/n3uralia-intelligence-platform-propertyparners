@@ -126,43 +126,43 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
 
   return <main className="mx-auto max-w-7xl space-y-8 pb-16">
     <header className="border-b border-[var(--n3-line)] pb-6">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">Administración · cartera</p>
-      <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Asignación de propiedades</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">La vista y cada escritura se limitan al alcance {scope.scope === 'global' ? 'global' : 'de oficina'} resuelto por la matriz central. En V1 sólo se asignan casas cuya dirección acredita explícitamente Vitacura.</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">{scope.scope === 'global' ? 'Administración · cartera' : 'Dirección · cartera'}</p>
+      <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Cartera y asignaciones</h1>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Asigna propiedades sólo dentro de {scope.scope === 'global' ? 'la operación autorizada' : 'tu oficina'}. Por ahora, esta cartera considera casas de Vitacura con dirección verificada.</p>
     </header>
     {error ? <div role="alert" className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible cargar toda la administración de cartera. Las secciones afectadas no se interpretan como vacías: {error}</div> : null}
 
     <section className="space-y-4" aria-labelledby="available-properties-title">
-      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Casas de Vitacura disponibles para asignación</h2></div>
+      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar propiedad</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Casas de Vitacura disponibles para asignación</h2></div>
       <form className="flex flex-col gap-2 sm:flex-row">
         <label className="sr-only" htmlFor="property-search">Buscar casa de Vitacura por dirección</label>
-        <input id="property-search" name="q" defaultValue={query} placeholder="Buscar por dirección normalizada" className="min-h-11 min-w-0 flex-1 border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]" />
+        <input id="property-search" name="q" defaultValue={query} placeholder="Buscar por dirección" className="min-h-11 min-w-0 flex-1 border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]" />
         <button className="min-h-11 border border-[var(--n3-line)] px-5 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]">Buscar</button>
       </form>
       <div className="grid gap-4 xl:grid-cols-2">
         {properties.map((property) => <article key={property.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold">{property.normalized_address || 'Dirección no disponible'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property.property_type || 'Tipología n/d'} · {property.useful_area_m2 ?? 'n/d'} m² · {property.bedrooms ?? 'n/d'} dorm. · {property.bathrooms ?? 'n/d'} baños</p></div><span className="text-[10px] uppercase tracking-wider text-[var(--n3-text-muted)]">{property.identity_status || 'sin estado'}</span></div>
-          <p className="mt-3 text-[10px] text-[var(--n3-text-muted)]">Última evidencia: {formatDate(property.last_seen_at)}</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold">{property.normalized_address || 'Dirección no disponible'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property.property_type || 'Tipo —'} · {property.useful_area_m2 ?? '—'} m² · {property.bedrooms ?? '—'} dorm. · {property.bathrooms ?? '—'} baños</p></div><span className="text-[10px] uppercase tracking-wider text-[var(--n3-text-muted)]">{property.identity_status || 'Estado pendiente'}</span></div>
+          <p className="mt-3 text-[10px] text-[var(--n3-text-muted)]">Última actualización: {formatDate(property.last_seen_at)}</p>
           {profilesUnavailable ? <div className="mt-5 border border-[#a77a22] p-4 text-xs leading-5 text-[#f6c453]">No se puede crear una asignación hasta recuperar la lista autorizada de ejecutivas.</div> : profiles.length ? <form action={createAssignment} className="mt-5 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="property_id" value={property.id} />
             <label className="text-xs text-[var(--n3-text-muted)]">Ejecutiva<select name="assigned_to" required className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="">Seleccionar</option>{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.full_name} · {profile.team || 'sin sucursal'}</option>)}</select></label>
             <label className="text-xs text-[var(--n3-text-muted)]">Rol<select name="assignment_role" defaultValue="owner" className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="owner">Responsable principal</option><option value="co_broker">Corretaje compartido</option><option value="support">Apoyo comercial</option></select></label>
-            <label className="text-xs text-[var(--n3-text-muted)] sm:col-span-2">Nota auditada<input name="notes" maxLength={500} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]" placeholder="Motivo o alcance de la asignación" /></label>
+            <label className="text-xs text-[var(--n3-text-muted)] sm:col-span-2">Nota<input name="notes" maxLength={500} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]" placeholder="Motivo o comentario para el equipo" /></label>
             <PendingSubmitButton idleLabel="Asignar propiedad" pendingLabel="Asignando…" className="min-h-11 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white focus-visible:ring-2 focus-visible:ring-white sm:col-span-2" />
-          </form> : <div className="mt-5 border border-[var(--n3-line)] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">No hay ejecutivas visibles dentro del alcance autorizado para crear una asignación.</div>}
+          </form> : <div className="mt-5 border border-[var(--n3-line)] p-4 text-xs leading-5 text-[var(--n3-text-muted)]">No hay integrantes del equipo disponibles para recibir una asignación.</div>}
         </article>)}
       </div>
       {!propertiesUnavailable && !properties.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No se encontraron casas de Vitacura para la búsqueda ingresada.</div> : null}
     </section>
 
     <section className="space-y-4" aria-labelledby="assignments-title">
-      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">02 · Cartera vigente e histórica</p><h2 id="assignments-title" className="mt-2 text-2xl font-semibold">Asignaciones registradas</h2></div>
+      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">02 · Asignaciones</p><h2 id="assignments-title" className="mt-2 text-2xl font-semibold">Cartera asignada</h2></div>
       <div className="grid gap-4">
         {assignments.map((assignment) => {
           const profile = profileById.get(assignment.assigned_to)
           const property = propertyById.get(assignment.property_id)
           return <article key={assignment.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-5">
-            <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_auto] lg:items-start"><div><p className="font-semibold">{property?.normalized_address || 'Propiedad sin dirección visible'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Tipología n/d'} · asignada {formatDate(assignment.assigned_at)}</p></div><div><p className="text-sm">{profile?.full_name || 'Perfil no disponible'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{profile?.team || 'Sin sucursal asociada'}</p></div><span className="text-[10px] uppercase tracking-wider text-[var(--n3-text-muted)]">{assignment.status}</span></div>
+            <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_auto] lg:items-start"><div><p className="font-semibold">{property?.normalized_address || 'Propiedad sin dirección visible'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Tipo —'} · asignada {formatDate(assignment.assigned_at)}</p></div><div><p className="text-sm">{profile?.full_name || 'Perfil no disponible'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{profile?.team || 'Sin sucursal asociada'}</p></div><span className="text-[10px] uppercase tracking-wider text-[var(--n3-text-muted)]">{assignment.status}</span></div>
             <form action={updateAssignment} className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr_auto] lg:items-end">
               <input type="hidden" name="assignment_id" value={assignment.id} />
               <label className="text-xs text-[var(--n3-text-muted)]">Rol<select name="assignment_role" defaultValue={assignment.assignment_role} className="mt-1 min-h-11 w-full border border-[var(--n3-line)] bg-black px-3 py-2.5 text-sm text-[var(--n3-text-light)]"><option value="owner">Responsable principal</option><option value="co_broker">Corretaje compartido</option><option value="support">Apoyo comercial</option></select></label>
@@ -173,7 +173,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
           </article>
         })}
       </div>
-      {!assignmentsUnavailable && !assignments.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No existen asignaciones registradas dentro del alcance autorizado.</div> : null}
+      {!assignmentsUnavailable && !assignments.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">{scope.scope === 'global' ? 'No hay asignaciones registradas en el alcance global.' : 'No hay asignaciones registradas para esta oficina.'}</div> : null}
     </section>
   </main>
 }

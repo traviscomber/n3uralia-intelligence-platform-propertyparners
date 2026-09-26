@@ -143,6 +143,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
+      viewer_scope: scope.scope,
       cases: cases.map((item) => {
         const count = acceptedComparableCount.get(item.id) ?? 0
         return {

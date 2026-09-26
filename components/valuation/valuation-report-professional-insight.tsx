@@ -47,9 +47,9 @@ function pct(value: number | null | undefined) {
 }
 
 function confidence(value: string | null | undefined) {
-  if (value === 'high') return 'Alta'
-  if (value === 'medium') return 'Media'
-  if (value === 'low') return 'Baja'
+  if (value === 'high' || value === 'strong') return 'Alta'
+  if (value === 'medium' || value === 'moderate') return 'Media'
+  if (value === 'low' || value === 'weak') return 'Baja'
   return 'N/D'
 }
 
@@ -75,7 +75,10 @@ export function ValuationReportProfessionalInsight({ valuationId }: { valuationI
   const hasAdvisory = Boolean(advisory?.available)
   const highAdvisory = advisory?.severity === 'high'
   const grade = review.quality?.grade || 'N/D'
-  const status = (review.quality?.status || 'REVISIÓN PROFESIONAL').replaceAll('_', ' ')
+  const rawStatus = review.quality?.status || 'REVISIÓN PROFESIONAL'
+  const status = rawStatus === 'READY_FOR_PROFESSIONAL_REVIEW'
+    ? 'LISTO PARA REVISIÓN PROFESIONAL'
+    : rawStatus.replaceAll('_', ' ')
 
   const conclusion = evidence.contradictions
     ? 'La valorización requiere revisar contradicciones de evidencia antes de una decisión final.'
@@ -100,7 +103,7 @@ export function ValuationReportProfessionalInsight({ valuationId }: { valuationI
 
       <dl className="grid gap-px bg-neutral-300 sm:grid-cols-2 lg:grid-cols-4">
         <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Ventas CBRS</dt><dd className="mt-2 text-xl font-semibold">{evidence.cbrsComparables ?? 0}</dd><p className="mt-1 text-xs text-neutral-500">{evidence.offerComparables ?? 0} ofertas seleccionadas</p></div>
-        <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Similitud media</dt><dd className="mt-2 text-xl font-semibold">{evidence.averageSimilarity == null ? 'N/D' : pct(evidence.averageSimilarity * 100)}</dd><p className="mt-1 text-xs text-neutral-500">Confianza {confidence(review.caseConfidence)}</p></div>
+        <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Coincidencia media</dt><dd className="mt-2 text-xl font-semibold">{evidence.averageSimilarity == null ? 'N/D' : pct(evidence.averageSimilarity * 100)}</dd><p className="mt-1 text-xs text-neutral-500">Confianza {confidence(review.caseConfidence)}</p></div>
         <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Dispersión</dt><dd className="mt-2 text-xl font-semibold">{pct(evidence.dispersionPct)}</dd><p className="mt-1 text-xs text-neutral-500">{evidence.contradictions ?? 0} contradicciones</p></div>
         <div className="bg-white p-4"><dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Mediana evidencia</dt><dd className="mt-2 text-xl font-semibold">{evidence.medianUfM2 == null ? 'N/D' : `${one.format(evidence.medianUfM2)} UF/m²`}</dd><p className="mt-1 text-xs text-neutral-500">Promedio {evidence.averageUfM2 == null ? 'N/D' : `${one.format(evidence.averageUfM2)} UF/m²`}</p></div>
       </dl>
@@ -116,15 +119,15 @@ export function ValuationReportProfessionalInsight({ valuationId }: { valuationI
         </div>
 
         <div className={hasAdvisory ? `p-5 ${highAdvisory ? 'bg-amber-50' : 'bg-neutral-50'}` : 'p-5 bg-neutral-50'}>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Advisory</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Control adicional</p>
           {hasAdvisory ? <>
             <p className="mt-3 text-base font-semibold">Revisión adicional recomendada</p>
-            <p className="mt-2 text-sm leading-6 text-neutral-600">{advisory?.message || 'Existe una señal challenger material que debe ser revisada profesionalmente.'}</p>
+            <p className="mt-2 text-sm leading-6 text-neutral-600">{advisory?.message || 'Existe una señal alternativa relevante que debe ser revisada profesionalmente.'}</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <div className="border border-neutral-300 bg-white p-3"><p className="text-[10px] uppercase text-neutral-500">Challenger</p><p className="mt-1 text-lg font-semibold">{uf(advisory?.challengerValueUf)}</p></div>
+              <div className="border border-neutral-300 bg-white p-3"><p className="text-[10px] uppercase text-neutral-500">Valor alternativo de control</p><p className="mt-1 text-lg font-semibold">{uf(advisory?.challengerValueUf)}</p></div>
               <div className="border border-neutral-300 bg-white p-3"><p className="text-[10px] uppercase text-neutral-500">Diferencia</p><p className="mt-1 text-lg font-semibold">{pct(advisory?.deltaPct)}</p></div>
             </div>
-            <p className="mt-3 text-xs text-neutral-500">Segmento {advisory?.segmentConfidence || 'N/D'} · N={advisory?.segmentEvidenceN ?? 'N/D'} · win rate {pct(advisory?.segmentWinRatePct)}</p>
+            <p className="mt-3 text-xs text-neutral-500">Confianza {confidence(advisory?.segmentConfidence)} · N={advisory?.segmentEvidenceN ?? 'N/D'} · mejora histórica {pct(advisory?.segmentWinRatePct)}</p>
           </> : <>
             <p className="mt-3 text-base font-semibold">Sin señal especial</p>
             <p className="mt-2 text-sm leading-6 text-neutral-600">El expediente continúa bajo la metodología estándar y la revisión humana habitual.</p>

@@ -27,7 +27,7 @@ type ValuationCase = {
   updated_at: string
 }
 
-type Payload = { cases: ValuationCase[]; error?: string }
+type Payload = { cases: ValuationCase[]; viewer_scope?: 'self' | 'office' | 'global'; error?: string }
 
 const money = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
 const statusLabels: Record<string, string> = { draft: 'Borrador', review: 'En revisión', approved: 'Aprobada', issued: 'Emitida' }
@@ -39,6 +39,7 @@ export default function ValuationRegistryPage() {
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('all')
+  const [viewerScope, setViewerScope] = useState<'self' | 'office' | 'global'>('self')
 
   async function load() {
     setLoading(true)
@@ -48,6 +49,7 @@ export default function ValuationRegistryPage() {
       const payload = await response.json() as Payload
       if (!response.ok) throw new Error(payload.error || 'No fue posible cargar las valorizaciones')
       setCases(payload.cases || [])
+      if (payload.viewer_scope) setViewerScope(payload.viewer_scope)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error de carga')
     } finally {
@@ -73,24 +75,34 @@ export default function ValuationRegistryPage() {
     return (status === 'all' || item.status === status) && text.includes(query.trim().toLowerCase())
   }), [cases, query, status])
 
-  const uatReadyReview = cases.find((item) => item.status === 'review' && item.uat_readiness?.ready)
-  const nextReview = uatReadyReview
-  const nextDraft = cases.find((item) => item.status === 'draft' && item.uat_readiness?.ready)
-  const uatReadyCount = cases.filter((item) => item.uat_readiness?.ready).length
-  const reviewBlockedCount = cases.filter((item) => item.status === 'review' && !item.uat_readiness?.ready).length
+  const isOfficeReviewer = viewerScope === 'office'
+  const isGlobalReviewer = viewerScope === 'global'
+  const isReviewer = isOfficeReviewer || isGlobalReviewer
+  const nextReview = cases.find((item) => item.status === 'review')
+  const nextDraft = viewerScope === 'self' ? cases.find((item) => item.status === 'draft') : undefined
+  const evidenceReadyCount = cases.filter((item) =>
+    Boolean(item.subject_property_id) &&
+    item.condition_status !== 'not_evaluable' &&
+    (item.accepted_comparable_count ?? 0) >= 3
+  ).length
   const unlinkedCount = cases.filter((item) => !item.subject_property_id).length
   const conditionBlockedCount = cases.filter((item) => item.condition_status === 'not_evaluable').length
-  const actionCount = counts.review + counts.draft + unlinkedCount + conditionBlockedCount
-  const actionMetrics = [
-    { label: 'Listas para UAT', value: uatReadyCount, tone: uatReadyCount ? 'success' as const : 'warning' as const },
-    ...(reviewBlockedCount > 0 ? [{ label: 'Review no apta UAT', value: reviewBlockedCount, tone: 'warning' as const }] : []),
-    ...(counts.review > 0 ? [{ label: 'En revisión', value: counts.review }] : []),
-    ...(counts.draft > 0 ? [{ label: 'Borradores', value: counts.draft }] : []),
-    ...(unlinkedCount > 0 ? [{ label: 'Sin vínculo', value: unlinkedCount, tone: 'warning' as const }] : []),
-    ...(conditionBlockedCount > 0 ? [{ label: 'Estado no evaluable', value: conditionBlockedCount, tone: 'danger' as const }] : []),
-    { label: 'Aprobadas', value: counts.approved },
-    { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' as const : 'default' as const },
-  ]
+  const actionCount = isReviewer ? counts.review : counts.review + counts.draft
+  const actionMetrics = isReviewer
+    ? [
+        { label: 'Pendientes de revisión', value: counts.review, tone: counts.review ? 'warning' as const : 'default' as const },
+        { label: 'Borradores de la oficina', value: counts.draft },
+        { label: 'Aprobadas', value: counts.approved },
+        { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' as const : 'default' as const },
+      ]
+    : [
+        ...(counts.review > 0 ? [{ label: 'En revisión', value: counts.review }] : []),
+        ...(counts.draft > 0 ? [{ label: 'Borradores', value: counts.draft }] : []),
+        ...(unlinkedCount > 0 ? [{ label: 'Sin vínculo', value: unlinkedCount, tone: 'warning' as const }] : []),
+        ...(conditionBlockedCount > 0 ? [{ label: 'Estado no evaluable', value: conditionBlockedCount, tone: 'danger' as const }] : []),
+        { label: 'Aprobadas', value: counts.approved },
+        { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' as const : 'default' as const },
+      ]
 
   if (loading && cases.length === 0) {
     return <WorkspaceShell><OperationalState kind="loading" title="Cargando valorizaciones" description="Consultando expedientes, estados y valores autorizados." /></WorkspaceShell>
@@ -103,12 +115,14 @@ export default function ValuationRegistryPage() {
   return (
     <WorkspaceShell>
       <WorkspaceHeader
-        eyebrow="Valorizaciones · Casas V1"
-        title="Qué necesita avanzar"
+        eyebrow={isReviewer ? 'Valorizaciones · Dirección' : 'Valorizaciones'}
+        title={isReviewer ? 'Qué requiere revisión' : 'Qué necesita avanzar'}
         meta={actionCount > 0 ? `${actionCount} requieren acción` : undefined}
         actions={[
           { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
-          { label: 'Nueva valorización', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> },
+          ...(viewerScope === 'self'
+            ? [{ label: 'Nueva valorización', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> }]
+            : []),
         ]}
       />
 
@@ -143,13 +157,20 @@ export default function ValuationRegistryPage() {
         </section>
       ) : (
         <section className="mt-7 max-w-5xl border-y border-[var(--n3-line)] py-5">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Siguiente acción UAT</p>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold">Preparar un caso canónico desde una Ficha 360</p>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">Los expedientes históricos en revisión no cumplen el ciclo UAT actual. El caso debe estar vinculado a una propiedad, tener condición evaluable y al menos 3 comparables aceptados.</p>
-            </div>
-            <Link href="/dashboard/properties/prospects" className="inline-flex min-h-11 shrink-0 items-center justify-center border border-[var(--n3-line)] px-4 text-xs font-semibold hover:border-[#d7332b]">Abrir prospección</Link>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Estado actual</p>
+          <div className="mt-2">
+            <p className="text-sm font-semibold">
+              {isOfficeReviewer
+                ? 'No hay valorizaciones pendientes de revisión en tu oficina.'
+                : isGlobalReviewer
+                  ? 'No hay valorizaciones pendientes de revisión.'
+                  : 'No hay valorizaciones que requieran una acción inmediata.'}
+            </p>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
+              {isReviewer
+                ? 'Cuando un expediente sea enviado a revisión aparecerá aquí con su valor propuesto, comparables y evidencia para decidir.'
+                : 'Puedes iniciar una nueva valorización o continuar un borrador desde el listado.'}
+            </p>
           </div>
         </section>
       )}
@@ -176,7 +197,9 @@ export default function ValuationRegistryPage() {
                 <div className="min-w-0">
                   <p className="break-words text-sm font-medium sm:truncate">{item.address || 'Sin dirección'}</p>
                   <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'} · {item.accepted_comparable_count ?? 0} comparables aceptados</p>
-                  <p className={`mt-1 text-[11px] ${item.uat_readiness?.ready ? 'text-[#9fd0c8]' : 'text-[#f0c96a]'}`}>{item.uat_readiness?.ready ? 'Apto para ciclo UAT actual' : `No apto UAT · ${item.uat_readiness?.blockers?.join(' · ') || 'evidencia insuficiente'}`}</p>
+                  <p className={`mt-1 text-[11px] ${(item.accepted_comparable_count ?? 0) >= 3 ? 'text-[#9fd0c8]' : 'text-[#f0c96a]'}`}>
+                    {(item.accepted_comparable_count ?? 0) >= 3 ? 'Evidencia comparable completa' : 'Evidencia comparable incompleta'}
+                  </p>
                 </div>
                 <span className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{statusLabels[item.status] || item.status}</span>
                 <span className="text-sm font-medium tabular-nums">{item.estimated_value_uf == null ? '—' : `${money.format(item.estimated_value_uf)} UF`}</span>
@@ -190,9 +213,11 @@ export default function ValuationRegistryPage() {
 
       <DataStatusBar
         cutoff={cases.length ? new Date(cases[0].updated_at).toLocaleString('es-CL') : '—'}
-        coverage={`${uatReadyCount} de ${cases.length} expedientes aptos para el ciclo UAT actual`}
-        issues={cases.length - uatReadyCount}
-        status={uatReadyCount > 0 ? 'ready' : cases.length ? 'partial' : 'blocked'}
+        coverage={isReviewer
+          ? `${counts.review} pendientes de revisión · ${evidenceReadyCount} con evidencia base completa`
+          : `${evidenceReadyCount} de ${cases.length} expedientes con evidencia base completa`}
+        issues={Math.max(0, cases.length - evidenceReadyCount)}
+        status={cases.length === 0 ? 'ready' : evidenceReadyCount === cases.length ? 'ready' : 'partial'}
       />
     </WorkspaceShell>
   )

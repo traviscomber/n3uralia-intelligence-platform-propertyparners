@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
   try {
@@ -11,8 +11,8 @@ export async function GET(request: Request) {
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
       return NextResponse.json({ error: 'lat y lon requeridos' }, { status: 400 })
     }
-    const admin = createAdminClient()
-    const { data, error } = await admin.rpc('lookup_vitacura_prc_v1', { p_lat: lat, p_lon: lon })
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('lookup_vitacura_prc_v1', { p_lat: lat, p_lon: lon })
     if (error) {
       console.error('VITACURA_PRC_LOOKUP_FAILED', { code: error.code ?? 'UNKNOWN' })
       return NextResponse.json({ error: 'No fue posible consultar PRC.' }, { status: 500 })
