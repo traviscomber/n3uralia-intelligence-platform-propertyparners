@@ -35,6 +35,7 @@ const RESOLUTION_LABELS: Record<string,string> = {
   learned_address_alias_conflict:'Patrón aprendido en conflicto',
   portal_nearby_poi_consensus_v1:'Puntos cercanos Portal',
   portal_nearby_poi_conflict:'Puntos cercanos en conflicto',
+  near_boundary_kml_advisory:'Coordenada próxima al borde KML',
   manual:'Sin resolución automática',
 }
 
