@@ -62,15 +62,15 @@ function officeFromEntity(entity: ManagementEntity | null, parent: ManagementEnt
   return { officeId: entity.parent_id, officeName: null }
 }
 
-async function resolveVisibleProfileIds(): Promise<string[]> {
-  const supabase = await createClient()
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
+
+async function resolveVisibleProfileIds(supabase: SupabaseServerClient): Promise<string[]> {
   const { data, error } = await supabase.rpc('current_user_visible_profile_ids')
   if (error) throw new Error(`Unable to resolve visible profiles: ${error.message}`)
   return unique((data || []).map((row: { profile_id: string }) => row.profile_id))
 }
 
-async function resolveVisibleEntityIds(): Promise<string[]> {
-  const supabase = await createClient()
+async function resolveVisibleEntityIds(supabase: SupabaseServerClient): Promise<string[]> {
   const { data, error } = await supabase.rpc('current_user_visible_entity_ids')
   if (error) throw new Error(`Unable to resolve visible entities: ${error.message}`)
   return unique((data || []).map((row: { entity_id: string }) => row.entity_id))
@@ -126,12 +126,12 @@ export async function getUserScope(): Promise<UserScope> {
 
   const office = officeFromEntity(entity, parent)
   const [visibleProfileIds, visibleEntityIds] = await Promise.all([
-    access.scope === 'self' ? Promise.resolve([profile.id]) : resolveVisibleProfileIds(),
+    access.scope === 'self' ? Promise.resolve([profile.id]) : resolveVisibleProfileIds(supabase),
     access.scope === 'global'
       ? Promise.resolve([])
       : access.scope === 'self'
         ? Promise.resolve(entity?.id ? [entity.id] : [])
-        : resolveVisibleEntityIds(),
+        : resolveVisibleEntityIds(supabase),
   ])
 
   return {
