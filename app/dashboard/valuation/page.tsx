@@ -255,12 +255,12 @@ function rateAnchorLabel(anchor: RateAnchor) {
 }
 
 function Stepper({ step, onBackTo }: { step: ValuationWizardStep; onBackTo: (step: ValuationWizardStep) => void }) {
-  return <div className="grid gap-2 md:grid-cols-5">{VALUATION_WIZARD_STEPS.map((item) => {
+  return <div className="grid grid-cols-5 gap-1.5 md:gap-2">{VALUATION_WIZARD_STEPS.map((item) => {
     const active = item.step === step
     const completed = item.step < step
-    return <button key={item.step} type="button" disabled={!completed} onClick={() => completed && onBackTo(item.step)} className={`flex items-center gap-3 border px-3 py-3 text-left transition ${active ? 'border-[#d7332b] bg-[#130d0d]' : completed ? 'border-[var(--n3-line)] bg-[#0c1111] hover:border-[#d7332b]' : 'border-[var(--n3-line)] bg-[#080d0d] opacity-55'}`}>
+    return <button key={item.step} type="button" aria-label={`Paso ${item.step}: ${item.label}`} aria-current={active ? 'step' : undefined} disabled={!completed} onClick={() => completed && onBackTo(item.step)} className={`flex min-h-11 items-center justify-center gap-2 border px-1.5 py-2 text-center transition md:justify-start md:px-3 md:py-3 md:text-left ${active ? 'border-[#d7332b] bg-[#130d0d]' : completed ? 'border-[var(--n3-line)] bg-[#0c1111] hover:border-[#d7332b]' : 'border-[var(--n3-line)] bg-[#080d0d] opacity-55'}`}>
       <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${active ? 'bg-[#d7332b] text-white' : completed ? 'bg-[#24302f] text-[#9fd0c8]' : 'bg-[#151919] text-[var(--n3-text-muted)]'}`}>{completed ? <Check size={14} /> : item.step}</span>
-      <span><span className="block text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Paso {item.step}</span><strong className="mt-0.5 block text-xs">{item.shortLabel}</strong></span>
+      <span className="hidden md:block"><span className="block text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Paso {item.step}</span><strong className="mt-0.5 block text-xs">{item.shortLabel}</strong></span>
     </button>
   })}</div>
 }
@@ -352,7 +352,8 @@ export default function ValuationPage() {
     .filter((item) => {
       const suggested = item as SuggestedComparable
       return item.sourceType === 'CBRS' &&
-        suggested.quality !== 'reference_only' &&
+        !item.id.startsWith('cmp-') &&
+        (suggested.quality === 'canonical' || suggested.quality === 'usable') &&
         item.priceUf > 0 &&
         calculateCanonicalComparableUfM2(item) > 0
     })
@@ -432,6 +433,7 @@ export default function ValuationPage() {
           landAreaM2: subject.landAreaM2,
           bedrooms: subject.bedrooms,
           bathrooms: subject.bathrooms,
+          constructionYear: subject.constructionYear,
           latitude: subject.latitude,
           longitude: subject.longitude,
         }),
@@ -699,13 +701,13 @@ export default function ValuationPage() {
 
     {message ? <div role="status" className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm text-[#ff9a93]">{message}</div> : null}
 
-    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-4 backdrop-blur">
-      <div className="flex items-center justify-between gap-3">
-        <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold disabled:opacity-30"><ArrowLeft size={14} />Anterior</button>
+    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-3 backdrop-blur md:py-4">
+      <div className="flex items-center justify-between gap-1.5 md:gap-3">
+        <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-30 md:gap-2 md:px-4"><ArrowLeft size={14} /><span className="hidden sm:inline">Anterior</span></button>
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
-        <div className="flex items-center gap-2">
-          {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex items-center gap-2 border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold disabled:opacity-50"><Save size={14} />{saving ? 'Guardando…' : 'Guardar borrador'}</button> : null}
-          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Continuar <ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex items-center gap-2 bg-[#d7332b] px-5 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Save size={15} />{saving ? 'Guardando…' : 'Guardar borrador'}</button>}
+        <div className="flex items-center gap-1.5 md:gap-2">
+          {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
+          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar'}</button>}
         </div>
       </div>
     </div>
