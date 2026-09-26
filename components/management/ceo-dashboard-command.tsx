@@ -23,7 +23,7 @@ type Summary = {
   entities: Entity[]
   historyCoverage?: {
     monthly2025Periods?: number
-    completeMonthly2025Periods?: number
+    baselineMonthly2025Periods?: number
     annual2025MetricCodes?: number
     completeMonthly2026Periods?: number
     latestVerifiedPeriod?: string | null
@@ -253,7 +253,7 @@ export function CeoDashboardCommand() {
   const creditedDetail = usesCommercialCredit ? `${n(selectedMetrics.management_credited_sales, 1)} crédito gestión` : undefined
   const history = summary.historyCoverage
   const historyLabel = history
-    ? `Histórico 2025: ${n(history.monthly2025Periods)} meses ventas/UF + ${n(history.annual2025MetricCodes)} métricas anuales · 2026: ${n(history.completeMonthly2026Periods)} meses operativos`
+    ? `Histórico 2025: ${n(history.baselineMonthly2025Periods)} meses × 6 métricas base + ${n(history.annual2025MetricCodes)} métricas anuales · 2026: ${n(history.completeMonthly2026Periods)} meses operativos`
     : 'Histórico —'
   const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)} · ${historyLabel}`
 
