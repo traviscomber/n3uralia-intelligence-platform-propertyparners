@@ -42,6 +42,7 @@ export async function GET() {
   const directorKeys = visibleDirectors.map((item) => item.director_key)
   if (!directorKeys.length) return NextResponse.json({
     directors: [],
+    permissions: { canBulkAssign: scope.scope === 'global' },
     leads: [],
     candidates: [],
     performance: [],
@@ -218,6 +219,7 @@ export async function GET() {
 
   return NextResponse.json({
     directors: visibleDirectors,
+    permissions: { canBulkAssign: scope.scope === 'global' },
     leads: enrichedLeads,
     candidates,
     performance,
