@@ -58,7 +58,7 @@ export default async function MarketPage() {
 
   const marketViews = [
     {
-      label: 'Oferta actual',
+      label: 'Casas hoy',
       detail: 'Qué casas están publicadas hoy y cuál es el universo completo del último snapshot válido.',
       href: '/dashboard/market/oferta',
       icon: Home,
