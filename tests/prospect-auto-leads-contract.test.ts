@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { readFileSync } from 'node:fs'
 
 test('prospect automation only creates leads from confirmed territory and current canonical identity', () => {
-  const sql = readFileSync('supabase/migrations/20260926142500_scope_auto_prospects_to_live_portal_houses.sql', 'utf8')
+  const sql = readFileSync('supabase/migrations/20260926143000_harden_auto_prospect_function_security.sql', 'utf8')
   assert.match(sql, /join public\.market_neighborhood_director_assignments/i)
   assert.match(sql, /t\.active/i)
   assert.match(sql, /t\.valid_to is null/i)
@@ -15,6 +15,8 @@ test('prospect automation only creates leads from confirmed territory and curren
   assert.match(sql, /lead_created/i)
   assert.match(sql, /director_assigned/i)
   assert.match(sql, /pg_advisory_xact_lock/i)
+  assert.match(sql, /security invoker/i)
+  assert.match(sql, /set search_path = ''/i)
   assert.match(sql, /grant execute on function public\.refresh_property_prospect_leads_v1\(\) to service_role/i)
   assert.doesNotMatch(sql, /insert into public\.market_neighborhood_director_assignments[\s\S]*select[\s\S]*vitacura_market_neighborhoods/i)
 })
