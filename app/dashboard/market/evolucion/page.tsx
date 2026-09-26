@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { CalculationTrace } from '@/components/market/calculation-trace'
 import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { requireAnyPageCapability } from '@/lib/access-guards'
@@ -193,11 +192,9 @@ export default async function MarketEvolutionPage() {
         />
       </div>
 
-      <div className="mt-6">
-        <Link href="/dashboard/control/operations" className="text-xs text-[var(--n3-teal-soft)]">
-          Ir a Gestión para MoM, YoY comercial, metas y scorecard
-        </Link>
-      </div>
+      <p className="mt-6 text-xs leading-5 text-[var(--n3-text-muted)]">
+        MoM y YoY comercial, metas, scorecard, funnel y alertas se consultan en la vista Hoy correspondiente al rol; no forman parte de Mercado.
+      </p>
     </WorkspaceShell>
   )
 }
