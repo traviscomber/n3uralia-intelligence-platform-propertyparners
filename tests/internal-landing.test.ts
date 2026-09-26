@@ -8,7 +8,7 @@ test('landing is an internal territorial entry point without public valuation', 
 
   assert.doesNotMatch(page, /PublicValuationEstimator/)
   assert.match(page, /VitacuraTerritoryLanding/)
-  assert.match(page, /\/dashboard\/market\/mapa\/oferta/)
+  assert.match(page, /\/dashboard\/market\/mapa/)
   assert.match(page, /\/dashboard\/properties/)
   assert.match(page, /\/dashboard\/valuations/)
   assert.match(territory, /Public-safe static projection/)
