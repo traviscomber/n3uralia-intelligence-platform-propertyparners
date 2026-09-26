@@ -19,3 +19,9 @@ test('property inbox explains learned suggestions without enabling confirm actio
   assert.match(ui,/learned_address_alias_conflict:'Patrón aprendido en conflicto'/)
   assert.match(ui,/La señal aprendida sirve para priorizar la revisión, pero no escribe barrio ni crea asignaciones/)
 })
+
+test('learned advisory confidence rendering uses PostgreSQL-safe numeric formatting', () => {
+  const sql=readFileSync('supabase/migrations/20260926185500_fix_learned_neighborhood_advisory_confidence.sql','utf8')
+  assert.match(sql,/round\(\(learned\.confidence\*100\)::numeric,1\)::text/)
+  assert.doesNotMatch(sql,/%.1f/)
+})
