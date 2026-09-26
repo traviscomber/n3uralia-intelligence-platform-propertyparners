@@ -79,7 +79,7 @@ export const SELLER_NAVIGATION: NavigationSection[] = [
       { label: 'Hoy', href: '/dashboard/partner', anyCapabilities: ['dashboard.self.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.self.read'] },
-      { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.self.read'] },
+      { label: 'Mi cartera', href: '/dashboard/properties', anyCapabilities: ['properties.self.read'] },
       { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', anyCapabilities: ['reports.self.read'] },
     ],
   },
