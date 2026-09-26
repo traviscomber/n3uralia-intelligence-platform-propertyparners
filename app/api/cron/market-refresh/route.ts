@@ -742,6 +742,8 @@ export async function GET(request: Request) {
 
   let identityIntelligence: unknown = null
   let identityIntelligenceError: string | null = null
+  let neighborhoodLearning: unknown = null
+  let neighborhoodLearningError: string | null = null
   let prospectPipeline: unknown = null
   let prospectPipelineError: string | null = null
 
@@ -749,6 +751,10 @@ export async function GET(request: Request) {
     const identityResult = await supabase.rpc('refresh_market_listing_property_match_candidates_v1')
     identityIntelligence = identityResult.data ?? null
     identityIntelligenceError = identityResult.error?.message ?? null
+
+    const learningResult = await supabase.rpc('refresh_market_neighborhood_learning_v1')
+    neighborhoodLearning = learningResult.data ?? null
+    neighborhoodLearningError = learningResult.error?.message ?? null
 
     const prospectResult = await supabase.rpc('refresh_property_prospect_leads_v1')
     prospectPipeline = prospectResult.data ?? null
@@ -758,6 +764,7 @@ export async function GET(request: Request) {
   const ok = completeInventories === DATASETS.length
     && totalFailures === 0
     && !identityIntelligenceError
+    && !neighborhoodLearningError
     && !prospectPipelineError
 
   return NextResponse.json(
@@ -776,6 +783,10 @@ export async function GET(request: Request) {
       identityIntelligence: {
         refresh: identityIntelligence,
         error: identityIntelligenceError,
+      },
+      neighborhoodLearning: {
+        refresh: neighborhoodLearning,
+        error: neighborhoodLearningError,
       },
       prospectPipeline: {
         refresh: prospectPipeline,
