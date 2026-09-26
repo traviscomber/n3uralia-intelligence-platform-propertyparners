@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { AlertTriangle, ArrowLeft, CheckCircle2, RotateCcw, Send, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, CheckCircle2, RotateCcw, Send } from 'lucide-react'
 
 type Review = {
   available:boolean
@@ -21,6 +21,7 @@ type Review = {
     modelEvidence:null|{scope:'global'|'barrio';barrio:string;evaluationYear:number;methodologyVersion:string;sampleCount:number;mapePct:number|null;medianAbsErrorPct:number|null;p80AbsErrorPct:number|null;p90AbsErrorPct:number|null;within10Pct:number|null;within15Pct:number|null;within20Pct:number|null;reliability:string;reviewMode:string}
   }
   loCurroAdvisory?:{available?:boolean;severity?:string;message?:string;challengerValueUf?:number;deltaPct?:number;segmentConfidence?:string;segmentEvidenceN?:number;segmentWinRatePct?:number;changesOfficialValue?:boolean}
+  permissions?:{ownsCase:boolean;canReview:boolean;canApprove:boolean}
   nonBindingIntelligence:boolean
   changesOfficialValue:boolean
   error?:string
@@ -33,13 +34,6 @@ function uf(v:number|null|undefined){ return v==null?'—':`UF ${nf.format(v)}` 
 
 const statusLabel:Record<string,string>={ draft:'Borrador', review:'En revisión', approved:'Aprobada', issued:'Emitida' }
 const confidenceLabel:Record<string,string>={ low:'Baja', medium:'Media', high:'Alta', strong:'Alta', moderate:'Media', weak:'Baja' }
-const gateLabel:Record<string,string>={
-  blocked:'Bloqueado',
-  mandatory_professional_review:'Revisión profesional obligatoria',
-  reinforced_review:'Revisión reforzada',
-  standard_review:'Revisión estándar',
-}
-
 export default function ProfessionalReviewPage(){
   const { id } = useParams<{id:string}>()
   const [review,setReview] = useState<Review|null>(null)
@@ -93,8 +87,12 @@ export default function ProfessionalReviewPage(){
   const gate = review.reviewGate
   const model = gate?.modelEvidence
   const gateAttention = gate?.mode === 'blocked' || gate?.mode === 'mandatory_professional_review'
-  const canReturn = review.caseStatus === 'review'
-  const canSubmit = review.caseStatus === 'draft' && gate?.mode !== 'blocked'
+  const permissions = review.permissions ?? { ownsCase:false, canReview:false, canApprove:false }
+  const isDirector = permissions.canReview && !permissions.canApprove
+  const isPartner = permissions.ownsCase && !permissions.canReview && !permissions.canApprove
+  const canReturn = review.caseStatus === 'review' && (permissions.canReview || permissions.canApprove)
+  const canSubmit = review.caseStatus === 'draft' && gate?.mode !== 'blocked' && (permissions.ownsCase || permissions.canReview || permissions.canApprove)
+  const attentionLabel = permissions.canApprove ? 'Qué debe mirar Pedro Pablo' : isDirector ? 'Qué debe validar dirección' : 'Qué debes revisar antes de enviar'
 
   return <div className="space-y-5 pb-10">
     <div className="flex items-center justify-between gap-3">
@@ -134,7 +132,7 @@ export default function ProfessionalReviewPage(){
       <div className="flex items-start gap-3">
         {gateAttention || highRisk ? <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300"/> : <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300"/>}
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Qué debe mirar Pedro Pablo</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{attentionLabel}</p>
           <h2 className="mt-1 text-lg font-semibold">{gateAttention || highRisk ? 'Requiere revisión antes de decidir' : 'Evidencia suficiente para revisión'}</h2>
           <div className="mt-3 space-y-2 text-sm text-[var(--n3-text-light)]">
             {gate?.reasons?.length ? gate.reasons.slice(0, 2).map((item)=><p key={item}>• {item.replace('Challenger material requiere contraste profesional','Existe una referencia alternativa material que conviene contrastar')}</p>) : null}
@@ -149,7 +147,7 @@ export default function ProfessionalReviewPage(){
       <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Acción</p>
       {canReturn ? <>
         <h2 className="mt-1 text-lg font-semibold">¿Necesita corrección?</h2>
-        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Escribe una instrucción concreta y devuelve el expediente a la ejecutiva.</p>
+        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">{permissions.canApprove ? 'Escribe una instrucción concreta y devuelve el expediente para ajuste.' : 'Escribe una instrucción concreta y devuelve el expediente al partner.'}</p>
         <textarea value={reason} onChange={event=>setReason(event.target.value)} rows={3} placeholder="Ej.: revisar el comparable 2 y justificar la diferencia antes de volver a enviar." className="mt-4 w-full border border-[var(--n3-line)] bg-[var(--n3-black)] p-3 text-sm text-[var(--n3-text-light)] outline-none focus:border-[var(--n3-teal-soft)]" />
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href={`/dashboard/valuations/${id}`} className="inline-flex min-h-10 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs font-semibold">Volver para decidir</Link>
@@ -157,8 +155,8 @@ export default function ProfessionalReviewPage(){
         </div>
       </> : null}
       {canSubmit ? <>
-        <h2 className="mt-1 text-lg font-semibold">Expediente corregido</h2>
-        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Cuando las correcciones estén completas, vuelve a enviarlo a revisión.</p>
+        <h2 className="mt-1 text-lg font-semibold">{isPartner ? 'Valorización lista' : 'Expediente corregido'}</h2>
+        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">{isPartner ? 'Cuando los comparables y la evidencia estén correctos, envía tu valorización a dirección.' : 'Cuando las correcciones estén completas, vuelve a enviarlo a revisión.'}</p>
         <div className="mt-4"><button type="button" disabled={working} onClick={()=>void transition('review')} className="inline-flex min-h-10 items-center gap-2 bg-[var(--primary)] px-4 text-xs font-semibold text-white disabled:opacity-40"><Send size={14}/>Enviar a revisión</button></div>
       </> : null}
       {message ? <p role="status" className="mt-3 text-sm text-[var(--n3-text-muted)]">{message}</p> : null}
