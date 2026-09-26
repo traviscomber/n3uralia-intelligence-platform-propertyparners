@@ -83,3 +83,14 @@ test('secondary territory signals cannot auto-resolve and learned aliases train 
   assert.match(sql,/support_rows::numeric\/nullif\(total_rows,0\)>=0\.98/)
   assert.doesNotMatch(sql,/decision='resolved_by_system'[\s\S]{0,500}accepted_memory/)
 })
+
+
+test('secondary signal calibration never promotes auto-write authority', () => {
+  const sql = readFileSync('supabase/migrations/20260926210000_calibrate_neighborhood_secondary_signals.sql','utf8')
+  assert.match(sql,/market_neighborhood_signal_quality_v1/)
+  assert.match(sql,/auto_write_eligible boolean not null default false/)
+  assert.match(sql,/false::boolean as auto_write_eligible/)
+  assert.match(sql,/wilson_lower_95/)
+  assert.match(sql,/0\.995/)
+  assert.match(sql,/Secondary signal remains advisory/)
+})
