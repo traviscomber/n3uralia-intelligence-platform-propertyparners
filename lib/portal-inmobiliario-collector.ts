@@ -611,8 +611,9 @@ export async function collectPortalListingDetails(options: {
     for (let start = 0; start < options.listingUrls.length; start += concurrency) {
       const batch = options.listingUrls.slice(start, start + concurrency)
       const results = await Promise.all(batch.map(async (url) => {
-        const page = await browser.newPage()
+        let page: Page | null = null
         try {
+          page = await browser.newPage()
           await configurePage(page)
           await gotoWithRetry(page, url, 'Portal listing')
           await waitForPrimaryDetail(page, waitMs)
@@ -625,7 +626,7 @@ export async function collectPortalListingDetails(options: {
         } catch (error) {
           return { row: null, failure: { url, error: error instanceof Error ? error.message : String(error) } }
         } finally {
-          await page.close()
+          if (page) await page.close().catch(() => undefined)
         }
       }))
 
@@ -635,7 +636,7 @@ export async function collectPortalListingDetails(options: {
       }
     }
   } finally {
-    await browser.close()
+    await browser.close().catch(() => undefined)
   }
 
   return {
