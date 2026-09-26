@@ -133,7 +133,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
     {error ? <div role="alert" className="border border-[#d7332b] bg-[#160d0c] p-5 text-sm text-[#ff766f]">No fue posible cargar toda la administración de cartera. Las secciones afectadas no se interpretan como vacías: {error}</div> : null}
 
     <section className="space-y-4" aria-labelledby="available-properties-title">
-      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar propiedad</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Propiedades disponibles para asignar</h2></div>
+      <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Buscar propiedad</p><h2 id="available-properties-title" className="mt-2 text-2xl font-semibold">Casas de Vitacura disponibles para asignación</h2></div>
       <form className="flex flex-col gap-2 sm:flex-row">
         <label className="sr-only" htmlFor="property-search">Buscar casa de Vitacura por dirección</label>
         <input id="property-search" name="q" defaultValue={query} placeholder="Buscar por dirección" className="min-h-11 min-w-0 flex-1 border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal)]" />
