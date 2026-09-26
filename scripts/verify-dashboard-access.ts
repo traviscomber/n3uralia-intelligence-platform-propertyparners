@@ -31,6 +31,7 @@ assert.equal(canAccessDashboardPath('seller', '/dashboard/market/fuentes'), fals
 assert.equal(canAccessDashboardPath('seller', '/dashboard/market/import'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/valorizador'), true)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/reportes/audiencias/ejecutivo'), true)
+assert.equal(canAccessDashboardPath('seller', '/dashboard/cuenta'), true)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/control'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/control/reports'), false)
 assert.equal(canAccessDashboardPath('seller', '/dashboard/control/schedules'), false)
