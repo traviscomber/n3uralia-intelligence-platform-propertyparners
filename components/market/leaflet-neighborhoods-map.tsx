@@ -178,7 +178,7 @@ export default function LeafletNeighborhoodsMap({ features, sourceLabel }: Props
 
       <div className="pointer-events-none absolute left-4 top-4 z-[500] max-w-[320px] border border-white/10 bg-black/80 px-4 py-3 backdrop-blur-sm">
         <p className="text-[10px] uppercase tracking-[0.18em] text-[#ff766f]">Vitacura · territorio PP</p>
-        <p className="mt-1 text-sm text-white">19 barrios canónicos</p>
+        <p className="mt-1 text-sm text-white">{features.length.toLocaleString('es-CL')} barrios canónicos</p>
         <p className="mt-1 text-[11px] leading-4 text-white/55">Intensidad = casas asignadas por barrio.</p>
       </div>
 

@@ -1,94 +1,91 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, BarChart3, CheckCircle2, ShieldCheck } from 'lucide-react'
-import PublicValuationEstimator from '@/components/public/public-valuation-estimator'
+import { ArrowRight } from 'lucide-react'
+import VitacuraTerritoryLanding from '@/components/public/vitacura-territory-landing'
+import { VITACURA_PUBLIC_TERRITORY } from '@/lib/vitacura-public-territory'
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[var(--n3-black)] text-[var(--n3-text-light)]">
-      <header className="border-b border-[var(--n3-line)]">
-        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:min-h-20 sm:px-8 lg:px-10">
-          <Image
-            src="/brand/property-partners-vitacura.png"
-            alt="Property Partners Vitacura"
-            width={230}
-            height={64}
-            className="h-8 w-auto max-w-[56vw] object-contain sm:h-10 sm:max-w-none"
-            priority
-          />
+    <main className="min-h-screen overflow-x-hidden bg-[#050807] text-[var(--n3-text-light)]">
+      <header className="border-b border-white/10">
+        <div className="mx-auto flex min-h-16 max-w-[1500px] items-center justify-between gap-4 px-4 sm:min-h-20 sm:px-8 lg:px-10">
+          <div className="flex min-w-0 items-center gap-4">
+            <Image
+              src="/brand/property-partners-vitacura.png"
+              alt="Property Partners Vitacura"
+              width={230}
+              height={64}
+              className="h-8 w-auto max-w-[54vw] object-contain sm:h-10 sm:max-w-none"
+              priority
+            />
+            <span className="hidden border-l border-white/10 pl-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40 md:inline">
+              Intelligence · Portal interno
+            </span>
+          </div>
+
           <Link
             href="/auth/login"
-            className="inline-flex min-h-11 shrink-0 items-center gap-2 border border-[var(--n3-line)] px-3 text-xs font-medium text-[var(--n3-text-light)] transition-colors hover:border-[var(--n3-teal-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] sm:px-4 sm:text-sm"
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 border border-[#d7332b] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#d7332b]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff766f]"
           >
-            <span className="hidden min-[360px]:inline">Iniciar sesión</span>
-            <span className="min-[360px]:hidden">Ingresar</span>
+            Ingresar
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </div>
       </header>
 
-      <section className="relative overflow-hidden border-b border-[var(--n3-line)]">
-        <div className="pointer-events-none absolute inset-0 opacity-35" aria-hidden="true">
-          <div className="absolute left-1/2 top-[-14rem] h-[34rem] w-px bg-[var(--n3-line)]" />
-          <div className="absolute left-[12%] top-0 h-full w-px bg-[var(--n3-line)]" />
-          <div className="absolute right-[12%] top-0 h-full w-px bg-[var(--n3-line)]" />
-          <div className="absolute left-0 top-[38%] h-px w-full bg-[var(--n3-line)]" />
-        </div>
+      <section className="border-b border-white/10">
+        <div className="mx-auto grid max-w-[1500px] gap-8 px-4 py-7 sm:px-8 sm:py-10 lg:grid-cols-[minmax(320px,0.62fr)_minmax(0,1.38fr)] lg:gap-12 lg:px-10 lg:py-12">
+          <div className="flex max-w-xl flex-col justify-between py-3 lg:py-8">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff766f]">
+                Property Partners · Vitacura
+              </p>
+              <h1 className="mt-5 max-w-[9ch] text-[clamp(3rem,8vw,6.4rem)] font-medium leading-[0.92] tracking-[-0.055em] text-white">
+                El territorio primero.
+              </h1>
+              <p className="mt-7 max-w-lg text-base leading-7 text-white/58 sm:text-lg">
+                Una portada simple para entrar al sistema desde la geografía real de Vitacura. Sin mezclar mercado, gestión, valorizaciones ni operación comercial.
+              </p>
+            </div>
 
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-10 lg:py-24">
-          <div className="flex max-w-2xl flex-col justify-center">
-            <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--n3-teal-soft)] sm:mb-5 sm:text-xs sm:tracking-[0.24em]">
-              Property Partners Intelligence · Sólo Vitacura
-            </p>
-            <h1 className="max-w-[12ch] text-[clamp(2.65rem,11vw,4.5rem)] font-semibold leading-[0.98] tracking-[-0.045em]">
-              Conoce un rango referencial para tu casa.
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-[var(--n3-text-muted)] sm:mt-7 sm:text-lg">
-              Estimación rápida con oferta activa de casas y barrios KML de Vitacura. Sin registro, sin dirección y sin entregar datos personales.
-            </p>
-
-            <div className="mt-8 grid max-w-xl grid-cols-1 gap-4 min-[430px]:grid-cols-3 sm:mt-9">
-              <div className="border-l border-[var(--n3-teal)] pl-4">
-                <BarChart3 className="mb-2.5 size-5 text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                <span className="text-sm leading-5 text-[var(--n3-text-muted)]">Oferta activa de Vitacura</span>
+            <div className="mt-10 border-t border-white/10 pt-5">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-white/38">
+                <span>KML Property Partners</span>
+                <span>{VITACURA_PUBLIC_TERRITORY.length} barrios</span>
+                <span>Vitacura</span>
               </div>
-              <div className="border-l border-[var(--n3-teal)] pl-4">
-                <CheckCircle2 className="mb-2.5 size-5 text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                <span className="text-sm leading-5 text-[var(--n3-text-muted)]">Piso mínimo de evidencia</span>
-              </div>
-              <div className="border-l border-[var(--n3-teal)] pl-4">
-                <ShieldCheck className="mb-2.5 size-5 text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                <span className="text-sm leading-5 text-[var(--n3-text-muted)]">Sin capturar datos personales</span>
-              </div>
+              <Link
+                href="/auth/login"
+                className="mt-5 inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#bf2c25] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff766f]"
+              >
+                Entrar al portal
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
             </div>
           </div>
 
-          <PublicValuationEstimator />
+          <VitacuraTerritoryLanding features={VITACURA_PUBLIC_TERRITORY} />
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-px border-x border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-3">
-        <div className="bg-[var(--n3-black)] p-5 sm:p-7 lg:p-8">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">01 · Ubicación</span>
-          <h2 className="mt-4 text-xl font-medium">Selecciona tu sector</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">Si el sector alcanza 5 observaciones utilizables, el rango es sectorial. Si no, usamos una referencia general de Vitacura y lo indicamos explícitamente.</p>
-        </div>
-        <div className="bg-[var(--n3-black)] p-5 sm:p-7 lg:p-8">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">02 · Características</span>
-          <h2 className="mt-4 text-xl font-medium">Describe tu casa</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">La superficie construida es obligatoria. Dormitorios y baños sólo refinan la muestra cuando existe evidencia suficiente.</p>
-        </div>
-        <div className="bg-[var(--n3-black)] p-5 sm:p-7 lg:p-8">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">03 · Resultado</span>
-          <h2 className="mt-4 text-xl font-medium">Recibe un rango, no falsa precisión</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">El cotizador orienta. La valorización profesional mantiene comparables, revisión, aprobación y trazabilidad separadas.</p>
+      <section className="mx-auto max-w-[1500px] px-4 py-7 sm:px-8 lg:px-10">
+        <div className="grid gap-5 border-t border-white/10 pt-5 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/30">Portada interna</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/42">
+              Después de iniciar sesión, cada área mantiene su propia pregunta y su propia vista. Mercado no se mezcla con control ejecutivo ni con Property 360.
+            </p>
+          </div>
+          <Link href="/auth/login" className="inline-flex items-center gap-2 text-xs font-medium text-white/64 hover:text-white">
+            Abrir sistema <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
         </div>
       </section>
 
-      <footer className="border-t border-[var(--n3-line)]">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-7 text-xs leading-5 text-[var(--n3-text-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
-          <span>Property Partners Vitacura · Estimación referencial de mercado</span>
-          <span>Inteligencia y trazabilidad tecnológica por N3uralia</span>
+      <footer className="border-t border-white/10">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-2 px-4 py-6 text-[10px] uppercase tracking-[0.12em] text-white/28 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
+          <span>Property Partners Vitacura</span>
+          <span>Desarrollado por N3uralia</span>
         </div>
       </footer>
     </main>

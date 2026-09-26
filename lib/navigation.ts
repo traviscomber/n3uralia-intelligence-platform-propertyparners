@@ -21,7 +21,7 @@ export const CEO_NAVIGATION: NavigationSection[] = [
       { label: 'Hoy', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
+      { label: 'Cierre mensual', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
     ],
@@ -42,7 +42,7 @@ export const ADMIN_NAVIGATION: NavigationSection[] = [
   {
     label: 'Administración',
     items: [
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
+      { label: 'Cierre mensual', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.global.manage'] },
       { label: 'Datos y metodología', href: '/dashboard/market/fuentes', anyCapabilities: ['market.manage_sources', 'settings.manage'] },
       { label: 'Asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.global.assign'] },
@@ -65,7 +65,7 @@ export const DIRECTOR_NAVIGATION: NavigationSection[] = [
   {
     label: 'Administración',
     items: [
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.office.read'] },
+      { label: 'Cierre mensual', href: '/dashboard/control/operations', anyCapabilities: ['management.office.read'] },
       { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.office.manage'] },
       { label: 'Asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.office.assign'] },
     ],

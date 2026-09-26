@@ -172,7 +172,7 @@ export default function ValuationRegistryPage() {
 
           <div className="divide-y divide-[var(--n3-line)]">
             {filtered.map((item) => (
-              <Link key={item.id} href={`/dashboard/valuations/${item.id}`} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
+              <Link key={item.id} href={`/dashboard/valuations/${item.id}`} prefetch={false} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-medium sm:truncate">{item.address || 'Sin dirección'}</p>
                   <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'} · {item.accepted_comparable_count ?? 0} comparables aceptados</p>

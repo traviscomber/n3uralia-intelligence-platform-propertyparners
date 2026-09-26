@@ -1,59 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
 
-type Evidence = {
-  label: string
-  source: string
-  reference?: string | null
-  cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations' | 'properties'
-}
-
-type ActionProposal = {
-  id: string
-  kind: 'review' | 'follow_up' | 'verify' | 'prepare'
-  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'cross-domain'
-  action: string
-  objectLabel: string
-  reason: string
-  priority: 'critical' | 'high' | 'medium' | 'low'
-  href: string
-  requiresConfirmation: true
-  executionStatus: 'proposed'
-  evidence: Evidence[]
-}
-
-type DecisionSupportResponse = {
-  proposals: ActionProposal[]
-  generatedAt: string
-  periodLabel: string
-  scopeLabel: string
-}
-
-function taskPriority(priority: ActionProposal['priority']) {
-  if (priority === 'critical') return 'urgent'
-  if (priority === 'high') return 'high'
-  if (priority === 'low') return 'low'
-  return 'medium'
-}
-
-function taskSeverity(priority: ActionProposal['priority']) {
-  if (priority === 'critical') return 'critical'
-  if (priority === 'high') return 'warning'
-  return 'info'
-}
-
-function detailFromProposal(proposal: ActionProposal, context: DecisionSupportResponse) {
-  const evidence = proposal.evidence
-    .map((item) => [item.label, item.source, item.reference, item.cutoff].filter(Boolean).join(' · '))
-    .join(' | ')
-  return [
-    proposal.reason,
-    `Origen: Pedro Pablo · ${context.scopeLabel} · ${context.periodLabel}.`,
-    evidence ? `Evidencia: ${evidence}.` : null,
-    'Acción creada mediante confirmación humana en Pedro Pablo Action Gateway.',
-  ].filter(Boolean).join(' ')
-}
+import {
+  buildPedroPabloTaskDraft,
+  type PedroPabloDecisionSupportResponse,
+} from '@/lib/pedro-pablo-action-gateway-contract'
 
 async function regenerateProposal(request: NextRequest, prompt: string, proposalId: string) {
   const cookie = request.headers.get('cookie') ?? ''
@@ -63,11 +14,11 @@ async function regenerateProposal(request: NextRequest, prompt: string, proposal
     body: JSON.stringify({ prompt }),
     cache: 'no-store',
   })
-  const payload = await response.json() as DecisionSupportResponse | { error?: string }
+  const payload = await response.json() as PedroPabloDecisionSupportResponse | { error?: string }
   if (!response.ok) {
     return { error: NextResponse.json({ error: 'No fue posible regenerar la propuesta autorizada.' }, { status: response.status }) }
   }
-  const context = payload as DecisionSupportResponse
+  const context = payload as PedroPabloDecisionSupportResponse
   const proposal = context.proposals.find((item) => item.id === proposalId)
   if (!proposal) {
     return { error: NextResponse.json({ error: 'La propuesta ya no coincide con el contexto autorizado actual.' }, { status: 409 }) }
@@ -100,17 +51,7 @@ export async function POST(request: NextRequest) {
     if ('error' in regenerated) return regenerated.error
     const { proposal, context, cookie } = regenerated
 
-    const taskDraft = {
-      sourceKey: `pedro-pablo:${proposal.id}`,
-      title: proposal.action,
-      detail: detailFromProposal(proposal, context),
-      severity: taskSeverity(proposal.priority),
-      priority: taskPriority(proposal.priority),
-      entityName: '',
-      assignedTo: null,
-      subjectProfileId: null,
-      dueDate: null,
-    }
+    const taskDraft = buildPedroPabloTaskDraft(proposal, context)
 
     if (mode === 'preview') {
       return NextResponse.json({

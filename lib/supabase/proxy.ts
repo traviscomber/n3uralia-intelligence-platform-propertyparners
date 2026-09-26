@@ -13,6 +13,15 @@ function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // Public pages and the access-error screen expose no authenticated
+  // business data and do not need a Supabase Auth round trip. Session refresh
+  // occurs on the next protected request.
+  const isLandingPage = pathname === '/'
+  const isPublicPage = isLandingPage || pathname.startsWith('/about') || pathname.startsWith('/contact')
+  if (isPublicPage || pathname === '/auth/error') {
+    return NextResponse.next({ request })
+  }
+
   // These two endpoints are intentionally public and expose no authenticated
   // business records. /api/release returns deployment identity for CI, while
   // the valuation endpoint returns aggregate market statistics only.
@@ -50,30 +59,20 @@ export async function updateSession(request: NextRequest) {
     // They must reach the route without requiring a browser Supabase session.
     if (isCronPath) return supabaseResponse
 
-    let user = null
-    try {
-      const result = await supabase.auth.getUser()
-      user = result.data.user
-    } catch (error) {
-      // An expired/invalid refresh token is an unauthenticated session, not an
-      // application error. Clear only Supabase auth cookies so the next login is clean.
-      const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
-      if (code === 'refresh_token_not_found' || code === 'refresh_token_already_used') {
-        supabaseResponse = clearSupabaseAuthCookies(request, supabaseResponse)
-        user = null
-      } else {
-        throw error
-      }
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
+    const userId = claimsError ? null : String(claimsData?.claims?.sub || '') || null
+    if (claimsError) {
+      // Invalid/expired auth state is unauthenticated. Clear only Supabase auth
+      // cookies so the next login starts from a clean session.
+      supabaseResponse = clearSupabaseAuthCookies(request, supabaseResponse)
     }
 
     const isAuthPath = pathname.startsWith('/auth')
-    const isLandingPage = pathname === '/'
     const isLegacyMarketingPath = pathname === '/es' || pathname.startsWith('/es/')
-    const isPublicPath = isLandingPage || pathname.startsWith('/about') || pathname.startsWith('/contact')
 
     // API consumers must receive a machine-readable authentication error instead
     // of an HTML login page with a misleading 200 response.
-    if (!user && isApiPath) {
+    if (!userId && isApiPath) {
       const response = NextResponse.json(
         { error: 'No autenticado.' },
         { status: 401, headers: { 'Cache-Control': 'no-store' } },
@@ -85,28 +84,28 @@ export async function updateSession(request: NextRequest) {
     // N3uralia marketing pages out of the production navigation for every user.
     if (isLegacyMarketingPath) {
       const url = request.nextUrl.clone()
-      url.pathname = user ? '/dashboard' : '/auth/login'
+      url.pathname = userId ? '/dashboard' : '/auth/login'
       const response = NextResponse.redirect(url)
-      return user ? response : clearSupabaseAuthCookies(request, response)
+      return userId ? response : clearSupabaseAuthCookies(request, response)
     }
 
     // Allow public access to landing page and public routes.
-    if (!user && !isAuthPath && !isPublicPath) {
+    if (!userId && !isAuthPath) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       return clearSupabaseAuthCookies(request, NextResponse.redirect(url))
     }
 
-    if (user && isAuthPath && !pathname.startsWith('/auth/callback') && pathname !== '/auth/error' && pathname !== '/auth/mfa') {
+    if (userId && isAuthPath && !pathname.startsWith('/auth/callback') && pathname !== '/auth/error' && pathname !== '/auth/mfa') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
     }
 
-    if (user && pathname.startsWith('/dashboard')) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+    if (userId && pathname.startsWith('/dashboard')) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle()
       // Unknown or missing roles are rejected by canAccessDashboardPath.
-      const role = profile?.role || user.app_metadata?.role || 'unauthorized'
+      const role = profile?.role || 'unauthorized'
       if (!canAccessDashboardPath(role, pathname)) {
         const url = request.nextUrl.clone()
         url.pathname = '/auth/error'

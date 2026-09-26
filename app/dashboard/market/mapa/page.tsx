@@ -100,7 +100,10 @@ export default async function VitacuraMapPage() {
         eyebrow="Mercado · Territorio"
         title="Mapa de barrios de Vitacura"
         meta="Sólo lectura"
-        actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
+        actions={[
+          { label: 'Oferta en mapa', href: '/dashboard/market/mapa/oferta', primary: true },
+          { label: 'Volver a Mercado', href: '/dashboard/market' },
+        ]}
       />
 
       {snapshot.error ? (

@@ -6,23 +6,21 @@ import { PedroPabloFloatingChat } from '@/components/intelligence/pedro-pablo-fl
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) redirect('/auth/login')
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
+  const userId = claimsError ? null : String(claimsData?.claims?.sub || '') || null
+  if (!userId) redirect('/auth/login')
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*')
-    .eq('id', user.id)
+    .select('id,full_name,role,team,avatar_url,created_at')
+    .eq('id', userId)
     .maybeSingle()
 
   return (
     <div className="dashboard-shell flex h-screen overflow-hidden bg-[var(--n3-black)] text-[var(--n3-text-light)]">
       <Sidebar profile={profile} />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar user={user} profile={profile} />
+        <Topbar profile={profile} />
         <main className="dashboard-content flex-1 overflow-y-auto bg-[var(--n3-black)] p-3 sm:p-4 md:p-6">
           {children}
         </main>

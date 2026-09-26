@@ -88,6 +88,9 @@ export function Property360ProspectWorkflow({
       setData(payload)
       setDirectorKey(payload.territoryAssignment?.director_key || '')
       setStatus(payload.lead?.status || 'assigned')
+      setNextFollowUpAt(payload.lead?.next_follow_up_at
+        ? new Date(payload.lead.next_follow_up_at).toISOString().slice(0,16)
+        : '')
     } catch(e) {
       setMessage(e instanceof Error ? e.message : 'No fue posible cargar la gestión comercial.')
     } finally { setLoading(false) }

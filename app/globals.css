@@ -350,3 +350,28 @@
     color: #ffffff;
   }
 }
+
+
+/* Offer-map light islands intentionally opt out of the dashboard legacy dark normalization.
+ * Keep this scoped to the map workspace so the rest of Property Partners retains its dark shell. */
+@media screen {
+  .dashboard-content .pp-map-light-surface {
+    background-color: #f4f1e9 !important;
+    color: #18201c !important;
+    border-color: rgba(24, 32, 28, 0.14) !important;
+  }
+
+  .dashboard-content .pp-map-light-surface :is(.pp-map-light-ink, h1, h2, h3, h4, strong) {
+    color: #18201c !important;
+  }
+
+  .dashboard-content .pp-map-light-surface .pp-map-light-muted {
+    color: #657069 !important;
+  }
+
+  .dashboard-content .pp-map-light-overlay {
+    background-color: rgba(242, 239, 232, 0.96) !important;
+    color: #18201c !important;
+    border-color: rgba(24, 32, 28, 0.14) !important;
+  }
+}

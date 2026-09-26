@@ -63,6 +63,10 @@ jobs:
       - name: Verify executive dashboard comparisons
         run: node --import tsx --test tests/executive-dashboard-comparisons.test.ts
 
+      - name: Verify Pedro Pablo action gateway
+        run: node --import tsx --test tests/pedro-pablo-action-gateway.test.ts
+
+
       - name: Verify contractual closeout model
         run: pnpm contract:closeout:verify
 
@@ -129,6 +133,10 @@ jobs:
       - name: Verify Property360 comparable gates
         run: node --import tsx --test tests/property360-comparables.test.ts
 
+      - name: Verify Property360 follow-up preservation
+        run: node --import tsx --test tests/property360-follow-up-preservation.test.ts
+
+
       - name: Verify Jan-Aug canonical management periods
         run: node --import tsx --test tests/management-canonical-periods.test.ts
 
@@ -155,6 +163,18 @@ jobs:
 
       - name: Verify Portal snapshot publication policy
         run: node --import tsx --test tests/portal-snapshot-policy.test.ts
+
+      - name: Verify integrated market workspace
+        run: node --import tsx --test tests/market-workspace.test.ts
+
+      - name: Verify Pedro market view separation
+        run: node --import tsx --test tests/market-pedro-view-separation.test.ts
+
+      - name: Verify top-level view responsibilities
+        run: node --import tsx --test tests/view-responsibility.test.ts
+
+
+
 
       - name: Verify management report scheduling
         run: pnpm management:reports:verify
@@ -200,6 +220,18 @@ jobs:
 
       - name: Verify dashboard access
         run: pnpm access:verify
+
+      - name: Verify application performance hot paths
+        run: node --import tsx --test tests/performance-hot-paths.test.ts
+
+      - name: Verify internal Vitacura landing
+        run: node --import tsx --test tests/internal-landing.test.ts
+
+      - name: Verify product view boundaries
+        run: node --import tsx --test tests/product-view-boundaries.test.ts
+
+
+
 
       - name: Build application
         run: pnpm build

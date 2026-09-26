@@ -115,7 +115,7 @@ export default async function PropertiesPage() {
                 <div><dt className="text-[var(--n3-text-muted)]">Corte</dt><dd className="mt-1 text-[var(--n3-text-light)]">{formatDate(property?.last_seen_at ?? null)}</dd></div>
               </dl>
             </>
-            return property ? <Link key={assignment.id} href={`/dashboard/properties/${property.id}`} className="block min-h-11 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{content}</Link> : <article key={assignment.id} className="py-4">{content}</article>
+            return property ? <Link key={assignment.id} href={`/dashboard/properties/${property.id}`} prefetch={false} className="block min-h-11 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{content}</Link> : <article key={assignment.id} className="py-4">{content}</article>
           })}
         </div>
 
@@ -131,7 +131,7 @@ export default async function PropertiesPage() {
                 <td className="p-3"><p className="font-medium">{property?.normalized_address || 'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Sin tipo'}{property?.bedrooms != null ? ` · ${property.bedrooms} dorm.` : ''}{area != null ? ` · ${area} m²` : ''}</p></td>
                 <td className="p-3 text-[var(--n3-text-muted)]">{assignmentRole(assignment.assignment_role)}</td>
                 <td className="p-3"><p>{property?.identity_status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</p><p className={`mt-1 text-xs ${ageDays === null || ageDays > 7 ? 'text-[#f0c96a]' : 'text-[var(--n3-text-muted)]'}`}>{freshness} · {formatDate(property?.last_seen_at ?? null)}</p></td>
-                <td className="p-3 text-right">{property ? <Link href={`/dashboard/properties/${property.id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--n3-teal-soft)]">Abrir propiedad</Link> : null}</td>
+                <td className="p-3 text-right">{property ? <Link href={`/dashboard/properties/${property.id}`} prefetch={false} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--n3-teal-soft)]">Abrir propiedad</Link> : null}</td>
               </tr>
             })}</tbody>
           </table>
