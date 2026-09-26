@@ -348,6 +348,16 @@ export default function ValuationPage() {
     () => comparables.filter((item) => item.selected && item.priceUf > 0 && calculateCanonicalComparableUfM2(item) > 0),
     [comparables],
   )
+  const recommendedComparableIds = useMemo(() => comparables
+    .filter((item) => {
+      const suggested = item as SuggestedComparable
+      return item.sourceType === 'CBRS' &&
+        suggested.quality !== 'reference_only' &&
+        item.priceUf > 0 &&
+        calculateCanonicalComparableUfM2(item) > 0
+    })
+    .slice(0, 3)
+    .map((item) => item.id), [comparables])
   const cbrsEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'CBRS')), [selectedComparables])
   const portalEvidence = useMemo(() => summarizeEvidence(selectedComparables.filter((item) => item.sourceType === 'Portal' || item.sourceType === 'TocToc')), [selectedComparables])
   const quality = useMemo(() => evidenceQuality(cbrsEvidence, portalEvidence), [cbrsEvidence, portalEvidence])
@@ -369,6 +379,16 @@ export default function ValuationPage() {
 
   function addComparable(sourceType: ValuationComparable['sourceType']) {
     setComparables((current) => [...current, blankComparable(current.length + 1, subject.propertyType, sourceType)])
+  }
+
+  function useRecommendedComparables() {
+    if (recommendedComparableIds.length < 3) return
+    const recommended = new Set(recommendedComparableIds)
+    setComparables((current) => current.map((item) => ({
+      ...item,
+      selected: recommended.has(item.id) ? true : item.selected,
+    })))
+    setMessage('Seleccionamos 3 ventas recomendadas. Revísalas antes de continuar.')
   }
 
   function goNext() {
@@ -525,16 +545,22 @@ export default function ValuationPage() {
           {subject.propertyType === 'Departamento' ? <>
             <NumberField label="M² útiles confirmados" value={subject.usefulAreaM2} onChange={(value) => updateSubject('usefulAreaM2', value)} suffix="m²" step={0.1} min={0} />
             <NumberField label="M² terraza / uso y goce" value={subject.terraceAreaM2} onChange={(value) => updateSubject('terraceAreaM2', value)} suffix="m²" step={0.1} min={0} />
-            <NumberField label="Piso" value={subject.floorNumber} onChange={(value) => updateSubject('floorNumber', value)} />
           </> : <>
             <NumberField label="M² construidos" value={subject.builtAreaM2} onChange={(value) => updateSubject('builtAreaM2', value)} suffix="m²" step={0.1} min={0} />
             <NumberField label="M² terreno" value={subject.landAreaM2} onChange={(value) => updateSubject('landAreaM2', value)} suffix="m²" step={0.1} min={0} />
           </>}
           <NumberField label="Dormitorios" value={subject.bedrooms} onChange={(value) => updateSubject('bedrooms', value)} min={0} />
           <NumberField label="Baños" value={subject.bathrooms} onChange={(value) => updateSubject('bathrooms', value)} min={0} />
-          <NumberField label="Estacionamientos" value={subject.parkingSpaces} onChange={(value) => updateSubject('parkingSpaces', value)} min={0} />
+          <NumberField label="Año construcción" value={subject.constructionYear} onChange={(value) => updateSubject('constructionYear', value)} min={1800} max={new Date().getFullYear()} />
         </div>
-        <div className="mt-5"><TextAreaField label="Estado y atributos" value={currentStateNotes} onChange={setCurrentStateNotes} placeholder="Ej.: remodelación completa, cocina integrada, bodega grande, quincho, parrillas, orientación, vista, estado de conservación, terraza de uso y goce, etc." /></div>
+        <details className="mt-5 border border-[var(--n3-line)] bg-[#080d0d]">
+          <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-[var(--n3-text-muted)]">Agregar detalles opcionales</summary>
+          <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
+            <NumberField label="Estacionamientos" value={subject.parkingSpaces} onChange={(value) => updateSubject('parkingSpaces', value)} min={0} />
+            {subject.propertyType === 'Departamento' ? <NumberField label="Piso" value={subject.floorNumber} onChange={(value) => updateSubject('floorNumber', value)} /> : <div />}
+            <div className="md:col-span-2"><TextAreaField label="Estado y atributos" value={currentStateNotes} onChange={setCurrentStateNotes} placeholder="Ej.: remodelación, cocina integrada, bodega, quincho, orientación, vista o estado de conservación." /></div>
+          </div>
+        </details>
       </div></IntelligencePanel>
       <MethodologyNote>Los atributos quedan trazados. No alteran el valor automáticamente.</MethodologyNote>
     </section> : null}
@@ -542,7 +568,10 @@ export default function ValuationPage() {
     {step === 3 ? <section className="space-y-4">
       <IntelligencePanel eyebrow="Paso 3 · Mercado" title="Evidencia de mercado" description="Revisa ventas registradas y oferta observada. Selecciona los comparables que realmente representan esta propiedad."><div className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div><p className="text-sm font-semibold">{subject.address}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType}</p></div>
-        <button type="button" disabled={suggesting} onClick={() => void suggestComparables()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{suggesting ? 'Analizando…' : comparables.length ? 'Actualizar análisis' : 'Analizar mercado'}</button>
+        <div className="flex flex-wrap gap-2">
+          {recommendedComparableIds.length >= 3 && selectedComparables.length < 3 ? <button type="button" onClick={useRecommendedComparables} className="inline-flex items-center gap-2 border border-[#5f8f82]/60 bg-[#0a1210] px-4 py-2.5 text-xs font-semibold text-[#c8e0da]"><Check size={14} />Usar 3 recomendados</button> : null}
+          <button type="button" disabled={suggesting} onClick={() => void suggestComparables()} className="inline-flex items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><Sparkles size={14} />{suggesting ? 'Analizando…' : comparables.length ? 'Actualizar análisis' : 'Analizar mercado'}</button>
+        </div>
       </div></IntelligencePanel>
 
       {(cbrsBenchmark || portalBenchmark) ? <MetricGrid>
@@ -578,9 +607,10 @@ export default function ValuationPage() {
         const sourceArea = item.propertyType === 'Casa' ? item.builtAreaM2 : (item.builtAreaM2 ?? item.usefulAreaM2)
         const manual = item.id.startsWith('cmp-')
         const isOutlier = methodologySummary.outlierIds.includes(item.id)
-        return <div key={item.id} className={`border ${item.selected ? 'border-[#d7332b]' : 'border-[var(--n3-line)]'} bg-[#0c1111]`}>
+        const recommended = recommendedComparableIds.includes(item.id)
+        return <div key={item.id} className={`border ${item.selected ? 'border-[#d7332b]' : recommended ? 'border-[#5f8f82]/60' : 'border-[var(--n3-line)]'} bg-[#0c1111]`}>
           <div className="flex flex-wrap items-center gap-4 p-4">
-            <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Solo referencia' : 'Usar como comparable'}</label>
+            <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Solo referencia' : 'Usar como comparable'}{recommended && !referenceOnly ? <span className="border border-[#5f8f82]/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-[#9fd0c8]">Sugerido</span> : null}</label>
             <div className="min-w-[220px] flex-1"><p className="text-sm font-semibold">{item.address || 'Comparable sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.sourceType === 'CBRS' ? 'Venta registrada' : item.sourceType === 'Portal' || item.sourceType === 'TocToc' ? 'Oferta publicada' : item.sourceType} · {item.transactionDate || (suggested.observedAt ? `observado ${formatObservedAt(suggested.observedAt)}` : 'fecha no disponible')}</p></div>
             <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m²` : ''}</p></div>
             <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />coincidencia {Math.round(item.similarityScore * 100)}%</div>
