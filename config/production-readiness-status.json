@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "status": "in-review",
-  "commit": "31bb6c462a0aec51c500c73eef00deab3d0ee6ca",
+  "commit": "a23f7de9738794a64980481f801f006dc9cee0ae",
   "deployment": "https://ppartnersgroup.app",
-  "deploymentId": "dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp",
+  "deploymentId": "dpl_VwMFYcvrTkeAbRypxfzrbvKPqsAs",
   "asOf": "2026-09-25",
   "checks": {
     "build": "passed",
@@ -18,21 +18,21 @@
   },
   "criticalFindings": [],
   "highFindings": [
-    "Isolated Supabase restore drill on 2026-09-25 failed with MIGRATIONS_FAILED because the recorded production migration ledger is not replayable from an empty database in historical order."
+    "Clean reconstruction remains blocked: the historical production migration ledger is not replayable from an empty database, and the two verified 2026-09-25 schema changes are recorded remotely under migration versions that differ from their repository filenames."
   ],
   "evidence": [
-    "Production baseline 31bb6c462a0aec51c500c73eef00deab3d0ee6ca is served by ppartnersgroup.app through Vercel deployment dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp READY on 2026-09-20.",
-    "PR #219 passed Contractual modules CI, N3uralia IP Boundaries, Supabase migration-history guard and Vercel preview before merge.",
-    "Production home and login returned HTTP 200 on the current deployment; runtime review found no errors in the selected post-deploy window.",
-    "Authenticated Role/RLS QA is automated with ephemeral OIDC identities.",
-    "SECURITY DEFINER hardening and future-migration guard are integrated.",
-    "Production Supabase schema fingerprint is versioned in config/production-schema-fingerprint.json.",
-    "N3uralia proprietary runtime modules remain server-only and explicitly excluded from transfer; client canonical and client-core material remains client-owned/client-core.",
+    "Production baseline a23f7de9738794a64980481f801f006dc9cee0ae is served by ppartnersgroup.app through Vercel deployment dpl_VwMFYcvrTkeAbRypxfzrbvKPqsAs READY on 2026-09-25.",
+    "PR #260 merged the Property Partners score-uplift release; Contractual modules CI, N3uralia IP Boundaries, Supabase migration-history guard, Authenticated Role QA and Authenticated Visual QA passed on the released main SHA.",
+    "Production build completed successfully and runtime review of dpl_VwMFYcvrTkeAbRypxfzrbvKPqsAs found no warning/error/fatal entries in the reviewed post-release window.",
+    "The live functions prevent_property_prospect_event_mutation() and assign_property_neighborhood_director_v1(uuid,text,uuid,text,text) were verified against the repository SQL, including pinned search_path and service-role-only execution grants.",
+    "Supabase remote migration history records harden_prospect_event_trigger as 20260925135325 while the repository file is 20260925124700; schema equivalence is verified.",
+    "Supabase remote migration history records atomic_neighborhood_director_assignment as 20260925135338 while the repository file is 20260925125000; schema equivalence is verified.",
+    "config/supabase-recovery-contract.json records the ledger mismatch and blocks recovery PASS until alignment and baseline replay complete.",
+    "The recovery workflow captures a schema-only public/private baseline as a review artifact and rejects row data or token-like material before hash generation.",
     "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md",
     "docs/canonical/CLEAN_RECONSTRUCTION_GUIDE.md",
     "docs/operations/INSTALLATION_RECOVERY_RUNBOOK.md",
-    "Restore drill attempted 2026-09-25 on isolated Supabase branch restore-drill-2026-09-25; branch reached MIGRATIONS_FAILED before application smoke. Production was untouched and the failed branch was deleted after evidence capture.",
-    "Root evidence: production migration 20260711005604 alters/seeds neighborhoods and market_data before later bootstrap/history entries establish the dependent base objects; subsequent early migrations also depend on vitacura_prc_zones and properties.",
-    "Backup/recovery remains pending until a clean baseline/reconstruction strategy is implemented and a second isolated restore drill passes."
+    "docs/operations/SUPABASE_RECOVERY_BASELINE.md",
+    "Backup/recovery remains pending until migration-history alignment, reviewed baseline capture and a successful isolated clean replay are evidenced."
   ]
 }
