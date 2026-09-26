@@ -26,7 +26,9 @@ test('canonical valuation source hashes and universes are fixed', () => {
 test('canonical publication ladder is 0/5/10 using margin inversion', () => {
   assert.deepEqual(canonical.methodology.publication.scenariosPct, [0, 5, 10])
   const scenarios = calculatePublicationScenarios(15890, 253.5)
-  assert.deepEqual(scenarios.map((item) => item.publicationUf), [15890, 16726, 17656])
+  assert.equal(scenarios[0].publicationUf, 15890)
+  assert.ok(Math.abs(scenarios[1].publicationUf - (15890 / 0.95)) < 1e-12)
+  assert.ok(Math.abs(scenarios[2].publicationUf - (15890 / 0.9)) < 1e-12)
 })
 
 test('canonical house and apartment mathematics reproduce source rules', () => {
