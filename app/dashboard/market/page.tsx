@@ -586,7 +586,7 @@ export default async function MarketPage() {
           <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Propiedades vigentes con ficha canónica, priorizadas por permanencia reportada por la fuente.</p>
           <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
             {executive.properties.map((property) => (
-              <Link key={property.id} href={`/dashboard/properties/${property.id}`} className="grid gap-2 py-3 text-sm hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_110px_90px] sm:items-center">
+              <Link key={property.id} href={`/dashboard/properties/${property.id}`} prefetch={false} className="grid gap-2 py-3 text-sm hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_110px_90px] sm:items-center">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{property.address || 'Propiedad sin dirección'}</p>
                   <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{property.neighborhood || 'Sin barrio'} · {property.source || 'fuente no indicada'}</p>
