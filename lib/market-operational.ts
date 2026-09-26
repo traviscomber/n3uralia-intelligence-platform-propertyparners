@@ -184,7 +184,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
   try {
     const supabase = await createClient()
     const service = createServiceClient()
-    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestIngestionRuns, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestInventoryRunResult, latestDetailRunResult, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase.rpc('get_market_house_identity_progress_v1').maybeSingle(),
@@ -212,8 +212,19 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .from('market_ingestion_runs')
         .select('id,status,accepted_rows,rejected_rows,completed_at,started_at,metadata')
         .eq('dataset_kind', 'portal_houses')
+        .eq('status', 'completed')
+        .contains('metadata', { pipeline: 'portal_inventory_discovery_v1', full_snapshot: true })
         .order('started_at', { ascending: false })
-        .limit(30),
+        .limit(1)
+        .maybeSingle(),
+      service
+        .from('market_ingestion_runs')
+        .select('id,status,accepted_rows,rejected_rows,completed_at,started_at,metadata')
+        .eq('dataset_kind', 'portal_houses')
+        .contains('metadata', { pipeline: 'unit_portal_listing_v2' })
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
       service
         .from('market_ingestion_runs')
         .select('id', { count: 'exact', head: true })
@@ -229,7 +240,8 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       clientSaleSignalsResult.error,
       confirmedSalesResult.error,
       latestMetric.error,
-      latestIngestionRuns.error,
+      latestInventoryRunResult.error,
+      latestDetailRunResult.error,
       ingestionRuns.error,
     ].filter(Boolean)
 
@@ -239,15 +251,8 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const scopeSummary = scopeSummaryResult.data as HouseScopeSummary | null
     const clientSaleSignals = clientSaleSignalsResult.data as ClientSaleSignalSummary | null
     const metric = latestMetric.data
-    const ingestionCandidates = latestIngestionRuns.data ?? []
-    const inventoryRun = ingestionCandidates.find((run) => {
-      const metadata = run.metadata && typeof run.metadata === 'object' ? run.metadata as Record<string, unknown> : null
-      return metadata?.pipeline === 'portal_inventory_discovery_v1' && metadata?.full_snapshot === true
-    }) ?? null
-    const detailRun = ingestionCandidates.find((run) => {
-      const metadata = run.metadata && typeof run.metadata === 'object' ? run.metadata as Record<string, unknown> : null
-      return metadata?.pipeline === 'unit_portal_listing_v2'
-    }) ?? null
+    const inventoryRun = latestInventoryRunResult.data ?? null
+    const detailRun = latestDetailRunResult.data ?? null
     const inventoryMetadata = inventoryRun?.metadata && typeof inventoryRun.metadata === 'object'
       ? inventoryRun.metadata as Record<string, unknown>
       : null
@@ -300,35 +305,35 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestClientSaleSignalAt: clientSaleSignalsResult.error ? null : clientSaleSignals?.latest_observed_at ?? null,
       latestClientSaleSourcePeriodEnd: clientSaleSignalsResult.error ? null : clientSaleSignals?.latest_source_period_end ?? null,
       clientSaleSignalSourceFiles: clientSaleSignalsResult.error ? null : clientSaleSignals?.source_files ?? 0,
-      latestIngestionAt: latestIngestionRuns.error ? null : inventoryRun?.completed_at ?? inventoryRun?.started_at ?? detailRun?.completed_at ?? detailRun?.started_at ?? null,
-      latestIngestionStatus: latestIngestionRuns.error ? null : inventoryRun?.status ?? detailRun?.status ?? null,
-      latestIngestionAccepted: latestIngestionRuns.error ? null : inventoryRun?.accepted_rows ?? detailRun?.accepted_rows ?? null,
-      latestIngestionRejected: latestIngestionRuns.error ? null : inventoryRun?.rejected_rows ?? detailRun?.rejected_rows ?? null,
-      latestIngestionFullSnapshot: latestIngestionRuns.error
+      latestIngestionAt: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.completed_at ?? inventoryRun?.started_at ?? detailRun?.completed_at ?? detailRun?.started_at ?? null,
+      latestIngestionStatus: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.status ?? detailRun?.status ?? null,
+      latestIngestionAccepted: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.accepted_rows ?? detailRun?.accepted_rows ?? null,
+      latestIngestionRejected: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.rejected_rows ?? detailRun?.rejected_rows ?? null,
+      latestIngestionFullSnapshot: (latestInventoryRunResult.error || latestDetailRunResult.error)
         ? null
         : typeof inventoryMetadata?.full_snapshot === 'boolean'
           ? inventoryMetadata.full_snapshot
           : null,
-      latestIngestionNew: latestIngestionRuns.error || inventoryMetadata?.new_listings == null ? null : Number(inventoryMetadata.new_listings),
-      latestIngestionUpdated: latestIngestionRuns.error || detailMetadata?.updated_listings == null ? null : Number(detailMetadata.updated_listings),
-      latestIngestionUnchanged: latestIngestionRuns.error || inventoryMetadata?.unchanged_listings == null ? null : Number(inventoryMetadata.unchanged_listings),
-      latestIngestionRemoved: latestIngestionRuns.error || inventoryMetadata?.removed_listings == null ? null : Number(inventoryMetadata.removed_listings),
-      latestDiscoveryRawCandidates: latestIngestionRuns.error || inventoryMetadata?.discovery_raw_candidates == null
+      latestIngestionNew: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.new_listings == null ? null : Number(inventoryMetadata.new_listings),
+      latestIngestionUpdated: (latestInventoryRunResult.error || latestDetailRunResult.error) || detailMetadata?.updated_listings == null ? null : Number(detailMetadata.updated_listings),
+      latestIngestionUnchanged: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.unchanged_listings == null ? null : Number(inventoryMetadata.unchanged_listings),
+      latestIngestionRemoved: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.removed_listings == null ? null : Number(inventoryMetadata.removed_listings),
+      latestDiscoveryRawCandidates: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.discovery_raw_candidates == null
         ? null
         : Number(inventoryMetadata.discovery_raw_candidates),
-      latestDiscoveryUniqueListings: latestIngestionRuns.error || inventoryMetadata?.discovery_unique_listings == null
+      latestDiscoveryUniqueListings: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.discovery_unique_listings == null
         ? null
         : Number(inventoryMetadata.discovery_unique_listings),
-      latestDiscoveryDuplicateCandidates: latestIngestionRuns.error || inventoryMetadata?.discovery_duplicate_candidates == null
+      latestDiscoveryDuplicateCandidates: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.discovery_duplicate_candidates == null
         ? null
         : Number(inventoryMetadata.discovery_duplicate_candidates),
-      latestDiscoveryPages: latestIngestionRuns.error || inventoryMetadata?.discovery_pages == null
+      latestDiscoveryPages: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.discovery_pages == null
         ? null
         : Number(inventoryMetadata.discovery_pages),
-      latestPortalReportedCount: latestIngestionRuns.error || inventoryMetadata?.portal_reported_result_count == null
+      latestPortalReportedCount: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.portal_reported_result_count == null
         ? null
         : Number(inventoryMetadata.portal_reported_result_count),
-      latestInventoryCoverageRatio: latestIngestionRuns.error || inventoryMetadata?.inventory_coverage_ratio == null
+      latestInventoryCoverageRatio: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.inventory_coverage_ratio == null
         ? null
         : Number(inventoryMetadata.inventory_coverage_ratio),
       ingestionRuns: ingestionRuns.error ? null : ingestionRuns.count ?? 0,
