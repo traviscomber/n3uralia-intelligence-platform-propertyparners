@@ -9,7 +9,7 @@ type Evidence = {
   source: string
   reference?: string | null
   cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports'
+  domain?: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'market'
 }
 
 type Coverage = {
@@ -23,7 +23,7 @@ type Coverage = {
 type ActionProposal = {
   id: string
   kind: 'review' | 'follow_up' | 'verify' | 'prepare'
-  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'cross-domain'
+  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'market' | 'cross-domain'
   action: string
   objectLabel: string
   reason: string
@@ -94,6 +94,7 @@ type ActionExecution = {
 type HistoryItem = { query: string; response: AssistantResponse }
 
 const starters = [
+  '¿Qué cambió esta mañana en el mercado?',
   '¿Qué requiere mi atención hoy?',
   '¿Qué propiedades necesitan revisión?',
   '¿Qué tareas están vencidas?',
