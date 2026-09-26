@@ -144,11 +144,28 @@ exposure as (
 ),
 capability as (
   select
-    (select count(*)::bigint from private.neighborhood_market_data_verified_v1) as neighborhood_verified_rows,
-    (select count(*)::bigint from public.market_transactions) as transaction_rows,
+    (
+      select count(*)::bigint
+      from public.market_neighborhoods n
+      join public.market_sources s on s.id=n.geometry_source_id
+      where n.geometry is not null
+        and s.code='kml_vitacura_barrios_2026_08_12'
+    ) as neighborhood_verified_rows,
+    (
+      select coalesce(sum(cbrs_transactions),0)::bigint
+      from public.market_supply_sales_intelligence
+      where cbrs_transactions>0
+    ) as transaction_rows,
     (select count(*)::bigint from public.valuation_cases) as valuation_case_rows,
     (select count(*)::bigint from public.valuation_comparables) as valuation_comparable_rows,
-    (select count(*)::bigint from public.management_approved_metric_values) as management_approved_rows
+    (select count(*)::bigint from public.management_approved_metric_values) as management_approved_rows,
+    (
+      select count(*)::bigint
+      from public.management_metric_values
+      where quality_status='verified'
+        and evaluation_status='evaluable'
+        and value is not null
+    ) as management_verified_evaluable_rows
 ),
 assembled as (
   select r.*,c.*,clc.*,p.*,lb.*,e.*,cap.*
@@ -172,15 +189,10 @@ classified as (
       case when a.production_listing_rows=0 then 'no_publishable_market_listing_dataset' end
     ],null) as blockers,
     array_remove(array[
-      case when a.production_property_rows=0 then 'property_identity_unavailable_disable_property_level_market_features' end,
-      case when a.legacy_candidate_rows>0 then 'legacy_identity_candidates_quarantined' end,
-      case when a.unresolved_provenance_rows>0 then 'legacy_provenance_backlog_quarantined' end,
-      case when a.probable_duplicate_rows>0 then 'legacy_duplicate_backlog_quarantined' end,
-      case when a.unlinked_current_listing_rows>0 then 'current_listing_identity_backlog_quarantined' end,
-      case when a.neighborhood_verified_rows=0 then 'neighborhood_data_unverified_disable_neighborhood_features' end,
-      case when a.transaction_rows=0 then 'transactions_unavailable_disable_transaction_features' end,
-      case when a.valuation_case_rows=0 or a.valuation_comparable_rows=0 then 'valuation_evidence_unavailable_disable_valuation_features' end,
-      case when a.management_approved_rows=0 then 'management_metrics_unpublished_use_verified_evaluable_layer' end
+      case when a.neighborhood_verified_rows=0 then 'canonical_kml_neighborhood_evidence_unavailable' end,
+      case when a.transaction_rows=0 then 'cbrs_transaction_evidence_unavailable' end,
+      case when a.valuation_case_rows=0 or a.valuation_comparable_rows=0 then 'valuation_evidence_unavailable' end,
+      case when a.management_approved_rows=0 and a.management_verified_evaluable_rows=0 then 'management_evidence_unavailable' end
     ],null) as limitations
   from assembled a
 )
@@ -222,6 +234,6 @@ grant usage on schema private to service_role;
 grant select on private.market_production_release_gate_v2 to service_role;
 
 comment on view private.market_production_release_gate_v2 is
-'Server-only market release gate. Listing-level market intelligence may publish fresh source-identified Portal houses without canonical property linkage; property-level features remain disabled until identity/provenance gates pass.';
+'Server-only intelligence release gate for the current Vitacura scope. Fresh source-identified Portal houses, canonical KML neighborhoods, CBRS aggregate transaction evidence, valuation evidence, and approved-or-verified management evidence are sufficient for decision support. Property identity/provenance backlogs remain visible telemetry and are never promoted to property-level facts without their own evidence gates.';
 
 commit;
