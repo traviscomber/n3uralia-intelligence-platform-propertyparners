@@ -21,7 +21,7 @@ type Comparable = {
   adjusted_value_uf:number|null; adjustment_notes:string|null; exclusion_reason:string|null; contradictions?:string[]|null
 }
 type Decision = { id:string; action:string; reason:string|null; created_at:string }
-type Permissions = { canEditComparables:boolean; canApprove:boolean; canIssue:boolean }
+type Permissions = { canEditComparables:boolean; canReview:boolean; canApprove:boolean; canIssue:boolean; ownsCase:boolean }
 type Payload = { valuationCase:ValuationCase; comparables:Comparable[]; decisions:Decision[]; permissions:Permissions; error?:string }
 
 const nf = new Intl.NumberFormat('es-CL',{ maximumFractionDigits:2 })
@@ -126,12 +126,15 @@ export default function ValuationWorkspacePage(){
   const valuation = data.valuationCase
   const permissions = data.permissions
   const isPreliminary = valuation.status === 'draft' || valuation.status === 'review'
+  const isDirectorView = permissions.canReview && !permissions.canApprove
+  const isPartnerView = permissions.ownsCase && !permissions.canReview && !permissions.canApprove
+  const isOperationalView = isDirectorView || isPartnerView
 
   return <div className="space-y-6 pb-10" aria-busy={busy!==null}>
     <header className="border-b border-[var(--n3-line)] pb-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-[var(--n3-teal)]">Expediente de valorización</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--n3-teal)]">{isDirectorView ? 'Revisión de dirección' : isPartnerView ? 'Tu valorización' : 'Expediente de valorización'}</p>
           <h1 className="mt-2 text-3xl font-semibold text-[var(--n3-text-light)]">{valuation.address || 'Propiedad sin dirección'}</h1>
           <p className="mt-1 text-sm text-[var(--n3-text-muted)]">{valuation.property_type || 'Tipo no informado'} · {valuation.neighborhood || 'Barrio no informado'} · versión {valuation.version_number}</p>
         </div>
@@ -169,12 +172,50 @@ export default function ValuationWorkspacePage(){
       </div>
     </div>}
 
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    {isOperationalView ? <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {[
+        [isDirectorView ? 'Valor a validar' : resultLabel(valuation.status), uf(valuation.estimated_value_uf)],
+        ['Comparables listos', String(accepted.length)],
+        ['Confianza', valuation.confidence ? (confidenceLabels[valuation.confidence] || valuation.confidence) : '—'],
+        ['Alertas pendientes', String(evidenceAlerts.length)],
+      ].map(([label,value])=><div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{value}</p></div>)}
+    </section> : <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {[[resultLabel(valuation.status),uf(valuation.estimated_value_uf)],['Referencia persistida',valuation.low_value_uf===valuation.high_value_uf?uf(valuation.estimated_value_uf):`${uf(valuation.low_value_uf)} — ${uf(valuation.high_value_uf)}`],['Confianza',valuation.confidence ? (confidenceLabels[valuation.confidence] || valuation.confidence) : '—'],['Comparables aceptados',String(accepted.length)],['Alertas evidencia',String(evidenceAlerts.length)]].map(([label,value])=><div key={label} className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4"><p className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{label}</p><p className="mt-2 text-xl font-semibold text-[var(--n3-text-light)]">{value}</p></div>)}
-    </section>
-    <ValuationDecisionIntelligence valuationId={id} />
+    </section>}
+    {isOperationalView ? <details className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+      <summary className="cursor-pointer px-4 py-3 text-sm text-[var(--n3-text-muted)]">Ver inteligencia y trazabilidad avanzada</summary>
+      <div className="border-t border-[var(--n3-line)]"><ValuationDecisionIntelligence valuationId={id} /></div>
+    </details> : <ValuationDecisionIntelligence valuationId={id} />}
 
-    <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+    {isOperationalView ? <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
+      <div className="border-b border-[var(--n3-line)] p-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-[var(--n3-teal)]">{isDirectorView ? 'Revisión de comparables' : 'Comparables de tu valorización'}</p>
+        <h2 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">{isDirectorView ? 'Valida que la muestra represente realmente la propiedad' : 'Confirma las referencias antes de enviar'}</h2>
+        <p className="mt-1 text-sm text-[var(--n3-text-muted)]">{isDirectorView ? 'Mira precio, superficie, distancia y coincidencia. Abre el criterio sólo cuando necesites justificar una excepción.' : 'Revisa las referencias seleccionadas y corrige sólo si alguna no representa la propiedad.'}</p>
+      </div>
+      <div className="overflow-x-auto"><table className="min-w-[820px] w-full text-left text-sm">
+        <thead className="bg-black/20 text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="px-4 py-3">Propiedad</th><th className="px-4 py-3">Venta</th><th className="px-4 py-3">Físico</th><th className="px-4 py-3">Coincidencia</th><th className="px-4 py-3">Evidencia</th><th className="px-4 py-3">Acción</th></tr></thead>
+        <tbody>{data.comparables.map(item=>{
+          const contradictions=item.contradictions ?? []
+          const blocked=contradictions.length>0
+          const accepting=busy===`comparable-${item.id}-select`
+          const excluding=busy===`comparable-${item.id}-exclude`
+          const noteValue=notes[item.id] ?? item.adjustment_notes ?? item.exclusion_reason ?? ''
+          return <tr key={item.id} className="border-t border-[var(--n3-line)] align-top">
+            <td className="px-4 py-3"><p className="font-medium text-[var(--n3-text-light)]">{item.address || 'Dirección no disponible'}</p><p className="text-xs text-[var(--n3-text-muted)]">{item.neighborhood || 'Barrio no disponible'} · {item.source_type || 'Fuente no informada'}</p></td>
+            <td className="px-4 py-3"><p className="font-medium text-[var(--n3-text-light)]">{uf(item.price_uf)}</p><p className="text-xs text-[var(--n3-text-muted)]">{item.price_uf_m2==null?'—':`${n1.format(item.price_uf_m2)} UF/m²`}</p></td>
+            <td className="px-4 py-3"><p className="text-[var(--n3-text-light)]">{m2(item.built_area_m2 ?? item.useful_area_m2)}</p><p className="text-xs text-[var(--n3-text-muted)]">{item.property_type==='Casa'?`Terreno ${m2(item.land_area_m2)}`:`${item.bedrooms==null?'—':item.bedrooms+'D'} · ${item.bathrooms==null?'—':item.bathrooms+'B'}`}</p></td>
+            <td className="px-4 py-3"><p className="font-medium text-[var(--n3-text-light)]">{n1.format(item.similarity_score*100)}%</p><p className="text-xs text-[var(--n3-text-muted)]">{item.distance_meters==null?'Distancia no disponible':`${nf.format(item.distance_meters)} m`}</p></td>
+            <td className="px-4 py-3">{blocked?<div className="max-w-56 space-y-1 text-xs text-amber-300">{contradictions.map((text,index)=><p key={index}>{text}</p>)}</div>:<span className="text-xs text-emerald-300">Sin alertas</span>}</td>
+            <td className="px-4 py-3">{permissions.canEditComparables ? <div className="min-w-52">
+              <div className="flex flex-wrap gap-2"><button onClick={()=>void comparableAction(item.id,'select')} disabled={busy!==null || blocked || item.similarity_score<=0 || (item.price_uf_m2??0)<=0} className="inline-flex min-h-10 items-center justify-center gap-1 border border-emerald-700 px-3 text-xs text-emerald-300 disabled:opacity-50"><CheckCircle2 className="h-3.5 w-3.5"/>{accepting?'Guardando…':'Aceptar'}</button><button onClick={()=>void comparableAction(item.id,'exclude')} disabled={busy!==null || !noteValue.trim()} className="inline-flex min-h-10 items-center justify-center gap-1 border border-red-800 px-3 text-xs text-red-300 disabled:opacity-50"><XCircle className="h-3.5 w-3.5"/>{excluding?'Guardando…':'Excluir'}</button></div>
+              <details className="mt-2"><summary className="cursor-pointer text-xs text-[var(--n3-text-muted)]">Agregar criterio</summary><div className="mt-2 space-y-2"><textarea disabled={busy!==null} value={noteValue} onChange={e=>setNotes(v=>({...v,[item.id]:e.target.value}))} placeholder="Motivo o criterio profesional" className="min-h-16 w-full border border-[var(--n3-line)] bg-black/20 p-2 text-xs text-[var(--n3-text-light)]"/><input disabled={busy!==null} value={adjustments[item.id] ?? String(item.adjustment_pct || 0)} onChange={e=>setAdjustments(v=>({...v,[item.id]:e.target.value}))} type="number" min={-35} max={35} step="0.5" aria-label="Ajuste documentado" className="min-h-9 w-24 border border-[var(--n3-line)] bg-black/20 px-2 text-xs text-[var(--n3-text-light)]"/><span className="ml-2 text-xs text-[var(--n3-text-muted)]">% documentado</span></div></details>
+              <p className="mt-2 text-[10px] uppercase tracking-wide text-[var(--n3-text-muted)]">{blocked?'Bloqueado':(matchStatusLabels[item.match_status] || item.match_status)}</p>
+            </div> : <span className="text-xs text-[var(--n3-text-muted)]">Solo lectura</span>}</td>
+          </tr>
+        })}</tbody>
+      </table></div>
+    </section> : <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
       <div className="border-b border-[var(--n3-line)] p-4"><h2 className="text-lg font-semibold text-[var(--n3-text-light)]">Comparables trazables</h2><p className="text-sm text-[var(--n3-text-muted)]">Portal, CBRS, KML canónico y metodología Property Partners se evalúan por separado. Una contradicción de ROL, geografía o UF/m² bloquea la selección hasta validación.</p></div>
       <div className="overflow-x-auto"><table className="min-w-[980px] w-full text-left text-sm"><thead className="bg-black/20 text-xs uppercase tracking-wide text-[var(--n3-text-muted)]"><tr><th className="px-4 py-3">Fuente</th><th className="px-4 py-3">Propiedad</th><th className="px-4 py-3">UF</th><th className="px-4 py-3">Superficie</th><th className="px-4 py-3">Programa</th><th className="px-4 py-3">Coincidencia</th><th className="px-4 py-3">Evidencia</th><th className="px-4 py-3">Criterio documentado</th><th className="px-4 py-3">Decisión</th></tr></thead><tbody>
         {data.comparables.map(item=>{
@@ -196,14 +237,13 @@ export default function ValuationWorkspacePage(){
         })}
         {!data.comparables.length && <tr><td colSpan={9} className="px-4 py-10 text-center text-[var(--n3-text-muted)]">No hay candidatos disponibles. El expediente permanece sin comparables hasta contar con evidencia real.</td></tr>}
       </tbody></table></div>
-    </section>
-
+    </section>}
     <section className="grid gap-6 lg:grid-cols-2">
-      <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><h2 className="text-lg font-semibold text-[var(--n3-text-light)]">Flujo de aprobación</h2><p className="mt-1 text-sm text-[var(--n3-text-muted)]">Preparar, revisar, aprobar y emitir.</p><textarea disabled={busy!==null} value={reason} onChange={e=>setReason(e.target.value)} placeholder="Justificación, observación o motivo de devolución" className="mt-4 min-h-24 w-full border border-[var(--n3-line)] bg-black/20 p-3 text-sm text-[var(--n3-text-light)] disabled:opacity-60"/><div className="mt-4 flex flex-wrap gap-2" aria-busy={busy!==null}>
+      <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><h2 className="text-lg font-semibold text-[var(--n3-text-light)]">{isDirectorView ? 'Enviar a decisión' : isPartnerView ? 'Siguiente paso' : 'Flujo de aprobación'}</h2><p className="mt-1 text-sm text-[var(--n3-text-muted)]">{isDirectorView ? 'Cuando comparables y evidencia estén correctos, envía el expediente para decisión.' : isPartnerView ? 'Completa la evidencia y envía tu valorización a dirección.' : 'Preparar, revisar, aprobar y emitir.'}</p><textarea disabled={busy!==null} value={reason} onChange={e=>setReason(e.target.value)} placeholder="Justificación, observación o motivo de devolución" className="mt-4 min-h-24 w-full border border-[var(--n3-line)] bg-black/20 p-3 text-sm text-[var(--n3-text-light)] disabled:opacity-60"/><div className="mt-4 flex flex-wrap gap-2" aria-busy={busy!==null}>
         {valuation.status==='draft' && <button onClick={()=>void workflow('review')} disabled={busy!==null || accepted.length<3 || evidenceAlerts.some(item=>item.selected)} className="inline-flex min-h-11 items-center gap-2 bg-[var(--n3-teal)] px-4 py-2 text-sm text-white disabled:opacity-50"><Send className="h-4 w-4"/>{busy==='workflow-review'?'Enviando…':'Enviar a revisión'}</button>}
         {valuation.status==='review' && permissions.canApprove && <><button onClick={()=>void workflow('approved')} disabled={busy!==null} className="inline-flex min-h-11 items-center gap-2 bg-emerald-700 px-4 py-2 text-sm text-white disabled:opacity-50"><ShieldCheck className="h-4 w-4"/>{busy==='workflow-approved'?'Aprobando…':'Aprobar'}</button><button onClick={()=>void workflow('draft')} disabled={busy!==null || !reason.trim()} className="inline-flex min-h-11 items-center gap-2 border border-red-800 px-4 py-2 text-sm text-red-300 disabled:opacity-50"><XCircle className="h-4 w-4"/>{busy==='workflow-draft'?'Devolviendo…':'Devolver'}</button></>}
         {valuation.status==='approved' && permissions.canIssue && <button onClick={()=>void workflow('issued')} disabled={busy!==null} title="La emisión congela esta versión y su evidencia." className="inline-flex min-h-11 items-center gap-2 bg-[var(--n3-teal)] px-4 py-2 text-sm text-white disabled:opacity-50"><FileCheck2 className="h-4 w-4"/>{busy==='workflow-issued'?'Emitiendo…':'Emitir'}</button>}
-        {valuation.status==='review' && !permissions.canApprove && <p className="text-sm text-[var(--n3-text-muted)]">Pendiente de revisión por dirección.</p>}{valuation.status==='approved' && !permissions.canIssue && <p className="text-sm text-[var(--n3-text-muted)]">Aprobada. La emisión corresponde al CEO autorizado.</p>}{valuation.status==='issued' && <p className="text-sm text-[var(--n3-text-muted)]">Emitida. El expediente queda en modo de consulta.</p>}
+        {valuation.status==='review' && !permissions.canApprove && <p className="text-sm text-[var(--n3-text-muted)]">{isDirectorView ? 'Expediente enviado. Queda pendiente de decisión superior.' : 'Tu valorización está en revisión por dirección.'}</p>}{valuation.status==='approved' && !permissions.canIssue && <p className="text-sm text-[var(--n3-text-muted)]">Aprobada. La emisión corresponde al CEO autorizado.</p>}{valuation.status==='issued' && <p className="text-sm text-[var(--n3-text-muted)]">Emitida. El expediente queda en modo de consulta.</p>}
       </div>{valuation.status==='approved' && permissions.canIssue ? <p className="mt-3 text-xs leading-5 text-amber-200">Emitir congela la versión, el valor y la evidencia del expediente. El sistema pedirá confirmación antes de ejecutar.</p> : null}</div>
       <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2"><History className="h-4 w-4 text-[var(--n3-teal)]"/><h2 className="text-lg font-semibold text-[var(--n3-text-light)]">Historial de decisiones</h2></div><div className="mt-4 max-h-80 space-y-3 overflow-auto">{data.decisions.map(item=><div key={item.id} className="border-l-2 border-[var(--n3-teal)] pl-3"><p className="text-sm font-medium text-[var(--n3-text-light)]">{decisionLabel(item.action)}</p><p className="text-xs text-[var(--n3-text-muted)]">{new Date(item.created_at).toLocaleString('es-CL')}</p>{item.reason&&<p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.reason}</p>}</div>)}{!data.decisions.length&&<p className="text-sm text-[var(--n3-text-muted)]">Sin decisiones registradas.</p>}</div></div>
     </section>
