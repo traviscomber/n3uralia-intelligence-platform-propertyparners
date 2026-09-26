@@ -41,6 +41,7 @@ test('CLP price is converted to UF with the daily indicator supplied by ingestio
   assert.equal(row.price_clp, 600000000)
   assert.equal(row.price_uf, 15000)
   assert.equal(row.price_uf_m2, 75)
+  assert.equal(row.uf_clp_at_observation, 40000)
   assert.ok(row.normalization_flags?.includes('price_converted_clp_to_uf_daily_indicator'))
   assert.ok(!row.normalization_flags?.includes('price_interpreted_clp_by_magnitude'))
 })
