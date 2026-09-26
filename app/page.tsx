@@ -1,35 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, BarChart3, Building2, Map, Search } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import VitacuraTerritoryLanding from '@/components/public/vitacura-territory-landing'
 import { VITACURA_PUBLIC_TERRITORY } from '@/lib/vitacura-public-territory'
-
-const shortcuts = [
-  {
-    label: 'Mercado',
-    description: 'Oferta, evidencia y señales del mercado de Vitacura.',
-    href: '/dashboard/market',
-    icon: BarChart3,
-  },
-  {
-    label: 'Mapa',
-    description: 'Barrios KML canónicos de Vitacura.',
-    href: '/dashboard/market/mapa',
-    icon: Map,
-  },
-  {
-    label: 'Propiedades',
-    description: 'Property 360, seguimiento y trazabilidad.',
-    href: '/dashboard/properties',
-    icon: Building2,
-  },
-  {
-    label: 'Valorizaciones',
-    description: 'Expedientes, comparables y revisión profesional.',
-    href: '/dashboard/valuations',
-    icon: Search,
-  },
-] as const
 
 export default function HomePage() {
   return (
@@ -65,19 +38,19 @@ export default function HomePage() {
           <div className="flex max-w-xl flex-col justify-between py-3 lg:py-8">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#ff766f]">
-                Property Partners Intelligence · Vitacura
+                Property Partners · Vitacura
               </p>
               <h1 className="mt-5 max-w-[9ch] text-[clamp(3rem,8vw,6.4rem)] font-medium leading-[0.92] tracking-[-0.055em] text-white">
-                Vitacura como territorio de trabajo.
+                El territorio primero.
               </h1>
               <p className="mt-7 max-w-lg text-base leading-7 text-white/58 sm:text-lg">
-                Barrios, mercado, propiedades y valorizaciones conectados en un solo sistema. La portada parte por el territorio, no por un cotizador.
+                Una portada simple para entrar al sistema desde la geografía real de Vitacura. Sin mezclar mercado, gestión, valorizaciones ni operación comercial.
               </p>
             </div>
 
             <div className="mt-10 border-t border-white/10 pt-5">
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-white/38">
-                <span>KML canónico</span>
+                <span>KML Property Partners</span>
                 <span>{VITACURA_PUBLIC_TERRITORY.length} barrios</span>
                 <span>Vitacura</span>
               </div>
@@ -95,43 +68,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1500px] px-4 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <section className="mx-auto max-w-[1500px] px-4 py-7 sm:px-8 lg:px-10">
+        <div className="grid gap-5 border-t border-white/10 pt-5 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">Acceso rápido</p>
-            <h2 className="mt-2 text-2xl font-medium text-white">Ir directo al trabajo.</h2>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/30">Portada interna</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/42">
+              Después de iniciar sesión, cada área mantiene su propia pregunta y su propia vista. Mercado no se mezcla con control ejecutivo ni con Property 360.
+            </p>
           </div>
-          <p className="text-xs text-white/35">Las áreas operacionales requieren sesión activa.</p>
-        </div>
-
-        <div className="grid border-l border-t border-white/10 sm:grid-cols-2 xl:grid-cols-4">
-          {shortcuts.map((item, index) => {
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={false}
-                className="group min-h-44 border-b border-r border-white/10 p-5 transition-colors hover:bg-white/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#ff766f]"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/28">{String(index + 1).padStart(2, '0')}</span>
-                  <Icon className="size-4 text-[#ff766f]" aria-hidden="true" />
-                </div>
-                <h3 className="mt-7 text-lg font-medium text-white">{item.label}</h3>
-                <p className="mt-2 max-w-xs text-sm leading-6 text-white/45">{item.description}</p>
-                <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-white/68 transition-colors group-hover:text-white">
-                  Abrir <ArrowRight className="size-3.5" aria-hidden="true" />
-                </span>
-              </Link>
-            )
-          })}
+          <Link href="/auth/login" className="inline-flex items-center gap-2 text-xs font-medium text-white/64 hover:text-white">
+            Abrir sistema <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
         </div>
       </section>
 
       <footer className="border-t border-white/10">
         <div className="mx-auto flex max-w-[1500px] flex-col gap-2 px-4 py-6 text-[10px] uppercase tracking-[0.12em] text-white/28 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
-          <span>Property Partners Vitacura · Intelligence Platform</span>
+          <span>Property Partners Vitacura</span>
           <span>Desarrollado por N3uralia</span>
         </div>
       </footer>
