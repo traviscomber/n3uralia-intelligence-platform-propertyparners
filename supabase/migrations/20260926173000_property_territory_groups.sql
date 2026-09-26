@@ -11,7 +11,7 @@ create table if not exists public.property_territory_groups (
 
 alter table public.property_territory_groups enable row level security;
 revoke all on table public.property_territory_groups from public, anon;
-grant select on table public.property_territory_groups to authenticated;
+revoke all on table public.property_territory_groups from authenticated;
 grant all on table public.property_territory_groups to service_role;
 
 create table if not exists public.property_territory_group_neighborhoods (
@@ -30,7 +30,7 @@ create table if not exists public.property_territory_group_neighborhoods (
 
 alter table public.property_territory_group_neighborhoods enable row level security;
 revoke all on table public.property_territory_group_neighborhoods from public, anon;
-grant select on table public.property_territory_group_neighborhoods to authenticated;
+revoke all on table public.property_territory_group_neighborhoods from authenticated;
 grant all on table public.property_territory_group_neighborhoods to service_role;
 
 create unique index if not exists property_territory_group_neighborhoods_one_current_group_idx
@@ -56,7 +56,7 @@ create table if not exists public.property_territory_group_director_assignments 
 
 alter table public.property_territory_group_director_assignments enable row level security;
 revoke all on table public.property_territory_group_director_assignments from public, anon;
-grant select on table public.property_territory_group_director_assignments to authenticated;
+revoke all on table public.property_territory_group_director_assignments from authenticated;
 grant all on table public.property_territory_group_director_assignments to service_role;
 
 create unique index if not exists property_territory_group_one_primary_director_idx
@@ -148,7 +148,8 @@ join public.property_director_directory d
 where g.active;
 
 revoke all on public.property_territory_group_staff_v1 from public,anon;
-grant select on public.property_territory_group_staff_v1 to authenticated,service_role;
+revoke all on public.property_territory_group_staff_v1 from authenticated;
+grant select on public.property_territory_group_staff_v1 to service_role;
 
 create or replace view public.management_source_records_territory_v1
 with (security_invoker=true)
@@ -165,7 +166,8 @@ join public.property_territory_groups g
  and g.active;
 
 revoke all on public.management_source_records_territory_v1 from public,anon;
-grant select on public.management_source_records_territory_v1 to authenticated,service_role;
+revoke all on public.management_source_records_territory_v1 from authenticated;
+grant select on public.management_source_records_territory_v1 to service_role;
 
 create or replace function public.get_current_property_territory_assignment_v1(p_neighborhood_id uuid)
 returns table (
@@ -204,7 +206,8 @@ as $function$
 $function$;
 
 revoke all on function public.get_current_property_territory_assignment_v1(uuid) from public,anon;
-grant execute on function public.get_current_property_territory_assignment_v1(uuid) to authenticated,service_role;
+revoke all on function public.get_current_property_territory_assignment_v1(uuid) from authenticated;
+grant execute on function public.get_current_property_territory_assignment_v1(uuid) to service_role;
 
 create or replace function public.assign_property_territory_group_director_v1(
   p_group_key text,
