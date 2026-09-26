@@ -126,7 +126,7 @@ export default function ManagementOperationsPage() {
         title="Qué falta para cerrar"
         meta={rejected ? `${rejected} observaciones de datos requieren revisión` : latestReport ? 'Reporte mensual disponible' : currentRuns.length ? 'Período con evidencia · cierre aún no emitido' : 'Sin evidencia cargada para el período'}
         controls={<div><label htmlFor="management-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><input id="management-period" type="month" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm" /></div>}
-        actions={[{ label: 'Metas y alertas', href: '/dashboard/control/admin' }]}
+        actions={[{ label: 'Calendario venta → entrega', href: '/dashboard/control/calendar' }, { label: 'Metas y alertas', href: '/dashboard/control/admin' }]}
       />
 
       <MetricStrip items={[
@@ -135,6 +135,13 @@ export default function ManagementOperationsPage() {
         { label: 'Observaciones', value: currentRuns.length ? rejected : '—', detail: currentRuns.length ? undefined : 'No evaluable sin carga', tone: currentRuns.length ? (rejected ? 'warning' : 'success') : 'default' },
         { label: 'Reportes', value: currentRuns.length ? currentReports.length : '—', detail: currentRuns.length && !currentReports.length ? 'Cierre pendiente' : undefined, tone: currentReports.length ? 'success' : 'default' },
       ]} />
+
+      <section className="mt-7 max-w-5xl border-y border-[var(--n3-line)] py-5">
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Postventa</p><h2 className="mt-1 text-lg font-semibold">Calendario desde la venta hasta la entrega</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Ordena documentación, promesa, títulos, escritura, inscripción y entrega sobre una línea de tiempo de cuatro meses, con responsables y alertas por vencimiento.</p></div>
+          <Link href="/dashboard/control/calendar" className="inline-flex min-h-11 items-center justify-center border border-[var(--n3-line)] px-5 text-sm font-semibold hover:border-[var(--n3-text-muted)]">Abrir calendario</Link>
+        </div>
+      </section>
 
       <section className="mt-7 max-w-5xl">
         <div className="border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Siguiente decisión</h2></div>
