@@ -92,11 +92,27 @@ type SuggestedComparable = ValuationComparable & {
   areaSemantics?: string
 }
 
+type HouseRecommendation = {
+  weightedRateUfM2: number
+  builtRateUfM2: number
+  landRateUfM2: number
+  estimatedValueUf: number
+  comparableCount: number
+  strictComparableCount: number
+  averageSimilarity: number
+  comparableSpread: number
+  confidence: 'high' | 'medium' | 'low'
+  evidenceGate: string
+  nonBinding: boolean
+  method: string
+}
+
 type SuggestResponse = {
   neighborhood: string
   suggestions: SuggestedComparable[]
   cbrsBenchmark: CbrsBenchmark | null
   portalBenchmark: PortalBenchmark | null
+  houseRecommendation?: HouseRecommendation | null
   notes: string[]
 }
 
@@ -289,6 +305,7 @@ export default function ValuationPage() {
   const [rateAnchor, setRateAnchor] = useState<RateAnchor>(null)
   const [cbrsBenchmark, setCbrsBenchmark] = useState<CbrsBenchmark | null>(null)
   const [portalBenchmark, setPortalBenchmark] = useState<PortalBenchmark | null>(null)
+  const [houseRecommendation, setHouseRecommendation] = useState<HouseRecommendation | null>(null)
   const [suggestionNotes, setSuggestionNotes] = useState<string[]>([])
   const [suggesting, setSuggesting] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -408,6 +425,7 @@ export default function ValuationPage() {
       setComparables((current) => [...current, ...fresh])
       setCbrsBenchmark(payload.cbrsBenchmark)
       setPortalBenchmark(payload.portalBenchmark)
+      setHouseRecommendation(payload.houseRecommendation ?? null)
       setSuggestionNotes(payload.notes || [])
       setMessage(fresh.length ? `${fresh.length} referencias encontradas.` : 'Sin referencias nuevas.')
     } catch (error) {
@@ -421,6 +439,12 @@ export default function ValuationPage() {
     if (!value || value <= 0) return
     updateSubject('usefulRateUfM2', value)
     setRateAnchor(anchor)
+  }
+
+  function adoptHouseRecommendation() {
+    if (!houseRecommendation) return
+    updateSubject('builtRateUfM2', houseRecommendation.builtRateUfM2)
+    updateSubject('landRateUfM2', houseRecommendation.landRateUfM2)
   }
 
   async function saveDraft() {
@@ -603,7 +627,28 @@ export default function ValuationPage() {
           </div>
           <div className="mt-5 max-w-sm"><NumberField label="UF/m² adoptado" value={subject.usefulRateUfM2} onChange={(value) => { updateSubject('usefulRateUfM2', value); setRateAnchor(value === undefined ? null : 'manual') }} suffix="UF/m²" step={0.1} min={0} /></div>
           <p className="mt-3 text-xs text-[var(--n3-text-muted)]">Origen de la decisión: {rateAnchorLabel(rateAnchor)}.</p>
-        </> : <div className="grid gap-4 md:grid-cols-2"><NumberField label="UF/m² construcción adoptado" value={subject.builtRateUfM2} onChange={(value) => updateSubject('builtRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} /><NumberField label="UF/m² terreno adoptado" value={subject.landRateUfM2} onChange={(value) => updateSubject('landRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} /></div>}
+        </> : <div className="space-y-4">
+          {houseRecommendation ? <div className="border border-[#5f8f82]/50 bg-[#0a1210] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <FieldLabel>Referencia sugerida por la evidencia</FieldLabel>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <strong className="text-xl">{houseRecommendation.weightedRateUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</strong>
+                  <span className="text-xs text-[var(--n3-text-muted)]">~{houseRecommendation.estimatedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</span>
+                </div>
+                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{houseRecommendation.comparableCount} comparables compatibles · confianza {houseRecommendation.confidence === 'high' ? 'alta' : houseRecommendation.confidence === 'medium' ? 'media' : 'baja'} · no vinculante.</p>
+              </div>
+              <button type="button" onClick={adoptHouseRecommendation} className="bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white">Usar esta referencia</button>
+            </div>
+          </div> : <div className="border border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-sm text-[#e0c87f]">No hay una referencia automática suficientemente robusta. Revisa los comparables y define la tasa profesional.</div>}
+          <details className="border border-[var(--n3-line)] bg-[#080d0d]" open={!houseRecommendation}>
+            <summary className="cursor-pointer px-4 py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ajustar tasa manualmente</summary>
+            <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 md:grid-cols-2">
+              <NumberField label="UF/m² construcción" value={subject.builtRateUfM2} onChange={(value) => updateSubject('builtRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} />
+              <NumberField label="UF/m² terreno" value={subject.landRateUfM2} onChange={(value) => updateSubject('landRateUfM2', value)} suffix="UF/m²" step={0.1} min={0} />
+            </div>
+          </details>
+        </div>}
       </div></IntelligencePanel>
 
       <IntelligencePanel eyebrow="Resultado para revisión" title={result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF` : 'Pendiente de confirmar tasa'} description={result ? `Valor comercial estimado · ${result.commercialUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado` : 'Confirma una tasa para obtener el valor comercial y los escenarios de publicación.'}>{result ? <div className="grid gap-3 p-5 md:grid-cols-3">{result.publicationScenarios.map((scenario) => <div key={scenario.upliftPct} className={`border p-4 ${scenario.upliftPct === 5 ? 'border-[var(--n3-teal)] bg-[#0a1210]' : 'border-[var(--n3-line)]'}`}><FieldLabel>{scenario.upliftPct === 0 ? 'Valor comercial' : `Publicación · margen ${scenario.upliftPct}%`}{scenario.upliftPct === 5 ? ' · escenario estándar' : ''}</FieldLabel><strong className="text-xl">{scenario.suggestedPriceUf.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{scenario.suggestedUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m² ponderado</p></div>)}</div> : <div className="p-5 text-sm text-[var(--n3-text-muted)]">Pendiente de tasa.</div>}</IntelligencePanel>
