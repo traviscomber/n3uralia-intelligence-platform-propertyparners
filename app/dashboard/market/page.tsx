@@ -92,6 +92,8 @@ export default async function MarketPage() {
         actions={[
           { label: 'Oferta vs ventas', href: '/dashboard/market/inteligencia', primary: true },
           { label: 'Mapa KML', href: '/dashboard/market/mapa' },
+          { label: 'XLSX', href: '/api/market/export?dataset=listings&format=xlsx' },
+          { label: 'Informe', href: '/dashboard/market/export' },
         ]}
       />
 
