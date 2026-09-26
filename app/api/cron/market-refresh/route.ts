@@ -567,6 +567,8 @@ export async function GET(request: Request) {
         .rpc('refresh_market_listing_property_match_candidates_v1')
       const { data: neighborhoodRefresh, error: neighborhoodError } = await supabase
         .rpc('refresh_market_neighborhood_learning_v1')
+      const { data: neighborhoodCalibration, error: calibrationError } = await supabase
+        .rpc('refresh_market_neighborhood_signal_quality_v1')
       const { data: prospectRefresh, error: prospectError } = await supabase
         .rpc('refresh_property_prospect_leads_v1')
 
@@ -596,7 +598,7 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({
-        ok: detailDrain.ingestionFailures === 0 && !intelligenceError && !neighborhoodError && !prospectError,
+        ok: detailDrain.ingestionFailures === 0 && !intelligenceError && !neighborhoodError && !calibrationError && !prospectError,
         mode: 'details_only',
         datasetKind: 'portal_houses',
         ...detailDrain,
@@ -609,11 +611,15 @@ export async function GET(request: Request) {
           refresh: neighborhoodRefresh ?? null,
           error: neighborhoodError?.message ?? null,
         },
+        neighborhoodCalibration: {
+          refresh: neighborhoodCalibration ?? null,
+          error: calibrationError?.message ?? null,
+        },
         prospects: {
           refresh: prospectRefresh ?? null,
           error: prospectError?.message ?? null,
         },
-      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError && !neighborhoodError && !prospectError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+      }, { status: detailDrain.ingestionFailures === 0 && !intelligenceError && !neighborhoodError && !calibrationError && !prospectError ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
     } catch (cause) {
       const failureMessage = cause instanceof Error ? cause.message : String(cause)
       console.error('[market-refresh] detail drain failed', { failureMessage })
@@ -789,6 +795,10 @@ export async function GET(request: Request) {
     const learningResult = await supabase.rpc('refresh_market_neighborhood_learning_v1')
     neighborhoodLearning = learningResult.data ?? null
     neighborhoodLearningError = learningResult.error?.message ?? null
+
+    const calibrationResult = await supabase.rpc('refresh_market_neighborhood_signal_quality_v1')
+    const neighborhoodCalibration = calibrationResult.data ?? null
+    const neighborhoodCalibrationError = calibrationResult.error?.message ?? null
 
     const prospectResult = await supabase.rpc('refresh_property_prospect_leads_v1')
     prospectPipeline = prospectResult.data ?? null
