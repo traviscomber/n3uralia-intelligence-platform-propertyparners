@@ -454,7 +454,7 @@ export async function GET(request: Request) {
     if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   } else if (!force) {
     if (!authorized(request)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    if (!scheduledWindow()) {
+    if (!detailsOnly && !scheduledWindow()) {
       return NextResponse.json({
         ok: true,
         skipped: true,
