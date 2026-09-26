@@ -94,3 +94,13 @@ test('secondary signal calibration never promotes auto-write authority', () => {
   assert.match(sql,/0\.995/)
   assert.match(sql,/Secondary signal remains advisory/)
 })
+
+
+test('near-boundary KML signal stays advisory and requires strong geometric separation', () => {
+  const sql = readFileSync('supabase/migrations/20260926211000_near_boundary_kml_advisory.sql','utf8')
+  assert.match(sql,/near_boundary_kml_advisory/)
+  assert.match(sql,/distance_m<=100/)
+  assert.match(sql,/second_distance_m-distance_m>=100/)
+  assert.match(sql,/else false/)
+  assert.doesNotMatch(sql,/decision='resolved_by_system'/)
+})
