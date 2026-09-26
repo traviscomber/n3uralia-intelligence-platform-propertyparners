@@ -8,6 +8,7 @@ on:
       - 'app/api/cron/market-refresh/route.ts'
       - 'app/api/internal/portal-collector-smoke/route.ts'
       - 'scripts/smoke-portal-inventory.ts'
+      - 'scripts/smoke-portal-neighborhood-capture.ts'
       - '.github/workflows/portal-inventory-smoke.yml'
   workflow_dispatch:
 
@@ -42,3 +43,6 @@ jobs:
 
       - name: Verify full Portal inventory coverage
         run: node --import tsx scripts/smoke-portal-inventory.ts
+
+      - name: Measure Portal neighborhood enrichment capture
+        run: node --import tsx scripts/smoke-portal-neighborhood-capture.ts
