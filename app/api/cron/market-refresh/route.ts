@@ -690,7 +690,20 @@ export async function GET(request: Request) {
         continue
       }
 
-      const detailUrls = rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
+      const currentState = await loadCurrentListingState(supabase, datasetKind)
+      const missingGeoUrls = inventory.listingUrls.filter((listingUrl) => {
+        const listingId = portalListingIdFromUrl(listingUrl, datasetKind)
+        if (!listingId) return false
+        const state = currentState.byId.get(listingId)
+        return !state || state.latitude == null || state.longitude == null
+      })
+      const missingGeoSet = new Set(missingGeoUrls)
+      const rotatedRemainder = rotatedDetailBatch(
+        inventory.listingUrls.filter((listingUrl) => !missingGeoSet.has(listingUrl)),
+        inventory.observedAt,
+      )
+      const detailUrls = [...missingGeoUrls, ...rotatedRemainder].slice(0, MAX_DETAIL_LISTINGS_PER_RUN)
+
       const details = await collectPortalListingDetails({
         datasetKind,
         listingUrls: detailUrls,
