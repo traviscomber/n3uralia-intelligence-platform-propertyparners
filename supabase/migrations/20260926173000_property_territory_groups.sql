@@ -497,6 +497,7 @@ declare
   v_changed integer := 0;
   v_reassigned integer := 0;
   v_created integer := 0;
+  v_step_reassigned integer := 0;
   v_seen uuid[] := '{}';
   v_now timestamptz := clock_timestamp();
   v_refresh jsonb := '{}'::jsonb;
@@ -621,7 +622,8 @@ begin
       v_now
     from updated u;
 
-    get diagnostics v_reassigned = v_reassigned + row_count;
+    get diagnostics v_step_reassigned = row_count;
+    v_reassigned:=v_reassigned+v_step_reassigned;
   end loop;
 
   v_refresh:=public.refresh_property_prospect_leads_v1();
