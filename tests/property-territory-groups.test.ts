@@ -20,11 +20,12 @@ test('the canonical operational groups are Santa Maria, Lo Beltran and Nueva Cos
 })
 
 test('current people are derived from the directory office and ranked independently from barrio membership', () => {
-  assert.match(sql,/join public\.property_director_directory d/i)
-  assert.match(sql,/unaccent\(btrim\(d\.office_name\)\)/i)
-  assert.match(sql,/row_number\(\) over/i)
-  assert.match(sql,/case when lower\(coalesce\(d\.role,''\)\)='director' then 0 else 1 end/i)
-  assert.doesNotMatch(sql,/insert into public\.property_territory_group_neighborhoods/i)
+  const seedSection = sql.split('create or replace function public.get_current_property_territory_assignment_v1')[0]
+  assert.match(seedSection,/join public\.property_director_directory d/i)
+  assert.match(seedSection,/unaccent\(btrim\(d\.office_name\)\)/i)
+  assert.match(seedSection,/row_number\(\) over/i)
+  assert.match(seedSection,/case when lower\(coalesce\(d\.role,''\)\)='director' then 0 else 1 end/i)
+  assert.doesNotMatch(seedSection,/insert into public\.property_territory_group_neighborhoods/i)
 })
 
 test('management source data is reorganized by stable territory group without rewriting source records', () => {
@@ -45,4 +46,10 @@ test('changing the routing owner operates at group scope and can reassign active
   assert.match(sql,/property_territory_group_neighborhoods gn/i)
   assert.match(sql,/join neighborhood_scope n on n\.neighborhood_id=l\.neighborhood_id/i)
   assert.doesNotMatch(sql,/update public\.property_territory_group_neighborhoods[\s\S]*p_director_key/i)
+})
+
+test('bulk barrio grouping is the only write path from prospect matrix', () => {
+  assert.match(sql,/assign_property_neighborhood_groups_bulk_v1/i)
+  assert.match(sql,/insert into public\.property_territory_group_neighborhoods/i)
+  assert.match(sql,/refresh_property_prospect_leads_v1/i)
 })
