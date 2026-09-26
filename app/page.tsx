@@ -13,8 +13,8 @@ const shortcuts = [
   },
   {
     label: 'Mapa',
-    description: 'Territorio KML y oferta georreferenciada.',
-    href: '/dashboard/market/mapa/oferta',
+    description: 'Barrios KML canónicos de Vitacura.',
+    href: '/dashboard/market/mapa',
     icon: Map,
   },
   {
