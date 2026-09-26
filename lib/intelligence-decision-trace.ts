@@ -1,5 +1,6 @@
 export type DecisionTraceEvidenceStatus =
   | 'approved_live'
+  | 'verified_live'
   | 'documentary_canonical'
   | 'external_market'
   | 'n3uralia_provisional'
@@ -31,6 +32,7 @@ export type DecisionTraceItem = {
 export function decisionTraceStatusLabel(status: DecisionTraceEvidenceStatus) {
   const labels: Record<DecisionTraceEvidenceStatus, string> = {
     approved_live: 'Evidencia viva aprobada',
+    verified_live: 'Evidencia viva verificada',
     documentary_canonical: 'Evidencia documental canónica',
     external_market: 'Mercado externo',
     n3uralia_provisional: 'Regla N3uralia provisional',
