@@ -103,8 +103,8 @@ export default function ValuationRegistryPage() {
   return (
     <WorkspaceShell>
       <WorkspaceHeader
-        eyebrow="Valorizaciones · Casas V1"
-        title="Qué necesita avanzar"
+        eyebrow="Pilar 03 · Valorización"
+        title="Expedientes de valorización"
         meta={actionCount > 0 ? `${actionCount} requieren acción` : undefined}
         actions={[
           { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
@@ -119,7 +119,7 @@ export default function ValuationRegistryPage() {
       {nextReview || nextDraft ? (
         <section className="mt-7 max-w-5xl">
           <div className="border-b border-[var(--n3-line)] pb-2">
-            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Siguiente acción</h2>
+            <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Decisión pendiente</h2>
           </div>
           <div className="divide-y divide-[var(--n3-line)]">
             {nextReview ? (
