@@ -178,5 +178,5 @@ export default function ProfessionalReviewPage(){
         <p>Estas capas son de control y no cambian automáticamente el valor oficial.</p>
       </div>
     </details>
-  </div>>
+  </div>
 }
