@@ -41,7 +41,7 @@ function assignmentRole(value: string) {
 export default async function PropertiesPage() {
   const scope = await requireUserScope()
   if (hasCapability(scope.role, 'properties.global.assign') || hasCapability(scope.role, 'properties.office.assign')) {
-    redirect('/dashboard/properties/admin')
+    redirect('/dashboard/properties/prospects')
   }
 
   const supabase = await createClient()
@@ -70,10 +70,10 @@ export default async function PropertiesPage() {
 
   return <WorkspaceShell>
     <WorkspaceHeader
-      eyebrow="Propiedades"
-      title="Mi cartera"
+      eyebrow="Pilar 04 · Ficha 360"
+      title="Mi cartera 360"
       meta={staleAssignments ? `${staleAssignments} requieren verificar vigencia` : assignments.length ? 'Sin alertas de vigencia' : 'Sin asignaciones activas'}
-      actions={[{ label: 'Prospección', href: '/dashboard/properties/prospects' }]}
+      actions={[{ label: 'Cartera 360', href: '/dashboard/properties/prospects' }]}
     />
 
     <MetricStrip items={[
