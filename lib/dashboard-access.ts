@@ -40,6 +40,7 @@ const SELLER_ALLOWED = [
   '/dashboard/valuation',
   '/dashboard/valorizador',
   '/dashboard/reportes/audiencias/ejecutivo',
+  '/dashboard/cuenta',
 ]
 
 function matches(pathname: string, route: string) {
