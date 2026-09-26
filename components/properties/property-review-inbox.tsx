@@ -32,6 +32,7 @@ const RESOLUTION_LABELS: Record<string,string> = {
   cbrs_street_consensus:'Consenso histórico CBRS',
   territorial_evidence:'Evidencia territorial cruzada',
   learned_address_alias_v1:'Patrón territorial aprendido',
+  learned_address_alias_conflict:'Patrón aprendido en conflicto',
   manual:'Sin resolución automática',
 }
 
