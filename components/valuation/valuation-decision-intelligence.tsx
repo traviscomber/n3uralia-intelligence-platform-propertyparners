@@ -36,6 +36,7 @@ type Payload = {
 
 const integer = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
 const decimal = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 })
+const reliabilityLabels: Record<string, string> = { low: 'baja', medium: 'media', high: 'alta' }
 
 function numberValue(value: unknown) {
   const parsed = Number(value)
@@ -77,6 +78,16 @@ function pct(value: number | null) {
 
 function uf(value: number | null) {
   return value == null ? '—' : `UF ${integer.format(value)}`
+}
+
+function historicalSaleLabel(value: string | null) {
+  if (!value) return 'No disponible'
+  const parts = value.split('|')
+  const date = parts.find((part) => /^\d{4}-\d{2}-\d{2}$/.test(part))
+  if (!date) return 'Referencia histórica identificada'
+  const parsed = new Date(`${date}T12:00:00Z`)
+  if (Number.isNaN(parsed.getTime())) return 'Referencia histórica identificada'
+  return `Venta registrada · ${parsed.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}`
 }
 
 export function ValuationDecisionIntelligence({ valuationId }: { valuationId: string }) {
@@ -207,7 +218,7 @@ export function ValuationDecisionIntelligence({ valuationId }: { valuationId: st
         <p>{metrics.offerCount === 0 ? 'Sin contraste de oferta activa en la muestra seleccionada.' : 'Existe contraste entre venta registrada y oferta observada.'}</p>
       </Panel>
       <Panel title="Backtest y trazabilidad">
-        <p>{metrics.backtestMapePct == null ? 'MAPE no disponible' : `MAPE ${decimal.format(metrics.backtestMapePct)}%`} · confiabilidad {metrics.backtestReliability || 'no informada'}.</p>
+        <p>{metrics.backtestMapePct == null ? 'MAPE no disponible' : `MAPE ${decimal.format(metrics.backtestMapePct)}%`} · confiabilidad {metrics.backtestReliability ? (reliabilityLabels[metrics.backtestReliability] || metrics.backtestReliability) : 'no informada'}.</p>
         <p>Fechas {metrics.dateCoverage == null ? '—' : `${decimal.format(metrics.dateCoverage)}%`} · distancias {metrics.distanceCoverage == null ? '—' : `${decimal.format(metrics.distanceCoverage)}%`}.</p>
       </Panel>
     </div>
@@ -226,17 +237,17 @@ export function ValuationDecisionIntelligence({ valuationId }: { valuationId: st
         {!metrics.valuation.condition_status && <Link href={`/dashboard/valuations/${valuationId}/condition`} className="mt-3 inline-flex min-h-10 items-center border border-[var(--n3-teal)] px-3 py-2 text-xs text-[var(--n3-teal)]">Evaluar estado</Link>}
       </Panel>
       <Panel title="Venta histórica del sujeto">
-        <p className="break-all">{metrics.holdoutEventKey || 'No disponible'}</p>
-        <p>{metrics.holdoutExcluded ? 'Holdout excluido del cálculo: sirve para validación externa.' : 'Estado de exclusión no confirmado.'}</p>
+        <p><strong>{historicalSaleLabel(metrics.holdoutEventKey)}</strong></p>
+        <p>{metrics.holdoutExcluded ? 'Se excluye del cálculo y se usa sólo para validar el resultado.' : 'Estado de exclusión no confirmado.'}</p>
       </Panel>
     </div>
 
     <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 lg:grid-cols-2">
-      <Panel title="Señal de oportunidad · 20% inferior">
+      <Panel title="Referencia en el tramo bajo">
         {metrics.opportunities.length
           ? metrics.opportunities.map((item, index) => <p key={index}>{item.address || 'Sin dirección'} · {numberValue(item.price_uf_m2) == null ? '—' : `${decimal.format(Number(item.price_uf_m2))} UF/m²`} · {uf(numberValue(item.price_uf))}</p>)
           : <p>Sin señal disponible.</p>}
-        <p className="text-xs text-[var(--n3-text-muted)]">Señal de revisión; no elimina comparables automáticamente.</p>
+        <p className="text-xs text-[var(--n3-text-muted)]">Referencia descriptiva para revisión; no elimina comparables ni modifica el valor automáticamente.</p>
       </Panel>
       <Panel title="Escenarios de publicación 0 / 5 / 10">
         <div className="grid gap-2 sm:grid-cols-3">
