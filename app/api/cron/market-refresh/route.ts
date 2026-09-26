@@ -305,10 +305,146 @@ async function persistInventoryRun(args: {
   }
 }
 
+
+async function loadInventoryRecords(
+  supabase: ReturnType<typeof getServiceClient>,
+  runId: string,
+) {
+  const records: Array<{ sourceRecordId: string; url: string }> = []
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase
+      .from('market_raw_records')
+      .select('source_record_id,payload')
+      .eq('ingestion_run_id', runId)
+      .range(offset, offset + 999)
+    if (error) throw error
+    for (const row of data ?? []) {
+      const payload = row.payload && typeof row.payload === 'object' ? row.payload as Record<string, unknown> : null
+      const url = typeof payload?.url === 'string' ? payload.url : null
+      if (row.source_record_id && url) records.push({ sourceRecordId: String(row.source_record_id), url })
+    }
+    if ((data ?? []).length < 1000) break
+  }
+  return records
+}
+
+async function loadCurrentListingState(
+  supabase: ReturnType<typeof getServiceClient>,
+  datasetKind: PortalDatasetKind,
+) {
+  const sourceCode = `portal-inmobiliario-vitacura-${datasetKind.replaceAll('_', '-')}`
+  const { data: source, error: sourceError } = await supabase
+    .from('market_sources')
+    .select('id')
+    .eq('code', sourceCode)
+    .maybeSingle()
+  if (sourceError) throw sourceError
+  if (!source?.id) return { sourceId: null, byId: new Map<string, string | null>() }
+
+  const byId = new Map<string, string | null>()
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase
+      .from('market_current_listings')
+      .select('source_listing_id,property_id')
+      .eq('source_id', source.id)
+      .range(offset, offset + 999)
+    if (error) throw error
+    for (const row of data ?? []) {
+      if (row.source_listing_id) byId.set(String(row.source_listing_id), row.property_id ? String(row.property_id) : null)
+    }
+    if ((data ?? []).length < 1000) break
+  }
+  return { sourceId: String(source.id), byId }
+}
+
+async function drainLatestInventoryDetails(args: {
+  supabase: ReturnType<typeof getServiceClient>
+  datasetKind: PortalDatasetKind
+  startedAt: number
+}) {
+  const { supabase, datasetKind, startedAt } = args
+  const latest = await latestCompleteInventoryRun(supabase, datasetKind)
+  if (!latest?.id) throw new Error('NO_COMPLETE_INVENTORY_RUN')
+
+  const [inventory, current] = await Promise.all([
+    loadInventoryRecords(supabase, String(latest.id)),
+    loadCurrentListingState(supabase, datasetKind),
+  ])
+
+  const absent = inventory.filter((item) => !current.byId.has(item.sourceRecordId))
+  const unlinked = inventory.filter((item) => current.byId.has(item.sourceRecordId) && current.byId.get(item.sourceRecordId) === null)
+  const queue = [...absent, ...unlinked]
+  const chunkSize = 72
+  let processed = 0
+  let parsed = 0
+  let accepted = 0
+  let rejected = 0
+  let linked = 0
+  let unlinkedCount = 0
+  let collectionFailures = 0
+  let ingestionFailures = 0
+
+  for (let offset = 0; offset < queue.length; offset += chunkSize) {
+    if (Date.now() - startedAt >= 235_000) break
+    const chunk = queue.slice(offset, offset + chunkSize)
+    const details = await collectPortalListingDetails({
+      datasetKind,
+      listingUrls: chunk.map((item) => item.url),
+      waitMs: DETAIL_WAIT_MS,
+    })
+    collectionFailures += details.failures.length
+    parsed += details.rows.length
+
+    const normalized = normalizePortalListingRows(details.rows)
+    const validRows = normalized.filter((row) => row.source_listing_id && row.url)
+    if (validRows.length) {
+      const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot_v2', {
+        p_source_label: 'portal_inmobiliario_vitacura',
+        p_source_file: `portal-detail-drain-${datasetKind}-${details.observedAt}.json`,
+        p_dataset_kind: datasetKind,
+        p_observed_at: details.observedAt,
+        p_rows: validRows,
+        p_full_snapshot: false,
+      })
+
+      if (pipelineError || pipelineResult?.failed) {
+        ingestionFailures += 1
+      } else if (!pipelineResult?.skipped) {
+        accepted += Number(pipelineResult?.accepted ?? 0)
+        rejected += Number(pipelineResult?.rejected ?? 0)
+        linked += Number(pipelineResult?.linked ?? 0)
+        unlinkedCount += Number(pipelineResult?.unlinked ?? 0)
+      }
+    }
+    processed += chunk.length
+  }
+
+  const remainingEstimate = Math.max(queue.length - processed, 0)
+  return {
+    runId: latest.id,
+    inventory: inventory.length,
+    currentBefore: current.byId.size,
+    absentBefore: absent.length,
+    unlinkedBefore: unlinked.length,
+    queued: queue.length,
+    processed,
+    parsed,
+    accepted,
+    rejected,
+    linked,
+    unlinked: unlinkedCount,
+    collectionFailures,
+    ingestionFailures,
+    remainingEstimate,
+    runtimeMs: Date.now() - startedAt,
+  }
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
+  const detailsOnly = url.searchParams.get('details_only') === '1'
   const previewBranchBypass = url.searchParams.get('preview_branch') === '1'
     && process.env.VERCEL_ENV === 'preview'
     && process.env.VERCEL_GIT_COMMIT_REF === 'fix/portal-daily-intelligence-sweep'
@@ -330,6 +466,31 @@ export async function GET(request: Request) {
 
   const startedAt = Date.now()
   const supabase = getServiceClient()
+
+  if (detailsOnly) {
+    try {
+      const detailDrain = await drainLatestInventoryDetails({
+        supabase,
+        datasetKind: 'portal_houses',
+        startedAt,
+      })
+      return NextResponse.json({
+        ok: detailDrain.ingestionFailures === 0,
+        mode: 'details_only',
+        datasetKind: 'portal_houses',
+        ...detailDrain,
+      }, { status: detailDrain.ingestionFailures === 0 ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+    } catch (cause) {
+      const failureMessage = cause instanceof Error ? cause.message : String(cause)
+      console.error('[market-refresh] detail drain failed', { failureMessage })
+      return NextResponse.json({
+        ok: false,
+        mode: 'details_only',
+        error: failureMessage,
+      }, { status: 503, headers: { 'Cache-Control': 'no-store' } })
+    }
+  }
+
   const results: Array<Record<string, unknown>> = []
   let totalFailures = 0
   let completeInventories = 0
@@ -395,9 +556,7 @@ export async function GET(request: Request) {
         continue
       }
 
-      const detailUrls = fullSweep
-        ? inventory.listingUrls
-        : rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
+      const detailUrls = rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
       const details = await collectPortalListingDetails({
         datasetKind,
         listingUrls: detailUrls,
