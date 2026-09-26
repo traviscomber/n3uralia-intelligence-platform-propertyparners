@@ -39,13 +39,13 @@ export default async function CanonicalClientReportsPage(){
 
   if(error){
     return <WorkspaceShell>
-      <WorkspaceHeader eyebrow="Informes" title="Último informe" meta="Consulta no disponible" actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+      <WorkspaceHeader eyebrow="Pilar 05 · Informes" title="Último informe" meta="Consulta no disponible" actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
       <div className="mt-6 max-w-5xl"><OperationalState kind="error" title="No fue posible consultar informes" description="La consulta de informes canónicos falló. No se interpreta este estado como ausencia de informes; reintenta más tarde o revisa la operación de reportes." /></div>
     </WorkspaceShell>
   }
 
   return <WorkspaceShell>
-    <WorkspaceHeader eyebrow="Informes" title="Último informe entregable" meta={current?`${current.kind} · ${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+    <WorkspaceHeader eyebrow="Pilar 05 · Informes" title="Último informe entregable" meta={current?`${current.kind} · ${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
 
     <section className="mt-6 max-w-5xl">
       {current?<article className="grid gap-6 border-y border-[var(--n3-line)] py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
