@@ -100,6 +100,7 @@ export function CeoDashboardCommand() {
 
   const selected = company?.evolution?.find((item) => item.period === period)
   const selectedMetrics = selected?.metrics ?? {}
+  const historical2025 = period.startsWith('2025-')
   const augustCompany = augustBoard?.entities.find((item) => item.slug === 'property-partners-vitacura') ?? null
   const compliance = ratio(selected?.sales, selected?.salesTarget)
   const cumulativeSales = selected?.cumulativeSales ?? sumThrough(company?.evolution, period, 'sales')
@@ -171,7 +172,7 @@ export function CeoDashboardCommand() {
   }).sort((a, b) => b.riskScore - a.riskScore || a.name.localeCompare(b.name)), [branches, period])
 
   const intelligence = useMemo<Action[]>(() => {
-    if (!selected) return []
+    if (!selected || historical2025) return []
     const items: Action[] = []
     const active = selectedMetrics.active_leads_snapshot ?? null
     const stale90 = selectedMetrics.stale_90_leads ?? null
@@ -195,7 +196,7 @@ export function CeoDashboardCommand() {
     if (credited != null && selected.sales != null && Math.abs(selected.sales - credited) >= 0.25) items.push({ label: 'Crédito comercial', value: `${n(credited, 1)} / ${n(selected.sales)}`, detail: inScope == null ? 'Separado de operaciones corporativas' : `${n(inScope)} operaciones en alcance`, href: '/dashboard/control/operations', priority: 55, critical: false })
 
     return items.sort((a, b) => b.priority - a.priority).slice(0, 5)
-  }, [compliance, gap, selected, selectedMetrics])
+  }, [compliance, gap, historical2025, selected, selectedMetrics])
 
   const actions = useMemo<Action[]>(() => {
     if (!operations) return intelligence
