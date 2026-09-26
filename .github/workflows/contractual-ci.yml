@@ -170,6 +170,10 @@ jobs:
       - name: Verify Pedro market view separation
         run: node --import tsx --test tests/market-pedro-view-separation.test.ts
 
+      - name: Verify top-level view responsibilities
+        run: node --import tsx --test tests/view-responsibility.test.ts
+
+
 
 
       - name: Verify management report scheduling
