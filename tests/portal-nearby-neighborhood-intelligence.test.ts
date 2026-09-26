@@ -52,3 +52,24 @@ test('nearby-place barrio inference requires multi-POI consensus and never rewri
   assert.doesNotMatch(sql,/update public\.management_source_records/i)
   assert.doesNotMatch(sql,/update public\.market_neighborhoods/i)
 })
+
+
+test('territory resolver prefers Portal point-in-KML before learned memory', () => {
+  const sql = readFileSync('supabase/migrations/20260926203000_coordinate_first_neighborhood_resolution.sql','utf8')
+  const point = sql.indexOf("if v_listing.latitude is not null and v_listing.longitude is not null then")
+  const memory = sql.indexOf("if v_address_key is not null then")
+  assert.ok(point >= 0)
+  assert.ok(memory >= 0)
+  assert.ok(point < memory)
+  assert.match(sql,/point_in_kml/)
+  assert.match(sql,/st_covers/)
+})
+
+test('daily market refresh prioritizes missing coordinates and uses the second cron as a detail drain', () => {
+  const route = readFileSync('app/api/cron/market-refresh/route.ts','utf8')
+  const vercel = readFileSync('vercel.json','utf8')
+  assert.match(route,/missingGeoBefore/)
+  assert.match(route,/missingGeoUrls/)
+  assert.match(route,/refresh_market_neighborhood_learning_v1/)
+  assert.match(vercel,/market-refresh\?details_only=1/)
+})
