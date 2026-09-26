@@ -33,6 +33,13 @@ export type NormalizedPortalListingRow = {
   raw_total_area?: unknown
   normalization_flags?: string[]
   canonical_reference?: boolean
+  nearby_places?: Array<{
+    category: string
+    name: string
+    walk_minutes: number | null
+    distance_m: number | null
+  }>
+  nearby_place_names?: string[]
 }
 
 export type NormalizedCbrsTransactionRow = {
@@ -137,6 +144,24 @@ function sourceListingId(row: MarketImportInputRow) {
   return match?.[1] ?? ''
 }
 
+function portalNearbyPlaces(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return []
+    const row = item as Record<string, unknown>
+    const name = text(row.name)
+    if (!name) return []
+    const distance = number(row.distance_m)
+    const walk = integer(row.walk_minutes)
+    return [{
+      category: text(row.category) || 'unknown',
+      name,
+      walk_minutes: walk != null && walk >= 0 && walk <= 180 ? walk : null,
+      distance_m: distance != null && distance > 0 && distance <= 5000 ? Math.round(distance) : null,
+    }]
+  }).slice(0, 80)
+}
+
 function portalPhotos(value: unknown) {
   const raw = text(value)
   if (!raw) return []
@@ -192,6 +217,8 @@ export function normalizePortalListingRows(rows: MarketImportInputRow[], dataset
     const explicitType = text(pick(row, ['property_type', 'tipo_propiedad', 'tipo']))
     const propertyType = explicitType || (datasetKind === 'portal_houses' ? 'Casa' : datasetKind === 'portal_projects' ? 'Proyecto' : 'Departamento')
     const photos = portalPhotos(pick(row, ['fotos_urls', 'photo_urls', 'photos']))
+    const nearbyPlaces = portalNearbyPlaces(pick(row, ['nearby_places']))
+    const nearbyPlaceNames = Array.from(new Set(nearbyPlaces.map((place) => place.name)))
 
     return {
       source_listing_id: sourceListingId(row),
@@ -224,6 +251,8 @@ export function normalizePortalListingRows(rows: MarketImportInputRow[], dataset
       raw_total_area: rawTotalArea,
       normalization_flags: flags,
       canonical_reference: false,
+      nearby_places: nearbyPlaces,
+      nearby_place_names: nearbyPlaceNames,
     }
   })
 }
