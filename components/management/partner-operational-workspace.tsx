@@ -63,18 +63,18 @@ export async function PartnerOperationalWorkspace() {
     const bTime = b.due_date ? new Date(b.due_date).getTime() : Number.POSITIVE_INFINITY
     return aTime - bTime
   })
-  const visibleTasks = tasks.slice(0, 4)
-  const hiddenTasks = tasks.slice(4)
-  const visibleAssignments = assignments.slice(0, 4)
-  const hiddenAssignments = assignments.slice(4)
+  const visibleTasks = tasks.slice(0, 3)
+  const hiddenTasks = tasks.slice(3)
+  const visibleAssignments = assignments.slice(0, 3)
+  const hiddenAssignments = assignments.slice(3)
   const errors = [assignmentsResult.error, tasksResult.error].filter(Boolean).map((item) => item?.message)
 
   return <section className="mx-auto mt-8 max-w-7xl space-y-6 pb-16">
-    <div className="border-b border-[var(--n3-line)] pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#ff766f]">Partner</p><h1 className="mt-2 text-3xl font-semibold">Qué hacer hoy</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Primero tus tareas y propiedades asignadas. El resto queda disponible cuando lo necesites.</p></div>
+    <div className="border-b border-[var(--n3-line)] pb-4"><h1 className="text-3xl font-semibold">Hoy</h1><p className="mt-2 text-sm text-[var(--n3-text-muted)]">Lo que requiere tu atención.</p></div>
     {errors.length ? <div className="border border-[#d7332b] bg-[#0c1111] p-4 text-sm text-[#ff766f]">No se pudo cargar toda tu información. Recarga la página o intenta nuevamente.</div> : null}
     <div className="grid gap-5 xl:grid-cols-2">
       <div className="border border-[var(--n3-line)] bg-[#0c1111]">
-        <div className="border-b border-[var(--n3-line)] p-4"><h2 className="font-semibold">Mis tareas</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Empieza por lo más urgente.</p></div>
+        <div className="border-b border-[var(--n3-line)] p-4"><h2 className="font-semibold">Tareas</h2></div>
         <div className="divide-y divide-[var(--n3-line)]">
           {visibleTasks.map((task) => <article key={task.id} className="p-4"><div className="flex items-start justify-between gap-3"><div><strong>{task.title}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Vence: {date(task.due_date)} · prioridad {priorityLabel(task.priority)}</p><PartnerTaskAction taskId={task.id} status={task.status} /></div><span className="border border-[var(--n3-line)] px-2 py-1 text-[10px] uppercase">{taskStatus(task.status)}</span></div></article>)}
           {!tasks.length ? <p className="p-5 text-sm text-[var(--n3-text-muted)]">No tienes tareas pendientes.</p> : null}
@@ -82,16 +82,13 @@ export async function PartnerOperationalWorkspace() {
         {hiddenTasks.length ? <details className="border-t border-[var(--n3-line)]"><summary className="min-h-11 cursor-pointer px-4 py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver {hiddenTasks.length} tarea{hiddenTasks.length === 1 ? '' : 's'} más</summary><div className="divide-y divide-[var(--n3-line)]">{hiddenTasks.map((task) => <article key={task.id} className="p-4"><div className="flex items-start justify-between gap-3"><div><strong>{task.title}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Vence: {date(task.due_date)} · prioridad {priorityLabel(task.priority)}</p><PartnerTaskAction taskId={task.id} status={task.status} /></div><span className="border border-[var(--n3-line)] px-2 py-1 text-[10px] uppercase">{taskStatus(task.status)}</span></div></article>)}</div></details> : null}
       </div>
       <div className="border border-[var(--n3-line)] bg-[#0c1111]">
-        <div className="border-b border-[var(--n3-line)] p-4"><h2 className="font-semibold">Mi cartera</h2><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Abre una propiedad cuando necesites comenzar su valorización.</p></div>
+        <div className="border-b border-[var(--n3-line)] p-4"><h2 className="font-semibold">Cartera</h2></div>
         <div className="divide-y divide-[var(--n3-line)]">
           {visibleAssignments.map((assignment) => { const property = assignment.market_properties[0] ?? null; const href = `/dashboard/valuation?assignmentId=${qs(assignment.id)}&propertyId=${qs(property?.id)}&address=${qs(property?.normalized_address)}&neighborhoodId=${qs(property?.neighborhood_id)}&propertyType=${qs(property?.property_type)}&usefulAreaM2=${qs(property?.useful_area_m2)}&builtAreaM2=${qs(property?.built_area_m2)}&bedrooms=${qs(property?.bedrooms)}&bathrooms=${qs(property?.bathrooms)}&parkingSpaces=${qs(property?.parking_spaces)}`; return <article key={assignment.id} className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><strong>{property?.normalized_address || 'Dirección no disponible'}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Tipo no disponible'} · asignada {date(assignment.assigned_at)}</p></div><Link href={href} className="border border-[#d7332b] px-3 py-2 text-xs font-semibold text-[#ff766f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Iniciar valorización</Link></div></article> })}
           {!assignments.length ? <p className="p-5 text-sm text-[var(--n3-text-muted)]">No tienes propiedades asignadas en este momento.</p> : null}
         </div>
         {hiddenAssignments.length ? <details className="border-t border-[var(--n3-line)]"><summary className="min-h-11 cursor-pointer px-4 py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver {hiddenAssignments.length} propiedad{hiddenAssignments.length === 1 ? '' : 'es'} más</summary><div className="divide-y divide-[var(--n3-line)]">{hiddenAssignments.map((assignment) => { const property = assignment.market_properties[0] ?? null; const href = `/dashboard/valuation?assignmentId=${qs(assignment.id)}&propertyId=${qs(property?.id)}&address=${qs(property?.normalized_address)}&neighborhoodId=${qs(property?.neighborhood_id)}&propertyType=${qs(property?.property_type)}&usefulAreaM2=${qs(property?.useful_area_m2)}&builtAreaM2=${qs(property?.built_area_m2)}&bedrooms=${qs(property?.bedrooms)}&bathrooms=${qs(property?.bathrooms)}&parkingSpaces=${qs(property?.parking_spaces)}`; return <article key={assignment.id} className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><strong>{property?.normalized_address || 'Dirección no disponible'}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type || 'Tipo no disponible'} · asignada {date(assignment.assigned_at)}</p></div><Link href={href} className="border border-[#d7332b] px-3 py-2 text-xs font-semibold text-[#ff766f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Iniciar valorización</Link></div></article> })}</div></details> : null}
       </div>
-    </div>
-    <div className="border-t border-[var(--n3-line)] pt-4">
-      <Link href="/dashboard/valuations" className="inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 py-3 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]">Ver mis valorizaciones</Link>
     </div>
   </section>
 }
