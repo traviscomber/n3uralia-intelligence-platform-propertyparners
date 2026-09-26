@@ -8,6 +8,7 @@ import { OperationalState } from '@/components/ui/operational-state'
 
 type Overview = {
   directors:Array<{director_key:string;full_name:string;role:string;office_name:string}>
+  permissions:{canBulkAssign:boolean}
   summary:{leads:number;active:number;overdue:number;valuations:number;won:number}
   performance:Array<{
     director:{director_key:string;full_name:string;role:string;office_name:string}
@@ -150,7 +151,7 @@ export default function ProspectManagementPage(){
           <div><span className="text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)] lg:hidden">Publicadas · </span><span className="text-sm">{row.eligiblePublished}</span></div>
           <div><span className="text-[10px] uppercase tracking-[0.1em] text-[var(--n3-text-muted)] lg:hidden">Leads · </span><span className="text-sm">{row.leads}</span></div>
           <div>
-            {row.needsDirector ? <select
+            {row.needsDirector && data.permissions.canBulkAssign ? <select
               aria-label={`Director o directora para ${row.neighborhood.name}`}
               value={territoryDraft[row.neighborhood.id]||''}
               onChange={event=>setTerritoryDraft(current=>({...current,[row.neighborhood.id]:event.target.value}))}
@@ -159,8 +160,8 @@ export default function ProspectManagementPage(){
               <option value="">Seleccionar dirección</option>
               {data.directors.map(director=><option key={director.director_key} value={director.director_key}>{director.full_name} · {director.office_name}</option>)}
             </select> : <div>
-              <p className="text-sm font-medium">{row.director?.full_name||'Asignado'}</p>
-              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.director?.office_name||'Territorio vigente'}</p>
+              <p className={`text-sm font-medium ${row.needsDirector?'text-[#f0c96a]':''}`}>{row.director?.full_name||(row.needsDirector?'Sin asignar':'Asignado')}</p>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{row.director?.office_name||(row.needsDirector?'Requiere alcance global para asignar':'Territorio vigente')}</p>
             </div>}
             {row.directorDriftLeads?<p className="mt-1 text-[11px] text-[#f0c96a]">{row.directorDriftLeads} lead(s) no coinciden con el territorio actual</p>:null}
           </div>
@@ -173,7 +174,7 @@ export default function ProspectManagementPage(){
         {!data.territoryCoverage.length?<p className="py-6 text-sm text-[var(--n3-text-muted)]">No hay casas publicadas elegibles con barrio canónico dentro del alcance actual.</p>:null}
       </div>
 
-      {pendingTerritories.length ? <div className="mt-5 border border-[var(--n3-line)] bg-white/[0.015] p-4">
+      {pendingTerritories.length && data.permissions.canBulkAssign ? <div className="mt-5 border border-[var(--n3-line)] bg-white/[0.015] p-4">
         <div className="flex items-start gap-3">
           <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[var(--n3-accent)]"/>
           <div className="flex-1">
@@ -196,7 +197,9 @@ export default function ProspectManagementPage(){
             {matrixMessage?<p className="mt-3 text-xs leading-5 text-[var(--n3-text-light)]">{matrixMessage}</p>:null}
           </div>
         </div>
-      </div> : <div className="mt-4 flex items-center gap-2 text-xs text-[var(--n3-accent)]"><CheckCircle2 size={14}/> Todos los barrios elegibles tienen dirección responsable.</div>}
+      </div> : pendingTerritories.length
+        ? <div className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">La matriz territorial está pendiente. La asignación masiva requiere alcance global.</div>
+        : <div className="mt-4 flex items-center gap-2 text-xs text-[var(--n3-accent)]"><CheckCircle2 size={14}/> Todos los barrios elegibles tienen dirección responsable.</div>}
     </section>
 
     <section className="mt-7">
