@@ -126,7 +126,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
 
   return <main className="mx-auto max-w-7xl space-y-8 pb-16">
     <header className="border-b border-[var(--n3-line)] pb-6">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">Dirección · cartera</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff766f]">{scope.scope === 'global' ? 'Administración · cartera' : 'Dirección · cartera'}</p>
       <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">Cartera y asignaciones</h1>
       <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Asigna propiedades sólo dentro de {scope.scope === 'global' ? 'la operación autorizada' : 'tu oficina'}. Por ahora, esta cartera considera casas de Vitacura con dirección verificada.</p>
     </header>
@@ -173,7 +173,7 @@ export default async function PropertyAssignmentAdminPage({ searchParams }: { se
           </article>
         })}
       </div>
-      {!assignmentsUnavailable && !assignments.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">No hay asignaciones registradas para esta oficina.</div> : null}
+      {!assignmentsUnavailable && !assignments.length ? <div role="status" className="border border-dashed border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">{scope.scope === 'global' ? 'No hay asignaciones registradas en el alcance global.' : 'No hay asignaciones registradas para esta oficina.'}</div> : null}
     </section>
   </main>
 }
