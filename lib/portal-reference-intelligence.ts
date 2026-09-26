@@ -43,6 +43,13 @@ function datasetKind(value: string): PortalReferenceDataset['datasetKind'] | nul
   return null
 }
 
+const LIVE_SOURCE_CODE_BY_KIND: Record<PortalReferenceDataset['datasetKind'], string> = {
+  portal_apartments: 'portal-inmobiliario-vitacura-portal-apartments',
+  portal_houses: 'portal-inmobiliario-vitacura-portal-houses',
+  portal_projects: 'portal-inmobiliario-vitacura-portal-projects',
+}
+const LIVE_SOURCE_CODES = Object.values(LIVE_SOURCE_CODE_BY_KIND)
+
 function liveKind(value: string | null | undefined): PortalReferenceDataset['datasetKind'] | null {
   if (value === 'Departamento') return 'portal_apartments'
   if (value === 'Casa') return 'portal_houses'
@@ -76,8 +83,9 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
         .order('listing_count', { ascending: false }),
       supabase
         .from('market_current_listings')
-        .select('price_uf,price_uf_m2,raw_payload,market_sources(code,metadata),market_properties(property_type,useful_area_m2)')
-        .in('status', ['active', 'observed']),
+        .select('price_uf,price_uf_m2,raw_payload,market_sources!inner(code,metadata),market_properties(property_type,useful_area_m2)')
+        .in('status', ['active', 'observed'])
+        .in('market_sources.code', LIVE_SOURCE_CODES),
     ])
 
     const error = referenceResult.error || liveResult.error
@@ -115,8 +123,7 @@ export async function getPortalReferenceSnapshot(): Promise<PortalReferenceSnaps
       // "Live" means the current canonical Portal collectors only. Legacy
       // imports remain available as historical evidence but must not be
       // counted as today's Portal inventory.
-      const expectedSourceCode = `portal-inmobiliario-vitacura-${kind}`
-      if (sourceCode !== expectedSourceCode) continue
+      if (sourceCode !== LIVE_SOURCE_CODE_BY_KIND[kind]) continue
 
       const rawPayload = row.raw_payload && typeof row.raw_payload === 'object' ? row.raw_payload as Record<string, unknown> : null
       const payloadArea = numericPayload(rawPayload?.useful_area_m2)
