@@ -10,7 +10,7 @@ export function PartnerTaskAction({ taskId, status }: { taskId: string; status: 
 
   async function update(nextStatus: 'in_progress' | 'done') {
     const resolutionNote = nextStatus === 'done'
-      ? window.prompt('Nota de resolución obligatoria')?.trim()
+      ? window.prompt('Escribe una breve nota de cierre')?.trim()
       : null
     if (nextStatus === 'done' && !resolutionNote) return
 
@@ -23,7 +23,7 @@ export function PartnerTaskAction({ taskId, status }: { taskId: string; status: 
         body: JSON.stringify({ status: nextStatus, resolutionNote }),
       })
       const payload = await response.json()
-      if (!response.ok) throw new Error(payload.error || 'No fue posible actualizar la tarea')
+      if (!response.ok) throw new Error('No fue posible actualizar la tarea')
       router.refresh()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No fue posible actualizar la tarea')
