@@ -1,6 +1,7 @@
 'use client'
 
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Bot, Database, RotateCcw, Send, ShieldCheck, Sparkles, X } from 'lucide-react'
 
 type Evidence = {
@@ -67,12 +68,30 @@ const starterSections = [
 ] as const
 
 export function PedroPabloFloatingChat() {
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const valuationCaseId = useMemo(() => pathname.match(/^\/dashboard\/valuations\/([^/]+)/)?.[1] ?? null, [pathname])
+  const contextualStarterSections = useMemo(() => valuationCaseId ? [
+    {
+      label: 'Esta valorización',
+      prompts: [
+        '¿Por qué este valor es defendible?',
+        '¿Qué comparables sostienen mejor este valor?',
+      ],
+    },
+    {
+      label: 'Antes de enviar',
+      prompts: [
+        '¿Qué debo revisar antes de enviarla a dirección?',
+        '¿Hay alguna alerta importante en este expediente?',
+      ],
+    },
+  ] as const : starterSections, [valuationCaseId])
 
   useEffect(() => {
     if (!open) return
@@ -109,7 +128,13 @@ export function PedroPabloFloatingChat() {
         credentials: 'include',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: query }),
+        body: JSON.stringify({
+          prompt: query,
+          pageContext: {
+            pathname,
+            valuationCaseId,
+          },
+        }),
       })
       const payload = await result.json()
       if (!result.ok) throw new Error(payload.error || 'No fue posible consultar Asistente de IA.')
@@ -222,11 +247,13 @@ export function PedroPabloFloatingChat() {
                     ¿Qué quieres revisar?
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
-                    Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.
+                    {valuationCaseId
+                      ? 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.'
+                      : 'Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.'}
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {starterSections.map((section) => (
+                  {contextualStarterSections.map((section) => (
                     <div key={section.label} className="rounded-lg border border-[var(--n3-line)] p-3">
                       <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
                         {section.label}
