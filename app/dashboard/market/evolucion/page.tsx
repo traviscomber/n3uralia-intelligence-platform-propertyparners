@@ -4,7 +4,10 @@ import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { requireAnyPageCapability } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 
+type PropertyType = 'Casa' | 'Departamento'
+
 type YearRow = {
+  property_type: PropertyType
   year: number
   transactions: number
   median_price_uf: number | string | null
@@ -29,8 +32,7 @@ function pct(current: number | null, previous: number | null) {
 
 function percent(value: number | null) {
   if (value == null) return '—'
-  const sign = value > 0 ? '+' : ''
-  return `${sign}${(value * 100).toFixed(1)}%`
+  return `${value > 0 ? '+' : ''}${(value * 100).toFixed(1)}%`
 }
 
 function points(values: Array<number | null>) {
@@ -47,170 +49,154 @@ function points(values: Array<number | null>) {
   }).filter(Boolean).join(' ')
 }
 
-export default async function MarketEvolutionPage() {
-  await requireAnyPageCapability(['market.manage_sources', 'management.global.read', 'management.office.read'])
-
-  const supabase = await createClient()
-  const lastCompleteYear = new Date().getFullYear() - 1
-  const [historyResult, liveRangeResult] = await Promise.all([
-    supabase
-      .from('market_cbrs_reference_metrics')
-      .select('year,transactions,median_price_uf,median_uf_m2,observed_at')
-      .eq('scope', 'year')
-      .eq('property_type', 'Casa')
-      .lte('year', lastCompleteYear)
-      .order('year', { ascending: false })
-      .limit(4),
-    supabase
-      .from('market_listing_history')
-      .select('first_seen_at,last_seen_at', { count: 'exact' })
-      .order('first_seen_at', { ascending: true })
-      .limit(1),
-  ])
-
-  const years = ((historyResult.data ?? []) as YearRow[]).sort((a, b) => a.year - b.year)
-  const liveFirstSeen = liveRangeResult.data?.[0]?.first_seen_at ?? null
-  const txPoints = points(years.map((row) => n(row.transactions)))
-  const pricePoints = points(years.map((row) => n(row.median_price_uf)))
-  const latest = years.at(-1) ?? null
-  const previous = years.at(-2) ?? null
+function TrendBlock({ propertyType, rows }: { propertyType: PropertyType; rows: YearRow[] }) {
+  const latest = rows.at(-1) ?? null
+  const previous = rows.at(-2) ?? null
   const latestTx = n(latest?.transactions)
   const previousTx = n(previous?.transactions)
   const latestPrice = n(latest?.median_price_uf)
   const previousPrice = n(previous?.median_price_uf)
   const latestUfM2 = n(latest?.median_uf_m2)
   const previousUfM2 = n(previous?.median_uf_m2)
+  const txPoints = points(rows.map((row) => n(row.transactions)))
+  const pricePoints = points(rows.map((row) => n(row.median_price_uf)))
+
+  return (
+    <section className="border-t border-[var(--n3-line)] pt-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{propertyType}</p>
+          <h2 className="mt-1 text-xl font-medium">Últimos {rows.length} años completos</h2>
+        </div>
+        <span className="text-xs text-[var(--n3-text-muted)]">{rows.at(0)?.year ?? '—'}–{latest?.year ?? '—'} · CBRS</span>
+      </div>
+
+      <div className="mt-5 grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
+        <div className="bg-[var(--n3-black)] p-4">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Compraventas</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">{number(latestTx)}</p>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">YoY {percent(pct(latestTx, previousTx))}</p>
+        </div>
+        <div className="bg-[var(--n3-black)] p-4">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana precio</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">UF {number(latestPrice, 0)}</p>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">YoY {percent(pct(latestPrice, previousPrice))}</p>
+        </div>
+        <div className="bg-[var(--n3-black)] p-4">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana UF/m²</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">{number(latestUfM2, 1)}</p>
+          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">YoY {percent(pct(latestUfM2, previousUfM2))}</p>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Línea · compraventas</p>
+          <svg viewBox="0 0 100 100" role="img" aria-label={`Evolución de compraventas de ${propertyType.toLowerCase()}`} className="mt-3 h-44 w-full">
+            <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
+            {txPoints ? <polyline points={txPoints} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" /> : null}
+          </svg>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Línea · mediana UF</p>
+          <svg viewBox="0 0 100 100" role="img" aria-label={`Evolución de precio de ${propertyType.toLowerCase()}`} className="mt-3 h-44 w-full">
+            <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
+            {pricePoints ? <polyline points={pricePoints} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" /> : null}
+          </svg>
+        </div>
+      </div>
+
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[620px] text-sm">
+          <thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
+            <tr>
+              <th className="py-2 text-left">Año</th>
+              <th className="py-2 text-right">Ventas</th>
+              <th className="py-2 text-right">Mediana UF</th>
+              <th className="py-2 text-right">Mediana UF/m²</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--n3-line)]">
+            {rows.map((row) => (
+              <tr key={row.year}>
+                <td className="py-3">{row.year}</td>
+                <td className="py-3 text-right tabular-nums">{number(n(row.transactions))}</td>
+                <td className="py-3 text-right tabular-nums">UF {number(n(row.median_price_uf), 0)}</td>
+                <td className="py-3 text-right tabular-nums">{number(n(row.median_uf_m2), 1)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+export default async function MarketEvolutionPage() {
+  await requireAnyPageCapability(['market.manage_sources', 'management.global.read', 'management.office.read'])
+
+  const supabase = await createClient()
+  const lastCompleteYear = new Date().getFullYear() - 1
+  const firstYear = lastCompleteYear - 3
+
+  const { data, error } = await supabase
+    .from('market_cbrs_reference_metrics')
+    .select('property_type,year,transactions,median_price_uf,median_uf_m2,observed_at')
+    .eq('scope', 'year')
+    .in('property_type', ['Casa', 'Departamento'])
+    .gte('year', firstYear)
+    .lte('year', lastCompleteYear)
+    .order('year', { ascending: true })
+
+  const rows = (data ?? []) as YearRow[]
+  const houses = rows.filter((row) => row.property_type === 'Casa')
+  const apartments = rows.filter((row) => row.property_type === 'Departamento')
 
   return (
     <WorkspaceShell>
       <WorkspaceHeader
         eyebrow="Mercado · Evolución"
-        title="4 años de mercado"
-        meta="Casas · Vitacura · CBRS canónico"
+        title="4 años · casas y departamentos"
+        meta="Vitacura · CBRS canónico"
         actions={[
-          { label: 'Oferta en mapa', href: '/dashboard/market/mapa/oferta', primary: true },
-          { label: 'Territorio', href: '/dashboard/market/mapa' },
-          { label: 'Volver a Mercado', href: '/dashboard/market' },
+          { label: 'Oferta vs ventas', href: '/dashboard/market/inteligencia', primary: true },
+          { label: 'Mapa KML', href: '/dashboard/market/mapa' },
+          { label: 'Volver', href: '/dashboard/market' },
         ]}
       />
 
-      {historyResult.error ? (
+      {error ? (
         <div className="mt-6 border border-[#ff8d87]/50 p-4 text-sm text-[#ff8d87]">
           No fue posible cargar la serie histórica CBRS.
         </div>
       ) : null}
 
-      <section className="mt-6 grid gap-px bg-[var(--n3-line)] sm:grid-cols-3">
-        <div className="bg-[var(--n3-bg)] p-4">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Ventas · último año completo</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{number(latestTx)}</p>
-          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">YoY {percent(pct(latestTx, previousTx))}</p>
-        </div>
-        <div className="bg-[var(--n3-bg)] p-4">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana precio</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">UF {number(latestPrice, 0)}</p>
-          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">YoY {percent(pct(latestPrice, previousPrice))}</p>
-        </div>
-        <div className="bg-[var(--n3-bg)] p-4">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana UF/m²</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{number(latestUfM2, 1)}</p>
-          <p className="mt-1 text-xs text-[var(--n3-text-muted)]">YoY {percent(pct(latestUfM2, previousUfM2))}</p>
-        </div>
-      </section>
+      <div className="mt-6 border-l-2 border-[var(--primary)] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">
+        Esta vista responde la línea histórica de mercado pedida por Pedro Pablo. El YoY compara años CBRS equivalentes. El MoM comercial, metas, funnel y Balanced Scorecard pertenecen a Gestión y no se mezclan con Mercado.
+      </div>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="border-t border-[var(--n3-line)] pt-4">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Compraventas</p>
-              <h2 className="mt-1 text-lg font-medium">Evolución anual</h2>
-            </div>
-            <span className="text-xs text-[var(--n3-text-muted)]">{years.at(0)?.year ?? '—'}–{latest?.year ?? '—'}</span>
-          </div>
-          <svg viewBox="0 0 100 100" role="img" aria-label="Evolución de compraventas de casas por año" className="mt-5 h-48 w-full">
-            <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
-            {txPoints ? <polyline points={txPoints} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" /> : null}
-          </svg>
-          <div className="grid grid-cols-4 gap-2 text-center text-xs text-[var(--n3-text-muted)]">
-            {years.map((row) => <div key={row.year}><p>{row.year}</p><p className="mt-1 font-medium text-[var(--n3-text-light)]">{number(n(row.transactions))}</p></div>)}
-          </div>
-        </div>
-
-        <div className="border-t border-[var(--n3-line)] pt-4">
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Precio de cierre</p>
-              <h2 className="mt-1 text-lg font-medium">Mediana UF</h2>
-            </div>
-            <span className="text-xs text-[var(--n3-text-muted)]">CBRS</span>
-          </div>
-          <svg viewBox="0 0 100 100" role="img" aria-label="Evolución anual de la mediana de precio UF" className="mt-5 h-48 w-full">
-            <line x1="5" y1="90" x2="95" y2="90" stroke="var(--n3-line)" strokeWidth="0.8" />
-            {pricePoints ? <polyline points={pricePoints} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" /> : null}
-          </svg>
-          <div className="grid grid-cols-4 gap-2 text-center text-xs text-[var(--n3-text-muted)]">
-            {years.map((row) => <div key={row.year}><p>{row.year}</p><p className="mt-1 font-medium text-[var(--n3-text-light)]">UF {number(n(row.median_price_uf), 0)}</p></div>)}
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-8 border-t border-[var(--n3-line)] pt-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cobertura temporal</p>
-            <h2 className="mt-1 text-lg font-medium">Qué podemos comparar hoy</h2>
-          </div>
-          <Link href="/dashboard/market/oferta" className="text-xs text-[var(--n3-teal-soft)]">Ver oferta actual</Link>
-        </div>
-        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2">
-          <div className="border-l border-[var(--n3-line)] pl-4">
-            <p className="font-medium">CBRS</p>
-            <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">La serie CBRS canónica disponible permite comparar años completos de casas. Esta vista usa los últimos cuatro años completos y calcula YoY real sobre la misma definición.</p>
-          </div>
-          <div className="border-l border-[var(--n3-line)] pl-4">
-            <p className="font-medium">Portal Inmobiliario</p>
-            <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">El historial live comienza en {liveFirstSeen ? new Date(liveFirstSeen).toLocaleDateString('es-CL') : 'fecha no disponible'}. No se inventa oferta histórica anterior a la captura real.</p>
-          </div>
-        </div>
-      </section>
+      <div className="mt-8 space-y-10">
+        <TrendBlock propertyType="Casa" rows={houses} />
+        <TrendBlock propertyType="Departamento" rows={apartments} />
+      </div>
 
       <div className="mt-8">
         <CalculationTrace
-          title="Ventas anuales"
-          source="CBRS · market_cbrs_reference_metrics"
-          universe="Compraventas clasificadas como Casa"
-          filters={`scope = year · year <= ${lastCompleteYear} · últimos 4 años completos disponibles`}
-          exclusions="Otros tipos de propiedad; Portal no participa en este conteo"
-          formula="conteo de transacciones confirmadas por año"
-          result={number(latestTx)}
+          title="Serie anual CBRS"
+          source="market_cbrs_reference_metrics"
+          universe="Compraventas residenciales canónicas de Vitacura"
+          filters={`scope = year · property_type separado · ${firstYear}–${lastCompleteYear}`}
+          exclusions="Estacionamientos, bodegas y otros componentes no cuentan como transacción residencial primaria; Portal no participa en estas ventas."
+          formula="Evento registral canónico agregado por año y tipo de propiedad"
+          result={`${houses.length} años Casa · ${apartments.length} años Departamento`}
+          note="No se reconstruye una segunda fórmula en UI. Se leen métricas CBRS ya persistidas."
         />
-        <CalculationTrace
-          title="Mediana precio de cierre"
-          source="CBRS · market_cbrs_reference_metrics"
-          universe="Compraventas clasificadas como Casa"
-          filters={`scope = year · year <= ${lastCompleteYear} · último año completo disponible`}
-          exclusions="Otros tipos de propiedad; precios de publicación de Portal"
-          formula="mediana de precio UF de cierres CBRS del año"
-          result={latestPrice == null ? '—' : `UF ${number(latestPrice, 0)}`}
-        />
-        <CalculationTrace
-          title="Mediana UF/m²"
-          source="CBRS · market_cbrs_reference_metrics"
-          universe="Compraventas de casas con superficie utilizable por la métrica canónica"
-          filters={`scope = year · year <= ${lastCompleteYear} · último año completo disponible`}
-          exclusions="Registros sin superficie válida; Portal no participa en este cálculo"
-          formula="mediana anual del indicador UF/m² canónico"
-          result={number(latestUfM2, 1)}
-        />
-        <CalculationTrace
-          title="Variación YoY"
-          source="Dos años completos consecutivos de la misma métrica CBRS"
-          universe="Mismo tipo de propiedad y misma definición"
-          filters={`ambos años <= ${lastCompleteYear}`}
-          formula="(valor actual / valor año anterior) − 1"
-          result={percent(pct(latestTx, previousTx))}
-          note="MoM requiere una serie mensual canónica. Se habilitará cuando la serie mensual esté disponible; no se aproxima desde datos anuales."
-        />
+      </div>
+
+      <div className="mt-6">
+        <Link href="/dashboard/control/operations" className="text-xs text-[var(--n3-teal-soft)]">
+          Ir a Gestión para MoM, YoY comercial, metas y scorecard
+        </Link>
       </div>
     </WorkspaceShell>
   )
