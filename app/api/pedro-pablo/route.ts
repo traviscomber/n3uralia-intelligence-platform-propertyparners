@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getOperationalMarketSnapshot, type OperationalMarketSnapshot } from '@/lib/market-operational'
 
 type Metric = {
   code: string
@@ -90,7 +91,7 @@ type Evidence = {
   source: string
   reference?: string | null
   cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations' | 'properties'
+  domain?: 'management' | 'tasks' | 'valuations' | 'properties' | 'market'
 }
 
 type Coverage = {
@@ -117,6 +118,7 @@ type ContextPack = {
   valuations: ValuationCase[]
   tasks: ManagementTask[]
   properties: PropertyContext | null
+  market: OperationalMarketSnapshot
   coverage: Coverage
 }
 
@@ -213,6 +215,59 @@ function buildCoverage(
   }
 }
 
+function answerMarket(context: ContextPack): PedroPabloResponse {
+  const market = context.market
+  const evidence: Evidence[] = [{
+    label: 'Barrido diario Portal Inmobiliario · casas Vitacura',
+    source: 'market_ingestion_runs + market_current_listings · snapshot completo',
+    cutoff: market.latestObservedAt,
+    domain: 'market',
+  }]
+
+  if (!market.latestIngestionFullSnapshot || market.activeInventory === null) {
+    return {
+      ...baseResponse(context),
+      title: 'Mercado sin snapshot completo verificable',
+      answer: 'No hay un snapshot completo de Portal Inmobiliario disponible para afirmar cambios diarios. Pedro Pablo no infiere altas, bajas ni inventario desde una captura parcial.',
+      evidence,
+      actions: [{ label: 'Abrir Mercado', href: '/dashboard/market' }],
+    }
+  }
+
+  const coverage = market.latestInventoryCoverageRatio === null
+    ? 'sin cobertura calculable'
+    : `${(market.latestInventoryCoverageRatio * 100).toFixed(1)}% de cobertura`
+  const linked = market.liveLinkedHouses ?? 0
+  const pending = market.pendingMatches ?? 0
+  const newCount = market.latestIngestionNew ?? 0
+  const removed = market.latestIngestionRemoved ?? 0
+  const unchanged = market.latestIngestionUnchanged ?? 0
+
+  const lines = [
+    `El barrido completo de esta mañana registra ${market.activeInventory.toLocaleString('es-CL')} casas live en Vitacura, con ${coverage} respecto del total reportado por Portal.`,
+    `Cambio contra el snapshot completo anterior: ${newCount.toLocaleString('es-CL')} nuevas, ${removed.toLocaleString('es-CL')} retiradas y ${unchanged.toLocaleString('es-CL')} sin cambio.`,
+    `Identidad PP: ${linked.toLocaleString('es-CL')} publicaciones están vinculadas a propiedad canónica y ${pending.toLocaleString('es-CL')} siguen pendientes de resolución segura.`,
+  ]
+
+  if ((market.identityCollisions ?? 0) > 0) {
+    lines.push(`${market.identityCollisions?.toLocaleString('es-CL')} casos presentan colisión de identidad y requieren revisión antes de asignar una propiedad.`)
+  }
+  if ((market.newLiveIdentityCases ?? 0) > 0) {
+    lines.push(`${market.newLiveIdentityCases?.toLocaleString('es-CL')} publicaciones no tienen evidencia externa suficiente para una vinculación automática segura.`)
+  }
+
+  return {
+    ...baseResponse(context),
+    title: 'Qué cambió esta mañana en el mercado',
+    answer: lines.join('\n'),
+    evidence,
+    actions: [
+      { label: 'Abrir Mercado', href: '/dashboard/market' },
+      { label: 'Revisar identidad', href: '/dashboard/market/inteligencia' },
+    ],
+  }
+}
+
 function baseResponse(context: ContextPack) {
   return {
     scopeLabel: context.summary.scopeLabel,
@@ -230,7 +285,23 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
   const evidence: Evidence[] = []
   const actions: Array<{ label: string; href: string }> = []
 
-  const alerts = summary.alerts.slice(0, 3)
+  const market = context.market
+  if (market.latestIngestionFullSnapshot && market.activeInventory !== null) {
+    const newCount = market.latestIngestionNew ?? 0
+    const removed = market.latestIngestionRemoved ?? 0
+    if (newCount > 0 || removed > 0) {
+      lines.push(`${lines.length + 1}. Mercado: ${newCount.toLocaleString('es-CL')} publicaciones nuevas y ${removed.toLocaleString('es-CL')} retiradas; inventario live ${market.activeInventory.toLocaleString('es-CL')}.`)
+      evidence.push({
+        label: 'Cambio diario de mercado',
+        source: 'Portal Inmobiliario · snapshot completo reconciliado',
+        cutoff: market.latestObservedAt,
+        domain: 'market',
+      })
+      actions.push({ label: 'Abrir Mercado', href: '/dashboard/market' })
+    }
+  }
+
+  const alerts = summary.alerts.slice(0, Math.max(0, 3 - lines.length))
   for (const alert of alerts) {
     lines.push(`${lines.length + 1}. ${alert.entityName}: ${alert.title}. ${alert.detail}`)
   }
@@ -478,6 +549,16 @@ function buildResponse(context: ContextPack, prompt: string): PedroPabloResponse
   if (entityAnswer) return entityAnswer
 
   const normalized = normalize(prompt)
+  if (
+    normalized.includes('mercado')
+    || normalized.includes('portal')
+    || normalized.includes('oferta')
+    || normalized.includes('desde ayer')
+    || normalized.includes('esta manana')
+    || normalized.includes('esta mañana')
+    || normalized.includes('nuevas publicaciones')
+    || normalized.includes('retiradas')
+  ) return answerMarket(context)
   if (normalized.includes('tarea') || normalized.includes('pendiente') || normalized.includes('venc')) return answerTasks(context)
   if (normalized.includes('valoriza') || normalized.includes('tasacion') || normalized.includes('tasar')) return answerValuations(context)
   if (normalized.includes('propiedad') || normalized.includes('cartera') || normalized.includes('inmueble') || normalized.includes('vigencia') || normalized.includes('identidad')) return answerProperties(context)
@@ -514,11 +595,12 @@ export async function POST(request: NextRequest) {
 
   const cookie = request.headers.get('cookie') ?? ''
   const requestHeaders = { cookie }
-  const [summaryResponse, tasksResponse, valuationsResponse, propertiesResponse] = await Promise.all([
+  const [summaryResponse, tasksResponse, valuationsResponse, propertiesResponse, market] = await Promise.all([
     fetch(new URL('/api/management/summary', request.url), { headers: requestHeaders, cache: 'no-store' }),
     fetch(new URL('/api/management/tasks', request.url), { headers: requestHeaders, cache: 'no-store' }),
     fetch(new URL('/api/valuations/cases', request.url), { headers: requestHeaders, cache: 'no-store' }),
     fetch(new URL('/api/pedro-pablo/properties', request.url), { headers: requestHeaders, cache: 'no-store' }),
+    getOperationalMarketSnapshot(),
   ])
 
   if (!summaryResponse.ok) {
@@ -538,6 +620,7 @@ export async function POST(request: NextRequest) {
       tasks: tasks ?? [],
       valuations: valuations ?? [],
       properties,
+      market,
       coverage: buildCoverage(summary, tasks, valuations, properties),
     }
     const response = buildResponse(context, prompt)
