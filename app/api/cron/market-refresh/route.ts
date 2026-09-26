@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
+import { requireExecutiveAccess } from '@/lib/api-access'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import {
   collectPortalListingDetails,
@@ -21,6 +22,26 @@ const DETAIL_WAIT_MS = 300
 const MIN_COMPLETE_INVENTORY_LISTINGS = 30
 const DETAIL_RUNTIME_GUARD_MS = 210_000
 const RAW_INSERT_CHUNK = 400
+const CHILE_TIME_ZONE = 'America/Santiago'
+
+function chileClock(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: CHILE_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(now)
+  return {
+    hour: Number(parts.find((part) => part.type === 'hour')?.value ?? '-1'),
+    minute: Number(parts.find((part) => part.type === 'minute')?.value ?? '-1'),
+  }
+}
+
+function scheduledWindow() {
+  const local = chileClock()
+  return local.hour === 7 && local.minute === 30
+}
+
 
 function authorized(request: Request) {
   const secret = process.env.CRON_SECRET
@@ -54,6 +75,7 @@ async function recordCollectionFailure(
   datasetKind: PortalDatasetKind,
   failureCode: string,
   counts?: { discovered?: number; parsed?: number; collectionFailures?: number },
+  failureMessage?: string,
 ) {
   const recordedAt = new Date().toISOString()
   await supabase.from('market_ingestion_runs').insert({
@@ -71,6 +93,7 @@ async function recordCollectionFailure(
       pipeline: 'portal_inventory_discovery_v1',
       stage: 'collection',
       failure_code: failureCode,
+      failure_message: failureMessage?.slice(0, 500) ?? null,
       discovered: counts?.discovered ?? null,
       parsed: counts?.parsed ?? null,
       collection_failures: counts?.collectionFailures ?? null,
@@ -283,8 +306,23 @@ async function persistInventoryRun(args: {
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  const url = new URL(request.url)
+  const force = url.searchParams.get('force') === '1'
+  const fullSweep = url.searchParams.get('full') === '1'
+
+  if (force) {
+    const access = await requireExecutiveAccess()
+    if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+  } else {
+    if (!authorized(request)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!scheduledWindow()) {
+      return NextResponse.json({
+        ok: true,
+        skipped: true,
+        reason: 'outside_0730_america_santiago',
+        timeZone: CHILE_TIME_ZONE,
+      }, { headers: { 'Cache-Control': 'no-store' } })
+    }
   }
 
   const startedAt = Date.now()
@@ -354,7 +392,9 @@ export async function GET(request: Request) {
         continue
       }
 
-      const detailUrls = rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
+      const detailUrls = fullSweep
+        ? inventory.listingUrls
+        : rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
       const details = await collectPortalListingDetails({
         datasetKind,
         listingUrls: detailUrls,
@@ -418,7 +458,9 @@ export async function GET(request: Request) {
     } catch (cause) {
       const failureCode = classifyCollectorFailure(cause)
       totalFailures += 1
-      await recordCollectionFailure(supabase, datasetKind, failureCode).catch(() => undefined)
+      const failureMessage = cause instanceof Error ? cause.message : String(cause)
+      console.error('[market-refresh] collector failed', { datasetKind, failureCode, failureMessage })
+      await recordCollectionFailure(supabase, datasetKind, failureCode, undefined, failureMessage).catch(() => undefined)
       results.push({ datasetKind, status: 'failed', failureCode })
     }
   }
@@ -432,7 +474,8 @@ export async function GET(request: Request) {
       inventoryPipeline: 'portal_inventory_discovery_v1',
       detailPipeline: 'unit_portal_listing_v2',
       maxDiscoveryPages: MAX_DISCOVERY_PAGES,
-      maxDetailListingsPerRun: MAX_DETAIL_LISTINGS_PER_RUN,
+      maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
+      fullSweep,
       completeInventories,
       expectedDatasets: DATASETS.length,
       totalFailures,
