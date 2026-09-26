@@ -78,20 +78,17 @@ async function resolveVisibleEntityIds(): Promise<string[]> {
 
 export async function getUserScope(): Promise<UserScope> {
   const supabase = await createClient()
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims()
-  const userId = claimsError ? null : String(claimsData?.claims?.sub || '') || null
-  if (!userId) throw new AuthenticationRequiredError()
-
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser()
+
   if (userError || !user) throw new AuthenticationRequiredError()
 
   const { data: rawProfile, error: profileError } = await supabase
     .from('profiles')
     .select('id,full_name,role,team,avatar_url,created_at')
-    .eq('id', userId)
+    .eq('id', user.id)
     .maybeSingle()
 
   const role = normalizeRole(rawProfile?.role)
