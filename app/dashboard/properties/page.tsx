@@ -15,6 +15,10 @@ type TerritoryProgress = {
   unmatched_houses: number | null
 }
 
+function n(value:number){return value.toLocaleString('es-CL')}
+function formatDate(value:string|null){return value?formatPropertyPartnersDate(value):'—'}
+function assignmentRole(value:string){if(value==='owner')return'Principal';if(value==='co_broker')return'Compartida';if(value==='support')return'Apoyo';return value}
+
 type AssignedProperty = {
   id: string
   assignment_role: string
