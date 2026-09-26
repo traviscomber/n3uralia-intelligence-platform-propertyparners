@@ -73,15 +73,17 @@ export async function PartnerPerformanceSummary() {
   })
   const personalRank = ranking.get(profileName) ?? null
   const personalProductivity = sales
-  const cards = [
-    ['Cierres junio', number(sales), `Meta: ${number(salesTarget)} · cumplimiento ${variation(salesCompliance)}`],
+  const primaryCards = [
+    ['Cierres del período', number(sales), `Meta: ${number(salesTarget)} · cumplimiento ${variation(salesCompliance)}`],
+    ['Venta del período', number(partner.salesSummary.currentSalesUf, ' UF'), 'Volumen acreditado en el corte'],
+    ['Seguimiento', number(partner.scores.followUp), 'Señal personal del período'],
+    ['Conversión', number(partner.scores.conversion), 'Señal personal del período'],
+  ]
+  const secondaryCards = [
     ['Vs mes anterior', variation(momSales), `Mayo ${number(maySales)} → junio ${number(sales)}`],
     ['Vs año anterior', variation(annual?.salesCountYoy), annual?.comparisonPeriod ? `Base ${annual.comparisonPeriod}` : 'Sin período comparable explícito'],
-    ['Venta junio', number(partner.salesSummary.currentSalesUf, ' UF'), `Vs año anterior ${variation(annual?.salesUfYoy)}`],
     ['Cierres acumulados', number(partner.salesSummary.cumulativeSalesCount), `Vs año anterior ${variation(annual?.cumulativeSalesCountYoy)}`],
     ['Venta acumulada', number(partner.salesSummary.cumulativeSalesUf, ' UF'), `Vs año anterior ${variation(annual?.cumulativeSalesUfYoy)}`],
-    ['Seguimiento', number(partner.scores.followUp), 'Dato disponible para el período'],
-    ['Conversión', number(partner.scores.conversion), 'Dato disponible para el período'],
   ]
 
   const trace = [
@@ -105,10 +107,11 @@ export async function PartnerPerformanceSummary() {
 
   return <section className="mx-auto mt-8 max-w-7xl space-y-5">
     <div className="border-b border-[var(--n3-line)] pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Mi desempeño</p><h2 className="mt-2 text-2xl font-semibold">Resultados del período</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--n3-text-muted)]">Tus cierres, ventas y seguimiento. Cuando falta información, se muestra como no disponible.</p></div>
-    <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-3">{cards.map(([label, value, detail]) => <article key={label} className="bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-2xl font-semibold">{value}</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{detail}</p></article>)}</div>
+    <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">{primaryCards.map(([label, value, detail]) => <article key={label} className="bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-2xl font-semibold">{value}</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{detail}</p></article>)}</div>
     <details className="border-t border-[var(--n3-line)] pt-4">
-      <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver más indicadores</summary>
+      <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver comparaciones y más indicadores</summary>
       <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
+        {secondaryCards.map(([label, value, detail]) => <article key={label} className="bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-2xl font-semibold">{value}</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{detail}</p></article>)}
         <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Captaciones</p><strong className="mt-2 block text-xl">Según fuente del período</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Si el dato no está disponible para este período, no se estima.</p></article>
         <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Productividad personal</p><strong className="mt-2 block text-xl">{number(personalProductivity)}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Cierres registrados para este período.</p></article>
         <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Ranking de cierres</p><strong className="mt-2 block text-xl">{personalRank == null ? '—' : '#' + personalRank}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Posición según cierres del mismo período; los empates comparten lugar.</p></article>
