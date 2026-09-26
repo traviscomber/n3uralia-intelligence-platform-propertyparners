@@ -27,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {children}
         </main>
       </div>
-      <PedroPabloFloatingChat />
+      <PedroPabloFloatingChat role={profile?.role ?? null} team={profile?.team ?? null} />
     </div>
   )
 }
