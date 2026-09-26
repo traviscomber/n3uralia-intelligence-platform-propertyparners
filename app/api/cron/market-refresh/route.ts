@@ -340,19 +340,60 @@ async function loadCurrentListingState(
   if (!source?.id) return { sourceId: null, byId: new Map<string, string | null>() }
 
   const byId = new Map<string, string | null>()
+  const rows: Array<{ id: string; sourceListingId: string; propertyId: string | null; status: string | null }> = []
   for (let offset = 0; ; offset += 1000) {
     const { data, error } = await supabase
       .from('market_current_listings')
-      .select('source_listing_id,property_id')
+      .select('id,source_listing_id,property_id,status')
       .eq('source_id', source.id)
       .range(offset, offset + 999)
     if (error) throw error
     for (const row of data ?? []) {
-      if (row.source_listing_id) byId.set(String(row.source_listing_id), row.property_id ? String(row.property_id) : null)
+      if (!row.source_listing_id) continue
+      const sourceListingId = String(row.source_listing_id)
+      const propertyId = row.property_id ? String(row.property_id) : null
+      byId.set(sourceListingId, propertyId)
+      rows.push({ id: String(row.id), sourceListingId, propertyId, status: row.status ? String(row.status) : null })
     }
     if ((data ?? []).length < 1000) break
   }
-  return { sourceId: String(source.id), byId }
+  return { sourceId: String(source.id), byId, rows }
+}
+
+async function reconcileCurrentInventoryPresence(args: {
+  supabase: ReturnType<typeof getServiceClient>
+  inventory: Array<{ sourceRecordId: string; url: string }>
+  current: Awaited<ReturnType<typeof loadCurrentListingState>>
+  observedAt: string
+}) {
+  const { supabase, inventory, current, observedAt } = args
+  if (!current.sourceId || !('rows' in current)) return { removed: 0, reactivated: 0 }
+
+  const inventoryIds = new Set(inventory.map((item) => item.sourceRecordId))
+  const staleIds = current.rows
+    .filter((row) => !inventoryIds.has(row.sourceListingId) && (row.status === 'active' || row.status === 'observed'))
+    .map((row) => row.id)
+  const reactivatedIds = current.rows
+    .filter((row) => inventoryIds.has(row.sourceListingId) && row.status === 'removed')
+    .map((row) => row.id)
+
+  for (let offset = 0; offset < staleIds.length; offset += 250) {
+    const { error } = await supabase
+      .from('market_current_listings')
+      .update({ status: 'removed', removed_at: observedAt })
+      .in('id', staleIds.slice(offset, offset + 250))
+    if (error) throw error
+  }
+
+  for (let offset = 0; offset < reactivatedIds.length; offset += 250) {
+    const { error } = await supabase
+      .from('market_current_listings')
+      .update({ status: 'observed', removed_at: null, observed_at: observedAt })
+      .in('id', reactivatedIds.slice(offset, offset + 250))
+    if (error) throw error
+  }
+
+  return { removed: staleIds.length, reactivated: reactivatedIds.length }
 }
 
 async function drainLatestInventoryDetails(args: {
@@ -371,7 +412,13 @@ async function drainLatestInventoryDetails(args: {
 
   const absent = inventory.filter((item) => !current.byId.has(item.sourceRecordId))
   const unlinked = inventory.filter((item) => current.byId.has(item.sourceRecordId) && current.byId.get(item.sourceRecordId) === null)
-  const queue = [...absent, ...unlinked]
+  const queue = absent
+  const reconciliation = await reconcileCurrentInventoryPresence({
+    supabase,
+    inventory,
+    current,
+    observedAt: new Date().toISOString(),
+  })
   const chunkSize = 18
   let processed = 0
   let parsed = 0
@@ -434,6 +481,7 @@ async function drainLatestInventoryDetails(args: {
     collectionFailures,
     ingestionFailures,
     remainingEstimate,
+    reconciliation,
     runtimeMs: Date.now() - startedAt,
   }
 }
@@ -474,6 +522,14 @@ export async function GET(request: Request) {
       })
       const { data: intelligenceRefresh, error: intelligenceError } = await supabase
         .rpc('refresh_market_listing_property_match_candidates_v1')
+      if (intelligenceError) {
+        console.error('[market-refresh] PP identity intelligence failed', {
+          message: intelligenceError.message,
+          details: intelligenceError.details,
+          hint: intelligenceError.hint,
+          code: intelligenceError.code,
+        })
+      }
 
       const sourceCode = 'portal-inmobiliario-vitacura-portal-houses'
       const { data: source } = await supabase
