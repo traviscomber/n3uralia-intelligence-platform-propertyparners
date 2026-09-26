@@ -26,26 +26,28 @@ export async function CeoIntelligencePanel() {
   const criticalRisk = risks.find((item) => item.severity === 'critical') ?? risks[0] ?? null
   const topActions = actions.slice(0, 3)
   const approvedEvidence = governed.evidenceLayer === 'approved_live'
+  const verifiedEvidence = governed.evidenceLayer === 'verified_live'
+  const liveEvidence = approvedEvidence || verifiedEvidence
   const decisionTrace: DecisionTraceItem[] = governed.signals.slice(0, 4).map((item) => ({
     id: `ceo-${item.ruleId}-${item.period}`,
     domain: 'executive',
     title: item.label,
-    evidenceStatus: item.evidenceLayer === 'approved_live' ? 'approved_live' : 'documentary_canonical',
+    evidenceStatus: item.evidenceLayer === 'approved_live' ? 'approved_live' : item.evidenceLayer === 'verified_live' ? 'verified_live' : 'documentary_canonical',
     evidenceLabel: item.evidence,
-    source: item.evidenceLayer === 'approved_live' ? 'Métrica de gestión aprobada' : 'Resumen operacional canónico',
+    source: item.evidenceLayer === 'approved_live' ? 'Métrica de gestión aprobada' : item.evidenceLayer === 'verified_live' ? 'Métrica de gestión verificada y evaluable' : 'Resumen operacional canónico',
     cutoff: item.period,
     ruleId: item.ruleId,
     ruleVersion: governed.policyVersion,
     ruleOrigin: item.origin === 'client_approved' ? 'client_approved' : 'n3uralia_provisional',
     severity: item.severity === 'high' ? 'critical' : 'warning',
-    confidence: item.evidenceLayer === 'approved_live' ? 'high' : 'medium',
+    confidence: item.evidenceLayer === 'documentary_fallback' ? 'medium' : 'high',
     action: item.rationale,
     href: '/dashboard/ceo/decisiones',
     evidenceCount: 1,
   }))
 
-  const evidenceBorderClass = approvedEvidence ? 'border-[var(--chart-3)]' : 'border-[var(--chart-4)]'
-  const evidenceTextClass = approvedEvidence ? 'text-[var(--chart-3)]' : 'text-[var(--chart-4)]'
+  const evidenceBorderClass = liveEvidence ? 'border-[var(--chart-3)]' : 'border-[var(--chart-4)]'
+  const evidenceTextClass = liveEvidence ? 'text-[var(--chart-3)]' : 'text-[var(--chart-4)]'
 
   return (
     <section className="space-y-4" aria-labelledby="n3uralia-intelligence-title">
@@ -81,7 +83,11 @@ export async function CeoIntelligencePanel() {
           <div className="text-right text-xs text-[var(--n3-text-muted)]">
             <p>{governed.signals.length} señales activas · {governed.unavailableMetrics.length} métricas no evaluables</p>
             <p className={evidenceTextClass}>
-              {approvedEvidence ? `Evidencia viva aprobada · corte ${governed.evaluatedPeriod}` : `Fallback documental · corte ${governed.evaluatedPeriod}`}
+              {approvedEvidence
+                ? `Evidencia viva aprobada · corte ${governed.evaluatedPeriod}`
+                : verifiedEvidence
+                  ? `Evidencia viva verificada · pendiente de aprobación · corte ${governed.evaluatedPeriod}`
+                  : `Fallback documental · corte ${governed.evaluatedPeriod}`}
             </p>
           </div>
         </div>

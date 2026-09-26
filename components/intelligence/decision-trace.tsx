@@ -17,7 +17,7 @@ function confidenceLabel(confidence: DecisionTraceItem['confidence']) {
 
 function StatusIcon({ status }: { status: DecisionTraceItem['evidenceStatus'] }) {
   if (status === 'missing' || status === 'non_evaluable') return <CircleHelp aria-hidden="true" size={14} />
-  if (status === 'approved_live' || status === 'documentary_canonical') return <CheckCircle2 aria-hidden="true" size={14} />
+  if (status === 'approved_live' || status === 'verified_live' || status === 'documentary_canonical') return <CheckCircle2 aria-hidden="true" size={14} />
   return <CircleAlert aria-hidden="true" size={14} />
 }
 

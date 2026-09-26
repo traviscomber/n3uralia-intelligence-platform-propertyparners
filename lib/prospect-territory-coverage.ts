@@ -11,6 +11,8 @@ export type ProspectCoverageLead = {
 
 export type ProspectCoverageTerritory = {
   neighborhood_id: string
+  group_key: string
+  group_name: string
   director_key: string
 }
 
@@ -34,7 +36,7 @@ export type ProspectTerritoryCoverageRow = {
   director: ProspectCoverageDirector | null
   territory: ProspectCoverageTerritory | null
   representativePropertyId: string | null
-  needsDirector: boolean
+  needsGroup: boolean
   directorDriftLeads: number
 }
 
@@ -79,7 +81,7 @@ export function buildProspectTerritoryCoverage(args: {
       director,
       territory,
       representativePropertyId: [...propertyIds][0] ?? null,
-      needsDirector: !territory,
+      needsGroup: !territory,
       directorDriftLeads,
     })
   }
@@ -89,10 +91,10 @@ export function buildProspectTerritoryCoverage(args: {
       || left.neighborhood.name.localeCompare(right.neighborhood.name, 'es'),
   )
 
-  const mappedNeighborhoods = rows.filter((row) => !row.needsDirector).length
+  const mappedNeighborhoods = rows.filter((row) => !row.needsGroup).length
   const eligiblePublished = rows.reduce((sum, row) => sum + row.eligiblePublished, 0)
   const uncoveredPublished = rows
-    .filter((row) => row.needsDirector)
+    .filter((row) => row.needsGroup)
     .reduce((sum, row) => sum + row.eligiblePublished, 0)
   const directorDriftLeads = rows.reduce((sum, row) => sum + row.directorDriftLeads, 0)
 

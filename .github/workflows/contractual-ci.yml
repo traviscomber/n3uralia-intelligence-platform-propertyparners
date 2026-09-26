@@ -150,6 +150,18 @@ jobs:
           tests/valuation/property-link-route.test.ts
 
 
+      - name: Verify intelligence closure contracts
+        run: >-
+          node --import tsx --test
+          tests/learned-neighborhood-alias-resolver.test.ts
+          tests/learned-neighborhood-review-advisory.test.ts
+          tests/property-territory-groups.test.ts
+          tests/management-decision-evidence-layer.test.ts
+          tests/n3uralia-intelligence-freshness.test.ts
+          tests/market-refresh-release-scope.test.ts
+          tests/market-intelligence-release-gate.test.ts
+          tests/pedro-pablo-operational-memory.test.ts
+
       - name: Verify canonical valuation source authority
         run: node --import tsx --test tests/valuation/canonical-source-authority.test.ts
 

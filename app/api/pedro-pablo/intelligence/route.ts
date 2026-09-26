@@ -48,6 +48,24 @@ type MemoryPayload = {
   generatedAt: string
 }
 
+type OperationalMemoryPayload = {
+  available: boolean
+  reason: 'role_scope' | 'source_unavailable' | null
+  summary: {
+    total: number
+    open: number
+    inProgress: number
+    done: number
+    dismissed: number
+    outcomesRecorded: number
+  } | null
+  items: Array<Record<string, unknown>>
+  mode: string
+  learningClaim?: string
+  generatedAt: string
+  writesPerformed: 0
+}
+
 type DecisionPayload = Record<string, unknown> & {
   title: string
   answer: string
@@ -94,11 +112,14 @@ export async function POST(request: NextRequest) {
 
   const cookie = request.headers.get('cookie') ?? ''
   const headers = { 'Content-Type': 'application/json', cookie }
-  const [decisionResponse, memoryResponse, expertiseResponse] = await Promise.all([
+  const [decisionResponse, memoryResponse, operationalMemoryResponse, expertiseResponse] = await Promise.all([
     fetch(new URL('/api/pedro-pablo/decision-support', request.url), {
       method: 'POST', headers, body: JSON.stringify({ prompt }), cache: 'no-store',
     }),
     fetch(new URL('/api/pedro-pablo/memory', request.url), {
+      headers: { cookie }, cache: 'no-store',
+    }),
+    fetch(new URL('/api/pedro-pablo/operational-memory', request.url), {
       headers: { cookie }, cache: 'no-store',
     }),
     fetch(new URL('/api/pedro-pablo/expertise', request.url), {
@@ -118,6 +139,18 @@ export async function POST(request: NextRequest) {
   const memory = memoryResponse.ok
     ? await memoryResponse.json() as MemoryPayload
     : { memories: [], memoryPolicy: 'unavailable', canonicalAuthority: false, generatedAt: new Date().toISOString() } as MemoryPayload
+  const operationalMemory = operationalMemoryResponse.ok
+    ? await operationalMemoryResponse.json() as OperationalMemoryPayload
+    : {
+        available: false,
+        reason: 'source_unavailable',
+        summary: null,
+        items: [],
+        mode: 'verified-task-history-only',
+        learningClaim: 'none',
+        generatedAt: new Date().toISOString(),
+        writesPerformed: 0,
+      } as OperationalMemoryPayload
   const expertise = expertiseResponse.ok
     ? await expertiseResponse.json() as ExpertisePayload
     : null
@@ -145,6 +178,16 @@ export async function POST(request: NextRequest) {
       policy: memory.memoryPolicy,
       canonicalAuthority: false,
     },
+    operationalMemoryContext: {
+      available: operationalMemory.available,
+      reason: operationalMemory.reason,
+      summary: operationalMemory.summary,
+      items: operationalMemory.items.slice(0, 6),
+      mode: operationalMemory.mode,
+      learningClaim: operationalMemory.learningClaim ?? 'none',
+      canonicalAuthority: false,
+      writesPerformed: 0,
+    },
     expertiseContext: expertise ? {
       available: expertise.available,
       profile: expertise.expertiseProfile,
@@ -156,8 +199,9 @@ export async function POST(request: NextRequest) {
       cards: [],
       policy: 'unavailable',
     },
-    reasoningPrecedence: 'canonical_data > property_specific_evidence > official_regulation > market_evidence > confirmed_memory > expert_interpretation',
+    reasoningPrecedence: 'canonical_data > property_specific_evidence > official_regulation > market_evidence > verified_operational_outcomes > confirmed_memory > expert_interpretation',
     intelligenceMode: expertMode ? 'vitacura-expertise' : 'canonical-operating-intelligence',
+    learningPolicy: 'verified outcomes may inform future context; no autonomous canonical rewrite; explicit memory remains confirmation-bound',
     writesPerformed: 0,
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

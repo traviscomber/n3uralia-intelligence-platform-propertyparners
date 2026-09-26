@@ -8,3 +8,13 @@ test('prospect overview builds candidates from houses instead of truncating the 
   assert.match(route, /chunkIds\(candidatePropertyIds,\s*50\)/)
   assert.doesNotMatch(route, /market_current_listings'\)[\s\S]{0,250}\.limit\(250\)/)
 })
+
+test('prospect overview resolves territory through stable group membership and primary group owner', () => {
+  const route = readFileSync('app/api/prospects/overview/route.ts', 'utf8')
+  assert.match(route,/property_territory_groups/)
+  assert.match(route,/property_territory_group_neighborhoods/)
+  assert.match(route,/property_territory_group_director_assignments/)
+  assert.match(route,/assignment_role', 'primary'/)
+  assert.match(route,/territoryGroups: visibleGroups/)
+  assert.doesNotMatch(route,/market_neighborhood_director_assignments/)
+})

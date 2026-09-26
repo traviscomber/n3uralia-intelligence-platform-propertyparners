@@ -7,9 +7,9 @@ import {
   getYtdSummary,
 } from '@/lib/crm-snapshot'
 import {
-  getBranchSalesYtdPerformance,
-  getCompanySalesCompliance,
-} from '@/lib/targets-2026'
+  getCanonicalManagementPeriods,
+  getLatestCanonicalManagementPeriod,
+} from '@/lib/management-canonical-periods'
 import { getMarketSnapshot } from '@/lib/market-snapshot'
 import { getValuationSnapshot } from '@/lib/valuation-snapshot'
 import { normalizePresentationDocuments } from '@/lib/presentations-2026'
@@ -109,33 +109,54 @@ const DOMAIN_LINKS: Record<IntelligenceDomain, string> = {
 }
 
 function buildClientEvidence(): IntelligenceEvidence[] {
-  const ytd = getYtdSummary()
+  const fallbackYtd = getYtdSummary()
   const operational = getOperationalSummary()
   const quality = getDataQuality()
-  const compliance = getCompanySalesCompliance('2026-06')
-  const branches = getBranchSalesYtdPerformance('2026-06')
-  const attributedSales = branches.reduce((sum, branch) => sum + branch.actualSales, 0)
+  const canonical = getLatestCanonicalManagementPeriod()
+  const canonicalPeriods = getCanonicalManagementPeriods()
+  const ytdSales = canonical?.company.ytdCreditedClosings ?? fallbackYtd.salesCount
+  const ytdSalesUf = canonical?.company.ytdCreditedSalesUf ?? fallbackYtd.salesUf
+  const canonicalTarget = canonical?.company.ytdCanonicalClosingTarget ?? null
+  const compliance = canonicalTarget && canonicalTarget > 0
+    ? Number((ytdSales / canonicalTarget * 100).toFixed(1))
+    : null
+  const attributedSales = canonical
+    ? canonicalPeriods
+      .filter((period) => period.period <= canonical.period)
+      .reduce(
+        (sum, period) => sum + period.offices.reduce((officeSum, office) => officeSum + office.creditedClosings, 0),
+        0,
+      )
+    : 0
+  const ytdPeriod = canonical ? `${canonical.period.slice(0,4)}-01/${canonical.period}` : 'CRM histórico disponible'
+  const canonicalSource = canonical
+    ? `${canonical.authority.file} · autoridad canónica vigente`
+    : 'CRM del cliente · fuente autoritativa disponible'
 
   const crmEvidence: IntelligenceEvidence[] = [
     {
       id: 'client.crm.sales-ytd',
       domain: 'crm',
       sourceClass: 'client_evidence',
-      label: 'Ventas acumuladas',
-      value: ytd.salesCount,
-      period: '2026-01/2026-06',
-      source: 'CRM del cliente · fuente autoritativa disponible',
-      methodology: 'Conteo de cierres aceptados dentro del alcance operacional declarado.',
+      label: 'Cierres acreditados acumulados',
+      value: ytdSales,
+      period: ytdPeriod,
+      source: canonicalSource,
+      methodology: canonical
+        ? 'Serie de cierres acreditados restatada por la autoridad canónica más reciente; no se reemplaza por cierres operacionales históricos.'
+        : 'Conteo de cierres aceptados dentro del alcance operacional declarado.',
     },
     {
       id: 'client.crm.sales-uf-ytd',
       domain: 'crm',
       sourceClass: 'client_evidence',
-      label: 'UF vendidas acumuladas',
-      value: ytd.salesUf,
-      period: '2026-01/2026-06',
-      source: 'CRM del cliente · fuente autoritativa disponible',
-      methodology: 'Suma de UF presentes en registros aceptados; no se imputan valores ausentes.',
+      label: 'UF acreditadas acumuladas',
+      value: ytdSalesUf,
+      period: ytdPeriod,
+      source: canonicalSource,
+      methodology: canonical
+        ? 'UF acreditadas acumuladas según la serie canónica vigente del directorio.'
+        : 'Suma de UF presentes en registros aceptados; no se imputan valores ausentes.',
     },
     {
       id: 'client.crm.lead-to-sale-proxy',
@@ -144,8 +165,8 @@ function buildClientEvidence(): IntelligenceEvidence[] {
       label: 'Proxy mensual cierres / leads',
       value: operational.leadToSaleProxy,
       period: operational.month || null,
-      source: 'CRM del cliente · corte mensual',
-      methodology: 'Ventas del mes divididas por leads creados en el mismo mes; no representa cohorte.',
+      source: 'CRM del cliente · último corte mensual con leads nuevos comparables',
+      methodology: 'Ventas del mes divididas por leads creados en el mismo mes; no representa cohorte y se conserva separado del cierre canónico del directorio.',
     },
     {
       id: 'client.crm.source-coverage',
@@ -162,20 +183,24 @@ function buildClientEvidence(): IntelligenceEvidence[] {
       domain: 'executive',
       sourceClass: 'client_evidence',
       label: 'Cumplimiento acumulado de cierres',
-      value: compliance.compliance,
-      period: '2026-06',
-      source: 'CRM del cliente + contrato de metas entregado',
-      methodology: 'Cierres CRM frente a meta acumulada compatible.',
+      value: compliance,
+      period: canonical?.period ?? operational.month ?? null,
+      source: canonicalSource,
+      methodology: canonical
+        ? 'Cierres acreditados acumulados frente a la meta acumulada publicada en la misma autoridad canónica.'
+        : 'No existe meta canónica vigente suficiente para recalcular cumplimiento.',
     },
     {
       id: 'client.executive.branch-attribution',
       domain: 'executive',
       sourceClass: 'client_evidence',
-      label: 'Ventas atribuibles a sucursal',
+      label: 'Cierres acreditados reconciliados por oficina',
       value: attributedSales,
-      period: '2026-01/2026-06',
-      source: 'CRM del cliente + estructura de sucursales',
-      methodology: `Parte identificada de ${ytd.salesCount} cierres acumulados.`,
+      period: ytdPeriod,
+      source: canonicalSource,
+      methodology: canonical
+        ? `Suma de cierres acreditados por Santa María, Nueva Costanera y Lo Beltrán a través de la serie canónica hasta ${canonical.period}; se contrasta contra ${ytdSales} cierres corporativos acumulados.`
+        : `Parte identificada de ${ytdSales} cierres acumulados.`,
     },
   ]
 
@@ -260,19 +285,21 @@ function buildN3uraliaSignals(evidence: IntelligenceEvidence[]): IntelligenceSig
 }
 
 function buildRisks(evidence: IntelligenceEvidence[], signals: IntelligenceSignal[]): IntelligenceRisk[] {
-  const sourceRisks: IntelligenceRisk[] = CRM_INTELLIGENCE.quality.issues.map((issue) => ({
-    id: `client.crm.${issue.code}`,
-    domain: 'crm',
-    severity: issue.severity,
-    title: issue.title,
-    detail: issue.detail,
-    evidenceIds: [],
-  }))
-
+  const sales = Number(evidence.find((item) => item.id === 'client.crm.sales-ytd')?.value ?? 0)
+  const attributed = Number(evidence.find((item) => item.id === 'client.executive.branch-attribution')?.value ?? 0)
+  const coverage = Number(evidence.find((item) => item.id === 'client.crm.source-coverage')?.value ?? 0)
+  const attributionRate = sales > 0 ? attributed / sales * 100 : null
   const attributionSignal = signals.find((signal) => signal.id === 'n3uralia.signal.attribution-gap')
 
   return [
-    ...sourceRisks,
+    ...(coverage < 90 ? [{
+      id: 'n3uralia.risk.source-coverage',
+      domain: 'crm' as const,
+      severity: 'warning' as const,
+      title: 'Cobertura parcial de evidencia interna',
+      detail: `La cobertura documental registrada es ${coverage.toFixed(1)}%. Las conclusiones que dependan de fuentes faltantes deben permanecer no evaluables.`,
+      evidenceIds: ['client.crm.source-coverage'],
+    }] : []),
     {
       id: 'n3uralia.risk.client-data-bias',
       domain: 'executive',
@@ -281,7 +308,7 @@ function buildRisks(evidence: IntelligenceEvidence[], signals: IntelligenceSigna
       detail: 'Los archivos del cliente describen su operación, pero no demuestran por sí solos el estado del mercado, la competitividad ni el potencial económico futuro.',
       evidenceIds: evidence.filter((item) => item.sourceClass === 'client_evidence').map((item) => item.id),
     },
-    ...(attributionSignal ? [{
+    ...(attributionSignal && attributionRate !== null && attributionRate < 99.5 ? [{
       id: 'n3uralia.risk.incomplete-attribution',
       domain: 'executive' as const,
       severity: 'warning' as const,
@@ -293,49 +320,36 @@ function buildRisks(evidence: IntelligenceEvidence[], signals: IntelligenceSigna
 }
 
 function buildActions(signals: IntelligenceSignal[]): IntelligenceAction[] {
-  const existing = CRM_INTELLIGENCE.actions
-
-  const clientBacked = (Object.entries(existing) as Array<['ceo' | 'director' | 'seller', typeof existing.ceo]>).flatMap(([audience, actions]) =>
-    actions.map((item, index) => ({
-      id: `n3uralia.action.${audience}.${index + 1}`,
-      audience,
-      priority: item.priority,
-      title: item.title,
-      rationale: item.evidence,
-      action: item.action,
-      domain: 'crm' as const,
-      evidenceIds: [],
-      origin: 'n3uralia_agent' as const,
-      href: DOMAIN_LINKS.crm,
-    })),
-  )
+  const attributionSignal = signals.find((signal) => signal.id === 'n3uralia.signal.attribution-gap')
+  const attributionNeedsWork = attributionSignal
+    ? !attributionSignal.interpretation.startsWith('100%') && !attributionSignal.interpretation.startsWith('99.9%')
+    : false
 
   return [
-    ...clientBacked,
     {
       id: 'n3uralia.action.ceo.market-contrast',
       audience: 'ceo',
       priority: 'high',
       title: 'Contrastar desempeño interno con el mercado',
       rationale: signals.find((signal) => signal.id === 'n3uralia.signal.market-context-pending')?.interpretation ?? '',
-      action: 'Incorporar oferta, precios, absorción, competencia, tasas y señales territoriales antes de emitir una conclusión estratégica.',
+      action: 'Incorporar oferta, precios, absorción, competencia, tasas y señales territoriales sólo cuando la evidencia externa esté vigente y publicable.',
       domain: 'market',
       evidenceIds: [],
       origin: 'n3uralia_agent',
       href: DOMAIN_LINKS.market,
     },
-    {
+    ...(attributionNeedsWork ? [{
       id: 'n3uralia.action.ceo.improve-attribution',
-      audience: 'ceo',
-      priority: 'high',
+      audience: 'ceo' as const,
+      priority: 'high' as const,
       title: 'Cerrar la brecha de atribución',
-      rationale: signals.find((signal) => signal.id === 'n3uralia.signal.attribution-gap')?.interpretation ?? '',
-      action: 'Priorizar normalización de sucursales, ejecutivos y responsables para que la inteligencia pueda asignar desempeño y riesgo con mayor precisión.',
-      domain: 'crm',
+      rationale: attributionSignal?.interpretation ?? '',
+      action: 'Priorizar normalización de oficinas y responsables hasta reconciliar la atribución con el total corporativo canónico.',
+      domain: 'crm' as const,
       evidenceIds: ['client.crm.sales-ytd', 'client.executive.branch-attribution'],
-      origin: 'n3uralia_agent',
+      origin: 'n3uralia_agent' as const,
       href: DOMAIN_LINKS.crm,
-    },
+    }] : []),
   ]
 }
 
@@ -362,8 +376,16 @@ export function buildN3uraliaIntelligenceContext(audience: IntelligenceAudience 
       commune: CRM_INTELLIGENCE.scope.commune,
       operation: CRM_INTELLIGENCE.scope.operation,
       propertyTypes: CRM_INTELLIGENCE.scope.propertyTypes,
-      periodStart: CRM_INTELLIGENCE.sourceInventory.periodStart,
-      periodEnd: CRM_INTELLIGENCE.sourceInventory.periodEnd,
+      periodStart: getLatestCanonicalManagementPeriod()
+        ? `${getLatestCanonicalManagementPeriod()!.period.slice(0, 4)}-01-01`
+        : CRM_INTELLIGENCE.sourceInventory.periodStart,
+      periodEnd: (() => {
+        const latest = getLatestCanonicalManagementPeriod()
+        if (!latest) return CRM_INTELLIGENCE.sourceInventory.periodEnd
+        const [year, month] = latest.period.split('-').map(Number)
+        const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate()
+        return `${latest.period}-${String(lastDay).padStart(2, '0')}`
+      })(),
     },
     evidence,
     signals,

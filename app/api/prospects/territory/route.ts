@@ -4,7 +4,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 
 type AssignmentInput = {
   neighborhoodId?: unknown
-  directorKey?: unknown
+  groupKey?: unknown
 }
 
 function text(value: unknown) {
@@ -33,11 +33,11 @@ export async function POST(request: Request) {
 
   const assignments = rawAssignments.map((item) => ({
     neighborhoodId: text(item.neighborhoodId),
-    directorKey: text(item.directorKey),
+    groupKey: text(item.groupKey),
   }))
 
-  if (assignments.some((item) => !item.neighborhoodId || !item.directorKey)) {
-    return NextResponse.json({ error: 'Cada barrio debe tener un director/a seleccionado.' }, { status: 400 })
+  if (assignments.some((item) => !item.neighborhoodId || !item.groupKey)) {
+    return NextResponse.json({ error: 'Cada barrio debe pertenecer a un grupo territorial.' }, { status: 400 })
   }
 
   const uniqueNeighborhoods = new Set(assignments.map((item) => item.neighborhoodId))
@@ -47,32 +47,32 @@ export async function POST(request: Request) {
 
   const db = createServiceClient()
   const neighborhoodIds = assignments.map((item) => item.neighborhoodId)
-  const directorKeys = [...new Set(assignments.map((item) => item.directorKey))]
+  const groupKeys = [...new Set(assignments.map((item) => item.groupKey))]
 
-  const [neighborhoodsResult, directorsResult] = await Promise.all([
+  const [neighborhoodsResult, groupsResult] = await Promise.all([
     db.from('market_neighborhoods').select('id,name,micro_neighborhood').in('id', neighborhoodIds),
-    db.from('property_director_directory').select('director_key,full_name,office_name,active').in('director_key', directorKeys).eq('active', true),
+    db.from('property_territory_groups').select('group_key,name,active').in('group_key', groupKeys).eq('active', true),
   ])
 
-  if (neighborhoodsResult.error || directorsResult.error) {
+  if (neighborhoodsResult.error || groupsResult.error) {
     return NextResponse.json({ error: 'No fue posible validar la matriz territorial.' }, { status: 500 })
   }
   if ((neighborhoodsResult.data ?? []).length !== neighborhoodIds.length) {
     return NextResponse.json({ error: 'Uno o más barrios no existen en el catálogo canónico.' }, { status: 409 })
   }
-  if ((directorsResult.data ?? []).length !== directorKeys.length) {
-    return NextResponse.json({ error: 'Uno o más directores/as no están activos.' }, { status: 409 })
+  if ((groupsResult.data ?? []).length !== groupKeys.length) {
+    return NextResponse.json({ error: 'Uno o más grupos territoriales no están activos.' }, { status: 409 })
   }
 
-  const { data, error } = await db.rpc('assign_property_neighborhood_directors_bulk_v1', {
+  const { data, error } = await db.rpc('assign_property_neighborhood_groups_bulk_v1', {
     p_assignments: assignments,
     p_actor_id: scope.profileId,
-    p_reason: 'Matriz territorial confirmada desde Prospección',
-    p_source: 'prospect-territory-bulk',
+    p_reason: 'Matriz barrio → grupo territorial confirmada desde Prospección',
+    p_source: 'prospect-territory-groups',
   })
 
   if (error) {
-    console.error('PROSPECT_TERRITORY_BULK_ASSIGNMENT_FAILED', {
+    console.error('PROSPECT_TERRITORY_GROUP_ASSIGNMENT_FAILED', {
       code: error.code,
       count: assignments.length,
     })

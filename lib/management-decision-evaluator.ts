@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getOperationalSummary } from '@/lib/crm-snapshot'
 import { MANAGEMENT_DECISION_POLICY, type ManagementDecisionRule } from '@/lib/management-decision-policy'
 
+export type DecisionEvidenceLayer = 'approved_live' | 'verified_live' | 'documentary_fallback'
+
 export type GovernedDecisionSignal = {
   ruleId: string
   metric: string
@@ -17,10 +19,10 @@ export type GovernedDecisionSignal = {
   rationale: string
   period: string
   evidence: string
-  evidenceLayer: 'approved_live' | 'documentary_fallback'
+  evidenceLayer: DecisionEvidenceLayer
 }
 
-type ApprovedMetricRow = {
+type MetricRow = {
   metric_code: string
   period_end: string
   value: number | string | null
@@ -95,32 +97,17 @@ function buildSignals(args: {
   return signals.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'high' ? -1 : 1))
 }
 
-async function loadApprovedCompanyMetrics() {
-  const supabase = await createClient()
-  const { data: company, error: entityError } = await supabase
-    .from('management_entities')
-    .select('id')
-    .eq('entity_type', 'company')
-    .eq('active', true)
-    .limit(1)
-    .maybeSingle()
-
-  if (entityError || !company?.id) return null
-
-  const { data, error } = await supabase
-    .from('management_approved_metric_values')
-    .select('metric_code,period_end,value')
-    .eq('entity_id', company.id)
-    .in('metric_code', [...REQUIRED_CODES])
-    .order('period_end', { ascending: false })
-
-  if (error || !data?.length) return null
-
-  const rows = data as ApprovedMetricRow[]
+function latestEvaluableMetricPack(rows: MetricRow[]) {
   const periods = [...new Set(rows.map((row) => row.period_end).filter(Boolean))].sort().reverse()
   for (const period of periods) {
     const periodRows = rows.filter((row) => row.period_end === period)
-    const values = Object.fromEntries(REQUIRED_CODES.map((code) => [code, numberOrNull(periodRows.find((row) => row.metric_code === code)?.value)])) as Record<string, number | null>
+    const values = Object.fromEntries(
+      REQUIRED_CODES.map((code) => [
+        code,
+        numberOrNull(periodRows.find((row) => row.metric_code === code)?.value),
+      ]),
+    ) as Record<string, number | null>
+
     const evaluablePairs = [
       values.active_leads_snapshot != null && values.stale_90_leads != null,
       values.active_leads_snapshot != null && values.unclassified_leads != null,
@@ -129,29 +116,87 @@ async function loadApprovedCompanyMetrics() {
     ]
     if (evaluablePairs.some(Boolean)) return { period, values }
   }
-
   return null
 }
 
+async function loadCompanyId() {
+  const supabase = await createClient()
+  const { data: company, error } = await supabase
+    .from('management_entities')
+    .select('id')
+    .eq('entity_type', 'company')
+    .eq('active', true)
+    .limit(1)
+    .maybeSingle()
+
+  return error || !company?.id ? null : company.id
+}
+
+async function loadApprovedCompanyMetrics(companyId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('management_approved_metric_values')
+    .select('metric_code,period_end,value')
+    .eq('entity_id', companyId)
+    .in('metric_code', [...REQUIRED_CODES])
+    .order('period_end', { ascending: false })
+
+  if (error || !data?.length) return null
+  return latestEvaluableMetricPack(data as MetricRow[])
+}
+
+async function loadVerifiedCompanyMetrics(companyId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('management_metric_values')
+    .select('metric_code,period_end,value,updated_at')
+    .eq('entity_id', companyId)
+    .in('metric_code', [...REQUIRED_CODES])
+    .eq('quality_status', 'verified')
+    .eq('evaluation_status', 'evaluable')
+    .not('value', 'is', null)
+    .order('period_end', { ascending: false })
+    .order('updated_at', { ascending: false })
+
+  if (error || !data?.length) return null
+  return latestEvaluableMetricPack(data as MetricRow[])
+}
+
+function evaluatePack(
+  pack: { period: string; values: Record<string, number | null> },
+  evidenceLayer: DecisionEvidenceLayer,
+) {
+  const metrics: Record<string, number | null> = {
+    stale_90_leads_ratio: ratio(pack.values.stale_90_leads, pack.values.active_leads_snapshot),
+    realized_visits_rate: ratio(pack.values.realized_visits, pack.values.scheduled_visits),
+    suspended_listings_ratio: ratio(pack.values.suspended_listings, pack.values.stock),
+    unclassified_leads_ratio: ratio(pack.values.unclassified_leads, pack.values.active_leads_snapshot),
+  }
+
+  return {
+    policyVersion: MANAGEMENT_DECISION_POLICY.version,
+    policyStatus: MANAGEMENT_DECISION_POLICY.status,
+    evaluatedPeriod: pack.period,
+    evidenceLayer,
+    signals: buildSignals({
+      metrics,
+      period: pack.period,
+      evidenceLayer,
+      evidenceValues: pack.values,
+    }),
+    unavailableMetrics: Object.entries(metrics).filter(([, value]) => value == null).map(([metric]) => metric),
+  }
+}
+
 export async function evaluateManagementDecisionPolicy() {
-  const approved = await loadApprovedCompanyMetrics()
+  const companyId = await loadCompanyId()
 
-  if (approved) {
-    const metrics: Record<string, number | null> = {
-      stale_90_leads_ratio: ratio(approved.values.stale_90_leads, approved.values.active_leads_snapshot),
-      realized_visits_rate: ratio(approved.values.realized_visits, approved.values.scheduled_visits),
-      suspended_listings_ratio: ratio(approved.values.suspended_listings, approved.values.stock),
-      unclassified_leads_ratio: ratio(approved.values.unclassified_leads, approved.values.active_leads_snapshot),
-    }
+  if (companyId) {
+    const approved = await loadApprovedCompanyMetrics(companyId)
+    if (approved) return evaluatePack(approved, 'approved_live')
 
-    return {
-      policyVersion: MANAGEMENT_DECISION_POLICY.version,
-      policyStatus: MANAGEMENT_DECISION_POLICY.status,
-      evaluatedPeriod: approved.period,
-      evidenceLayer: 'approved_live' as const,
-      signals: buildSignals({ metrics, period: approved.period, evidenceLayer: 'approved_live', evidenceValues: approved.values }),
-      unavailableMetrics: Object.entries(metrics).filter(([, value]) => value == null).map(([metric]) => metric),
-    }
+    const verified = await loadVerifiedCompanyMetrics(companyId)
+    if (verified) return evaluatePack(verified, 'verified_live')
   }
 
   const summary = getOperationalSummary()
@@ -176,7 +221,12 @@ export async function evaluateManagementDecisionPolicy() {
     policyStatus: MANAGEMENT_DECISION_POLICY.status,
     evaluatedPeriod: summary.month,
     evidenceLayer: 'documentary_fallback' as const,
-    signals: buildSignals({ metrics, period: summary.month, evidenceLayer: 'documentary_fallback', evidenceValues }),
+    signals: buildSignals({
+      metrics,
+      period: summary.month,
+      evidenceLayer: 'documentary_fallback',
+      evidenceValues,
+    }),
     unavailableMetrics: Object.entries(metrics).filter(([, value]) => value == null).map(([metric]) => metric),
   }
 }

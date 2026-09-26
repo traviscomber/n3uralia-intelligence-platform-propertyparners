@@ -31,6 +31,8 @@ const RESOLUTION_LABELS: Record<string,string> = {
   validated_rule:'Regla territorial validada',
   cbrs_street_consensus:'Consenso histórico CBRS',
   territorial_evidence:'Evidencia territorial cruzada',
+  learned_address_alias_v1:'Patrón territorial aprendido',
+  learned_address_alias_conflict:'Patrón aprendido en conflicto',
   manual:'Sin resolución automática',
 }
 
@@ -51,6 +53,7 @@ function ageLabel(value:string|null){
 
 function statusLabel(row:PropertyReviewRow){
   if(row.can_decide&&row.proposed_neighborhood_name)return'Sugerencia lista'
+  if(row.resolution_kind==='learned_address_alias_v1'&&row.proposed_neighborhood_name)return'Sugerencia aprendida'
   if(row.classification==='ambiguous')return'Barrio ambiguo'
   if(row.classification==='no_match')return'Sin match'
   return'Falta evidencia'
@@ -182,7 +185,7 @@ export function PropertyReviewInbox({initialRows}:Props){
             ><CheckCircle2 size={14}/>{busy?'Confirmando…':'Confirmar barrio'}</button>:null}
             {selected.url?<Link href={selected.url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs font-semibold text-[var(--n3-text-light)]">Abrir aviso <ExternalLink size={13}/></Link>:null}
           </div>
-          {!selected.can_decide?<div className="mt-4 flex items-start gap-2 text-xs leading-5 text-[var(--n3-text-muted)]"><ShieldCheck size={14} className="mt-0.5 shrink-0"/>La evidencia todavía no permite una confirmación segura. El caso permanece abierto hasta que exista una señal territorial determinística.</div>:null}
+          {!selected.can_decide?<div className="mt-4 flex items-start gap-2 text-xs leading-5 text-[var(--n3-text-muted)]"><ShieldCheck size={14} className="mt-0.5 shrink-0"/>{selected.resolution_kind==='learned_address_alias_v1'?'La señal aprendida sirve para priorizar la revisión, pero no escribe barrio ni crea asignaciones. Debe validarse antes de continuar al flujo operativo.':'La evidencia todavía no permite una confirmación segura. El caso permanece abierto hasta que exista una señal territorial determinística.'}</div>:null}
           {message?<p className="mt-4 text-xs leading-5 text-[var(--n3-text-light)]">{message}</p>:null}
         </section>
       </div>:<div className="flex min-h-[500px] items-center justify-center text-sm text-[var(--n3-text-muted)]">No hay propiedades pendientes de revisión.</div>}

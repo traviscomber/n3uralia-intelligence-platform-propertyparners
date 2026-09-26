@@ -29,74 +29,124 @@ export async function GET() {
   }
 
   const db = createServiceClient()
-  const { data: directors, error: directorsError } = await db
-    .from('property_director_directory')
-    .select('director_key,full_name,role,office_name,profile_id,source,source_effective_date')
-    .eq('active', true)
-    .order('office_name')
-    .order('full_name')
 
-  if (directorsError) return NextResponse.json({ error: 'No fue posible cargar el directorio territorial.' }, { status: 500 })
+  const [directorsResult, groupsResult, groupMembershipResult, groupOwnersResult] = await Promise.all([
+    db.from('property_director_directory')
+      .select('director_key,full_name,role,office_name,profile_id,source,source_effective_date')
+      .eq('active', true)
+      .order('office_name')
+      .order('full_name'),
+    db.from('property_territory_groups')
+      .select('id,group_key,name,source,source_effective_date')
+      .eq('active', true)
+      .order('name'),
+    db.from('property_territory_group_neighborhoods')
+      .select('group_id,neighborhood_id,valid_from,source')
+      .eq('active', true)
+      .is('valid_to', null)
+      .limit(200),
+    db.from('property_territory_group_director_assignments')
+      .select('group_id,director_key,assignment_role,valid_from,source')
+      .eq('active', true)
+      .is('valid_to', null)
+      .eq('assignment_role', 'primary')
+      .limit(50),
+  ])
 
-  const visibleDirectors = (directors ?? []).filter((item) => scope.scope === 'global' || !scope.team || item.office_name === scope.team)
+  if (directorsResult.error || groupsResult.error || groupMembershipResult.error || groupOwnersResult.error) {
+    return NextResponse.json({ error: 'No fue posible cargar el modelo territorial.' }, { status: 500 })
+  }
+
+  const directors = directorsResult.data ?? []
+  const allGroups = groupsResult.data ?? []
+  const visibleGroups = allGroups.filter((group) => scope.scope === 'global' || !scope.team || group.name === scope.team)
+  const visibleGroupIds = new Set(visibleGroups.map((group) => group.id))
+  const visibleDirectors = directors.filter((item) => scope.scope === 'global' || !scope.team || item.office_name === scope.team)
   const directorKeys = visibleDirectors.map((item) => item.director_key)
-  if (!directorKeys.length) return NextResponse.json({
-    directors: [],
-    permissions: { canBulkAssign: scope.scope === 'global' },
-    leads: [],
-    candidates: [],
-    performance: [],
-    territoryCoverage: [],
-    territorySummary: {
-      neighborhoods: 0,
-      mappedNeighborhoods: 0,
-      unmappedNeighborhoods: 0,
-      coveragePct: null,
-      eligiblePublished: 0,
-      uncoveredPublished: 0,
-      directorDriftLeads: 0,
-      candidateUniverseTruncated: false,
-      candidateUniverseCount: 0,
-    },
-    summary: { leads:0,active:0,overdue:0,valuations:0,won:0 },
-    generatedAt: new Date().toISOString(),
-  })
 
-  const [leadResult, territoryResult] = await Promise.all([
+  if (!visibleGroups.length || !directorKeys.length) {
+    return NextResponse.json({
+      directors: visibleDirectors,
+      territoryGroups: visibleGroups,
+      permissions: { canBulkAssign: scope.scope === 'global' },
+      leads: [],
+      candidates: [],
+      performance: [],
+      territoryCoverage: [],
+      territorySummary: {
+        neighborhoods: 0,
+        mappedNeighborhoods: 0,
+        unmappedNeighborhoods: 0,
+        coveragePct: null,
+        eligiblePublished: 0,
+        uncoveredPublished: 0,
+        directorDriftLeads: 0,
+        candidateUniverseTruncated: false,
+        candidateUniverseCount: 0,
+      },
+      summary: { leads:0,active:0,overdue:0,valuations:0,won:0 },
+      generatedAt: new Date().toISOString(),
+    })
+  }
+
+  const groupById = new Map(allGroups.map((group) => [group.id, group]))
+  const primaryOwnerByGroup = new Map(
+    (groupOwnersResult.data ?? []).map((row) => [row.group_id, row]),
+  )
+
+  const territories = (groupMembershipResult.data ?? [])
+    .filter((membership) => visibleGroupIds.has(membership.group_id))
+    .map((membership) => {
+      const group = groupById.get(membership.group_id)
+      const owner = primaryOwnerByGroup.get(membership.group_id)
+      if (!group || !owner) return null
+      return {
+        neighborhood_id: membership.neighborhood_id,
+        group_key: group.group_key,
+        group_name: group.name,
+        director_key: owner.director_key,
+      }
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+
+  const [leadResult, neighborhoodsResult] = await Promise.all([
     db.from('property_prospect_leads')
       .select('id,property_id,neighborhood_id,director_key,status,priority,source_listing_id,source_url,lead_reason,detected_at,assigned_at,first_contact_at,last_follow_up_at,next_follow_up_at,won_at,lost_at,lost_reason,latest_note,updated_at')
       .in('director_key', directorKeys)
       .order('updated_at', { ascending: false })
       .limit(500),
-    db.from('market_neighborhood_director_assignments')
-      .select('id,neighborhood_id,director_key,valid_from,assignment_reason,source')
-      .in('director_key', directorKeys)
-      .eq('active', true)
-      .is('valid_to', null)
-      .limit(200),
+    db.from('market_neighborhoods')
+      .select('id,name,micro_neighborhood,assignment_status')
+      .order('name')
+      .limit(100),
   ])
 
-  if (leadResult.error || territoryResult.error) return NextResponse.json({ error: 'No fue posible cargar la operación de prospección.' }, { status: 500 })
+  if (leadResult.error || neighborhoodsResult.error) {
+    return NextResponse.json({ error: 'No fue posible cargar la operación de prospección.' }, { status: 500 })
+  }
 
   const leads = leadResult.data ?? []
   const propertyIds = [...new Set(leads.map((item) => item.property_id))]
-  const neighborhoodIds = [...new Set([...(territoryResult.data ?? []).map((item) => item.neighborhood_id), ...leads.map((item) => item.neighborhood_id)])]
 
-  const [propertiesResult, neighborhoodsResult, valuationsResult] = await Promise.all([
+  const [propertiesResult, valuationsResult] = await Promise.all([
     propertyIds.length
       ? db.from('market_properties').select('id,normalized_address,property_type,neighborhood_id,identity_status,last_seen_at').in('id', propertyIds)
       : Promise.resolve({ data: [], error: null }),
-    db.from('market_neighborhoods').select('id,name,micro_neighborhood,assignment_status').order('name').limit(100),
     propertyIds.length
       ? db.from('valuation_cases').select('id,subject_property_id,status,estimated_value_uf,valuation_date,created_at,issued_at').in('subject_property_id', propertyIds).order('created_at', { ascending:false })
       : Promise.resolve({ data: [], error: null }),
   ])
-  if (propertiesResult.error || neighborhoodsResult.error || valuationsResult.error) return NextResponse.json({ error: 'No fue posible completar el pipeline de prospección.' }, { status: 500 })
+
+  if (propertiesResult.error || valuationsResult.error) {
+    return NextResponse.json({ error: 'No fue posible completar el pipeline de prospección.' }, { status: 500 })
+  }
 
   const propertyById = new Map((propertiesResult.data ?? []).map((item) => [item.id,item]))
   const neighborhoodById = new Map((neighborhoodsResult.data ?? []).map((item) => [item.id,item]))
-  const directorByKey = new Map(visibleDirectors.map((item) => [item.director_key,item]))
+  const directorByKey = new Map(directors.map((item) => [item.director_key,item]))
+  const territoryByNeighborhood = new Map(territories.map((item) => [item.neighborhood_id,item]))
   const valuationsByProperty = new Map<string, any[]>()
+
   for (const valuation of valuationsResult.data ?? []) {
     const list = valuationsByProperty.get(valuation.subject_property_id) ?? []
     list.push(valuation)
@@ -106,10 +156,12 @@ export async function GET() {
   const now = Date.now()
   const enrichedLeads = leads.map((lead) => {
     const valuationRows = valuationsByProperty.get(lead.property_id) ?? []
+    const territory = territoryByNeighborhood.get(lead.neighborhood_id) ?? null
     return {
       ...lead,
       property: propertyById.get(lead.property_id) ?? null,
       neighborhood: neighborhoodById.get(lead.neighborhood_id) ?? null,
+      territory,
       director: directorByKey.get(lead.director_key) ?? null,
       valuationCount: valuationRows.length,
       latestValuation: valuationRows[0] ?? null,
@@ -145,7 +197,10 @@ export async function GET() {
     .not('neighborhood_id', 'is', null)
     .order('last_seen_at', { ascending: false })
     .limit(MAX_CANDIDATE_PROPERTIES)
-  if (candidatePropertiesResult.error) return NextResponse.json({ error:'No fue posible resolver las casas publicadas.' },{status:500})
+
+  if (candidatePropertiesResult.error) {
+    return NextResponse.json({ error:'No fue posible resolver las casas publicadas.' },{status:500})
+  }
 
   const candidateProperties = candidatePropertiesResult.data ?? []
   const candidatePropertyIds = candidateProperties.map((item) => item.id)
@@ -157,14 +212,15 @@ export async function GET() {
       .in('property_id', ids)
       .in('status',['active','observed'])
       .order('observed_at',{ascending:false})
-    if (listingChunk.error) return NextResponse.json({ error: 'No fue posible cargar publicaciones candidatas.' }, { status:500 })
+    if (listingChunk.error) {
+      return NextResponse.json({ error: 'No fue posible cargar publicaciones candidatas.' }, { status:500 })
+    }
     candidateListingRows.push(...(listingChunk.data ?? []))
   }
 
   const leadPropertySet = new Set(propertyIds)
-  const territoryByNeighborhood = new Map((territoryResult.data ?? []).map((item)=>[item.neighborhood_id,item]))
-  const candidatePropertyById = new Map(candidateProperties.map((item)=>[item.id,item]))
   const listingByProperty = new Map<string, any>()
+
   for(const listing of candidateListingRows) {
     const operation = String(listing.operation ?? '').toLowerCase()
     if (!['sale','venta','sell'].includes(operation)) continue
@@ -175,23 +231,22 @@ export async function GET() {
   const territoryCoverage = buildProspectTerritoryCoverage({
     eligibleProperties,
     leads,
-    territories: territoryResult.data ?? [],
+    territories,
     neighborhoods: neighborhoodsResult.data ?? [],
-    directors: visibleDirectors,
+    directors,
   })
-  const visibleCoverageRows = scope.scope === 'global'
-    ? territoryCoverage.rows
-    : territoryCoverage.rows.filter((row) => row.territory && directorKeys.includes(row.territory.director_key))
+
+  const visibleCoverageRows = territoryCoverage.rows
 
   const visibleCoverageSummary = {
     neighborhoods: visibleCoverageRows.length,
-    mappedNeighborhoods: visibleCoverageRows.filter((row) => !row.needsDirector).length,
-    unmappedNeighborhoods: visibleCoverageRows.filter((row) => row.needsDirector).length,
+    mappedNeighborhoods: visibleCoverageRows.filter((row) => !row.needsGroup).length,
+    unmappedNeighborhoods: visibleCoverageRows.filter((row) => row.needsGroup).length,
     coveragePct: visibleCoverageRows.length
-      ? Number((visibleCoverageRows.filter((row) => !row.needsDirector).length / visibleCoverageRows.length * 100).toFixed(1))
+      ? Number((visibleCoverageRows.filter((row) => !row.needsGroup).length / visibleCoverageRows.length * 100).toFixed(1))
       : null,
     eligiblePublished: visibleCoverageRows.reduce((sum, row) => sum + row.eligiblePublished, 0),
-    uncoveredPublished: visibleCoverageRows.filter((row) => row.needsDirector).reduce((sum, row) => sum + row.eligiblePublished, 0),
+    uncoveredPublished: visibleCoverageRows.filter((row) => row.needsGroup).reduce((sum, row) => sum + row.eligiblePublished, 0),
     directorDriftLeads: visibleCoverageRows.reduce((sum, row) => sum + row.directorDriftLeads, 0),
     candidateUniverseTruncated: (candidatePropertiesResult.count ?? 0) > candidateProperties.length,
     candidateUniverseCount: candidatePropertiesResult.count ?? candidateProperties.length,
@@ -204,14 +259,14 @@ export async function GET() {
       const territory=territoryByNeighborhood.get(property.neighborhood_id) ?? null
       const listing=listingByProperty.get(id)
       if(!listing) return null
-      if(scope.scope !== 'global' && (!territory || !directorKeys.includes(territory.director_key))) return null
+      if(scope.scope !== 'global' && !territory) return null
       return {
         property,
         neighborhood: neighborhoodById.get(property.neighborhood_id) ?? null,
-        director: territory ? directorByKey.get(territory.director_key) ?? null : null,
         territory,
+        director: territory ? directorByKey.get(territory.director_key) ?? null : null,
         listing,
-        needsDirector: !territory,
+        needsGroup: !territory,
       }
     })
     .filter(Boolean)
@@ -219,6 +274,7 @@ export async function GET() {
 
   return NextResponse.json({
     directors: visibleDirectors,
+    territoryGroups: visibleGroups,
     permissions: { canBulkAssign: scope.scope === 'global' },
     leads: enrichedLeads,
     candidates,
