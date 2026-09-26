@@ -524,14 +524,10 @@ export async function GET(request: Request) {
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
-  const previewBranchBypass = url.searchParams.get('preview_branch') === '1'
-    && process.env.VERCEL_ENV === 'preview'
-    && process.env.VERCEL_GIT_COMMIT_REF === 'fix/portal-daily-intelligence-sweep'
-
-  if (force && !previewBranchBypass) {
+  if (force) {
     const access = await requireExecutiveAccess()
     if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
-  } else if (!force) {
+  } else {
     if (!authorized(request)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     if (!detailsOnly && !scheduledWindow()) {
       return NextResponse.json({
