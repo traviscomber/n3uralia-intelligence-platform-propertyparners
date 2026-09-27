@@ -80,7 +80,7 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   assert.equal(sections[3]?.items.length > 0, true)
 }
 
-assert.equal(CEO_NAVIGATION.flatMap((section) => section.items).length, 6)
+assert.equal(CEO_NAVIGATION.flatMap((section) => section.items).length, 7)
 assert.equal(ADMIN_NAVIGATION.flatMap((section) => section.items).length, 10)
 assert.equal(DIRECTOR_NAVIGATION.flatMap((section) => section.items).length, 8)
 assert.equal(SELLER_NAVIGATION.flatMap((section) => section.items).length, 5)
