@@ -68,6 +68,9 @@ export type OperatingProfile = {
   features: Record<OperatingFeatureId, boolean>
   roles: Record<UserRole, OperatingRoleProfile>
   sourceAdapters: readonly SourceAdapterDefinition[]
+  policies: {
+    managementDecisionPolicyId: string
+  }
   actions: {
     gatewayPolicyId: string
     proposalPolicyId: string
@@ -168,6 +171,9 @@ const PROPERTY_PARTNERS_PROFILE: OperatingProfile = {
         { id: 'seller-document-review', title: 'Revisar documentación, identidad o vigencia de la propiedad que tenga mayor brecha.', domain: 'documents', href: '/dashboard/properties', condition: 'has-portfolio-attention', priority: 'medium' },
       ],
     },
+  },
+  policies: {
+    managementDecisionPolicyId: 'property-partners-management-2026-08-07.2',
   },
   sourceAdapters: [
     {
