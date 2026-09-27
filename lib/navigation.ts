@@ -46,7 +46,7 @@ export const CEO_NAVIGATION: NavigationSection[] = [
   {
     label: 'Administración',
     items: [
-      { label: 'Usuarios', href: '/dashboard/settings', anyCapabilities: ['users.manage'] },
+      { label: 'Usuarios', href: '/dashboard/settings/users', anyCapabilities: ['users.manage'] },
       { label: 'Datos y fuentes', href: '/dashboard/market/fuentes', anyCapabilities: ['market.manage_sources', 'settings.manage'] },
     ],
   },
@@ -64,7 +64,7 @@ export const ADMIN_NAVIGATION: NavigationSection[] = [
       { label: 'Seguimiento general', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.global.manage'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
-      { label: 'Usuarios', href: '/dashboard/settings', anyCapabilities: ['users.manage', 'settings.manage'] },
+      { label: 'Usuarios', href: '/dashboard/settings/users', anyCapabilities: ['users.manage'] },
     ],
   },
   {
