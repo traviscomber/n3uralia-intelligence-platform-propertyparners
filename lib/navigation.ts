@@ -25,14 +25,15 @@ export const CEO_NAVIGATION: NavigationSection[] = [
     label: 'Control de gestión',
     items: [
       { label: 'Control de gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
+      { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.global.manage'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
-      { label: 'Usuarios', href: '/dashboard/settings', anyCapabilities: ['users.manage', 'settings.manage'] },
     ],
   },
   {
     label: 'Inteligencia de negocios',
     items: [
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Cartera y asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.global.assign'] },
       { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
     ],
   },
@@ -42,8 +43,14 @@ export const CEO_NAVIGATION: NavigationSection[] = [
       { label: 'Valorizador', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
     ],
   },
+  {
+    label: 'Administración',
+    items: [
+      { label: 'Usuarios', href: '/dashboard/settings', anyCapabilities: ['users.manage'] },
+      { label: 'Datos y fuentes', href: '/dashboard/market/fuentes', anyCapabilities: ['market.manage_sources', 'settings.manage'] },
+    ],
+  },
 ]
-
 export const ADMIN_NAVIGATION: NavigationSection[] = [
   {
     label: 'Resumen',
