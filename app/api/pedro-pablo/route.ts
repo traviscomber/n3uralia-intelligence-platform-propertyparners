@@ -274,7 +274,7 @@ function baseResponse(context: ContextPack) {
     periodLabel: context.summary.periodLabel,
     confidence: 'high' as const,
     coverage: context.coverage,
-    decisionPolicy: 'pedro-pablo-prioritization-v2 · evidencia autorizada > tareas vencidas/urgentes > valorizaciones en revisión > cartera con identidad/vigencia pendiente > brechas de cumplimiento',
+    decisionPolicy: 'pedro-pablo-prioritization-v3 · evidencia autorizada > tareas vencidas/urgentes > bloqueos operativos > siguiente mejor acción proactiva > contexto de mercado',
   }
 }
 
@@ -438,12 +438,16 @@ function answerTasks(context: ContextPack): PedroPabloResponse {
   }
 
   if (!tasks.length) {
+    const proactive = proactiveWork(context)
     return {
       ...baseResponse(context),
-      title: 'Sin tareas activas',
-      answer: 'No hay tareas abiertas o en progreso dentro de tu alcance actual.',
+      title: 'Sin tareas formales · trabajo disponible',
+      answer: [
+        'No hay tareas abiertas o en progreso dentro de tu alcance actual.',
+        ...proactive.map((item, index) => `${index + 1}. Puedes avanzar: ${item.text}`),
+      ].join('\n'),
       evidence: [{ label: 'Tareas operativas', source: 'management_tasks · alcance autorizado', cutoff: new Date().toISOString(), domain: 'tasks' }],
-      actions: [{ label: 'Abrir control de gestión', href: '/dashboard/control/operations' }],
+      actions: proactive.map((item) => ({ label: item.text, href: item.href })),
     }
   }
 
