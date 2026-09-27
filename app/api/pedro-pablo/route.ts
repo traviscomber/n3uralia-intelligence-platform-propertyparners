@@ -391,12 +391,25 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
   }
 
   if (!lines.length) {
+    const proactive = proactiveWork(context)
     return {
       ...baseResponse(context),
-      title: 'Todo al día',
-      answer: 'No hay tareas activas, alertas, valorizaciones en revisión, propiedades pendientes ni brechas evaluables dentro de tu alcance actual.',
+      title: 'Sin pendientes formales · puedes avanzar',
+      answer: [
+        'No hay pendientes formales que requieran atención inmediata.',
+        ...proactive.map((item, index) => `${index + 1}. Siguiente mejor acción: ${item.text}`),
+      ].join('\n'),
       evidence: [{ label: 'Cobertura actual', source: summary.dataProvenance, cutoff: summary.generatedAt, domain: 'management' }],
-      actions: [{ label: 'Abrir control de gestión', href: '/dashboard/control/operations' }],
+      actions: proactive.map((item) => ({ label: item.text, href: item.href })),
+    }
+  }
+
+  if (lines.length < 5) {
+    const proactive = proactiveWork(context)
+    for (const item of proactive) {
+      if (lines.length >= 5) break
+      lines.push(`${lines.length + 1}. Siguiente mejor acción: ${item.text}`)
+      if (!actions.some((action) => action.href === item.href)) actions.push({ label: item.text, href: item.href })
     }
   }
 
