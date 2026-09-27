@@ -61,7 +61,7 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   }
 }
 
-const expectedSections = [
+const canonicalBusinessSections = [
   'Resumen',
   'Control de gestión',
   'Inteligencia de negocios',
@@ -69,10 +69,13 @@ const expectedSections = [
 ]
 
 for (const [role, sections] of Object.entries(navigationByRole)) {
+  const expected = role === 'ceo'
+    ? [...canonicalBusinessSections, 'Administración']
+    : canonicalBusinessSections
   assert.deepEqual(
     sections.map((section) => section.label),
-    expectedSections,
-    `${role} navigation must preserve the canonical Property Partners pillar structure`,
+    expected,
+    `${role} navigation must preserve the canonical Property Partners information architecture`,
   )
   assert.equal(sections[0]?.items.some((item) => item.label === 'Hoy'), true)
   assert.equal(sections[1]?.items.length > 0, true)
@@ -80,7 +83,7 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   assert.equal(sections[3]?.items.length > 0, true)
 }
 
-assert.equal(CEO_NAVIGATION.flatMap((section) => section.items).length, 7)
+assert.equal(CEO_NAVIGATION.flatMap((section) => section.items).length, 10)
 assert.equal(ADMIN_NAVIGATION.flatMap((section) => section.items).length, 10)
 assert.equal(DIRECTOR_NAVIGATION.flatMap((section) => section.items).length, 8)
 assert.equal(SELLER_NAVIGATION.flatMap((section) => section.items).length, 5)
