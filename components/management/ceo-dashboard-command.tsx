@@ -273,14 +273,12 @@ export function CeoDashboardCommand() {
       actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }]}
     />
 
-    {period === '2026-08' && augustCompany
-      ? <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
-      : <MetricStrip items={[
-          { label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail },
-          { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) },
-          { label: 'Venta', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined },
-          { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) },
-        ]} />}
+    <MetricStrip items={[
+      { label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail },
+      { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) },
+      { label: 'Venta', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined },
+      { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) },
+    ]} />
 
     <section className="mt-6">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
@@ -373,7 +371,7 @@ export function CeoDashboardCommand() {
             </span>
             <span className="text-right">
               <span className="block text-sm font-semibold tabular-nums">{item.credited == null ? (item.sales == null ? '—' : n(item.sales, 1)) : n(item.credited, 1)}</span>
-              <span className="block text-xs text-[var(--n3-text-muted)]">{item.creditedUf != null ? uf(item.creditedUf) : uf(item.salesUf)}</span>
+              <span className="block text-xs text-[var(--n3-text-muted)]">resultado</span>
             </span>
             <ArrowRight size={15} className="text-[var(--n3-text-muted)]" />
           </Link>
@@ -394,6 +392,13 @@ export function CeoDashboardCommand() {
             <Download size={14} /> Exportar
           </button>
         </div>
+
+        {period === '2026-08' && augustCompany
+          ? <div>
+              <h3 className="mb-2 text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Directorio agosto</h3>
+              <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
+            </div>
+          : null}
 
         <div>
           <h3 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Todas las oficinas</h3>
