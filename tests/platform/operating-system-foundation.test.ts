@@ -11,6 +11,9 @@ test('Property Partners remains the canonical operating profile with three pilla
   assert.deepEqual(profile.pillars.map((item) => item.label), ['Control de gestión', 'Inteligencia de negocios', 'Valorizador de propiedades'])
   assert.equal(profile.assistant.dailyWorkFirst, true)
   assert.equal(profile.assistant.humanConfirmationForWrites, true)
+  assert.deepEqual(profile.workflows.valuation.allowedTargets, ['draft', 'review', 'approved', 'issued'])
+  assert.deepEqual(profile.workflows.valuation.mfaTargets, ['approved', 'issued'])
+  assert.equal(profile.workflows.valuation.returnTaskDueDays, 3)
 })
 
 test('Partner receives productive work even without formal tasks', () => {

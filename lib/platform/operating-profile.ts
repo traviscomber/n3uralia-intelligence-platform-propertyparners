@@ -40,6 +40,8 @@ export type OperatingRoleProfile = {
   proactiveActions: OperatingActionTemplate[]
 }
 
+export type ValuationWorkflowStatus = 'draft' | 'review' | 'approved' | 'issued'
+
 export type OperatingProfile = {
   schemaVersion: 1
   tenantId: string
@@ -48,6 +50,13 @@ export type OperatingProfile = {
   pillars: Array<{ id: OperatingPillarId; label: string }>
   features: Record<OperatingFeatureId, boolean>
   roles: Record<UserRole, OperatingRoleProfile>
+  workflows: {
+    valuation: {
+      allowedTargets: readonly ValuationWorkflowStatus[]
+      mfaTargets: readonly ValuationWorkflowStatus[]
+      returnTaskDueDays: number
+    }
+  }
   assistant: {
     dailyWorkFirst: true
     proactiveWorkWhenClear: true
@@ -130,6 +139,13 @@ const PROPERTY_PARTNERS_PROFILE: OperatingProfile = {
         { id: 'seller-market-prospect', title: 'Revisar oportunidades de mercado y preparar el próximo contacto comercial.', domain: 'market', href: '/dashboard/market', condition: 'no-portfolio', priority: 'medium' },
         { id: 'seller-document-review', title: 'Revisar documentación, identidad o vigencia de la propiedad que tenga mayor brecha.', domain: 'documents', href: '/dashboard/properties', condition: 'has-portfolio-attention', priority: 'medium' },
       ],
+    },
+  },
+  workflows: {
+    valuation: {
+      allowedTargets: ['draft', 'review', 'approved', 'issued'],
+      mfaTargets: ['approved', 'issued'],
+      returnTaskDueDays: 3,
     },
   },
   assistant: {

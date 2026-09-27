@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getRuntimeOperatingProfile } from '@/lib/platform/tenant-context'
 import {
   accessErrorResponse,
   assertProfileVisible,
   requireAnyCapability,
   requireMfaLevel2,
 } from '@/lib/access-guards'
-
-const allowedTargets = new Set(['draft', 'review', 'approved', 'issued'])
 
 function logWorkflowFailure(stage: string, error: unknown) {
   console.error(stage, {
@@ -27,12 +26,16 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const body = await request.json().catch(() => null)
     const target = String(body?.status || '')
     const reason = String(body?.reason || '').trim() || null
+    const valuationWorkflow = getRuntimeOperatingProfile().workflows.valuation
+    const allowedTargets = new Set<string>(valuationWorkflow.allowedTargets)
+    const mfaTargets = new Set<string>(valuationWorkflow.mfaTargets)
+    const requiresMfa = mfaTargets.has(target)
 
     if (!allowedTargets.has(target)) {
       return NextResponse.json({ error: 'Estado de destino inválido' }, { status: 400 })
     }
 
-    if (target === 'approved' || target === 'issued') await requireMfaLevel2()
+    if (requiresMfa) await requireMfaLevel2()
 
     const { data: valuationCase, error: caseError } = await supabase
       .from('valuation_cases')
@@ -83,7 +86,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     if (target === 'draft') {
       const due = new Date()
-      due.setDate(due.getDate() + 3)
+      due.setDate(due.getDate() + valuationWorkflow.returnTaskDueDays)
       const { data: requester } = await supabase
         .from('profiles')
         .select('team')
@@ -127,7 +130,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       versionNumber: result.versionNumber ?? null,
       acceptedComparableCount: result.acceptedComparableCount ?? null,
       atomic: true,
-      mfaVerified: target === 'approved' || target === 'issued',
+      mfaVerified: requiresMfa,
     })
   } catch (error) {
     return accessErrorResponse(error)

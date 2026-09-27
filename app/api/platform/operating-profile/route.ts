@@ -28,6 +28,7 @@ export async function GET() {
         officeName: scope.officeName,
       },
       assistant: profile.assistant,
+      workflows: profile.workflows,
       proactiveActionCatalog: role.proactiveActions.map((action) => ({
         id: action.id,
         title: action.title,
