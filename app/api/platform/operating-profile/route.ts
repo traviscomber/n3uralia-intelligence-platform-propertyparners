@@ -28,6 +28,7 @@ export async function GET() {
         officeName: scope.officeName,
       },
       assistant: profile.assistant,
+      policies: profile.policies,
       actions: {
         gatewayPolicyId: profile.actions.gatewayPolicyId,
         proposalPolicyId: profile.actions.proposalPolicyId,
