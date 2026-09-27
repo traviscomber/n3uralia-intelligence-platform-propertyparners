@@ -47,6 +47,8 @@ const ROLE_CAPABILITIES: Record<UserRole, readonly Capability[]> = {
     'properties.global.assign',
     'tasks.global.manage',
     'reports.global.read',
+    'users.manage',
+    'settings.manage',
   ],
   admin: [
     'dashboard.global.read',
