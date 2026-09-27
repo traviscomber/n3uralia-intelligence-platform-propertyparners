@@ -86,11 +86,16 @@ test('daily priorities put tasks before general market movement', async () => {
 })
 
 
-test('assistant keeps useful work available when there are no formal tasks', async () => {
-  const source = await import('node:fs/promises').then((fs) => fs.readFile('app/api/pedro-pablo/route.ts', 'utf8'))
+test('assistant keeps useful work available through the reusable operating profile', async () => {
+  const fs = await import('node:fs/promises')
+  const source = await fs.readFile('app/api/pedro-pablo/route.ts', 'utf8')
+  const profile = await fs.readFile('lib/platform/operating-profile.ts', 'utf8')
+
   assert.match(source, /function proactiveWork\(/)
+  assert.match(source, /buildNextBestActions/)
+  assert.match(source, /getRuntimeOperatingProfile/)
   assert.match(source, /Sin tareas formales · trabajo disponible/)
   assert.match(source, /Siguiente mejor acción/)
-  assert.match(source, /Ordenar tu cartera/)
-  assert.match(source, /Avanzar una valorización/)
+  assert.match(profile, /Ordenar tu cartera/)
+  assert.match(profile, /Avanzar una valorización/)
 })
