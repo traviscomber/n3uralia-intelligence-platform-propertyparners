@@ -61,10 +61,28 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   }
 }
 
-assert.equal(CEO_NAVIGATION.length, 1)
-assert.equal(CEO_NAVIGATION[0]?.items.length, 6)
-assert.equal(ADMIN_NAVIGATION[0]?.items.length, 5)
-assert.equal(DIRECTOR_NAVIGATION[0]?.items.length, 5)
-assert.equal(SELLER_NAVIGATION[0]?.items.length, 5)
+const expectedSections = [
+  'Resumen',
+  'Control de gestión',
+  'Inteligencia de negocios',
+  'Valorizador de propiedades',
+]
 
-console.log('Dashboard access and simplified role navigation verified for CEO, admin, director, subdirector and seller. CEO surface remains business-only.')
+for (const [role, sections] of Object.entries(navigationByRole)) {
+  assert.deepEqual(
+    sections.map((section) => section.label),
+    expectedSections,
+    `${role} navigation must preserve the canonical Property Partners pillar structure`,
+  )
+  assert.equal(sections[0]?.items.some((item) => item.label === 'Hoy'), true)
+  assert.equal(sections[1]?.items.length > 0, true)
+  assert.equal(sections[2]?.items.length > 0, true)
+  assert.equal(sections[3]?.items.length > 0, true)
+}
+
+assert.equal(CEO_NAVIGATION.flatMap((section) => section.items).length, 6)
+assert.equal(ADMIN_NAVIGATION.flatMap((section) => section.items).length, 10)
+assert.equal(DIRECTOR_NAVIGATION.flatMap((section) => section.items).length, 8)
+assert.equal(SELLER_NAVIGATION.flatMap((section) => section.items).length, 5)
+
+console.log('Dashboard access and canonical three-pillar role navigation verified for CEO, admin, director, subdirector and seller.')
