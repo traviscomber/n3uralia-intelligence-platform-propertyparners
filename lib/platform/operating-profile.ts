@@ -68,52 +68,6 @@ export type OperatingProfile = {
   features: Record<OperatingFeatureId, boolean>
   roles: Record<UserRole, OperatingRoleProfile>
   sourceAdapters: readonly SourceAdapterDefinition[]
-  sourceAdapters: [
-    {
-      id: 'portal-inmobiliario',
-      label: 'Portal Inmobiliario',
-      domain: 'market',
-      backend: 'market_sources',
-      matchSourceTypes: ['portal'],
-      refreshMode: 'manual-validated',
-      canonicalRole: 'evidence',
-    },
-    {
-      id: 'cbrs-vitacura',
-      label: 'CBRS Vitacura',
-      domain: 'market',
-      backend: 'market_sources',
-      matchSourceTypes: ['cbrs'],
-      refreshMode: 'manual-validated',
-      canonicalRole: 'evidence',
-    },
-    {
-      id: 'barrios-vitacura',
-      label: 'Barrios Vitacura',
-      domain: 'market',
-      backend: 'market_sources',
-      matchSourceTypes: ['kml'],
-      refreshMode: 'manual-validated',
-      canonicalRole: 'evidence',
-    },
-    {
-      id: 'gestion-operacional',
-      label: 'Gestión operacional',
-      domain: 'management',
-      backend: 'management_source_records',
-      refreshMode: 'manual-validated',
-      canonicalRole: 'transactional-source',
-    },
-    {
-      id: 'reportes-ejecutivos',
-      label: 'Reportes ejecutivos',
-      domain: 'reporting',
-      backend: 'data_sources',
-      matchSourceTypes: ['executive_report', 'report_engine'],
-      refreshMode: 'derived',
-      canonicalRole: 'derived',
-    },
-  ],
   actions: {
     gatewayPolicyId: string
     proposalPolicyId: string
@@ -215,6 +169,52 @@ const PROPERTY_PARTNERS_PROFILE: OperatingProfile = {
       ],
     },
   },
+  sourceAdapters: [
+    {
+      id: 'portal-inmobiliario',
+      label: 'Portal Inmobiliario',
+      domain: 'market',
+      backend: 'market_sources',
+      matchSourceTypes: ['portal'],
+      refreshMode: 'manual-validated',
+      canonicalRole: 'evidence',
+    },
+    {
+      id: 'cbrs-vitacura',
+      label: 'CBRS Vitacura',
+      domain: 'market',
+      backend: 'market_sources',
+      matchSourceTypes: ['cbrs'],
+      refreshMode: 'manual-validated',
+      canonicalRole: 'evidence',
+    },
+    {
+      id: 'barrios-vitacura',
+      label: 'Barrios Vitacura',
+      domain: 'market',
+      backend: 'market_sources',
+      matchSourceTypes: ['kml'],
+      refreshMode: 'manual-validated',
+      canonicalRole: 'evidence',
+    },
+    {
+      id: 'gestion-operacional',
+      label: 'Gestión operacional',
+      domain: 'management',
+      backend: 'management_source_records',
+      refreshMode: 'manual-validated',
+      canonicalRole: 'transactional-source',
+    },
+    {
+      id: 'reportes-ejecutivos',
+      label: 'Reportes ejecutivos',
+      domain: 'reporting',
+      backend: 'data_sources',
+      matchSourceTypes: ['executive_report', 'report_engine'],
+      refreshMode: 'derived',
+      canonicalRole: 'derived',
+    },
+  ],
   actions: {
     gatewayPolicyId: 'pedro-pablo-action-gateway-v1',
     proposalPolicyId: 'pedro-pablo-proposal-contract-v4-reports-aware',
