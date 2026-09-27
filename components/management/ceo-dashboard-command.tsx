@@ -42,6 +42,11 @@ const metric = (point: Point | undefined, code: string) => point?.metrics?.[code
 const riskLabel = (risk: Risk) => risk === 'high' ? 'Alto' : risk === 'medium' ? 'Medio' : risk === 'low' ? 'Bajo' : 'Sin evidencia'
 const riskClass = (risk: Risk) => risk === 'high' ? 'text-[#ff8d87]' : risk === 'medium' ? 'text-[#f0c96a]' : risk === 'low' ? 'text-[#78d59a]' : 'text-[var(--n3-text-muted)]'
 const officeSlug = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+const pillarLabel = (href: string) => href.includes('/valuations') || href.includes('/valuation')
+  ? 'Valorizador de propiedades'
+  : href.includes('/market') || href.includes('/properties')
+    ? 'Inteligencia de negocios'
+    : 'Control de gestión'
 
 const DECISION_THRESHOLDS = {
   leadBacklogCritical: getDecisionThreshold('lead-backlog-critical'),
@@ -286,7 +291,8 @@ export function CeoDashboardCommand() {
           >
             <span className={`h-2 w-2 rounded-full ${item.critical ? 'bg-[var(--primary)]' : 'bg-[#f0c96a]'}`} />
             <span className="min-w-0">
-              <span className="block truncate text-sm font-medium">{item.label}</span>
+              <span className="block text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{pillarLabel(item.href)}</span>
+              <span className="mt-1 block truncate text-sm font-medium">{item.label}</span>
               {item.detail ? <span className="block truncate text-xs text-[var(--n3-text-muted)]">{item.detail}</span> : null}
             </span>
             <span className={`text-base font-semibold tabular-nums ${item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}`}>{item.value}</span>
@@ -298,7 +304,7 @@ export function CeoDashboardCommand() {
 
     <section className="mt-6">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
-        <h2 className="text-sm font-semibold">Oficinas</h2>
+        <div><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Control de gestión</p><h2 className="mt-1 text-sm font-semibold">Oficinas</h2></div>
         <span className="text-xs text-[var(--n3-text-muted)]">Prioridad de hoy</span>
       </div>
       <div className="divide-y divide-[var(--n3-line)]">
