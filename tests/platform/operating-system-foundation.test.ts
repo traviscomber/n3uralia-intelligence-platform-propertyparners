@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { DEFAULT_TENANT_ID, getOperatingProfile } from '../../lib/platform/operating-profile'
 import { buildNextBestActions } from '../../lib/platform/next-best-action'
+import { validateOperatingProfile } from '../../lib/platform/profile-validator'
 
 test('Property Partners remains the canonical operating profile with three pillars', () => {
   const profile = getOperatingProfile(DEFAULT_TENANT_ID)
@@ -26,6 +27,7 @@ test('Property Partners remains the canonical operating profile with three pilla
     'barrios-vitacura',
   ])
   assert.ok(profile.sourceAdapters.every((item) => item.refreshMode !== 'managed-sync' || item.backend !== 'market_sources'))
+  assert.deepEqual(validateOperatingProfile(profile), [])
 })
 
 test('Partner receives productive work even without formal tasks', () => {
@@ -230,4 +232,17 @@ test('management decision evaluator resolves rules from the active client policy
   assert.match(evaluator, /for \(const rule of args\.policy\.rules\)/)
   assert.match(registry, /property-partners-management-2026-08-07\.2/)
   assert.match(registry, /MANAGEMENT_DECISION_POLICY/)
+})
+
+
+test('operating profile validation blocks unsafe future client configuration', () => {
+  const profile = structuredClone(getOperatingProfile(DEFAULT_TENANT_ID))
+  profile.assistant.humanConfirmationForWrites = false
+  profile.sourceAdapters.push({ ...profile.sourceAdapters[0] })
+  profile.workflows.valuation.mfaTargets = ['issued', 'draft', 'invalid' as never]
+
+  const issues = validateOperatingProfile(profile)
+  assert.ok(issues.some((item) => item.code === 'unsafe_action_gateway'))
+  assert.ok(issues.some((item) => item.code === 'duplicate_source_adapter'))
+  assert.ok(issues.some((item) => item.code === 'invalid_mfa_target'))
 })
