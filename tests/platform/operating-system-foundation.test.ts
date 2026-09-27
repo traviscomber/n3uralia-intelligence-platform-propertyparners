@@ -18,6 +18,13 @@ test('Property Partners remains the canonical operating profile with three pilla
   assert.equal(profile.actions.proposalPolicyId, 'pedro-pablo-proposal-contract-v4-reports-aware')
   assert.deepEqual(profile.actions.allowedConfirmedActions, ['create_task'])
   assert.equal(profile.actions.taskSourcePrefix, 'pedro-pablo')
+  assert.equal(profile.sourceAdapters.length, 5)
+  assert.deepEqual(profile.sourceAdapters.slice(0, 3).map((item) => item.id), [
+    'portal-inmobiliario',
+    'cbrs-vitacura',
+    'barrios-vitacura',
+  ])
+  assert.ok(profile.sourceAdapters.every((item) => item.refreshMode !== 'managed-sync' || item.backend !== 'market_sources'))
 })
 
 test('Partner receives productive work even without formal tasks', () => {
@@ -172,4 +179,41 @@ test('attention API is read-only, RLS-scoped and bounded', async () => {
   assert.doesNotMatch(source, /\.insert\(/)
   assert.doesNotMatch(source, /\.update\(/)
   assert.doesNotMatch(source, /createAdminClient/)
+})
+
+
+test('source adapter registry normalizes existing source health without creating another source of truth', async () => {
+  const { resolveSourceAdapterState, sourceAdapterSummary } = await import('../../lib/platform/source-adapters')
+  const profile = getOperatingProfile(DEFAULT_TENANT_ID)
+  const portal = profile.sourceAdapters.find((item) => item.id === 'portal-inmobiliario')
+  assert.ok(portal)
+
+  const state = resolveSourceAdapterState(portal!, {
+    market: [
+      { source_type: 'portal', status: 'active', row_count: 10, imported_at: '2026-09-26T12:00:00Z' },
+      { source_type: 'portal', status: 'active', row_count: 5, imported_at: '2026-09-26T13:00:00Z' },
+    ],
+    data: [],
+    management: [],
+  })
+
+  assert.equal(state.health, 'healthy')
+  assert.equal(state.records, 15)
+  assert.equal(state.evidenceCount, 2)
+  assert.equal(sourceAdapterSummary([state]).healthy, 1)
+})
+
+test('source adapter API is bounded, RLS-scoped and read-only', async () => {
+  const fs = await import('node:fs/promises')
+  const source = await fs.readFile('app/api/platform/source-adapters/route.ts', 'utf8')
+  assert.match(source, /requireAnyCapability/)
+  assert.match(source, /market_sources/)
+  assert.match(source, /data_sources/)
+  assert.match(source, /management_source_records/)
+  assert.match(source, /\.limit\(100\)/)
+  assert.match(source, /\.limit\(50\)/)
+  assert.match(source, /writesPerformed:\s*0/)
+  assert.doesNotMatch(source, /createAdminClient/)
+  assert.doesNotMatch(source, /\.insert\(/)
+  assert.doesNotMatch(source, /\.update\(/)
 })

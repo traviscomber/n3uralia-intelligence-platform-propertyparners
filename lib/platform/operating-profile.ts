@@ -14,6 +14,7 @@ export type OperatingFeatureId =
   | 'source-governance'
   | 'activity-feed'
   | 'attention-inbox'
+  | 'source-adapter-registry'
 
 export type NextActionCondition =
   | 'always'
@@ -44,6 +45,19 @@ export type OperatingRoleProfile = {
 
 export type ValuationWorkflowStatus = 'draft' | 'review' | 'approved' | 'issued'
 export type ConfirmedActionId = 'create_task'
+export type SourceAdapterBackend = 'market_sources' | 'data_sources' | 'management_source_records'
+export type SourceAdapterRefreshMode = 'manual-validated' | 'managed-sync' | 'derived'
+
+export type SourceAdapterDefinition = {
+  id: string
+  label: string
+  domain: 'market' | 'management' | 'valuation' | 'reporting'
+  backend: SourceAdapterBackend
+  matchSourceTypes?: readonly string[]
+  matchDatasets?: readonly string[]
+  refreshMode: SourceAdapterRefreshMode
+  canonicalRole: 'evidence' | 'transactional-source' | 'derived'
+}
 
 export type OperatingProfile = {
   schemaVersion: 1
@@ -53,6 +67,53 @@ export type OperatingProfile = {
   pillars: Array<{ id: OperatingPillarId; label: string }>
   features: Record<OperatingFeatureId, boolean>
   roles: Record<UserRole, OperatingRoleProfile>
+  sourceAdapters: readonly SourceAdapterDefinition[]
+  sourceAdapters: [
+    {
+      id: 'portal-inmobiliario',
+      label: 'Portal Inmobiliario',
+      domain: 'market',
+      backend: 'market_sources',
+      matchSourceTypes: ['portal'],
+      refreshMode: 'manual-validated',
+      canonicalRole: 'evidence',
+    },
+    {
+      id: 'cbrs-vitacura',
+      label: 'CBRS Vitacura',
+      domain: 'market',
+      backend: 'market_sources',
+      matchSourceTypes: ['cbrs'],
+      refreshMode: 'manual-validated',
+      canonicalRole: 'evidence',
+    },
+    {
+      id: 'barrios-vitacura',
+      label: 'Barrios Vitacura',
+      domain: 'market',
+      backend: 'market_sources',
+      matchSourceTypes: ['kml'],
+      refreshMode: 'manual-validated',
+      canonicalRole: 'evidence',
+    },
+    {
+      id: 'gestion-operacional',
+      label: 'Gestión operacional',
+      domain: 'management',
+      backend: 'management_source_records',
+      refreshMode: 'manual-validated',
+      canonicalRole: 'transactional-source',
+    },
+    {
+      id: 'reportes-ejecutivos',
+      label: 'Reportes ejecutivos',
+      domain: 'reporting',
+      backend: 'data_sources',
+      matchSourceTypes: ['executive_report', 'report_engine'],
+      refreshMode: 'derived',
+      canonicalRole: 'derived',
+    },
+  ],
   actions: {
     gatewayPolicyId: string
     proposalPolicyId: string
@@ -100,6 +161,7 @@ const PROPERTY_PARTNERS_PROFILE: OperatingProfile = {
     'source-governance': true,
     'activity-feed': true,
     'attention-inbox': true,
+    'source-adapter-registry': true,
   },
   roles: {
     ceo: {
