@@ -56,8 +56,8 @@ test('assistant follow-up questions are contextual instead of static starters', 
   assert.match(route, /¿Qué comparables sostienen mejor esta valorización\?/)
   assert.match(route, /¿Qué antecedente falta verificar antes de avanzar\?/)
   assert.match(chat, /message\.suggestedQuestions/)
-  assert.match(chat, /Primero puedo ordenar lo que requiere tu atención hoy/)
-  assert.match(chat, /Revisar mi día/)
+  assert.match(chat, /Primero reviso pendientes reales/)
+  assert.match(chat, /Organizar mi día/)
   assert.doesNotMatch(chat, /const starters =/)
 })
 
@@ -68,8 +68,8 @@ test('assistant opens with today first and keeps the three business pillars avai
     assert.match(chat, new RegExp(label))
   }
   assert.match(chat, /Empecemos por hoy/)
-  assert.match(chat, /Revisar mi día/)
-  assert.match(chat, /Tareas primero/)
+  assert.match(chat, /Organizar mi día/)
+  assert.match(chat, /Pendientes \+ siguiente acción/)
   assert.match(chat, /onClick=\{\(\) => void ask\(dailyPrompt\)\}/)
 })
 
@@ -83,4 +83,14 @@ test('daily priorities put tasks before general market movement', async () => {
   assert.ok(priorities.indexOf('const market = context.market') > -1)
   assert.ok(priorities.indexOf('const activeTasks') < priorities.indexOf('const market = context.market'))
   assert.match(priorities, /title: 'Qué requiere atención hoy'/)
+})
+
+
+test('assistant keeps useful work available when there are no formal tasks', async () => {
+  const source = await import('node:fs/promises').then((fs) => fs.readFile('app/api/pedro-pablo/route.ts', 'utf8'))
+  assert.match(source, /function proactiveWork\(/)
+  assert.match(source, /Sin tareas formales · trabajo disponible/)
+  assert.match(source, /Siguiente mejor acción/)
+  assert.match(source, /Ordenar tu cartera/)
+  assert.match(source, /Avanzar una valorización/)
 })
