@@ -26,6 +26,7 @@ export const CEO_NAVIGATION: NavigationSection[] = [
     items: [
       { label: 'Control de gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
+      { label: 'Usuarios', href: '/dashboard/settings', anyCapabilities: ['users.manage', 'settings.manage'] },
     ],
   },
   {
