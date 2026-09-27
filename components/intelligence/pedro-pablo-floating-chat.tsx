@@ -314,7 +314,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                         : 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.')
                       : (isDirectorSupport
                         ? 'Puedo ayudarte a priorizar lo pendiente de tu oficina, revisar valorizaciones y preparar devoluciones con razones objetivas.'
-                        : 'Primero puedo ordenar lo que requiere tu atención hoy. Después profundizamos sólo donde haga falta.')}
+                        : 'Primero reviso pendientes reales. Si no hay ninguno, te propongo el siguiente trabajo útil: valorizar, ordenar cartera, contactar, revisar documentación o pedir apoyo.')}
                   </p>
                 </div>
                 {!valuationCaseId ? (
@@ -323,8 +323,8 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                     onClick={() => void ask(dailyPrompt)}
                     className="flex min-h-12 w-full items-center justify-between rounded-lg border border-[var(--primary)] bg-[var(--n3-deep)] px-4 text-left text-sm font-medium text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                   >
-                    <span>Revisar mi día</span>
-                    <span className="text-xs font-normal text-[var(--n3-text-muted)]">Tareas primero</span>
+                    <span>Organizar mi día</span>
+                    <span className="text-xs font-normal text-[var(--n3-text-muted)]">Pendientes + siguiente acción</span>
                   </button>
                 ) : null}
                 <div className="grid gap-2 sm:grid-cols-2">
