@@ -1,4 +1,5 @@
 import type { UserRole } from '@/lib/types'
+import { assertValidOperatingProfile } from '@/lib/platform/profile-validator'
 
 export type OperatingPillarId = 'management' | 'intelligence' | 'valuation'
 export type OperatingFeatureId =
@@ -250,7 +251,7 @@ const PROFILES: Record<string, OperatingProfile> = {
 export function getOperatingProfile(tenantId: string): OperatingProfile {
   const profile = PROFILES[tenantId]
   if (!profile) throw new Error(`Unknown operating profile: ${tenantId}`)
-  return profile
+  return assertValidOperatingProfile(profile)
 }
 
 export function getRoleOperatingProfile(profile: OperatingProfile, role: string): OperatingRoleProfile | null {
