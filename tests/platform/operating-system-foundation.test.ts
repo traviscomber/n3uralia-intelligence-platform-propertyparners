@@ -1,0 +1,248 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { DEFAULT_TENANT_ID, getOperatingProfile } from '../../lib/platform/operating-profile'
+import { buildNextBestActions } from '../../lib/platform/next-best-action'
+import { validateOperatingProfile } from '../../lib/platform/profile-validator'
+
+test('Property Partners remains the canonical operating profile with three pillars', () => {
+  const profile = getOperatingProfile(DEFAULT_TENANT_ID)
+  assert.equal(profile.clientName, 'Property Partners')
+  assert.equal(profile.marketScope, 'Vitacura')
+  assert.deepEqual(profile.pillars.map((item) => item.id), ['management', 'intelligence', 'valuation'])
+  assert.deepEqual(profile.pillars.map((item) => item.label), ['Control de gestión', 'Inteligencia de negocios', 'Valorizador de propiedades'])
+  assert.equal(profile.assistant.dailyWorkFirst, true)
+  assert.equal(profile.assistant.humanConfirmationForWrites, true)
+  assert.deepEqual(profile.workflows.valuation.allowedTargets, ['draft', 'review', 'approved', 'issued'])
+  assert.deepEqual(profile.workflows.valuation.mfaTargets, ['approved', 'issued'])
+  assert.equal(profile.workflows.valuation.returnTaskDueDays, 3)
+  assert.equal(profile.actions.gatewayPolicyId, 'pedro-pablo-action-gateway-v1')
+  assert.equal(profile.actions.proposalPolicyId, 'pedro-pablo-proposal-contract-v4-reports-aware')
+  assert.deepEqual(profile.actions.allowedConfirmedActions, ['create_task'])
+  assert.equal(profile.actions.taskSourcePrefix, 'pedro-pablo')
+  assert.equal(profile.policies.managementDecisionPolicyId, 'property-partners-management-2026-08-07.2')
+  assert.equal(profile.sourceAdapters.length, 5)
+  assert.deepEqual(profile.sourceAdapters.slice(0, 3).map((item) => item.id), [
+    'portal-inmobiliario',
+    'cbrs-vitacura',
+    'barrios-vitacura',
+  ])
+  assert.ok(profile.sourceAdapters.every((item) => item.refreshMode !== 'managed-sync' || item.backend !== 'market_sources'))
+  assert.deepEqual(validateOperatingProfile(profile), [])
+})
+
+test('Partner receives productive work even without formal tasks', () => {
+  const profile = getOperatingProfile(DEFAULT_TENANT_ID)
+  const actions = buildNextBestActions(profile, 'seller', {
+    portfolioTotal: 8,
+    portfolioAttentionCount: 1,
+    pendingIdentityCount: 1,
+    staleAssignmentsCount: 0,
+    valuationReviewCount: 0,
+    valuationDraftCount: 1,
+    marketAvailable: true,
+  })
+
+  assert.equal(actions.length, 3)
+  assert.match(actions[0].title, /Avanzar una valorización/)
+  assert.ok(actions.some((item) => /contactos, llamados/.test(item.title)))
+  assert.ok(actions.some((item) => /documentación/.test(item.title)))
+})
+
+test('CEO next actions stay aligned to management, valuation and market', () => {
+  const profile = getOperatingProfile(DEFAULT_TENANT_ID)
+  const actions = buildNextBestActions(profile, 'ceo', {
+    portfolioTotal: 0,
+    portfolioAttentionCount: 0,
+    pendingIdentityCount: 0,
+    staleAssignmentsCount: 0,
+    valuationReviewCount: 2,
+    valuationDraftCount: 0,
+    marketAvailable: true,
+  })
+
+  assert.deepEqual(actions.map((item) => item.domain), ['management', 'valuation', 'market'])
+})
+
+test('Administration receives cleanup and source-governance work when data gaps exist', () => {
+  const profile = getOperatingProfile(DEFAULT_TENANT_ID)
+  const actions = buildNextBestActions(profile, 'admin', {
+    portfolioTotal: 12,
+    portfolioAttentionCount: 2,
+    pendingIdentityCount: 2,
+    staleAssignmentsCount: 1,
+    valuationReviewCount: 0,
+    valuationDraftCount: 0,
+    marketAvailable: true,
+  })
+
+  assert.match(actions[0].title, /identidad, vigencia o documentación/)
+  assert.ok(actions.some((item) => /cartera y asignaciones/.test(item.title)))
+  assert.ok(actions.some((item) => /datos y fuentes/.test(item.title)))
+})
+
+test('Unknown tenant profiles fail closed', () => {
+  assert.throws(() => getOperatingProfile('unknown-client'), /Unknown operating profile/)
+})
+
+
+test('Action Gateway preserves human-confirmed task creation through the client profile', async () => {
+  const fs = await import('node:fs/promises')
+  const gateway = await fs.readFile('app/api/pedro-pablo/action-gateway/route.ts', 'utf8')
+  const decision = await fs.readFile('app/api/pedro-pablo/decision-support/route.ts', 'utf8')
+
+  assert.match(gateway, /getRuntimeOperatingProfile\(\)\.actions/)
+  assert.match(gateway, /allowedConfirmedActions\.includes\('create_task'\)/)
+  assert.match(gateway, /if \(!confirm\)/)
+  assert.match(gateway, /actionPolicy\.taskSourcePrefix/)
+  assert.match(decision, /operatingProfile\.actions\.allowedConfirmedActions/)
+  assert.match(decision, /operatingProfile\.actions\.proposalPolicyId/)
+})
+
+
+test('activity normalization produces one stable cross-domain contract', async () => {
+  const { normalizeTaskActivity, normalizeValuationActivity, sortPlatformActivity } = await import('../../lib/platform/activity')
+
+  const task = normalizeTaskActivity({
+    id: 'e1',
+    task_id: 't1',
+    actor_id: 'u1',
+    event_type: 'status_changed',
+    from_status: 'open',
+    to_status: 'in_progress',
+    changes: {},
+    created_at: '2026-09-26T12:00:00Z',
+  }, 'Llamar cliente', 'Partner')
+
+  const valuation = normalizeValuationActivity({
+    id: 'e2',
+    valuation_case_id: 'v1',
+    actor_id: 'u2',
+    action: 'submitted_for_review',
+    from_status: 'draft',
+    to_status: 'review',
+    reason: null,
+    metadata: {},
+    created_at: '2026-09-26T13:00:00Z',
+  }, 'Av. Vitacura 123', 'Directora')
+
+  assert.equal(task.domain, 'management')
+  assert.equal(valuation.domain, 'valuation')
+  assert.equal(sortPlatformActivity([task, valuation], 2)[0].id, 'valuation:e2')
+  assert.match(valuation.href, /\/dashboard\/valuations\/v1/)
+})
+
+test('activity API remains RLS-scoped and bounded', async () => {
+  const fs = await import('node:fs/promises')
+  const source = await fs.readFile('app/api/platform/activity/route.ts', 'utf8')
+  assert.match(source, /requireUserScope\(\)/)
+  assert.match(source, /\.limit\(limit\)/)
+  assert.match(source, /Math\.min\(50/)
+  assert.match(source, /management_task_events/)
+  assert.match(source, /valuation_decision_log/)
+  assert.doesNotMatch(source, /createAdminClient/)
+})
+
+
+test('attention inbox keeps formal work ahead of proactive work', async () => {
+  const { composeAttentionInbox, proactiveAttentionItems, taskAttentionItems } = await import('../../lib/platform/attention')
+
+  const formal = taskAttentionItems([{
+    id: 't1',
+    title: 'Llamar propietario',
+    priority: 'medium',
+    status: 'open',
+    due_date: '2026-09-25',
+  }], '2026-09-26')
+
+  const proactive = proactiveAttentionItems([{
+    id: 'seller-portfolio-contact',
+    title: 'Ordenar cartera',
+    domain: 'contacts',
+    href: '/dashboard/properties',
+    priority: 'medium',
+    mode: 'proactive',
+    source: 'operating-profile',
+  }])
+
+  const inbox = composeAttentionInbox(formal, proactive, 5)
+  assert.equal(inbox.mode, 'attention')
+  assert.equal(inbox.items[0].kind, 'task')
+  assert.equal(inbox.items[0].priority, 'urgent')
+  assert.equal(inbox.items[1].kind, 'proactive')
+})
+
+test('attention API is read-only, RLS-scoped and bounded', async () => {
+  const fs = await import('node:fs/promises')
+  const source = await fs.readFile('app/api/platform/attention/route.ts', 'utf8')
+  assert.match(source, /requireUserScope\(\)/)
+  assert.match(source, /management_tasks/)
+  assert.match(source, /valuation_cases/)
+  assert.match(source, /property_assignments/)
+  assert.match(source, /writesPerformed:\s*0/)
+  assert.doesNotMatch(source, /\.insert\(/)
+  assert.doesNotMatch(source, /\.update\(/)
+  assert.doesNotMatch(source, /createAdminClient/)
+})
+
+
+test('source adapter registry normalizes existing source health without creating another source of truth', async () => {
+  const { resolveSourceAdapterState, sourceAdapterSummary } = await import('../../lib/platform/source-adapters')
+  const profile = getOperatingProfile(DEFAULT_TENANT_ID)
+  const portal = profile.sourceAdapters.find((item) => item.id === 'portal-inmobiliario')
+  assert.ok(portal)
+
+  const state = resolveSourceAdapterState(portal!, {
+    market: [
+      { source_type: 'portal', status: 'active', row_count: 10, imported_at: '2026-09-26T12:00:00Z' },
+      { source_type: 'portal', status: 'active', row_count: 5, imported_at: '2026-09-26T13:00:00Z' },
+    ],
+    data: [],
+    management: [],
+  })
+
+  assert.equal(state.health, 'healthy')
+  assert.equal(state.records, 15)
+  assert.equal(state.evidenceCount, 2)
+  assert.equal(sourceAdapterSummary([state]).healthy, 1)
+})
+
+test('source adapter API is bounded, RLS-scoped and read-only', async () => {
+  const fs = await import('node:fs/promises')
+  const source = await fs.readFile('app/api/platform/source-adapters/route.ts', 'utf8')
+  assert.match(source, /requireAnyCapability/)
+  assert.match(source, /market_sources/)
+  assert.match(source, /data_sources/)
+  assert.match(source, /management_source_records/)
+  assert.match(source, /\.limit\(100\)/)
+  assert.match(source, /\.limit\(50\)/)
+  assert.match(source, /writesPerformed:\s*0/)
+  assert.doesNotMatch(source, /createAdminClient/)
+  assert.doesNotMatch(source, /\.insert\(/)
+  assert.doesNotMatch(source, /\.update\(/)
+})
+
+
+test('management decision evaluator resolves rules from the active client policy', async () => {
+  const fs = await import('node:fs/promises')
+  const evaluator = await fs.readFile('lib/management-decision-evaluator.ts', 'utf8')
+  const registry = await fs.readFile('lib/platform/client-policies.ts', 'utf8')
+
+  assert.match(evaluator, /getRuntimeOperatingProfile\(\)/)
+  assert.match(evaluator, /getManagementDecisionPolicy\(operatingProfile\.policies\.managementDecisionPolicyId\)/)
+  assert.match(evaluator, /for \(const rule of args\.policy\.rules\)/)
+  assert.match(registry, /property-partners-management-2026-08-07\.2/)
+  assert.match(registry, /MANAGEMENT_DECISION_POLICY/)
+})
+
+
+test('operating profile validation blocks unsafe future client configuration', () => {
+  const profile = structuredClone(getOperatingProfile(DEFAULT_TENANT_ID))
+  profile.assistant.humanConfirmationForWrites = false
+  profile.sourceAdapters.push({ ...profile.sourceAdapters[0] })
+  profile.workflows.valuation.mfaTargets = ['issued', 'draft', 'invalid' as never]
+
+  const issues = validateOperatingProfile(profile)
+  assert.ok(issues.some((item) => item.code === 'unsafe_action_gateway'))
+  assert.ok(issues.some((item) => item.code === 'duplicate_source_adapter'))
+  assert.ok(issues.some((item) => item.code === 'invalid_mfa_target'))
+})

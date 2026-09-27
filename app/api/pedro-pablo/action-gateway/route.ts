@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { accessErrorResponse, requireAnyCapability } from '@/lib/access-guards'
+import { getRuntimeOperatingProfile } from '@/lib/platform/tenant-context'
 
 type Evidence = {
   label: string
@@ -43,15 +44,15 @@ function taskSeverity(priority: ActionProposal['priority']) {
   return 'info'
 }
 
-function detailFromProposal(proposal: ActionProposal, context: DecisionSupportResponse) {
+function detailFromProposal(proposal: ActionProposal, context: DecisionSupportResponse, attribution: string) {
   const evidence = proposal.evidence
     .map((item) => [item.label, item.source, item.reference, item.cutoff].filter(Boolean).join(' · '))
     .join(' | ')
   return [
     proposal.reason,
-    `Origen: Pedro Pablo · ${context.scopeLabel} · ${context.periodLabel}.`,
+    `Origen: ${attribution} · ${context.scopeLabel} · ${context.periodLabel}.`,
     evidence ? `Evidencia: ${evidence}.` : null,
-    'Acción creada mediante confirmación humana en Pedro Pablo Action Gateway.',
+    `Acción creada mediante confirmación humana en ${attribution} Action Gateway.`,
   ].filter(Boolean).join(' ')
 }
 
@@ -78,6 +79,11 @@ async function regenerateProposal(request: NextRequest, prompt: string, proposal
 export async function POST(request: NextRequest) {
   try {
     await requireAnyCapability(['tasks.global.manage', 'tasks.office.manage'])
+    const actionPolicy = getRuntimeOperatingProfile().actions
+
+    if (!actionPolicy.allowedConfirmedActions.includes('create_task')) {
+      return NextResponse.json({ error: 'La creación de tareas no está habilitada para este cliente.' }, { status: 409 })
+    }
 
     let body: unknown
     try {
@@ -101,9 +107,9 @@ export async function POST(request: NextRequest) {
     const { proposal, context, cookie } = regenerated
 
     const taskDraft = {
-      sourceKey: `pedro-pablo:${proposal.id}`,
+      sourceKey: `${actionPolicy.taskSourcePrefix}:${proposal.id}`,
       title: proposal.action,
-      detail: detailFromProposal(proposal, context),
+      detail: detailFromProposal(proposal, context, actionPolicy.attribution),
       severity: taskSeverity(proposal.priority),
       priority: taskPriority(proposal.priority),
       entityName: '',
@@ -120,7 +126,7 @@ export async function POST(request: NextRequest) {
         executable: true,
         executionStatus: 'preview',
         writesPerformed: 0,
-        gatewayPolicy: 'pedro-pablo-action-gateway-v1',
+        gatewayPolicy: actionPolicy.gatewayPolicyId,
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
@@ -144,7 +150,7 @@ export async function POST(request: NextRequest) {
       executionStatus: 'executed',
       writesPerformed: 1,
       task: taskPayload.task ?? null,
-      gatewayPolicy: 'pedro-pablo-action-gateway-v1',
+      gatewayPolicy: actionPolicy.gatewayPolicyId,
       confirmedByHuman: true,
       executedAt: new Date().toISOString(),
     }, { status: 201, headers: { 'Cache-Control': 'no-store' } })

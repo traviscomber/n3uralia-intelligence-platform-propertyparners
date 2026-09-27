@@ -2,7 +2,9 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { getOperationalSummary } from '@/lib/crm-snapshot'
-import { MANAGEMENT_DECISION_POLICY, type ManagementDecisionRule } from '@/lib/management-decision-policy'
+import type { ManagementDecisionRule } from '@/lib/management-decision-policy'
+import { getManagementDecisionPolicy, type ManagementDecisionPolicy } from '@/lib/platform/client-policies'
+import { getRuntimeOperatingProfile } from '@/lib/platform/tenant-context'
 
 export type DecisionEvidenceLayer = 'approved_live' | 'verified_live' | 'documentary_fallback'
 
@@ -56,13 +58,14 @@ function matches(value: number, rule: ManagementDecisionRule) {
 }
 
 function buildSignals(args: {
+  policy: ManagementDecisionPolicy
   metrics: Record<string, number | null>
   period: string
   evidenceLayer: GovernedDecisionSignal['evidenceLayer']
   evidenceValues: Record<string, number | null>
 }) {
   const signals: GovernedDecisionSignal[] = []
-  for (const rule of MANAGEMENT_DECISION_POLICY.rules) {
+  for (const rule of args.policy.rules) {
     const value = args.metrics[rule.metric]
     if (value == null || !Number.isFinite(value) || !matches(value, rule)) continue
 
@@ -165,6 +168,7 @@ async function loadVerifiedCompanyMetrics(companyId: string) {
 function evaluatePack(
   pack: { period: string; values: Record<string, number | null> },
   evidenceLayer: DecisionEvidenceLayer,
+  policy: ManagementDecisionPolicy,
 ) {
   const metrics: Record<string, number | null> = {
     stale_90_leads_ratio: ratio(pack.values.stale_90_leads, pack.values.active_leads_snapshot),
@@ -174,11 +178,12 @@ function evaluatePack(
   }
 
   return {
-    policyVersion: MANAGEMENT_DECISION_POLICY.version,
-    policyStatus: MANAGEMENT_DECISION_POLICY.status,
+    policyVersion: policy.version,
+    policyStatus: policy.status,
     evaluatedPeriod: pack.period,
     evidenceLayer,
     signals: buildSignals({
+      policy,
       metrics,
       period: pack.period,
       evidenceLayer,
@@ -189,14 +194,16 @@ function evaluatePack(
 }
 
 export async function evaluateManagementDecisionPolicy() {
+  const operatingProfile = getRuntimeOperatingProfile()
+  const policy = getManagementDecisionPolicy(operatingProfile.policies.managementDecisionPolicyId)
   const companyId = await loadCompanyId()
 
   if (companyId) {
     const approved = await loadApprovedCompanyMetrics(companyId)
-    if (approved) return evaluatePack(approved, 'approved_live')
+    if (approved) return evaluatePack(approved, 'approved_live', policy)
 
     const verified = await loadVerifiedCompanyMetrics(companyId)
-    if (verified) return evaluatePack(verified, 'verified_live')
+    if (verified) return evaluatePack(verified, 'verified_live', policy)
   }
 
   const summary = getOperationalSummary()
@@ -217,11 +224,12 @@ export async function evaluateManagementDecisionPolicy() {
   }
 
   return {
-    policyVersion: MANAGEMENT_DECISION_POLICY.version,
-    policyStatus: MANAGEMENT_DECISION_POLICY.status,
+    policyVersion: policy.version,
+    policyStatus: policy.status,
     evaluatedPeriod: summary.month,
     evidenceLayer: 'documentary_fallback' as const,
     signals: buildSignals({
+      policy,
       metrics,
       period: summary.month,
       evidenceLayer: 'documentary_fallback',

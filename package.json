@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "pnpm ai:senior:verify && pnpm valuation:gate && pnpm management:gate",
+    "prebuild": "pnpm platform:verify && pnpm ai:senior:verify && pnpm valuation:gate && pnpm management:gate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -77,7 +77,8 @@
     "qa:roles": "node scripts/run-authenticated-role-qa.mjs",
     "qa:technical": "node scripts/run-technical-acceptance.mjs",
     "ai:senior:verify": "node --import tsx --test tests/pedro-pablo-vitacura-senior-behavior.test.ts && node --test tests/pedro-pablo-vitacura-senior-expertise.test.mjs",
-    "security:secdef-contract": "node scripts/verify-security-definer-contract.mjs"
+    "security:secdef-contract": "node scripts/verify-security-definer-contract.mjs",
+    "platform:verify": "node --import tsx --test tests/platform/*.test.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
