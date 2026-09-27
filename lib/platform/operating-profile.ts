@@ -41,6 +41,7 @@ export type OperatingRoleProfile = {
 }
 
 export type ValuationWorkflowStatus = 'draft' | 'review' | 'approved' | 'issued'
+export type ConfirmedActionId = 'create_task'
 
 export type OperatingProfile = {
   schemaVersion: 1
@@ -50,6 +51,13 @@ export type OperatingProfile = {
   pillars: Array<{ id: OperatingPillarId; label: string }>
   features: Record<OperatingFeatureId, boolean>
   roles: Record<UserRole, OperatingRoleProfile>
+  actions: {
+    gatewayPolicyId: string
+    proposalPolicyId: string
+    allowedConfirmedActions: readonly ConfirmedActionId[]
+    taskSourcePrefix: string
+    attribution: string
+  }
   workflows: {
     valuation: {
       allowedTargets: readonly ValuationWorkflowStatus[]
@@ -140,6 +148,13 @@ const PROPERTY_PARTNERS_PROFILE: OperatingProfile = {
         { id: 'seller-document-review', title: 'Revisar documentación, identidad o vigencia de la propiedad que tenga mayor brecha.', domain: 'documents', href: '/dashboard/properties', condition: 'has-portfolio-attention', priority: 'medium' },
       ],
     },
+  },
+  actions: {
+    gatewayPolicyId: 'pedro-pablo-action-gateway-v1',
+    proposalPolicyId: 'pedro-pablo-proposal-contract-v4-reports-aware',
+    allowedConfirmedActions: ['create_task'],
+    taskSourcePrefix: 'pedro-pablo',
+    attribution: 'Pedro Pablo',
   },
   workflows: {
     valuation: {

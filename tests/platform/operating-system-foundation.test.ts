@@ -14,6 +14,10 @@ test('Property Partners remains the canonical operating profile with three pilla
   assert.deepEqual(profile.workflows.valuation.allowedTargets, ['draft', 'review', 'approved', 'issued'])
   assert.deepEqual(profile.workflows.valuation.mfaTargets, ['approved', 'issued'])
   assert.equal(profile.workflows.valuation.returnTaskDueDays, 3)
+  assert.equal(profile.actions.gatewayPolicyId, 'pedro-pablo-action-gateway-v1')
+  assert.equal(profile.actions.proposalPolicyId, 'pedro-pablo-proposal-contract-v4-reports-aware')
+  assert.deepEqual(profile.actions.allowedConfirmedActions, ['create_task'])
+  assert.equal(profile.actions.taskSourcePrefix, 'pedro-pablo')
 })
 
 test('Partner receives productive work even without formal tasks', () => {
@@ -68,4 +72,18 @@ test('Administration receives cleanup and source-governance work when data gaps 
 
 test('Unknown tenant profiles fail closed', () => {
   assert.throws(() => getOperatingProfile('unknown-client'), /Unknown operating profile/)
+})
+
+
+test('Action Gateway preserves human-confirmed task creation through the client profile', async () => {
+  const fs = await import('node:fs/promises')
+  const gateway = await fs.readFile('app/api/pedro-pablo/action-gateway/route.ts', 'utf8')
+  const decision = await fs.readFile('app/api/pedro-pablo/decision-support/route.ts', 'utf8')
+
+  assert.match(gateway, /getRuntimeOperatingProfile\(\)\.actions/)
+  assert.match(gateway, /allowedConfirmedActions\.includes\('create_task'\)/)
+  assert.match(gateway, /if \(!confirm\)/)
+  assert.match(gateway, /actionPolicy\.taskSourcePrefix/)
+  assert.match(decision, /operatingProfile\.actions\.allowedConfirmedActions/)
+  assert.match(decision, /operatingProfile\.actions\.proposalPolicyId/)
 })

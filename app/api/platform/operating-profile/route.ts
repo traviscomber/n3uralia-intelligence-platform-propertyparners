@@ -28,6 +28,11 @@ export async function GET() {
         officeName: scope.officeName,
       },
       assistant: profile.assistant,
+      actions: {
+        gatewayPolicyId: profile.actions.gatewayPolicyId,
+        proposalPolicyId: profile.actions.proposalPolicyId,
+        allowedConfirmedActions: profile.actions.allowedConfirmedActions,
+      },
       workflows: profile.workflows,
       proactiveActionCatalog: role.proactiveActions.map((action) => ({
         id: action.id,

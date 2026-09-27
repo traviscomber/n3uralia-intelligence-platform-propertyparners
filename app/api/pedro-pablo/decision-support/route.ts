@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profile'
+import { getRuntimeOperatingProfile } from '@/lib/platform/tenant-context'
 import { routePedroPabloPrompt } from '@/lib/pedro-pablo/agentic-router'
 import { PEDRO_PABLO_ALIGNMENT_CONTRACT, PEDRO_PABLO_VITACURA_EXPERTISE, detectOutOfScopeMarket, expertiseCardsForPrompt } from '@/lib/pedro-pablo/vitacura-expertise'
 
@@ -605,6 +606,7 @@ export async function POST(request: NextRequest) {
     ? ['¿Qué comparables sostienen mejor este valor?', '¿Qué debo revisar antes de enviarla a dirección?', '¿Hay alguna alerta importante en este expediente?']
     : suggestedQuestionsForPrompt(prompt, seniorExpertise, scopeConflict)
   const proposals = buildProposals(response)
+  const operatingProfile = getRuntimeOperatingProfile()
   const scope = await requireUserScope()
   const canCreateTask = hasCapability(scope.role, 'tasks.global.manage') || hasCapability(scope.role, 'tasks.office.manage')
   const directorSupport = scope.role === 'director' || scope.role === 'subdirector'
@@ -635,8 +637,8 @@ export async function POST(request: NextRequest) {
     proposals,
     suggestedQuestions,
     assistantProfile,
-    availableConfirmedActions: canCreateTask ? ['create_task'] : [],
-    proposalPolicy: 'pedro-pablo-proposal-contract-v4-reports-aware',
+    availableConfirmedActions: canCreateTask ? operatingProfile.actions.allowedConfirmedActions : [],
+    proposalPolicy: operatingProfile.actions.proposalPolicyId,
     executionPolicy: 'human-confirmation-required',
     executableWrites: 0,
     routing,
