@@ -18,6 +18,7 @@ test('Property Partners remains the canonical operating profile with three pilla
   assert.equal(profile.actions.proposalPolicyId, 'pedro-pablo-proposal-contract-v4-reports-aware')
   assert.deepEqual(profile.actions.allowedConfirmedActions, ['create_task'])
   assert.equal(profile.actions.taskSourcePrefix, 'pedro-pablo')
+  assert.equal(profile.policies.managementDecisionPolicyId, 'property-partners-management-2026-08-07.2')
   assert.equal(profile.sourceAdapters.length, 5)
   assert.deepEqual(profile.sourceAdapters.slice(0, 3).map((item) => item.id), [
     'portal-inmobiliario',
@@ -216,4 +217,17 @@ test('source adapter API is bounded, RLS-scoped and read-only', async () => {
   assert.doesNotMatch(source, /createAdminClient/)
   assert.doesNotMatch(source, /\.insert\(/)
   assert.doesNotMatch(source, /\.update\(/)
+})
+
+
+test('management decision evaluator resolves rules from the active client policy', async () => {
+  const fs = await import('node:fs/promises')
+  const evaluator = await fs.readFile('lib/management-decision-evaluator.ts', 'utf8')
+  const registry = await fs.readFile('lib/platform/client-policies.ts', 'utf8')
+
+  assert.match(evaluator, /getRuntimeOperatingProfile\(\)/)
+  assert.match(evaluator, /getManagementDecisionPolicy\(operatingProfile\.policies\.managementDecisionPolicyId\)/)
+  assert.match(evaluator, /for \(const rule of args\.policy\.rules\)/)
+  assert.match(registry, /property-partners-management-2026-08-07\.2/)
+  assert.match(registry, /MANAGEMENT_DECISION_POLICY/)
 })
