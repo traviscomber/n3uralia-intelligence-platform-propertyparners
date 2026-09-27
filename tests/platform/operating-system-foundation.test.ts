@@ -87,3 +87,47 @@ test('Action Gateway preserves human-confirmed task creation through the client 
   assert.match(decision, /operatingProfile\.actions\.allowedConfirmedActions/)
   assert.match(decision, /operatingProfile\.actions\.proposalPolicyId/)
 })
+
+
+test('activity normalization produces one stable cross-domain contract', async () => {
+  const { normalizeTaskActivity, normalizeValuationActivity, sortPlatformActivity } = await import('../../lib/platform/activity')
+
+  const task = normalizeTaskActivity({
+    id: 'e1',
+    task_id: 't1',
+    actor_id: 'u1',
+    event_type: 'status_changed',
+    from_status: 'open',
+    to_status: 'in_progress',
+    changes: {},
+    created_at: '2026-09-26T12:00:00Z',
+  }, 'Llamar cliente', 'Partner')
+
+  const valuation = normalizeValuationActivity({
+    id: 'e2',
+    valuation_case_id: 'v1',
+    actor_id: 'u2',
+    action: 'submitted_for_review',
+    from_status: 'draft',
+    to_status: 'review',
+    reason: null,
+    metadata: {},
+    created_at: '2026-09-26T13:00:00Z',
+  }, 'Av. Vitacura 123', 'Directora')
+
+  assert.equal(task.domain, 'management')
+  assert.equal(valuation.domain, 'valuation')
+  assert.equal(sortPlatformActivity([task, valuation], 2)[0].id, 'valuation:e2')
+  assert.match(valuation.href, /\/dashboard\/valuations\/v1/)
+})
+
+test('activity API remains RLS-scoped and bounded', async () => {
+  const fs = await import('node:fs/promises')
+  const source = await fs.readFile('app/api/platform/activity/route.ts', 'utf8')
+  assert.match(source, /requireUserScope\(\)/)
+  assert.match(source, /\.limit\(limit\)/)
+  assert.match(source, /Math\.min\(50/)
+  assert.match(source, /management_task_events/)
+  assert.match(source, /valuation_decision_log/)
+  assert.doesNotMatch(source, /createAdminClient/)
+})

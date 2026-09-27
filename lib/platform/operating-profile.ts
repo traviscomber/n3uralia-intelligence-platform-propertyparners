@@ -12,6 +12,7 @@ export type OperatingFeatureId =
   | 'action-gateway'
   | 'user-administration'
   | 'source-governance'
+  | 'activity-feed'
 
 export type NextActionCondition =
   | 'always'
@@ -96,6 +97,7 @@ const PROPERTY_PARTNERS_PROFILE: OperatingProfile = {
     'action-gateway': true,
     'user-administration': true,
     'source-governance': true,
+    'activity-feed': true,
   },
   roles: {
     ceo: {
