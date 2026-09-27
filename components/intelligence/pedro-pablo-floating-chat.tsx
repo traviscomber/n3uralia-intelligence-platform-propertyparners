@@ -38,31 +38,24 @@ type ChatMessage = {
 
 const starterSections = [
   {
-    label: 'Mercado Vitacura',
+    label: 'Control de gestión',
     prompts: [
-      '¿Qué está cambiando en el mercado de Vitacura?',
-      '¿Qué microzona merece revisión?',
+      '¿Qué está vencido o urgente?',
+      '¿Dónde hay una brecha que requiera intervención?',
     ],
   },
   {
-    label: 'Valorizaciones',
+    label: 'Inteligencia de negocios',
+    prompts: [
+      '¿Qué cambió hoy en el mercado de Vitacura?',
+      '¿Qué propiedad o señal merece revisión?',
+    ],
+  },
+  {
+    label: 'Valorizador',
     prompts: [
       '¿Qué valorizaciones requieren atención?',
-      '¿Qué comparables sostienen mejor una valorización?',
-    ],
-  },
-  {
-    label: 'Propiedades y antecedentes',
-    prompts: [
-      '¿Qué propiedades tienen brechas de evidencia?',
-      '¿Qué antecedente falta verificar?',
-    ],
-  },
-  {
-    label: 'Gestión y reportes',
-    prompts: [
-      '¿Qué requiere atención hoy?',
-      '¿Qué entrega o reporte requiere revisión?',
+      '¿Qué expediente debería revisar primero?',
     ],
   },
 ] as const
@@ -70,6 +63,14 @@ const starterSections = [
 export function PedroPabloFloatingChat({ role, team }: { role: string | null; team: string | null }) {
   const pathname = usePathname()
   const isDirectorSupport = role === 'director' || role === 'subdirector'
+  const isPartnerSupport = role === 'seller'
+  const dailyPrompt = role === 'ceo'
+    ? '¿Qué requiere mi atención hoy?'
+    : isDirectorSupport
+      ? '¿Qué requiere atención hoy en mi oficina?'
+      : isPartnerSupport
+        ? '¿Qué tareas tengo hoy?'
+        : '¿Qué requiere atención hoy?'
   const [open, setOpen] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -115,24 +116,43 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
     if (isDirectorSupport) {
       return [
         {
+          label: 'Trabajo de hoy',
+          prompts: [
+            '¿Qué tareas o devoluciones están pendientes?',
+            '¿Qué está vencido o urgente en mi oficina?',
+          ],
+        },
+        {
           label: 'Valorizaciones de mi oficina',
           prompts: [
             '¿Qué valorizaciones requieren mi atención?',
             '¿Qué expedientes tienen evidencia débil o alertas?',
           ],
         },
+      ] as const
+    }
+
+    if (isPartnerSupport) {
+      return [
         {
-          label: 'Partners y seguimiento',
+          label: 'Trabajo de hoy',
           prompts: [
-            '¿Qué tareas o devoluciones están pendientes?',
-            '¿Qué requiere atención hoy en mi oficina?',
+            '¿Qué tareas tengo pendientes?',
+            '¿Qué devolución o vencimiento debería resolver primero?',
+          ],
+        },
+        {
+          label: 'Mi trabajo',
+          prompts: [
+            '¿Qué valorización debería avanzar ahora?',
+            '¿Qué propiedad de mi cartera requiere atención?',
           ],
         },
       ] as const
     }
 
     return starterSections
-  }, [valuationCaseId, isDirectorSupport])
+  }, [valuationCaseId, isDirectorSupport, isPartnerSupport])
 
   useEffect(() => {
     if (!open) return
@@ -285,7 +305,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-[var(--n3-text-light)]">
                     <Sparkles size={15} className="text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                    ¿Qué quieres revisar?
+                    Empecemos por hoy
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
                     {valuationCaseId
@@ -294,9 +314,19 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                         : 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.')
                       : (isDirectorSupport
                         ? 'Puedo ayudarte a priorizar lo pendiente de tu oficina, revisar valorizaciones y preparar devoluciones con razones objetivas.'
-                        : 'Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.')}
+                        : 'Primero puedo ordenar lo que requiere tu atención hoy. Después profundizamos sólo donde haga falta.')}
                   </p>
                 </div>
+                {!valuationCaseId ? (
+                  <button
+                    type="button"
+                    onClick={() => void ask(dailyPrompt)}
+                    className="flex min-h-12 w-full items-center justify-between rounded-lg border border-[var(--primary)] bg-[var(--n3-deep)] px-4 text-left text-sm font-medium text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                  >
+                    <span>Revisar mi día</span>
+                    <span className="text-xs font-normal text-[var(--n3-text-muted)]">Tareas primero</span>
+                  </button>
+                ) : null}
                 <div className="grid gap-2 sm:grid-cols-2">
                   {contextualStarterSections.map((section) => (
                     <div key={section.label} className="rounded-lg border border-[var(--n3-line)] p-3">
@@ -388,7 +418,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 onKeyDown={onComposerKeyDown}
                 rows={2}
                 maxLength={800}
-                placeholder="Pregunta sobre tu oficina o un expediente…"
+                placeholder={valuationCaseId ? 'Pregunta sobre este expediente…' : 'Pregunta sobre tus tareas o trabajo de hoy…'}
                 className="min-h-[54px] max-h-36 flex-1 resize-none rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 py-2 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
               />
               <button
