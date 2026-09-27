@@ -131,3 +131,45 @@ test('activity API remains RLS-scoped and bounded', async () => {
   assert.match(source, /valuation_decision_log/)
   assert.doesNotMatch(source, /createAdminClient/)
 })
+
+
+test('attention inbox keeps formal work ahead of proactive work', async () => {
+  const { composeAttentionInbox, proactiveAttentionItems, taskAttentionItems } = await import('../../lib/platform/attention')
+
+  const formal = taskAttentionItems([{
+    id: 't1',
+    title: 'Llamar propietario',
+    priority: 'medium',
+    status: 'open',
+    due_date: '2026-09-25',
+  }], '2026-09-26')
+
+  const proactive = proactiveAttentionItems([{
+    id: 'seller-portfolio-contact',
+    title: 'Ordenar cartera',
+    domain: 'contacts',
+    href: '/dashboard/properties',
+    priority: 'medium',
+    mode: 'proactive',
+    source: 'operating-profile',
+  }])
+
+  const inbox = composeAttentionInbox(formal, proactive, 5)
+  assert.equal(inbox.mode, 'attention')
+  assert.equal(inbox.items[0].kind, 'task')
+  assert.equal(inbox.items[0].priority, 'urgent')
+  assert.equal(inbox.items[1].kind, 'proactive')
+})
+
+test('attention API is read-only, RLS-scoped and bounded', async () => {
+  const fs = await import('node:fs/promises')
+  const source = await fs.readFile('app/api/platform/attention/route.ts', 'utf8')
+  assert.match(source, /requireUserScope\(\)/)
+  assert.match(source, /management_tasks/)
+  assert.match(source, /valuation_cases/)
+  assert.match(source, /property_assignments/)
+  assert.match(source, /writesPerformed:\s*0/)
+  assert.doesNotMatch(source, /\.insert\(/)
+  assert.doesNotMatch(source, /\.update\(/)
+  assert.doesNotMatch(source, /createAdminClient/)
+})

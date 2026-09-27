@@ -13,6 +13,7 @@ export type OperatingFeatureId =
   | 'user-administration'
   | 'source-governance'
   | 'activity-feed'
+  | 'attention-inbox'
 
 export type NextActionCondition =
   | 'always'
@@ -98,6 +99,7 @@ const PROPERTY_PARTNERS_PROFILE: OperatingProfile = {
     'user-administration': true,
     'source-governance': true,
     'activity-feed': true,
+    'attention-inbox': true,
   },
   roles: {
     ceo: {
