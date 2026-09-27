@@ -285,35 +285,13 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
   const evidence: Evidence[] = []
   const actions: Array<{ label: string; href: string }> = []
 
-  const market = context.market
-  if (market.latestIngestionFullSnapshot && market.activeInventory !== null) {
-    const newCount = market.latestIngestionNew ?? 0
-    const removed = market.latestIngestionRemoved ?? 0
-    if (newCount > 0 || removed > 0) {
-      lines.push(`${lines.length + 1}. Mercado: ${newCount.toLocaleString('es-CL')} publicaciones nuevas y ${removed.toLocaleString('es-CL')} retiradas; inventario live ${market.activeInventory.toLocaleString('es-CL')}.`)
-      evidence.push({
-        label: 'Cambio diario de mercado',
-        source: 'Portal Inmobiliario · snapshot completo reconciliado',
-        cutoff: market.latestObservedAt,
-        domain: 'market',
-      })
-      actions.push({ label: 'Abrir Mercado', href: '/dashboard/market' })
-    }
-  }
-
-  const alerts = summary.alerts.slice(0, Math.max(0, 3 - lines.length))
-  for (const alert of alerts) {
-    lines.push(`${lines.length + 1}. ${alert.entityName}: ${alert.title}. ${alert.detail}`)
-  }
-  if (alerts.length) {
-    evidence.push({ label: 'Alertas operativas', source: 'Resumen de gestión autorizado', cutoff: summary.generatedAt, domain: 'management' })
-    actions.push({ label: 'Abrir control de gestión', href: '/dashboard/control/operations' })
-  }
-
+  // Daily work comes first: overdue, urgent and active tasks are the first
+  // thing the assistant should help the user resolve.
   const activeTasks = tasks
     .filter(isActiveTask)
     .sort((a, b) => taskPriorityRank(a, today) - taskPriorityRank(b, today))
-    .slice(0, Math.max(0, 5 - lines.length))
+    .slice(0, 3)
+
   for (const task of activeTasks) {
     const due = task.due_date ? ` Vence ${task.due_date}${isOverdueTask(task, today) ? ' y está atrasada' : ''}.` : ''
     lines.push(`${lines.length + 1}. Tarea: ${task.title}.${due}`)
@@ -323,6 +301,17 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     actions.push({ label: 'Revisar tareas', href: '/dashboard/control/operations' })
   }
 
+  // Then surface consequential alerts from management.
+  const alerts = summary.alerts.slice(0, Math.max(0, 4 - lines.length))
+  for (const alert of alerts) {
+    lines.push(`${lines.length + 1}. ${alert.entityName}: ${alert.title}. ${alert.detail}`)
+  }
+  if (alerts.length) {
+    evidence.push({ label: 'Alertas operativas', source: 'Resumen de gestión autorizado', cutoff: summary.generatedAt, domain: 'management' })
+    actions.push({ label: 'Abrir control de gestión', href: '/dashboard/control/operations' })
+  }
+
+  // Valuations and property evidence are next because they can block today's work.
   const reviewCases = valuations
     .filter((item) => item.status === 'review')
     .sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')))
@@ -344,6 +333,7 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     actions.push({ label: 'Revisar cartera', href: '/dashboard/properties' })
   }
 
+  // Management gaps complete the daily list before general market movement.
   if (lines.length < 5) {
     const risks = topRiskMetrics(summary.entities).slice(0, 5 - lines.length)
     for (const { entity, metric } of risks) {
@@ -355,25 +345,41 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     }
   }
 
+  // Market is relevant context, but it should not displace today's work.
+  const market = context.market
+  if (lines.length < 5 && market.latestIngestionFullSnapshot && market.activeInventory !== null) {
+    const newCount = market.latestIngestionNew ?? 0
+    const removed = market.latestIngestionRemoved ?? 0
+    if (newCount > 0 || removed > 0) {
+      lines.push(`${lines.length + 1}. Mercado: ${newCount.toLocaleString('es-CL')} publicaciones nuevas y ${removed.toLocaleString('es-CL')} retiradas; inventario live ${market.activeInventory.toLocaleString('es-CL')}.`)
+      evidence.push({
+        label: 'Cambio diario de mercado',
+        source: 'Portal Inmobiliario · snapshot completo reconciliado',
+        cutoff: market.latestObservedAt,
+        domain: 'market',
+      })
+      actions.push({ label: 'Abrir Mercado', href: '/dashboard/market' })
+    }
+  }
+
   if (!lines.length) {
     return {
       ...baseResponse(context),
-      title: 'Sin prioridades evaluables',
-      answer: 'No hay alertas, tareas activas, valorizaciones en revisión, propiedades con atención pendiente ni métricas con cumplimiento evaluable dentro de tu alcance actual. Pedro Pablo no completará vacíos con supuestos.',
+      title: 'Todo al día',
+      answer: 'No hay tareas activas, alertas, valorizaciones en revisión, propiedades pendientes ni brechas evaluables dentro de tu alcance actual.',
       evidence: [{ label: 'Cobertura actual', source: summary.dataProvenance, cutoff: summary.generatedAt, domain: 'management' }],
-      actions: [{ label: 'Revisar datos disponibles', href: '/dashboard/control/operations' }],
+      actions: [{ label: 'Abrir control de gestión', href: '/dashboard/control/operations' }],
     }
   }
 
   return {
     ...baseResponse(context),
-    title: 'Prioridades operativas',
+    title: 'Qué requiere atención hoy',
     answer: lines.join('\n'),
     evidence: evidence.slice(0, 8),
     actions: Array.from(new Map(actions.map((item) => [item.href, item])).values()),
   }
 }
-
 function answerTasks(context: ContextPack): PedroPabloResponse {
   const today = new Date().toISOString().slice(0, 10)
   const tasks = context.tasks
