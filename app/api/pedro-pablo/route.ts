@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOperationalMarketSnapshot, type OperationalMarketSnapshot } from '@/lib/market-operational'
+import { buildNextBestActions } from '@/lib/platform/next-best-action'
+import { getRuntimeOperatingProfile } from '@/lib/platform/tenant-context'
 
 type Metric = {
   code: string
@@ -279,31 +281,18 @@ function baseResponse(context: ContextPack) {
 }
 
 function proactiveWork(context: ContextPack) {
-  const role = context.summary.role
-  const suggestions: Array<{ text: string; href: string }> = []
-  const add = (text: string, href: string) => {
-    if (!suggestions.some((item) => item.text === text)) suggestions.push({ text, href })
-  }
+  const profile = getRuntimeOperatingProfile()
+  const actions = buildNextBestActions(profile, context.summary.role, {
+    portfolioTotal: context.properties?.totalAssignments ?? 0,
+    portfolioAttentionCount: context.properties?.attention.length ?? 0,
+    pendingIdentityCount: context.properties?.pendingIdentity ?? 0,
+    staleAssignmentsCount: context.properties?.staleAssignments ?? 0,
+    valuationReviewCount: context.coverage.valuations.review,
+    valuationDraftCount: context.coverage.valuations.drafts,
+    marketAvailable: Boolean(context.market.latestIngestionFullSnapshot && context.market.activeInventory !== null),
+  })
 
-  if (role === 'seller') {
-    add('Avanzar una valorización y revisar comparables o antecedentes antes de enviarla.', '/dashboard/valuations')
-    add('Ordenar tu cartera y definir los próximos contactos o seguimientos comerciales.', '/dashboard/properties')
-    if ((context.properties?.attention.length ?? 0) > 0) add('Revisar documentación, identidad o vigencia de la propiedad con mayor brecha.', '/dashboard/properties')
-  } else if (role === 'director' || role === 'subdirector') {
-    add('Revisar la valorización más prioritaria de la oficina.', '/dashboard/valuations')
-    add('Revisar cartera y seguimiento de Partners para definir a quién apoyar hoy.', '/dashboard/properties/admin')
-    if ((context.properties?.pendingIdentity ?? 0) > 0) add('Pedir a administración resolver brechas de documentación o identidad pendientes.', '/dashboard/properties')
-  } else if (role === 'ceo') {
-    add('Revisar la oficina con mayor brecha y definir una intervención concreta con su directora.', '/dashboard/control/operations')
-    add('Revisar valorizaciones pendientes de decisión o aprobación.', '/dashboard/valuations')
-    add('Revisar cartera y mercado para decidir dónde concentrar seguimiento comercial.', '/dashboard/market')
-  } else {
-    add('Resolver propiedades con identidad, vigencia o documentación pendiente.', '/dashboard/properties')
-    add('Ordenar cartera y asignaciones para el equipo.', '/dashboard/properties/admin')
-    add('Revisar datos y fuentes que necesiten actualización o validación.', '/dashboard/market/fuentes')
-  }
-
-  return suggestions.slice(0, 3)
+  return actions.map((action) => ({ text: action.title, href: action.href }))
 }
 
 function answerPriorities(context: ContextPack): PedroPabloResponse {
