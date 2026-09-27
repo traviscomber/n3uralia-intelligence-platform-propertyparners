@@ -45,6 +45,11 @@ export default function UserAdministrationPanel() {
 
   useEffect(() => { void load() }, [])
 
+  const teams = useMemo(
+    () => [...new Set(profiles.map((profile) => profile.team).filter((value): value is string => Boolean(value)))].sort((a, b) => a.localeCompare(b, 'es')),
+    [profiles],
+  )
+
   const visible = useMemo(() => {
     const q = search.trim().toLocaleLowerCase('es')
     if (!q) return profiles
@@ -146,6 +151,7 @@ export default function UserAdministrationPanel() {
                 <input
                   key={`${profile.id}-${profile.team ?? ''}`}
                   defaultValue={profile.team || ''}
+                  list="known-user-teams"
                   disabled={saving}
                   onBlur={(event) => {
                     const value = event.currentTarget.value.trim()
@@ -159,8 +165,12 @@ export default function UserAdministrationPanel() {
         }) : <p className="py-6 text-sm text-[var(--n3-text-muted)]">No hay usuarios para este filtro.</p>}
       </div>
 
+      <datalist id="known-user-teams">
+        {teams.map((team) => <option key={team} value={team} />)}
+      </datalist>
+
       <p className="text-xs text-[var(--n3-text-muted)]">
-        El rol CEO está protegido y no puede modificarse desde este panel.
+        El rol CEO está protegido. Las oficinas existentes aparecen como sugerencias para mantener la nomenclatura consistente.
       </p>
     </div>
   )
