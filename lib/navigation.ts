@@ -16,13 +16,28 @@ export type NavigationSection = {
 
 export const CEO_NAVIGATION: NavigationSection[] = [
   {
-    label: 'Principal',
+    label: 'Resumen',
     items: [
       { label: 'Hoy', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
-      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
+    ],
+  },
+  {
+    label: 'Control de gestión',
+    items: [
       { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
+    ],
+  },
+  {
+    label: 'Inteligencia de negocios',
+    items: [
+      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+    ],
+  },
+  {
+    label: 'Valorizador de propiedades',
+    items: [
+      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
     ],
   },
 ]
