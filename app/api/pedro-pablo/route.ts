@@ -278,6 +278,34 @@ function baseResponse(context: ContextPack) {
   }
 }
 
+function proactiveWork(context: ContextPack) {
+  const role = context.summary.role
+  const suggestions: Array<{ text: string; href: string }> = []
+  const add = (text: string, href: string) => {
+    if (!suggestions.some((item) => item.text === text)) suggestions.push({ text, href })
+  }
+
+  if (role === 'seller') {
+    add('Avanzar una valorización y revisar comparables o antecedentes antes de enviarla.', '/dashboard/valuations')
+    add('Ordenar tu cartera y definir los próximos contactos o seguimientos comerciales.', '/dashboard/properties')
+    if ((context.properties?.attention.length ?? 0) > 0) add('Revisar documentación, identidad o vigencia de la propiedad con mayor brecha.', '/dashboard/properties')
+  } else if (role === 'director' || role === 'subdirector') {
+    add('Revisar la valorización más prioritaria de la oficina.', '/dashboard/valuations')
+    add('Revisar cartera y seguimiento de Partners para definir a quién apoyar hoy.', '/dashboard/properties/admin')
+    if ((context.properties?.pendingIdentity ?? 0) > 0) add('Pedir a administración resolver brechas de documentación o identidad pendientes.', '/dashboard/properties')
+  } else if (role === 'ceo') {
+    add('Revisar la oficina con mayor brecha y definir una intervención concreta con su directora.', '/dashboard/control/operations')
+    add('Revisar valorizaciones pendientes de decisión o aprobación.', '/dashboard/valuations')
+    add('Revisar cartera y mercado para decidir dónde concentrar seguimiento comercial.', '/dashboard/market')
+  } else {
+    add('Resolver propiedades con identidad, vigencia o documentación pendiente.', '/dashboard/properties')
+    add('Ordenar cartera y asignaciones para el equipo.', '/dashboard/properties/admin')
+    add('Revisar datos y fuentes que necesiten actualización o validación.', '/dashboard/market/fuentes')
+  }
+
+  return suggestions.slice(0, 3)
+}
+
 function answerPriorities(context: ContextPack): PedroPabloResponse {
   const { summary, tasks, valuations, properties } = context
   const today = new Date().toISOString().slice(0, 10)
