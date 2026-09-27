@@ -5,7 +5,7 @@ import vm from 'node:vm'
 const source = readFileSync(new URL('../lib/access-control.ts', import.meta.url), 'utf8')
 
 const expected = {
-  ceo: ['dashboard.global.read', 'valuations.global.approve', 'reports.global.read'],
+  ceo: ['dashboard.global.read', 'valuations.global.approve', 'reports.global.read', 'users.manage', 'settings.manage'],
   admin: ['users.manage', 'settings.manage', 'market.manage_sources'],
   director: ['dashboard.office.read', 'properties.office.assign', 'valuations.office.review'],
   subdirector: ['dashboard.office.read', 'management.office.manage', 'reports.office.read'],
