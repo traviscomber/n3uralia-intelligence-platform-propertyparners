@@ -4,13 +4,14 @@ import { requireExecutiveAccess } from '@/lib/api-access'
 
 export const dynamic = 'force-dynamic'
 
-const ALLOWED_ROLES = new Set(['ceo', 'director', 'seller', 'admin'])
+const ALLOWED_ROLES = new Set(['ceo', 'director', 'subdirector', 'seller', 'admin'])
+const EDITABLE_ROLES = new Set(['director', 'subdirector', 'seller', 'admin'])
 const MAX_FILTER_LENGTH = 80
 
 type ProfileRow = {
   id: string
   full_name: string | null
-  role: 'ceo' | 'director' | 'seller' | 'admin' | string
+  role: 'ceo' | 'director' | 'subdirector' | 'seller' | 'admin' | string
   team: string | null
   avatar_url: string | null
   created_at: string
@@ -91,5 +92,64 @@ export async function GET(request: NextRequest) {
       { error: 'No fue posible cargar el directorio de perfiles.' },
       { status: 500 },
     )
+  }
+}
+
+
+export async function PATCH(request: NextRequest) {
+  const access = await requireExecutiveAccess()
+  if (!access.allowed) {
+    return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+  }
+
+  try {
+    const body = await request.json() as Record<string, unknown>
+    const id = typeof body.id === 'string' ? body.id.trim() : ''
+    const fullName = typeof body.full_name === 'string' ? body.full_name.trim().slice(0, 120) : null
+    const team = typeof body.team === 'string' ? body.team.trim().slice(0, 120) : null
+    const role = typeof body.role === 'string' ? body.role.trim().toLowerCase() : null
+
+    if (!id) return NextResponse.json({ error: 'Usuario requerido.' }, { status: 400 })
+    if (role && !EDITABLE_ROLES.has(role)) {
+      return NextResponse.json({ error: 'Tipo de usuario no permitido.' }, { status: 400 })
+    }
+
+    const supabase = getServiceClient()
+    const { data: before, error: beforeError } = await supabase
+      .from('profiles')
+      .select('id, full_name, role, team, avatar_url, created_at')
+      .eq('id', id)
+      .single()
+
+    if (beforeError || !before) {
+      return NextResponse.json({ error: 'Usuario no encontrado.' }, { status: 404 })
+    }
+
+    if (before.role === 'ceo' || id === access.userId) {
+      if (role && role !== before.role) {
+        return NextResponse.json({ error: 'El rol CEO no puede modificarse desde este panel.' }, { status: 409 })
+      }
+    }
+
+    const updates: Record<string, string | null> = {}
+    if (fullName !== null && fullName !== before.full_name) updates.full_name = fullName || null
+    if (team !== null && team !== before.team) updates.team = team || null
+    if (role && role !== before.role) updates.role = role
+
+    if (!Object.keys(updates).length) {
+      return NextResponse.json({ profile: before })
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', id)
+      .select('id, full_name, role, team, avatar_url, created_at')
+      .single()
+
+    if (error) throw new Error('PROFILE_UPDATE_FAILED')
+    return NextResponse.json({ profile: data })
+  } catch {
+    return NextResponse.json({ error: 'No fue posible actualizar el usuario.' }, { status: 500 })
   }
 }
