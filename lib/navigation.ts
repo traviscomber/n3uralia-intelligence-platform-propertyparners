@@ -18,7 +18,7 @@ export const CEO_NAVIGATION: NavigationSection[] = [
   {
     label: 'Principal',
     items: [
-      { label: 'Hoy', href: '/dashboard/ceo', exact: true, anyCapabilities: ['dashboard.global.read'] },
+      { label: 'Hoy', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
       { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
