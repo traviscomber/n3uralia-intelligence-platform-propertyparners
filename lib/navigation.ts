@@ -24,20 +24,20 @@ export const CEO_NAVIGATION: NavigationSection[] = [
   {
     label: 'Control de gestión',
     items: [
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
+      { label: 'Control de gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
     ],
   },
   {
     label: 'Inteligencia de negocios',
     items: [
-      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Inteligencia de negocios', href: '/dashboard/market', anyCapabilities: ['market.read'] },
     ],
   },
   {
     label: 'Valorizador de propiedades',
     items: [
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
+      { label: 'Valorizador', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
     ],
   },
 ]
