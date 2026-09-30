@@ -19,9 +19,9 @@ function Card({ item }: { item: PartnerItem }) {
   return <article className="break-inside-avoid border border-[var(--n3-line)] bg-[var(--n3-card)] p-5 print:border-gray-300 print:bg-white"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">{item.branch}</p><h2 className="mt-1 text-xl font-semibold text-[var(--n3-text-light)]">{item.name}</h2></div><div className="text-right"><p className="text-2xl font-semibold text-[var(--n3-text-light)]">{n(item.salesSummary.currentSalesCount)}</p><p className="text-[10px] text-[var(--n3-text-muted)]">cierres junio</p></div></div><div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2"><div className="border border-[var(--n3-line)] p-3 print:border-gray-300"><small className="text-[var(--n3-text-muted)]">UF junio</small><p className="mt-1 font-semibold">{n(item.salesSummary.currentSalesUf)} UF</p></div><div className="border border-[var(--n3-line)] p-3 print:border-gray-300"><small className="text-[var(--n3-text-muted)]">UF acumulada</small><p className="mt-1 font-semibold">{n(item.salesSummary.cumulativeSalesUf)} UF</p></div></div><Scores item={item} /></article>
 }
 
-export default async function AudiencePage({ params, searchParams }: { params: Promise<{ audience: string }>; searchParams: Promise<{ branch?: string }> }) {
+export default async function AudiencePage({ params, searchParams }: { params: Promise<{ audience: string }>; searchParams: Promise<{ branch?: string; partner?: string }> }) {
   const { audience } = await params
-  const { branch } = await searchParams
+  const { branch, partner } = await searchParams
   const data = getAudienceData(audience)
   if (!data) notFound()
 
@@ -42,20 +42,25 @@ export default async function AudiencePage({ params, searchParams }: { params: P
   if (isDirector && audience === 'ceo') redirect('/auth/error')
   if (!isExecutive && !isDirector && !isSeller) redirect('/auth/error')
 
-  const title = data.kind === 'ceo' ? 'Reporte CEO' : data.kind === 'director-cuenta' ? 'Reportes Director de Cuenta' : isSeller ? 'Mi reporte de desempeño' : 'Reportes Ejecutivo / Partner'
+  const title = data.kind === 'ceo' ? 'PL Real Estate' : data.kind === 'director-cuenta' ? (branch || profile?.team || 'Reporte de oficina') : isSeller ? 'Mi reporte de desempeño' : (partner || 'Reporte Partner')
 
   let items: PartnerItem[] | typeof data.branches = []
   if (data.kind === 'ceo') {
     items = data.branches
   } else if (data.kind === 'director-cuenta') {
-    items = isDirector && profile?.team ? data.branches.filter((item) => normalize(item.name) === normalize(profile.team)) : data.branches
+    const allowedBranch = isDirector && profile?.team ? profile.team : branch
+    items = allowedBranch ? data.branches.filter((item) => normalize(item.name) === normalize(allowedBranch)) : data.branches
   } else if (isSeller) {
     const canonicalName = canonicalEntity?.name || profile?.full_name
     items = data.partners.filter((item) => normalize(item.name) === normalize(canonicalName))
   } else if (isDirector && profile?.team) {
     items = data.partners.filter((item) => normalize(item.branch) === normalize(profile.team))
   } else {
-    items = data.partners.filter((item) => !branch || item.branch === branch)
+    items = data.partners.filter((item) => {
+      if (partner) return normalize(item.name) === normalize(partner)
+      if (branch) return normalize(item.branch) === normalize(branch)
+      return true
+    })
   }
 
   const backHref = isSeller ? '/dashboard/partner' : '/dashboard/reportes/autonomos'
