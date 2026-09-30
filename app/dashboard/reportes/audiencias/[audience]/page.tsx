@@ -19,9 +19,9 @@ function Card({ item }: { item: PartnerItem }) {
   return <article className="break-inside-avoid border border-[var(--n3-line)] bg-[var(--n3-card)] p-5 print:border-gray-300 print:bg-white"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">{item.branch}</p><h2 className="mt-1 text-xl font-semibold text-[var(--n3-text-light)]">{item.name}</h2></div><div className="text-right"><p className="text-2xl font-semibold text-[var(--n3-text-light)]">{n(item.salesSummary.currentSalesCount)}</p><p className="text-[10px] text-[var(--n3-text-muted)]">cierres junio</p></div></div><div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2"><div className="border border-[var(--n3-line)] p-3 print:border-gray-300"><small className="text-[var(--n3-text-muted)]">UF junio</small><p className="mt-1 font-semibold">{n(item.salesSummary.currentSalesUf)} UF</p></div><div className="border border-[var(--n3-line)] p-3 print:border-gray-300"><small className="text-[var(--n3-text-muted)]">UF acumulada</small><p className="mt-1 font-semibold">{n(item.salesSummary.cumulativeSalesUf)} UF</p></div></div><Scores item={item} /></article>
 }
 
-export default async function AudiencePage({ params, searchParams }: { params: Promise<{ audience: string }>; searchParams: Promise<{ branch?: string }> }) {
+export default async function AudiencePage({ params, searchParams }: { params: Promise<{ audience: string }>; searchParams: Promise<{ branch?: string; partner?: string }> }) {
   const { audience } = await params
-  const { branch } = await searchParams
+  const { branch, partner } = await searchParams
   const data = getAudienceData(audience)
   if (!data) notFound()
 
@@ -42,20 +42,32 @@ export default async function AudiencePage({ params, searchParams }: { params: P
   if (isDirector && audience === 'ceo') redirect('/auth/error')
   if (!isExecutive && !isDirector && !isSeller) redirect('/auth/error')
 
-  const title = data.kind === 'ceo' ? 'Reporte CEO' : data.kind === 'director-cuenta' ? 'Reportes Director de Cuenta' : isSeller ? 'Mi reporte de desempeño' : 'Reportes Ejecutivo / Partner'
+  const title = data.kind === 'ceo' ? 'PL Real Estate' : data.kind === 'director-cuenta' ? (branch || profile?.team || 'Reporte de oficina') : isSeller ? 'Mi reporte de desempeño' : (partner || 'Reporte Partner')
 
   let items: PartnerItem[] | typeof data.branches = []
+  let officeSummary: PartnerItem | null = null
   if (data.kind === 'ceo') {
     items = data.branches
   } else if (data.kind === 'director-cuenta') {
-    items = isDirector && profile?.team ? data.branches.filter((item) => normalize(item.name) === normalize(profile.team)) : data.branches
+    const allowedBranch = isDirector && profile?.team ? profile.team : branch
+    const selectedOffice = allowedBranch
+      ? data.branches.find((item) => normalize(item.name) === normalize(allowedBranch))
+      : null
+    officeSummary = (selectedOffice ?? null) as PartnerItem | null
+    items = allowedBranch
+      ? data.partners.filter((item) => normalize(item.branch) === normalize(allowedBranch))
+      : data.partners
   } else if (isSeller) {
     const canonicalName = canonicalEntity?.name || profile?.full_name
     items = data.partners.filter((item) => normalize(item.name) === normalize(canonicalName))
   } else if (isDirector && profile?.team) {
     items = data.partners.filter((item) => normalize(item.branch) === normalize(profile.team))
   } else {
-    items = data.partners.filter((item) => !branch || item.branch === branch)
+    items = data.partners.filter((item) => {
+      if (partner) return normalize(item.name) === normalize(partner)
+      if (branch) return normalize(item.branch) === normalize(branch)
+      return true
+    })
   }
 
   const backHref = isSeller ? '/dashboard/partner' : '/dashboard/reportes/autonomos'
@@ -63,6 +75,8 @@ export default async function AudiencePage({ params, searchParams }: { params: P
   const showBranchNavigation = data.kind === 'ejecutivo' && !isSeller && !isDirector
 
   return <div className="mx-auto max-w-7xl space-y-6 pb-16 print:fixed print:inset-0 print:z-[100] print:m-0 print:max-w-none print:overflow-visible print:bg-white print:p-8 print:text-black print:[--n3-card:#ffffff] print:[--n3-line:#d1d5db] print:[--n3-teal:#b42318] print:[--n3-text-light:#111827] print:[--n3-text-muted:#4b5563]"><header className="border-b border-[var(--n3-line)] pb-6"><div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><Link href={backHref} className="text-xs font-semibold text-[var(--n3-teal)]">← {backLabel}</Link><PrintReportButton /></div><p className="hidden text-xs font-semibold uppercase tracking-[0.18em] print:block">Property Partners Vitacura</p><h1 className="mt-4 text-3xl font-semibold text-[var(--n3-text-light)] sm:text-4xl">{title}</h1><div className="mt-3 grid gap-1 text-sm text-[var(--n3-text-muted)] sm:grid-cols-2"><p>Período: enero–junio 2026</p><p className="sm:text-right">Corte comercial: junio 2026</p><p>Operación: venta · Vitacura</p><p className="sm:text-right">Fuente: presentaciones auditadas 2026</p></div></header>
+    {data.kind === 'director-cuenta' && officeSummary ? <section><p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Consolidado oficina</p><Card item={officeSummary} /></section> : null}
+    {data.kind === 'director-cuenta' ? <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Bajada por Partner</p><p className="mt-1 text-sm text-[var(--n3-text-muted)]">Cada ficha corresponde a un Partner de la oficina seleccionada.</p></div> : null}
     {data.kind === 'ceo' ? <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 md:grid-cols-4">{[['Cierres junio', data.company.salesSummary.currentSalesCount], ['UF junio', data.company.salesSummary.currentSalesUf], ['Cierres acumulados', data.company.salesSummary.cumulativeSalesCount], ['UF acumulada', data.company.salesSummary.cumulativeSalesUf]].map(([label,value]) => <div key={label as string} className="bg-[var(--n3-card)] p-5"><p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">{label as string}</p><p className="mt-2 text-3xl font-semibold">{n(value as number)}</p></div>)}</section> : null}
     {showBranchNavigation && data.kind === 'ejecutivo' ? <nav className="flex flex-wrap gap-2 print:hidden">{Array.from(new Set(data.partners.map((item) => item.branch))).map((name) => <Link key={name} href={`/dashboard/reportes/audiencias/ejecutivo?branch=${encodeURIComponent(name)}`} className="border border-[var(--n3-line)] px-3 py-2 text-xs text-[var(--n3-text-muted)] hover:border-[var(--n3-teal)]">{name}</Link>)}</nav> : null}
     <section className="grid gap-4 xl:grid-cols-3 print:grid-cols-1">{items.map((item) => <Card key={`${item.name}`} item={item as PartnerItem} />)}</section>
