@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "asOf": "2026-09-20",
+  "asOf": "2026-09-25",
   "allowedStatuses": [
     "pending",
     "passed",
@@ -26,11 +26,12 @@
     {
       "id": "UAT-02",
       "area": "ceo-dashboard",
-      "status": "pending",
+      "status": "accepted-with-observation",
       "evidence": [
-        "CEO dashboard is deployed on the current production baseline.",
-        "Management scoring, persistence, reconciliation, reporting, delivery and CEO coherence gates pass in CI.",
-        "Pedro Pablo is the final business validator and must confirm that the executive reading reflects how Property Partners should be managed."
+        "CEO dashboard is deployed on production SHA c8892dbd9e35af9c64b1e0040eaa75c19839da28 through Vercel deployment dpl_DC2PB1jD63MehBs1KxTLwvhRtxR9, state READY.",
+        "Contractual modules CI, Authenticated role QA, Authenticated visual QA and N3uralia IP Boundaries passed for the current production SHA.",
+        "Business feedback relayed by N3uralia on 2026-09-25: Pedro Pablo indicated that the comparisons/results are correct and asked for more explanation of the results.",
+        "Observation PP-UAT-OBS-01: expand explanatory context around comparison results without changing the underlying canonical calculations."
       ],
       "owner": "Client",
       "blocking": true
@@ -38,12 +39,13 @@
     {
       "id": "UAT-03",
       "area": "business-intelligence-management",
-      "status": "pending",
+      "status": "accepted-with-observation",
       "evidence": [
-        "Management scoring, persisted overlays, reconciliation, comparisons, source contracts and report delivery gates pass.",
-        "Pedro Pablo is the canonical final validator of Business Intelligence / Management and the business-intelligence criterion originates from him.",
-        "Remaining KPI definitions must be formally approved before provisional metrics become official.",
-        "config/client-dependencies-status.json#kpi-dictionary"
+        "Management scoring, persisted overlays, reconciliation, comparisons, canonical source contracts and report delivery gates pass.",
+        "The KPI dictionary dependency is recorded as received in config/client-dependencies-status.json.",
+        "Metric-specific dense rankings preserve shared ties and do not introduce an undocumented tie-breaker.",
+        "Business feedback relayed by N3uralia on 2026-09-25: Pedro Pablo indicated that the comparisons/results are correct and requested clearer explanation of what the results mean.",
+        "Observation PP-UAT-OBS-01 is classified as a non-blocking explanatory/UX improvement; canonical values and comparison logic remain unchanged."
       ],
       "owner": "Shared",
       "blocking": true
@@ -77,12 +79,12 @@
     {
       "id": "UAT-06",
       "area": "monthly-reporting",
-      "status": "blocked-client-input",
+      "status": "pending",
       "evidence": [
-        "Management report scheduling, KPI/reporting readiness gates, recipient validation, delivery and canonical Reportin PDF verification pass.",
-        "Final schedule, recipients, frequency and channel require Pedro Pablo's business approval.",
-        "The system remains fail-closed until those definitions are approved.",
-        "config/client-dependencies-status.json#reporting-approval"
+        "Management report scheduling, KPI/reporting readiness, recipient validation, delivery and canonical Reportin PDF verification pass.",
+        "The reporting-approval dependency is approved: canonical uploads generate persisted in-system reports for review; email distribution is not a prerequisite for this review workflow.",
+        "The canonical report review flow Draft -> Review -> Approved was exercised on three real July reports and all three persisted approved status with audit events.",
+        "Final UAT still needs the report-period/send-control checks defined in docs/canonical/UAT_ACCEPTANCE_PLAN.md before this case can be marked passed."
       ],
       "owner": "Shared",
       "blocking": true
@@ -105,10 +107,9 @@
       "area": "operational-continuity",
       "status": "passed",
       "evidence": [
-        "Production deployment dpl_G7zMs9mPeZg1zVC3nrYzRx5xiFkp is READY and serves ppartnersgroup.app.",
-        "Contractual modules CI, N3uralia IP Boundaries and Supabase migration-history guard passed on the current closeout.",
-        "Production home and login returned HTTP 200 on the current deployment.",
-        "Runtime review found no errors in the selected post-deploy window.",
+        "Production SHA c8892dbd9e35af9c64b1e0040eaa75c19839da28 is deployed through Vercel deployment dpl_DC2PB1jD63MehBs1KxTLwvhRtxR9 in READY state.",
+        "Contractual modules CI, Authenticated role QA, Authenticated visual QA and N3uralia IP Boundaries passed for the current production SHA.",
+        "Post-merge runtime review on the exact deployment found no error/fatal events in the inspected window.",
         "Frozen-lockfile install and production build pass on clean GitHub runners.",
         "docs/canonical/PRODUCTION_ROLLBACK_PROCEDURE.md"
       ],
