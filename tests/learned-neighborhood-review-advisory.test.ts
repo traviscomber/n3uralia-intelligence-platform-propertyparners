@@ -17,7 +17,8 @@ test('property inbox explains learned suggestions without enabling confirm actio
   const ui=readFileSync('components/properties/property-review-inbox.tsx','utf8')
   assert.match(ui,/learned_address_alias_v1:'Patrón territorial aprendido'/)
   assert.match(ui,/learned_address_alias_conflict:'Patrón aprendido en conflicto'/)
-  assert.match(ui,/La señal aprendida sirve para priorizar la revisión, pero no escribe barrio ni crea asignaciones/)
+  assert.match(ui,/Esta señal es sólo de apoyo/)
+  assert.match(ui,/no pueden confirmar el barrio por sí solos/)
 })
 
 test('learned advisory confidence rendering uses PostgreSQL-safe numeric formatting', () => {
