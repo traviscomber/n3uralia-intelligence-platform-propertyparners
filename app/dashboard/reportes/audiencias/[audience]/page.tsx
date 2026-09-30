@@ -45,11 +45,18 @@ export default async function AudiencePage({ params, searchParams }: { params: P
   const title = data.kind === 'ceo' ? 'PL Real Estate' : data.kind === 'director-cuenta' ? (branch || profile?.team || 'Reporte de oficina') : isSeller ? 'Mi reporte de desempeño' : (partner || 'Reporte Partner')
 
   let items: PartnerItem[] | typeof data.branches = []
+  let officeSummary: PartnerItem | null = null
   if (data.kind === 'ceo') {
     items = data.branches
   } else if (data.kind === 'director-cuenta') {
     const allowedBranch = isDirector && profile?.team ? profile.team : branch
-    items = allowedBranch ? data.branches.filter((item) => normalize(item.name) === normalize(allowedBranch)) : data.branches
+    const selectedOffice = allowedBranch
+      ? data.branches.find((item) => normalize(item.name) === normalize(allowedBranch))
+      : null
+    officeSummary = (selectedOffice ?? null) as PartnerItem | null
+    items = allowedBranch
+      ? data.partners.filter((item) => normalize(item.branch) === normalize(allowedBranch))
+      : data.partners
   } else if (isSeller) {
     const canonicalName = canonicalEntity?.name || profile?.full_name
     items = data.partners.filter((item) => normalize(item.name) === normalize(canonicalName))
@@ -68,6 +75,8 @@ export default async function AudiencePage({ params, searchParams }: { params: P
   const showBranchNavigation = data.kind === 'ejecutivo' && !isSeller && !isDirector
 
   return <div className="mx-auto max-w-7xl space-y-6 pb-16 print:fixed print:inset-0 print:z-[100] print:m-0 print:max-w-none print:overflow-visible print:bg-white print:p-8 print:text-black print:[--n3-card:#ffffff] print:[--n3-line:#d1d5db] print:[--n3-teal:#b42318] print:[--n3-text-light:#111827] print:[--n3-text-muted:#4b5563]"><header className="border-b border-[var(--n3-line)] pb-6"><div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><Link href={backHref} className="text-xs font-semibold text-[var(--n3-teal)]">← {backLabel}</Link><PrintReportButton /></div><p className="hidden text-xs font-semibold uppercase tracking-[0.18em] print:block">Property Partners Vitacura</p><h1 className="mt-4 text-3xl font-semibold text-[var(--n3-text-light)] sm:text-4xl">{title}</h1><div className="mt-3 grid gap-1 text-sm text-[var(--n3-text-muted)] sm:grid-cols-2"><p>Período: enero–junio 2026</p><p className="sm:text-right">Corte comercial: junio 2026</p><p>Operación: venta · Vitacura</p><p className="sm:text-right">Fuente: presentaciones auditadas 2026</p></div></header>
+    {data.kind === 'director-cuenta' && officeSummary ? <section><p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Consolidado oficina</p><Card item={officeSummary} /></section> : null}
+    {data.kind === 'director-cuenta' ? <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Bajada por Partner</p><p className="mt-1 text-sm text-[var(--n3-text-muted)]">Cada ficha corresponde a un Partner de la oficina seleccionada.</p></div> : null}
     {data.kind === 'ceo' ? <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 md:grid-cols-4">{[['Cierres junio', data.company.salesSummary.currentSalesCount], ['UF junio', data.company.salesSummary.currentSalesUf], ['Cierres acumulados', data.company.salesSummary.cumulativeSalesCount], ['UF acumulada', data.company.salesSummary.cumulativeSalesUf]].map(([label,value]) => <div key={label as string} className="bg-[var(--n3-card)] p-5"><p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">{label as string}</p><p className="mt-2 text-3xl font-semibold">{n(value as number)}</p></div>)}</section> : null}
     {showBranchNavigation && data.kind === 'ejecutivo' ? <nav className="flex flex-wrap gap-2 print:hidden">{Array.from(new Set(data.partners.map((item) => item.branch))).map((name) => <Link key={name} href={`/dashboard/reportes/audiencias/ejecutivo?branch=${encodeURIComponent(name)}`} className="border border-[var(--n3-line)] px-3 py-2 text-xs text-[var(--n3-text-muted)] hover:border-[var(--n3-teal)]">{name}</Link>)}</nav> : null}
     <section className="grid gap-4 xl:grid-cols-3 print:grid-cols-1">{items.map((item) => <Card key={`${item.name}`} item={item as PartnerItem} />)}</section>
