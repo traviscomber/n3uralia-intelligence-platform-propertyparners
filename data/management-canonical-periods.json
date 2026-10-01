@@ -701,10 +701,10 @@
         "source": "Cierres_septiembre_2026.xlsx",
         "reportedClosings": 5,
         "notes": [
-          "September net close: 6 active operations minus 1 historical July suspension.",
-          "Historical suspension operation 10050 is carried in September as -1 closing and -22,000 UF.",
-          "Signed UF is authoritative for the suspension adjustment; inconsistent USD/EUR/CLP conversions are excluded.",
-          "Partner-level September performance is not published through the role dashboard unless a profile can be matched to canonical nominal evidence; office totals must not be inferred to a Partner."
+          "Cierre neto de septiembre: 6 operaciones activas menos 1 suspensión histórica correspondiente a julio.",
+          "La operación suspendida 10050 se registra en septiembre como -1 cierre y -22.000 UF.",
+          "Para este ajuste, la UF firmada es la cifra canónica; las conversiones USD/EUR/CLP inconsistentes quedan excluidas.",
+          "El desempeño nominal por Partner sólo se publica cuando existe evidencia canónica vinculada inequívocamente al perfil; no se infieren resultados desde la oficina."
         ]
       },
       "company": {
@@ -813,6 +813,6 @@
     "oldReports": "Older reports remain source evidence. When they conflict with a later Pedro board report, expose the restatement rather than overwriting history.",
     "officeAggregation": "Use the corporate canonical metric as authority even when office values reconcile arithmetically.",
     "partner": "Do not infer Partner metrics from office totals.",
-    "september2026": "September uses the verified CRM close and activity exports. Operation 10050 is a July business suspended in September and is applied as -1 closing / -22,000 UF to company, Lo Beltrán and the affected Partner. Scores and unpublished targets remain null."
+    "september2026": "Septiembre usa los cierres y exportaciones CRM verificadas. La operación 10050 corresponde a un negocio de julio suspendido en septiembre y se aplica como -1 cierre / -22.000 UF a compañía, Lo Beltrán y al Partner afectado. Scores y metas no publicadas permanecen n/d."
   }
 }
