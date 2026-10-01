@@ -7,6 +7,12 @@ type OfficeSnapshot = {
   captures?: number | null
   leads?: number | null
   activeLeads?: number | null
+  classifiedLeads?: number | null
+  unclassifiedLeads?: number | null
+  stale90Leads?: number | null
+  activeALeads?: number | null
+  stale15ALeads?: number | null
+  suspendedListings?: number | null
   requirements?: number | null
   scheduledVisits?: number | null
   realizedVisits?: number | null
@@ -35,6 +41,13 @@ type CompanySnapshot = {
   stock?: number | null
   captures?: number | null
   leads?: number | null
+  activeLeads?: number | null
+  classifiedLeads?: number | null
+  unclassifiedLeads?: number | null
+  stale90Leads?: number | null
+  activeALeads?: number | null
+  stale15ALeads?: number | null
+  suspendedListings?: number | null
   requirements?: number | null
   scheduledVisits?: number | null
   realizedVisits?: number | null
@@ -110,10 +123,19 @@ function officeEntity(period: CanonicalPeriod, office: OfficeSnapshot): Dashboar
     metrics: [
       metric('management_credited_sales', 'Cierres acreditados', 'count', office.creditedClosings, sourceName, sourceReference, period.period, office.canonicalClosingTarget ?? null),
       metric('management_credited_sales_uf', 'UF acreditadas', 'uf', office.creditedSalesUf, sourceName, sourceReference, period.period),
+      metric('sales', 'Cierres del período', 'count', office.creditedClosings, sourceName, sourceReference, period.period, office.canonicalClosingTarget ?? null),
+      metric('sales_uf', 'UF del período', 'uf', office.creditedSalesUf, sourceName, sourceReference, period.period),
       metric('stock', 'Cartera publicada', 'count', office.stock ?? null, sourceName, sourceReference, period.period),
       metric('captations', 'Captaciones', 'count', office.captures ?? null, sourceName, sourceReference, period.period),
       metric('leads', 'Leads', 'count', office.leads ?? null, sourceName, sourceReference, period.period),
       metric('active_leads', 'Leads activos', 'count', office.activeLeads ?? null, sourceName, sourceReference, period.period),
+      metric('active_leads_snapshot', 'Leads activos', 'count', office.activeLeads ?? null, sourceName, sourceReference, period.period),
+      metric('classified_leads', 'Leads clasificados', 'count', office.classifiedLeads ?? null, sourceName, sourceReference, period.period),
+      metric('unclassified_leads', 'Leads sin clasificar', 'count', office.unclassifiedLeads ?? null, sourceName, sourceReference, period.period),
+      metric('stale_90_leads', 'Leads +90 días', 'count', office.stale90Leads ?? null, sourceName, sourceReference, period.period),
+      metric('active_a_leads', 'Leads A activos', 'count', office.activeALeads ?? null, sourceName, sourceReference, period.period),
+      metric('stale_15a_leads', 'Leads A +15 días', 'count', office.stale15ALeads ?? null, sourceName, sourceReference, period.period),
+      metric('suspended_listings', 'Propiedades suspendidas', 'count', office.suspendedListings ?? null, sourceName, sourceReference, period.period),
       metric('requirements', 'Requerimientos', 'count', office.requirements ?? null, sourceName, sourceReference, period.period),
       metric('scheduled_visits', 'Visitas agendadas', 'count', office.scheduledVisits ?? null, sourceName, sourceReference, period.period),
       metric('realized_visits', 'Visitas realizadas', 'count', office.realizedVisits ?? null, sourceName, sourceReference, period.period),
@@ -143,6 +165,12 @@ function officeEntity(period: CanonicalPeriod, office: OfficeSnapshot): Dashboar
             stock: historicalOffice.stock ?? null,
             leads: historicalOffice.leads ?? null,
             active_leads_snapshot: historicalOffice.activeLeads ?? null,
+            classified_leads: historicalOffice.classifiedLeads ?? null,
+            unclassified_leads: historicalOffice.unclassifiedLeads ?? null,
+            stale_90_leads: historicalOffice.stale90Leads ?? null,
+            active_a_leads: historicalOffice.activeALeads ?? null,
+            stale_15a_leads: historicalOffice.stale15ALeads ?? null,
+            suspended_listings: historicalOffice.suspendedListings ?? null,
             requirements: historicalOffice.requirements ?? null,
             scheduled_visits: historicalOffice.scheduledVisits ?? null,
             realized_visits: historicalOffice.realizedVisits ?? null,
@@ -189,6 +217,13 @@ export function getCanonicalManagementDashboardEntities(period = getLatestCanoni
       metric('stock', 'Cartera publicada', 'count', company.stock ?? null, sourceName, sourceReference, period.period),
       metric('captations', 'Captaciones', 'count', company.captures ?? null, sourceName, sourceReference, period.period),
       metric('leads', 'Leads', 'count', company.leads ?? null, sourceName, sourceReference, period.period),
+      metric('active_leads_snapshot', 'Leads activos', 'count', company.activeLeads ?? null, sourceName, sourceReference, period.period),
+      metric('classified_leads', 'Leads clasificados', 'count', company.classifiedLeads ?? null, sourceName, sourceReference, period.period),
+      metric('unclassified_leads', 'Leads sin clasificar', 'count', company.unclassifiedLeads ?? null, sourceName, sourceReference, period.period),
+      metric('stale_90_leads', 'Leads +90 días', 'count', company.stale90Leads ?? null, sourceName, sourceReference, period.period),
+      metric('active_a_leads', 'Leads A activos', 'count', company.activeALeads ?? null, sourceName, sourceReference, period.period),
+      metric('stale_15a_leads', 'Leads A +15 días', 'count', company.stale15ALeads ?? null, sourceName, sourceReference, period.period),
+      metric('suspended_listings', 'Propiedades suspendidas', 'count', company.suspendedListings ?? null, sourceName, sourceReference, period.period),
       metric('requirements', 'Requerimientos', 'count', company.requirements ?? null, sourceName, sourceReference, period.period),
       metric('scheduled_visits', 'Visitas agendadas', 'count', company.scheduledVisits ?? null, sourceName, sourceReference, period.period),
       metric('realized_visits', 'Visitas realizadas', 'count', company.realizedVisits ?? null, sourceName, sourceReference, period.period),
@@ -210,6 +245,17 @@ export function getCanonicalManagementDashboardEntities(period = getLatestCanoni
         portfolio_score: item.company.portfolioScore,
         follow_up_score: item.company.followUpScore,
         conversion: item.company.conversionScore,
+        active_leads_snapshot: item.company.activeLeads ?? null,
+        classified_leads: item.company.classifiedLeads ?? null,
+        unclassified_leads: item.company.unclassifiedLeads ?? null,
+        stale_90_leads: item.company.stale90Leads ?? null,
+        active_a_leads: item.company.activeALeads ?? null,
+        stale_15a_leads: item.company.stale15ALeads ?? null,
+        suspended_listings: item.company.suspendedListings ?? null,
+        stock: item.company.stock ?? null,
+        captations: item.company.captures ?? null,
+        scheduled_visits: item.company.scheduledVisits ?? null,
+        realized_visits: item.company.realizedVisits ?? null,
       },
     })),
   }
