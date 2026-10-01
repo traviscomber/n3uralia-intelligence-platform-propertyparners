@@ -1,6 +1,12 @@
-import { collectPortalVitacura } from '../lib/portal-inmobiliario-collector'
+import {
+  collectPortalListingDetails,
+  discoverPortalVitacuraUniverse,
+} from '../lib/portal-inmobiliario-collector'
 import { applyPortalUfConversion, normalizePortalListingRows } from '../lib/market-source-import'
 import { fetchUfClpForDate } from '../lib/chilean-uf'
+
+const MIN_COMPLETE_INVENTORY = 1_000
+const MAX_DISCOVERY_PAGES = 40
 
 async function githubOidcToken(audience: string) {
   const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL
@@ -17,39 +23,79 @@ async function githubOidcToken(audience: string) {
   return json.value
 }
 
+function validateDiscovery(discovery: {
+  listingUrls: string[]
+  discovery: {
+    exhausted: boolean
+    capped: boolean
+    newListingsPerPage: number[]
+  }
+}) {
+  const sequence = discovery.discovery.newListingsPerPage
+  const firstZero = sequence.findIndex((count) => count === 0)
+  const sequencePass = firstZero < 0 || sequence.slice(firstZero + 1).every((count) => count === 0)
+
+  if (discovery.listingUrls.length < MIN_COMPLETE_INVENTORY) {
+    throw new Error(`PORTAL_EXTERNAL_DISCOVERY_TOO_SMALL_${discovery.listingUrls.length}`)
+  }
+  if (!discovery.discovery.exhausted || discovery.discovery.capped) {
+    throw new Error('PORTAL_EXTERNAL_DISCOVERY_INCOMPLETE')
+  }
+  if (!sequencePass) {
+    throw new Error('PORTAL_EXTERNAL_DISCOVERY_INTERNAL_GAP')
+  }
+}
+
 async function main() {
   const started = Date.now()
-  const collection = await collectPortalVitacura({
+
+  // Phase 1: full inventory discovery. This is the canonical presence/removal gate.
+  const inventory = await discoverPortalVitacuraUniverse({
     datasetKind: 'portal_houses',
     commune: 'vitacura-metropolitana',
     operation: 'venta',
-    maxPages: 40,
-    maxListings: 2200,
-    waitMs: 700,
+    maxPages: MAX_DISCOVERY_PAGES,
+    waitMs: 900,
+  })
+  validateDiscovery(inventory)
+
+  console.log(JSON.stringify({
+    stage: 'discovered',
+    observedAt: inventory.observedAt,
+    pages: inventory.discovery.pagesVisited,
+    discovered: inventory.listingUrls.length,
+    reported: inventory.discovery.reportedResultCount,
+    exhausted: inventory.discovery.exhausted,
+    capped: inventory.discovery.capped,
+    runtimeMs: Date.now() - started,
+  }))
+
+  // Phase 2: detail extraction using the same N3uralia Chrome runtime.
+  // No paid per-page provider is involved.
+  const details = await collectPortalListingDetails({
+    datasetKind: 'portal_houses',
+    listingUrls: inventory.listingUrls,
+    waitMs: 550,
   })
 
-  if (collection.listingUrls.length < 1000) {
-    throw new Error(`PORTAL_EXTERNAL_DISCOVERY_TOO_SMALL_${collection.listingUrls.length}`)
-  }
-
-  const ufClp = await fetchUfClpForDate(collection.observedAt)
+  const ufClp = await fetchUfClpForDate(inventory.observedAt)
   const normalized = applyPortalUfConversion(
-    normalizePortalListingRows(collection.rows, 'portal_houses'),
+    normalizePortalListingRows(details.rows, 'portal_houses'),
     ufClp,
   )
   const validRows = normalized.filter((row) => row.source_listing_id && row.url)
-  const coverage = collection.discovery.reportedResultCount && collection.discovery.reportedResultCount > 0
-    ? collection.listingUrls.length / collection.discovery.reportedResultCount
+  const coverage = inventory.discovery.reportedResultCount && inventory.discovery.reportedResultCount > 0
+    ? inventory.listingUrls.length / inventory.discovery.reportedResultCount
     : null
 
   console.log(JSON.stringify({
     stage: 'collected',
-    observedAt: collection.observedAt,
-    pages: collection.discovery.pagesVisited,
-    discovered: collection.listingUrls.length,
-    reported: collection.discovery.reportedResultCount,
+    observedAt: inventory.observedAt,
+    pages: inventory.discovery.pagesVisited,
+    discovered: inventory.listingUrls.length,
+    reported: inventory.discovery.reportedResultCount,
     valid: validRows.length,
-    failures: collection.failures.length,
+    failures: details.failures.length,
     coverage,
     runtimeMs: Date.now() - started,
   }))
@@ -62,10 +108,11 @@ async function main() {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      observedAt: collection.observedAt,
+      observedAt: inventory.observedAt,
       rows: validRows,
-      discovery: collection.discovery,
-      failedListingDetails: collection.failures.length,
+      discovery: inventory.discovery,
+      failedListingDetails: details.failures.length,
+      acquisitionRuntime: 'self_hosted_chrome',
     }),
   })
 
