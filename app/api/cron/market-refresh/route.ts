@@ -63,6 +63,8 @@ function classifyCollectorFailure(cause: unknown) {
     return 'COLLECTOR_BROWSER_EXECUTABLE_MISSING'
   }
   if (message.includes('failed to launch') || message.includes('browser launch')) return 'COLLECTOR_BROWSER_LAUNCH_FAILED'
+  if (message.includes('portal_suspicious_traffic') || message.includes('suspicious traffic')) return 'COLLECTOR_SOURCE_ANTI_BOT'
+  if (message.includes('collector_empty_discovery')) return 'COLLECTOR_EMPTY_DISCOVERY'
   if (message.includes('http 403')) return 'COLLECTOR_SOURCE_FORBIDDEN'
   if (message.includes('http 429')) return 'COLLECTOR_SOURCE_RATE_LIMITED'
   if (message.includes('timeout') || message.includes('timed out')) return 'COLLECTOR_SOURCE_TIMEOUT'
