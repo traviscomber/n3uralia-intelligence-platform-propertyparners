@@ -735,7 +735,9 @@
         "stale90Leads": 521,
         "activeALeads": 94,
         "stale15ALeads": 21,
-        "targetSemantics": "published_monthly_target_only"
+        "targetSemantics": "published_monthly_target_only",
+        "unclassifiedLeads": 615,
+        "suspendedListings": 24
       },
       "offices": [
         {
@@ -751,7 +753,13 @@
           "captures": 6,
           "activeLeads": 500,
           "scheduledVisits": 73,
-          "realizedVisits": 48
+          "realizedVisits": 48,
+          "classifiedLeads": 300,
+          "unclassifiedLeads": 200,
+          "stale90Leads": 96,
+          "activeALeads": 34,
+          "stale15ALeads": 1,
+          "suspendedListings": 6
         },
         {
           "name": "Nueva Costanera",
@@ -766,7 +774,13 @@
           "captures": 7,
           "activeLeads": 654,
           "scheduledVisits": 86,
-          "realizedVisits": 46
+          "realizedVisits": 46,
+          "classifiedLeads": 370,
+          "unclassifiedLeads": 284,
+          "stale90Leads": 390,
+          "activeALeads": 39,
+          "stale15ALeads": 9,
+          "suspendedListings": 13
         },
         {
           "name": "Lo Beltrán",
@@ -781,7 +795,13 @@
           "captures": 14,
           "activeLeads": 286,
           "scheduledVisits": 79,
-          "realizedVisits": 46
+          "realizedVisits": 46,
+          "classifiedLeads": 176,
+          "unclassifiedLeads": 110,
+          "stale90Leads": 15,
+          "activeALeads": 21,
+          "stale15ALeads": 11,
+          "suspendedListings": 5
         }
       ],
       "partnerLevelAvailable": false
