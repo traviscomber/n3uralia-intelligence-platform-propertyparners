@@ -156,6 +156,69 @@ function rotatedDetailBatch(urls: string[], observedAt: string) {
   )
 }
 
+async function deltaDetailBatch(args: {
+  supabase: ReturnType<typeof getServiceClient>
+  datasetKind: PortalDatasetKind
+  urls: string[]
+  previousRunId: string | null
+  observedAt: string
+  fullSweep: boolean
+}) {
+  const { supabase, datasetKind, urls, previousRunId, observedAt, fullSweep } = args
+  if (fullSweep) {
+    return {
+      urls: urls.slice(0, MAX_DETAIL_LISTINGS_PER_RUN),
+      mode: 'full_sweep',
+      newCount: null,
+      recoveryCount: null,
+      unchangedSkipped: Math.max(urls.length - MAX_DETAIL_LISTINGS_PER_RUN, 0),
+    }
+  }
+
+  if (!previousRunId) {
+    const fallback = rotatedDetailBatch(urls, observedAt)
+    return {
+      urls: fallback,
+      mode: 'bootstrap_rotating',
+      newCount: null,
+      recoveryCount: null,
+      unchangedSkipped: Math.max(urls.length - fallback.length, 0),
+    }
+  }
+
+  const [previousIds, currentState] = await Promise.all([
+    loadInventoryIds(supabase, previousRunId),
+    loadCurrentListingState(supabase, datasetKind),
+  ])
+
+  const newUrls: string[] = []
+  const recoveryUrls: string[] = []
+  const unchangedUrls: string[] = []
+
+  for (const url of urls) {
+    const id = portalListingIdFromUrl(url, datasetKind)
+    if (!id) continue
+    if (!previousIds.has(id)) {
+      newUrls.push(url)
+      continue
+    }
+    if (!currentState.byId.has(id)) {
+      recoveryUrls.push(url)
+      continue
+    }
+    unchangedUrls.push(url)
+  }
+
+  const selected = [...newUrls, ...recoveryUrls].slice(0, MAX_DETAIL_LISTINGS_PER_RUN)
+  return {
+    urls: selected,
+    mode: 'delta_only',
+    newCount: newUrls.length,
+    recoveryCount: recoveryUrls.length,
+    unchangedSkipped: unchangedUrls.length,
+  }
+}
+
 async function reconcileRemovedListings(
   supabase: ReturnType<typeof getServiceClient>,
   datasetKind: PortalDatasetKind,
@@ -703,22 +766,36 @@ export async function GET(request: Request) {
         continue
       }
 
-      const detailUrls = rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
-      const details = process.env.FIRECRAWL_API_KEY
-        ? await collectPortalListingDetailsViaFirecrawl({
-            datasetKind,
-            listingUrls: detailUrls,
-          })
-        : await collectPortalListingDetails({
-            datasetKind,
-            listingUrls: detailUrls,
-            waitMs: DETAIL_WAIT_MS,
-          })
+      const detailSelection = await deltaDetailBatch({
+        supabase,
+        datasetKind,
+        urls: inventory.listingUrls,
+        previousRunId: previousCompleteRun?.id ?? null,
+        observedAt: inventory.observedAt,
+        fullSweep,
+      })
+      const detailUrls = detailSelection.urls
+      const details = detailUrls.length
+        ? process.env.FIRECRAWL_API_KEY
+          ? await collectPortalListingDetailsViaFirecrawl({
+              datasetKind,
+              listingUrls: detailUrls,
+            })
+          : await collectPortalListingDetails({
+              datasetKind,
+              listingUrls: detailUrls,
+              waitMs: DETAIL_WAIT_MS,
+            })
+        : { observedAt: inventory.observedAt, rows: [], failures: [] }
       const normalized = normalizePortalListingRows(details.rows)
       const validRows = normalized.filter((row) => row.source_listing_id && row.url)
 
       let detailResult: Record<string, unknown> = {
+        mode: detailSelection.mode,
         requested: detailUrls.length,
+        newCandidates: detailSelection.newCount,
+        recoveryCandidates: detailSelection.recoveryCount,
+        unchangedSkipped: detailSelection.unchangedSkipped,
         parsed: details.rows.length,
         valid: validRows.length,
         failures: details.failures.length,
@@ -755,6 +832,8 @@ export async function GET(request: Request) {
             runId: pipelineResult?.run_id ?? null,
           }
         }
+      } else if (detailUrls.length === 0) {
+        detailResult = { ...detailResult, status: 'no_delta_changes' }
       } else {
         detailEnrichmentFailures += 1
         detailResult = { ...detailResult, status: 'no_valid_rows' }
