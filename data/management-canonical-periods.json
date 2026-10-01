@@ -703,7 +703,8 @@
         "notes": [
           "September net close: 6 active operations minus 1 historical July suspension.",
           "Historical suspension operation 10050 is carried in September as -1 closing and -22,000 UF.",
-          "Signed UF is authoritative for the suspension adjustment; inconsistent USD/EUR/CLP conversions are excluded."
+          "Signed UF is authoritative for the suspension adjustment; inconsistent USD/EUR/CLP conversions are excluded.",
+          "Partner-level September performance is not published through the role dashboard unless a profile can be matched to canonical nominal evidence; office totals must not be inferred to a Partner."
         ]
       },
       "company": {
@@ -783,7 +784,7 @@
           "realizedVisits": 46
         }
       ],
-      "partnerLevelAvailable": true
+      "partnerLevelAvailable": false
     }
   ],
   "semanticRules": {
