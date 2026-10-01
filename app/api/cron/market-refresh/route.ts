@@ -642,12 +642,19 @@ export async function GET(request: Request) {
       const coverageRatio = inventory.discovery.reportedResultCount && inventory.discovery.reportedResultCount > 0
         ? inventory.listingUrls.length / inventory.discovery.reportedResultCount
         : null
+      const previousCount = Number(
+        (previousCompleteRun?.metadata as Record<string, unknown> | null | undefined)?.discovery_unique_listings ?? 0,
+      )
+      const baselineFloor = previousCount > 0
+        ? Math.max(MIN_COMPLETE_INVENTORY_LISTINGS, Math.floor(previousCount * 0.85))
+        : MIN_COMPLETE_INVENTORY_LISTINGS
+      const countSanityPass = inventory.listingUrls.length >= baselineFloor
+      const coveragePass = coverageRatio == null || (coverageRatio >= 0.97 && coverageRatio <= 1.05)
       const fullSnapshot = inventory.discovery.exhausted
         && !inventory.discovery.capped
         && inventory.listingUrls.length >= MIN_COMPLETE_INVENTORY_LISTINGS
-        && coverageRatio != null
-        && coverageRatio >= 0.97
-        && coverageRatio <= 1.05
+        && countSanityPass
+        && coveragePass
 
       const persistedInventory = await persistInventoryRun({
         supabase,
@@ -668,6 +675,8 @@ export async function GET(request: Request) {
           inventory: persistedInventory,
           discovery: inventory.discovery,
           coverageRatio,
+          previousVerifiedInventoryCount: previousCount || null,
+          minimumAcceptedInventoryCount: baselineFloor,
           detailStatus: 'skipped_until_complete_inventory',
         })
         continue
