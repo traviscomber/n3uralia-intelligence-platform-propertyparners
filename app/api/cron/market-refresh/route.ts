@@ -650,11 +650,16 @@ export async function GET(request: Request) {
         : MIN_COMPLETE_INVENTORY_LISTINGS
       const countSanityPass = inventory.listingUrls.length >= baselineFloor
       const coveragePass = coverageRatio == null || (coverageRatio >= 0.97 && coverageRatio <= 1.05)
+      const discoverySequence = inventory.discovery.newListingsPerPage
+      const firstZeroPage = discoverySequence.findIndex((count) => count === 0)
+      const discoverySequencePass = firstZeroPage < 0
+        || discoverySequence.slice(firstZeroPage + 1).every((count) => count === 0)
       const fullSnapshot = inventory.discovery.exhausted
         && !inventory.discovery.capped
         && inventory.listingUrls.length >= MIN_COMPLETE_INVENTORY_LISTINGS
         && countSanityPass
         && coveragePass
+        && discoverySequencePass
 
       const persistedInventory = await persistInventoryRun({
         supabase,
@@ -677,6 +682,7 @@ export async function GET(request: Request) {
           coverageRatio,
           previousVerifiedInventoryCount: previousCount || null,
           minimumAcceptedInventoryCount: baselineFloor,
+          discoverySequencePass,
           detailStatus: 'skipped_until_complete_inventory',
         })
         continue
