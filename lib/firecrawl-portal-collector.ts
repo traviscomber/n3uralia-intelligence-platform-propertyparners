@@ -114,49 +114,66 @@ type FirecrawlBatchStatus = {
   error?: unknown
 }
 
-async function firecrawlBatchScrape(urls: string[]): Promise<FirecrawlDoc[]> {
+async function firecrawlBatchScrapeChunk(urls: string[]): Promise<FirecrawlDoc[]> {
   const key = process.env.FIRECRAWL_API_KEY
   if (!key) throw new Error('FIRECRAWL_API_KEY_MISSING')
 
-  const startResponse = await fetch('https://api.firecrawl.dev/v2/batch/scrape', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      urls,
-      formats: ['links'],
-      maxAge: 0,
-      proxy: 'stealth',
-      location: { country: 'CL', languages: ['es'] },
-      waitFor: 2200,
-      timeout: 60000,
-      ignoreInvalidURLs: true,
-      maxConcurrency: 2,
-    }),
-    cache: 'no-store',
-  })
-
-  const started = await startResponse.json().catch(() => null) as FirecrawlBatchStatus | null
-  if (!startResponse.ok || !started?.id) {
-    throw new Error(`FIRECRAWL_BATCH_START_HTTP_${startResponse.status}`)
-  }
-
-  const deadline = Date.now() + 240_000
-  let statusUrl = `https://api.firecrawl.dev/v2/batch/scrape/${started.id}`
-
-  while (Date.now() < deadline) {
-    const response = await fetch(statusUrl, {
-      headers: { Authorization: `Bearer ${key}` },
+  let startResponse: Response | null = null
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    startResponse = await fetch('https://api.firecrawl.dev/v2/batch/scrape', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        urls,
+        formats: ['links'],
+        maxAge: 0,
+        proxy: 'stealth',
+        location: { country: 'CL', languages: ['es'] },
+        waitFor: 1800,
+        timeout: 60000,
+        ignoreInvalidURLs: true,
+        maxConcurrency: 2,
+      }),
       cache: 'no-store',
     })
-    const payload = await response.json().catch(() => null) as FirecrawlBatchStatus | null
-    if (!response.ok || !payload) throw new Error(`FIRECRAWL_BATCH_STATUS_HTTP_${response.status}`)
+    if (startResponse.ok) break
+    if (![429, 500, 502, 503, 504].includes(startResponse.status) || attempt === 5) {
+      throw new Error(`FIRECRAWL_BATCH_START_HTTP_${startResponse.status}`)
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(3000 * attempt, 12000)))
+  }
 
+  const started = await startResponse!.json().catch(() => null) as FirecrawlBatchStatus | null
+  if (!started?.id) throw new Error('FIRECRAWL_BATCH_START_INVALID')
+
+  const deadline = Date.now() + 90_000
+  const statusUrl = `https://api.firecrawl.dev/v2/batch/scrape/${started.id}`
+
+  while (Date.now() < deadline) {
+    let response: Response | null = null
+    let payload: FirecrawlBatchStatus | null = null
+
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      response = await fetch(statusUrl, {
+        headers: { Authorization: `Bearer ${key}` },
+        cache: 'no-store',
+      })
+      payload = await response.json().catch(() => null) as FirecrawlBatchStatus | null
+
+      if (response.ok && payload) break
+      if (![429, 500, 502, 503, 504].includes(response.status) || attempt === 5) {
+        throw new Error(`FIRECRAWL_BATCH_STATUS_HTTP_${response.status}`)
+      }
+      await new Promise((resolve) => setTimeout(resolve, Math.min(2500 * attempt, 10000)))
+    }
+
+    if (!payload) throw new Error('FIRECRAWL_BATCH_STATUS_INVALID')
     if (payload.status === 'failed') throw new Error('FIRECRAWL_BATCH_FAILED')
     if (payload.status !== 'completed') {
-      await new Promise((resolve) => setTimeout(resolve, 2500))
+      await new Promise((resolve) => setTimeout(resolve, 2200))
       continue
     }
 
@@ -164,12 +181,21 @@ async function firecrawlBatchScrape(urls: string[]): Promise<FirecrawlDoc[]> {
     let next = payload.next ?? null
     let pages = 0
     while (next && pages < 20) {
-      const pageResponse = await fetch(next, {
-        headers: { Authorization: `Bearer ${key}` },
-        cache: 'no-store',
-      })
-      const pagePayload = await pageResponse.json().catch(() => null) as FirecrawlBatchStatus | null
-      if (!pageResponse.ok || !pagePayload) throw new Error(`FIRECRAWL_BATCH_PAGE_HTTP_${pageResponse.status}`)
+      let pageResponse: Response | null = null
+      let pagePayload: FirecrawlBatchStatus | null = null
+      for (let attempt = 1; attempt <= 5; attempt += 1) {
+        pageResponse = await fetch(next, {
+          headers: { Authorization: `Bearer ${key}` },
+          cache: 'no-store',
+        })
+        pagePayload = await pageResponse.json().catch(() => null) as FirecrawlBatchStatus | null
+        if (pageResponse.ok && pagePayload) break
+        if (![429, 500, 502, 503, 504].includes(pageResponse.status) || attempt === 5) {
+          throw new Error(`FIRECRAWL_BATCH_PAGE_HTTP_${pageResponse.status}`)
+        }
+        await new Promise((resolve) => setTimeout(resolve, Math.min(2500 * attempt, 10000)))
+      }
+      if (!pagePayload) throw new Error('FIRECRAWL_BATCH_PAGE_INVALID')
       documents.push(...(pagePayload.data ?? []))
       next = pagePayload.next ?? null
       pages += 1
@@ -178,6 +204,22 @@ async function firecrawlBatchScrape(urls: string[]): Promise<FirecrawlDoc[]> {
   }
 
   throw new Error('FIRECRAWL_BATCH_TIMEOUT')
+}
+
+async function firecrawlBatchScrape(urls: string[]): Promise<FirecrawlDoc[]> {
+  const documents: FirecrawlDoc[] = []
+  const chunkSize = 8
+
+  for (let offset = 0; offset < urls.length; offset += chunkSize) {
+    const chunk = urls.slice(offset, offset + chunkSize)
+    const chunkDocuments = await firecrawlBatchScrapeChunk(chunk)
+    documents.push(...chunkDocuments)
+    if (offset + chunkSize < urls.length) {
+      await new Promise((resolve) => setTimeout(resolve, 2500))
+    }
+  }
+
+  return documents
 }
 
 function sourceUrlOf(doc: FirecrawlDoc) {
