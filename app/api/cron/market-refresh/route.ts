@@ -620,6 +620,10 @@ export async function GET(request: Request) {
         waitMs: DISCOVERY_WAIT_MS,
       })
 
+      if (inventory.listingUrls.length === 0) {
+        throw new Error('COLLECTOR_EMPTY_DISCOVERY')
+      }
+
       const coverageRatio = inventory.discovery.reportedResultCount && inventory.discovery.reportedResultCount > 0
         ? inventory.listingUrls.length / inventory.discovery.reportedResultCount
         : null
