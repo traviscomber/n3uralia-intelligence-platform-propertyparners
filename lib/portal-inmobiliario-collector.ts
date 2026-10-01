@@ -515,7 +515,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
         const navigation = await gotoWithRetry(page, searchUrl, 'Portal search')
         // Portal returns 404 when pagination goes past the last available page.
         // Treat that as proven exhaustion; all other non-2xx responses remain failures.
-        if (navigation.exhausted) return { text: '', pageCandidates: [] }
+        if (navigation.exhausted) return { text: '', pageCandidates: [], blocked: false }
         // Since late September 2026 Portal can hydrate search cards client-side.
         // Wait for listing anchors instead of assuming the initial HTML already
         // contains the inventory. A timeout is non-fatal: embedded JSON is still parsed.
@@ -528,16 +528,20 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
           text: document.body?.innerText ?? '',
         }))
         const html = await page.content()
+        const blocked = /suspicious-traffic-frontend|suspicious traffic|account-verification/i.test(html)
         const pageCandidates = [...pageState.links, ...extractEmbeddedListingUrls(html, datasetKind)]
           .map(canonicalListingUrl)
           .filter((href) => isDatasetListingUrl(href, datasetKind))
-        return { text: pageState.text, pageCandidates }
+        return { text: pageState.text, pageCandidates, blocked }
       } finally {
         await page.close()
       }
     }))
 
     for (const result of pageResults) {
+      if (result.blocked && result.pageCandidates.length === 0) {
+        throw new Error('PORTAL_SUSPICIOUS_TRAFFIC')
+      }
       if (reportedResultCount == null) {
         const match = result.text.match(/([0-9][0-9.,]*)\s+resultados/i)
         if (match?.[1]) {
