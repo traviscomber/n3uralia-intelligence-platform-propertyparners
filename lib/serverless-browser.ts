@@ -1,11 +1,19 @@
 import type { Browser } from 'puppeteer-core'
 
 export async function launchServerlessBrowser(): Promise<Browser> {
-  const [{ default: puppeteer }, { default: chromium }] = await Promise.all([
-    import('puppeteer-core'),
-    import('@sparticuz/chromium'),
-  ])
+  const { default: puppeteer } = await import('puppeteer-core')
+  const systemChrome = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH
 
+  if (systemChrome) {
+    return puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      defaultViewport: { width: 1440, height: 1000 },
+      executablePath: systemChrome,
+      headless: true,
+    })
+  }
+
+  const { default: chromium } = await import('@sparticuz/chromium')
   chromium.setGraphicsMode = false
   const args = await puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' })
   const executablePath = await chromium.executablePath()
