@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: '30 10 * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/serverless-browser.ts'
+      - 'lib/portal-inmobiliario-collector.ts'
+      - 'scripts/run-portal-external-snapshot.ts'
+      - 'app/api/internal/portal-github-ingest/route.ts'
+      - '.github/workflows/portal-daily-snapshot.yml'
 
 permissions:
   contents: read
