@@ -58,34 +58,49 @@ async function firecrawlScrape(url: string, formats: string[]): Promise<Firecraw
   const key = process.env.FIRECRAWL_API_KEY
   if (!key) throw new Error('FIRECRAWL_API_KEY_MISSING')
 
-  const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url,
-      formats,
-      maxAge: 0,
-      proxy: 'stealth',
-      location: { country: 'CL', languages: ['es'] },
-      waitFor: 2500,
-      timeout: 60000,
-    }),
-    cache: 'no-store',
-  })
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats,
+        maxAge: 0,
+        proxy: 'stealth',
+        location: { country: 'CL', languages: ['es'] },
+        waitFor: 2200,
+        timeout: 60000,
+      }),
+      cache: 'no-store',
+    })
 
-  const payload = await response.json().catch(() => null) as Record<string, unknown> | null
-  if (!response.ok || !payload) throw new Error(`FIRECRAWL_HTTP_${response.status}`)
-  const success = payload.success
-  if (success === false) throw new Error('FIRECRAWL_SCRAPE_FAILED')
-  const doc = (payload.data && typeof payload.data === 'object' ? payload.data : payload) as FirecrawlDoc
-  const title = String(doc.metadata?.title ?? '')
-  if (/mercado libre/i.test(title) && !(doc.links ?? []).some((link) => /MLC-?\d+/i.test(link))) {
-    throw new Error('FIRECRAWL_PORTAL_BLOCKED')
+    const payload = await response.json().catch(() => null) as Record<string, unknown> | null
+
+    if (response.ok && payload) {
+      if (payload.success === false) throw new Error('FIRECRAWL_SCRAPE_FAILED')
+      const doc = (payload.data && typeof payload.data === 'object' ? payload.data : payload) as FirecrawlDoc
+      const title = String(doc.metadata?.title ?? '')
+      if (/mercado libre/i.test(title) && !(doc.links ?? []).some((link) => /MLC-?\d+/i.test(link))) {
+        throw new Error('FIRECRAWL_PORTAL_BLOCKED')
+      }
+      return doc
+    }
+
+    if (response.status !== 429 || attempt === 8) {
+      throw new Error(`FIRECRAWL_HTTP_${response.status}`)
+    }
+
+    const retryAfter = Number(response.headers.get('retry-after') ?? 0)
+    const waitMs = retryAfter > 0
+      ? Math.min(retryAfter * 1000, 30000)
+      : Math.min(4000 * attempt, 30000)
+    await new Promise((resolve) => setTimeout(resolve, waitMs))
   }
-  return doc
+
+  throw new Error('FIRECRAWL_HTTP_429')
 }
 
 export async function discoverPortalVitacuraViaFirecrawl(
@@ -135,7 +150,7 @@ export async function discoverPortalVitacuraViaFirecrawl(
       exhausted = true
       break
     }
-    await new Promise((resolve) => setTimeout(resolve, 3200))
+    await new Promise((resolve) => setTimeout(resolve, 4500))
   }
 
   const listingUrls = [...urls]
