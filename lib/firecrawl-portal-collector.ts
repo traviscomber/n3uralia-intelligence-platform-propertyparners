@@ -103,6 +103,87 @@ async function firecrawlScrape(url: string, formats: string[]): Promise<Firecraw
   throw new Error('FIRECRAWL_HTTP_429')
 }
 
+type FirecrawlBatchStatus = {
+  success?: boolean
+  status?: string
+  id?: string
+  total?: number
+  completed?: number
+  data?: FirecrawlDoc[]
+  next?: string | null
+  error?: unknown
+}
+
+async function firecrawlBatchScrape(urls: string[]): Promise<FirecrawlDoc[]> {
+  const key = process.env.FIRECRAWL_API_KEY
+  if (!key) throw new Error('FIRECRAWL_API_KEY_MISSING')
+
+  const startResponse = await fetch('https://api.firecrawl.dev/v2/batch/scrape', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      urls,
+      formats: ['links'],
+      maxAge: 0,
+      proxy: 'stealth',
+      location: { country: 'CL', languages: ['es'] },
+      waitFor: 2200,
+      timeout: 60000,
+      ignoreInvalidURLs: true,
+      maxConcurrency: 2,
+    }),
+    cache: 'no-store',
+  })
+
+  const started = await startResponse.json().catch(() => null) as FirecrawlBatchStatus | null
+  if (!startResponse.ok || !started?.id) {
+    throw new Error(`FIRECRAWL_BATCH_START_HTTP_${startResponse.status}`)
+  }
+
+  const deadline = Date.now() + 240_000
+  let statusUrl = `https://api.firecrawl.dev/v2/batch/scrape/${started.id}`
+
+  while (Date.now() < deadline) {
+    const response = await fetch(statusUrl, {
+      headers: { Authorization: `Bearer ${key}` },
+      cache: 'no-store',
+    })
+    const payload = await response.json().catch(() => null) as FirecrawlBatchStatus | null
+    if (!response.ok || !payload) throw new Error(`FIRECRAWL_BATCH_STATUS_HTTP_${response.status}`)
+
+    if (payload.status === 'failed') throw new Error('FIRECRAWL_BATCH_FAILED')
+    if (payload.status !== 'completed') {
+      await new Promise((resolve) => setTimeout(resolve, 2500))
+      continue
+    }
+
+    const documents: FirecrawlDoc[] = [...(payload.data ?? [])]
+    let next = payload.next ?? null
+    let pages = 0
+    while (next && pages < 20) {
+      const pageResponse = await fetch(next, {
+        headers: { Authorization: `Bearer ${key}` },
+        cache: 'no-store',
+      })
+      const pagePayload = await pageResponse.json().catch(() => null) as FirecrawlBatchStatus | null
+      if (!pageResponse.ok || !pagePayload) throw new Error(`FIRECRAWL_BATCH_PAGE_HTTP_${pageResponse.status}`)
+      documents.push(...(pagePayload.data ?? []))
+      next = pagePayload.next ?? null
+      pages += 1
+    }
+    return documents
+  }
+
+  throw new Error('FIRECRAWL_BATCH_TIMEOUT')
+}
+
+function sourceUrlOf(doc: FirecrawlDoc) {
+  return String(doc.metadata?.sourceURL ?? doc.metadata?.url ?? '')
+}
+
 export async function discoverPortalVitacuraViaFirecrawl(
   options: PortalCollectorOptions,
 ): Promise<PortalDiscoveryResult> {
@@ -112,30 +193,33 @@ export async function discoverPortalVitacuraViaFirecrawl(
   const maxPages = Math.max(1, options.maxPages ?? 40)
   const pageSize = datasetKind === 'portal_projects' ? 20 : 48
   const base = buildSearchBase(datasetKind, operation, commune)
+  const searchUrls = Array.from({ length: maxPages }, (_, index) => buildSearchUrl(base, index + 1, datasetKind))
+  const docs = await firecrawlBatchScrape(searchUrls)
+  const bySource = new Map<string, FirecrawlDoc>()
+
+  for (const doc of docs) {
+    const sourceURL = sourceUrlOf(doc)
+    if (sourceURL) bySource.set(canonicalListingUrl(sourceURL), doc)
+  }
+
   const urls = new Set<string>()
-  const searchUrls: string[] = []
   const newListingsPerPage: number[] = []
   let rawListingCandidates = 0
   let duplicateListingCandidates = 0
   let exhausted = false
+  let pagesVisited = 0
 
   for (let page = 1; page <= maxPages; page += 1) {
     const searchUrl = buildSearchUrl(base, page, datasetKind)
-    searchUrls.push(searchUrl)
-    let doc = await firecrawlScrape(searchUrl, ['links'])
-    let candidates = (doc.links ?? [])
+    const canonicalSearch = canonicalListingUrl(searchUrl)
+    const doc = bySource.get(canonicalSearch)
+      ?? docs.find((candidate) => sourceUrlOf(candidate).includes(`_Desde_${(page - 1) * pageSize + 1}`))
+      ?? (page === 1 ? docs.find((candidate) => !sourceUrlOf(candidate).includes('_Desde_')) : undefined)
+
+    pagesVisited += 1
+    const candidates = (doc?.links ?? [])
       .map(canonicalListingUrl)
       .filter((url) => isListingUrl(url, datasetKind))
-
-    if (candidates.length === 0 && page > 1) {
-      for (let retry = 0; retry < 2 && candidates.length === 0; retry += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 5000))
-        doc = await firecrawlScrape(searchUrl, ['links'])
-        candidates = (doc.links ?? [])
-          .map(canonicalListingUrl)
-          .filter((url) => isListingUrl(url, datasetKind))
-      }
-    }
 
     rawListingCandidates += candidates.length
     const before = urls.size
@@ -146,29 +230,30 @@ export async function discoverPortalVitacuraViaFirecrawl(
     const added = urls.size - before
     newListingsPerPage.push(added)
 
-    if (candidates.length < pageSize || added === 0) {
+    if (page > 1 && (candidates.length === 0 || added === 0)) {
       exhausted = true
       break
     }
-    await new Promise((resolve) => setTimeout(resolve, 4500))
+    if (candidates.length > 0 && candidates.length < pageSize) {
+      exhausted = true
+      break
+    }
   }
 
   const listingUrls = [...urls]
   return {
-    searchUrls,
+    searchUrls: searchUrls.slice(0, pagesVisited),
     listingUrls,
     observedAt: new Date().toISOString(),
     discovery: {
-      pagesVisited: searchUrls.length,
+      pagesVisited,
       newListingsPerPage,
       rawListingCandidates,
       duplicateListingCandidates,
       uniqueListings: listingUrls.length,
-      // Exhaustion is stronger evidence here than a rendered result counter:
-      // Firecrawl paginates until Portal returns a short/no-new-results page.
       reportedResultCount: exhausted ? listingUrls.length : null,
       exhausted,
-      capped: !exhausted && searchUrls.length >= maxPages,
+      capped: !exhausted && pagesVisited >= maxPages,
     },
   }
 }
