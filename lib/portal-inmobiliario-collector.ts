@@ -519,10 +519,10 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
         // Since late September 2026 Portal can hydrate search cards client-side.
         // Wait for listing anchors instead of assuming the initial HTML already
         // contains the inventory. A timeout is non-fatal: embedded JSON is still parsed.
-        await Promise.race([
-          page.waitForSelector('a[href*="MLC-"], a[href*="/p/MLC"]', { timeout: 8_000 }).catch(() => null),
-          new Promise((resolve) => setTimeout(resolve, Math.max(waitMs, 1_200))),
-        ])
+        await page
+          .waitForSelector('a[href*="MLC-"], a[href*="/p/MLC"]', { timeout: 10_000 })
+          .catch(() => null)
+        await new Promise((resolve) => setTimeout(resolve, Math.max(waitMs, 500)))
         const pageState = await page.evaluate(() => ({
           links: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href),
           text: document.body?.innerText ?? '',
