@@ -165,10 +165,16 @@ export async function getExecutiveDashboardSnapshot() {
       const key = monthKey(row.period_start)
       acc[key] ??= {}
       const code = row.metric_code === 'active_leads_snapshot' ? 'leads' : row.metric_code
+      // active_leads_snapshot is a stock metric and must not be compared with
+      // legacy monthly "leads" flow counts even when both happen to use
+      // formula_version=1. Namespace its comparison version explicitly.
+      const comparisonVersion = row.metric_code === 'active_leads_snapshot'
+        ? 1000 + row.formula_version
+        : row.formula_version
       if (code === 'leads' && row.metric_code === 'active_leads_snapshot') {
-        acc[key][code] = { value: numeric(row.value), formulaVersion: row.formula_version }
+        acc[key][code] = { value: numeric(row.value), formulaVersion: comparisonVersion }
       } else {
-        acc[key][code] ??= { value: numeric(row.value), formulaVersion: row.formula_version }
+        acc[key][code] ??= { value: numeric(row.value), formulaVersion: comparisonVersion }
       }
       return acc
     }, {})
