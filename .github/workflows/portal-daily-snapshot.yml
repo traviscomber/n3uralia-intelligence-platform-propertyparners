@@ -1,0 +1,54 @@
+name: Portal Daily Snapshot
+
+on:
+  schedule:
+    - cron: '30 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: portal-daily-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$chrome" ]; then
+            echo "Chrome is not available on this runner." >&2
+            exit 1
+          fi
+          echo "PUPPETEER_EXECUTABLE_PATH=$chrome" >> "$GITHUB_ENV"
+          "$chrome" --version
+
+      - name: Capture and publish Portal snapshot
+        env:
+          NODE_ENV: production
+        run: node --import tsx scripts/run-portal-external-snapshot.ts
