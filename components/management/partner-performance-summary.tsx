@@ -1,126 +1,116 @@
-import { DecisionTrace } from '@/components/intelligence/decision-trace'
-import { requirePageCapability } from '@/lib/access-guards'
-import { getManagementEntities } from '@/lib/presentations-2026'
-import { parseCanonicalSalesComparison } from '@/lib/canonical-commercial-comparisons'
+'use client'
 
-function normalize(value: string | null | undefined) {
-  return String(value ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLowerCase()
+import { useEffect, useMemo, useState } from 'react'
+import { RefreshCw } from 'lucide-react'
+
+type Metric = {
+  code: string
+  label: string
+  unit: 'count' | 'uf' | 'percent' | 'days' | 'score'
+  value: number | null
+  target: number | null
+  compliance: number | null
+  mom: number | null
+  yoy?: number | null
+  periodStart?: string
+  periodEnd?: string
+  sourceName?: string
+  sourceReference?: string | null
+  qualityStatus?: string
 }
 
-function number(value: number | null | undefined, suffix = '') {
-  if (value === null || value === undefined) return 'n/d'
-  return `${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })}${suffix}`
+type Entity = {
+  id: string
+  name: string
+  entityType: string
+  metrics: Metric[]
 }
 
-function variation(value: number | null | undefined) {
-  if (value === null || value === undefined) return 'n/d'
-  return `${value > 0 ? '+' : ''}${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })}%`
+type Payload = {
+  scopeLabel: string
+  entities: Entity[]
+  periodLabel: string
+  generatedAt?: string
+  dataProvenance?: string
+  dataLayers?: { latestApprovedPeriodEnd?: string | null }
 }
 
-type PartnerMetricView = {
-  salesSummary: {
-    source: { deck: string; slide: number; title: string }
-    currentSalesCount: number | null
-    currentSalesUf: number | null
-    cumulativeSalesCount: number | null
-    cumulativeSalesUf: number | null
-    currentTargetSalesCount?: number | null
+const fmt = (metric?: Metric) => {
+  if (!metric || metric.value == null) return 'N/D'
+  if (metric.unit === 'uf') return `${metric.value.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF`
+  if (metric.unit === 'percent') return `${metric.value.toLocaleString('es-CL', { maximumFractionDigits: 1 })}%`
+  return metric.value.toLocaleString('es-CL', { maximumFractionDigits: 1 })
+}
+
+export function PartnerPerformanceSummary() {
+  const [payload, setPayload] = useState<Payload | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/management/summary', { cache: 'no-store' })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'No fue posible cargar el desempeño personal.')
+      setPayload(data)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No fue posible cargar el desempeño personal.')
+    } finally {
+      setLoading(false)
+    }
   }
-  sales?: {
-    salesCount?: Record<string, number | null>
-  }
-  scores: { followUp: number | null; conversion: number | null }
-}
 
-export async function PartnerPerformanceSummary() {
-  const scope = await requirePageCapability('management.self.read')
-  const canonical = getManagementEntities()
-  const profileName = normalize(scope.profile.full_name)
-  const team = normalize(scope.profile.team)
-  const rawPartner = canonical.partners.find((item) => {
-    const sameName = normalize(item.name) === profileName
-    const sameBranch = !team || normalize(item.branch) === team
-    return sameName && sameBranch
-  })
+  useEffect(() => { void load() }, [])
 
-  if (!rawPartner) {
-    return <section className="mx-auto mt-8 max-w-7xl border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]"><h1 className="sr-only">Desempeño personal</h1><p>No existe una ficha canónica vinculada de forma inequívoca a este perfil. No se presentan métricas inferidas.</p></section>
-  }
-
-  const partner = rawPartner as unknown as PartnerMetricView
-  const annual = parseCanonicalSalesComparison(rawPartner as unknown as Parameters<typeof parseCanonicalSalesComparison>[0])
-  const source = partner.salesSummary.source
-  const sales = partner.salesSummary.currentSalesCount
-  const salesTarget = partner.salesSummary.currentTargetSalesCount ?? null
-  const salesCompliance = sales !== null && salesTarget ? (sales / salesTarget) * 100 : null
-  const maySales = partner.sales?.salesCount?.['2026-05'] ?? null
-  const momSales = sales != null && maySales != null && maySales !== 0 ? ((sales / maySales) - 1) * 100 : null
-  const peers = canonical.partners
-    .map((item) => ({ item, sales: Number((item as unknown as PartnerMetricView).salesSummary?.currentSalesCount ?? NaN) }))
-    .filter((entry) => Number.isFinite(entry.sales))
-    .sort((a,b) => b.sales - a.sales)
-  let previousSales: number | null = null
-  let currentRank = 0
-  const ranking = new Map<string, number>()
-  peers.forEach((entry, index) => {
-    if (previousSales === null || entry.sales !== previousSales) currentRank = index + 1
-    previousSales = entry.sales
-    ranking.set(normalize((entry.item as unknown as {name?:string}).name), currentRank)
-  })
-  const personalRank = ranking.get(profileName) ?? null
-  const personalProductivity = sales
+  const partner = payload?.entities.find((item) => item.entityType === 'partner')
+  const metrics = useMemo(() => new Map((partner?.metrics ?? []).map((item) => [item.code, item])), [partner])
   const cards = [
-    ['Cierres junio', number(sales), `Meta: ${number(salesTarget)} · cumplimiento ${variation(salesCompliance)}`],
-    ['MoM · cierres', variation(momSales), `Mayo ${number(maySales)} → junio ${number(sales)}`],
-    ['YoY · cierres', variation(annual?.salesCountYoy), annual?.comparisonPeriod ? `Base ${annual.comparisonPeriod}` : 'Sin período comparable explícito'],
-    ['Venta junio', number(partner.salesSummary.currentSalesUf, ' UF'), `YoY ${variation(annual?.salesUfYoy)}`],
-    ['Cierres acumulados', number(partner.salesSummary.cumulativeSalesCount), `YoY ${variation(annual?.cumulativeSalesCountYoy)}`],
-    ['Venta acumulada', number(partner.salesSummary.cumulativeSalesUf, ' UF'), `YoY ${variation(annual?.cumulativeSalesUfYoy)}`],
-    ['Seguimiento', number(partner.scores.followUp), 'Score reproducido desde fuente canónica'],
-    ['Conversión', number(partner.scores.conversion), 'Score reproducido desde fuente canónica'],
-  ]
-
-  const trace = [
-    {
-      id: 'partner-canonical-performance',
-      domain: 'crm' as const,
-      title: 'Desempeño personal del corte',
-      evidenceStatus: 'documentary_canonical' as const,
-      evidenceLabel: `${number(sales)} cierres frente a meta ${number(salesTarget)}; seguimiento ${number(partner.scores.followUp)} y conversión ${number(partner.scores.conversion)}.`,
-      source: source.deck,
-      sourceReference: `Lámina ${source.slide} · ${source.title}`,
-      cutoff: 'Junio de 2026',
-      ruleOrigin: 'canonical_methodology' as const,
-      severity: salesCompliance != null && salesCompliance < 100 ? 'warning' as const : 'info' as const,
-      confidence: 'high' as const,
-      action: salesCompliance != null && salesCompliance < 100 ? 'Revisar cartera, seguimiento y próximas acciones comerciales.' : 'Mantener seguimiento y revisar evolución del próximo corte.',
-      href: '/dashboard/control/operations',
-      evidenceCount: 6,
-    },
-  ]
+    ['Cierres del período', metrics.get('sales') ?? metrics.get('management_credited_sales')],
+    ['UF del período', metrics.get('sales_uf') ?? metrics.get('management_credited_sales_uf')],
+    ['Captaciones', metrics.get('captations')],
+    ['Leads activos', metrics.get('active_leads_snapshot') ?? metrics.get('active_leads')],
+    ['Visitas agendadas', metrics.get('scheduled_visits')],
+    ['Visitas realizadas', metrics.get('realized_visits')],
+  ] as const
+  const hasNominalMetrics = cards.some(([, item]) => item?.value != null)
 
   return <section className="mx-auto mt-8 max-w-7xl space-y-5">
-    <div className="border-b border-[var(--n3-line)] pb-4"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Lectura contractual personal</p><h1 className="mt-2 text-2xl font-semibold">Metas, evolución y calidad comercial</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">Una sola lectura personal con valores, metas y comparaciones del período. No mezcla métricas de otras ejecutivas.</p></div>
-    <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-3">{cards.map(([label, value, detail]) => <article key={label} className="bg-[var(--n3-deep)] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p><p className="mt-3 text-2xl font-semibold">{value}</p><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">{detail}</p></article>)}</div>
-    <section>
-      <div className="border-b border-[var(--n3-line)] pb-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cobertura contractual personal</p><h2 className="mt-1 text-lg font-semibold">Lo disponible y lo que requiere definición PP</h2></div>
-      <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Captaciones</p><strong className="mt-2 block text-xl">Según fuente del período</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Los Excel canónicos permiten atribución por agente. Si esta ficha no trae el dato, se mantiene n/d y no se reemplaza por stock.</p></article>
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Productividad personal</p><strong className="mt-2 block text-xl">{number(personalProductivity)}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Cierres acreditados del período por ejecutiva; la unidad personal equivale a sus cierres acreditados.</p></article>
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Ranking de cierres</p><strong className="mt-2 block text-xl">{personalRank == null ? 'n/d' : '#' + personalRank}</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Ordenado por cierres canónicos del mismo corte; los empates comparten posición.</p></article>
-        <article className="bg-[var(--n3-deep)] p-5"><p className="text-xs text-[var(--n3-text-muted)]">Alertas</p><strong className="mt-2 block text-xl">Operativas</strong><p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">Tareas y alertas personales están disponibles en el detalle operativo con alcance RLS.</p></article>
+    <div className="border-b border-[var(--n3-line)] pb-4">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Desempeño personal</p>
+      <h1 className="mt-2 text-2xl font-semibold">Corte canónico vigente</h1>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">
+        {payload?.scopeLabel ?? 'Partner'} · {payload?.periodLabel ?? 'Cargando período…'}
+      </p>
+    </div>
+
+    {loading ? <div role="status" aria-busy="true" className="border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">Cargando datos canónicos…</div> : null}
+    {error ? <div role="alert" className="border border-[#d7332b] p-5 text-sm text-[#ff766f]"><p>{error}</p><button onClick={() => void load()} className="mt-3 inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs"><RefreshCw size={14}/>Reintentar</button></div> : null}
+
+    {!loading && payload && !hasNominalMetrics ? <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-6">
+      <p className="text-sm font-semibold">Septiembre 2026 está actualizado a nivel compañía y oficina.</p>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">
+        Este perfil no tiene todavía métricas nominales de septiembre aprobadas y vinculadas de forma inequívoca. No se muestran valores heredados de junio ni se infieren resultados desde la oficina.
+      </p>
+    </div> : null}
+
+    {!loading && payload && hasNominalMetrics ? <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-3">
+      {cards.map(([label, item]) => <article key={label} className="bg-[var(--n3-deep)] p-5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p>
+        <p className="mt-3 text-2xl font-semibold">{fmt(item)}</p>
+        <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">
+          {item?.periodEnd ? `Corte ${item.periodEnd}` : payload.periodLabel}
+        </p>
+      </article>)}
+    </div> : null}
+
+    {!loading && payload ? <details className="border-t border-[var(--n3-line)] pt-4">
+      <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver fuente y alcance</summary>
+      <div className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">
+        <p>{payload.dataProvenance ?? 'Datos canónicos vigentes.'}</p>
+        <p className="mt-2">Regla: no se heredan métricas de períodos anteriores para completar un corte nominal faltante.</p>
       </div>
-    </section>
-    <details className="border-t border-[var(--n3-line)] pt-4">
-      <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver trazabilidad y fuente</summary>
-      <div className="mt-5 space-y-4">
-        <DecisionTrace items={trace} title="Trazabilidad de desempeño personal" />
-        <div className="border-l-2 border-[var(--primary)] pl-4 text-xs leading-5 text-[var(--n3-text-muted)]">Fuente: {source.deck} · lámina {source.slide} · {source.title}. Período principal: junio de 2026; acumulado enero–junio de 2026. Comparación YoY contra 2025 cuando la tabla canónica contiene base explícita.</div>
-      </div>
-    </details>
+    </details> : null}
   </section>
 }
