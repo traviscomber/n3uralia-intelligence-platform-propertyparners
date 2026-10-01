@@ -2,8 +2,8 @@
   "schemaVersion": "2.0.0",
   "canonicalPolicy": {
     "precedence": "Latest Pedro board report controls the current management-credit, goal and scoring series. Earlier issued reports remain immutable historical evidence and are never silently deleted.",
-    "currentAuthority": "Ago_Directorio.pptx",
-    "currentAuthoritySha256": "395e5d942d575bf17939cef99567cfa6ef3f2c6b85bb9d1af43a7b2c20ea2f74",
+    "currentAuthority": "Cierres_septiembre_2026.xlsx + CRM September canonical exports",
+    "currentAuthoritySha256": "1ceb7a8b4eb1cfb29d39800b52111e49fba8ead0312d8daab8b30973b0fcffcb",
     "asReportedVsRestated": "HistoricalIssuedSnapshot captures what was reported at the time. Company/offices hold the current restated canon.",
     "targetSemantics": {
       "rule": "Monthly and cumulative targets are separate published management facts. Do not derive one from the other.",
@@ -18,7 +18,8 @@
         8.6,
         8.8,
         8.6,
-        8.2
+        8.2,
+        8
       ],
       "companyCumulativeTargets": [
         5.86,
@@ -687,6 +688,102 @@
         }
       ],
       "partnerLevelAvailable": false
+    },
+    {
+      "period": "2026-09",
+      "authority": {
+        "file": "September 2026 canonical CRM set",
+        "sha256": "1ceb7a8b4eb1cfb29d39800b52111e49fba8ead0312d8daab8b30973b0fcffcb",
+        "kind": "canonical_crm_month_close",
+        "restatesManagementSeriesThrough": "2026-09"
+      },
+      "historicalIssuedSnapshot": {
+        "source": "Cierres_septiembre_2026.xlsx",
+        "reportedClosings": 5,
+        "notes": [
+          "September net close: 6 active operations minus 1 historical July suspension.",
+          "Historical suspension operation 10050 is carried in September as -1 closing and -22,000 UF.",
+          "Signed UF is authoritative for the suspension adjustment; inconsistent USD/EUR/CLP conversions are excluded."
+        ]
+      },
+      "company": {
+        "name": "Property Partners Vitacura",
+        "legalName": "PL Real Estate Spa",
+        "creditedClosings": 5,
+        "creditedSalesUf": 49560,
+        "canonicalClosingTarget": 8,
+        "canonicalSalesUfTarget": null,
+        "creditedClosingCompliancePercent": 62.5,
+        "ytdCreditedClosings": 55.5,
+        "ytdCreditedSalesUf": 970346,
+        "ytdCanonicalClosingTarget": null,
+        "ytdCanonicalSalesUfTarget": null,
+        "managementScore": null,
+        "portfolioScore": null,
+        "followUpScore": null,
+        "conversionScore": null,
+        "scoringStatus": "not_evaluable",
+        "operationalClosings": 5,
+        "operationalSalesUf": 49560,
+        "stock": 340,
+        "captures": 27,
+        "scheduledVisits": 238,
+        "realizedVisits": 140,
+        "activeLeads": 1470,
+        "classifiedLeads": 855,
+        "stale90Leads": 521,
+        "activeALeads": 94,
+        "stale15ALeads": 21,
+        "targetSemantics": "published_monthly_target_only"
+      },
+      "offices": [
+        {
+          "name": "Santa María",
+          "creditedClosings": 0,
+          "creditedSalesUf": 0,
+          "canonicalClosingTarget": null,
+          "managementScore": null,
+          "portfolioScore": null,
+          "followUpScore": null,
+          "conversionScore": null,
+          "stock": 143,
+          "captures": 6,
+          "activeLeads": 500,
+          "scheduledVisits": 73,
+          "realizedVisits": 48
+        },
+        {
+          "name": "Nueva Costanera",
+          "creditedClosings": 4,
+          "creditedSalesUf": 48360,
+          "canonicalClosingTarget": null,
+          "managementScore": null,
+          "portfolioScore": null,
+          "followUpScore": null,
+          "conversionScore": null,
+          "stock": 94,
+          "captures": 7,
+          "activeLeads": 654,
+          "scheduledVisits": 86,
+          "realizedVisits": 46
+        },
+        {
+          "name": "Lo Beltrán",
+          "creditedClosings": 1,
+          "creditedSalesUf": 1200,
+          "canonicalClosingTarget": null,
+          "managementScore": null,
+          "portfolioScore": null,
+          "followUpScore": null,
+          "conversionScore": null,
+          "stock": 101,
+          "captures": 14,
+          "activeLeads": 286,
+          "scheduledVisits": 79,
+          "realizedVisits": 46
+        }
+      ],
+      "partnerLevelAvailable": true
     }
   ],
   "semanticRules": {
@@ -694,6 +791,7 @@
     "operationalClosings": "Use operational CRM values only as operational context; never substitute them for management-credit closures.",
     "oldReports": "Older reports remain source evidence. When they conflict with a later Pedro board report, expose the restatement rather than overwriting history.",
     "officeAggregation": "Use the corporate canonical metric as authority even when office values reconcile arithmetically.",
-    "partner": "Do not infer Partner metrics from office totals."
+    "partner": "Do not infer Partner metrics from office totals.",
+    "september2026": "September uses the verified CRM close and activity exports. Operation 10050 is a July business suspended in September and is applied as -1 closing / -22,000 UF to company, Lo Beltrán and the affected Partner. Scores and unpublished targets remain null."
   }
 }
