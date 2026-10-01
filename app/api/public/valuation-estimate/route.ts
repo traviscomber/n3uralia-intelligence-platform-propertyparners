@@ -80,32 +80,44 @@ async function loadPublicMarketData(): Promise<PublicMarketData> {
     new Set(listings.map((row) => String(row.property_id ?? '')).filter(Boolean)),
   )
 
-  const [propertiesResult, reviewsResult] = await Promise.all([
-    propertyIds.length
-      ? supabase.from('market_properties').select('id,neighborhood_id').in('id', propertyIds)
-      : Promise.resolve({ data: [], error: null }),
-    listingIds.length
-      ? supabase
-          .from('market_neighborhood_review_items')
-          .select('id,listing_id,suggested_neighborhood_id,decision,created_at')
-          .in('listing_id', listingIds)
-          .order('created_at', { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
-  ])
+  // PostgREST rejects very large .in(...) filters as a bad request once the
+  // current portal inventory grows. Keep the public estimator stable by
+  // resolving IDs in bounded batches.
+  const properties: Array<{ id: string; neighborhood_id: string | null }> = []
+  for (let index = 0; index < propertyIds.length; index += 200) {
+    const batch = propertyIds.slice(index, index + 200)
+    const result = await supabase.from('market_properties').select('id,neighborhood_id').in('id', batch)
+    if (result.error) throw result.error
+    properties.push(...((result.data ?? []) as Array<{ id: string; neighborhood_id: string | null }>))
+  }
 
-  if (propertiesResult.error || reviewsResult.error) {
-    throw propertiesResult.error ?? reviewsResult.error
+  const reviews: Array<{
+    id: string
+    listing_id: string
+    suggested_neighborhood_id: string | null
+    decision: string | null
+    created_at: string
+  }> = []
+  for (let index = 0; index < listingIds.length; index += 200) {
+    const batch = listingIds.slice(index, index + 200)
+    const result = await supabase
+      .from('market_neighborhood_review_items')
+      .select('id,listing_id,suggested_neighborhood_id,decision,created_at')
+      .in('listing_id', batch)
+      .order('created_at', { ascending: false })
+    if (result.error) throw result.error
+    reviews.push(...((result.data ?? []) as typeof reviews))
   }
 
   const neighborhoodByPropertyId = new Map(
-    (propertiesResult.data ?? []).map((row) => [String(row.id), String(row.neighborhood_id ?? '')]),
+    properties.map((row) => [String(row.id), String(row.neighborhood_id ?? '')]),
   )
   const latestReviewByListing = new Map<
     string,
     { suggestedNeighborhoodId: string; decision: string }
   >()
 
-  for (const row of reviewsResult.data ?? []) {
+  for (const row of reviews) {
     const listingId = String(row.listing_id ?? '')
     if (!listingId || latestReviewByListing.has(listingId)) continue
     latestReviewByListing.set(listingId, {
