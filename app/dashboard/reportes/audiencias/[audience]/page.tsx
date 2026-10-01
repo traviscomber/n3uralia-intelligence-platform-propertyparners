@@ -2,11 +2,30 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { getAudienceData } from '@/lib/report-audiences'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import PrintReportButton from '@/components/reports/print-report-button'
 import { getLatestCanonicalManagementPeriod } from '@/lib/management-canonical-periods'
 
 function n(value: number | null | undefined, digits = 0) { return value == null ? 'n/d' : value.toLocaleString('es-CL', { maximumFractionDigits: digits }) }
 function normalize(value: string | null | undefined) { return (value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase() }
+function sellerDisplayName(value: string | null | undefined) { return (value ?? '').replace(/\s*\|\s*Chile\s*$/i, '').trim() }
+function sellerKey(value: string | null | undefined) { return normalize(sellerDisplayName(value)) }
+
+type SeptemberCloseRow = {
+  seller_name: string | null
+  office_name: string | null
+  amount_uf: number | string | null
+  raw_payload: Record<string, unknown> | null
+}
+
+function summarizeClosures(rows: SeptemberCloseRow[]) {
+  return rows.reduce((acc, row) => {
+    const state = String(row.raw_payload?.operation_state ?? '').toLowerCase()
+    acc.closures += state === 'suspendida' ? -1 : 1
+    acc.uf += Number(row.amount_uf ?? 0) || 0
+    return acc
+  }, { closures: 0, uf: 0 })
+}
 
 type PartnerItem = NonNullable<ReturnType<typeof getAudienceData>> extends infer Audience
   ? Audience extends { partners: Array<infer Partner> } ? Partner : never
