@@ -72,6 +72,7 @@ export async function getExecutiveDashboardSnapshot() {
           .eq('entity_id', entityId)
           .in('metric_code', [
             'leads',
+            'active_leads_snapshot',
             'scheduled_visits',
             'realized_visits',
             'sales',
@@ -125,9 +126,13 @@ export async function getExecutiveDashboardSnapshot() {
   const activeKeys = new Set((canonical ?? []).filter((property) => activeIds.has(property.id)).map((property) => property.canonical_key))
 
   const rows = uniqueMetrics((metricResult.data ?? []) as MetricRow[])
-  const latestLeads = latestMonthlyByCode(rows, 'leads')
-  const verifiedPeriodEnd = latestLeads?.period_end
-    ?? rows.map((row) => row.period_end).sort().reverse()[0]
+  const latestLeads = latestMonthlyByCode(rows, 'active_leads_snapshot') ?? latestMonthlyByCode(rows, 'leads')
+  const verifiedPeriodEnd = rows
+    .filter((row) => ['active_leads_snapshot', 'leads', 'scheduled_visits', 'realized_visits', 'sales', 'sales_uf'].includes(row.metric_code))
+    .map((row) => row.period_end)
+    .sort()
+    .reverse()[0]
+    ?? latestLeads?.period_end
     ?? null
   const verifiedMonth = verifiedPeriodEnd ? monthKey(verifiedPeriodEnd) : null
   const nextMonth = verifiedMonth
@@ -154,12 +159,17 @@ export async function getExecutiveDashboardSnapshot() {
   const byCode = new Map(currentMonthRows.map((row) => [row.metric_code, row]))
 
   const monthly = rows
-    .filter((row) => ['leads', 'realized_visits', 'sales', 'sales_uf'].includes(row.metric_code))
+    .filter((row) => ['leads', 'active_leads_snapshot', 'realized_visits', 'sales', 'sales_uf'].includes(row.metric_code))
     .filter((row) => row.period_start.slice(0, 7) === row.period_end.slice(0, 7))
     .reduce<Record<string, Record<string, { value: number | null; formulaVersion: number }>>>((acc, row) => {
       const key = monthKey(row.period_start)
       acc[key] ??= {}
-      acc[key][row.metric_code] ??= { value: numeric(row.value), formulaVersion: row.formula_version }
+      const code = row.metric_code === 'active_leads_snapshot' ? 'leads' : row.metric_code
+      if (code === 'leads' && row.metric_code === 'active_leads_snapshot') {
+        acc[key][code] = { value: numeric(row.value), formulaVersion: row.formula_version }
+      } else {
+        acc[key][code] ??= { value: numeric(row.value), formulaVersion: row.formula_version }
+      }
       return acc
     }, {})
 
@@ -184,7 +194,7 @@ export async function getExecutiveDashboardSnapshot() {
     companyName: company?.name ?? 'Property Partners',
     verifiedPeriodEnd,
     latest: {
-      leads: numeric(byCode.get('leads')?.value),
+      leads: numeric((byCode.get('active_leads_snapshot') ?? byCode.get('leads'))?.value),
       scheduledVisits: numeric(byCode.get('scheduled_visits')?.value),
       realizedVisits: numeric(byCode.get('realized_visits')?.value),
       sales: numeric(byCode.get('sales')?.value),
