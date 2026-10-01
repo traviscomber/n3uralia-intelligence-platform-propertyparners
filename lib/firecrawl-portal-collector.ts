@@ -250,6 +250,8 @@ export async function discoverPortalVitacuraViaFirecrawl(
   let duplicateListingCandidates = 0
   let exhausted = false
   let pagesVisited = 0
+  let consecutiveEmptyPages = 0
+  let shortPageSeen = false
 
   for (let page = 1; page <= maxPages; page += 1) {
     const searchUrl = buildSearchUrl(base, page, datasetKind)
@@ -257,6 +259,7 @@ export async function discoverPortalVitacuraViaFirecrawl(
     const doc = bySource.get(canonicalSearch)
       ?? docs.find((candidate) => sourceUrlOf(candidate).includes(`_Desde_${(page - 1) * pageSize + 1}`))
       ?? (page === 1 ? docs.find((candidate) => !sourceUrlOf(candidate).includes('_Desde_')) : undefined)
+      ?? docs[page - 1]
 
     pagesVisited += 1
     const candidates = (doc?.links ?? [])
@@ -272,11 +275,15 @@ export async function discoverPortalVitacuraViaFirecrawl(
     const added = urls.size - before
     newListingsPerPage.push(added)
 
-    if (page > 1 && (candidates.length === 0 || added === 0)) {
-      exhausted = true
-      break
-    }
-    if (candidates.length > 0 && candidates.length < pageSize) {
+    if (candidates.length === 0 || added === 0) consecutiveEmptyPages += 1
+    else consecutiveEmptyPages = 0
+
+    if (candidates.length > 0 && candidates.length < pageSize) shortPageSeen = true
+
+    // A single empty/duplicate page is not sufficient evidence of exhaustion:
+    // Firecrawl or Portal can transiently return an incomplete page. Require
+    // two consecutive empty pages, or a short page followed by an empty page.
+    if (consecutiveEmptyPages >= 2 || (shortPageSeen && consecutiveEmptyPages >= 1)) {
       exhausted = true
       break
     }
