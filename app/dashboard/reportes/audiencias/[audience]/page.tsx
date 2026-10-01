@@ -143,6 +143,101 @@ export default async function AudiencePage({ params, searchParams }: { params: P
     </div>
   }
 
+  const current = getLatestCanonicalManagementPeriod()
+  const service = createServiceClient()
+
+  if (data.kind === 'director-cuenta' && current) {
+    const allowedBranch = isDirector && profile?.team ? profile.team : (branch || current.offices[0]?.name || '')
+    const office = current.offices.find((item) => normalize(item.name) === normalize(allowedBranch))
+    if (!office) notFound()
+
+    const { data: closeRows } = await service
+      .from('management_source_records')
+      .select('seller_name,office_name,amount_uf,raw_payload')
+      .eq('dataset', 'sales_close_2026_09')
+      .eq('office_name', office.name)
+      .order('source_row_number', { ascending: true })
+
+    const byPartner = new Map<string, { name: string; rows: SeptemberCloseRow[] }>()
+    for (const row of (closeRows ?? []) as SeptemberCloseRow[]) {
+      const name = sellerDisplayName(row.seller_name)
+      const key = sellerKey(name)
+      if (!key) continue
+      const entry = byPartner.get(key) ?? { name, rows: [] }
+      entry.rows.push(row)
+      byPartner.set(key, entry)
+    }
+
+    return <div className="mx-auto max-w-7xl space-y-6 pb-16 print:fixed print:inset-0 print:z-[100] print:m-0 print:max-w-none print:overflow-visible print:bg-white print:p-8 print:text-black print:[--n3-card:#ffffff] print:[--n3-line:#d1d5db] print:[--n3-text-light:#111827] print:[--n3-text-muted:#4b5563]">
+      <header className="border-b border-[var(--n3-line)] pb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><Link href="/dashboard/pedro-pablo" className="text-xs font-semibold text-[var(--n3-teal)]">← Pedro Pablo</Link><PrintReportButton /></div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Property Partners Vitacura · Informe de oficina</p>
+        <h1 className="mt-2 text-3xl font-semibold">{office.name} · Septiembre 2026</h1>
+        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">Corte comercial 30-09-2026 · fuente canónica vigente</p>
+      </header>
+
+      <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ['Cierres netos', office.creditedClosings],
+          ['UF netas', office.creditedSalesUf],
+          ['Cartera', office.stock ?? null],
+          ['Captaciones', office.captures ?? null],
+          ['Leads activos', office.activeLeads ?? null],
+          ['Sin clasificar', office.unclassifiedLeads ?? null],
+          ['Visitas agendadas', office.scheduledVisits ?? null],
+          ['Visitas realizadas', office.realizedVisits ?? null],
+        ].map(([label,value]) => <div key={String(label)} className="bg-[var(--n3-card)] p-5"><p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">{String(label)}</p><p className="mt-2 text-3xl font-semibold">{typeof value === 'number' ? value.toLocaleString('es-CL') : 'n/d'}</p></div>)}
+      </section>
+
+      <section>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Bajada nominal · cierres</p>
+        <div className="mt-3 overflow-x-auto border border-[var(--n3-line)]">
+          <table className="w-full min-w-[650px] text-sm">
+            <thead><tr className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]"><th className="px-4 py-3 text-left">Partner</th><th className="px-4 py-3 text-right">Cierres netos</th><th className="px-4 py-3 text-right">UF netas</th><th className="px-4 py-3 text-left">Evidencia</th></tr></thead>
+            <tbody>{Array.from(byPartner.values()).map((entry) => { const summary=summarizeClosures(entry.rows); return <tr key={entry.name} className="border-t border-[var(--n3-line)]"><td className="px-4 py-3 font-medium">{entry.name}</td><td className="px-4 py-3 text-right">{summary.closures}</td><td className="px-4 py-3 text-right">{summary.uf.toLocaleString('es-CL')} UF</td><td className="px-4 py-3 text-xs text-[var(--n3-text-muted)]">Cierres septiembre 2026</td></tr>})}</tbody>
+          </table>
+        </div>
+        {!byPartner.size ? <p className="mt-3 text-sm text-[var(--n3-text-muted)]">No existen cierres nominales registrados para esta oficina en septiembre.</p> : null}
+      </section>
+
+      <footer className="border-t border-[var(--n3-line)] pt-4 text-xs leading-5 text-[var(--n3-text-muted)]">No se infieren métricas nominales de leads, visitas ni scores por Partner desde los totales de la oficina.</footer>
+    </div>
+  }
+
+  if (data.kind === 'ejecutivo' && current) {
+    const requestedName = isSeller ? (canonicalEntity?.name || profile?.full_name || '') : (partner || '')
+    const canonicalPartner = data.partners.find((item) => normalize(item.name) === normalize(requestedName))
+    const displayName = canonicalPartner?.name || requestedName || 'Partner'
+    const { data: allCloseRows } = await service
+      .from('management_source_records')
+      .select('seller_name,office_name,amount_uf,raw_payload')
+      .eq('dataset', 'sales_close_2026_09')
+      .order('source_row_number', { ascending: true })
+    const partnerRows = ((allCloseRows ?? []) as SeptemberCloseRow[]).filter((row) => sellerKey(row.seller_name) === sellerKey(displayName))
+    const summary = summarizeClosures(partnerRows)
+    const officeName = partnerRows[0]?.office_name || canonicalPartner?.branch || null
+
+    return <div className="mx-auto max-w-5xl space-y-6 pb-16 print:fixed print:inset-0 print:z-[100] print:m-0 print:max-w-none print:overflow-visible print:bg-white print:p-8 print:text-black print:[--n3-card:#ffffff] print:[--n3-line:#d1d5db] print:[--n3-text-light:#111827] print:[--n3-text-muted:#4b5563]">
+      <header className="border-b border-[var(--n3-line)] pb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><Link href={isSeller ? '/dashboard/partner' : '/dashboard/pedro-pablo'} className="text-xs font-semibold text-[var(--n3-teal)]">← Volver</Link><PrintReportButton /></div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Property Partners Vitacura · Reporte Partner</p>
+        <h1 className="mt-2 text-3xl font-semibold">{displayName} · Septiembre 2026</h1>
+        <p className="mt-2 text-sm text-[var(--n3-text-muted)]">{officeName ? officeName + ' · ' : ''}Corte comercial 30-09-2026</p>
+      </header>
+
+      <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+        <div className="bg-[var(--n3-card)] p-6"><p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">Cierres netos</p><p className="mt-2 text-4xl font-semibold">{summary.closures}</p></div>
+        <div className="bg-[var(--n3-card)] p-6"><p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">UF netas</p><p className="mt-2 text-4xl font-semibold">{summary.uf.toLocaleString('es-CL')} UF</p></div>
+      </section>
+
+      {partnerRows.some((row) => String(row.raw_payload?.operation_state ?? '').toLowerCase() === 'suspendida') ? <section className="border-l-2 border-[#d7332b] pl-4"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">Ajuste histórico</p><p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">Este resultado incluye la suspensión registrada en septiembre de un negocio originado en julio. El ajuste permanece visible y reduce cierres y UF del período.</p></section> : null}
+
+      <section className="border border-[var(--n3-line)] p-5"><p className="text-sm font-semibold">Alcance nominal de septiembre</p><p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">El archivo canónico permite atribuir cierres y UF por Partner. Leads, visitas y scores no se publican a nivel individual porque septiembre no trae evidencia nominal suficiente para esas métricas.</p></section>
+
+      <footer className="border-t border-[var(--n3-line)] pt-4 text-xs text-[var(--n3-text-muted)]">Fuente: cierres septiembre 2026 · sin inferencias desde totales de oficina.</footer>
+    </div>
+  }
+
   const title = data.kind === 'ceo' ? 'PL Real Estate' : data.kind === 'director-cuenta' ? (branch || profile?.team || 'Reporte de oficina') : isSeller ? 'Mi reporte de desempeño' : (partner || 'Reporte Partner')
 
   let items: PartnerItem[] | typeof data.branches = []
