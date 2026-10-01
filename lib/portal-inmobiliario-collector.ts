@@ -504,7 +504,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   let rawListingCandidates = 0
   let reportedResultCount: number | null = null
   let exhausted = false
-  const concurrency = 4
+  const concurrency = 2
 
   for (let start = 0; start < searchUrls.length && !exhausted; start += concurrency) {
     const batch = searchUrls.slice(start, start + concurrency)
@@ -516,7 +516,13 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
         // Portal returns 404 when pagination goes past the last available page.
         // Treat that as proven exhaustion; all other non-2xx responses remain failures.
         if (navigation.exhausted) return { text: '', pageCandidates: [] }
-        if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
+        // Since late September 2026 Portal can hydrate search cards client-side.
+        // Wait for listing anchors instead of assuming the initial HTML already
+        // contains the inventory. A timeout is non-fatal: embedded JSON is still parsed.
+        await Promise.race([
+          page.waitForSelector('a[href*="MLC-"], a[href*="/p/MLC"]', { timeout: 8_000 }).catch(() => null),
+          new Promise((resolve) => setTimeout(resolve, Math.max(waitMs, 1_200))),
+        ])
         const pageState = await page.evaluate(() => ({
           links: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((anchor) => anchor.href),
           text: document.body?.innerText ?? '',
