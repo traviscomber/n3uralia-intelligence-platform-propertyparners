@@ -41,6 +41,7 @@ export default async function AudiencePage({ params, searchParams }: { params: P
   if (isSeller && audience !== 'ejecutivo') redirect('/auth/error')
   if (isDirector && audience === 'ceo') redirect('/auth/error')
   if (!isExecutive && !isDirector && !isSeller) redirect('/auth/error')
+  if (data.kind === 'ceo' && isExecutive) redirect('/dashboard/ceo/reporte')
 
   const title = data.kind === 'ceo' ? 'PL Real Estate' : data.kind === 'director-cuenta' ? (branch || profile?.team || 'Reporte de oficina') : isSeller ? 'Mi reporte de desempeño' : (partner || 'Reporte Partner')
 
