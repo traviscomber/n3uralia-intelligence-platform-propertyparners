@@ -125,7 +125,7 @@ export async function discoverPortalVitacuraViaFirecrawl(
       exhausted = true
       break
     }
-    await new Promise((resolve) => setTimeout(resolve, 1800))
+    await new Promise((resolve) => setTimeout(resolve, 3200))
   }
 
   const listingUrls = [...urls]
