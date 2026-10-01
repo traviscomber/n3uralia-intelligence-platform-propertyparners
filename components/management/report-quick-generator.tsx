@@ -43,7 +43,7 @@ export function ReportQuickGenerator({ branches, partners, compact = false }: Pr
     : availablePartners[0]?.name ?? ''
 
   const href = level === 'pl-real-estate'
-    ? '/dashboard/reportes/audiencias/ceo'
+    ? '/dashboard/ceo/reporte'
     : level === 'office'
       ? `/dashboard/reportes/audiencias/director-cuenta?branch=${encodeURIComponent(branch)}`
       : `/dashboard/reportes/audiencias/ejecutivo?partner=${encodeURIComponent(selectedPartner)}`
