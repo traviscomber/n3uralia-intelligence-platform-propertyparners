@@ -125,6 +125,7 @@ export async function discoverPortalVitacuraViaFirecrawl(
       exhausted = true
       break
     }
+    await new Promise((resolve) => setTimeout(resolve, 1800))
   }
 
   const listingUrls = [...urls]
@@ -153,7 +154,7 @@ export async function collectPortalListingDetailsViaFirecrawl(args: {
 }) {
   const rows: MarketImportInputRow[] = []
   const failures: Array<{ url: string; error: string }> = []
-  const concurrency = 4
+  const concurrency = 1
 
   for (let start = 0; start < args.listingUrls.length; start += concurrency) {
     const batch = args.listingUrls.slice(start, start + concurrency)
@@ -173,6 +174,7 @@ export async function collectPortalListingDetailsViaFirecrawl(args: {
       if (result.row) rows.push(result.row)
       if (result.failure) failures.push(result.failure)
     }
+    if (start + concurrency < args.listingUrls.length) await new Promise((resolve) => setTimeout(resolve, 1200))
   }
 
   return { observedAt: new Date().toISOString(), rows, failures }
