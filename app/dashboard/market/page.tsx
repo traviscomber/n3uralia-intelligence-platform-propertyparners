@@ -107,7 +107,13 @@ export default async function MarketPage() {
     ? market.logicalComponentsWithNeighborhood / market.logicalHouseComponents
     : null
   const territoryExceptions = (market.ambiguousTerritorySuggestions ?? 0) + (market.unmatchedTerritoryHouses ?? 0)
-  const dataStatus = market.error || market.freshnessStatus === 'stale'
+  const latestAttemptIsNewer = Boolean(
+    market.latestAttemptAt
+      && (!market.latestIngestionAt || new Date(market.latestAttemptAt).getTime() > new Date(market.latestIngestionAt).getTime()),
+  )
+  const portalSourceDegraded = latestAttemptIsNewer && market.latestAttemptStatus === 'failed'
+
+  const dataStatus = market.error || market.freshnessStatus === 'stale' || portalSourceDegraded
     ? 'blocked'
     : liveIdentityCoverage !== null && liveIdentityCoverage >= 0.8 && liveTerritorialCoverage !== null && liveTerritorialCoverage >= 0.8 && market.confirmedSales !== null
       ? 'ready'
@@ -229,6 +235,18 @@ export default async function MarketPage() {
 
       {market.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar toda la información de mercado." /></div> : null}
       {executiveResult.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar el control ejecutivo; sus indicadores no se muestran." /></div> : null}
+      {portalSourceDegraded ? (
+        <div className="mt-4 border border-[#8a5a20] bg-[#2a1d0f] px-4 py-3 text-xs leading-5 text-[#f0c96a]">
+          <p className="font-semibold">Portal Inmobiliario · fuente temporalmente degradada</p>
+          <p className="mt-1">
+            El cron automático continúa ejecutándose, pero la captura más reciente fue rechazada porque Portal no entregó inventario utilizable.
+            Se conserva el último corte completo verificado del {date(market.latestIngestionAt)} y no se publica una actualización vacía como vigente.
+          </p>
+          <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">
+            Último intento: {date(market.latestAttemptAt)} · estado {market.latestAttemptStatus ?? '—'}{market.latestAttemptError ? ` · ${market.latestAttemptError}` : ''}
+          </p>
+        </div>
+      ) : null}
 
       <section className="mt-6 border-y border-[var(--n3-line)] py-7">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.7fr)] lg:items-end">
