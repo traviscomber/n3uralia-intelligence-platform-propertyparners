@@ -38,9 +38,12 @@ const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
 const DEFAULT_COMMUNE = 'vitacura-metropolitana'
 
 function buildSearchBase(datasetKind: PortalDatasetKind, operation: string, commune: string) {
-  if (datasetKind === 'portal_houses') return `${PORTAL_ORIGIN}/${operation}/casa/propiedades-usadas/${commune}`
+  // Portal changed its canonical search routes at the end of September 2026.
+  // The legacy /propiedades-usadas path can return HTTP 200 with an empty shell,
+  // which made the cron look successful while discovering zero listings.
+  if (datasetKind === 'portal_houses') return `${PORTAL_ORIGIN}/${operation}/casa/${commune}`
   if (datasetKind === 'portal_projects') return `${PORTAL_ORIGIN}/${operation}/departamento/proyectos/${commune}`
-  return `${PORTAL_ORIGIN}/${operation}/departamento/propiedades-usadas/${commune}`
+  return `${PORTAL_ORIGIN}/${operation}/departamento/${commune}`
 }
 
 function buildSearchUrl(base: string, page: number, datasetKind: PortalDatasetKind) {
