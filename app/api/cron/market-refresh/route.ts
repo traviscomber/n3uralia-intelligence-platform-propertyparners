@@ -7,6 +7,10 @@ import {
   discoverPortalVitacuraUniverse,
   portalListingIdFromUrl,
 } from '@/lib/portal-inmobiliario-collector'
+import {
+  collectPortalListingDetailsViaFirecrawl,
+  discoverPortalVitacuraViaFirecrawl,
+} from '@/lib/firecrawl-portal-collector'
 import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
 
 export const runtime = 'nodejs'
@@ -614,13 +618,22 @@ export async function GET(request: Request) {
   for (const datasetKind of DATASETS) {
     try {
       const previousCompleteRun = await latestCompleteInventoryRun(supabase, datasetKind)
-      const inventory = await discoverPortalVitacuraUniverse({
-        datasetKind,
-        commune: 'vitacura-metropolitana',
-        operation: 'venta',
-        maxPages: MAX_DISCOVERY_PAGES,
-        waitMs: DISCOVERY_WAIT_MS,
-      })
+      const useFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY)
+      const inventory = useFirecrawl
+        ? await discoverPortalVitacuraViaFirecrawl({
+            datasetKind,
+            commune: 'vitacura-metropolitana',
+            operation: 'venta',
+            maxPages: MAX_DISCOVERY_PAGES,
+            waitMs: DISCOVERY_WAIT_MS,
+          })
+        : await discoverPortalVitacuraUniverse({
+            datasetKind,
+            commune: 'vitacura-metropolitana',
+            operation: 'venta',
+            maxPages: MAX_DISCOVERY_PAGES,
+            waitMs: DISCOVERY_WAIT_MS,
+          })
 
       if (inventory.listingUrls.length === 0) {
         throw new Error('COLLECTOR_EMPTY_DISCOVERY')
@@ -676,11 +689,16 @@ export async function GET(request: Request) {
       }
 
       const detailUrls = rotatedDetailBatch(inventory.listingUrls, inventory.observedAt)
-      const details = await collectPortalListingDetails({
-        datasetKind,
-        listingUrls: detailUrls,
-        waitMs: DETAIL_WAIT_MS,
-      })
+      const details = process.env.FIRECRAWL_API_KEY
+        ? await collectPortalListingDetailsViaFirecrawl({
+            datasetKind,
+            listingUrls: detailUrls,
+          })
+        : await collectPortalListingDetails({
+            datasetKind,
+            listingUrls: detailUrls,
+            waitMs: DETAIL_WAIT_MS,
+          })
       const normalized = normalizePortalListingRows(details.rows)
       const validRows = normalized.filter((row) => row.source_listing_id && row.url)
 
@@ -770,8 +788,8 @@ export async function GET(request: Request) {
     {
       ok,
       fullSnapshot: completeInventories === DATASETS.length,
-      inventoryPipeline: 'portal_inventory_discovery_v1',
-      detailPipeline: 'unit_portal_listing_v2',
+      inventoryPipeline: process.env.FIRECRAWL_API_KEY ? 'portal_inventory_firecrawl_v1' : 'portal_inventory_discovery_v1',
+      detailPipeline: process.env.FIRECRAWL_API_KEY ? 'unit_portal_listing_firecrawl_v1' : 'unit_portal_listing_v2',
       maxDiscoveryPages: MAX_DISCOVERY_PAGES,
       maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
       fullSweep,
