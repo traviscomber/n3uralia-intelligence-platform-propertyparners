@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getAudienceData } from '@/lib/report-audiences'
 import { createClient } from '@/lib/supabase/server'
 import PrintReportButton from '@/components/reports/print-report-button'
+import { getLatestCanonicalManagementPeriod } from '@/lib/management-canonical-periods'
 
 function n(value: number | null | undefined, digits = 0) { return value == null ? 'n/d' : value.toLocaleString('es-CL', { maximumFractionDigits: digits }) }
 function normalize(value: string | null | undefined) { return (value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase() }
@@ -41,7 +42,87 @@ export default async function AudiencePage({ params, searchParams }: { params: P
   if (isSeller && audience !== 'ejecutivo') redirect('/auth/error')
   if (isDirector && audience === 'ceo') redirect('/auth/error')
   if (!isExecutive && !isDirector && !isSeller) redirect('/auth/error')
-  if (data.kind === 'ceo' && isExecutive) redirect('/dashboard/ceo/reporte')
+
+  if (data.kind === 'ceo' && isExecutive) {
+    const current = getLatestCanonicalManagementPeriod()
+    if (!current) notFound()
+    const company = current.company
+    const notes = Array.isArray((current.historicalIssuedSnapshot as { notes?: string[] } | undefined)?.notes)
+      ? ((current.historicalIssuedSnapshot as { notes?: string[] }).notes ?? [])
+      : []
+    return <div className="mx-auto max-w-7xl space-y-6 pb-16 print:fixed print:inset-0 print:z-[100] print:m-0 print:max-w-none print:overflow-visible print:bg-white print:p-8 print:text-black print:[--n3-card:#ffffff] print:[--n3-line:#d1d5db] print:[--n3-teal:#b42318] print:[--n3-text-light:#111827] print:[--n3-text-muted:#4b5563]">
+      <header className="border-b border-[var(--n3-line)] pb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+          <Link href="/dashboard/pedro-pablo" className="text-xs font-semibold text-[var(--n3-teal)]">← Pedro Pablo</Link>
+          <PrintReportButton />
+        </div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Property Partners Vitacura · Informe ejecutivo</p>
+        <h1 className="mt-2 text-3xl font-semibold text-[var(--n3-text-light)] sm:text-4xl">PL Real Estate · Septiembre 2026</h1>
+        <div className="mt-3 grid gap-1 text-sm text-[var(--n3-text-muted)] sm:grid-cols-2">
+          <p>Período: septiembre 2026</p>
+          <p className="sm:text-right">Corte comercial: 30-09-2026</p>
+          <p>Fuente: {current.authority.file}</p>
+          <p className="sm:text-right">Estado: canónico</p>
+        </div>
+      </header>
+
+      <section className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ['Cierres netos', company.creditedClosings],
+          ['UF netas', company.creditedSalesUf],
+          ['Cartera publicada', company.stock ?? null],
+          ['Captaciones', company.captures ?? null],
+          ['Leads activos', company.activeLeads ?? null],
+          ['Leads clasificados', company.classifiedLeads ?? null],
+          ['Visitas agendadas', company.scheduledVisits ?? null],
+          ['Visitas realizadas', company.realizedVisits ?? null],
+        ].map(([label,value]) => <div key={String(label)} className="bg-[var(--n3-card)] p-5">
+          <p className="text-[10px] uppercase tracking-widest text-[var(--n3-text-muted)]">{String(label)}</p>
+          <p className="mt-2 text-3xl font-semibold">{typeof value === 'number' ? value.toLocaleString('es-CL') : 'n/d'}</p>
+        </div>)}
+      </section>
+
+      <section>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Oficinas</p>
+        <div className="overflow-x-auto border border-[var(--n3-line)]">
+          <table className="w-full min-w-[900px] text-sm">
+            <thead className="bg-[#080d0d] text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)] print:bg-white">
+              <tr>
+                <th className="px-4 py-3 text-left">Oficina</th>
+                <th className="px-4 py-3 text-right">Cierres</th>
+                <th className="px-4 py-3 text-right">UF</th>
+                <th className="px-4 py-3 text-right">Cartera</th>
+                <th className="px-4 py-3 text-right">Captaciones</th>
+                <th className="px-4 py-3 text-right">Leads activos</th>
+                <th className="px-4 py-3 text-right">Visitas ag.</th>
+                <th className="px-4 py-3 text-right">Realizadas</th>
+              </tr>
+            </thead>
+            <tbody>{current.offices.map((office) => <tr key={office.name} className="border-t border-[var(--n3-line)]">
+              <td className="px-4 py-3 font-semibold">{office.name}</td>
+              <td className="px-4 py-3 text-right">{office.creditedClosings.toLocaleString('es-CL')}</td>
+              <td className="px-4 py-3 text-right">{office.creditedSalesUf.toLocaleString('es-CL')} UF</td>
+              <td className="px-4 py-3 text-right">{office.stock?.toLocaleString('es-CL') ?? 'n/d'}</td>
+              <td className="px-4 py-3 text-right">{office.captures?.toLocaleString('es-CL') ?? 'n/d'}</td>
+              <td className="px-4 py-3 text-right">{office.activeLeads?.toLocaleString('es-CL') ?? 'n/d'}</td>
+              <td className="px-4 py-3 text-right">{office.scheduledVisits?.toLocaleString('es-CL') ?? 'n/d'}</td>
+              <td className="px-4 py-3 text-right">{office.realizedVisits?.toLocaleString('es-CL') ?? 'n/d'}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="border-l-2 border-[var(--n3-teal)] pl-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Ajuste canónico</p>
+        <p className="mt-2 text-sm leading-6 text-[var(--n3-text-light)]">Septiembre registra 6 operaciones activas por 71.560 UF y una suspensión histórica de julio por -1 cierre / -22.000 UF. Resultado neto: 5 cierres / 49.560 UF.</p>
+        {notes.length ? <ul className="mt-3 space-y-1 text-xs leading-5 text-[var(--n3-text-muted)]">{notes.map((note) => <li key={note}>• {note}</li>)}</ul> : null}
+      </section>
+
+      <footer className="border-t border-[var(--n3-line)] pt-4 text-xs leading-5 text-[var(--n3-text-muted)]">
+        Informe generado desde la fuente canónica vigente. Métricas no publicadas para septiembre se mantienen como n/d y no se reconstruyen por inferencia.
+      </footer>
+    </div>
+  }
 
   const title = data.kind === 'ceo' ? 'PL Real Estate' : data.kind === 'director-cuenta' ? (branch || profile?.team || 'Reporte de oficina') : isSeller ? 'Mi reporte de desempeño' : (partner || 'Reporte Partner')
 
