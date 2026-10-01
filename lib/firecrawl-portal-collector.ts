@@ -107,10 +107,20 @@ export async function discoverPortalVitacuraViaFirecrawl(
   for (let page = 1; page <= maxPages; page += 1) {
     const searchUrl = buildSearchUrl(base, page, datasetKind)
     searchUrls.push(searchUrl)
-    const doc = await firecrawlScrape(searchUrl, ['links'])
-    const candidates = (doc.links ?? [])
+    let doc = await firecrawlScrape(searchUrl, ['links'])
+    let candidates = (doc.links ?? [])
       .map(canonicalListingUrl)
       .filter((url) => isListingUrl(url, datasetKind))
+
+    if (candidates.length === 0 && page > 1) {
+      for (let retry = 0; retry < 2 && candidates.length === 0; retry += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 5000))
+        doc = await firecrawlScrape(searchUrl, ['links'])
+        candidates = (doc.links ?? [])
+          .map(canonicalListingUrl)
+          .filter((url) => isListingUrl(url, datasetKind))
+      }
+    }
 
     rawListingCandidates += candidates.length
     const before = urls.size
