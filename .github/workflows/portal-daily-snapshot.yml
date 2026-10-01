@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   snapshot:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     timeout-minutes: 25
 
     steps:
@@ -48,8 +48,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
-          if [ -z "$chrome" ]; then
+          chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          if [ ! -x "$chrome" ]; then
+            chrome="$(command -v google-chrome || command -v chromium || true)"
+          fi
+          if [ -z "$chrome" ] || [ ! -x "$chrome" ]; then
             echo "Chrome is not available on this runner." >&2
             exit 1
           fi
