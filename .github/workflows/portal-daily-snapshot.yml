@@ -23,8 +23,10 @@ concurrency:
 
 jobs:
   snapshot:
-    runs-on: macos-14
-    timeout-minutes: 25
+    # Primary zero-credit runtime: an always-on N3uralia worker located on a
+    # normal Chilean office/residential network where Portal works in Chrome.
+    runs-on: [self-hosted, n3uralia, portal, chile]
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -48,12 +50,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-          if [ ! -x "$chrome" ]; then
-            chrome="$(command -v google-chrome || command -v chromium || true)"
+          chrome="${PUPPETEER_EXECUTABLE_PATH:-}"
+          if [ -z "$chrome" ]; then
+            for candidate in               "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"               "/usr/bin/google-chrome"               "/usr/bin/google-chrome-stable"               "/usr/bin/chromium"               "/usr/bin/chromium-browser"
+            do
+              if [ -x "$candidate" ]; then
+                chrome="$candidate"
+                break
+              fi
+            done
           fi
           if [ -z "$chrome" ] || [ ! -x "$chrome" ]; then
-            echo "Chrome is not available on this runner." >&2
+            echo "Chrome is not available on the self-hosted runner." >&2
             exit 1
           fi
           echo "PUPPETEER_EXECUTABLE_PATH=$chrome" >> "$GITHUB_ENV"
