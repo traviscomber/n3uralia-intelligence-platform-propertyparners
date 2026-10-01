@@ -18,6 +18,7 @@ type PortalGithubPayload = {
     capped?: boolean
   }
   failedListingDetails?: number
+  acquisitionRuntime?: string
 }
 
 function getServiceClient() {
@@ -92,6 +93,9 @@ export async function POST(req: NextRequest) {
     const observedAt = typeof body.observedAt === 'string' ? body.observedAt : new Date().toISOString()
     const discovery = body.discovery ?? {}
     const failedListingDetails = Number(body.failedListingDetails ?? 0)
+    const acquisitionRuntime = body.acquisitionRuntime === 'self_hosted_chrome'
+      ? 'self_hosted_chrome'
+      : 'github_actions_chrome'
 
     const reported = Number(discovery.reportedResultCount ?? 0)
     const discovered = Number(discovery.uniqueListings ?? rows.length)
@@ -150,7 +154,7 @@ export async function POST(req: NextRequest) {
           metadata: {
             ...metadata,
             pipeline: 'portal_inventory_discovery_v1',
-            acquisition_runtime: 'github_actions_chrome',
+            acquisition_runtime: acquisitionRuntime,
             github_run_id: claims.run_id ?? null,
             github_sha: claims.sha ?? null,
             observed_at: observedAt,
