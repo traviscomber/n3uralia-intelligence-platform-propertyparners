@@ -34,6 +34,9 @@ export type OperationalMarketSnapshot = {
   clientSaleSignalSourceFiles: number | null
   latestIngestionAt: string | null
   latestIngestionStatus: string | null
+  latestAttemptAt: string | null
+  latestAttemptStatus: string | null
+  latestAttemptError: string | null
   latestIngestionAccepted: number | null
   latestIngestionRejected: number | null
   latestIngestionFullSnapshot: boolean | null
@@ -142,6 +145,9 @@ const emptySnapshot: OperationalMarketSnapshot = {
   clientSaleSignalSourceFiles: null,
   latestIngestionAt: null,
   latestIngestionStatus: null,
+  latestAttemptAt: null,
+  latestAttemptStatus: null,
+  latestAttemptError: null,
   latestIngestionAccepted: null,
   latestIngestionRejected: null,
   latestIngestionFullSnapshot: null,
@@ -184,7 +190,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
   try {
     const supabase = await createClient()
     const service = createServiceClient()
-    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestInventoryRunResult, latestDetailRunResult, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestInventoryRunResult, latestDetailRunResult, latestAttemptRunResult, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase.rpc('get_market_house_identity_progress_v1').maybeSingle(),
@@ -227,6 +233,13 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .maybeSingle(),
       service
         .from('market_ingestion_runs')
+        .select('id,status,accepted_rows,rejected_rows,completed_at,started_at,error_message,metadata')
+        .eq('dataset_kind', 'portal_houses')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      service
+        .from('market_ingestion_runs')
         .select('id', { count: 'exact', head: true })
         .eq('dataset_kind', 'portal_houses'),
     ])
@@ -242,6 +255,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestMetric.error,
       latestInventoryRunResult.error,
       latestDetailRunResult.error,
+      latestAttemptRunResult.error,
       ingestionRuns.error,
     ].filter(Boolean)
 
@@ -253,6 +267,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const metric = latestMetric.data
     const inventoryRun = latestInventoryRunResult.data ?? null
     const detailRun = latestDetailRunResult.data ?? null
+    const attemptRun = latestAttemptRunResult.data ?? null
     const inventoryMetadata = inventoryRun?.metadata && typeof inventoryRun.metadata === 'object'
       ? inventoryRun.metadata as Record<string, unknown>
       : null
@@ -307,6 +322,9 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       clientSaleSignalSourceFiles: clientSaleSignalsResult.error ? null : clientSaleSignals?.source_files ?? 0,
       latestIngestionAt: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.completed_at ?? inventoryRun?.started_at ?? detailRun?.completed_at ?? detailRun?.started_at ?? null,
       latestIngestionStatus: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.status ?? detailRun?.status ?? null,
+      latestAttemptAt: latestAttemptRunResult.error ? null : attemptRun?.completed_at ?? attemptRun?.started_at ?? null,
+      latestAttemptStatus: latestAttemptRunResult.error ? null : attemptRun?.status ?? null,
+      latestAttemptError: latestAttemptRunResult.error ? null : attemptRun?.error_message ?? null,
       latestIngestionAccepted: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.accepted_rows ?? detailRun?.accepted_rows ?? null,
       latestIngestionRejected: (latestInventoryRunResult.error || latestDetailRunResult.error) ? null : inventoryRun?.rejected_rows ?? detailRun?.rejected_rows ?? null,
       latestIngestionFullSnapshot: (latestInventoryRunResult.error || latestDetailRunResult.error)
