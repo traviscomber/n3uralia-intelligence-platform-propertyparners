@@ -297,14 +297,37 @@ export async function GET() {
     scopeLabel = 'Compañía completa'
   } else if (role === 'director' || role === 'subdirector') {
     const team = normalize(profile.team)
-    const branch = canonical.branches.find((item) => normalize(item.name) === team || normalize(item.branch) === team)
-    const partners = canonical.partners.filter((item) => normalize(item.branch) === team || (branch && normalize(item.branch) === normalize(branch.name)))
-    entities = [...(branch ? [toPayloadEntity(branch, 'branch')] : []), ...partners.map((item) => toPayloadEntity(item, 'partner'))]
+    const branch = latestCanonicalEntities.find((item) =>
+      item.entityType === 'branch' && normalize(item.name) === team
+    )
+    const documentaryPartners = canonical.partners.filter((item) =>
+      normalize(item.branch) === team || (branch && normalize(item.branch) === normalize(branch.name))
+    )
+    const partnerShells: DashboardEntity[] = documentaryPartners.map((item) => ({
+      id: `partner:${normalize(item.name).replace(/[^a-z0-9]+/g, '-')}`,
+      name: item.name,
+      entityType: 'partner',
+      parentId: branch?.id ?? null,
+      classification: item.scores.classification,
+      metrics: [],
+      evolution: [],
+    }))
+    entities = [...(branch ? [branch] : []), ...partnerShells]
     scopeLabel = branch?.name ?? profile.team ?? 'Sucursal asignada'
   } else if (role === 'seller') {
     const partner = canonical.partners.find((item) => normalize(item.name) === normalize(profile.full_name))
-    if (partner) entities = [toPayloadEntity(partner, 'partner')]
-    scopeLabel = partner ? `${partner.name} · ${partner.branch ?? profile.team ?? 'Sin sucursal'}` : `${profile.full_name ?? 'Partner'} · sin ficha documental vinculada`
+    if (partner) {
+      entities = [{
+        id: `partner:${normalize(partner.name).replace(/[^a-z0-9]+/g, '-')}`,
+        name: partner.name,
+        entityType: 'partner',
+        parentId: null,
+        classification: partner.scores.classification,
+        metrics: [],
+        evolution: [],
+      }]
+    }
+    scopeLabel = partner ? `${partner.name} · ${partner.branch ?? profile.team ?? 'Sin sucursal'}` : `${profile.full_name ?? 'Partner'} · sin ficha canónica nominal vinculada`
   } else return NextResponse.json({ error: 'Rol no autorizado.' }, { status: 403 })
 
   const [persistedEntitiesResult, definitionsResult, approvedValuesResult, goalsResult] = await Promise.all([
