@@ -14,6 +14,8 @@ export type SupplySalesRow = {
   supplyDepthRatio: number | null
   signal: string
   confidence: string
+  asOfPortal: string | null
+  asOfCbrs: string | null
 }
 
 export type HouseSupplySalesLiveRow = {
@@ -46,6 +48,8 @@ function supplySalesRow(row: Record<string, unknown>): SupplySalesRow {
     supplyDepthRatio: row.supply_depth_ratio == null ? null : Number(row.supply_depth_ratio),
     signal: String(row.signal ?? 'insufficient_data'),
     confidence: String(row.confidence ?? 'low'),
+    asOfPortal: row.as_of_portal == null ? null : String(row.as_of_portal),
+    asOfCbrs: row.as_of_cbrs == null ? null : String(row.as_of_cbrs),
   }
 }
 
