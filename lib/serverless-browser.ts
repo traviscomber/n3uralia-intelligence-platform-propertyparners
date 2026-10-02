@@ -1,4 +1,5 @@
 import type { Browser } from 'puppeteer-core'
+import { resolvePortalProxy } from '@/lib/portal-proxy'
 
 export async function launchServerlessBrowser(): Promise<Browser> {
   const { default: puppeteer } = await import('puppeteer-core')
