@@ -80,6 +80,8 @@ async function main() {
   assert.doesNotMatch(smoke, /supabase|insert\(|update\(|delete\(/i, 'Collector smoke must remain read-only.')
   assert.match(apartmentBootstrap, /details_only/ , 'Apartment bootstrap must reuse the bounded detail-drain path.')
   assert.match(apartmentBootstrap, /portal_apartments/, 'Apartment bootstrap must be hard-scoped to apartments.')
+  assert.match(apartmentBootstrap, /provider'.*'brightdata'/, 'Apartment bootstrap must force Bright Data and avoid Firecrawl quota use.')
+  assert.match(refresh, /brightDataOnly[\s\S]*collectPortalListingDetailsViaBrightData/, 'Bright Data-only detail drain must bypass provider fallbacks.')
   assert.match(vercelConfig, /market-apartment-bootstrap/, 'Apartment bootstrap must be scheduled explicitly.')
 
   assert.match(authMigration, /grant execute on function public\.ingest_portal_listing_snapshot_v2[\s\S]*to service_role/i, 'Portal ingestion must be executable by service_role.')
