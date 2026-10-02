@@ -135,7 +135,7 @@ async function firecrawlBatchScrapeChunk(urls: string[]): Promise<FirecrawlDoc[]
         waitFor: 1800,
         timeout: 60000,
         ignoreInvalidURLs: true,
-        maxConcurrency: 2,
+        maxConcurrency: 5,
       }),
       cache: 'no-store',
     })
@@ -208,14 +208,14 @@ async function firecrawlBatchScrapeChunk(urls: string[]): Promise<FirecrawlDoc[]
 
 async function firecrawlBatchScrape(urls: string[]): Promise<FirecrawlDoc[]> {
   const documents: FirecrawlDoc[] = []
-  const chunkSize = 8
+  const chunkSize = 20
 
   for (let offset = 0; offset < urls.length; offset += chunkSize) {
     const chunk = urls.slice(offset, offset + chunkSize)
     const chunkDocuments = await firecrawlBatchScrapeChunk(chunk)
     documents.push(...chunkDocuments)
     if (offset + chunkSize < urls.length) {
-      await new Promise((resolve) => setTimeout(resolve, 2500))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
 
