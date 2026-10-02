@@ -95,11 +95,16 @@ function brightDataConfig() {
   }
 }
 
-async function brightDataRaw(url: string) {
+async function brightDataRaw(url: string, options?: {
+  requestTimeoutMs?: number
+  maxAttempts?: number
+}) {
   const { apiKey, zone } = brightDataConfig()
+  const requestTimeoutMs = Math.min(Math.max(options?.requestTimeoutMs ?? REQUEST_TIMEOUT_MS, 5_000), REQUEST_TIMEOUT_MS)
+  const maxAttempts = Math.min(Math.max(options?.maxAttempts ?? MAX_ATTEMPTS, 1), MAX_ATTEMPTS)
   let lastStatus: number | null = null
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const response = await fetch(BRIGHTDATA_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -112,7 +117,7 @@ async function brightDataRaw(url: string) {
         format: 'raw',
       }),
       cache: 'no-store',
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(requestTimeoutMs),
     })
 
     lastStatus = response.status
@@ -120,13 +125,13 @@ async function brightDataRaw(url: string) {
 
     if (response.ok) {
       if (body.trim()) return body
-      if (attempt === MAX_ATTEMPTS) throw new Error('BRIGHTDATA_EMPTY_BODY')
+      if (attempt === maxAttempts) throw new Error('BRIGHTDATA_EMPTY_BODY')
       await new Promise((resolve) => setTimeout(resolve, 800 * attempt))
       continue
     }
 
     const retryable = response.status === 429 || response.status >= 500
-    if (!retryable || attempt === MAX_ATTEMPTS) {
+    if (!retryable || attempt === maxAttempts) {
       throw new Error(`BRIGHTDATA_HTTP_${response.status}`)
     }
 
@@ -210,19 +215,25 @@ export async function discoverPortalVitacuraViaBrightData(
 export async function collectPortalListingDetailsViaBrightData(args: {
   datasetKind: PortalDatasetKind
   listingUrls: string[]
+  concurrency?: number
+  requestTimeoutMs?: number
+  maxAttempts?: number
 }) {
   const rows: MarketImportInputRow[] = []
   const failures: Array<{ url: string; error: string }> = []
 
   // Keep concurrency deliberately low: the first objective is reliable,
   // low-bandwidth evidence collection rather than maximum throughput.
-  const concurrency = 4
+  const concurrency = Math.min(Math.max(args.concurrency ?? 4, 1), 8)
 
   for (let start = 0; start < args.listingUrls.length; start += concurrency) {
     const batch = args.listingUrls.slice(start, start + concurrency)
     const results = await Promise.all(batch.map(async (url) => {
       try {
-        const html = await brightDataRaw(url)
+        const html = await brightDataRaw(url, {
+          requestTimeoutMs: args.requestTimeoutMs,
+          maxAttempts: args.maxAttempts,
+        })
         const row = parsePortalListing(html, url, args.datasetKind)
         if (!row.source_listing_id) {
           row.source_listing_id = portalListingIdFromUrl(url, args.datasetKind) ?? ''
