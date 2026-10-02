@@ -14,6 +14,7 @@ export const maxDuration = 180
 const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
 const DISCOVERY_PAGES_PER_DATASET = 1
 const MAX_NEW_DETAILS_PER_DATASET = 12
+const EXISTING_PRICE_PROBES_PER_DATASET = 2
 const CHILE_TIME_ZONE = 'America/Santiago'
 
 function chileClock(now = new Date()) {
@@ -209,7 +210,23 @@ export async function GET(request: Request) {
         return Boolean(id) && !baselineIds.has(String(id)) && !currentIds.has(String(id))
       })
 
-      const detailUrls = newUrls.slice(0, MAX_NEW_DETAILS_PER_DATASET)
+      const knownUrls = discovery.listingUrls.filter((url) => {
+        const id = portalListingIdFromUrl(url, datasetKind)
+        return Boolean(id) && (baselineIds.has(String(id)) || currentIds.has(String(id)))
+      })
+      const dayIndex = Math.floor(Date.now() / 86_400_000)
+      const probeOffset = knownUrls.length ? (dayIndex * EXISTING_PRICE_PROBES_PER_DATASET) % knownUrls.length : 0
+      const existingPriceProbes = knownUrls.length
+        ? Array.from(
+            { length: Math.min(EXISTING_PRICE_PROBES_PER_DATASET, knownUrls.length) },
+            (_, index) => knownUrls[(probeOffset + index) % knownUrls.length],
+          )
+        : []
+
+      const detailUrls = [...new Set([
+        ...newUrls.slice(0, MAX_NEW_DETAILS_PER_DATASET),
+        ...existingPriceProbes,
+      ])]
       const details = detailUrls.length
         ? await collectPortalListingDetailsViaBrightData({
             datasetKind,
@@ -260,9 +277,11 @@ export async function GET(request: Request) {
         discoveredInPulse: discovery.listingUrls.length,
         newCandidates: newUrls.length,
         detailRequested: detailUrls.length,
+        newDetailRequested: Math.min(newUrls.length, MAX_NEW_DETAILS_PER_DATASET),
+        existingPriceProbes: existingPriceProbes.length,
         detailParsed: validRows.length,
         detailFailures: details.failures.length,
-        deferredNewCandidates: Math.max(newUrls.length - detailUrls.length, 0),
+        deferredNewCandidates: Math.max(newUrls.length - MAX_NEW_DETAILS_PER_DATASET, 0),
         requestUpperBound,
         ingestion,
       })
@@ -286,7 +305,8 @@ export async function GET(request: Request) {
     datasets: DATASETS,
     discoveryPagesPerDataset: DISCOVERY_PAGES_PER_DATASET,
     maxNewDetailsPerDataset: MAX_NEW_DETAILS_PER_DATASET,
-    minimumProviderRequestsWhenNoChanges: DATASETS.length * DISCOVERY_PAGES_PER_DATASET,
+    minimumProviderRequestsWhenNoChanges: DATASETS.length * (DISCOVERY_PAGES_PER_DATASET + EXISTING_PRICE_PROBES_PER_DATASET),
+    existingPriceProbesPerDataset: EXISTING_PRICE_PROBES_PER_DATASET,
     totalProviderRequestsUpperBound,
     runtimeMs: Date.now() - startedAt,
     results,
