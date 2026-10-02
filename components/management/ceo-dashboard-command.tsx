@@ -21,6 +21,14 @@ type Entity = { id: string; name: string; entityType: string; evolution?: Point[
 type Summary = {
   generatedAt?: string
   entities: Entity[]
+  historyCoverage?: {
+    monthly2025Periods?: number
+    baselineMonthly2025Periods?: number
+    annual2025MetricCodes?: number
+    completeMonthly2026Periods?: number
+    latestVerifiedPeriod?: string | null
+    note?: string
+  }
   dataLayers?: { approvedMetricCount?: number; errors?: string[] }
 }
 type AugustBoard = {
@@ -92,6 +100,7 @@ export function CeoDashboardCommand() {
 
   const selected = company?.evolution?.find((item) => item.period === period)
   const selectedMetrics = selected?.metrics ?? {}
+  const historical2025 = period.startsWith('2025-')
   const augustCompany = augustBoard?.entities.find((item) => item.slug === 'property-partners-vitacura') ?? null
   const compliance = ratio(selected?.sales, selected?.salesTarget)
   const cumulativeSales = selected?.cumulativeSales ?? sumThrough(company?.evolution, period, 'sales')
@@ -163,7 +172,7 @@ export function CeoDashboardCommand() {
   }).sort((a, b) => b.riskScore - a.riskScore || a.name.localeCompare(b.name)), [branches, period])
 
   const intelligence = useMemo<Action[]>(() => {
-    if (!selected) return []
+    if (!selected || historical2025) return []
     const items: Action[] = []
     const active = selectedMetrics.active_leads_snapshot ?? null
     const stale90 = selectedMetrics.stale_90_leads ?? null
@@ -187,7 +196,7 @@ export function CeoDashboardCommand() {
     if (credited != null && selected.sales != null && Math.abs(selected.sales - credited) >= 0.25) items.push({ label: 'Crédito comercial', value: `${n(credited, 1)} / ${n(selected.sales)}`, detail: inScope == null ? 'Separado de operaciones corporativas' : `${n(inScope)} operaciones en alcance`, href: '/dashboard/control/operations', priority: 55, critical: false })
 
     return items.sort((a, b) => b.priority - a.priority).slice(0, 5)
-  }, [compliance, gap, selected, selectedMetrics])
+  }, [compliance, gap, historical2025, selected, selectedMetrics])
 
   const actions = useMemo<Action[]>(() => {
     if (!operations) return intelligence
@@ -243,23 +252,36 @@ export function CeoDashboardCommand() {
       ? 'blocked'
       : identityCoverage < 100 ? 'partial' : 'ready'
   const creditedDetail = usesCommercialCredit ? `${n(selectedMetrics.management_credited_sales, 1)} crédito gestión` : undefined
-  const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)}`
+  const history = summary.historyCoverage
+  const historyLabel = history
+    ? `Histórico 2025: ${n(history.baselineMonthly2025Periods)} meses × 6 métricas base + ${n(history.annual2025MetricCodes)} métricas anuales · 2026: ${n(history.completeMonthly2026Periods)} meses operativos`
+    : 'Histórico —'
+  const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)} · ${historyLabel}`
 
   return <WorkspaceShell contentClassName="max-w-[1480px]">
     <WorkspaceHeader eyebrow="Control Tower" title="Cierre de gestión" controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }, { label: 'Informe', href: `/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`, primary: true, icon: <FileText size={14} /> }, { label: 'Exportar', onClick: exportData, icon: <Download size={14} />, ariaLabel: 'Exportar' }]} />
-    {period === '2026-08' && augustCompany
-      ? <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
-      : <MetricStrip items={[{ label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail }, { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) }, { label: 'UF', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined }, { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) }]} />}
+    {historical2025
+      ? <MetricStrip items={[
+          { label: 'Cierres', value: n(selected?.sales) },
+          { label: 'UF', value: uf(selected?.salesUf) },
+          { label: 'Leads', value: n(selectedMetrics.leads) },
+          { label: 'Visitas realizadas', value: n(selectedMetrics.realized_visits), detail: selectedMetrics.scheduled_visits == null ? undefined : `${n(selectedMetrics.realized_visits)} / ${n(selectedMetrics.scheduled_visits)} agendadas` },
+        ]} />
+      : period === '2026-08' && augustCompany
+        ? <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
+        : <MetricStrip items={[{ label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail }, { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) }, { label: 'UF', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined }, { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) }]} />}
 
     <section className="mt-5">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Señales y acciones</h2><span className={`text-xs tabular-nums ${critical ? 'text-[#ff8d87]' : 'text-[var(--n3-text-muted)]'}`}>{critical ? `${critical} críticas` : `${actions.length} activas`}</span></div>
       <div className="divide-y divide-[var(--n3-line)]">{actions.length ? actions.map((item) => <Link key={`${item.label}-${item.href}`} href={item.href} className="group grid min-h-14 grid-cols-[8px_minmax(0,1fr)_auto_auto] items-center gap-3 py-2 hover:bg-white/[0.025]"><span className={`h-2 w-2 rounded-full ${item.critical ? 'bg-[var(--primary)]' : 'bg-[#f0c96a]'}`} /><span className="min-w-0"><span className="block truncate text-sm font-medium">{item.label}</span>{item.detail ? <span className="block truncate text-xs text-[var(--n3-text-muted)]">{item.detail}</span> : null}</span><span className={`text-base font-semibold tabular-nums ${item.critical ? 'text-[#ff8d87]' : 'text-[#f0c96a]'}`}>{item.value}</span><ArrowRight size={15} className="text-[var(--n3-text-muted)]" /></Link>) : <div className="py-4 text-sm text-[var(--n3-text-muted)]">Sin señales prioritarias</div>}</div>
     </section>
 
+    {!historical2025 ? (
     <section className="mt-5">
       <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Oficinas</h2>
       <div className="mt-2 overflow-x-auto border-t border-[var(--n3-line)]"><table className="w-full min-w-[900px] border-collapse text-left"><thead className="border-b border-[var(--n3-line)] text-[10px] uppercase tracking-[0.11em] text-[var(--n3-text-muted)]"><tr><th className="py-3 pr-4 font-medium">Oficina</th><th className="px-3 py-3 font-medium">Resultado</th><th className="px-3 py-3 font-medium">Cartera</th><th className="px-3 py-3 font-medium">Seguimiento</th><th className="px-3 py-3 font-medium">Conversión</th><th className="px-3 py-3 font-medium">Principal brecha</th><th className="px-3 py-3 text-right font-medium">Detalle</th></tr></thead><tbody>{offices.map((item) => <tr key={item.id} className="border-b border-[var(--n3-line)] text-sm"><td className="py-3 pr-4"><span className="block font-medium">{item.name}</span><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">Gestión {n(item.managementScore,1)}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{item.credited == null ? (item.sales == null ? '—' : n(item.sales,1)) : n(item.credited,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.creditedUf != null ? uf(item.creditedUf) : uf(item.salesUf)}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.portfolioScore,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.stock == null ? 'Sin stock' : `${n(item.stock)} propiedades`}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.followUp,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.active == null ? '—' : `${n(item.active)} leads activos`}</span></td><td className="px-3 py-3 tabular-nums"><span className="block font-semibold">{n(item.conversionScore,1)}</span><span className="block text-xs text-[var(--n3-text-muted)]">{item.visitRate == null ? '—' : `${pct(item.visitRate)} visitas`}</span></td><td className="px-3 py-3"><span className={`font-semibold ${item.weakest?.value != null && item.weakest.value < 70 ? 'text-[#f0c96a]' : riskClass(item.risk)}`}>{item.weakest ? item.weakest.key : riskLabel(item.risk)}</span><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">{item.weakest ? `${n(item.weakest.value,1)} pts` : item.action}</span></td><td className="px-3 py-3 text-right"><Link href={`/dashboard/control/offices/${officeSlug(item.name)}`} className="inline-flex items-center gap-1 font-medium hover:text-[var(--n3-text-light)]">Office 360<ArrowRight size={13} /></Link></td></tr>)}</tbody></table></div>
     </section>
+    ) : null}
 
     <DataStatusBar cutoff={freshness} coverage={coverageLabel} issues={operations.errors.length + dataLayerIssues + (approvedMetricCount === 0 ? 1 : 0)} status={dataStatus} />
   </WorkspaceShell>
