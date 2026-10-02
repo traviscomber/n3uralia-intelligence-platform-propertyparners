@@ -5,6 +5,7 @@ import { requireUserScope } from '@/lib/access-guards'
 import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profile'
 import { routePedroPabloPrompt } from '@/lib/pedro-pablo/agentic-router'
 import { PEDRO_PABLO_ALIGNMENT_CONTRACT, PEDRO_PABLO_VITACURA_EXPERTISE, detectOutOfScopeMarket, expertiseCardsForPrompt } from '@/lib/pedro-pablo/vitacura-expertise'
+import { getMarketOpportunityPulse, type MarketOpportunityPulse } from '@/lib/market-opportunity-intelligence'
 
 type Evidence = {
   label: string
@@ -315,7 +316,7 @@ function isReportPrompt(prompt: string) {
   return ['reporte', 'reportes', 'informe', 'informes', 'entrega', 'entregas', 'envio', 'envios'].some((term) => prompt.includes(term))
 }
 
-function seniorResponse(base: BaseResponse, prompt: string, expertise: ReturnType<typeof expertiseCardsForPrompt>): BaseResponse {
+function seniorResponse(base: BaseResponse, prompt: string, expertise: ReturnType<typeof expertiseCardsForPrompt>, marketPulse: MarketOpportunityPulse | null): BaseResponse {
   if (!expertise.length) return base
 
   const topics = new Set(expertise.map((item) => item.topic))
@@ -331,6 +332,26 @@ function seniorResponse(base: BaseResponse, prompt: string, expertise: ReturnTyp
 
   const lines: string[] = []
   lines.push('Hecho canónico: la etapa vigente está limitada a Vitacura y la metodología contractual de valorización tiene precedencia.')
+
+  const asksMarketOpportunities = ['oportunidad', 'oportunidades', 'radar', 'mercado hoy', 'que revisar', 'qué revisar']
+    .some((term) => normalize(prompt).includes(term))
+  if (asksMarketOpportunities && marketPulse && !marketPulse.error) {
+    const top = marketPulse.rows.slice(0, 3)
+    if (top.length) {
+      lines.push(`Pulso observable: ${marketPulse.evaluatedListings} avisos vigentes evaluados; ${marketPulse.withPriceReduction} muestran una baja de precio observada, ${marketPulse.longExposure} tienen al menos 60 días de exposición y ${marketPulse.belowNeighborhoodMedian} están al menos 5% bajo la mediana UF/m² de su barrio/tipo cuando existe evidencia territorial suficiente.`)
+      for (const [index, row] of top.entries()) {
+        const evidenceLabels = row.signals.map((signal) => signal.label).join(', ')
+        lines.push(`${index + 1}. ${row.title || row.address || row.sourceListingId} · score de revisión ${row.score}/100 · ${evidenceLabels}.`)
+      }
+      lines.push('El score sólo prioriza revisión comercial; no demuestra urgencia, intención del propietario ni valor de cierre.')
+      evidence.push({
+        label: 'Pulso de oportunidades de mercado',
+        source: 'Portal Inmobiliario · evidencia observada + historial N3uralia',
+        cutoff: marketPulse.generatedAt,
+        domain: 'market',
+      })
+    }
+  }
 
   if (topics.has('pricing_strategy') || topics.has('commercial_valuation')) {
     lines.push('Interpretación senior: un precio de salida defendible debe construirse desde el inmueble concreto, sus atributos verificables y comparables aceptados; Portal representa oferta y CBRS evidencia transaccional sujeta a identidad y comparabilidad.')
@@ -524,7 +545,7 @@ export async function POST(request: NextRequest) {
       }
     : baseRouting
   const cookie = request.headers.get('cookie') ?? ''
-  const [baseResponse, reportsResponse, valuationPageResponse, valuationReviewResponse] = await Promise.all([
+  const [baseResponse, reportsResponse, valuationPageResponse, valuationReviewResponse, marketPulse] = await Promise.all([
     fetch(new URL('/api/pedro-pablo', request.url), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', cookie },
@@ -540,6 +561,9 @@ export async function POST(request: NextRequest) {
       : Promise.resolve(null),
     valuationCaseId
       ? fetch(new URL(`/api/valuations/${valuationCaseId}/professional-review`, request.url), { headers: { cookie }, cache: 'no-store' })
+      : Promise.resolve(null),
+    seniorExpertise.length > 0
+      ? getMarketOpportunityPulse()
       : Promise.resolve(null),
   ])
 
@@ -594,7 +618,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!scopeConflict && seniorExpertise.length > 0) {
-    response = seniorResponse(response, prompt, seniorExpertise)
+    response = seniorResponse(response, prompt, seniorExpertise, marketPulse)
   }
 
   if (!scopeConflict && valuationCaseId && valuationPagePayload) {
