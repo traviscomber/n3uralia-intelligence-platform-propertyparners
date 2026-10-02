@@ -76,18 +76,8 @@ async function discoverPortalWithFallback(args: {
 }) {
   const failures: Array<{ provider: CollectorProvider; error: string }> = []
 
-  if (process.env.BRIGHTDATA_API_KEY) {
-    try {
-      return {
-        result: await discoverPortalVitacuraViaBrightData(args),
-        provider: 'brightdata' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
+  // Full-universe discovery is materially faster and cheaper through Firecrawl batch scraping.
+  // Bright Data remains the primary detail enricher and the discovery fallback.
   if (process.env.FIRECRAWL_API_KEY) {
     try {
       return {
@@ -97,6 +87,18 @@ async function discoverPortalWithFallback(args: {
       }
     } catch (error) {
       failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
+  if (process.env.BRIGHTDATA_API_KEY) {
+    try {
+      return {
+        result: await discoverPortalVitacuraViaBrightData(args),
+        provider: 'brightdata' as CollectorProvider,
+        failures,
+      }
+    } catch (error) {
+      failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -691,6 +693,13 @@ export async function GET(request: Request) {
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
+  const requestedDataset = url.searchParams.get('dataset')
+  if (requestedDataset && !DATASETS.includes(requestedDataset as PortalDatasetKind)) {
+    return NextResponse.json({ error: 'Dataset no soportado.' }, { status: 400 })
+  }
+  const selectedDatasets: PortalDatasetKind[] = requestedDataset
+    ? [requestedDataset as PortalDatasetKind]
+    : DATASETS
   if (force) {
     const access = await requireExecutiveAccess()
     if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
@@ -713,7 +722,7 @@ export async function GET(request: Request) {
     try {
       const detailDrain = await drainLatestInventoryDetails({
         supabase,
-        datasetKind: 'portal_houses',
+        datasetKind: selectedDatasets[0],
         startedAt,
       })
       const { data: intelligenceRefresh, error: intelligenceError } = await supabase
@@ -721,7 +730,7 @@ export async function GET(request: Request) {
       const { data: prospectRefresh, error: prospectError } = await supabase
         .rpc('refresh_property_prospect_leads_v1')
 
-      const sourceCode = 'portal-inmobiliario-vitacura-portal-houses'
+      const sourceCode = `portal-inmobiliario-vitacura-${selectedDatasets[0].replaceAll('_', '-')}`
       const { data: source } = await supabase
         .from('market_sources')
         .select('id')
@@ -749,7 +758,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         ok: detailDrain.ingestionFailures === 0 && !intelligenceError && !prospectError,
         mode: 'details_only',
-        datasetKind: 'portal_houses',
+        datasetKind: selectedDatasets[0],
         ...detailDrain,
         intelligence: {
           refresh: intelligenceRefresh ?? null,
@@ -777,7 +786,7 @@ export async function GET(request: Request) {
   let completeInventories = 0
   let detailEnrichmentFailures = 0
 
-  for (const datasetKind of DATASETS) {
+  for (const datasetKind of selectedDatasets) {
     try {
       const previousCompleteRun = await latestCompleteInventoryRun(supabase, datasetKind)
       const inventoryCollection = await discoverPortalWithFallback({
@@ -960,7 +969,7 @@ export async function GET(request: Request) {
   let prospectPipeline: unknown = null
   let prospectPipelineError: string | null = null
 
-  if (completeInventories === DATASETS.length) {
+  if (completeInventories === selectedDatasets.length) {
     const identityResult = await supabase.rpc('refresh_market_listing_property_match_candidates_v1')
     identityIntelligence = identityResult.data ?? null
     identityIntelligenceError = identityResult.error?.message ?? null
@@ -970,7 +979,7 @@ export async function GET(request: Request) {
     prospectPipelineError = prospectResult.error?.message ?? null
   }
 
-  const ok = completeInventories === DATASETS.length
+  const ok = completeInventories === selectedDatasets.length
     && totalFailures === 0
     && !identityIntelligenceError
     && !prospectPipelineError
@@ -978,19 +987,26 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       ok,
-      fullSnapshot: completeInventories === DATASETS.length,
-      collectorPreference: process.env.BRIGHTDATA_API_KEY
-        ? 'brightdata'
-        : process.env.FIRECRAWL_API_KEY
+      fullSnapshot: completeInventories === selectedDatasets.length,
+      collectorPreference: {
+        inventory: process.env.FIRECRAWL_API_KEY
           ? 'firecrawl'
-          : 'browser',
+          : process.env.BRIGHTDATA_API_KEY
+            ? 'brightdata'
+            : 'browser',
+        details: process.env.BRIGHTDATA_API_KEY
+          ? 'brightdata'
+          : process.env.FIRECRAWL_API_KEY
+            ? 'firecrawl'
+            : 'browser',
+      },
       inventoryPipeline: 'portal_inventory_discovery_v1',
       detailPipeline: 'unit_portal_listing_v2',
       maxDiscoveryPages: MAX_DISCOVERY_PAGES,
       maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
       fullSweep,
       completeInventories,
-      expectedDatasets: DATASETS.length,
+      expectedDatasets: selectedDatasets.length,
       totalFailures,
       detailEnrichmentFailures,
       identityIntelligence: {
