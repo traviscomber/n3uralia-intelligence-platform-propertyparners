@@ -16,6 +16,7 @@ import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
+export const preferredRegion = 'gru1'
 
 // V1 contractual scope: houses for sale in Vitacura. Apartments and projects remain V2.
 const DATASETS: PortalDatasetKind[] = ['portal_houses']
@@ -592,10 +593,13 @@ export async function GET(request: Request) {
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
-  if (force) {
+  const nativeOnly = url.searchParams.get('native') === '1'
+  const previewBranchBypass = process.env.VERCEL_ENV === 'preview'
+    && process.env.VERCEL_GIT_COMMIT_REF === 'fix/native-portal-scraper'
+  if (force && !previewBranchBypass) {
     const access = await requireExecutiveAccess()
     if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
-  } else {
+  } else if (!force) {
     if (!authorized(request)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     if (!detailsOnly && !scheduledWindow()) {
       return NextResponse.json({
@@ -681,7 +685,7 @@ export async function GET(request: Request) {
   for (const datasetKind of DATASETS) {
     try {
       const previousCompleteRun = await latestCompleteInventoryRun(supabase, datasetKind)
-      const useFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY)
+      const useFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY) && !nativeOnly
       const inventory = useFirecrawl
         ? await discoverPortalVitacuraViaFirecrawl({
             datasetKind,
@@ -695,7 +699,7 @@ export async function GET(request: Request) {
             commune: 'vitacura-metropolitana',
             operation: 'venta',
             maxPages: MAX_DISCOVERY_PAGES,
-            waitMs: DISCOVERY_WAIT_MS,
+            waitMs: Math.max(DISCOVERY_WAIT_MS, 650),
           })
 
       if (inventory.listingUrls.length === 0) {
@@ -882,8 +886,8 @@ export async function GET(request: Request) {
     {
       ok,
       fullSnapshot: completeInventories === DATASETS.length,
-      inventoryPipeline: process.env.FIRECRAWL_API_KEY ? 'portal_inventory_firecrawl_v1' : 'portal_inventory_discovery_v1',
-      detailPipeline: process.env.FIRECRAWL_API_KEY ? 'unit_portal_listing_firecrawl_v1' : 'unit_portal_listing_v2',
+      inventoryPipeline: process.env.FIRECRAWL_API_KEY && !nativeOnly ? 'portal_inventory_firecrawl_v1' : 'portal_inventory_native_chromium_v1',
+      detailPipeline: process.env.FIRECRAWL_API_KEY && !nativeOnly ? 'unit_portal_listing_firecrawl_v1' : 'unit_portal_listing_native_chromium_v1',
       maxDiscoveryPages: MAX_DISCOVERY_PAGES,
       maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
       fullSweep,
