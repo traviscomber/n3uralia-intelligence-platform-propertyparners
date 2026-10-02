@@ -35,3 +35,18 @@ test('adds an optional price range without changing the geographic scope', () =>
   assert.equal(url.searchParams.get('offset'), '50')
   assert.match(url.searchParams.get('item_location') ?? '', /^lat:/)
 })
+
+test('houses and apartments share the same strict Vitacura geographic contract', () => {
+  for (const categoryId of ['MLC_HOUSES_SALE', 'MLC_APARTMENTS_SALE']) {
+    const path = buildVitacuraSearchUrl({
+      categoryId,
+      limit: 5,
+      offset: 0,
+    })
+    const url = new URL(`https://api.mercadolibre.com${path}`)
+    assert.equal(
+      url.searchParams.get('item_location'),
+      `lat:${VITACURA_BBOX.south}_${VITACURA_BBOX.north},lon:${VITACURA_BBOX.west}_${VITACURA_BBOX.east}`,
+    )
+  }
+})
