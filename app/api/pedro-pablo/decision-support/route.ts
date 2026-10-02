@@ -341,9 +341,9 @@ function seniorResponse(base: BaseResponse, prompt: string, expertise: ReturnTyp
       lines.push(`Pulso observable: ${marketPulse.evaluatedListings} avisos vigentes evaluados; ${marketPulse.withPriceReduction} muestran una baja de precio observada, ${marketPulse.longExposure} tienen al menos 60 días de exposición y ${marketPulse.belowNeighborhoodMedian} están al menos 5% bajo la mediana UF/m² de su barrio/tipo cuando existe evidencia territorial suficiente.`)
       for (const [index, row] of top.entries()) {
         const evidenceLabels = row.signals.map((signal) => signal.label).join(', ')
-        lines.push(`${index + 1}. ${row.title || row.address || row.sourceListingId} · score de revisión ${row.score}/100 · ${evidenceLabels}.`)
+        lines.push(`${index + 1}. ${row.title || row.address || row.sourceListingId} · ${evidenceLabels}.`)
       }
-      lines.push('El score sólo prioriza revisión comercial; no demuestra urgencia, intención del propietario ni valor de cierre.')
+      lines.push('Las señales no constituyen ranking ni demuestran urgencia, intención del propietario o valor de cierre.')
       evidence.push({
         label: 'Pulso de oportunidades de mercado',
         source: 'Portal Inmobiliario · evidencia observada + historial N3uralia',
