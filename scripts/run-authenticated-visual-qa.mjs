@@ -61,16 +61,66 @@ async function waitForAuthenticatedState(page) {
   if (state.pathname.startsWith('/auth/login')) throw new Error(state.alert || 'Authentication did not leave the login page.')
 }
 
-async function login(page, email, password) {
-  await page.goto(`${baseUrl}/auth/login`, { waitUntil: 'networkidle2' })
-  const emailInput = await page.$('input[type="email"], input[name="email"]')
-  const passwordInput = await page.$('input[type="password"], input[name="password"]')
-  if (!emailInput || !passwordInput) throw new Error('Login form fields were not found.')
+async function captureLoginDiagnostic(page, profileKey, contextDir, reason) {
+  const screenshotPath = path.join(contextDir, 'login-diagnostic.png')
+  const htmlPath = path.join(contextDir, 'login-diagnostic.html')
+  const metaPath = path.join(contextDir, 'login-diagnostic.json')
+  const [html, meta] = await Promise.all([
+    page.content().catch(() => ''),
+    page.evaluate(() => ({
+      title: document.title,
+      pathname: window.location.pathname,
+      readyState: document.readyState,
+      bodyText: document.body?.innerText?.trim().slice(0, 1200) || '',
+      inputs: [...document.querySelectorAll('input')].map((input) => ({
+        id: input.id || null,
+        name: input.getAttribute('name'),
+        type: input.getAttribute('type'),
+        placeholder: input.getAttribute('placeholder'),
+      })),
+      buttons: [...document.querySelectorAll('button')].map((button) => ({
+        type: button.getAttribute('type'),
+        text: button.textContent?.trim().slice(0, 120) || '',
+      })),
+    })).catch(() => ({ title: '', pathname: '', readyState: '', bodyText: '', inputs: [], buttons: [] })),
+  ])
+  await Promise.all([
+    page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => null),
+    fs.writeFile(htmlPath, html || '<!-- unavailable -->').catch(() => null),
+    fs.writeFile(metaPath, `${JSON.stringify({ profileKey, reason, url: page.url(), ...meta }, null, 2)}\n`).catch(() => null),
+  ])
+}
+
+async function login(page, profileKey, contextDir, email, password) {
+  await page.goto(`${baseUrl}/auth/login`, { waitUntil: 'domcontentloaded' })
+  await page.waitForFunction(() => document.readyState === 'interactive' || document.readyState === 'complete', { timeout: 15000 }).catch(() => null)
+
+  const emailSelector = '#email, input[type="email"], input[name="email"]'
+  const passwordSelector = '#password, input[type="password"], input[name="password"]'
+
+  try {
+    await Promise.all([
+      page.waitForSelector(emailSelector, { visible: true, timeout: 15000 }),
+      page.waitForSelector(passwordSelector, { visible: true, timeout: 15000 }),
+    ])
+  } catch {
+    await captureLoginDiagnostic(page, profileKey, contextDir, 'Login form fields were not found after waiting for visible inputs.')
+    throw new Error('Login form fields were not found after waiting for the rendered form.')
+  }
+
+  const emailInput = await page.$(emailSelector)
+  const passwordInput = await page.$(passwordSelector)
+  const submitButton = await page.$('button[type="submit"]')
+  if (!emailInput || !passwordInput || !submitButton) {
+    await captureLoginDiagnostic(page, profileKey, contextDir, 'Login controls incomplete.')
+    throw new Error('Login controls were incomplete.')
+  }
+
   await emailInput.click({ clickCount: 3 })
   await emailInput.type(email)
   await passwordInput.click({ clickCount: 3 })
   await passwordInput.type(password)
-  await page.click('button[type="submit"]')
+  await submitButton.click()
   await waitForAuthenticatedState(page)
 }
 
@@ -122,7 +172,7 @@ for (const profile of profiles) {
   page.on('console', (message) => { if (message.type() === 'error') browserErrors.push(message.text()) })
 
   try {
-    await login(page, profile.email, profile.password)
+    await login(page, profile.key, contextDir, profile.email, profile.password)
 
     const routes = [profile.start, ...protectedVisualRoutes]
     for (const route of routes) {
