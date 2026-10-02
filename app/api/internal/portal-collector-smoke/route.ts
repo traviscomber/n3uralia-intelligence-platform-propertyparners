@@ -1,65 +1,137 @@
 import { NextResponse } from 'next/server'
-import { discoverPortalVitacuraUniverse } from '@/lib/portal-inmobiliario-collector'
+import {
+  collectPortalListingDetailsViaBrightData,
+  discoverPortalVitacuraViaBrightData,
+} from '@/lib/brightdata-portal-collector'
+import type { PortalDatasetKind } from '@/lib/market-source-import'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
+// Redeploy marker: Bright Data preview env refreshed.
+
+const VALIDATION_BRANCH = 'feat/brightdata-vitacura-smoke-20261002'
+const TOTAL_DETAIL_BUDGET = 10
+const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
 
 export async function GET() {
-  if (process.env.VERCEL_GIT_COMMIT_REF !== 'fix/portal-daily-intelligence-sweep') {
+  if (process.env.VERCEL_GIT_COMMIT_REF !== VALIDATION_BRANCH) {
     return new NextResponse(null, { status: 404 })
   }
 
   try {
     const startedAt = Date.now()
-    const collection = await discoverPortalVitacuraUniverse({
-      datasetKind: 'portal_houses',
-      commune: 'vitacura-metropolitana',
-      operation: 'venta',
-      maxPages: 40,
-      waitMs: 150,
-    })
+    const perDatasetBudget = Math.max(1, Math.floor(TOTAL_DETAIL_BUDGET / DATASETS.length))
+    const results: Array<Record<string, unknown>> = []
+    let requestedDetails = 0
+    let parsedDetails = 0
+    let totalFailures = 0
 
-    const coverageRatio = collection.discovery.reportedResultCount && collection.discovery.reportedResultCount > 0
-      ? collection.listingUrls.length / collection.discovery.reportedResultCount
-      : null
-    const fullSnapshot = collection.discovery.exhausted
-      && !collection.discovery.capped
-      && collection.listingUrls.length >= 30
-      && coverageRatio != null
-      && coverageRatio >= 0.97
-      && coverageRatio <= 1.05
+    for (const datasetKind of DATASETS) {
+      const discovery = await discoverPortalVitacuraViaBrightData({
+        datasetKind,
+        commune: 'vitacura-metropolitana',
+        operation: 'venta',
+        maxPages: 1,
+      })
 
-    const runtimeMs = Date.now() - startedAt
-    console.info(
-      '[portal-collector-smoke-summary]',
-      JSON.stringify({
-        ok: fullSnapshot,
-        reported: collection.discovery.reportedResultCount,
-        unique: collection.listingUrls.length,
-        coverageRatio,
-        pagesVisited: collection.discovery.pagesVisited,
-        duplicateCandidates: collection.discovery.duplicateListingCandidates,
-        exhausted: collection.discovery.exhausted,
-        capped: collection.discovery.capped,
-        runtimeMs,
-      }),
-    )
+      const detailUrls = discovery.listingUrls.slice(0, perDatasetBudget)
+      const details = await collectPortalListingDetailsViaBrightData({
+        datasetKind,
+        listingUrls: detailUrls,
+      })
+
+      requestedDetails += detailUrls.length
+      parsedDetails += details.rows.length
+      totalFailures += details.failures.length
+
+      results.push({
+        datasetKind,
+        discovery: {
+          pagesVisited: discovery.discovery.pagesVisited,
+          rawCandidates: discovery.discovery.rawListingCandidates,
+          duplicates: discovery.discovery.duplicateListingCandidates,
+          uniqueListings: discovery.discovery.uniqueListings,
+          capped: discovery.discovery.capped,
+        },
+        details: {
+          requested: detailUrls.length,
+          parsed: details.rows.length,
+          failures: details.failures.length,
+          sample: details.rows.map((row) => ({
+            source_listing_id: row.source_listing_id,
+            property_type: row.property_type,
+            title: row.title,
+            address: row.address,
+            price_uf: row.price_uf,
+            useful_area_m2: row.useful_area_m2,
+            built_area_m2: row.built_area_m2,
+            land_area_m2: row.land_area_m2,
+            bedrooms: row.bedrooms,
+            bathrooms: row.bathrooms,
+            parking_spaces: row.parking_spaces,
+            url: row.url,
+          })),
+        },
+      })
+    }
+
+    const ok = requestedDetails === TOTAL_DETAIL_BUDGET
+      && parsedDetails > 0
+      && totalFailures === 0
+
+    console.info('[portal-brightdata-smoke-summary]', JSON.stringify({
+      ok,
+      requestedDetails,
+      parsedDetails,
+      totalFailures,
+      results: results.map((result) => ({
+        datasetKind: result.datasetKind,
+        discovery: result.discovery,
+        details: result.details && typeof result.details === 'object'
+          ? {
+              requested: (result.details as Record<string, unknown>).requested,
+              parsed: (result.details as Record<string, unknown>).parsed,
+              failures: (result.details as Record<string, unknown>).failures,
+            }
+          : null,
+      })),
+      runtimeMs: Date.now() - startedAt,
+    }))
 
     return NextResponse.json({
-      ok: fullSnapshot,
-      observedAt: collection.observedAt,
-      discovered: collection.listingUrls.length,
-      discovery: collection.discovery,
-      coverageRatio,
-      runtimeMs,
-      sample: collection.listingUrls.slice(0, 10),
-    }, { status: fullSnapshot ? 200 : 503, headers: { 'Cache-Control': 'no-store' } })
+      ok,
+      mode: 'brightdata_bounded_smoke',
+      readOnly: true,
+      writes: 0,
+      target: {
+        commune: 'Vitacura',
+        operation: 'venta',
+        datasets: DATASETS,
+      },
+      costGuard: {
+        discoveryPagesPerDataset: 1,
+        detailBudgetTotal: TOTAL_DETAIL_BUDGET,
+        maximumProviderRequests: DATASETS.length + TOTAL_DETAIL_BUDGET,
+        responseFormat: 'raw',
+        screenshots: false,
+        unchangedListingRefresh: false,
+      },
+      requestedDetails,
+      parsedDetails,
+      totalFailures,
+      runtimeMs: Date.now() - startedAt,
+      results,
+    }, {
+      status: ok ? 200 : 503,
+      headers: { 'Cache-Control': 'no-store' },
+    })
   } catch (error) {
-    console.error('[portal-collector-smoke] collection failed', error)
+    console.error('[portal-brightdata-smoke] collection failed', error)
     return NextResponse.json({
       ok: false,
-      error: 'No fue posible completar la prueba del colector.',
+      mode: 'brightdata_bounded_smoke',
+      error: 'No fue posible completar la prueba acotada de Bright Data.',
     }, { status: 500, headers: { 'Cache-Control': 'no-store' } })
   }
 }

@@ -11,16 +11,20 @@ import {
   collectPortalListingDetailsViaFirecrawl,
   discoverPortalVitacuraViaFirecrawl,
 } from '@/lib/firecrawl-portal-collector'
+import {
+  collectPortalListingDetailsViaBrightData,
+  discoverPortalVitacuraViaBrightData,
+} from '@/lib/brightdata-portal-collector'
 import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-// V1 contractual scope: houses for sale in Vitacura. Apartments and projects remain V2.
-const DATASETS: PortalDatasetKind[] = ['portal_houses']
+// Daily market scope: houses and apartments for sale in Vitacura. Projects remain out of scope.
+const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
 const MAX_DISCOVERY_PAGES = 40
-const MAX_DETAIL_LISTINGS_PER_RUN = 48
+const MAX_DETAIL_LISTINGS_PER_RUN = 16
 const DISCOVERY_WAIT_MS = 150
 const DETAIL_WAIT_MS = 300
 const MIN_COMPLETE_INVENTORY_LISTINGS = 30
@@ -59,6 +63,96 @@ function getServiceClient() {
   return createSupabaseClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
+}
+
+type CollectorProvider = 'brightdata' | 'firecrawl' | 'browser'
+
+async function discoverPortalWithFallback(args: {
+  datasetKind: PortalDatasetKind
+  commune: string
+  operation: 'venta' | 'arriendo'
+  maxPages: number
+  waitMs: number
+}) {
+  const failures: Array<{ provider: CollectorProvider; error: string }> = []
+
+  if (process.env.BRIGHTDATA_API_KEY) {
+    try {
+      return {
+        result: await discoverPortalVitacuraViaBrightData(args),
+        provider: 'brightdata' as CollectorProvider,
+        failures,
+      }
+    } catch (error) {
+      failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
+  if (process.env.FIRECRAWL_API_KEY) {
+    try {
+      return {
+        result: await discoverPortalVitacuraViaFirecrawl(args),
+        provider: 'firecrawl' as CollectorProvider,
+        failures,
+      }
+    } catch (error) {
+      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
+  return {
+    result: await discoverPortalVitacuraUniverse(args),
+    provider: 'browser' as CollectorProvider,
+    failures,
+  }
+}
+
+async function collectPortalDetailsWithFallback(args: {
+  datasetKind: PortalDatasetKind
+  listingUrls: string[]
+  waitMs: number
+}) {
+  const failures: Array<{ provider: CollectorProvider; error: string }> = []
+
+  if (process.env.BRIGHTDATA_API_KEY) {
+    try {
+      return {
+        result: await collectPortalListingDetailsViaBrightData({
+          datasetKind: args.datasetKind,
+          listingUrls: args.listingUrls,
+        }),
+        provider: 'brightdata' as CollectorProvider,
+        failures,
+      }
+    } catch (error) {
+      failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
+  if (process.env.FIRECRAWL_API_KEY) {
+    try {
+      return {
+        result: await collectPortalListingDetailsViaFirecrawl({
+          datasetKind: args.datasetKind,
+          listingUrls: args.listingUrls,
+        }),
+        provider: 'firecrawl' as CollectorProvider,
+        failures,
+      }
+    } catch (error) {
+      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
+  return {
+    result: await collectPortalListingDetails({
+      datasetKind: args.datasetKind,
+      listingUrls: args.listingUrls,
+      waitMs: args.waitMs,
+    }),
+    provider: 'browser' as CollectorProvider,
+    failures,
+  }
 }
 
 function classifyCollectorFailure(cause: unknown) {
@@ -301,8 +395,9 @@ async function persistInventoryRun(args: {
   }
   fullSnapshot: boolean
   previousRunId: string | null
+  provider: CollectorProvider
 }) {
-  const { supabase, datasetKind, observedAt, urls, discovery, fullSnapshot, previousRunId } = args
+  const { supabase, datasetKind, observedAt, urls, discovery, fullSnapshot, previousRunId, provider } = args
   const currentIds = new Set(
     urls
       .map((url) => portalListingIdFromUrl(url, datasetKind))
@@ -333,6 +428,7 @@ async function persistInventoryRun(args: {
       completed_at: null,
       metadata: {
         pipeline: 'portal_inventory_discovery_v1',
+        collector_provider: provider,
         stage: 'persisting_inventory_presence',
         full_snapshot: false,
         discovery_pages: discovery.pagesVisited,
@@ -391,6 +487,7 @@ async function persistInventoryRun(args: {
         completed_at: observedAt,
         metadata: {
           pipeline: 'portal_inventory_discovery_v1',
+          collector_provider: provider,
           stage: 'inventory_presence',
           full_snapshot: fullSnapshot,
           discovery_pages: discovery.pagesVisited,
@@ -421,6 +518,7 @@ async function persistInventoryRun(args: {
         error_message: 'INVENTORY_PERSISTENCE_FAILED',
         metadata: {
           pipeline: 'portal_inventory_discovery_v1',
+          collector_provider: provider,
           stage: 'inventory_presence_failed',
           full_snapshot: false,
           discovery_unique_listings: currentIds.size,
@@ -534,11 +632,12 @@ async function drainLatestInventoryDetails(args: {
   for (let offset = 0; offset < queue.length; offset += chunkSize) {
     if (Date.now() - startedAt >= 235_000) break
     const chunk = queue.slice(offset, offset + chunkSize)
-    const details = await collectPortalListingDetails({
+    const detailCollection = await collectPortalDetailsWithFallback({
       datasetKind,
       listingUrls: chunk.map((item) => item.url),
       waitMs: DETAIL_WAIT_MS,
     })
+    const details = detailCollection.result
     collectionFailures += details.failures.length
     parsed += details.rows.length
 
@@ -681,22 +780,14 @@ export async function GET(request: Request) {
   for (const datasetKind of DATASETS) {
     try {
       const previousCompleteRun = await latestCompleteInventoryRun(supabase, datasetKind)
-      const useFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY)
-      const inventory = useFirecrawl
-        ? await discoverPortalVitacuraViaFirecrawl({
-            datasetKind,
-            commune: 'vitacura-metropolitana',
-            operation: 'venta',
-            maxPages: MAX_DISCOVERY_PAGES,
-            waitMs: DISCOVERY_WAIT_MS,
-          })
-        : await discoverPortalVitacuraUniverse({
-            datasetKind,
-            commune: 'vitacura-metropolitana',
-            operation: 'venta',
-            maxPages: MAX_DISCOVERY_PAGES,
-            waitMs: DISCOVERY_WAIT_MS,
-          })
+      const inventoryCollection = await discoverPortalWithFallback({
+        datasetKind,
+        commune: 'vitacura-metropolitana',
+        operation: 'venta',
+        maxPages: MAX_DISCOVERY_PAGES,
+        waitMs: DISCOVERY_WAIT_MS,
+      })
+      const inventory = inventoryCollection.result
 
       if (inventory.listingUrls.length === 0) {
         throw new Error('COLLECTOR_EMPTY_DISCOVERY')
@@ -732,6 +823,7 @@ export async function GET(request: Request) {
         discovery: inventory.discovery,
         fullSnapshot,
         previousRunId: previousCompleteRun?.id ?? null,
+        provider: inventoryCollection.provider,
       })
 
       if (!fullSnapshot) {
@@ -742,6 +834,8 @@ export async function GET(request: Request) {
           observedAt: inventory.observedAt,
           inventory: persistedInventory,
           discovery: inventory.discovery,
+          collectorProvider: inventoryCollection.provider,
+          providerFallbacks: inventoryCollection.failures,
           coverageRatio,
           previousVerifiedInventoryCount: previousCount || null,
           minimumAcceptedInventoryCount: baselineFloor,
@@ -760,6 +854,8 @@ export async function GET(request: Request) {
           observedAt: inventory.observedAt,
           inventory: persistedInventory,
           discovery: inventory.discovery,
+          collectorProvider: inventoryCollection.provider,
+          providerFallbacks: inventoryCollection.failures,
           coverageRatio,
           detailStatus: 'skipped_runtime_guard',
         })
@@ -775,18 +871,15 @@ export async function GET(request: Request) {
         fullSweep,
       })
       const detailUrls = detailSelection.urls
-      const details = detailUrls.length
-        ? process.env.FIRECRAWL_API_KEY
-          ? await collectPortalListingDetailsViaFirecrawl({
-              datasetKind,
-              listingUrls: detailUrls,
-            })
-          : await collectPortalListingDetails({
-              datasetKind,
-              listingUrls: detailUrls,
-              waitMs: DETAIL_WAIT_MS,
-            })
-        : { observedAt: inventory.observedAt, rows: [], failures: [] }
+      const detailCollection = detailUrls.length
+        ? await collectPortalDetailsWithFallback({
+            datasetKind,
+            listingUrls: detailUrls,
+            waitMs: DETAIL_WAIT_MS,
+          })
+        : null
+      const details = detailCollection?.result
+        ?? { observedAt: inventory.observedAt, rows: [], failures: [] }
       const normalized = normalizePortalListingRows(details.rows)
       const validRows = normalized.filter((row) => row.source_listing_id && row.url)
 
@@ -799,6 +892,8 @@ export async function GET(request: Request) {
         parsed: details.rows.length,
         valid: validRows.length,
         failures: details.failures.length,
+        provider: detailCollection?.provider ?? null,
+        providerFallbacks: detailCollection?.failures ?? [],
       }
 
       if (validRows.length) {
@@ -845,6 +940,8 @@ export async function GET(request: Request) {
         observedAt: inventory.observedAt,
         inventory: persistedInventory,
         discovery: inventory.discovery,
+        collectorProvider: inventoryCollection.provider,
+        providerFallbacks: inventoryCollection.failures,
         coverageRatio,
         detailStatus: detailResult,
       })
@@ -882,8 +979,13 @@ export async function GET(request: Request) {
     {
       ok,
       fullSnapshot: completeInventories === DATASETS.length,
-      inventoryPipeline: process.env.FIRECRAWL_API_KEY ? 'portal_inventory_firecrawl_v1' : 'portal_inventory_discovery_v1',
-      detailPipeline: process.env.FIRECRAWL_API_KEY ? 'unit_portal_listing_firecrawl_v1' : 'unit_portal_listing_v2',
+      collectorPreference: process.env.BRIGHTDATA_API_KEY
+        ? 'brightdata'
+        : process.env.FIRECRAWL_API_KEY
+          ? 'firecrawl'
+          : 'browser',
+      inventoryPipeline: 'portal_inventory_discovery_v1',
+      detailPipeline: 'unit_portal_listing_v2',
       maxDiscoveryPages: MAX_DISCOVERY_PAGES,
       maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
       fullSweep,
