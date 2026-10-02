@@ -81,6 +81,8 @@ async function main() {
   assert.match(apartmentBootstrap, /details_only/ , 'Apartment bootstrap must reuse the bounded detail-drain path.')
   assert.match(apartmentBootstrap, /portal_apartments/, 'Apartment bootstrap must be hard-scoped to apartments.')
   assert.match(apartmentBootstrap, /provider'.*'brightdata'/, 'Apartment bootstrap must force Bright Data and avoid Firecrawl quota use.')
+  assert.match(apartmentBootstrap, /postprocess'.*'0'/, 'Apartment bootstrap must skip heavyweight identity/prospect refresh on each bounded batch.')
+  assert.match(refresh, /skipPostprocess/, 'Detail-drain route must support explicit postprocess deferral.')
   assert.match(refresh, /brightDataOnly[\s\S]*collectPortalListingDetailsViaBrightData/, 'Bright Data-only detail drain must bypass provider fallbacks.')
   assert.match(vercelConfig, /market-apartment-bootstrap/, 'Apartment bootstrap must be scheduled explicitly.')
 
