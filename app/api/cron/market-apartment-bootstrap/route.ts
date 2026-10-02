@@ -9,6 +9,7 @@ export async function GET(request: Request) {
   target.searchParams.set('details_only', '1')
   target.searchParams.set('dataset', 'portal_apartments')
   target.searchParams.set('provider', 'brightdata')
+  target.searchParams.set('postprocess', '0')
 
   return runMarketRefresh(new Request(target, {
     method: 'GET',
