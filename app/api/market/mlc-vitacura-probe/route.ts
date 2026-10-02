@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireExecutiveAccess } from '@/lib/api-access'
-import { searchVitacuraHouseSales } from '@/lib/mercadolibre-vitacura-collector'
+import { searchVitacuraSales, type VitacuraPropertyType } from '@/lib/mercadolibre-vitacura-collector'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,6 +20,8 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url)
+  const propertyTypeParam = url.searchParams.get('type')
+  const propertyType: VitacuraPropertyType = propertyTypeParam === 'apartments' ? 'apartments' : 'houses'
   const limit = Math.round(boundedNumber(url.searchParams.get('limit'), 5, 1, 20))
   const offset = Math.round(boundedNumber(url.searchParams.get('offset'), 0, 0, 950))
   const minPriceRaw = url.searchParams.get('min_price')
@@ -28,7 +30,8 @@ export async function GET(request: Request) {
   const maxPrice = maxPriceRaw == null ? undefined : boundedNumber(maxPriceRaw, 999_999_999, 0, 999_999_999)
 
   try {
-    const result = await searchVitacuraHouseSales({
+    const result = await searchVitacuraSales({
+      propertyType,
       limit,
       offset,
       minPrice,
@@ -37,7 +40,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      scope: 'vitacura_houses_for_sale',
+      scope: propertyType === 'houses' ? 'vitacura_houses_for_sale' : 'vitacura_apartments_for_sale',
       tokenConfigured: true,
       categories: result.categories,
       query: result.query,
@@ -52,7 +55,7 @@ export async function GET(request: Request) {
     const missingToken = message.includes('MERCADOLIBRE_ACCESS_TOKEN_MISSING')
     return NextResponse.json({
       ok: false,
-      scope: 'vitacura_houses_for_sale',
+      scope: propertyType === 'houses' ? 'vitacura_houses_for_sale' : 'vitacura_apartments_for_sale',
       tokenConfigured: !missingToken,
       error: missingToken ? 'MERCADOLIBRE_ACCESS_TOKEN_MISSING' : message,
     }, {
