@@ -23,7 +23,14 @@ export const maxDuration = 300
 
 // Daily market scope: houses and apartments for sale in Vitacura. Projects remain out of scope.
 const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
-const MAX_DISCOVERY_PAGES = 40
+const MAX_DISCOVERY_PAGES_HOUSES = 40
+const MAX_DISCOVERY_PAGES_APARTMENTS = 80
+
+function maxDiscoveryPagesFor(datasetKind: PortalDatasetKind) {
+  return datasetKind === 'portal_apartments'
+    ? MAX_DISCOVERY_PAGES_APARTMENTS
+    : MAX_DISCOVERY_PAGES_HOUSES
+}
 const MAX_DETAIL_LISTINGS_PER_RUN = 16
 const DISCOVERY_WAIT_MS = 150
 const DETAIL_WAIT_MS = 300
@@ -793,7 +800,7 @@ export async function GET(request: Request) {
         datasetKind,
         commune: 'vitacura-metropolitana',
         operation: 'venta',
-        maxPages: MAX_DISCOVERY_PAGES,
+        maxPages: maxDiscoveryPagesFor(datasetKind),
         waitMs: DISCOVERY_WAIT_MS,
       })
       const inventory = inventoryCollection.result
@@ -1002,7 +1009,10 @@ export async function GET(request: Request) {
       },
       inventoryPipeline: 'portal_inventory_discovery_v1',
       detailPipeline: 'unit_portal_listing_v2',
-      maxDiscoveryPages: MAX_DISCOVERY_PAGES,
+      maxDiscoveryPages: {
+        portal_houses: MAX_DISCOVERY_PAGES_HOUSES,
+        portal_apartments: MAX_DISCOVERY_PAGES_APARTMENTS,
+      },
       maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
       fullSweep,
       completeInventories,
