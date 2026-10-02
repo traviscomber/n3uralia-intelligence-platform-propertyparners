@@ -159,11 +159,17 @@ async function recordDeltaRun(args: {
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
+  const url = new URL(request.url)
+  const dryRun = url.searchParams.get('dry_run') === '1'
+  const previewDryRun = dryRun
+    && process.env.VERCEL_ENV === 'preview'
+    && process.env.VERCEL_GIT_COMMIT_REF === 'feat/brightdata-daily-delta-20261002'
+
+  if (!authorized(request) && !previewDryRun) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  if (!scheduledWindow()) {
+  if (!previewDryRun && !scheduledWindow()) {
     return NextResponse.json({
       ok: true,
       skipped: true,
@@ -215,7 +221,7 @@ export async function GET(request: Request) {
       const validRows = normalized.filter((row) => row.source_listing_id && row.url)
       let ingestion: Record<string, unknown> | null = null
 
-      if (validRows.length) {
+      if (validRows.length && !previewDryRun) {
         const { data, error } = await supabase.rpc('ingest_portal_listing_snapshot_v2', {
           p_source_label: 'portal_inmobiliario_vitacura',
           p_source_file: `portal-daily-delta-details-${datasetKind}-${details.observedAt}.json`,
@@ -228,7 +234,7 @@ export async function GET(request: Request) {
         ingestion = data ?? null
       }
 
-      await recordDeltaRun({
+      if (!previewDryRun) await recordDeltaRun({
         supabase,
         datasetKind,
         observedAt: details.observedAt,
@@ -273,6 +279,8 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: totalFailures === 0,
     mode: 'brightdata_daily_delta',
+    dryRun: previewDryRun,
+    writes: previewDryRun ? 0 : 'bounded_delta_only',
     fullSnapshot: false,
     removalReconciliation: 'deferred_to_full_inventory',
     datasets: DATASETS,
