@@ -50,6 +50,7 @@ type ListingRow = {
   price_uf: number | string | null
   price_uf_m2: number | string | null
   observed_at: string | null
+  created_at: string | null
 }
 
 type HistoryRow = {
@@ -182,14 +183,20 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
 
     const listingsResult = await db
       .from('market_current_listings')
-      .select('source_id,source_listing_id,property_id,title,raw_address,url,price_uf,price_uf_m2,observed_at')
+      .select('source_id,source_listing_id,property_id,title,raw_address,url,price_uf,price_uf_m2,observed_at,created_at')
       .in('source_id', sourceIds)
       .in('status', ['active', 'observed'])
       .order('observed_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(3500)
 
     if (listingsResult.error) return { ...empty, error: listingsResult.error.message }
-    const listings = (listingsResult.data ?? []) as ListingRow[]
+    const rawListings = (listingsResult.data ?? []) as ListingRow[]
+    const latestByListing = new Map<string, ListingRow>()
+    for (const row of rawListings) {
+      if (!latestByListing.has(row.source_listing_id)) latestByListing.set(row.source_listing_id, row)
+    }
+    const listings = [...latestByListing.values()]
     const sourceListingIds = [...new Set(listings.map((row) => row.source_listing_id).filter(Boolean))]
     const propertyIds = [...new Set(listings.map((row) => row.property_id).filter((id): id is string => Boolean(id)))]
 
@@ -236,7 +243,7 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
     const medianByNeighborhood = new Map([...neighborhoodUfM2.entries()].map(([key, values]) => [key, median(values)]))
     const now = new Date().toISOString()
 
-    const rows = listings.map((listing): MarketOpportunityRow => {
+    const scoredRows = listings.map((listing): MarketOpportunityRow => {
       const propertyType = typeBySource.get(listing.source_id) ?? 'Casa'
       const history = historyByListing.get(listing.source_listing_id)
       const neighborhoodId = listing.property_id ? neighborhoodByProperty.get(listing.property_id) ?? null : null
@@ -285,15 +292,17 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
         signals: scored.signals,
       }
     }).filter((row) => row.score > 0)
+
+    const rows = [...scoredRows]
       .sort((a, b) => b.score - a.score || (b.daysObserved ?? 0) - (a.daysObserved ?? 0))
       .slice(0, 40)
 
     return {
       rows,
       evaluatedListings: listings.length,
-      withPriceReduction: rows.filter((row) => (row.priceReductionFromMaxPct ?? 0) > 0).length,
-      longExposure: rows.filter((row) => (row.daysObserved ?? 0) >= 60).length,
-      belowNeighborhoodMedian: rows.filter((row) => (row.relativeToNeighborhoodMedianPct ?? 0) <= -0.05).length,
+      withPriceReduction: scoredRows.filter((row) => (row.priceReductionFromMaxPct ?? 0) > 0).length,
+      longExposure: scoredRows.filter((row) => (row.daysObserved ?? 0) >= 60).length,
+      belowNeighborhoodMedian: scoredRows.filter((row) => (row.relativeToNeighborhoodMedianPct ?? 0) <= -0.05).length,
       generatedAt: new Date().toISOString(),
       methodology: empty.methodology,
     }
