@@ -21,7 +21,6 @@ export async function updateSession(request: NextRequest) {
     || pathname === '/api/public/valuation-estimate'
     || pathname === '/api/internal/portal-collector-smoke'
     || (pathname === '/api/market/mlc-vitacura-probe' && process.env.VERCEL_ENV === 'preview')
-    || (pathname === '/api/market/mlc-client-credentials-probe' && process.env.VERCEL_ENV === 'preview')
     || pathname === '/api/integrations/mercadolibre/callback'
     || (pathname === '/api/integrations/mercadolibre/start' && process.env.VERCEL_ENV === 'preview')
   ) {
