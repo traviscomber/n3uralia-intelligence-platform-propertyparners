@@ -151,28 +151,41 @@ export async function discoverPortalVitacuraViaBrightData(
   let duplicateListingCandidates = 0
   let exhausted = false
 
-  for (let page = 1; page <= maxPages; page += 1) {
-    const searchUrl = buildSearchUrl(base, page, datasetKind)
-    searchUrls.push(searchUrl)
+  const discoveryConcurrency = 4
 
-    const html = await brightDataRaw(searchUrl)
-    const candidates = extractListingUrls(html, datasetKind)
-    rawListingCandidates += candidates.length
+  for (let startPage = 1; startPage <= maxPages; startPage += discoveryConcurrency) {
+    const pages = Array.from(
+      { length: Math.min(discoveryConcurrency, maxPages - startPage + 1) },
+      (_, index) => startPage + index,
+    )
+    const urls = pages.map((page) => buildSearchUrl(base, page, datasetKind))
+    const htmlPages = await Promise.all(urls.map((url) => brightDataRaw(url)))
 
-    const before = listingUrls.size
-    for (const url of candidates) {
-      if (listingUrls.has(url)) duplicateListingCandidates += 1
-      listingUrls.add(url)
+    let shouldStop = false
+    for (let index = 0; index < pages.length; index += 1) {
+      const searchUrl = urls[index]
+      searchUrls.push(searchUrl)
+
+      const candidates = extractListingUrls(htmlPages[index], datasetKind)
+      rawListingCandidates += candidates.length
+
+      const before = listingUrls.size
+      for (const url of candidates) {
+        if (listingUrls.has(url)) duplicateListingCandidates += 1
+        listingUrls.add(url)
+      }
+      const added = listingUrls.size - before
+      newListingsPerPage.push(added)
+
+      // Cost guard: stop processing as soon as Portal clearly signals exhaustion.
+      // A concurrent batch can overfetch at most three search pages.
+      if (candidates.length === 0 || added === 0 || candidates.length < pageSize) {
+        exhausted = true
+        shouldStop = true
+        break
+      }
     }
-    const added = listingUrls.size - before
-    newListingsPerPage.push(added)
-
-    // Cost guard: stop as soon as Portal clearly signals the end of pagination.
-    // The production pipeline can still request more pages explicitly when needed.
-    if (candidates.length === 0 || added === 0 || candidates.length < pageSize) {
-      exhausted = true
-      break
-    }
+    if (shouldStop) break
   }
 
   return {
@@ -201,7 +214,7 @@ export async function collectPortalListingDetailsViaBrightData(args: {
 
   // Keep concurrency deliberately low: the first objective is reliable,
   // low-bandwidth evidence collection rather than maximum throughput.
-  const concurrency = 2
+  const concurrency = 4
 
   for (let start = 0; start < args.listingUrls.length; start += concurrency) {
     const batch = args.listingUrls.slice(start, start + concurrency)
