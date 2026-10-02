@@ -18,9 +18,19 @@ function serviceClient() {
   return createSupabaseClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
 }
 
-export function mercadoLibreOAuthConfig(origin?: string) {
-  const clientId = process.env.MERCADOLIBRE_CLIENT_ID?.trim()
-  const clientSecret = process.env.MERCADOLIBRE_CLIENT_SECRET?.trim()
+export async function mercadoLibreOAuthConfig(origin?: string) {
+  let clientId = process.env.MERCADOLIBRE_CLIENT_ID?.trim() || ''
+  let clientSecret = process.env.MERCADOLIBRE_CLIENT_SECRET?.trim() || ''
+
+  if (!clientId || !clientSecret) {
+    const supabase = serviceClient()
+    const { data, error } = await supabase.rpc('get_mercadolibre_oauth_credentials_v1')
+    if (error) throw new Error(`MERCADOLIBRE_CREDENTIALS_READ_FAILED:${error.message}`)
+    const creds = (data ?? {}) as { client_id?: string | null; client_secret?: string | null }
+    clientId ||= creds.client_id?.trim() || ''
+    clientSecret ||= creds.client_secret?.trim() || ''
+  }
+
   if (!clientId) throw new Error('MERCADOLIBRE_CLIENT_ID_MISSING')
   if (!clientSecret) throw new Error('MERCADOLIBRE_CLIENT_SECRET_MISSING')
 
@@ -80,7 +90,7 @@ export async function exchangeMercadoLibreAuthorizationCode(args: {
   codeVerifier: string
   origin?: string
 }) {
-  const { clientId, clientSecret, redirectUri } = mercadoLibreOAuthConfig(args.origin)
+  const { clientId, clientSecret, redirectUri } = await mercadoLibreOAuthConfig(args.origin)
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     client_id: clientId,
@@ -95,7 +105,7 @@ export async function exchangeMercadoLibreAuthorizationCode(args: {
 }
 
 async function refreshMercadoLibreToken(refreshToken: string) {
-  const { clientId, clientSecret } = mercadoLibreOAuthConfig('https://ppartnersgroup.app')
+  const { clientId, clientSecret } = await mercadoLibreOAuthConfig('https://ppartnersgroup.app')
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     client_id: clientId,
