@@ -75,9 +75,33 @@ export async function GET() {
     }
   }
 
+  const bulkIds = ["MLC4182532688","MLC2045837473","MLC3946847146","MLC3979950386","MLC2233243027","MLC1482039985","MLC1568362894","MLC1806475591","MLC1849060153","MLC1379757895"]
+  const bulkPath = `/items/bulk?ids=${bulkIds.join(',')}&attributes=body.id,body.title,body.price,body.currency_id,body.permalink,body.category_id,body.location,body.address`
+  const bulk = await get(bulkPath, token)
+  const bulkRows = Array.isArray(bulk.parsed)
+    ? (bulk.parsed as Array<{ id?: string; status_code?: number; body?: { id?: string; title?: string; price?: number; currency_id?: string; permalink?: string; category_id?: string; location?: unknown; address?: unknown } }>).map((row) => ({
+        id: row.id ?? row.body?.id ?? null,
+        status: row.status_code ?? null,
+        title: row.body?.title ?? null,
+        price: row.body?.price ?? null,
+        currency: row.body?.currency_id ?? null,
+        permalink: row.body?.permalink ?? null,
+        categoryId: row.body?.category_id ?? null,
+        hasLocation: Boolean(row.body?.location),
+        hasAddress: Boolean(row.body?.address),
+      }))
+    : []
+
   return NextResponse.json({
     ok: true,
     discovered: { realEstateId, houses, apartments },
     results,
+    bulk: {
+      status: bulk.response.status,
+      ok: bulk.response.ok,
+      requested: bulkIds.length,
+      returned: bulkRows.length,
+      rows: bulkRows,
+    },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
