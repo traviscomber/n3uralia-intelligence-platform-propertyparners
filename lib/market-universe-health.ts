@@ -90,14 +90,15 @@ export async function getMarketUniverseHealth(): Promise<MarketUniverseHealth> {
     const datasets: MarketDatasetHealth[] = []
     for (const dataset of DATASETS) {
       const sourceId = sourceByCode.get(dataset.sourceCode)
-      const countResult = sourceId
+      const currentResult = sourceId
         ? await db.from('market_current_listings')
-            .select('id', { count: 'exact', head: true })
+            .select('source_listing_id')
             .eq('source_id', sourceId)
             .in('status', ['active', 'observed'])
-        : { count: 0, error: null }
+            .limit(3500)
+        : { data: [], error: null }
 
-      if (countResult.error) return { ...empty, error: countResult.error.message }
+      if (currentResult.error) return { ...empty, error: currentResult.error.message }
 
       const fullRun = latestFullByDataset.get(dataset.datasetKind) ?? null
       const deltaRun = latestDeltaByDataset.get(dataset.datasetKind) ?? null
@@ -107,7 +108,7 @@ export async function getMarketUniverseHealth(): Promise<MarketUniverseHealth> {
       const fullInventory = metadata?.discovery_unique_listings == null
         ? null
         : Number(metadata.discovery_unique_listings)
-      const detailedActive = countResult.count ?? 0
+      const detailedActive = new Set((currentResult.data ?? []).map((row) => row.source_listing_id).filter(Boolean)).size
 
       datasets.push({
         datasetKind: dataset.datasetKind,
