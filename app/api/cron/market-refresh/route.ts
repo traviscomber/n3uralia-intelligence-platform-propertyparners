@@ -629,7 +629,7 @@ async function drainLatestInventoryDetails(args: {
     return observedAt < snapshotStartedAt
   })
   const queue = [...absent, ...staleUnlinked]
-  const chunkSize = brightDataOnly ? 12 : 18
+  const chunkSize = brightDataOnly ? 24 : 18
   let processed = 0
   let parsed = 0
   let accepted = 0
@@ -639,16 +639,17 @@ async function drainLatestInventoryDetails(args: {
   let collectionFailures = 0
   let ingestionFailures = 0
 
-  for (let offset = 0; offset < queue.length; offset += chunkSize) {
+  const queueToProcess = brightDataOnly ? queue.slice(0, chunkSize) : queue
+  for (let offset = 0; offset < queueToProcess.length; offset += chunkSize) {
     if (Date.now() - startedAt >= (brightDataOnly ? 160_000 : 235_000)) break
-    const chunk = queue.slice(offset, offset + chunkSize)
+    const chunk = queueToProcess.slice(offset, offset + chunkSize)
     const detailCollection = brightDataOnly
       ? {
           result: await collectPortalListingDetailsViaBrightData({
             datasetKind,
             listingUrls: chunk.map((item) => item.url),
-            concurrency: 4,
-            requestTimeoutMs: 40_000,
+            concurrency: 8,
+            requestTimeoutMs: 35_000,
             maxAttempts: 1,
           }),
           provider: 'brightdata' as CollectorProvider,

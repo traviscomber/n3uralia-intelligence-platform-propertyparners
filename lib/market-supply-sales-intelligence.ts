@@ -96,6 +96,49 @@ export async function getHouseSupplySalesLive(): Promise<{ rows: HouseSupplySale
   }
 }
 
+
+export type ApartmentLiveBaseline = {
+  portalListings: number
+  portalMedianPriceUf: number | null
+  portalMedianUfM2: number | null
+  portalMedianUsefulAreaM2: number | null
+  asOfPortal: string | null
+  cbrsTransactions24m: number
+  cbrsMedianPriceUf24m: number | null
+  cbrsMedianUfM224m: number | null
+  cbrsFrom: string | null
+  cbrsTo: string | null
+}
+
+export async function getApartmentLiveBaseline(): Promise<{ row: ApartmentLiveBaseline | null; error?: string }> {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('get_market_apartment_live_baseline_v1')
+
+    if (error) return { row: null, error: error.message }
+
+    const source = ((data ?? [])[0] ?? null) as Record<string, unknown> | null
+    if (!source) return { row: null }
+
+    return {
+      row: {
+        portalListings: Number(source.portal_listings ?? 0),
+        portalMedianPriceUf: source.portal_median_price_uf == null ? null : Number(source.portal_median_price_uf),
+        portalMedianUfM2: source.portal_median_uf_m2 == null ? null : Number(source.portal_median_uf_m2),
+        portalMedianUsefulAreaM2: source.portal_median_useful_area_m2 == null ? null : Number(source.portal_median_useful_area_m2),
+        asOfPortal: source.as_of_portal == null ? null : String(source.as_of_portal),
+        cbrsTransactions24m: Number(source.cbrs_transactions_24m ?? 0),
+        cbrsMedianPriceUf24m: source.cbrs_median_price_uf_24m == null ? null : Number(source.cbrs_median_price_uf_24m),
+        cbrsMedianUfM224m: source.cbrs_median_uf_m2_24m == null ? null : Number(source.cbrs_median_uf_m2_24m),
+        cbrsFrom: source.cbrs_from == null ? null : String(source.cbrs_from),
+        cbrsTo: source.cbrs_to == null ? null : String(source.cbrs_to),
+      },
+    }
+  } catch (error) {
+    return { row: null, error: error instanceof Error ? error.message : 'No fue posible consultar la línea base live de departamentos.' }
+  }
+}
+
 export type MarketGeometryRow = {
   neighborhoodName: string
   geometry: unknown
