@@ -3,6 +3,8 @@ import { ArrowLeft, Clock3, Home, MapPinned, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { getHouseSupplySalesLive, getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
+import { getMarketOpportunityPulse } from '@/lib/market-opportunity-intelligence'
+import { getMarketUniverseHealth } from '@/lib/market-universe-health'
 
 function number(value: number | null, digits = 0) {
   return value === null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
@@ -76,10 +78,12 @@ function signalFill(signal: string | undefined) {
 }
 
 export default async function MarketIntelligencePage() {
-  const [intelligence, context, houses] = await Promise.all([
+  const [intelligence, context, houses, opportunityPulse, universe] = await Promise.all([
     getSupplySalesIntelligence(),
     getMarketIntelligenceContext(),
     getHouseSupplySalesLive(),
+    getMarketOpportunityPulse(),
+    getMarketUniverseHealth(),
   ])
   const apartments = intelligence.rows.filter((row) => row.propertyType === 'Departamento' && row.neighborhoodName !== 'SIN_BARRIO')
   const liveHouses = houses.rows.filter((row) => row.neighborhoodName)
@@ -141,7 +145,7 @@ export default async function MarketIntelligencePage() {
       <WorkspaceHeader
         eyebrow="Mercado"
         title="Oferta vs ventas"
-        meta="Casas live + referencia de departamentos + CBRS + barrios KML Property Partners"
+        meta="Casas + departamentos · Portal live + CBRS + barrios KML Property Partners"
         actions={[{ label: 'Volver', href: '/dashboard/market', icon: <ArrowLeft size={15} /> }]}
       />
 
@@ -154,7 +158,37 @@ export default async function MarketIntelligencePage() {
         { label: 'Barrios con casas', value: number(liveHouses.length) },
         { label: 'Deptos muy sobre ventas', value: number(strongGap.length), tone: strongGap.length ? 'warning' : 'default' },
         { label: 'Confianza alta deptos', value: percent(apartments.length ? highConfidence.length / apartments.length : null) },
+        { label: 'Avisos evaluados', value: number(opportunityPulse.evaluatedListings) },
       ]} />
+
+      <section className="mt-7 border-y border-[var(--n3-line)] py-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Universo operativo</p>
+            <h2 className="mt-1 text-lg font-medium">Cobertura real de Vitacura</h2>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Separa inventario descubierto de fichas con detalle. Así el sistema no presenta una muestra enriquecida como si fuera el universo completo.</p>
+          </div>
+          <span className="text-xs text-[var(--n3-text-muted)]">Full snapshot {dateLabel(universe.latestFullSnapshotAt)}</span>
+        </div>
+
+        {universe.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible medir la cobertura completa del mercado." /></div> : null}
+
+        <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+          {universe.datasets.map((dataset) => (
+            <div key={dataset.datasetKind} className="bg-[var(--n3-bg)] px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{dataset.label}</p>
+              <div className="mt-2 flex items-baseline gap-3">
+                <p className="text-3xl font-semibold tabular-nums">{number(dataset.fullInventory)}</p>
+                <p className="text-xs text-[var(--n3-text-muted)]">IDs en inventario completo</p>
+              </div>
+              <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{number(dataset.detailedActive)} fichas activas con detalle · cobertura {percent(dataset.detailCoveragePct)}</p>
+              <p className="mt-1 text-[10px] text-[var(--n3-text-muted)]">Corte completo {dateLabel(dataset.fullSnapshotAt)}{dataset.latestDeltaAt ? ` · último pulso ${dateLabel(dataset.latestDeltaAt)}` : ''}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">Inventario completo total: {number(universe.fullInventoryTotal)} publicaciones. Cobertura enriquecida actual: {percent(universe.detailCoveragePct)}. Los análisis de precio y oportunidad usan sólo fichas con evidencia suficiente; el inventario completo sigue siendo la referencia para presencia y retiros.</p>
+      </section>
 
       <section className="mt-7">
         <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
@@ -247,6 +281,58 @@ export default async function MarketIntelligencePage() {
             <div><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Brecha UF/m²</p><p className="mt-1 text-base font-semibold tabular-nums">{percent(row.ufM2GapPct)}</p></div>
           </div>
         )) : <div className="py-8 text-sm text-[var(--n3-text-muted)]">No hay barrios con datos suficientes para publicar una señal.</div>}</div>
+      </section>
+
+      <section className="mt-8">
+        <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Pulso de oportunidades</p>
+            <h2 className="mt-1 text-lg font-medium">Señales observables para revisión comercial</h2>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">{opportunityPulse.methodology}</p>
+          </div>
+          <span className="text-xs text-[var(--n3-text-muted)]">Corte {dateLabel(opportunityPulse.generatedAt)}</span>
+        </div>
+
+        {opportunityPulse.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible calcular el pulso de oportunidades." /></div> : null}
+
+        <MetricStrip items={[
+          { label: 'Evaluados', value: number(opportunityPulse.evaluatedListings) },
+          { label: 'Con baja observada', value: number(opportunityPulse.withPriceReduction) },
+          { label: '≥60 días observados', value: number(opportunityPulse.longExposure) },
+          { label: '≥5% bajo mediana barrio', value: number(opportunityPulse.belowNeighborhoodMedian) },
+        ]} />
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[980px] text-sm">
+            <thead className="border-b border-[var(--n3-line)] text-left text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
+              <tr>
+                <th className="py-3 pr-4">Propiedad</th>
+                <th className="py-3 pr-4">Tipo</th>
+                <th className="py-3 pr-4 text-right">UF</th>
+                <th className="py-3 pr-4 text-right">Días</th>
+                <th className="py-3 pr-4 text-right">Baja vs máx.</th>
+                <th className="py-3 text-right">UF/m² vs barrio</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--n3-line)]">
+              {opportunityPulse.rows.slice(0, 20).map((row) => (
+                <tr key={row.sourceListingId}>
+                  <td className="py-3 pr-4">
+                    <p className="font-medium text-[var(--n3-text-light)]">{row.title || row.address || row.sourceListingId}</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--n3-text-muted)]">{row.neighborhoodName || 'Barrio no confirmado'} · {row.observationCount} corte{row.observationCount === 1 ? '' : 's'}</p>
+                  </td>
+                  <td className="py-3 pr-4">{row.propertyType}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{row.priceUf == null ? '—' : number(row.priceUf, 0)}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{row.daysObserved ?? '—'}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{percent(row.priceReductionFromMaxPct)}</td>
+                  <td className="py-3 text-right tabular-nums">{percent(row.relativeToNeighborhoodMedianPct)}</td>
+                </tr>
+              ))}
+              {!opportunityPulse.rows.length ? <tr><td colSpan={6} className="py-8 text-sm text-[var(--n3-text-muted)]">No hay señales observables suficientes para revisión en este corte.</td></tr> : null}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">Las señales exponen evidencia para revisión humana sin crear un ranking. No afirman motivación de venta, urgencia ni valor de cierre. La mediana de barrio usa sólo publicaciones vigentes con identidad territorial confirmada.</p>
       </section>
 
       <section className="mt-6 border-t border-[var(--n3-line)] pt-4 text-xs leading-relaxed text-[var(--n3-text-muted)]">

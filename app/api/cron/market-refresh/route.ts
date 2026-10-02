@@ -609,8 +609,9 @@ async function drainLatestInventoryDetails(args: {
   supabase: ReturnType<typeof getServiceClient>
   datasetKind: PortalDatasetKind
   startedAt: number
+  brightDataOnly?: boolean
 }) {
-  const { supabase, datasetKind, startedAt } = args
+  const { supabase, datasetKind, startedAt, brightDataOnly = false } = args
   const latest = await latestCompleteInventoryRun(supabase, datasetKind)
   if (!latest?.id) throw new Error('NO_COMPLETE_INVENTORY_RUN')
 
@@ -641,11 +642,20 @@ async function drainLatestInventoryDetails(args: {
   for (let offset = 0; offset < queue.length; offset += chunkSize) {
     if (Date.now() - startedAt >= 235_000) break
     const chunk = queue.slice(offset, offset + chunkSize)
-    const detailCollection = await collectPortalDetailsWithFallback({
-      datasetKind,
-      listingUrls: chunk.map((item) => item.url),
-      waitMs: DETAIL_WAIT_MS,
-    })
+    const detailCollection = brightDataOnly
+      ? {
+          result: await collectPortalListingDetailsViaBrightData({
+            datasetKind,
+            listingUrls: chunk.map((item) => item.url),
+          }),
+          provider: 'brightdata' as CollectorProvider,
+          failures: [] as Array<{ provider: CollectorProvider; error: string }>,
+        }
+      : await collectPortalDetailsWithFallback({
+          datasetKind,
+          listingUrls: chunk.map((item) => item.url),
+          waitMs: DETAIL_WAIT_MS,
+        })
     const details = detailCollection.result
     collectionFailures += details.failures.length
     parsed += details.rows.length
@@ -700,6 +710,7 @@ export async function GET(request: Request) {
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
+  const brightDataOnly = url.searchParams.get('provider') === 'brightdata'
   const requestedDataset = url.searchParams.get('dataset')
   if (requestedDataset && !DATASETS.includes(requestedDataset as PortalDatasetKind)) {
     return NextResponse.json({ error: 'Dataset no soportado.' }, { status: 400 })
@@ -731,6 +742,7 @@ export async function GET(request: Request) {
         supabase,
         datasetKind: selectedDatasets[0],
         startedAt,
+        brightDataOnly,
       })
       const { data: intelligenceRefresh, error: intelligenceError } = await supabase
         .rpc('refresh_market_listing_property_match_candidates_v1')
