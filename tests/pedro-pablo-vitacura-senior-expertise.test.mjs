@@ -69,7 +69,7 @@ test('decision support exposes the Pedro Pablo alignment contract to the senior 
 test('senior expertise changes the visible answer, not only metadata', () => {
   assert.match(support, /function seniorResponse\(/)
   assert.match(support, /Lectura senior inmobiliaria · Vitacura/)
-  assert.match(support, /response = seniorResponse\(response, prompt, seniorExpertise\)/)
+  assert.match(support, /response = seniorResponse\(response, prompt, seniorExpertise, marketPulse\)/)
   assert.match(support, /Portal representa oferta y CBRS evidencia transaccional/)
 })
 
