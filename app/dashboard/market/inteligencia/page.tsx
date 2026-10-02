@@ -4,6 +4,7 @@ import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { getHouseSupplySalesLive, getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
 import { getMarketOpportunityPulse } from '@/lib/market-opportunity-intelligence'
+import { getMarketUniverseHealth } from '@/lib/market-universe-health'
 
 function number(value: number | null, digits = 0) {
   return value === null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
@@ -77,11 +78,12 @@ function signalFill(signal: string | undefined) {
 }
 
 export default async function MarketIntelligencePage() {
-  const [intelligence, context, houses, opportunityPulse] = await Promise.all([
+  const [intelligence, context, houses, opportunityPulse, universe] = await Promise.all([
     getSupplySalesIntelligence(),
     getMarketIntelligenceContext(),
     getHouseSupplySalesLive(),
     getMarketOpportunityPulse(),
+    getMarketUniverseHealth(),
   ])
   const apartments = intelligence.rows.filter((row) => row.propertyType === 'Departamento' && row.neighborhoodName !== 'SIN_BARRIO')
   const liveHouses = houses.rows.filter((row) => row.neighborhoodName)
@@ -143,7 +145,7 @@ export default async function MarketIntelligencePage() {
       <WorkspaceHeader
         eyebrow="Mercado"
         title="Oferta vs ventas"
-        meta="Casas live + referencia de departamentos + CBRS + barrios KML Property Partners"
+        meta="Casas + departamentos · Portal live + CBRS + barrios KML Property Partners"
         actions={[{ label: 'Volver', href: '/dashboard/market', icon: <ArrowLeft size={15} /> }]}
       />
 
@@ -158,6 +160,35 @@ export default async function MarketIntelligencePage() {
         { label: 'Confianza alta deptos', value: percent(apartments.length ? highConfidence.length / apartments.length : null) },
         { label: 'Avisos evaluados', value: number(opportunityPulse.evaluatedListings) },
       ]} />
+
+      <section className="mt-7 border-y border-[var(--n3-line)] py-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Universo operativo</p>
+            <h2 className="mt-1 text-lg font-medium">Cobertura real de Vitacura</h2>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Separa inventario descubierto de fichas con detalle. Así el sistema no presenta una muestra enriquecida como si fuera el universo completo.</p>
+          </div>
+          <span className="text-xs text-[var(--n3-text-muted)]">Full snapshot {dateLabel(universe.latestFullSnapshotAt)}</span>
+        </div>
+
+        {universe.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible medir la cobertura completa del mercado." /></div> : null}
+
+        <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+          {universe.datasets.map((dataset) => (
+            <div key={dataset.datasetKind} className="bg-[var(--n3-bg)] px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{dataset.label}</p>
+              <div className="mt-2 flex items-baseline gap-3">
+                <p className="text-3xl font-semibold tabular-nums">{number(dataset.fullInventory)}</p>
+                <p className="text-xs text-[var(--n3-text-muted)]">IDs en inventario completo</p>
+              </div>
+              <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{number(dataset.detailedActive)} fichas activas con detalle · cobertura {percent(dataset.detailCoveragePct)}</p>
+              <p className="mt-1 text-[10px] text-[var(--n3-text-muted)]">Corte completo {dateLabel(dataset.fullSnapshotAt)}{dataset.latestDeltaAt ? ` · último pulso ${dateLabel(dataset.latestDeltaAt)}` : ''}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">Inventario completo total: {number(universe.fullInventoryTotal)} publicaciones. Cobertura enriquecida actual: {percent(universe.detailCoveragePct)}. Los análisis de precio y oportunidad usan sólo fichas con evidencia suficiente; el inventario completo sigue siendo la referencia para presencia y retiros.</p>
+      </section>
 
       <section className="mt-7">
         <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
