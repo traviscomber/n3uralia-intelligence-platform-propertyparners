@@ -118,9 +118,6 @@ async function refreshMercadoLibreToken(refreshToken: string) {
 }
 
 export async function getMercadoLibreAccessToken() {
-  const envToken = process.env.MERCADOLIBRE_ACCESS_TOKEN?.trim()
-  if (envToken) return envToken
-
   const supabase = serviceClient()
   const { data, error } = await supabase
     .from('mercadolibre_oauth_tokens')
@@ -129,14 +126,18 @@ export async function getMercadoLibreAccessToken() {
     .maybeSingle()
 
   if (error) throw new Error(`MERCADOLIBRE_TOKEN_READ_FAILED:${error.message}`)
-  if (!data?.access_token || !data.refresh_token || !data.expires_at) {
-    throw new Error('MERCADOLIBRE_ACCESS_TOKEN_MISSING')
+
+  if (data?.access_token && data.refresh_token && data.expires_at) {
+    const expiresAt = Date.parse(data.expires_at)
+    if (Number.isFinite(expiresAt) && expiresAt > Date.now() + 5 * 60 * 1000) {
+      return data.access_token
+    }
+    return refreshMercadoLibreToken(data.refresh_token)
   }
 
-  const expiresAt = Date.parse(data.expires_at)
-  if (Number.isFinite(expiresAt) && expiresAt > Date.now() + 5 * 60 * 1000) {
-    return data.access_token
-  }
+  // Legacy fallback only. OAuth-issued tokens in the server-only store are authoritative.
+  const envToken = process.env.MERCADOLIBRE_ACCESS_TOKEN?.trim()
+  if (envToken) return envToken
 
-  return refreshMercadoLibreToken(data.refresh_token)
+  throw new Error('MERCADOLIBRE_ACCESS_TOKEN_MISSING')
 }
