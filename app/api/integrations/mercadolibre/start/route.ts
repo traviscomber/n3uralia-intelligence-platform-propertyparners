@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   }
 
   const origin = new URL(request.url).origin
-  const { clientId, redirectUri } = mercadoLibreOAuthConfig(origin)
+  const { clientId, redirectUri } = await mercadoLibreOAuthConfig(origin)
   const state = base64url(randomBytes(24))
   const verifier = base64url(randomBytes(48))
   const challenge = base64url(createHash('sha256').update(verifier).digest())
