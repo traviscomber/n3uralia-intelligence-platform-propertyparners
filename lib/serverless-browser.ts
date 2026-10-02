@@ -19,7 +19,12 @@ export async function launchServerlessBrowser(): Promise<Browser> {
   const executablePath = await chromium.executablePath()
 
   return puppeteer.launch({
-    args,
+    args: [
+      ...args,
+      '--disable-blink-features=AutomationControlled',
+      '--lang=es-CL,es',
+      '--window-size=1440,1000',
+    ],
     defaultViewport: { width: 1440, height: 1000 },
     executablePath,
     headless: 'shell',
