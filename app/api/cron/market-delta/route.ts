@@ -126,6 +126,7 @@ async function recordDeltaRun(args: {
   discovered: number
   newCandidates: number
   requestedDetails: number
+  priceProbes: number
   parsedDetails: number
   failures: number
 }) {
@@ -149,6 +150,7 @@ async function recordDeltaRun(args: {
       baseline_started_at: args.baselineStartedAt,
       new_candidates: args.newCandidates,
       requested_details: args.requestedDetails,
+      existing_price_probes: args.priceProbes,
       parsed_details: args.parsedDetails,
       detail_failures: args.failures,
       removal_reconciliation: 'deferred_to_full_inventory',
@@ -260,6 +262,7 @@ export async function GET(request: Request) {
         discovered: discovery.listingUrls.length,
         newCandidates: newUrls.length,
         requestedDetails: detailUrls.length,
+        priceProbes: existingPriceProbes.length,
         parsedDetails: validRows.length,
         failures: details.failures.length,
       })
