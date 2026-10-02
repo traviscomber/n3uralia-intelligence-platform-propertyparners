@@ -118,7 +118,10 @@ async function brightDataRaw(url: string) {
     lastStatus = response.status
     const body = await response.text()
 
-    if (response.ok && body.length >= 100) return body
+    if (response.ok) {
+      if (!body.trim()) throw new Error('BRIGHTDATA_EMPTY_BODY')
+      return body
+    }
 
     const retryable = response.status === 429 || response.status >= 500
     if (!retryable || attempt === MAX_ATTEMPTS) {
