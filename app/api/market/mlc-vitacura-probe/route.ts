@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { requireExecutiveAccess } from '@/lib/api-access'
 import { searchVitacuraHouseSales } from '@/lib/mercadolibre-vitacura-collector'
 
 export const runtime = 'nodejs'
@@ -12,6 +13,12 @@ function boundedNumber(value: string | null, fallback: number, min: number, max:
 }
 
 export async function GET(request: Request) {
+  const previewBypass = process.env.VERCEL_ENV === 'preview'
+  if (!previewBypass) {
+    const access = await requireExecutiveAccess()
+    if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
+  }
+
   const url = new URL(request.url)
   const limit = Math.round(boundedNumber(url.searchParams.get('limit'), 5, 1, 20))
   const offset = Math.round(boundedNumber(url.searchParams.get('offset'), 0, 0, 950))
