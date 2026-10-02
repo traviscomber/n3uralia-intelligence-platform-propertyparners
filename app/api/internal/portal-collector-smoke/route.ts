@@ -8,6 +8,7 @@ import type { PortalDatasetKind } from '@/lib/market-source-import'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
+// Redeploy marker: Bright Data preview env refreshed.
 
 const VALIDATION_BRANCH = 'feat/brightdata-vitacura-smoke-20261002'
 const TOTAL_DETAIL_BUDGET = 10
