@@ -22,6 +22,7 @@ export async function updateSession(request: NextRequest) {
     || pathname === '/api/internal/portal-collector-smoke'
     || (pathname === '/api/market/mlc-vitacura-probe' && process.env.VERCEL_ENV === 'preview')
     || pathname === '/api/integrations/mercadolibre/callback'
+    || (pathname === '/api/integrations/mercadolibre/start' && process.env.VERCEL_ENV === 'preview')
   ) {
     return NextResponse.next({ request })
   }
