@@ -1,4 +1,5 @@
 import type { MarketImportInputRow } from '@/lib/market-import'
+import { getMercadoLibreAccessToken } from '@/lib/mercadolibre-oauth'
 
 const MELI_API = 'https://api.mercadolibre.com'
 const SITE_ID = 'MLC'
@@ -63,17 +64,12 @@ export type VitacuraSearchOptions = {
   maxPrice?: number
 }
 
-function requiredToken() {
-  const token = process.env.MERCADOLIBRE_ACCESS_TOKEN?.trim()
-  if (!token) throw new Error('MERCADOLIBRE_ACCESS_TOKEN_MISSING')
-  return token
-}
-
 async function meliGet<T>(path: string) {
+  const token = await getMercadoLibreAccessToken()
   const response = await fetch(`${MELI_API}${path}`, {
     cache: 'no-store',
     headers: {
-      Authorization: `Bearer ${requiredToken()}`,
+      Authorization: `Bearer ${token}`,
       Accept: 'application/json',
     },
   })
