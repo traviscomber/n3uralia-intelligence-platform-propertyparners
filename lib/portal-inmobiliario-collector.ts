@@ -3,6 +3,7 @@ import { parse, type HTMLElement } from 'node-html-parser'
 import type { MarketImportInputRow } from '@/lib/market-import'
 import type { PortalDatasetKind } from '@/lib/market-source-import'
 import { launchServerlessBrowser } from '@/lib/serverless-browser'
+import { resolvePortalProxy } from '@/lib/portal-proxy'
 
 export type PortalCollectorOptions = {
   datasetKind: PortalDatasetKind
@@ -452,6 +453,10 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
 }
 
 async function configurePage(page: Page) {
+  const proxy = resolvePortalProxy()
+  if (proxy?.username && proxy.password) {
+    await page.authenticate({ username: proxy.username, password: proxy.password })
+  }
   await page.setViewport({ width: 1440, height: 1000 })
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36')
   await page.setExtraHTTPHeaders({
