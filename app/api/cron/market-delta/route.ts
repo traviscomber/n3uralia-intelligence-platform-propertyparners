@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 180
 
 const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
-const DISCOVERY_PAGES_PER_DATASET = 2
+const DISCOVERY_PAGES_PER_DATASET = 1
 const MAX_NEW_DETAILS_PER_DATASET = 12
 const CHILE_TIME_ZONE = 'America/Santiago'
 
