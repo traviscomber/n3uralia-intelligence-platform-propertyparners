@@ -144,7 +144,7 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
     longExposure: 0,
     belowNeighborhoodMedian: 0,
     generatedAt: new Date().toISOString(),
-    methodology: 'evidence_v1: baja de precio observada + días de exposición + UF/m² relativo a mediana publicada del mismo barrio/tipo + repetición de evidencia. No crea ranking, no es valorización ni infiere intención del propietario.',
+    methodology: 'evidence_v2: baja de precio observada + días de exposición + repetición de evidencia; la comparación UF/m² por barrio se publica sólo cuando la identidad territorial está gobernada. Para departamentos se mantiene desactivada hasta resolver el barrio canónico. No crea ranking, no es valorización ni infiere intención del propietario.',
   } satisfies MarketOpportunityPulse
 
   try {
@@ -219,7 +219,7 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
       const propertyType = typeBySource.get(listing.source_id)
       const neighborhoodId = listing.property_id ? neighborhoodByProperty.get(listing.property_id) ?? null : null
       const priceUfM2 = numeric(listing.price_uf_m2)
-      if (!propertyType || !neighborhoodId || priceUfM2 == null || priceUfM2 <= 0) continue
+      if (!propertyType || propertyType !== 'Casa' || !neighborhoodId || priceUfM2 == null || priceUfM2 <= 0) continue
       const key = `${propertyType}:${neighborhoodId}`
       const values = neighborhoodUfM2.get(key) ?? []
       values.push(priceUfM2)
@@ -232,7 +232,8 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
     const scoredRows = listings.map((listing): MarketOpportunityRow => {
       const propertyType = typeBySource.get(listing.source_id) ?? 'Casa'
       const history = historyByListing.get(listing.source_listing_id)
-      const neighborhoodId = listing.property_id ? neighborhoodByProperty.get(listing.property_id) ?? null : null
+      const rawNeighborhoodId = listing.property_id ? neighborhoodByProperty.get(listing.property_id) ?? null : null
+      const neighborhoodId = propertyType === 'Casa' ? rawNeighborhoodId : null
       const neighborhoodName = neighborhoodId ? neighborhoodNameById.get(neighborhoodId) ?? null : null
       const priceUf = numeric(listing.price_uf)
       const priceUfM2 = numeric(listing.price_uf_m2)
