@@ -711,6 +711,7 @@ export async function GET(request: Request) {
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
   const brightDataOnly = url.searchParams.get('provider') === 'brightdata'
+  const skipPostprocess = url.searchParams.get('postprocess') === '0'
   const requestedDataset = url.searchParams.get('dataset')
   if (requestedDataset && !DATASETS.includes(requestedDataset as PortalDatasetKind)) {
     return NextResponse.json({ error: 'Dataset no soportado.' }, { status: 400 })
@@ -744,10 +745,20 @@ export async function GET(request: Request) {
         startedAt,
         brightDataOnly,
       })
-      const { data: intelligenceRefresh, error: intelligenceError } = await supabase
-        .rpc('refresh_market_listing_property_match_candidates_v1')
-      const { data: prospectRefresh, error: prospectError } = await supabase
-        .rpc('refresh_property_prospect_leads_v1')
+      let intelligenceRefresh: unknown = null
+      let intelligenceError: { message?: string } | null = null
+      let prospectRefresh: unknown = null
+      let prospectError: { message?: string } | null = null
+
+      if (!skipPostprocess) {
+        const intelligenceResult = await supabase.rpc('refresh_market_listing_property_match_candidates_v1')
+        intelligenceRefresh = intelligenceResult.data ?? null
+        intelligenceError = intelligenceResult.error
+
+        const prospectResult = await supabase.rpc('refresh_property_prospect_leads_v1')
+        prospectRefresh = prospectResult.data ?? null
+        prospectError = prospectResult.error
+      }
 
       const sourceCode = `portal-inmobiliario-vitacura-${selectedDatasets[0].replaceAll('_', '-')}`
       const { data: source } = await supabase
@@ -784,6 +795,7 @@ export async function GET(request: Request) {
           error: intelligenceError?.message ?? null,
           identityState,
         },
+        postprocessSkipped: skipPostprocess,
         prospects: {
           refresh: prospectRefresh ?? null,
           error: prospectError?.message ?? null,
