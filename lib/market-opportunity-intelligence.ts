@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 export type MarketOpportunitySignal =
   | 'price_reduction'
@@ -148,7 +149,23 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
   } satisfies MarketOpportunityPulse
 
   try {
-    const db = await createClient()
+    const authDb = await createClient()
+    const { data: userData, error: userError } = await authDb.auth.getUser()
+    if (userError || !userData.user) return { ...empty, error: 'Sesión requerida para consultar inteligencia de mercado.' }
+
+    const { data: profile, error: profileError } = await authDb
+      .from('profiles')
+      .select('role')
+      .eq('id', userData.user.id)
+      .maybeSingle()
+    if (profileError) return { ...empty, error: profileError.message }
+
+    const role = String(profile?.role ?? '').toLowerCase()
+    if (!['admin', 'ceo', 'director', 'subdirector', 'seller'].includes(role)) {
+      return { ...empty, error: 'Acceso restringido a inteligencia de mercado.' }
+    }
+
+    const db = createServiceClient()
     const sourcesResult = await db
       .from('market_sources')
       .select('id,code')
