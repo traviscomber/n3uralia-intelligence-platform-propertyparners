@@ -453,15 +453,28 @@ export function parsePortalListing(html: string, url: string, datasetKind: Porta
 
 async function configurePage(page: Page) {
   await page.setViewport({ width: 1440, height: 1000 })
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36')
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36')
   await page.setExtraHTTPHeaders({
     'Accept-Language': 'es-CL,es;q=0.9,en;q=0.7',
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Upgrade-Insecure-Requests': '1',
   })
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+    Object.defineProperty(navigator, 'languages', { get: () => ['es-CL', 'es', 'en-US', 'en'] })
+    Object.defineProperty(navigator, 'platform', { get: () => 'Win32' })
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 })
+    Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 })
+    Object.defineProperty(navigator, 'plugins', {
+      get: () => [{ name: 'Chrome PDF Plugin' }, { name: 'Chrome PDF Viewer' }, { name: 'Native Client' }],
+    })
+    ;(window as typeof window & { chrome?: Record<string, unknown> }).chrome = { runtime: {} }
+  })
+  await page.emulateTimezone('America/Santiago').catch(() => undefined)
   await page.setRequestInterception(true)
   page.on('request', (request) => {
     const resourceType = request.resourceType()
-    if (resourceType === 'image' || resourceType === 'media' || resourceType === 'font') request.abort()
+    if (resourceType === 'media' || resourceType === 'font') request.abort()
     else request.continue()
   })
 }
@@ -504,7 +517,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   let rawListingCandidates = 0
   let reportedResultCount: number | null = null
   let exhausted = false
-  const concurrency = 2
+  const concurrency = 1
 
   for (let start = 0; start < searchUrls.length && !exhausted; start += concurrency) {
     const batch = searchUrls.slice(start, start + concurrency)
