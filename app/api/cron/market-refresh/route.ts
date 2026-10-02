@@ -17,7 +17,6 @@ import { portalProxyConfigured } from '@/lib/portal-proxy'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
-export const preferredRegion = 'gru1'
 
 // V1 contractual scope: houses for sale in Vitacura. Apartments and projects remain V2.
 const DATASETS: PortalDatasetKind[] = ['portal_houses']
@@ -595,7 +594,6 @@ export async function GET(request: Request) {
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
   const nativeOnly = url.searchParams.get('native') === '1'
-  const probeOnly = url.searchParams.get('probe') === '1'
   const previewBranchBypass = process.env.VERCEL_ENV === 'preview'
     && process.env.VERCEL_GIT_COMMIT_REF === 'fix/native-portal-scraper'
   if (force && !previewBranchBypass) {
@@ -615,29 +613,6 @@ export async function GET(request: Request) {
 
   const startedAt = Date.now()
 
-  if (probeOnly && previewBranchBypass) {
-    const response = await fetch('https://www.portalinmobiliario.com/venta/casa/vitacura-metropolitana', {
-      cache: 'no-store',
-      redirect: 'follow',
-      headers: {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
-        'accept-language': 'es-CL,es;q=0.9,en;q=0.7',
-        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-      },
-    })
-    const html = await response.text()
-    const ids = new Set(html.match(/MLC-?\\d+/gi) ?? [])
-    return NextResponse.json({
-      ok: response.ok,
-      status: response.status,
-      finalUrl: response.url,
-      blocked: /suspicious-traffic-frontend|suspicious traffic|account-verification/i.test(html),
-      mlcIds: ids.size,
-      bytes: html.length,
-      region: process.env.VERCEL_REGION ?? null,
-      sample: [...ids].slice(0, 5),
-    }, { headers: { 'Cache-Control': 'no-store' } })
-  }
 
   const supabase = getServiceClient()
 
