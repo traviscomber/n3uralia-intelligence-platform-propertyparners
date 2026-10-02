@@ -25,7 +25,6 @@ export type MarketOpportunityRow = {
   priceReductionFromMaxPct: number | null
   neighborhoodMedianUfM2: number | null
   relativeToNeighborhoodMedianPct: number | null
-  score: number
   signals: Array<{ type: MarketOpportunitySignal; label: string; value: number | null }>
 }
 
@@ -85,7 +84,7 @@ function median(values: number[]) {
     : (sorted[middle - 1] + sorted[middle]) / 2
 }
 
-export function scoreMarketOpportunity(input: {
+export function buildMarketOpportunitySignals(input: {
   priceUf: number | null
   historicalMaxPriceUf: number | null
   daysObserved: number | null
@@ -93,7 +92,6 @@ export function scoreMarketOpportunity(input: {
   neighborhoodMedianUfM2: number | null
   observationCount: number
 }) {
-  let score = 0
   const signals: MarketOpportunityRow['signals'] = []
 
   const priceReductionFromMaxPct = input.priceUf != null
@@ -104,17 +102,10 @@ export function scoreMarketOpportunity(input: {
       : null
 
   if (priceReductionFromMaxPct != null && priceReductionFromMaxPct > 0) {
-    if (priceReductionFromMaxPct >= 0.10) score += 45
-    else if (priceReductionFromMaxPct >= 0.05) score += 30
-    else score += 15
     signals.push({ type: 'price_reduction', label: 'Baja observada desde máximo histórico', value: priceReductionFromMaxPct })
   }
 
   if (input.daysObserved != null && input.daysObserved >= 30) {
-    if (input.daysObserved >= 120) score += 25
-    else if (input.daysObserved >= 90) score += 20
-    else if (input.daysObserved >= 60) score += 12
-    else score += 6
     signals.push({ type: 'long_exposure', label: 'Exposición observada', value: input.daysObserved })
   }
 
@@ -125,19 +116,14 @@ export function scoreMarketOpportunity(input: {
       : null
 
   if (relativeToNeighborhoodMedianPct != null && relativeToNeighborhoodMedianPct <= -0.05) {
-    if (relativeToNeighborhoodMedianPct <= -0.15) score += 25
-    else if (relativeToNeighborhoodMedianPct <= -0.10) score += 18
-    else score += 10
     signals.push({ type: 'below_neighborhood_median', label: 'UF/m² bajo mediana publicada del barrio', value: relativeToNeighborhoodMedianPct })
   }
 
   if (input.observationCount >= 3) {
-    score += 5
     signals.push({ type: 'repeated_observation', label: 'Evidencia repetida en cortes', value: input.observationCount })
   }
 
   return {
-    score: Math.min(score, 100),
     signals,
     priceReductionFromMaxPct,
     relativeToNeighborhoodMedianPct,
@@ -158,7 +144,7 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
     longExposure: 0,
     belowNeighborhoodMedian: 0,
     generatedAt: new Date().toISOString(),
-    methodology: 'triage_v1: baja de precio observada + días de exposición + UF/m² relativo a mediana publicada del mismo barrio/tipo + repetición de evidencia. No es valorización ni inferencia de intención del propietario.',
+    methodology: 'evidence_v1: baja de precio observada + días de exposición + UF/m² relativo a mediana publicada del mismo barrio/tipo + repetición de evidencia. No crea ranking, no es valorización ni infiere intención del propietario.',
   } satisfies MarketOpportunityPulse
 
   try {
@@ -260,7 +246,7 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
         ? medianByNeighborhood.get(`${propertyType}:${neighborhoodId}`) ?? null
         : null
 
-      const scored = scoreMarketOpportunity({
+      const observed = buildMarketOpportunitySignals({
         priceUf,
         historicalMaxPriceUf,
         daysObserved,
@@ -285,16 +271,15 @@ export async function getMarketOpportunityPulse(): Promise<MarketOpportunityPuls
         observationCount,
         historicalMinPriceUf,
         historicalMaxPriceUf,
-        priceReductionFromMaxPct: scored.priceReductionFromMaxPct,
+        priceReductionFromMaxPct: observed.priceReductionFromMaxPct,
         neighborhoodMedianUfM2,
-        relativeToNeighborhoodMedianPct: scored.relativeToNeighborhoodMedianPct,
-        score: scored.score,
-        signals: scored.signals,
+        relativeToNeighborhoodMedianPct: observed.relativeToNeighborhoodMedianPct,
+        signals: observed.signals,
       }
-    }).filter((row) => row.score > 0)
+    }).filter((row) => row.signals.length > 0)
 
     const rows = [...scoredRows]
-      .sort((a, b) => b.score - a.score || (b.daysObserved ?? 0) - (a.daysObserved ?? 0))
+      .sort((a, b) => (b.lastSeenAt ?? '').localeCompare(a.lastSeenAt ?? '') || a.sourceListingId.localeCompare(b.sourceListingId))
       .slice(0, 40)
 
     return {
