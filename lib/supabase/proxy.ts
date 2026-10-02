@@ -20,6 +20,7 @@ export async function updateSession(request: NextRequest) {
     pathname === '/api/release'
     || pathname === '/api/public/valuation-estimate'
     || pathname === '/api/internal/portal-collector-smoke'
+    || pathname === '/api/market/mlc-vitacura-probe'
   ) {
     return NextResponse.next({ request })
   }
