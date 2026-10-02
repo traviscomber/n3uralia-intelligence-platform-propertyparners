@@ -8,7 +8,7 @@ async function main() {
   ])
 
   assert.match(route, /portal_daily_delta_v1/, 'Daily sync must use a distinct non-full-snapshot pipeline.')
-  assert.match(route, /DISCOVERY_PAGES_PER_DATASET = 2/, 'Daily Bright Data discovery must stay capped at two pages per dataset.')
+  assert.match(route, /DISCOVERY_PAGES_PER_DATASET = 1/, 'Daily Bright Data discovery must stay capped at two pages per dataset.')
   assert.match(route, /MAX_NEW_DETAILS_PER_DATASET = 12/, 'Daily detail enrichment must stay bounded.')
   assert.match(route, /discoverPortalVitacuraViaBrightData/, 'Daily discovery must use Bright Data.')
   assert.match(route, /collectPortalListingDetailsViaBrightData/, 'Daily detail enrichment must use Bright Data.')
