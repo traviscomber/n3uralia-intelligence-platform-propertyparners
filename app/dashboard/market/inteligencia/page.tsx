@@ -308,7 +308,6 @@ export default async function MarketIntelligencePage() {
               <tr>
                 <th className="py-3 pr-4">Propiedad</th>
                 <th className="py-3 pr-4">Tipo</th>
-                <th className="py-3 pr-4 text-right">Score</th>
                 <th className="py-3 pr-4 text-right">UF</th>
                 <th className="py-3 pr-4 text-right">Días</th>
                 <th className="py-3 pr-4 text-right">Baja vs máx.</th>
@@ -323,18 +322,17 @@ export default async function MarketIntelligencePage() {
                     <p className="mt-0.5 text-[10px] text-[var(--n3-text-muted)]">{row.neighborhoodName || 'Barrio no confirmado'} · {row.observationCount} corte{row.observationCount === 1 ? '' : 's'}</p>
                   </td>
                   <td className="py-3 pr-4">{row.propertyType}</td>
-                  <td className="py-3 pr-4 text-right font-semibold tabular-nums">{row.score}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">{row.priceUf == null ? '—' : number(row.priceUf, 0)}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">{row.daysObserved ?? '—'}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">{percent(row.priceReductionFromMaxPct)}</td>
                   <td className="py-3 text-right tabular-nums">{percent(row.relativeToNeighborhoodMedianPct)}</td>
                 </tr>
               ))}
-              {!opportunityPulse.rows.length ? <tr><td colSpan={7} className="py-8 text-sm text-[var(--n3-text-muted)]">No hay señales observables suficientes para priorizar revisión en este corte.</td></tr> : null}
+              {!opportunityPulse.rows.length ? <tr><td colSpan={6} className="py-8 text-sm text-[var(--n3-text-muted)]">No hay señales observables suficientes para revisión en este corte.</td></tr> : null}
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">El score ordena evidencia para revisión humana. No afirma motivación de venta, urgencia ni valor de cierre. La mediana de barrio usa sólo publicaciones vigentes con identidad territorial confirmada.</p>
+        <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">Las señales exponen evidencia para revisión humana sin crear un ranking. No afirman motivación de venta, urgencia ni valor de cierre. La mediana de barrio usa sólo publicaciones vigentes con identidad territorial confirmada.</p>
       </section>
 
       <section className="mt-6 border-t border-[var(--n3-line)] pt-4 text-xs leading-relaxed text-[var(--n3-text-muted)]">
