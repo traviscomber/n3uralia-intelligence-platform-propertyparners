@@ -20,7 +20,7 @@ export async function updateSession(request: NextRequest) {
     pathname === '/api/release'
     || pathname === '/api/public/valuation-estimate'
     || pathname === '/api/internal/portal-collector-smoke'
-    || pathname === '/api/market/mlc-vitacura-probe'
+    || (pathname === '/api/market/mlc-vitacura-probe' && process.env.VERCEL_ENV === 'preview')
   ) {
     return NextResponse.next({ request })
   }
