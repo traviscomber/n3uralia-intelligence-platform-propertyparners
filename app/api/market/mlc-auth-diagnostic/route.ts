@@ -76,6 +76,32 @@ export async function GET() {
   }
 
   const bulkIds = ["MLC4182532688","MLC2045837473","MLC3946847146","MLC3979950386","MLC2233243027","MLC1482039985","MLC1568362894","MLC1806475591","MLC1849060153","MLC1379757895"]
+  const individualRows = []
+  for (const id of bulkIds) {
+    const item = await get(`/items/${id}`, token)
+    const body = item.parsed && typeof item.parsed === 'object' && !Array.isArray(item.parsed)
+      ? item.parsed as Record<string, unknown>
+      : {}
+    const location = body.location && typeof body.location === 'object'
+      ? body.location as Record<string, unknown>
+      : {}
+    const city = location.city && typeof location.city === 'object'
+      ? location.city as Record<string, unknown>
+      : {}
+    individualRows.push({
+      id,
+      status: item.response.status,
+      ok: item.response.ok,
+      returnedId: typeof body.id === 'string' ? body.id : null,
+      title: typeof body.title === 'string' ? body.title : null,
+      price: typeof body.price === 'number' ? body.price : null,
+      currency: typeof body.currency_id === 'string' ? body.currency_id : null,
+      permalink: typeof body.permalink === 'string' ? body.permalink : null,
+      categoryId: typeof body.category_id === 'string' ? body.category_id : null,
+      city: typeof city.name === 'string' ? city.name : null,
+    })
+  }
+
   const bulkPath = `/items/bulk?ids=${bulkIds.join(',')}&attributes=body.id,body.title,body.price,body.currency_id,body.permalink,body.category_id,body.location,body.address`
   const bulk = await get(bulkPath, token)
   const bulkRows = Array.isArray(bulk.parsed)
@@ -103,5 +129,6 @@ export async function GET() {
       returned: bulkRows.length,
       rows: bulkRows,
     },
+    individual: individualRows,
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
