@@ -148,16 +148,16 @@ export function buildVitacuraSearchUrl(args: {
 }
 
 function explicitVitacura(item: MeliSearchItem) {
-  const fields = [
+  // Fail closed: Avenida Vitacura also crosses neighboring communes, so
+  // address-line/neighborhood text is not sufficient evidence of commune.
+  const cityNames = [
     item.address?.city_name,
     item.location?.city?.name,
-    item.location?.address_line,
-    item.location?.neighborhood?.name,
   ]
     .filter(Boolean)
     .map((value) => normalizeName(String(value)))
 
-  return fields.some((value) => value.includes('vitacura'))
+  return cityNames.some((value) => value === 'vitacura')
 }
 
 function toMarketRow(item: MeliSearchItem): MarketImportInputRow | null {
