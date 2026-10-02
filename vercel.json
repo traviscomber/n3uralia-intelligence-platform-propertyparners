@@ -3,73 +3,14 @@
   "fluid": true,
   "installCommand": "pnpm install --no-frozen-lockfile",
   "crons": [
-    {
-      "path": "/api/cron/management-monthly",
-      "schedule": "0 9 1 * *"
-    },
-    {
-      "path": "/api/cron/management-delivery",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/deliver-documents-weekly",
-      "schedule": "0 6 * * 1"
-    },
-    {
-      "path": "/api/cron/deliver-documents-monthly",
-      "schedule": "0 6 1 * *"
-    },
-    {
-      "path": "/api/cron/document-delivery-claim",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/market-refresh",
-      "schedule": "30 10 * * *"
-    },
-    {
-      "path": "/api/cron/valuation-ml-resolve",
-      "schedule": "45 4 * * *"
-    },
-    {
-      "path": "/api/cron/prc-refresh",
-      "schedule": "10 5 * * *"
-    },
-    {
-      "path": "/api/cron/road-hierarchy-refresh",
-      "schedule": "20 5 1 * *"
-    }
-  ],
-  "functions": {
-    "app/api/cron/market-refresh/route.ts": {
-      "regions": [
-        "gru1"
-      ],
-      "maxDuration": 300
-    },
-    "app/api/cron/portal-probe-fra/route.ts": {
-      "regions": [
-        "fra1"
-      ],
-      "maxDuration": 30
-    },
-    "app/api/cron/portal-probe-cdg/route.ts": {
-      "regions": [
-        "cdg1"
-      ],
-      "maxDuration": 30
-    },
-    "app/api/cron/portal-probe-sfo/route.ts": {
-      "regions": [
-        "sfo1"
-      ],
-      "maxDuration": 30
-    },
-    "app/api/cron/portal-probe-sin/route.ts": {
-      "regions": [
-        "sin1"
-      ],
-      "maxDuration": 30
-    }
-  }
+    { "path": "/api/cron/management-monthly", "schedule": "0 9 1 * *" },
+    { "path": "/api/cron/management-delivery", "schedule": "0 * * * *" },
+    { "path": "/api/cron/deliver-documents-weekly", "schedule": "0 6 * * 1" },
+    { "path": "/api/cron/deliver-documents-monthly", "schedule": "0 6 1 * *" },
+    { "path": "/api/cron/document-delivery-claim", "schedule": "0 * * * *" },
+    { "path": "/api/cron/market-refresh", "schedule": "30 10 * * *" },
+    { "path": "/api/cron/valuation-ml-resolve", "schedule": "45 4 * * *" },
+    { "path": "/api/cron/prc-refresh", "schedule": "10 5 * * *" },
+    { "path": "/api/cron/road-hierarchy-refresh", "schedule": "20 5 1 * *" }
+  ]
 }
