@@ -117,6 +117,22 @@ async function refreshMercadoLibreToken(refreshToken: string) {
   return token.access_token
 }
 
+export async function getMercadoLibreClientCredentialsToken() {
+  const { clientId, clientSecret } = await mercadoLibreOAuthConfig('https://ppartnersgroup.app')
+  const body = new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: clientId,
+    client_secret: clientSecret,
+  })
+  const token = await exchangeToken(body)
+  return {
+    accessToken: token.access_token,
+    expiresIn: token.expires_in,
+    scope: token.scope ?? null,
+    tokenType: token.token_type ?? 'bearer',
+  }
+}
+
 export async function getMercadoLibreAccessToken() {
   const envToken = process.env.MERCADOLIBRE_ACCESS_TOKEN?.trim()
   if (envToken) return envToken
