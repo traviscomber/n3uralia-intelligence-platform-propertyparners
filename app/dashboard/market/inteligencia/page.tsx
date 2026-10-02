@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, Clock3, Home, MapPinned, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
-import { getHouseSupplySalesLive, getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
+import { getApartmentLiveBaseline, getHouseSupplySalesLive, getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
 import { getMarketOpportunityPulse } from '@/lib/market-opportunity-intelligence'
 import { getMarketUniverseHealth } from '@/lib/market-universe-health'
 
@@ -85,10 +85,11 @@ function signalFill(signal: string | undefined) {
 }
 
 export default async function MarketIntelligencePage() {
-  const [intelligence, context, houses, opportunityPulse, universe] = await Promise.all([
+  const [intelligence, context, houses, apartmentLive, opportunityPulse, universe] = await Promise.all([
     getSupplySalesIntelligence(),
     getMarketIntelligenceContext(),
     getHouseSupplySalesLive(),
+    getApartmentLiveBaseline(),
     getMarketOpportunityPulse(),
     getMarketUniverseHealth(),
   ])
@@ -203,6 +204,38 @@ export default async function MarketIntelligencePage() {
         </div>
 
         <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">Inventario completo total: {number(universe.fullInventoryTotal)} publicaciones. Cobertura enriquecida actual: {percent(universe.detailCoveragePct)}. Los análisis de precio y oportunidad usan sólo fichas con evidencia suficiente; el inventario completo sigue siendo la referencia para presencia y retiros.</p>
+      </section>
+
+      <section className="mt-7 border-y border-[var(--n3-line)] py-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Departamentos · línea base live</p>
+            <h2 className="mt-1 text-lg font-medium">Mercado actual sin inferir barrio</h2>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Se calcula directamente sobre las fichas Portal enriquecidas del universo vigente. Mientras termina el bootstrap, la cobertura se muestra por separado y no se interpreta esta muestra como el universo completo.</p>
+          </div>
+          <span className="text-xs text-[var(--n3-text-muted)]">Portal {dateLabel(apartmentLive.row?.asOfPortal ?? null)}</span>
+        </div>
+
+        {apartmentLive.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar la línea base live de departamentos." /></div> : null}
+
+        <MetricStrip items={[
+          { label: 'Deptos con detalle', value: number(apartmentLive.row?.portalListings ?? null) },
+          { label: 'Mediana publicada UF', value: number(apartmentLive.row?.portalMedianPriceUf ?? null, 0) },
+          { label: 'Mediana publicada UF/m²', value: number(apartmentLive.row?.portalMedianUfM2 ?? null, 1) },
+          { label: 'Mediana superficie útil', value: apartmentLive.row?.portalMedianUsefulAreaM2 == null ? '—' : `${number(apartmentLive.row.portalMedianUsefulAreaM2, 1)} m²` },
+        ]} />
+
+        <div className="mt-4 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+          <div className="bg-[var(--n3-bg)] px-4 py-4">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Portal vigente</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--n3-text-light)]">Mediana asking: {number(apartmentLive.row?.portalMedianPriceUf ?? null, 0)} UF · {number(apartmentLive.row?.portalMedianUfM2 ?? null, 1)} UF/m² útil.</p>
+          </div>
+          <div className="bg-[var(--n3-bg)] px-4 py-4">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">CBRS · últimos 24 meses disponibles</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--n3-text-light)]">{number(apartmentLive.row?.cbrsTransactions24m ?? null)} compraventas · mediana {number(apartmentLive.row?.cbrsMedianPriceUf24m ?? null, 0)} UF · {number(apartmentLive.row?.cbrsMedianUfM224m ?? null, 1)} UF/m² construido.</p>
+            <p className="mt-1 text-[10px] text-[var(--n3-text-muted)]">{dateLabel(apartmentLive.row?.cbrsFrom ?? null)} → {dateLabel(apartmentLive.row?.cbrsTo ?? null)}. Se muestra como referencia histórica; no se convierte automáticamente en señal por barrio.</p>
+          </div>
+        </div>
       </section>
 
       <section className="mt-7">
