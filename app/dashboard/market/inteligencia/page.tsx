@@ -3,6 +3,7 @@ import { ArrowLeft, Clock3, Home, MapPinned, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
 import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { getHouseSupplySalesLive, getMarketIntelligenceContext, getSupplySalesIntelligence } from '@/lib/market-supply-sales-intelligence'
+import { getMarketOpportunityPulse } from '@/lib/market-opportunity-intelligence'
 
 function number(value: number | null, digits = 0) {
   return value === null ? '—' : value.toLocaleString('es-CL', { maximumFractionDigits: digits, minimumFractionDigits: digits })
@@ -76,10 +77,11 @@ function signalFill(signal: string | undefined) {
 }
 
 export default async function MarketIntelligencePage() {
-  const [intelligence, context, houses] = await Promise.all([
+  const [intelligence, context, houses, opportunityPulse] = await Promise.all([
     getSupplySalesIntelligence(),
     getMarketIntelligenceContext(),
     getHouseSupplySalesLive(),
+    getMarketOpportunityPulse(),
   ])
   const apartments = intelligence.rows.filter((row) => row.propertyType === 'Departamento' && row.neighborhoodName !== 'SIN_BARRIO')
   const liveHouses = houses.rows.filter((row) => row.neighborhoodName)
@@ -154,6 +156,7 @@ export default async function MarketIntelligencePage() {
         { label: 'Barrios con casas', value: number(liveHouses.length) },
         { label: 'Deptos muy sobre ventas', value: number(strongGap.length), tone: strongGap.length ? 'warning' : 'default' },
         { label: 'Confianza alta deptos', value: percent(apartments.length ? highConfidence.length / apartments.length : null) },
+        { label: 'Avisos evaluados', value: number(opportunityPulse.evaluatedListings) },
       ]} />
 
       <section className="mt-7">
@@ -247,6 +250,60 @@ export default async function MarketIntelligencePage() {
             <div><p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Brecha UF/m²</p><p className="mt-1 text-base font-semibold tabular-nums">{percent(row.ufM2GapPct)}</p></div>
           </div>
         )) : <div className="py-8 text-sm text-[var(--n3-text-muted)]">No hay barrios con datos suficientes para publicar una señal.</div>}</div>
+      </section>
+
+      <section className="mt-8">
+        <div className="flex flex-col gap-2 border-b border-[var(--n3-line)] pb-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Pulso de oportunidades</p>
+            <h2 className="mt-1 text-lg font-medium">Señales observables para revisión comercial</h2>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">{opportunityPulse.methodology}</p>
+          </div>
+          <span className="text-xs text-[var(--n3-text-muted)]">Corte {dateLabel(opportunityPulse.generatedAt)}</span>
+        </div>
+
+        {opportunityPulse.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible calcular el pulso de oportunidades." /></div> : null}
+
+        <MetricStrip items={[
+          { label: 'Evaluados', value: number(opportunityPulse.evaluatedListings) },
+          { label: 'Con baja observada', value: number(opportunityPulse.withPriceReduction) },
+          { label: '≥60 días observados', value: number(opportunityPulse.longExposure) },
+          { label: '≥5% bajo mediana barrio', value: number(opportunityPulse.belowNeighborhoodMedian) },
+        ]} />
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[980px] text-sm">
+            <thead className="border-b border-[var(--n3-line)] text-left text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
+              <tr>
+                <th className="py-3 pr-4">Propiedad</th>
+                <th className="py-3 pr-4">Tipo</th>
+                <th className="py-3 pr-4 text-right">Score</th>
+                <th className="py-3 pr-4 text-right">UF</th>
+                <th className="py-3 pr-4 text-right">Días</th>
+                <th className="py-3 pr-4 text-right">Baja vs máx.</th>
+                <th className="py-3 text-right">UF/m² vs barrio</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--n3-line)]">
+              {opportunityPulse.rows.slice(0, 20).map((row) => (
+                <tr key={row.sourceListingId}>
+                  <td className="py-3 pr-4">
+                    <p className="font-medium text-[var(--n3-text-light)]">{row.title || row.address || row.sourceListingId}</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--n3-text-muted)]">{row.neighborhoodName || 'Barrio no confirmado'} · {row.observationCount} corte{row.observationCount === 1 ? '' : 's'}</p>
+                  </td>
+                  <td className="py-3 pr-4">{row.propertyType}</td>
+                  <td className="py-3 pr-4 text-right font-semibold tabular-nums">{row.score}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{row.priceUf == null ? '—' : number(row.priceUf, 0)}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{row.daysObserved ?? '—'}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{percent(row.priceReductionFromMaxPct)}</td>
+                  <td className="py-3 text-right tabular-nums">{percent(row.relativeToNeighborhoodMedianPct)}</td>
+                </tr>
+              ))}
+              {!opportunityPulse.rows.length ? <tr><td colSpan={7} className="py-8 text-sm text-[var(--n3-text-muted)]">No hay señales observables suficientes para priorizar revisión en este corte.</td></tr> : null}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-[11px] leading-5 text-[var(--n3-text-muted)]">El score ordena evidencia para revisión humana. No afirma motivación de venta, urgencia ni valor de cierre. La mediana de barrio usa sólo publicaciones vigentes con identidad territorial confirmada.</p>
       </section>
 
       <section className="mt-6 border-t border-[var(--n3-line)] pt-4 text-xs leading-relaxed text-[var(--n3-text-muted)]">
