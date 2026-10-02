@@ -12,6 +12,7 @@ import {
   discoverPortalVitacuraViaFirecrawl,
 } from '@/lib/firecrawl-portal-collector'
 import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { portalProxyConfigured } from '@/lib/portal-proxy'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -711,7 +712,8 @@ export async function GET(request: Request) {
   for (const datasetKind of DATASETS) {
     try {
       const previousCompleteRun = await latestCompleteInventoryRun(supabase, datasetKind)
-      const useFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY) && !nativeOnly
+      const nativeConfigured = portalProxyConfigured()
+      const useFirecrawl = Boolean(process.env.FIRECRAWL_API_KEY) && !nativeOnly && !nativeConfigured
       const inventory = useFirecrawl
         ? await discoverPortalVitacuraViaFirecrawl({
             datasetKind,
@@ -912,8 +914,9 @@ export async function GET(request: Request) {
     {
       ok,
       fullSnapshot: completeInventories === DATASETS.length,
-      inventoryPipeline: process.env.FIRECRAWL_API_KEY && !nativeOnly ? 'portal_inventory_firecrawl_v1' : 'portal_inventory_native_chromium_v1',
-      detailPipeline: process.env.FIRECRAWL_API_KEY && !nativeOnly ? 'unit_portal_listing_firecrawl_v1' : 'unit_portal_listing_native_chromium_v1',
+      inventoryPipeline: process.env.FIRECRAWL_API_KEY && !nativeOnly && !portalProxyConfigured() ? 'portal_inventory_firecrawl_v1' : 'portal_inventory_native_chromium_v1',
+      detailPipeline: process.env.FIRECRAWL_API_KEY && !nativeOnly && !portalProxyConfigured() ? 'unit_portal_listing_firecrawl_v1' : 'unit_portal_listing_native_chromium_v1',
+      nativeProxyConfigured: portalProxyConfigured(),
       maxDiscoveryPages: MAX_DISCOVERY_PAGES,
       maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
       fullSweep,
