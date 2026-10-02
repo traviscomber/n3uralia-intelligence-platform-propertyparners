@@ -46,6 +46,30 @@
         "gru1"
       ],
       "maxDuration": 300
+    },
+    "app/api/cron/portal-probe-fra/route.ts": {
+      "regions": [
+        "fra1"
+      ],
+      "maxDuration": 30
+    },
+    "app/api/cron/portal-probe-cdg/route.ts": {
+      "regions": [
+        "cdg1"
+      ],
+      "maxDuration": 30
+    },
+    "app/api/cron/portal-probe-sfo/route.ts": {
+      "regions": [
+        "sfo1"
+      ],
+      "maxDuration": 30
+    },
+    "app/api/cron/portal-probe-sin/route.ts": {
+      "regions": [
+        "sin1"
+      ],
+      "maxDuration": 30
     }
   }
 }
