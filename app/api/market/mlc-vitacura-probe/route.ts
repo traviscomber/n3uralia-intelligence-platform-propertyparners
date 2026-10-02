@@ -15,7 +15,6 @@ function boundedNumber(value: string | null, fallback: number, min: number, max:
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const previewBypass = process.env.VERCEL_ENV === 'preview'
-    && process.env.VERCEL_GIT_COMMIT_REF === 'feat/mlc-vitacura-api'
 
   if (!previewBypass) {
     const access = await requireExecutiveAccess()
