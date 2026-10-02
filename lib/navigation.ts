@@ -16,71 +16,129 @@ export type NavigationSection = {
 
 export const CEO_NAVIGATION: NavigationSection[] = [
   {
-    label: 'Principal',
+    label: 'Resumen',
     items: [
       { label: 'Hoy', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
-      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
-      { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
-      { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
+    ],
+  },
+  {
+    label: 'Control de gestión',
+    items: [
+      { label: 'Control de gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
+      { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.global.manage'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
+    ],
+  },
+  {
+    label: 'Inteligencia de negocios',
+    items: [
+      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Cartera y asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.global.assign'] },
+      { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
+    ],
+  },
+  {
+    label: 'Valorizador de propiedades',
+    items: [
+      { label: 'Valorizador', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
+    ],
+  },
+  {
+    label: 'Administración',
+    items: [
+      { label: 'Usuarios', href: '/dashboard/settings/users', anyCapabilities: ['users.manage'] },
+      { label: 'Datos y fuentes', href: '/dashboard/market/fuentes', anyCapabilities: ['market.manage_sources', 'settings.manage'] },
     ],
   },
 ]
-
 export const ADMIN_NAVIGATION: NavigationSection[] = [
   {
-    label: 'Principal',
+    label: 'Resumen',
     items: [
       { label: 'Hoy', href: '/dashboard', exact: true, anyCapabilities: ['dashboard.global.read'] },
-      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
-      { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
-      { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
     ],
   },
   {
-    label: 'Operación',
+    label: 'Control de gestión',
     items: [
       { label: 'Seguimiento general', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Metas y alertas', href: '/dashboard/control/admin', anyCapabilities: ['management.global.manage'] },
+      { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
+      { label: 'Usuarios', href: '/dashboard/settings/users', anyCapabilities: ['users.manage'] },
+    ],
+  },
+  {
+    label: 'Inteligencia de negocios',
+    items: [
+      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
       { label: 'Cartera y asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.global.assign'] },
       { label: 'Datos y fuentes', href: '/dashboard/market/fuentes', anyCapabilities: ['market.manage_sources', 'settings.manage'] },
-      { label: 'Usuarios', href: '/dashboard/settings', anyCapabilities: ['users.manage', 'settings.manage'] },
+    ],
+  },
+  {
+    label: 'Valorizador de propiedades',
+    items: [
+      { label: 'Valorizador', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
     ],
   },
 ]
 
 export const DIRECTOR_NAVIGATION: NavigationSection[] = [
   {
-    label: 'Principal',
+    label: 'Resumen',
     items: [
       { label: 'Hoy', href: '/dashboard/director', anyCapabilities: ['dashboard.office.read'] },
-      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.office.read'] },
-      { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.office.read'] },
+    ],
+  },
+  {
+    label: 'Control de gestión',
+    items: [
+      { label: 'Operación', href: '/dashboard/control/operations', anyCapabilities: ['management.office.read'] },
+      { label: 'Metas y seguimiento', href: '/dashboard/control/admin', anyCapabilities: ['management.office.manage'] },
       { label: 'Informes', href: '/dashboard/director/reporte', anyCapabilities: ['reports.office.read'] },
     ],
   },
   {
-    label: 'Gestión de oficina',
+    label: 'Inteligencia de negocios',
     items: [
-      { label: 'Operación', href: '/dashboard/control/operations', anyCapabilities: ['management.office.read'] },
-      { label: 'Metas y seguimiento', href: '/dashboard/control/admin', anyCapabilities: ['management.office.manage'] },
+      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.office.read'] },
       { label: 'Cartera y asignaciones', href: '/dashboard/properties/admin', anyCapabilities: ['properties.office.assign'] },
+    ],
+  },
+  {
+    label: 'Valorizador de propiedades',
+    items: [
+      { label: 'Valorizador', href: '/dashboard/valuations', anyCapabilities: ['valuations.office.read'] },
     ],
   },
 ]
 
 export const SELLER_NAVIGATION: NavigationSection[] = [
   {
-    label: 'Principal',
+    label: 'Resumen',
     items: [
       { label: 'Hoy', href: '/dashboard/partner', anyCapabilities: ['dashboard.self.read'] },
-      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
-      { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.self.read'] },
-      { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.self.read'] },
+    ],
+  },
+  {
+    label: 'Control de gestión',
+    items: [
       { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', anyCapabilities: ['reports.self.read'] },
+    ],
+  },
+  {
+    label: 'Inteligencia de negocios',
+    items: [
+      { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Mi cartera', href: '/dashboard/properties', anyCapabilities: ['properties.self.read'] },
+    ],
+  },
+  {
+    label: 'Valorizador de propiedades',
+    items: [
+      { label: 'Valorizador', href: '/dashboard/valuations', anyCapabilities: ['valuations.self.read'] },
     ],
   },
 ]
