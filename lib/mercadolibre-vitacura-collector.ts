@@ -53,7 +53,10 @@ type MeliSearchResponse = {
   results?: MeliSearchItem[]
 }
 
+export type VitacuraPropertyType = 'houses' | 'apartments'
+
 export type VitacuraSearchOptions = {
+  propertyType: VitacuraPropertyType
   limit?: number
   offset?: number
   minPrice?: number
@@ -107,19 +110,21 @@ async function findChildByName(parentId: string, expectedName: string) {
   return child.id
 }
 
-export async function resolveVitacuraHouseSaleCategory() {
+export async function resolveVitacuraSaleCategory(propertyType: VitacuraPropertyType) {
   const siteCategories = await meliGet<Array<{ id: string; name: string }>>(`/sites/${SITE_ID}/categories`)
   const realEstate = siteCategories.find((item) => normalizeName(item.name) === 'inmuebles')
   if (!realEstate) throw new Error('MERCADOLIBRE_REAL_ESTATE_CATEGORY_NOT_FOUND')
 
-  const houses = await findChildByName(realEstate.id, 'Casas')
-  const sale = await findChildByName(houses, 'Venta')
+  const parentName = propertyType === 'houses' ? 'Casas' : 'Departamentos'
+  const propertyCategoryId = await findChildByName(realEstate.id, parentName)
+  const saleCategoryId = await findChildByName(propertyCategoryId, 'Venta')
 
   return {
     siteId: SITE_ID,
     realEstateCategoryId: realEstate.id,
-    housesCategoryId: houses,
-    saleCategoryId: sale,
+    propertyType,
+    propertyCategoryId,
+    saleCategoryId,
   }
 }
 
@@ -160,7 +165,7 @@ function explicitVitacura(item: MeliSearchItem) {
   return cityNames.some((value) => value === 'vitacura')
 }
 
-function toMarketRow(item: MeliSearchItem): MarketImportInputRow | null {
+function toMarketRow(item: MeliSearchItem, propertyType: VitacuraPropertyType): MarketImportInputRow | null {
   if (!item.id || !explicitVitacura(item)) return null
   const price = typeof item.price === 'number' && Number.isFinite(item.price) ? item.price : null
   const currency = item.currency_id?.toUpperCase() ?? null
@@ -168,7 +173,7 @@ function toMarketRow(item: MeliSearchItem): MarketImportInputRow | null {
 
   return {
     source_listing_id: item.id.replace(/^MLC/i, ''),
-    property_type: 'Casa',
+    property_type: propertyType === 'houses' ? 'Casa' : 'Departamento',
     operation: 'Venta',
     status: 'active',
     url,
@@ -193,10 +198,10 @@ function toMarketRow(item: MeliSearchItem): MarketImportInputRow | null {
   }
 }
 
-export async function searchVitacuraHouseSales(options: VitacuraSearchOptions = {}) {
+export async function searchVitacuraSales(options: VitacuraSearchOptions) {
   const limit = Math.min(Math.max(Math.round(options.limit ?? 10), 1), 50)
   const offset = Math.max(Math.round(options.offset ?? 0), 0)
-  const categories = await resolveVitacuraHouseSaleCategory()
+  const categories = await resolveVitacuraSaleCategory(options.propertyType)
   const path = buildVitacuraSearchUrl({
     categoryId: categories.saleCategoryId,
     limit,
@@ -208,12 +213,15 @@ export async function searchVitacuraHouseSales(options: VitacuraSearchOptions = 
   const response = await meliGet<MeliSearchResponse>(path)
   const rawItems = response.results ?? []
   const vitacuraItems = rawItems.filter(explicitVitacura)
-  const rows = vitacuraItems.map(toMarketRow).filter((row): row is MarketImportInputRow => Boolean(row))
+  const rows = vitacuraItems
+    .map((item) => toMarketRow(item, options.propertyType))
+    .filter((row): row is MarketImportInputRow => Boolean(row))
 
   return {
     categories,
     query: {
       siteId: SITE_ID,
+      propertyType: options.propertyType,
       bbox: VITACURA_BBOX,
       limit,
       offset,
