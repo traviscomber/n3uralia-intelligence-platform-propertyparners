@@ -634,6 +634,7 @@ async function drainLatestInventoryDetails(args: {
   let parsed = 0
   let accepted = 0
   let rejected = 0
+  let scopeRejected = 0
   let linked = 0
   let unlinkedCount = 0
   let collectionFailures = 0
@@ -686,7 +687,7 @@ async function drainLatestInventoryDetails(args: {
         unlinkedCount += Number(pipelineResult?.unlinked ?? 0)
       }
     }
-    rejected += rowsWithIdentity.length - validRows.length
+    scopeRejected += rowsWithIdentity.length - validRows.length
     processed += chunk.length
   }
 
@@ -702,6 +703,7 @@ async function drainLatestInventoryDetails(args: {
     parsed,
     accepted,
     rejected,
+    scopeRejected,
     linked,
     unlinked: unlinkedCount,
     collectionFailures,
