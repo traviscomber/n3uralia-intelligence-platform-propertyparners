@@ -276,9 +276,9 @@ export type PortalScopeDecision = {
  * identifies Vitacura. Search-page membership alone is not sufficient.
  */
 export function portalListingMatchesVitacuraScope(
-  row: Pick<NormalizedPortalListingRow, 'address' | 'normalized_address' | 'title'>,
+  row: Pick<NormalizedPortalListingRow, 'address' | 'normalized_address'>,
 ): PortalScopeDecision {
-  const evidence = [row.address, row.normalized_address, row.title]
+  const evidence = [row.address, row.normalized_address]
     .filter((value): value is string => Boolean(value))
     .join(' ')
     .normalize('NFD')
