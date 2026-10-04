@@ -263,6 +263,36 @@ export function normalizeCbrsTransactionRows(rows: MarketImportInputRow[]): Norm
 }
 
 
+export type PortalScopeDecision = {
+  accepted: boolean
+  reason: 'vitacura_explicit' | 'missing_vitacura_evidence'
+}
+
+/**
+ * Fail-closed geographic gate for the Vitacura Portal datasets.
+ *
+ * Portal search results can occasionally leak listings from adjacent communes.
+ * A detail row is canonical only when its own location evidence explicitly
+ * identifies Vitacura. Search-page membership alone is not sufficient.
+ */
+export function portalListingMatchesVitacuraScope(
+  row: Pick<NormalizedPortalListingRow, 'address' | 'normalized_address'>,
+): PortalScopeDecision {
+  const evidence = [row.address, row.normalized_address]
+    .filter((value): value is string => Boolean(value))
+    .join(' ')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+
+  if (/\bvitacura\b/.test(evidence)) {
+    return { accepted: true, reason: 'vitacura_explicit' }
+  }
+
+  return { accepted: false, reason: 'missing_vitacura_evidence' }
+}
+
+
 export function applyPortalUfConversion(rows: NormalizedPortalListingRow[], ufClp: number | null) {
   if (!ufClp || !Number.isFinite(ufClp) || ufClp <= 0) return rows
 

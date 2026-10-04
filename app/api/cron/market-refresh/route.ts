@@ -15,7 +15,7 @@ import {
   collectPortalListingDetailsViaBrightData,
   discoverPortalVitacuraViaBrightData,
 } from '@/lib/brightdata-portal-collector'
-import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { normalizePortalListingRows, portalListingMatchesVitacuraScope, type PortalDatasetKind } from '@/lib/market-source-import'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -634,6 +634,7 @@ async function drainLatestInventoryDetails(args: {
   let parsed = 0
   let accepted = 0
   let rejected = 0
+  let scopeRejected = 0
   let linked = 0
   let unlinkedCount = 0
   let collectionFailures = 0
@@ -664,8 +665,9 @@ async function drainLatestInventoryDetails(args: {
     collectionFailures += details.failures.length
     parsed += details.rows.length
 
-    const normalized = normalizePortalListingRows(details.rows)
-    const validRows = normalized.filter((row) => row.source_listing_id && row.url)
+    const normalized = normalizePortalListingRows(details.rows, datasetKind)
+    const rowsWithIdentity = normalized.filter((row) => row.source_listing_id && row.url)
+    const validRows = rowsWithIdentity.filter((row) => portalListingMatchesVitacuraScope(row).accepted)
     if (validRows.length) {
       const { data: pipelineResult, error: pipelineError } = await supabase.rpc('ingest_portal_listing_snapshot_v2', {
         p_source_label: 'portal_inmobiliario_vitacura',
@@ -685,6 +687,7 @@ async function drainLatestInventoryDetails(args: {
         unlinkedCount += Number(pipelineResult?.unlinked ?? 0)
       }
     }
+    scopeRejected += rowsWithIdentity.length - validRows.length
     processed += chunk.length
   }
 
@@ -700,6 +703,7 @@ async function drainLatestInventoryDetails(args: {
     parsed,
     accepted,
     rejected,
+    scopeRejected,
     linked,
     unlinked: unlinkedCount,
     collectionFailures,
