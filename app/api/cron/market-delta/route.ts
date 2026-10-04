@@ -5,7 +5,7 @@ import {
   discoverPortalVitacuraViaBrightData,
 } from '@/lib/brightdata-portal-collector'
 import { portalListingIdFromUrl } from '@/lib/portal-inmobiliario-collector'
-import { normalizePortalListingRows, type PortalDatasetKind } from '@/lib/market-source-import'
+import { normalizePortalListingRows, portalListingMatchesVitacuraScope, type PortalDatasetKind } from '@/lib/market-source-import'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -128,6 +128,7 @@ async function recordDeltaRun(args: {
   requestedDetails: number
   priceProbes: number
   parsedDetails: number
+  scopeRejected: number
   failures: number
 }) {
   const { error } = await args.supabase.from('market_ingestion_runs').insert({
@@ -152,6 +153,8 @@ async function recordDeltaRun(args: {
       requested_details: args.requestedDetails,
       existing_price_probes: args.priceProbes,
       parsed_details: args.parsedDetails,
+      scope_rejected: args.scopeRejected,
+      scope_policy: 'vitacura_explicit_fail_closed_v1',
       detail_failures: args.failures,
       removal_reconciliation: 'deferred_to_full_inventory',
       provider_request_floor: DISCOVERY_PAGES_PER_DATASET,
@@ -236,8 +239,11 @@ export async function GET(request: Request) {
           })
         : { observedAt: discovery.observedAt, rows: [], failures: [] }
 
-      const normalized = normalizePortalListingRows(details.rows)
-      const validRows = normalized.filter((row) => row.source_listing_id && row.url)
+      const normalized = normalizePortalListingRows(details.rows, datasetKind)
+      const rowsWithIdentity = normalized.filter((row) => row.source_listing_id && row.url)
+      const scopedRows = rowsWithIdentity.filter((row) => portalListingMatchesVitacuraScope(row).accepted)
+      const scopeRejectedRows = rowsWithIdentity.filter((row) => !portalListingMatchesVitacuraScope(row).accepted)
+      const validRows = scopedRows
       let ingestion: Record<string, unknown> | null = null
 
       if (validRows.length && !previewDryRun) {
@@ -264,6 +270,7 @@ export async function GET(request: Request) {
         requestedDetails: detailUrls.length,
         priceProbes: existingPriceProbes.length,
         parsedDetails: validRows.length,
+        scopeRejected: scopeRejectedRows.length,
         failures: details.failures.length,
       })
 
@@ -283,6 +290,8 @@ export async function GET(request: Request) {
         newDetailRequested: Math.min(newUrls.length, MAX_NEW_DETAILS_PER_DATASET),
         existingPriceProbes: existingPriceProbes.length,
         detailParsed: validRows.length,
+        scopeRejected: scopeRejectedRows.length,
+        scopeRejectedIds: scopeRejectedRows.map((row) => row.source_listing_id),
         detailFailures: details.failures.length,
         deferredNewCandidates: Math.max(newUrls.length - MAX_NEW_DETAILS_PER_DATASET, 0),
         requestUpperBound,
