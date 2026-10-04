@@ -274,8 +274,36 @@ function baseResponse(context: ContextPack) {
     periodLabel: context.summary.periodLabel,
     confidence: 'high' as const,
     coverage: context.coverage,
-    decisionPolicy: 'pedro-pablo-prioritization-v2 · evidencia autorizada > tareas vencidas/urgentes > valorizaciones en revisión > cartera con identidad/vigencia pendiente > brechas de cumplimiento',
+    decisionPolicy: 'pedro-pablo-prioritization-v3 · evidencia autorizada > tareas vencidas/urgentes > bloqueos operativos > siguiente mejor acción proactiva > contexto de mercado',
   }
+}
+
+function proactiveWork(context: ContextPack) {
+  const role = context.summary.role
+  const suggestions: Array<{ text: string; href: string }> = []
+  const add = (text: string, href: string) => {
+    if (!suggestions.some((item) => item.text === text)) suggestions.push({ text, href })
+  }
+
+  if (role === 'seller') {
+    add('Avanzar una valorización y revisar comparables o antecedentes antes de enviarla.', '/dashboard/valuations')
+    add('Ordenar tu cartera y definir los próximos contactos o seguimientos comerciales.', '/dashboard/properties')
+    if ((context.properties?.attention.length ?? 0) > 0) add('Revisar documentación, identidad o vigencia de la propiedad con mayor brecha.', '/dashboard/properties')
+  } else if (role === 'director' || role === 'subdirector') {
+    add('Revisar la valorización más prioritaria de la oficina.', '/dashboard/valuations')
+    add('Revisar cartera y seguimiento de Partners para definir a quién apoyar hoy.', '/dashboard/properties/admin')
+    if ((context.properties?.pendingIdentity ?? 0) > 0) add('Pedir a administración resolver brechas de documentación o identidad pendientes.', '/dashboard/properties')
+  } else if (role === 'ceo') {
+    add('Revisar la oficina con mayor brecha y definir una intervención concreta con su directora.', '/dashboard/control/operations')
+    add('Revisar valorizaciones pendientes de decisión o aprobación.', '/dashboard/valuations')
+    add('Revisar cartera y mercado para decidir dónde concentrar seguimiento comercial.', '/dashboard/market')
+  } else {
+    add('Resolver propiedades con identidad, vigencia o documentación pendiente.', '/dashboard/properties')
+    add('Ordenar cartera y asignaciones para el equipo.', '/dashboard/properties/admin')
+    add('Revisar datos y fuentes que necesiten actualización o validación.', '/dashboard/market/fuentes')
+  }
+
+  return suggestions.slice(0, 3)
 }
 
 function answerPriorities(context: ContextPack): PedroPabloResponse {
@@ -285,35 +313,13 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
   const evidence: Evidence[] = []
   const actions: Array<{ label: string; href: string }> = []
 
-  const market = context.market
-  if (market.latestIngestionFullSnapshot && market.activeInventory !== null) {
-    const newCount = market.latestIngestionNew ?? 0
-    const removed = market.latestIngestionRemoved ?? 0
-    if (newCount > 0 || removed > 0) {
-      lines.push(`${lines.length + 1}. Mercado: ${newCount.toLocaleString('es-CL')} publicaciones nuevas y ${removed.toLocaleString('es-CL')} retiradas; inventario live ${market.activeInventory.toLocaleString('es-CL')}.`)
-      evidence.push({
-        label: 'Cambio diario de mercado',
-        source: 'Portal Inmobiliario · snapshot completo reconciliado',
-        cutoff: market.latestObservedAt,
-        domain: 'market',
-      })
-      actions.push({ label: 'Abrir Mercado', href: '/dashboard/market' })
-    }
-  }
-
-  const alerts = summary.alerts.slice(0, Math.max(0, 3 - lines.length))
-  for (const alert of alerts) {
-    lines.push(`${lines.length + 1}. ${alert.entityName}: ${alert.title}. ${alert.detail}`)
-  }
-  if (alerts.length) {
-    evidence.push({ label: 'Alertas operativas', source: 'Resumen de gestión autorizado', cutoff: summary.generatedAt, domain: 'management' })
-    actions.push({ label: 'Abrir control de gestión', href: '/dashboard/control/operations' })
-  }
-
+  // Daily work comes first: overdue, urgent and active tasks are the first
+  // thing the assistant should help the user resolve.
   const activeTasks = tasks
     .filter(isActiveTask)
     .sort((a, b) => taskPriorityRank(a, today) - taskPriorityRank(b, today))
-    .slice(0, Math.max(0, 5 - lines.length))
+    .slice(0, 3)
+
   for (const task of activeTasks) {
     const due = task.due_date ? ` Vence ${task.due_date}${isOverdueTask(task, today) ? ' y está atrasada' : ''}.` : ''
     lines.push(`${lines.length + 1}. Tarea: ${task.title}.${due}`)
@@ -323,6 +329,17 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     actions.push({ label: 'Revisar tareas', href: '/dashboard/control/operations' })
   }
 
+  // Then surface consequential alerts from management.
+  const alerts = summary.alerts.slice(0, Math.max(0, 4 - lines.length))
+  for (const alert of alerts) {
+    lines.push(`${lines.length + 1}. ${alert.entityName}: ${alert.title}. ${alert.detail}`)
+  }
+  if (alerts.length) {
+    evidence.push({ label: 'Alertas operativas', source: 'Resumen de gestión autorizado', cutoff: summary.generatedAt, domain: 'management' })
+    actions.push({ label: 'Abrir control de gestión', href: '/dashboard/control/operations' })
+  }
+
+  // Valuations and property evidence are next because they can block today's work.
   const reviewCases = valuations
     .filter((item) => item.status === 'review')
     .sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')))
@@ -344,6 +361,7 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     actions.push({ label: 'Revisar cartera', href: '/dashboard/properties' })
   }
 
+  // Management gaps complete the daily list before general market movement.
   if (lines.length < 5) {
     const risks = topRiskMetrics(summary.entities).slice(0, 5 - lines.length)
     for (const { entity, metric } of risks) {
@@ -355,25 +373,54 @@ function answerPriorities(context: ContextPack): PedroPabloResponse {
     }
   }
 
+  // Market is relevant context, but it should not displace today's work.
+  const market = context.market
+  if (lines.length < 5 && market.latestIngestionFullSnapshot && market.activeInventory !== null) {
+    const newCount = market.latestIngestionNew ?? 0
+    const removed = market.latestIngestionRemoved ?? 0
+    if (newCount > 0 || removed > 0) {
+      lines.push(`${lines.length + 1}. Mercado: ${newCount.toLocaleString('es-CL')} publicaciones nuevas y ${removed.toLocaleString('es-CL')} retiradas; inventario live ${market.activeInventory.toLocaleString('es-CL')}.`)
+      evidence.push({
+        label: 'Cambio diario de mercado',
+        source: 'Portal Inmobiliario · snapshot completo reconciliado',
+        cutoff: market.latestObservedAt,
+        domain: 'market',
+      })
+      actions.push({ label: 'Abrir Mercado', href: '/dashboard/market' })
+    }
+  }
+
   if (!lines.length) {
+    const proactive = proactiveWork(context)
     return {
       ...baseResponse(context),
-      title: 'Sin prioridades evaluables',
-      answer: 'No hay alertas, tareas activas, valorizaciones en revisión, propiedades con atención pendiente ni métricas con cumplimiento evaluable dentro de tu alcance actual. Pedro Pablo no completará vacíos con supuestos.',
+      title: 'Sin pendientes formales · puedes avanzar',
+      answer: [
+        'No hay pendientes formales que requieran atención inmediata.',
+        ...proactive.map((item, index) => `${index + 1}. Siguiente mejor acción: ${item.text}`),
+      ].join('\n'),
       evidence: [{ label: 'Cobertura actual', source: summary.dataProvenance, cutoff: summary.generatedAt, domain: 'management' }],
-      actions: [{ label: 'Revisar datos disponibles', href: '/dashboard/control/operations' }],
+      actions: proactive.map((item) => ({ label: item.text, href: item.href })),
+    }
+  }
+
+  if (lines.length < 5) {
+    const proactive = proactiveWork(context)
+    for (const item of proactive) {
+      if (lines.length >= 5) break
+      lines.push(`${lines.length + 1}. Siguiente mejor acción: ${item.text}`)
+      if (!actions.some((action) => action.href === item.href)) actions.push({ label: item.text, href: item.href })
     }
   }
 
   return {
     ...baseResponse(context),
-    title: 'Prioridades operativas',
+    title: 'Qué requiere atención hoy',
     answer: lines.join('\n'),
     evidence: evidence.slice(0, 8),
     actions: Array.from(new Map(actions.map((item) => [item.href, item])).values()),
   }
 }
-
 function answerTasks(context: ContextPack): PedroPabloResponse {
   const today = new Date().toISOString().slice(0, 10)
   const tasks = context.tasks
@@ -391,12 +438,16 @@ function answerTasks(context: ContextPack): PedroPabloResponse {
   }
 
   if (!tasks.length) {
+    const proactive = proactiveWork(context)
     return {
       ...baseResponse(context),
-      title: 'Sin tareas activas',
-      answer: 'No hay tareas abiertas o en progreso dentro de tu alcance actual.',
+      title: 'Sin tareas formales · trabajo disponible',
+      answer: [
+        'No hay tareas abiertas o en progreso dentro de tu alcance actual.',
+        ...proactive.map((item, index) => `${index + 1}. Puedes avanzar: ${item.text}`),
+      ].join('\n'),
       evidence: [{ label: 'Tareas operativas', source: 'management_tasks · alcance autorizado', cutoff: new Date().toISOString(), domain: 'tasks' }],
-      actions: [{ label: 'Abrir control de gestión', href: '/dashboard/control/operations' }],
+      actions: proactive.map((item) => ({ label: item.text, href: item.href })),
     }
   }
 
