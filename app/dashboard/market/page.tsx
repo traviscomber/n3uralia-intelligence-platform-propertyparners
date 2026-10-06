@@ -226,7 +226,7 @@ export default async function MarketPage() {
       <WorkspaceHeader
         eyebrow="Mercado"
         title="Vitacura · Casas"
-        meta={`Corte ${date(market.latestObservedAt)} · ${freshness(market.freshnessStatus, market.observationAgeDays)}`}
+        meta={market.latestDeltaAt ? `Actualizado ${date(market.latestDeltaAt)}` : `Último inventario completo ${date(market.latestObservedAt)}`}
         actions={[
           { label: 'Ver casas en oferta', href: '/dashboard/market/oferta', primary: true, icon: <TrendingUp size={15} /> },
           { label: 'Informe', href: '/dashboard/market/export', icon: <FileText size={15} /> },
@@ -274,14 +274,23 @@ export default async function MarketPage() {
             <p className={`mt-3 text-xs ${market.latestIngestionFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[#f0c96a]'}`}>
               {market.latestIngestionFullSnapshot ? 'Corte completo verificado' : 'Cobertura parcial · retiros aún no confirmados'}
             </p>
-            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Corte {date(market.latestIngestionAt)}</p>
+            {market.latestDeltaAt ? (
+              <div className="mt-3">
+                <p className="text-sm font-medium text-[var(--n3-teal-soft)]">Actualizado {date(market.latestDeltaAt)}</p>
+                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">
+                  {number(market.latestDeltaNewCandidates)} nuevas detectadas · {number(market.latestDeltaParsedDetails)} fichas actualizadas
+                </p>
+              </div>
+            ) : null}
+            <p className="mt-2 text-[10px] text-[var(--n3-text-muted)]">Inventario completo verificado: {date(market.latestIngestionAt)}</p>
           </div>
         </div>
 
-        <div className="mt-7 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-7 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-5">
           {[
-            ['Nuevas', number(market.latestIngestionNew), 'No estaban en el corte completo anterior'],
-            ['Retiradas', number(market.latestIngestionRemoved), 'Desaparecieron respecto del corte anterior'],
+            ['Nuevas hoy', number(market.latestDeltaNewCandidates), market.latestDeltaAt ? `Actualizado ${date(market.latestDeltaAt)}` : 'Sin actualización diaria disponible'],
+            ['Nuevas último inventario', number(market.latestIngestionNew), 'Nuevas detectadas en el último inventario completo'],
+            ['Retiradas', number(market.latestIngestionRemoved), 'Confirmadas en el último inventario completo'],
             ['Mediana publicada', houseLive?.medianPriceUf == null ? '—' : `UF ${decimal(houseLive.medianPriceUf, 0)}`, 'Precio publicado de la oferta vigente'],
             ['Mediana UF/m²', decimal(houseLive?.medianUfM2 ?? null, 1), 'Sólo publicaciones con superficie válida'],
           ].map(([label, value, detail]) => (
@@ -739,7 +748,7 @@ export default async function MarketPage() {
           </section>
 
           <DataStatusBar
-            cutoff={date(market.latestObservedAt)}
+            cutoff={market.latestDeltaAt ? `Actualizado ${date(market.latestDeltaAt)}` : `Inventario ${date(market.latestObservedAt)}`}
             coverage={`${number(market.liveLinkedHouses)} de ${number(market.liveHouseCount)} casas live vinculadas · ${number(market.logicalHouseComponents)} propiedades consolidadas V1 · ${number(market.outOfScopeLegacyHouses)} legacy fuera de alcance aisladas`}
             issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (market.confirmedSales === null ? 1 : 0) + (territory.error ? 1 : 0) + (portalReference.error ? 1 : 0) + territoryExceptions + (market.identityCollisions ?? 0) + (market.duplicateComponents ?? 0)}
             status={dataStatus}
