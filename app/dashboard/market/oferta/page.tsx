@@ -21,6 +21,13 @@ type InventoryRun = {
   metadata: Record<string, unknown> | null
 }
 
+type DeltaRun = {
+  id: string
+  completed_at: string | null
+  started_at: string
+  metadata: Record<string, unknown> | null
+}
+
 export default async function MarketOfferPage() {
   await requireAnyPageCapability(['market.manage_sources', 'management.global.read', 'management.office.read'])
 
@@ -36,6 +43,53 @@ export default async function MarketOfferPage() {
     const metadata = run.metadata && typeof run.metadata === 'object' ? run.metadata : null
     return metadata?.pipeline === 'portal_inventory_discovery_v1' && metadata?.full_snapshot === true
   }) ?? null
+
+  const latestDeltaRun = ((recentRuns ?? []) as DeltaRun[]).find((run) => {
+    const metadata = run.metadata && typeof run.metadata === 'object' ? run.metadata : null
+    return metadata?.pipeline === 'portal_daily_delta_v1'
+  }) ?? null
+
+  const latestDeltaAt = latestDeltaRun?.completed_at ?? latestDeltaRun?.started_at ?? null
+  const latestDeltaMetadata = latestDeltaRun?.metadata && typeof latestDeltaRun.metadata === 'object'
+    ? latestDeltaRun.metadata
+    : null
+  const latestDeltaNewCandidates = latestDeltaMetadata?.new_candidates == null
+    ? null
+    : Number(latestDeltaMetadata.new_candidates)
+
+  const { data: fullInventoryIds, error: fullInventoryIdsError } = inventoryRun
+    ? await supabase
+        .from('market_raw_records')
+        .select('source_record_id')
+        .eq('ingestion_run_id', inventoryRun.id)
+        .range(0, 2499)
+    : { data: null, error: null }
+
+  const fullInventoryIdSet = new Set(
+    (fullInventoryIds ?? [])
+      .map((row) => String(row.source_record_id ?? ''))
+      .filter(Boolean),
+  )
+
+  const { data: latestPulseRows, error: latestPulseError } = latestDeltaAt
+    ? await supabase
+        .from('market_current_listings')
+        .select('source_listing_id,title,raw_address,price_uf,observed_at,url,market_sources!inner(code)')
+        .eq('market_sources.code', 'portal-inmobiliario-vitacura-portal-houses')
+        .gte('observed_at', latestDeltaAt)
+        .order('observed_at', { ascending: false })
+        .limit(40)
+    : { data: null, error: null }
+
+  const latestPulse = (latestPulseRows ?? []).map((row) => ({
+    sourceListingId: String(row.source_listing_id ?? ''),
+    title: row.title as string | null,
+    address: row.raw_address as string | null,
+    priceUf: row.price_uf == null ? null : Number(row.price_uf),
+    observedAt: row.observed_at as string | null,
+    url: row.url as string | null,
+    isNewSinceFullSnapshot: !fullInventoryIdSet.has(String(row.source_listing_id ?? '')),
+  })).filter((row) => row.sourceListingId)
 
   const { data: inventoryRows, error: inventoryError } = inventoryRun
     ? await supabase
@@ -67,14 +121,14 @@ export default async function MarketOfferPage() {
   const detailById = new Map((detailRows ?? []).map((row) => [String(row.source_listing_id), row]))
   const total = inventoryRun?.accepted_rows ?? null
   const observedAt = inventoryRun?.completed_at ?? inventoryRun?.started_at ?? null
-  const error = runError || inventoryError || detailError
+  const error = runError || inventoryError || detailError || fullInventoryIdsError || latestPulseError
 
   return (
     <WorkspaceShell>
       <WorkspaceHeader
         eyebrow="Mercado · Portal"
         title="Casas en oferta"
-        meta="Vitacura · inventario diario completo"
+        meta={`Vitacura · corte completo ${observedAt ? formatPropertyPartnersDateTime(observedAt) : '—'} · último pulso ${latestDeltaAt ? formatPropertyPartnersDateTime(latestDeltaAt) : '—'}`}
         actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
       />
 
@@ -99,6 +153,49 @@ export default async function MarketOfferPage() {
           </p>
         ) : null}
       </section>
+
+      {!error && latestDeltaAt ? (
+        <section className="mt-6 border-y border-[var(--n3-line)] py-5">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Último pulso diario</p>
+              <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{formatPropertyPartnersDateTime(latestDeltaAt)}</h2>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
+                Este pulso incorpora cambios recientes sin reemplazar el último inventario completo. Las bajas sólo se confirman contra un full snapshot.
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-semibold tabular-nums">{number(latestDeltaNewCandidates)}</p>
+              <p className="text-[11px] text-[var(--n3-text-muted)]">nuevas detectadas</p>
+            </div>
+          </div>
+
+          {latestPulse.length ? (
+            <div className="mt-4 divide-y divide-[var(--n3-line)] border-t border-[var(--n3-line)]">
+              {latestPulse.map((item) => (
+                <div key={item.sourceListingId} className="grid gap-2 py-3 text-sm md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_120px_120px_32px] md:items-center">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-[var(--n3-text-light)]">{item.title || `Publicación Portal ${item.sourceListingId}`}</p>
+                    <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">ID {item.sourceListingId}</p>
+                  </div>
+                  <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{item.address || 'Dirección no disponible'}</p>
+                  <p className="tabular-nums">{moneyUf(item.priceUf)}</p>
+                  <p className={item.isNewSinceFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[var(--n3-text-muted)]'}>
+                    {item.isNewSinceFullSnapshot ? 'Nueva desde corte' : 'Reobservada'}
+                  </p>
+                  {item.url ? (
+                    <a href={item.url} target="_blank" rel="noreferrer" aria-label="Abrir publicación del último pulso en Portal Inmobiliario" className="inline-flex min-h-10 min-w-10 items-center justify-center text-[var(--n3-teal-soft)]">
+                      <ExternalLink size={15} />
+                    </a>
+                  ) : <span />}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-xs text-[var(--n3-text-muted)]">El pulso se ejecutó, pero no dejó fichas detalladas para mostrar.</p>
+          )}
+        </section>
+      ) : null}
 
       {error ? (
         <div className="mt-6 border border-[#ff8d87]/50 p-4 text-sm text-[#ff8d87]">
