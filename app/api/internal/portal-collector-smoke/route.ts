@@ -79,26 +79,6 @@ export async function GET() {
     const ok = requestedDetails === TOTAL_DETAIL_BUDGET
       && parsedDetails > 0
       && totalFailures === 0
-
-    console.info('[portal-brightdata-smoke-summary]', JSON.stringify({
-      ok,
-      requestedDetails,
-      parsedDetails,
-      totalFailures,
-      results: results.map((result) => ({
-        datasetKind: result.datasetKind,
-        discovery: result.discovery,
-        details: result.details && typeof result.details === 'object'
-          ? {
-              requested: (result.details as Record<string, unknown>).requested,
-              parsed: (result.details as Record<string, unknown>).parsed,
-              failures: (result.details as Record<string, unknown>).failures,
-            }
-          : null,
-      })),
-      runtimeMs: Date.now() - startedAt,
-    }))
-
     return NextResponse.json({
       ok,
       mode: 'brightdata_bounded_smoke',
@@ -126,8 +106,7 @@ export async function GET() {
       status: ok ? 200 : 503,
       headers: { 'Cache-Control': 'no-store' },
     })
-  } catch (error) {
-    console.error('[portal-brightdata-smoke] collection failed', error)
+  } catch {
     return NextResponse.json({
       ok: false,
       mode: 'brightdata_bounded_smoke',
