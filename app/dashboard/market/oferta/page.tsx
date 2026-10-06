@@ -128,7 +128,7 @@ export default async function MarketOfferPage() {
       <WorkspaceHeader
         eyebrow="Mercado · Portal"
         title="Casas en oferta"
-        meta={`Vitacura · corte completo ${observedAt ? formatPropertyPartnersDateTime(observedAt) : '—'} · último pulso ${latestDeltaAt ? formatPropertyPartnersDateTime(latestDeltaAt) : '—'}`}
+        meta={latestDeltaAt ? `Vitacura · Actualizado ${formatPropertyPartnersDateTime(latestDeltaAt)}` : `Vitacura · Inventario ${observedAt ? formatPropertyPartnersDateTime(observedAt) : '—'}`}
         actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
       />
 
@@ -142,7 +142,7 @@ export default async function MarketOfferPage() {
             </p>
           </div>
           <div className="text-right text-xs text-[var(--n3-text-muted)]">
-            <p>Último snapshot completo</p>
+            <p>Inventario completo verificado</p>
             <p className="mt-1 text-[var(--n3-text-light)]">{observedAt ? formatPropertyPartnersDateTime(observedAt) : '—'}</p>
           </div>
         </div>
@@ -158,15 +158,15 @@ export default async function MarketOfferPage() {
         <section className="mt-6 border-y border-[var(--n3-line)] py-5">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Último pulso diario</p>
-              <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{formatPropertyPartnersDateTime(latestDeltaAt)}</h2>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Actualización automática</p>
+              <h2 className="mt-1 text-lg font-medium text-[var(--n3-teal-soft)]">Actualizado {formatPropertyPartnersDateTime(latestDeltaAt)}</h2>
               <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-                Este pulso incorpora cambios recientes sin reemplazar el último inventario completo. Las bajas sólo se confirman contra un full snapshot.
+                Incluye las publicaciones detectadas y actualizadas en la ejecución automática más reciente. El inventario completo verificado se mantiene como referencia para confirmar bajas.
               </p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-semibold tabular-nums">{number(latestDeltaNewCandidates)}</p>
-              <p className="text-[11px] text-[var(--n3-text-muted)]">nuevas detectadas</p>
+              <p className="text-[11px] text-[var(--n3-text-muted)]">nuevas hoy</p>
             </div>
           </div>
 
@@ -181,10 +181,10 @@ export default async function MarketOfferPage() {
                   <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{item.address || 'Dirección no disponible'}</p>
                   <p className="tabular-nums">{moneyUf(item.priceUf)}</p>
                   <p className={item.isNewSinceFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[var(--n3-text-muted)]'}>
-                    {item.isNewSinceFullSnapshot ? 'Nueva desde corte' : 'Reobservada'}
+                    {item.isNewSinceFullSnapshot ? 'Nueva' : 'Actualizada'}
                   </p>
                   {item.url ? (
-                    <a href={item.url} target="_blank" rel="noreferrer" aria-label="Abrir publicación del último pulso en Portal Inmobiliario" className="inline-flex min-h-10 min-w-10 items-center justify-center text-[var(--n3-teal-soft)]">
+                    <a href={item.url} target="_blank" rel="noreferrer" aria-label="Abrir publicación actualizada en Portal Inmobiliario" className="inline-flex min-h-10 min-w-10 items-center justify-center text-[var(--n3-teal-soft)]">
                       <ExternalLink size={15} />
                     </a>
                   ) : <span />}
