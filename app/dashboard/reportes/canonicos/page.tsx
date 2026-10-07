@@ -64,7 +64,7 @@ export default async function CanonicalClientReportsPage(){
   const incomplete=reports.filter(report=>!isDeliverable(report))
   const deliverableCount=reports.filter(isDeliverable).length
   const status=reports.length===0?'blocked':incomplete.length>0?'partial':'ready'
-  const cutoff=current?formatDate(current.createdAt):'—'
+  const cutoff=latestDraft?formatDate(latestDraft.createdAt):current?formatDate(current.createdAt):'—'
 
   if(error){
     return <WorkspaceShell>
