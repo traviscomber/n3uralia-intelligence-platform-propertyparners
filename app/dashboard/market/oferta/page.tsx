@@ -163,7 +163,7 @@ export default async function MarketOfferPage() {
               {latestPulse.map((item) => (
                 <div key={item.sourceListingId} className="grid gap-2 py-3 text-sm md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_120px_120px_32px] md:items-center">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-[var(--n3-text-light)]">{item.title || `Publicación Portal ${item.sourceListingId}`}</p>
+                    <p className="truncate font-medium text-[var(--n3-text-light)]">{item.title || 'Publicación de Portal'}</p>
                                       </div>
                   <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{item.address || 'Dirección no disponible'}</p>
                   <p className="tabular-nums">{moneyUf(item.priceUf)}</p>
@@ -221,7 +221,7 @@ export default async function MarketOfferPage() {
               return (
                 <div key={item.sourceListingId} className="grid gap-2 py-4 text-sm md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_140px_160px_32px] md:items-center">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-[var(--n3-text-light)]">{detail?.title || `Publicación Portal ${item.sourceListingId}`}</p>
+                    <p className="truncate font-medium text-[var(--n3-text-light)]">{detail?.title || 'Publicación de Portal'}</p>
                   </div>
                   <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{detail?.raw_address || 'Dirección no disponible'}</p>
                   <p className="tabular-nums">{moneyUf(detail?.price_uf == null ? null : Number(detail.price_uf))}</p>
