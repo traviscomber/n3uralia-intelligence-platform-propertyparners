@@ -87,7 +87,7 @@ export function PartnerPerformanceSummary() {
       </p>
     </div>
 
-    {loading ? <div role="status" aria-busy="true" className="border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">Cargando datos canónicos…</div> : null}
+    {loading ? <div role="status" aria-busy="true" className="border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">Cargando información…</div> : null}
     {error ? <div role="alert" className="border border-[#d7332b] p-5 text-sm text-[#ff766f]"><p>{error}</p><button onClick={() => void load()} className="mt-3 inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs"><RefreshCw size={14}/>Reintentar</button></div> : null}
 
     {!loading && payload && !hasNominalMetrics ? <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-6">
