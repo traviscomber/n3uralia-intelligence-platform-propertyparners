@@ -164,8 +164,7 @@ export default async function MarketOfferPage() {
                 <div key={item.sourceListingId} className="grid gap-2 py-3 text-sm md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_120px_120px_32px] md:items-center">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[var(--n3-text-light)]">{item.title || `Publicación Portal ${item.sourceListingId}`}</p>
-                    <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">ID {item.sourceListingId}</p>
-                  </div>
+                                      </div>
                   <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{item.address || 'Dirección no disponible'}</p>
                   <p className="tabular-nums">{moneyUf(item.priceUf)}</p>
                   <p className={item.isNewSinceFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[var(--n3-text-muted)]'}>
@@ -180,7 +179,7 @@ export default async function MarketOfferPage() {
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-xs text-[var(--n3-text-muted)]">El pulso se ejecutó, pero no dejó fichas detalladas para mostrar.</p>
+            <p className="mt-4 text-xs text-[var(--n3-text-muted)]">La actualización terminó, pero no dejó publicaciones detalladas para mostrar.</p>
           )}
         </section>
       ) : null}
@@ -212,7 +211,7 @@ export default async function MarketOfferPage() {
             <span>Publicación</span>
             <span>Dirección</span>
             <span>Precio</span>
-            <span>Estado de detalle</span>
+            <span>Estado</span>
             <span />
           </div>
           <div className="divide-y divide-[var(--n3-line)]">
@@ -225,11 +224,11 @@ export default async function MarketOfferPage() {
                     <p className="truncate font-medium text-[var(--n3-text-light)]">{detail?.title || `Publicación Portal ${item.sourceListingId}`}</p>
                     <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">ID {item.sourceListingId}</p>
                   </div>
-                  <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{detail?.raw_address || 'Pendiente de enriquecimiento'}</p>
+                  <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{detail?.raw_address || 'Dirección no disponible'}</p>
                   <p className="tabular-nums">{moneyUf(detail?.price_uf == null ? null : Number(detail.price_uf))}</p>
                   <div>
                     <p className={detail ? 'text-[var(--n3-teal-soft)]' : 'text-[var(--n3-text-muted)]'}>
-                      {detail ? 'Enriquecida' : 'Presencia confirmada'}
+                      {detail ? 'Detalle disponible' : 'Publicación vigente'}
                     </p>
                     <p className="mt-1 text-[10px] text-[var(--n3-text-muted)]">
                       {detailObservedAt ? formatPropertyPartnersDateTime(detailObservedAt) : 'Inventario diario'}
