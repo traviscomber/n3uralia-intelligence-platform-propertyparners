@@ -549,7 +549,7 @@ export default function ValuationPage() {
       {manualOpen ? <IntelligencePanel eyebrow="Alternativa" title="Ingreso manual" description="Úsalo sólo si la propiedad no aparece en la búsqueda."><div className="grid gap-4 p-5 md:grid-cols-2">
         <div className="block"><FieldLabel>Tipo</FieldLabel><div className={`grid ${v2Unlocked ? 'grid-cols-2' : 'grid-cols-1'} border border-[var(--n3-line)] bg-[#080d0d]`} aria-label="Tipo de propiedad"><button type="button" aria-pressed={subject.propertyType === 'Casa'} onClick={() => updateSubject('propertyType', 'Casa')} className={`${subject.propertyType === 'Casa' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} px-3 py-3 text-sm font-semibold`}>Casa</button>{v2Unlocked ? <button type="button" aria-pressed={subject.propertyType === 'Departamento'} onClick={() => updateSubject('propertyType', 'Departamento')} className={`${subject.propertyType === 'Departamento' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)] hover:text-white'} border-l border-[var(--n3-line)] px-3 py-3 text-sm`}>Departamento</button> : null}</div></div>
         <TextField label="Dirección" value={subject.address} onChange={(value) => updateSubject('address', value)} placeholder="Calle y número" />
-        <TextField label="Barrio / sector" value={subject.neighborhood} onChange={(value) => updateSubject('neighborhood', value)} placeholder="Barrio canónico" />
+        <TextField label="Barrio / sector" value={subject.neighborhood} onChange={(value) => updateSubject('neighborhood', value)} placeholder="Barrio / sector" />
         <TextField label="ROL si existe" value={subject.rol} onChange={(value) => updateSubject('rol', value)} />
       </div></IntelligencePanel> : null}
     </section> : null}
@@ -560,7 +560,7 @@ export default function ValuationPage() {
           <div className="border border-[var(--n3-line)] p-3 md:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address || 'Sin dirección'}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood || 'Barrio pendiente'} · ROL {subject.rol || 'no disponible'}</p></div>
           <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Programa</FieldLabel><strong className="text-sm">{subject.bedrooms ?? '—'}D / {subject.bathrooms ?? '—'}B</strong></div>
           <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Año</FieldLabel><strong className="text-sm">{subject.constructionYear ?? '—'}</strong></div>
-          <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Origen</FieldLabel><strong className="text-sm">{quickLookup ? 'Dato canónico' : 'Ingreso manual'}</strong></div>
+          <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Origen</FieldLabel><strong className="text-sm">{quickLookup ? 'Dato verificado' : 'Ingreso manual'}</strong></div>
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           {subject.propertyType === 'Departamento' ? <>
@@ -637,7 +637,7 @@ export default function ValuationPage() {
             <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />coincidencia {Math.round(item.similarityScore * 100)}%</div>
           </div>
           {isOutlier ? <div className="border-t border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-xs text-[#e0c87f]">Revisar: este valor se aleja más de 25% de la mediana seleccionada.</div> : null}
-          {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Referencia sin superficie canónica completa.</div> : null}
+          {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Referencia sin superficie completa.</div> : null}
           {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona, tamaño y programa similares." /></div> : null}
           <details className="border-t border-[var(--n3-line)]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">{manual ? 'Completar' : 'Detalles'}</summary><div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-4">
             <label className="block"><FieldLabel>Fuente</FieldLabel><select value={item.sourceType} onChange={(event) => updateComparable(index, { sourceType: event.target.value as ValuationComparable['sourceType'] })} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Portal</option><option>TocToc</option><option>CBRS</option><option>Cliente</option></select></label>
