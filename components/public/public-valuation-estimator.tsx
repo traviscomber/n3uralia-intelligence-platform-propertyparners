@@ -30,7 +30,7 @@ type EstimateResponse = {
 }
 
 const uf = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
-const date = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
+const dateTime = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' })
 
 export default function PublicValuationEstimator() {
   const [coverage, setCoverage] = useState<CoverageOption[]>([])
@@ -244,6 +244,11 @@ export default function PublicValuationEstimator() {
               </strong>
               <span className="text-xl text-[var(--n3-text-muted)]">UF</span>
             </div>
+            {result.newestObservation ? (
+              <p className="mt-3 text-xs text-[var(--n3-text-muted)]">
+                Actualizado {dateTime.format(new Date(result.newestObservation))}
+              </p>
+            ) : null}
 
             {result.coverageLevel === 'vitacura' ? (
               <div className="mt-5 border-l-2 border-[var(--n3-teal-soft)] bg-[#080d0d] px-4 py-3 text-xs leading-5 text-[var(--n3-text-muted)]">
@@ -271,11 +276,6 @@ export default function PublicValuationEstimator() {
                   <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.referenceArea} · {result.marketSampleCount} avisos</strong>
                 </div>
               </div>
-              {result.newestObservation ? (
-                <p className="mt-4 text-xs text-[var(--n3-text-muted)]">
-                  Observación más reciente: {date.format(new Date(result.newestObservation))}.
-                </p>
-              ) : null}
             </details>
 
             <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">
