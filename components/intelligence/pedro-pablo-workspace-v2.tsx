@@ -112,7 +112,7 @@ function evidenceCutoffLabel(value:string){
 }
 
 const starters = [
-  { label: 'Mercado hoy', prompt: '¿Qué cambió esta mañana en el mercado?' },
+  { label: 'Mercado hoy', prompt: '¿Qué cambió hoy en el mercado?' },
   { label: 'Prioridades', prompt: '¿Qué requiere mi atención hoy?' },
   { label: 'Propiedades', prompt: '¿Qué propiedades necesitan revisión?' },
   { label: 'Tareas vencidas', prompt: '¿Qué tareas están vencidas?' },
@@ -227,7 +227,7 @@ export function PedroPabloWorkspaceV2() {
       const payload = await result.json()
       if (!result.ok) throw new Error(payload.error || 'No fue posible ejecutar la acción confirmada.')
       const execution = payload as ActionExecution
-      setActionSuccess(execution.task?.id ? `Tarea creada y registrada · ${execution.task.id}` : 'Tarea creada y registrada.')
+      setActionSuccess('Tarea creada y registrada.')
       setActionPreview(null)
       try {
         setResponse(await fetchDecisionSupport(lastQuery))
