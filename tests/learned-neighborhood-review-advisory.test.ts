@@ -15,9 +15,11 @@ test('review inbox surfaces learned aliases only as advisory intelligence', () =
 
 test('property inbox explains learned suggestions without enabling confirm action', () => {
   const ui=readFileSync('components/properties/property-review-inbox.tsx','utf8')
-  assert.match(ui,/learned_address_alias_v1:'Patrón territorial aprendido'/)
-  assert.match(ui,/learned_address_alias_conflict:'Patrón aprendido en conflicto'/)
-  assert.match(ui,/La señal aprendida sirve para priorizar la revisión, pero no escribe barrio ni crea asignaciones/)
+  assert.match(ui,/learned_address_alias_v1:'Patrón de dirección conocido'/)
+  assert.match(ui,/learned_address_alias_conflict:'Dirección con señales en conflicto'/)
+  assert.match(ui,/La dirección coincide con un patrón conocido, pero requiere confirmación antes de aplicarse/)
+  assert.match(ui,/selected\.can_decide&&selected\.review_id&&selected\.proposed_neighborhood_id/)
+  assert.doesNotMatch(ui,/La señal aprendida sirve para priorizar la revisión, pero no escribe barrio ni crea asignaciones/)
 })
 
 test('learned advisory confidence rendering uses PostgreSQL-safe numeric formatting', () => {
