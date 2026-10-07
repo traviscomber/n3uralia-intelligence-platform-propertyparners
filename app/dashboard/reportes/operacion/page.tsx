@@ -14,10 +14,10 @@ export default async function ReportOperationsPage() {
     <IntelligenceHeader
       eyebrow="Informes"
       title="Generar y revisar"
-      description="Informe mensual de negocio. El informe contractual se entrega por separado; ningún borrador se envía automáticamente."
+      description="Genera el informe mensual de negocio o el avance contractual. Todo borrador requiere revisión antes de cualquier envío."
       actions={[
         { label: 'Ver informes', href: '/dashboard/reportes/canonicos', primary: true },
-        { label: 'Revisar programaciones', href: '/dashboard/control/admin' },
+        { label: 'Programaciones', href: '/dashboard/control/admin' },
       ]}
     />
     {canOperate ? <CeoIntelligenceReportGenerator /> : null}

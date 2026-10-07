@@ -66,12 +66,11 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <header className="mb-8 text-center">
           <PPLogo className="mx-auto w-56" priority />
-          <p className="mt-4 text-sm text-[var(--n3-text-muted)]">Inteligencia de mercado Vitacura</p>
         </header>
 
         <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-6" aria-labelledby="login-title">
           <h1 id="login-title" className="mb-1 text-xl font-semibold text-[var(--n3-text-light)]">Iniciar sesión</h1>
-          <p className="mb-6 text-sm leading-6 text-[var(--n3-text-muted)]">Accede al control de gestión e inteligencia comercial.</p>
+          <p className="mb-6 text-sm leading-6 text-[var(--n3-text-muted)]">Ingresa con tu cuenta de Property Partners.</p>
 
           {error ? (
             <div role="alert" className="mb-4 border border-[#ff766f] bg-[#160d0c] p-3 text-sm text-[var(--n3-text-light)]">
@@ -114,8 +113,6 @@ export default function LoginPage() {
               {loading ? 'Ingresando…' : 'Ingresar'}
             </button>
           </form>
-
-          <p className="mt-4 text-center text-xs text-[var(--n3-text-muted)]">Acceso administrado internamente.</p>
 
           <div className="mt-5 border-t border-[var(--n3-line)] pt-3 text-center text-[11px] text-[var(--n3-text-muted)]">
             Powered by{' '}

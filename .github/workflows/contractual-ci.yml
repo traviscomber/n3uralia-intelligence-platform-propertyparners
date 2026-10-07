@@ -129,7 +129,7 @@ jobs:
       - name: Verify Property360 comparable gates
         run: node --import tsx --test tests/property360-comparables.test.ts
 
-      - name: Verify Jan-Aug canonical management periods
+      - name: Verify Jan-Sep canonical management periods
         run: node --import tsx --test tests/management-canonical-periods.test.ts
 
       - name: Verify Office 360 canonical management contract
@@ -161,6 +161,8 @@ jobs:
           tests/market-refresh-release-scope.test.ts
           tests/market-intelligence-release-gate.test.ts
           tests/pedro-pablo-operational-memory.test.ts
+          tests/pedro-pablo-data-readiness.test.ts
+          tests/decision-first-ui.test.ts
 
       - name: Verify canonical valuation source authority
         run: node --import tsx --test tests/valuation/canonical-source-authority.test.ts

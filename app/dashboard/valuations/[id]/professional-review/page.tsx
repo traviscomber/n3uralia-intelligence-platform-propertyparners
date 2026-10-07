@@ -163,17 +163,17 @@ export default function ProfessionalReviewPage(){
     </section> : null}
 
     <details className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
-      <summary className="cursor-pointer px-5 py-4 text-sm font-medium text-[var(--n3-text-muted)]">Ver detalle técnico y trazabilidad</summary>
+      <summary className="cursor-pointer px-5 py-4 text-sm font-medium text-[var(--n3-text-muted)]">Ver análisis y respaldo</summary>
       <div className="grid gap-px border-t border-[var(--n3-line)] bg-[var(--n3-line)] md:grid-cols-2 xl:grid-cols-4">
         <div className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Coincidencia media</p><p className="mt-1 text-lg font-semibold">{review.evidence.averageSimilarity==null?'—':pct(review.evidence.averageSimilarity*100)}</p></div>
         <div className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Dispersión</p><p className="mt-1 text-lg font-semibold">{pct(review.evidence.dispersionPct)}</p></div>
         <div className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Promedio muestra</p><p className="mt-1 text-lg font-semibold">{review.evidence.averageUfM2==null?'—':`${n1.format(review.evidence.averageUfM2)} UF/m²`}</p></div>
-        <div className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Calidad interna</p><p className="mt-1 text-lg font-semibold">{review.quality.grade}</p></div>
+        <div className="bg-[var(--n3-deep)] p-4"><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Calidad de evidencia</p><p className="mt-1 text-lg font-semibold">{review.quality.grade}</p></div>
       </div>
       <div className="space-y-3 border-t border-[var(--n3-line)] p-5 text-sm text-[var(--n3-text-muted)]">
         <p>Metodología: Property Partners vigente.</p>
-        {model ? <p>Validación histórica {model.evaluationYear}: error medio {pct(model.mapePct)} · dentro ±15% {pct(model.within15Pct)} · confiabilidad {confidenceLabel[model.reliability] || model.reliability}.</p> : <p>Sin validación histórica adicional aplicable a este caso.</p>}
-        <p>Estas capas son de control y no cambian automáticamente el valor oficial.</p>
+        {model ? <p>Desempeño histórico {model.evaluationYear}: desviación media {pct(model.mapePct)} · dentro de ±15% {pct(model.within15Pct)} · confiabilidad {confidenceLabel[model.reliability] || model.reliability}.</p> : <p>Sin validación histórica adicional aplicable a este caso.</p>}
+        <p>Este análisis es de apoyo y no cambia automáticamente el valor oficial.</p>
       </div>
     </details>
   </div>

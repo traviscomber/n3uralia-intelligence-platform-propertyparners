@@ -61,13 +61,25 @@ function statusLabel(value: string) {
   const labels: Record<string, string> = {
     generated: 'Generado',
     distributed: 'Distribuido',
-    failed: 'Fallido',
+    failed: 'Con error',
     pending: 'Pendiente',
     processing: 'Procesando',
     sent: 'Enviado',
     acknowledged: 'Confirmado',
   }
-  return labels[value] ?? value
+  return labels[value] ?? value.replaceAll('_', ' ')
+}
+
+function periodLabel(start: string, end: string) {
+  const startDate = new Date(`${start.slice(0, 10)}T12:00:00.000Z`)
+  const endDate = new Date(`${end.slice(0, 10)}T12:00:00.000Z`)
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return `${start} – ${end}`
+  if (start.slice(0, 7) === end.slice(0, 7)) {
+    const label = new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(startDate)
+    return label.charAt(0).toUpperCase() + label.slice(1)
+  }
+  const format = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeZone: 'UTC' })
+  return `${format.format(startDate)} – ${format.format(endDate)}`
 }
 
 export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
@@ -118,8 +130,8 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
       if (!response.ok) throw new Error(payload.error || 'La operación falló.')
       if (endpoint.endsWith('/deliver')) {
         setMessage(payload.configured
-          ? `Cola procesada: ${payload.sent ?? 0} enviados, ${payload.failed ?? 0} reintentos y ${payload.terminal ?? 0} fallos terminales.`
-          : payload.reason || 'Proveedor de correo no configurado.')
+          ? `Envíos procesados: ${payload.sent ?? 0} enviados, ${payload.failed ?? 0} con reintento y ${payload.terminal ?? 0} con error.`
+          : payload.reason || 'El envío por correo no está configurado.')
       } else {
         setMessage(`Programaciones procesadas: ${payload.schedulesProcessed ?? 0}; fallidas: ${payload.schedulesFailed ?? 0}.`)
       }
@@ -147,19 +159,19 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
 
   return <div className="space-y-10" aria-busy={loading || Boolean(action)}>
     <section>
-      <SectionHeading eyebrow="Operación" title="Generación y entrega de reportes" description="Cada ejecución conserva período, snapshot, destinatario, intentos y referencia del proveedor. Las horas se muestran en America/Santiago." />
+      <SectionHeading eyebrow="Operación" title="Generación y entrega de informes" description="Cada informe conserva período, destinatario, intentos y estado de entrega. Las horas se muestran en horario de Chile." />
       <MetricGrid>
-        <MetricCard label="Reportes" value={String(reports.length)} detail="Ejecuciones visibles según el alcance del usuario." />
+        <MetricCard label="Informes" value={String(reports.length)} detail="Informes disponibles para tu acceso." />
         <MetricCard label="Envíos completados" value={String(sent)} detail="Estados enviados o confirmados." />
-        <MetricCard label="Cola pendiente" value={String(pending)} detail="Pendientes o en proceso." />
-        <MetricCard label="Fallos" value={String(failed)} detail="Con reintento programado o terminal." />
+        <MetricCard label="Envíos pendientes" value={String(pending)} detail="Pendientes o en proceso." />
+        <MetricCard label="Con error" value={String(failed)} detail="Requieren reintento o revisión." />
       </MetricGrid>
     </section>
 
     <IntelligencePanel
-      eyebrow="Delivery Control"
-      title="Estado del proveedor"
-      description={delivery.configured ? `Proveedor activo: ${delivery.provider}` : 'Faltan credenciales del proveedor; la cola no consume intentos.'}
+      eyebrow="Entrega por correo"
+      title="Estado de envíos"
+      description={delivery.configured ? 'El envío por correo está disponible.' : 'El envío por correo no está configurado.'}
       critical={!delivery.configured}
     >
       <div className="flex flex-wrap items-center gap-3 p-5">
@@ -173,17 +185,17 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
             onClick={() => void execute('/api/management/reports/run', 'generate')}
             className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm disabled:opacity-50"
           >
-            <Play size={15} />{action === 'generate' ? 'Generando…' : 'Generar vencidos'}
+            <Play size={15} />{action === 'generate' ? 'Generando…' : 'Generar programados'}
           </button>
           <button
             type="button"
             disabled={Boolean(action) || loading || !delivery.configured}
             aria-disabled={!delivery.configured || undefined}
-            title={!delivery.configured ? 'Configura el proveedor antes de procesar entregas.' : undefined}
+            title={!delivery.configured ? 'Configura el envío por correo antes de procesar los envíos.' : undefined}
             onClick={() => void execute('/api/management/reports/deliver', 'deliver')}
             className="inline-flex min-h-11 items-center gap-2 border border-[#d7332b] px-4 py-2 text-sm text-[#ff766f] disabled:opacity-50"
           >
-            <Mail size={15} />{action === 'deliver' ? 'Procesando…' : 'Procesar entregas'}
+            <Mail size={15} />{action === 'deliver' ? 'Procesando…' : 'Procesar envíos'}
           </button>
         </> : null}
         <button type="button" disabled={loading || Boolean(action)} onClick={() => void load()} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm disabled:opacity-50">
@@ -195,7 +207,7 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
     </IntelligencePanel>
 
     <section>
-      <SectionHeading eyebrow="Registro" title="Ejecuciones recientes" description="El PDF se genera desde el snapshot persistido; no vuelve a calcular los datos." />
+      <SectionHeading eyebrow="Registro" title="Informes recientes" description="Cada PDF conserva los datos con los que fue generado." />
       {!loading && !reports.length ? <OperationalState compact kind="empty" title="Sin reportes generados" description="No existen reportes generados dentro de su alcance." /> : null}
       <div className="space-y-4">
         {reports.map((report) => {
@@ -204,20 +216,20 @@ export function ReportDeliveryConsole({ canOperate }: { canOperate: boolean }) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ff766f]">{reportLabels[report.report_type] ?? report.report_type}</p>
-                <h3 className="mt-2 break-words text-lg font-semibold">{report.period_start} – {report.period_end}</h3>
-                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Generado {dateTime(report.generated_at)} · hora Chile · Estado {statusLabel(report.status)}</p>
+                <h3 className="mt-2 break-words text-lg font-semibold">{periodLabel(report.period_start, report.period_end)}</h3>
+                <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Generado {dateTime(report.generated_at)} · {statusLabel(report.status)}</p>
               </div>
               <Link href={`/api/management/reports/${report.id}/artifact`} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm">
                 <Download size={15} />Descargar PDF
               </Link>
             </div>
             <div className="mt-5 space-y-2">
-              {!reportDistributions.length ? <p className="text-xs text-[var(--n3-text-muted)]">Sin destinatarios registrados.</p> : reportDistributions.map((distribution) => <div key={distribution.id} className="grid gap-2 border-t border-[var(--n3-line)] py-3 text-xs md:grid-cols-[minmax(180px,1fr)_110px_90px_minmax(180px,1fr)]">
+              {!reportDistributions.length ? <p className="text-xs text-[var(--n3-text-muted)]">Sin envío programado.</p> : reportDistributions.map((distribution) => <div key={distribution.id} className="grid gap-2 border-t border-[var(--n3-line)] py-3 text-xs md:grid-cols-[minmax(180px,1fr)_110px_90px_minmax(180px,1fr)]">
                 <span className="break-all">{distribution.recipient}</span>
                 <span>{statusLabel(distribution.status)}</span>
-                <span>{distribution.attempt_count} intentos</span>
+                <span>{distribution.attempt_count} {distribution.attempt_count===1?'intento':'intentos'}</span>
                 <span className={`break-words ${distribution.error_message ? 'text-[#ff766f]' : 'text-[var(--n3-text-muted)]'}`}>
-                  {distribution.error_message || (distribution.sent_at ? `Enviado ${dateTime(distribution.sent_at)} · hora Chile` : `Próximo ${dateTime(distribution.next_attempt_at)} · hora Chile`)}
+                  {distribution.error_message || (distribution.sent_at ? `Enviado ${dateTime(distribution.sent_at)}` : `Próximo intento ${dateTime(distribution.next_attempt_at)}`)}
                 </span>
               </div>)}
             </div>

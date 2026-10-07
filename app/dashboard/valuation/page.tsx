@@ -249,7 +249,7 @@ function rateAnchorLabel(anchor: RateAnchor) {
     cbrs_average: 'Promedio CBRS seleccionado',
     portal_median: 'Mediana Portal seleccionada',
     portal_average: 'Promedio Portal seleccionado',
-    champion_v5: 'Referencia Champion v5 confirmada',
+    champion_v5: 'Referencia sugerida confirmada',
     manual: 'Definido por valorizador',
   }
   return anchor ? labels[anchor] : 'Pendiente de confirmación'
@@ -469,7 +469,7 @@ export default function ValuationPage() {
     updateSubject('builtRateUfM2', houseRecommendation.builtRateUfM2)
     updateSubject('landRateUfM2', houseRecommendation.landRateUfM2)
     setRateAnchor('champion_v5')
-    setMessage('Referencia aplicada. Puedes ajustarla manualmente si corresponde.')
+    setMessage('Referencia sugerida aplicada. Puedes ajustarla si corresponde.')
   }
 
   function draftProfessionalJustification() {
@@ -534,11 +534,11 @@ export default function ValuationPage() {
 
   return <IntelligencePage>
     <IntelligenceHeader
-      eyebrow="Módulo II · Valorización"
-      title="Valorizador Property Partners"
-      description="Busca la propiedad y obtén un valor defendible para trabajar con el cliente. La evidencia queda disponible para revisar y ajustar cuando corresponda."
+      eyebrow="Valorizaciones"
+      title="Nueva valorización"
+      description="Busca la propiedad, revisa la evidencia y define el valor para trabajar con el cliente."
       actions={[{ label: 'Registro de valorizaciones', href: '/dashboard/valuations' }, { label: 'Inteligencia de mercado', href: '/dashboard/market' }]}
-      meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">property-partners-valuation-v2</div>}
+
     />
 
     <Stepper step={step} onBackTo={setStep} />
@@ -546,10 +546,10 @@ export default function ValuationPage() {
     {step === 1 ? <section className="space-y-4">
       <QuickSubjectLookup />
       <div className="text-center"><button type="button" onClick={() => setManualOpen((value) => !value)} className="text-xs text-[var(--n3-text-muted)] underline underline-offset-4 hover:text-white">{manualOpen ? 'Ocultar ingreso manual' : 'Ingreso manual'}</button></div>
-      {manualOpen ? <IntelligencePanel eyebrow="Alternativa" title="Ingreso manual" description="Si no está en la base."><div className="grid gap-4 p-5 md:grid-cols-2">
-        <div className="block"><FieldLabel>Tipo</FieldLabel><div className="grid grid-cols-2 border border-[var(--n3-line)] bg-[#080d0d]" aria-label="Tipo de propiedad"><button type="button" aria-pressed={subject.propertyType === 'Casa'} onClick={() => updateSubject('propertyType', 'Casa')} className={`${subject.propertyType === 'Casa' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} px-3 py-3 text-sm font-semibold`}>Casa</button><button type="button" disabled={!v2Unlocked} aria-disabled={!v2Unlocked} aria-pressed={subject.propertyType === 'Departamento'} title={v2Unlocked ? 'Funcionalidad V2 habilitada para N3uralia' : 'Disponible en la versión 2'} onClick={() => v2Unlocked && updateSubject('propertyType', 'Departamento')} className={`${subject.propertyType === 'Departamento' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} ${v2Unlocked ? 'hover:text-white' : 'cursor-not-allowed opacity-60'} border-l border-[var(--n3-line)] px-3 py-3 text-sm`}>Departamento <span className="ml-1 text-[10px] uppercase tracking-[0.12em]">{v2Unlocked ? 'Desbloqueado' : 'V2'}</span></button></div></div>
+      {manualOpen ? <IntelligencePanel eyebrow="Alternativa" title="Ingreso manual" description="Úsalo sólo si la propiedad no aparece en la búsqueda."><div className="grid gap-4 p-5 md:grid-cols-2">
+        <div className="block"><FieldLabel>Tipo</FieldLabel><div className={`grid ${v2Unlocked ? 'grid-cols-2' : 'grid-cols-1'} border border-[var(--n3-line)] bg-[#080d0d]`} aria-label="Tipo de propiedad"><button type="button" aria-pressed={subject.propertyType === 'Casa'} onClick={() => updateSubject('propertyType', 'Casa')} className={`${subject.propertyType === 'Casa' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} px-3 py-3 text-sm font-semibold`}>Casa</button>{v2Unlocked ? <button type="button" aria-pressed={subject.propertyType === 'Departamento'} onClick={() => updateSubject('propertyType', 'Departamento')} className={`${subject.propertyType === 'Departamento' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)] hover:text-white'} border-l border-[var(--n3-line)] px-3 py-3 text-sm`}>Departamento</button> : null}</div></div>
         <TextField label="Dirección" value={subject.address} onChange={(value) => updateSubject('address', value)} placeholder="Calle y número" />
-        <TextField label="Barrio / sector" value={subject.neighborhood} onChange={(value) => updateSubject('neighborhood', value)} placeholder="Barrio canónico" />
+        <TextField label="Barrio / sector" value={subject.neighborhood} onChange={(value) => updateSubject('neighborhood', value)} placeholder="Barrio / sector" />
         <TextField label="ROL si existe" value={subject.rol} onChange={(value) => updateSubject('rol', value)} />
       </div></IntelligencePanel> : null}
     </section> : null}
@@ -560,7 +560,7 @@ export default function ValuationPage() {
           <div className="border border-[var(--n3-line)] p-3 md:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address || 'Sin dirección'}</strong><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood || 'Barrio pendiente'} · ROL {subject.rol || 'no disponible'}</p></div>
           <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Programa</FieldLabel><strong className="text-sm">{subject.bedrooms ?? '—'}D / {subject.bathrooms ?? '—'}B</strong></div>
           <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Año</FieldLabel><strong className="text-sm">{subject.constructionYear ?? '—'}</strong></div>
-          <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Origen</FieldLabel><strong className="text-sm">{quickLookup ? 'Dato canónico' : 'Ingreso manual'}</strong></div>
+          <div className="border border-[var(--n3-line)] p-3"><FieldLabel>Origen</FieldLabel><strong className="text-sm">{quickLookup ? 'Dato verificado' : 'Ingreso manual'}</strong></div>
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           {subject.propertyType === 'Departamento' ? <>
@@ -637,7 +637,7 @@ export default function ValuationPage() {
             <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />coincidencia {Math.round(item.similarityScore * 100)}%</div>
           </div>
           {isOutlier ? <div className="border-t border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-xs text-[#e0c87f]">Revisar: este valor se aleja más de 25% de la mediana seleccionada.</div> : null}
-          {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Referencia sin superficie canónica completa.</div> : null}
+          {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Referencia sin superficie completa.</div> : null}
           {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona, tamaño y programa similares." /></div> : null}
           <details className="border-t border-[var(--n3-line)]"><summary className="cursor-pointer px-4 py-3 text-xs text-[var(--n3-text-muted)]">{manual ? 'Completar' : 'Detalles'}</summary><div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-4">
             <label className="block"><FieldLabel>Fuente</FieldLabel><select value={item.sourceType} onChange={(event) => updateComparable(index, { sourceType: event.target.value as ValuationComparable['sourceType'] })} className="w-full border border-[var(--n3-line)] bg-[#080d0d] px-3 py-3 text-sm"><option>Portal</option><option>TocToc</option><option>CBRS</option><option>Cliente</option></select></label>
@@ -710,7 +710,7 @@ export default function ValuationPage() {
       <IntelligencePanel eyebrow="Paso 5 · Tu valorización" title={result && selectedComparables.length >= 3 ? 'Valor listo para trabajar' : 'Revisión final'} description="Confirma el valor que usarás con el cliente y deja la evidencia lista para dirección."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="border border-[var(--n3-line)] p-4 xl:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType} · ROL {subject.rol || 'no disponible'}</p></div>
         <div className="border border-[var(--n3-line)] p-4"><FieldLabel>Evidencia</FieldLabel><strong className="text-xl">{selectedComparables.length}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{cbrsEvidence.count} ventas · {portalEvidence.count} ofertas</p></div>
-        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor sugerido</FieldLabel><strong className="text-2xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia Champion v5 confirmada por la ejecutiva' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
+        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor sugerido</FieldLabel><strong className="text-2xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia sugerida confirmada' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
       </div>
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
@@ -722,18 +722,18 @@ export default function ValuationPage() {
         </div>
         <TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables..." />
       </div></IntelligencePanel>
-      <MethodologyNote>Portal: oferta. CBRS: ventas. Property Partners decide.</MethodologyNote>
+      <MethodologyNote>Oferta publicada y ventas registradas respaldan la decisión. Property Partners confirma el valor.</MethodologyNote>
     </section> : null}
 
     {message ? <div role="status" className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm text-[#ff9a93]">{message}</div> : null}
 
-    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-3 backdrop-blur md:py-4">
+    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[var(--n3-black)] px-2 py-3 md:py-4">
       <div className="flex items-center justify-between gap-1.5 md:gap-3">
         <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-30 md:gap-2 md:px-4"><ArrowLeft size={14} /><span className="hidden sm:inline">Anterior</span></button>
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
         <div className="flex items-center gap-1.5 md:gap-2">
           {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
-          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización'}</button>}
+          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>{step === 1 ? 'Revisar estado' : step === 2 ? 'Revisar mercado' : step === 3 ? 'Definir valor' : 'Revisión final'}</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización'}</button>}
         </div>
       </div>
     </div>

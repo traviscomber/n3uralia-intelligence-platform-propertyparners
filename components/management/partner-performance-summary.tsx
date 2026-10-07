@@ -66,50 +66,58 @@ export function PartnerPerformanceSummary() {
 
   const partner = payload?.entities.find((item) => item.entityType === 'partner')
   const metrics = useMemo(() => new Map((partner?.metrics ?? []).map((item) => [item.code, item])), [partner])
-  const cards = [
-    ['Cierres del período', metrics.get('sales') ?? metrics.get('management_credited_sales')],
-    ['UF del período', metrics.get('sales_uf') ?? metrics.get('management_credited_sales_uf')],
-    ['Captaciones', metrics.get('captations')],
+  const primaryCards = [
+    ['Cierres', metrics.get('sales') ?? metrics.get('management_credited_sales')],
+    ['UF', metrics.get('sales_uf') ?? metrics.get('management_credited_sales_uf')],
     ['Leads activos', metrics.get('active_leads_snapshot') ?? metrics.get('active_leads')],
-    ['Visitas agendadas', metrics.get('scheduled_visits')],
     ['Visitas realizadas', metrics.get('realized_visits')],
   ] as const
-  const hasNominalMetrics = cards.some(([, item]) => item?.value != null)
+  const secondaryCards = [
+    ['Captaciones', metrics.get('captations')],
+    ['Visitas agendadas', metrics.get('scheduled_visits')],
+  ] as const
+  const hasNominalMetrics = [...primaryCards, ...secondaryCards].some(([, item]) => item?.value != null)
 
   return <section className="mx-auto mt-8 max-w-7xl space-y-5">
     <div className="border-b border-[var(--n3-line)] pb-4">
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Desempeño personal</p>
-      <h1 className="mt-2 text-2xl font-semibold">Corte canónico vigente</h1>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Hoy</p>
+      <h1 className="mt-2 text-2xl font-semibold">Mi desempeño</h1>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">
-        {payload?.scopeLabel ?? 'Partner'} · {payload?.periodLabel ?? 'Cargando período…'}
+        {payload?.scopeLabel ?? 'Partner'} · {payload?.generatedAt ? `Actualizado ${new Date(payload.generatedAt).toLocaleString('es-CL')}` : payload?.periodLabel ?? 'Cargando período…'}
       </p>
     </div>
 
-    {loading ? <div role="status" aria-busy="true" className="border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">Cargando datos canónicos…</div> : null}
+    {loading ? <div role="status" aria-busy="true" className="border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">Cargando información…</div> : null}
     {error ? <div role="alert" className="border border-[#d7332b] p-5 text-sm text-[#ff766f]"><p>{error}</p><button onClick={() => void load()} className="mt-3 inline-flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs"><RefreshCw size={14}/>Reintentar</button></div> : null}
 
     {!loading && payload && !hasNominalMetrics ? <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-6">
-      <p className="text-sm font-semibold">Septiembre 2026 está actualizado a nivel compañía y oficina.</p>
+      <p className="text-sm font-semibold">Aún no hay resultados personales disponibles para este período.</p>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--n3-text-muted)]">
-        Este perfil no tiene todavía métricas nominales de septiembre aprobadas y vinculadas de forma inequívoca. No se muestran valores heredados de junio ni se infieren resultados desde la oficina.
+        La vista no completa valores faltantes con datos de meses anteriores.
       </p>
     </div> : null}
 
-    {!loading && payload && hasNominalMetrics ? <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-3">
-      {cards.map(([label, item]) => <article key={label} className="bg-[var(--n3-deep)] p-5">
+    {!loading && payload && hasNominalMetrics ? <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
+      {primaryCards.map(([label, item]) => <article key={label} className="bg-[var(--n3-deep)] p-5">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{label}</p>
         <p className="mt-3 text-2xl font-semibold">{fmt(item)}</p>
         <p className="mt-2 text-xs leading-5 text-[var(--n3-text-muted)]">
-          {item?.periodEnd ? `Corte ${item.periodEnd}` : payload.periodLabel}
+          {item?.periodEnd ? `Al ${item.periodEnd}` : payload.periodLabel}
         </p>
       </article>)}
     </div> : null}
 
     {!loading && payload ? <details className="border-t border-[var(--n3-line)] pt-4">
-      <summary className="cursor-pointer text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver fuente y alcance</summary>
+      <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver detalle</summary>
+      <div className="mt-2 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2">
+        {secondaryCards.map(([label, item]) => <article key={label} className="bg-[var(--n3-deep)] p-4">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">{label}</p>
+          <p className="mt-2 text-xl font-semibold">{fmt(item)}</p>
+        </article>)}
+      </div>
       <div className="mt-4 text-xs leading-5 text-[var(--n3-text-muted)]">
-        <p>{payload.dataProvenance ?? 'Datos canónicos vigentes.'}</p>
-        <p className="mt-2">Regla: no se heredan métricas de períodos anteriores para completar un corte nominal faltante.</p>
+        <p>{payload.dataProvenance ?? 'Datos vigentes.'}</p>
+        <p className="mt-2">Los datos faltantes no se completan con períodos anteriores.</p>
       </div>
     </details> : null}
   </section>

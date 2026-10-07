@@ -6,13 +6,13 @@ type Evidence = {
   source: string
   reference?: string | null
   cutoff?: string | null
-  domain?: 'management' | 'tasks' | 'valuations' | 'properties'
+  domain?: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'market'
 }
 
 type ActionProposal = {
   id: string
   kind: 'review' | 'follow_up' | 'verify' | 'prepare'
-  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'cross-domain'
+  domain: 'management' | 'tasks' | 'valuations' | 'properties' | 'reports' | 'market' | 'cross-domain'
   action: string
   objectLabel: string
   reason: string
@@ -28,6 +28,15 @@ type DecisionSupportResponse = {
   generatedAt: string
   periodLabel: string
   scopeLabel: string
+  dataReadiness?: {
+    mode: 'observe'
+    status: 'ready' | 'limited' | 'blocked'
+    score: number
+    warnings: string[]
+    blockers: string[]
+    evaluatedAt: string
+    policyVersion: string
+  }
 }
 
 function taskPriority(priority: ActionProposal['priority']) {
@@ -100,6 +109,14 @@ export async function POST(request: NextRequest) {
     if ('error' in regenerated) return regenerated.error
     const { proposal, context, cookie } = regenerated
 
+    if (!context.dataReadiness || context.dataReadiness.status === 'blocked') {
+      return NextResponse.json({
+        error: 'No se puede preparar esta acción: faltan datos verificables.',
+        readiness: context.dataReadiness ?? { status: 'blocked', blockers: ['readiness_unavailable'] },
+        writesPerformed: 0,
+      }, { status: 409, headers: { 'Cache-Control': 'no-store' } })
+    }
+
     const taskDraft = {
       sourceKey: `pedro-pablo:${proposal.id}`,
       title: proposal.action,
@@ -120,7 +137,12 @@ export async function POST(request: NextRequest) {
         executable: true,
         executionStatus: 'preview',
         writesPerformed: 0,
-        gatewayPolicy: 'pedro-pablo-action-gateway-v1',
+        gatewayPolicy: 'pedro-pablo-action-gateway-v2-data-ready',
+        readiness: {
+          status: context.dataReadiness.status,
+          warnings: context.dataReadiness.warnings,
+          policyVersion: context.dataReadiness.policyVersion,
+        },
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
@@ -144,7 +166,12 @@ export async function POST(request: NextRequest) {
       executionStatus: 'executed',
       writesPerformed: 1,
       task: taskPayload.task ?? null,
-      gatewayPolicy: 'pedro-pablo-action-gateway-v1',
+      gatewayPolicy: 'pedro-pablo-action-gateway-v2-data-ready',
+      readiness: {
+        status: context.dataReadiness.status,
+        warnings: context.dataReadiness.warnings,
+        policyVersion: context.dataReadiness.policyVersion,
+      },
       confirmedByHuman: true,
       executedAt: new Date().toISOString(),
     }, { status: 201, headers: { 'Cache-Control': 'no-store' } })

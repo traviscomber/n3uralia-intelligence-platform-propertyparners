@@ -38,11 +38,18 @@ test('August canonical monthly snapshot uses the Pedro board authority without i
   assert.equal(snapshot.entities.filter((entity) => entity.entityType === 'partner').length, 0)
 })
 
-test('canonical monthly snapshot handles calendar month ends and refuses unpublished periods', () => {
+test('canonical monthly snapshot handles calendar month ends and exposes only published periods', () => {
   const february = buildCanonicalMonthlySnapshot('2026-02', '2026-03-01T12:00:00.000Z', 'cron')
   assert.ok(february)
   assert.equal(february.period.end, '2026-02-28')
 
-  assert.equal(buildCanonicalMonthlySnapshot('2026-09', '2026-10-01T12:00:00.000Z', 'cron'), null)
+  const september = buildCanonicalMonthlySnapshot('2026-09', '2026-10-01T12:00:00.000Z', 'cron')
+  assert.ok(september)
+  assert.equal(september.period.end, '2026-09-30')
+  assert.equal(september.company.cierresAcreditados, 5)
+  assert.equal(september.company.volumenUfAcreditado, 49560)
+  assert.equal(september.company.scoreGestion, null)
+  assert.equal(september.completeness.fullManagementScoreReady, false)
+
   assert.equal(buildCanonicalMonthlySnapshot('invalid', '2026-10-01T12:00:00.000Z', 'cron'), null)
 })

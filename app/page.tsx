@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, BarChart3, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import PublicValuationEstimator from '@/components/public/public-valuation-estimator'
 
 export default function HomePage() {
@@ -38,57 +38,36 @@ export default function HomePage() {
         <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-10 lg:py-24">
           <div className="flex max-w-2xl flex-col justify-center">
             <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--n3-teal-soft)] sm:mb-5 sm:text-xs sm:tracking-[0.24em]">
-              Property Partners Intelligence · Sólo Vitacura
+              Property Partners Vitacura
             </p>
             <h1 className="max-w-[12ch] text-[clamp(2.65rem,11vw,4.5rem)] font-semibold leading-[0.98] tracking-[-0.045em]">
               Conoce un rango referencial para tu casa.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-[var(--n3-text-muted)] sm:mt-7 sm:text-lg">
-              Estimación rápida con oferta activa de casas y barrios KML de Vitacura. Sin registro, sin dirección y sin entregar datos personales.
+              Rango estimado con oferta activa de casas en Vitacura.
             </p>
 
-            <div className="mt-8 grid max-w-xl grid-cols-1 gap-4 min-[430px]:grid-cols-3 sm:mt-9">
-              <div className="border-l border-[var(--n3-teal)] pl-4">
-                <BarChart3 className="mb-2.5 size-5 text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                <span className="text-sm leading-5 text-[var(--n3-text-muted)]">Oferta activa de Vitacura</span>
-              </div>
-              <div className="border-l border-[var(--n3-teal)] pl-4">
-                <CheckCircle2 className="mb-2.5 size-5 text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                <span className="text-sm leading-5 text-[var(--n3-text-muted)]">Piso mínimo de evidencia</span>
-              </div>
-              <div className="border-l border-[var(--n3-teal)] pl-4">
-                <ShieldCheck className="mb-2.5 size-5 text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                <span className="text-sm leading-5 text-[var(--n3-text-muted)]">Sin capturar datos personales</span>
-              </div>
-            </div>
           </div>
 
           <PublicValuationEstimator />
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-px border-x border-[var(--n3-line)] bg-[var(--n3-line)] sm:grid-cols-3">
-        <div className="bg-[var(--n3-black)] p-5 sm:p-7 lg:p-8">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">01 · Ubicación</span>
-          <h2 className="mt-4 text-xl font-medium">Selecciona tu sector</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">Si el sector alcanza 5 observaciones utilizables, el rango es sectorial. Si no, usamos una referencia general de Vitacura y lo indicamos explícitamente.</p>
-        </div>
-        <div className="bg-[var(--n3-black)] p-5 sm:p-7 lg:p-8">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">02 · Características</span>
-          <h2 className="mt-4 text-xl font-medium">Describe tu casa</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">La superficie construida es obligatoria. Dormitorios y baños sólo refinan la muestra cuando existe evidencia suficiente.</p>
-        </div>
-        <div className="bg-[var(--n3-black)] p-5 sm:p-7 lg:p-8">
-          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--n3-teal-soft)]">03 · Resultado</span>
-          <h2 className="mt-4 text-xl font-medium">Recibe un rango, no falsa precisión</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">El cotizador orienta. La valorización profesional mantiene comparables, revisión, aprobación y trazabilidad separadas.</p>
-        </div>
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-8 lg:px-10">
+        <details className="border-t border-[var(--n3-line)] pt-4">
+          <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Cómo se calcula</summary>
+          <div className="grid gap-5 border-t border-[var(--n3-line)] py-5 text-sm leading-6 text-[var(--n3-text-muted)] sm:grid-cols-3">
+            <p>Usamos oferta activa de casas del sector cuando existe evidencia suficiente.</p>
+            <p>Si el sector no alcanza el mínimo, usamos una referencia general de Vitacura y lo indicamos.</p>
+            <p>El resultado es referencial y no reemplaza una valorización profesional.</p>
+          </div>
+        </details>
       </section>
 
       <footer className="border-t border-[var(--n3-line)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-7 text-xs leading-5 text-[var(--n3-text-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
-          <span>Property Partners Vitacura · Estimación referencial de mercado</span>
-          <span>Inteligencia y trazabilidad tecnológica por N3uralia</span>
+          <span>Property Partners Vitacura</span>
+          <span>Tecnología por N3uralia</span>
         </div>
       </footer>
     </main>

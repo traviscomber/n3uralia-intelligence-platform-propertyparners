@@ -195,13 +195,13 @@ export function ValuationDecisionIntelligence({ valuationId }: { valuationId: st
 
   return <section className="border border-[var(--n3-line)] bg-[var(--n3-deep)]">
     <div className="border-b border-[var(--n3-line)] p-4">
-      <p className="text-xs uppercase tracking-[0.16em] text-[var(--n3-teal)]">INTELIGENCIA PARA DECISIÓN</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-[var(--n3-teal)]">ANÁLISIS DE RESPALDO</p>
       <h2 className="mt-1 text-lg font-semibold text-[var(--n3-text-light)]">Qué respalda el valor y qué falta antes de decidir</h2>
       <p className="mt-1 text-sm text-[var(--n3-text-muted)]">Lectura descriptiva sobre evidencia aceptada. No aplica ajustes económicos automáticos.</p>
     </div>
 
     <div className="grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
-      <Metric label="Área comparable sujeto" value={metrics.effectiveArea == null ? '—' : `${decimal.format(metrics.effectiveArea)} m²`} detail={metrics.valuation.property_type === 'Casa' ? 'Construidos + terreno/4' : 'Útil + terraza/2'} />
+      <Metric label="Área ponderada" value={metrics.effectiveArea == null ? '—' : `${decimal.format(metrics.effectiveArea)} m²`} detail={metrics.valuation.property_type === 'Casa' ? 'Construidos + terreno/4' : 'Útil + terraza/2'} />
       <Metric label="UF/m² implícito" value={metrics.impliedUfM2 == null ? '—' : `${decimal.format(metrics.impliedUfM2)} UF/m²`} detail={`vs mediana ${pct(metrics.deltaVsMedianUfM2)}`} />
       <Metric label="Mediana comparables" value={metrics.medianUfM2 == null ? '—' : `${decimal.format(metrics.medianUfM2)} UF/m²`} detail={metrics.averageUfM2 == null ? 'Promedio no disponible' : `Promedio ${decimal.format(metrics.averageUfM2)} UF/m²`} />
       <Metric label="Dispersión muestra" value={metrics.dispersionPct == null ? '—' : `${decimal.format(metrics.dispersionPct)}%`} detail={metrics.minUfM2 == null || metrics.maxUfM2 == null ? 'Rango no disponible' : `${decimal.format(metrics.minUfM2)}–${decimal.format(metrics.maxUfM2)} UF/m²`} />
@@ -217,42 +217,42 @@ export function ValuationDecisionIntelligence({ valuationId }: { valuationId: st
         <p><strong>{metrics.cbrsCount}</strong> ventas CBRS · <strong>{metrics.offerCount}</strong> ofertas Portal/TocToc.</p>
         <p>{metrics.offerCount === 0 ? 'Sin contraste de oferta activa en la muestra seleccionada.' : 'Existe contraste entre venta registrada y oferta observada.'}</p>
       </Panel>
-      <Panel title="Backtest y trazabilidad">
-        <p>{metrics.backtestMapePct == null ? 'MAPE no disponible' : `MAPE ${decimal.format(metrics.backtestMapePct)}%`} · confiabilidad {metrics.backtestReliability ? (reliabilityLabels[metrics.backtestReliability] || metrics.backtestReliability) : 'no informada'}.</p>
+      <Panel title="Validación histórica">
+        <p>{metrics.backtestMapePct == null ? 'Desviación histórica no disponible' : `Desviación ${decimal.format(metrics.backtestMapePct)}%`} · confiabilidad {metrics.backtestReliability ? (reliabilityLabels[metrics.backtestReliability] || metrics.backtestReliability) : 'no informada'}.</p>
         <p>Fechas {metrics.dateCoverage == null ? '—' : `${decimal.format(metrics.dateCoverage)}%`} · distancias {metrics.distanceCoverage == null ? '—' : `${decimal.format(metrics.distanceCoverage)}%`}.</p>
       </Panel>
     </div>
 
     <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 lg:grid-cols-3">
-      <Panel title="Rango / banda">
+      <Panel title="Rango de evidencia">
         {metrics.contractualRangeDefined
-          ? <p>Rango contractual persistido: <strong>{uf(numberValue(metrics.valuation.low_value_uf))} — {uf(numberValue(metrics.valuation.high_value_uf))}</strong>.</p>
-          : <p><strong>Rango contractual aún no definido.</strong></p>}
-        <p>{metrics.evidenceBand ? `Banda observable de comparables: ${uf(metrics.evidenceBand.low)} — ${uf(metrics.evidenceBand.high)}.` : 'Banda de evidencia no evaluable.'}</p>
-        <p className="text-xs text-[var(--n3-text-muted)]">La banda observable no reemplaza una regla contractual de rango que Property Partners no ha definido en las fuentes revisadas.</p>
+          ? <p>Rango registrado: <strong>{uf(numberValue(metrics.valuation.low_value_uf))} — {uf(numberValue(metrics.valuation.high_value_uf))}</strong>.</p>
+          : <p><strong>Rango registrado aún no definido.</strong></p>}
+        <p>{metrics.evidenceBand ? `Rango observado en comparables: ${uf(metrics.evidenceBand.low)} — ${uf(metrics.evidenceBand.high)}.` : 'Rango de evidencia no evaluable.'}</p>
+        <p className="text-xs text-[var(--n3-text-muted)]">El rango observado no reemplaza un rango oficial cuando éste no ha sido definido.</p>
       </Panel>
       <Panel title="Estado del inmueble">
         <p><strong>{metrics.valuation.condition_status ? `${metrics.valuation.condition_status}${metrics.valuation.condition_score != null ? ` · ${decimal.format(Number(metrics.valuation.condition_score))}/5` : ''}` : 'No evaluado'}</strong></p>
         <p>{metrics.valuation.condition_status ? 'Existe evidencia física registrada.' : 'Faltan condición/remodelación y factores subjetivos para una lectura completa.'}</p>
         {!metrics.valuation.condition_status && <Link href={`/dashboard/valuations/${valuationId}/condition`} className="mt-3 inline-flex min-h-10 items-center border border-[var(--n3-teal)] px-3 py-2 text-xs text-[var(--n3-teal)]">Evaluar estado</Link>}
       </Panel>
-      <Panel title="Venta histórica del sujeto">
+      <Panel title="Venta histórica de la propiedad">
         <p><strong>{historicalSaleLabel(metrics.holdoutEventKey)}</strong></p>
         <p>{metrics.holdoutExcluded ? 'Se excluye del cálculo y se usa sólo para validar el resultado.' : 'Estado de exclusión no confirmado.'}</p>
       </Panel>
     </div>
 
     <div className="grid gap-4 border-t border-[var(--n3-line)] p-4 lg:grid-cols-2">
-      <Panel title="Referencia en el tramo bajo">
+      <Panel title="Referencias de menor valor">
         {metrics.opportunities.length
           ? metrics.opportunities.map((item, index) => <p key={index}>{item.address || 'Sin dirección'} · {numberValue(item.price_uf_m2) == null ? '—' : `${decimal.format(Number(item.price_uf_m2))} UF/m²`} · {uf(numberValue(item.price_uf))}</p>)
           : <p>Sin señal disponible.</p>}
         <p className="text-xs text-[var(--n3-text-muted)]">Referencia descriptiva para revisión; no elimina comparables ni modifica el valor automáticamente.</p>
       </Panel>
-      <Panel title="Escenarios de publicación 0 / 5 / 10">
+      <Panel title="Escenarios de publicación">
         <div className="grid gap-2 sm:grid-cols-3">
           {metrics.scenarios.map((scenario) => <div key={scenario.margin} className="border border-[var(--n3-line)] p-3">
-            <p className="text-xs text-[var(--n3-text-muted)]">{scenario.margin === 5 ? '+5% · estándar PP' : `+${scenario.margin}%`}</p>
+            <p className="text-xs text-[var(--n3-text-muted)]">{scenario.margin === 5 ? '+5% · sugerido' : `+${scenario.margin}%`}</p>
             <p className="mt-1 font-semibold">{uf(scenario.price)}</p>
           </div>)}
         </div>

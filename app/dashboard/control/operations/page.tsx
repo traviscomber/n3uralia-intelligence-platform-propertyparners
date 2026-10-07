@@ -10,6 +10,18 @@ import { formatPropertyPartnersDate, propertyPartnersMonthKey } from '@/lib/prop
 type ImportRun = { id:string; source_name:string; period_start:string; status:string; rows_received:number; rows_inserted:number; rows_rejected?:number; created_at:string }
 type Report = { id:string; report_type:string; period_start:string; status:string; generated_at:string }
 
+function statusLabel(value:string){
+  const labels:Record<string,string>={draft:'Borrador',pending:'Pendiente',ready:'Listo',generated:'Generado',approved:'Aprobado',issued:'Emitido',completed:'Completado',success:'Completado',failed:'Con observaciones',error:'Con observaciones'}
+  const label=labels[value.toLowerCase()]
+  if(label) return label
+  return value.replaceAll('_',' ').replace(/^./,(char)=>char.toUpperCase())
+}
+
+function reportTypeLabel(value:string){
+  const labels:Record<string,string>={monthly:'Informe mensual',weekly:'Informe semanal',board:'Informe de directorio'}
+  return labels[value.toLowerCase()] ?? 'Informe'
+}
+
 export default function ManagementOperationsPage() {
   const [period, setPeriod] = useState(propertyPartnersMonthKey())
   const [rows, setRows] = useState('[]')
@@ -108,6 +120,7 @@ export default function ManagementOperationsPage() {
   const rejected = currentRuns.reduce((sum, run) => sum + Number(run.rows_rejected || 0), 0)
   const latestReport = currentReports[0] ?? null
   const inserted = currentRuns.reduce((sum, run) => sum + Number(run.rows_inserted || 0), 0)
+  const latestUpdate = currentRuns[0]?.created_at ? new Date(currentRuns[0].created_at).toLocaleString('es-CL') : '—'
   const nextStep = rejected > 0
     ? { title: 'Revisar observaciones antes de cerrar', detail: `${rejected} filas fueron rechazadas en las cargas del período.`, label: 'Revisar reconciliación', href: '/dashboard/control/reconciliacion' }
     : currentRuns.length === 0
@@ -124,16 +137,15 @@ export default function ManagementOperationsPage() {
       <WorkspaceHeader
         eyebrow="Gestión"
         title="Qué falta para cerrar"
-        meta={rejected ? `${rejected} observaciones de datos requieren revisión` : latestReport ? 'Reporte mensual disponible' : currentRuns.length ? 'Período con evidencia · cierre aún no emitido' : 'Sin evidencia cargada para el período'}
+        meta={`Actualizado ${latestUpdate}`}
         controls={<div><label htmlFor="management-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><input id="management-period" type="month" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm" /></div>}
         actions={[{ label: 'Metas y alertas', href: '/dashboard/control/admin' }]}
       />
 
       <MetricStrip items={[
-        { label: 'Cargas', value: currentRuns.length || '—', detail: currentRuns.length ? undefined : 'Sin evidencia del período' },
-        { label: 'Filas incorporadas', value: currentRuns.length ? inserted : '—', detail: currentRuns.length ? undefined : 'No evaluable sin carga' },
-        { label: 'Observaciones', value: currentRuns.length ? rejected : '—', detail: currentRuns.length ? undefined : 'No evaluable sin carga', tone: currentRuns.length ? (rejected ? 'warning' : 'success') : 'default' },
-        { label: 'Reportes', value: currentRuns.length ? currentReports.length : '—', detail: currentRuns.length && !currentReports.length ? 'Cierre pendiente' : undefined, tone: currentReports.length ? 'success' : 'default' },
+        { label: 'Estado', value: currentRuns.length === 0 ? 'Sin datos' : rejected > 0 ? 'Pendiente' : latestReport ? 'Cerrado' : 'Listo', tone: currentRuns.length === 0 ? 'default' : rejected > 0 ? 'warning' : latestReport ? 'success' : 'default' },
+        { label: 'Observaciones', value: currentRuns.length ? rejected : '—', tone: currentRuns.length ? (rejected ? 'warning' : 'success') : 'default' },
+        { label: 'Reporte', value: latestReport ? 'Disponible' : currentRuns.length ? 'Pendiente' : '—', tone: latestReport ? 'success' : 'default' },
       ]} />
 
       <section className="mt-7 max-w-5xl">
@@ -148,18 +160,18 @@ export default function ManagementOperationsPage() {
 
       <section className="mt-8 max-w-5xl">
         <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2"><h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Cierre mensual</h2><span className="text-xs text-[var(--n3-text-muted)]">{currentReports.length ? 'Disponible' : 'Pendiente'}</span></div>
-        {latestReport ? <article className="grid gap-4 border-b border-[var(--n3-line)] py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div><p className="text-sm font-medium">Reporte {latestReport.report_type}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{latestReport.status} · {formatPropertyPartnersDate(latestReport.generated_at)}</p></div><div className="flex flex-wrap gap-2"><Link href={`/dashboard/control/reports/${latestReport.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><FileText size={14}/> Abrir</Link><a href={`/api/management/reports/${latestReport.id}/artifact`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><Download size={14}/> PDF</a></div></article> : <div className="border-b border-[var(--n3-line)] py-6"><p className="text-sm text-[var(--n3-text-muted)]">Todavía no existe un reporte mensual para este período.</p><button disabled={busy || currentRuns.length===0 || rejected>0} onClick={() => void generateReport()} className="mt-4 min-h-11 bg-[var(--primary)] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">{busy ? 'Procesando…' : 'Generar reporte mensual'}</button>{currentRuns.length===0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Carga evidencia del período antes de generar el cierre.</p>:rejected>0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Resuelve las observaciones de datos antes de generar el cierre.</p>:null}</div>}
-        {currentReports.length>1?<details className="border-b border-[var(--n3-line)]"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ver {currentReports.length-1} reporte{currentReports.length-1===1?' anterior':'s anteriores'}</summary><div className="divide-y divide-[var(--n3-line)]">{currentReports.slice(1).map((report) => <div key={report.id} className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm"><div><p className="font-medium">Reporte {report.report_type}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{report.status} · {formatPropertyPartnersDate(report.generated_at)}</p></div><Link href={`/dashboard/control/reports/${report.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4"><FileText size={14}/> Abrir</Link></div>)}</div></details>:null}
+        {latestReport ? <article className="grid gap-4 border-b border-[var(--n3-line)] py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><div><p className="text-sm font-medium">{reportTypeLabel(latestReport.report_type)}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{statusLabel(latestReport.status)} · {formatPropertyPartnersDate(latestReport.generated_at)}</p></div><div className="flex flex-wrap gap-2"><Link href={`/dashboard/control/reports/${latestReport.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><FileText size={14}/> Abrir</Link><a href={`/api/management/reports/${latestReport.id}/artifact`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-sm"><Download size={14}/> PDF</a></div></article> : <div className="border-b border-[var(--n3-line)] py-6"><p className="text-sm text-[var(--n3-text-muted)]">Todavía no existe un reporte mensual para este período.</p><button disabled={busy || currentRuns.length===0 || rejected>0} onClick={() => void generateReport()} className="mt-4 min-h-11 bg-[var(--primary)] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">{busy ? 'Procesando…' : 'Generar reporte mensual'}</button>{currentRuns.length===0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Carga evidencia del período antes de generar el cierre.</p>:rejected>0?<p className="mt-2 text-xs text-[var(--n3-text-muted)]">Resuelve las observaciones de datos antes de generar el cierre.</p>:null}</div>}
+        {currentReports.length>1?<details className="border-b border-[var(--n3-line)]"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ver {currentReports.length-1} reporte{currentReports.length-1===1?' anterior':'s anteriores'}</summary><div className="divide-y divide-[var(--n3-line)]">{currentReports.slice(1).map((report) => <div key={report.id} className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm"><div><p className="font-medium">{reportTypeLabel(report.report_type)}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{statusLabel(report.status)} · {formatPropertyPartnersDate(report.generated_at)}</p></div><Link href={`/dashboard/control/reports/${report.id}`} className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4"><FileText size={14}/> Abrir</Link></div>)}</div></details>:null}
         <Link href="/dashboard/control/reports" className="mt-3 inline-flex min-h-11 items-center text-xs font-medium text-[var(--n3-teal-soft)]">Ver archivo completo</Link>
       </section>
 
       <details className="mt-9 max-w-5xl border-t border-[var(--n3-line)] pt-4"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Acciones secundarias</summary><div className="grid border-y border-[var(--n3-line)] sm:grid-cols-2"><button disabled={busy} onClick={() => void evaluate()} className="min-h-20 border-b border-[var(--n3-line)] px-4 text-left text-sm hover:bg-white/[0.03] disabled:opacity-50 sm:border-b-0 sm:border-r"><strong>Reevaluar alertas</strong><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">Actualizar excepciones a partir de los datos actuales.</span></button><button disabled={busy || currentRuns.length===0 || rejected>0} onClick={() => void generateReport()} className="min-h-20 px-4 text-left text-sm hover:bg-white/[0.03] disabled:opacity-40"><strong>Regenerar reporte</strong><span className="mt-1 block text-xs text-[var(--n3-text-muted)]">Crear una nueva versión del resumen mensual.</span></button></div></details>
 
       <details id="technical-data" className="mt-7 max-w-5xl border-t border-[var(--n3-line)] pt-4">
-        <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Operación técnica de datos</summary>
+        <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Datos y cargas</summary>
         <div className="mt-4 space-y-5">
           <div className="divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
-            {currentRuns.map((run) => <div key={run.id} className="grid gap-2 py-3 text-xs sm:grid-cols-[minmax(0,1fr)_100px_150px] sm:items-center"><span className="text-sm">{run.source_name}</span><span className="text-[var(--n3-text-muted)]">{run.status}</span><span className="text-[var(--n3-text-muted)]">{run.rows_inserted}/{run.rows_received} incorporadas{run.rows_rejected ? ` · ${run.rows_rejected} rechazadas` : ''}</span></div>)}
+            {currentRuns.map((run) => <div key={run.id} className="grid gap-2 py-3 text-xs sm:grid-cols-[minmax(0,1fr)_100px_150px] sm:items-center"><span className="text-sm">{run.source_name}</span><span className="text-[var(--n3-text-muted)]">{statusLabel(run.status)}</span><span className="text-[var(--n3-text-muted)]">{run.rows_inserted}/{run.rows_received} incorporadas{run.rows_rejected ? ` · ${run.rows_rejected} rechazadas` : ''}</span></div>)}
             {!currentRuns.length ? <div className="py-6 text-sm text-[var(--n3-text-muted)]">Sin cargas para este período.</div> : null}
           </div>
           <button onClick={() => setAdvancedOpen((value) => !value)} className="min-h-11 text-xs font-medium text-[var(--n3-teal-soft)]">{advancedOpen ? 'Cerrar carga avanzada' : 'Carga avanzada'}</button>
@@ -167,12 +179,15 @@ export default function ManagementOperationsPage() {
         </div>
       </details>
 
-      <DataStatusBar
-        cutoff={currentRuns[0]?.created_at ? new Date(currentRuns[0].created_at).toLocaleString('es-CL') : '—'}
-        coverage={currentRuns.length ? `${inserted} filas incorporadas · ${currentRuns.length} carga${currentRuns.length === 1 ? '' : 's'}` : 'Sin evidencia cargada para el período'}
-        issues={currentRuns.length === 0 ? 1 : rejected}
-        status={currentRuns.length === 0 ? 'blocked' : rejected > 0 ? 'partial' : 'ready'}
-      />
+      <details className="mt-7 max-w-5xl border-t border-[var(--n3-line)] pt-4">
+        <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver calidad de datos</summary>
+        <DataStatusBar
+          cutoff={latestUpdate}
+          coverage={currentRuns.length ? `${inserted} filas incorporadas · ${currentRuns.length} carga${currentRuns.length === 1 ? '' : 's'}` : 'Sin evidencia cargada para el período'}
+          issues={currentRuns.length === 0 ? 1 : rejected}
+          status={currentRuns.length === 0 ? 'blocked' : rejected > 0 ? 'partial' : 'ready'}
+        />
+      </details>
     </WorkspaceShell>
   )
 }

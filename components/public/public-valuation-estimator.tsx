@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { ArrowRight, BarChart3, Loader2, MapPin, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Loader2, MapPin, ShieldCheck } from 'lucide-react'
 
 type CoverageOption = {
   neighborhood: string
@@ -30,7 +30,7 @@ type EstimateResponse = {
 }
 
 const uf = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 })
-const date = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })
+const dateTime = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' })
 
 export default function PublicValuationEstimator() {
   const [coverage, setCoverage] = useState<CoverageOption[]>([])
@@ -52,7 +52,8 @@ export default function PublicValuationEstimator() {
         if (!active) return
         const options = payload.coverage ?? []
         setCoverage(options)
-        setNeighborhood(options[0]?.neighborhood ?? '')
+        const preferred = options.find((option) => option.coverageLevel === 'sector') ?? options[0]
+        setNeighborhood(preferred?.neighborhood ?? '')
       })
       .catch((error: unknown) => {
         if (!active) return
@@ -106,12 +107,9 @@ export default function PublicValuationEstimator() {
 
   return (
     <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 flex items-start justify-between gap-4 border-b border-[var(--n3-line)] pb-5 sm:mb-7">
-        <div className="min-w-0">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Cotizador público · Vitacura</p>
-          <h2 className="text-2xl font-semibold leading-tight text-[var(--n3-text-light)] sm:text-3xl">Obtén un rango referencial</h2>
-        </div>
-        <BarChart3 className="mt-1 size-6 shrink-0 text-[var(--n3-teal-soft)]" aria-hidden="true" />
+      <div className="mb-6 border-b border-[var(--n3-line)] pb-5 sm:mb-7">
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">Casas · Vitacura</p>
+        <h2 className="text-2xl font-semibold leading-tight text-[var(--n3-text-light)] sm:text-3xl">Obtén un rango referencial</h2>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit} aria-busy={submitting}>
@@ -134,7 +132,7 @@ export default function PublicValuationEstimator() {
               {loadingCoverage && <option value="">Cargando cobertura…</option>}
               {!loadingCoverage && coverage.length === 0 && <option value="">Cobertura no disponible</option>}
               {sectorCoverage.length ? (
-                <optgroup label="Estimación con muestra sectorial">
+                <optgroup label="Con datos suficientes del sector">
                   {sectorCoverage.map((option) => (
                     <option key={option.neighborhood} value={option.neighborhood}>
                       {option.neighborhood}
@@ -143,7 +141,7 @@ export default function PublicValuationEstimator() {
                 </optgroup>
               ) : null}
               {vitacuraCoverage.length ? (
-                <optgroup label="Referencia general de Vitacura">
+                <optgroup label="Referencia de Vitacura">
                   {vitacuraCoverage.map((option) => (
                     <option key={option.neighborhood} value={option.neighborhood}>
                       {option.neighborhood}
@@ -155,8 +153,8 @@ export default function PublicValuationEstimator() {
             {selectedCoverage ? (
               <span className="block text-xs leading-5 text-[var(--n3-text-muted)]">
                 {selectedCoverage.coverageLevel === 'sector'
-                  ? `${selectedCoverage.sampleCount} avisos utilizables en el sector: la estimación será sectorial.`
-                  : `${selectedCoverage.sampleCount} avisos utilizables en el sector: se usará una referencia general de Vitacura sin bajar el mínimo de 5 observaciones.`}
+                  ? `${selectedCoverage.sampleCount} avisos del sector disponibles para estimar.`
+                  : `${selectedCoverage.sampleCount} avisos del sector. El rango usará la referencia general de Vitacura.`}
               </span>
             ) : null}
           </label>
@@ -239,15 +237,18 @@ export default function PublicValuationEstimator() {
             <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--n3-teal-soft)]">
               {result.coverageLevel === 'sector' ? `Estimación sectorial · ${result.referenceArea}` : 'Referencia general · Vitacura'}
             </p>
-            <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <p className="mt-3 text-xs text-[var(--n3-text-muted)]">Rango referencial</p>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <strong className="text-4xl font-semibold tracking-tight text-[var(--n3-text-light)] sm:text-5xl">
-                {uf.format(result.estimateUf)}
+                {uf.format(result.lowUf)}–{uf.format(result.highUf)}
               </strong>
               <span className="text-xl text-[var(--n3-text-muted)]">UF</span>
             </div>
-            <p className="mt-3 text-sm text-[var(--n3-text-muted)]">
-              Rango de mercado: <span className="text-[var(--n3-text-light)]">{uf.format(result.lowUf)}–{uf.format(result.highUf)} UF</span>
-            </p>
+            {result.newestObservation ? (
+              <p className="mt-3 text-xs text-[var(--n3-text-muted)]">
+                Actualizado {dateTime.format(new Date(result.newestObservation))}
+              </p>
+            ) : null}
 
             {result.coverageLevel === 'vitacura' ? (
               <div className="mt-5 border-l-2 border-[var(--n3-teal-soft)] bg-[#080d0d] px-4 py-3 text-xs leading-5 text-[var(--n3-text-muted)]">
@@ -255,33 +256,30 @@ export default function PublicValuationEstimator() {
               </div>
             ) : null}
 
-            <div className="mt-6 grid gap-px bg-[var(--n3-line)] min-[420px]:grid-cols-2">
-              <div className="bg-[var(--n3-deep)] p-4">
-                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Muestra usada</span>
-                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.sampleCount}</strong>
+            <details className="mt-6 border-t border-[var(--n3-line)] pt-4">
+              <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver detalle del cálculo</summary>
+              <div className="mt-2 grid gap-px bg-[var(--n3-line)] min-[420px]:grid-cols-2">
+                <div className="bg-[var(--n3-deep)] p-4">
+                  <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Referencia central</span>
+                  <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{uf.format(result.estimateUf)} UF</strong>
+                </div>
+                <div className="bg-[var(--n3-deep)] p-4">
+                  <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Muestra usada</span>
+                  <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.sampleCount}</strong>
+                </div>
+                <div className="bg-[var(--n3-deep)] p-4">
+                  <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana publicada</span>
+                  <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.medianUfM2.toFixed(1)} UF/m² construido</strong>
+                </div>
+                <div className="bg-[var(--n3-deep)] p-4">
+                  <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Cobertura</span>
+                  <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.referenceArea} · {result.marketSampleCount} avisos</strong>
+                </div>
               </div>
-              <div className="bg-[var(--n3-deep)] p-4">
-                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Mediana oferta</span>
-                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.medianUfM2.toFixed(1)} UF/m² construido</strong>
-              </div>
-              <div className="bg-[var(--n3-deep)] p-4">
-                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base territorial</span>
-                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.referenceArea} · {result.marketSampleCount}</strong>
-              </div>
-              <div className="bg-[var(--n3-deep)] p-4">
-                <span className="block text-[11px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Evidencia del sector</span>
-                <strong className="mt-1 block text-lg text-[var(--n3-text-light)]">{result.sectorSampleCount} avisos</strong>
-              </div>
-            </div>
-
-            {result.newestObservation && (
-              <p className="mt-4 text-xs text-[var(--n3-text-muted)]">
-                Observación más reciente de la muestra: {date.format(new Date(result.newestObservation))}.
-              </p>
-            )}
+            </details>
 
             <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">
-              Estimación automática referencial basada en publicaciones activas de oferta territorialmente resueltas. No constituye una tasación ni reemplaza la valorización profesional de Property Partners.
+              Estimación referencial basada en oferta activa. No constituye una tasación ni reemplaza la valorización profesional de Property Partners.
             </p>
 
             <a

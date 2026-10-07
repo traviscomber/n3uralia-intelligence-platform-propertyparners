@@ -106,6 +106,71 @@ const signed = (value: unknown, digits = 1) => {
   return `${numeric > 0 ? '+' : ''}${numeric.toLocaleString('es-CL', { maximumFractionDigits: digits })}%`
 }
 
+const reportTypeLabel = (value: string) => {
+  const labels: Record<string, string> = {
+    monthly: 'Informe mensual',
+    management: 'Informe de gestión',
+    executive: 'Informe ejecutivo',
+    board: 'Informe de Directorio',
+  }
+  return labels[value] ?? value.replaceAll('_', ' ')
+}
+
+const statusLabel = (value: string) => {
+  const labels: Record<string, string> = {
+    draft: 'Borrador',
+    review: 'En revisión',
+    approved: 'Aprobado',
+    issued: 'Emitido',
+    sent: 'Enviado',
+    failed: 'Con error',
+  }
+  return labels[value] ?? value.replaceAll('_', ' ')
+}
+
+const dateLabel = (value: string) => {
+  const parsed = new Date(`${value.slice(0, 10)}T12:00:00`)
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('es-CL')
+}
+
+const entityTypeLabel = (value: string | undefined) => {
+  const labels: Record<string, string> = {
+    company: 'Compañía',
+    branch: 'Oficina',
+    office: 'Oficina',
+    partner: 'Partner',
+    seller: 'Partner',
+  }
+  return value ? (labels[value] ?? value.replaceAll('_', ' ')) : 'n/d'
+}
+
+const qualityLabel = (value: string | undefined) => {
+  const labels: Record<string, string> = {
+    verified: 'Verificado',
+    valid: 'Verificado',
+    approved: 'Aprobado',
+    partial: 'Parcial',
+    provisional: 'Provisional',
+    stale: 'Desactualizado',
+    rejected: 'Rechazado',
+    missing: 'Sin dato',
+  }
+  return value ? (labels[value] ?? value.replaceAll('_', ' ')) : 'Sin dato'
+}
+
+const severityLabel = (value: string) => {
+  const labels: Record<string, string> = {
+    info: 'Información',
+    warning: 'Atención',
+    critical: 'Crítica',
+    high: 'Alta',
+    medium: 'Media',
+    low: 'Baja',
+  }
+  return labels[value] ?? value.replaceAll('_', ' ')
+}
+
+
 export default function PrintableManagementReportPage() {
   const params = useParams<{ id: string }>()
   const [report, setReport] = useState<Report | null>(null)
@@ -175,8 +240,8 @@ export default function PrintableManagementReportPage() {
     <main className="mx-auto max-w-6xl bg-white p-8 text-black print:max-w-none print:p-0">
       <div className="mb-8 flex items-start justify-between gap-6 border-b border-black pb-5 print:hidden">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em]">Módulo III · Reporte contractual</p>
-          <h1 className="mt-2 text-3xl font-semibold">{report.report_type}</h1>
+          <p className="text-xs uppercase tracking-[0.18em]">Gestión mensual</p>
+          <h1 className="mt-2 text-3xl font-semibold">{reportTypeLabel(report.report_type)}</h1>
         </div>
         <div className="flex gap-2">
           <a href={`/api/management/reports/${report.id}/artifact`} className="bg-black px-4 py-2 text-sm text-white">Descargar PDF</a>
@@ -186,10 +251,10 @@ export default function PrintableManagementReportPage() {
 
       <header className="mb-8 border-b-2 border-black pb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7332b]">Property Partners</p>
-        <h1 className="mt-3 font-serif text-5xl">Reporte {report.report_type}</h1>
+        <h1 className="mt-3 font-serif text-5xl">{reportTypeLabel(report.report_type)}</h1>
         <div className="mt-5 grid gap-2 text-sm sm:grid-cols-3">
-          <p><strong>Período:</strong> {report.period_start} — {report.period_end}</p>
-          <p><strong>Estado:</strong> {report.status}</p>
+          <p><strong>Período:</strong> {dateLabel(report.period_start)} — {dateLabel(report.period_end)}</p>
+          <p><strong>Estado:</strong> {statusLabel(report.status)}</p>
           <p><strong>Generado:</strong> {new Date(report.generated_at).toLocaleString('es-CL')}</p>
         </div>
       </header>
@@ -209,50 +274,50 @@ export default function PrintableManagementReportPage() {
             <p className="mt-2 text-xs text-neutral-400">Volumen acreditado: {format(creditedUf, 0)} UF</p>
           </div>
           <div className="border border-black p-5">
-            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Vs. meta documentada</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Vs. meta</p>
             <p className="mt-3 font-serif text-4xl">{salesTarget?.attainmentPct == null ? 'n/d' : `${format(salesTarget.attainmentPct)}%`}</p>
             <p className="mt-2 text-xs text-neutral-600">{format(salesTarget?.actual)} / {format(salesTarget?.target)} cierres</p>
-            {salesTarget?.target != null && !salesTarget.officialForScoring ? <p className="mt-2 text-xs font-medium text-[#a62721]">Referencia documental · no scoring oficial</p> : null}
+            {salesTarget?.target != null && !salesTarget.officialForScoring ? <p className="mt-2 text-xs font-medium text-[#a62721]">Referencia informativa · aún no aprobada para evaluación</p> : null}
           </div>
           <div className="border border-black p-5">
-            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">MoM · cierres acreditados</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Vs. mes anterior · cierres</p>
             <p className="mt-3 font-serif text-4xl">{comparisons?.mom?.status === 'exact' ? signed(momDelta) : 'n/d'}</p>
-            <p className="mt-2 text-xs text-neutral-600">{comparisons?.mom?.status === 'exact' ? `${format(momClosures?.previous)} → ${format(momClosures?.current)} cierres vs ${comparisons.mom.previousPeriod}` : 'Sin mes anterior canónico comparable'}</p>
+            <p className="mt-2 text-xs text-neutral-600">{comparisons?.mom?.status === 'exact' ? `${format(momClosures?.previous)} → ${format(momClosures?.current)} cierres vs ${comparisons.mom.previousPeriod}` : 'Sin mes anterior comparable'}</p>
           </div>
           <div className="border border-black p-5">
-            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Acumulado YTD</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Acumulado del año</p>
             <p className="mt-3 font-serif text-4xl">{ytd?.attainmentPct == null ? 'n/d' : `${format(ytd.attainmentPct)}%`}</p>
             <p className="mt-2 text-xs text-neutral-600">{format(ytd?.closures)} / {format(ytd?.target)} cierres</p>
           </div>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
           <div className="border-l-4 border-[#d7332b] bg-neutral-100 px-4 py-4 text-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">YoY mensual · operación corporativa</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Vs. mismo mes del año anterior</p>
             {comparisons?.yoy?.status === 'exact_operational'
               ? <div className="mt-2">
                   <p className="text-2xl font-semibold">{signed(yoyClosures?.delta?.value)} <span className="text-sm font-normal text-neutral-500">cierres</span></p>
                   <p className="mt-1 text-neutral-700">{format(yoyClosures?.previous)} → {format(yoyClosures?.current)} vs {comparisons.yoy.period}</p>
                   <p className="mt-1 text-neutral-600">{signed(yoySalesUf?.delta?.value)} UF · {format(yoySalesUf?.previous,0)} → {format(yoySalesUf?.current,0)} UF</p>
-                  <p className="mt-2 text-xs text-neutral-500">Comparación operacional. El crédito de gestión 2025 no existe como dimensión histórica equivalente.</p>
+                  <p className="mt-2 text-xs text-neutral-500">La comparación usa cierres. El crédito de gestión 2025 no tiene un equivalente histórico.</p>
                 </div>
-              : <p className="mt-2 text-neutral-600">Sin período comparable canonicalizado. No se infiere YoY desde agregados incompatibles.</p>}
+              : <p className="mt-2 text-neutral-600">Sin período comparable disponible. No se infiere una variación desde datos no equivalentes.</p>}
           </div>
           <div className="border-l-4 border-black bg-neutral-100 px-4 py-4 text-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">YoY acumulado · operación corporativa</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Acumulado vs. año anterior</p>
             {yoyYtd?.status === 'exact_operational'
               ? <div className="mt-2">
-                  <p className="text-2xl font-semibold">{signed(yoyYtd.closures?.delta?.value)} <span className="text-sm font-normal text-neutral-500">cierres YTD</span></p>
+                  <p className="text-2xl font-semibold">{signed(yoyYtd.closures?.delta?.value)} <span className="text-sm font-normal text-neutral-500">cierres acumulados</span></p>
                   <p className="mt-1 text-neutral-700">{format(yoyYtd.closures?.previous)} → {format(yoyYtd.closures?.current)} cierres</p>
                   <p className="mt-1 text-neutral-600">{signed(yoyYtd.salesUf?.delta?.value)} UF · {format(yoyYtd.salesUf?.previous,0)} → {format(yoyYtd.salesUf?.current,0)} UF</p>
                   <p className="mt-2 text-xs text-neutral-500">Mismo corte acumulado del año anterior.</p>
                 </div>
-              : <p className="mt-2 text-neutral-600">Sin acumulado comparable canonicalizado para el período.</p>}
+              : <p className="mt-2 text-neutral-600">Sin acumulado comparable disponible para el período.</p>}
           </div>
         </div>
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold">Resumen operacional</h2>
+        <h2 className="mb-4 text-xl font-semibold">Resumen del período</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="border border-black p-4"><p className="text-xs uppercase">Leads nuevos</p><p className="mt-2 text-3xl font-semibold">{format(company.leadsNuevos, 0)}</p></div>
           <div className="border border-black p-4"><p className="text-xs uppercase">Visitas agendadas</p><p className="mt-2 text-3xl font-semibold">{format(company.visitasAgendadas, 0)}</p></div>
@@ -262,7 +327,7 @@ export default function PrintableManagementReportPage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold">Resultados por entidad</h2>
+        <h2 className="mb-4 text-xl font-semibold">Resultados por ámbito</h2>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead><tr>{['Entidad', 'Tipo', 'Métrica', 'Valor', 'Fuente', 'Calidad'].map((item) => <th key={item} className="border border-black p-2 text-left">{item}</th>)}</tr></thead>
@@ -270,11 +335,11 @@ export default function PrintableManagementReportPage() {
               {entities.flatMap((entity) => (entity.metrics ?? []).map((metric) => (
                 <tr key={`${entity.id}-${metric.code ?? metric.label ?? 'metric'}`}>
                   <td className="border border-black p-2">{entity.name}</td>
-                  <td className="border border-black p-2">{entity.entityType ?? entity.entity_type ?? 'n/d'}</td>
+                  <td className="border border-black p-2">{entityTypeLabel(entity.entityType ?? entity.entity_type)}</td>
                   <td className="border border-black p-2">{metric.label ?? metric.code ?? 'n/d'}</td>
                   <td className="border border-black p-2">{metric.value ?? 'n/d'}</td>
                   <td className="border border-black p-2">{metric.sourceName ?? metric.source_name ?? 'Pendiente'}</td>
-                  <td className="border border-black p-2">{metric.qualityStatus ?? metric.quality_status ?? 'sin datos'}</td>
+                  <td className="border border-black p-2">{qualityLabel(metric.qualityStatus ?? metric.quality_status)}</td>
                 </tr>
               )))}
             </tbody>
@@ -288,19 +353,18 @@ export default function PrintableManagementReportPage() {
           <div className="space-y-3">
             {alerts.map((alert) => (
               <article key={alert.id} className="border border-black p-4">
-                <div className="flex justify-between gap-4"><strong>{alert.title}</strong><span className="uppercase">{alert.severity}</span></div>
+                <div className="flex justify-between gap-4"><strong>{alert.title}</strong><span>{severityLabel(alert.severity)}</span></div>
                 <p className="mt-2 text-sm">{alert.detail}</p>
               </article>
             ))}
           </div>
         ) : (
-          <p className="border border-black p-4 text-sm">No hay alertas abiertas registradas para este snapshot.</p>
+          <p className="border border-black p-4 text-sm">No hay alertas abiertas registradas para este período.</p>
         )}
       </section>
 
       <footer className="mt-12 border-t border-black pt-4 text-xs">
-        <p>Documento generado desde evidencia canónica. Las metas documentadas pueden mostrarse como comparación informativa aunque permanezcan fuera del scoring oficial hasta su aprobación formal.</p>
-        <p className="mt-2">Identificador: {report.id}</p>
+        <p>Documento generado desde fuentes aprobadas. Las metas aún no aprobadas para evaluación se muestran sólo como referencia informativa.</p>
       </footer>
     </main>
   )

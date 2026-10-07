@@ -8,10 +8,6 @@ import {
   portalListingIdFromUrl,
 } from '@/lib/portal-inmobiliario-collector'
 import {
-  collectPortalListingDetailsViaFirecrawl,
-  discoverPortalVitacuraViaFirecrawl,
-} from '@/lib/firecrawl-portal-collector'
-import {
   collectPortalListingDetailsViaBrightData,
   discoverPortalVitacuraViaBrightData,
 } from '@/lib/brightdata-portal-collector'
@@ -42,19 +38,29 @@ const CHILE_TIME_ZONE = 'America/Santiago'
 function chileClock(now = new Date()) {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: CHILE_TIME_ZONE,
+    weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   }).formatToParts(now)
   return {
+    weekday: parts.find((part) => part.type === 'weekday')?.value ?? '',
     hour: Number(parts.find((part) => part.type === 'hour')?.value ?? '-1'),
     minute: Number(parts.find((part) => part.type === 'minute')?.value ?? '-1'),
   }
 }
 
+function scheduledInventoryDataset(now = new Date()): PortalDatasetKind | null {
+  const local = chileClock(now)
+  if (local.hour !== 8 || local.minute !== 0) return null
+  if (local.weekday === 'Sun') return 'portal_houses'
+  if (local.weekday === 'Wed') return 'portal_apartments'
+  return null
+}
+
 function scheduledWindow() {
   const local = chileClock()
-  return local.hour === 7 && local.minute === 30
+  return (local.hour === 7 && local.minute === 30) || Boolean(scheduledInventoryDataset())
 }
 
 
@@ -72,7 +78,7 @@ function getServiceClient() {
   })
 }
 
-type CollectorProvider = 'brightdata' | 'firecrawl' | 'browser'
+type CollectorProvider = 'brightdata' | 'browser'
 
 async function discoverPortalWithFallback(args: {
   datasetKind: PortalDatasetKind
@@ -83,20 +89,8 @@ async function discoverPortalWithFallback(args: {
 }) {
   const failures: Array<{ provider: CollectorProvider; error: string }> = []
 
-  // Full-universe discovery is materially faster and cheaper through Firecrawl batch scraping.
-  // Bright Data remains the primary detail enricher and the discovery fallback.
-  if (process.env.FIRECRAWL_API_KEY) {
-    try {
-      return {
-        result: await discoverPortalVitacuraViaFirecrawl(args),
-        provider: 'firecrawl' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
+  // Portal acquisition prefers Bright Data.
+  // The in-house browser collector is the only bounded fallback.
   if (process.env.BRIGHTDATA_API_KEY) {
     try {
       return {
@@ -135,21 +129,6 @@ async function collectPortalDetailsWithFallback(args: {
       }
     } catch (error) {
       failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
-  if (process.env.FIRECRAWL_API_KEY) {
-    try {
-      return {
-        result: await collectPortalListingDetailsViaFirecrawl({
-          datasetKind: args.datasetKind,
-          listingUrls: args.listingUrls,
-        }),
-        provider: 'firecrawl' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -718,25 +697,31 @@ export async function GET(request: Request) {
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
+  const maintenance = url.searchParams.get('maintenance') === '1'
   const brightDataOnly = url.searchParams.get('provider') === 'brightdata'
   const skipPostprocess = url.searchParams.get('postprocess') === '0'
   const requestedDataset = url.searchParams.get('dataset')
   if (requestedDataset && !DATASETS.includes(requestedDataset as PortalDatasetKind)) {
     return NextResponse.json({ error: 'Dataset no soportado.' }, { status: 400 })
   }
+  const scheduledDataset = !requestedDataset && !force && !maintenance && !detailsOnly
+    ? scheduledInventoryDataset()
+    : null
   const selectedDatasets: PortalDatasetKind[] = requestedDataset
     ? [requestedDataset as PortalDatasetKind]
-    : DATASETS
+    : scheduledDataset
+      ? [scheduledDataset]
+      : DATASETS
   if (force) {
     const access = await requireExecutiveAccess()
     if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   } else {
     if (!authorized(request)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    if (!detailsOnly && !scheduledWindow()) {
+    if (!detailsOnly && !maintenance && !scheduledWindow()) {
       return NextResponse.json({
         ok: true,
         skipped: true,
-        reason: 'outside_0730_america_santiago',
+        reason: 'outside_market_refresh_window_america_santiago',
         timeZone: CHILE_TIME_ZONE,
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
@@ -1028,16 +1013,8 @@ export async function GET(request: Request) {
       ok,
       fullSnapshot: completeInventories === selectedDatasets.length,
       collectorPreference: {
-        inventory: process.env.FIRECRAWL_API_KEY
-          ? 'firecrawl'
-          : process.env.BRIGHTDATA_API_KEY
-            ? 'brightdata'
-            : 'browser',
-        details: process.env.BRIGHTDATA_API_KEY
-          ? 'brightdata'
-          : process.env.FIRECRAWL_API_KEY
-            ? 'firecrawl'
-            : 'browser',
+        inventory: process.env.BRIGHTDATA_API_KEY ? 'brightdata' : 'browser',
+        details: process.env.BRIGHTDATA_API_KEY ? 'brightdata' : 'browser',
       },
       inventoryPipeline: 'portal_inventory_discovery_v1',
       detailPipeline: 'unit_portal_listing_v2',
