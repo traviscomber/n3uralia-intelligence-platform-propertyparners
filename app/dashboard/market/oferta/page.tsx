@@ -3,7 +3,7 @@ import { ExternalLink } from 'lucide-react'
 import { requireAnyPageCapability } from '@/lib/access-guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
-import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 
 function number(value: number | null) {
   return value == null ? '—' : value.toLocaleString('es-CL')
@@ -132,41 +132,29 @@ export default async function MarketOfferPage() {
         actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
       />
 
-      <section className="mt-6 border-y border-[var(--n3-line)] py-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Publicaciones únicas vigentes</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{number(error ? null : total)}</p>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-              Snapshot completo de presencia en Portal Inmobiliario para casas usadas en venta en Vitacura. El detalle de cada ficha se enriquece por lotes sin alterar este universo.
-            </p>
-          </div>
-          <div className="text-right text-xs text-[var(--n3-text-muted)]">
-            <p>Inventario completo verificado</p>
-            <p className="mt-1 text-[var(--n3-text-light)]">{observedAt ? formatPropertyPartnersDateTime(observedAt) : '—'}</p>
-          </div>
-        </div>
-
-        {total != null && total > inventory.length ? (
-          <p className="mt-4 text-[11px] text-[var(--n3-text-muted)]">
-            Mostrando las primeras {inventory.length.toLocaleString('es-CL')} de {total.toLocaleString('es-CL')} publicaciones. El conteo superior corresponde al snapshot completo, no al límite visual de esta página.
-          </p>
-        ) : null}
-      </section>
+      <MetricStrip items={[
+        {
+          label: 'Inventario verificado',
+          value: number(error ? null : total),
+          detail: observedAt ? formatPropertyPartnersDateTime(observedAt) : 'Sin inventario completo',
+        },
+        {
+          label: 'Nuevas hoy',
+          value: number(latestDeltaNewCandidates),
+          detail: latestDeltaAt ? `Actualizado ${formatPropertyPartnersDateTime(latestDeltaAt)}` : 'Sin actualización diaria',
+        },
+      ]} />
 
       {!error && latestDeltaAt ? (
         <section className="mt-6 border-y border-[var(--n3-line)] py-5">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Actualización automática</p>
-              <h2 className="mt-1 text-lg font-medium text-[var(--n3-teal-soft)]">Actualizado {formatPropertyPartnersDateTime(latestDeltaAt)}</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-                Incluye las publicaciones detectadas y actualizadas en la ejecución automática más reciente. El inventario completo verificado se mantiene como referencia para confirmar bajas.
-              </p>
+              <h2 className="text-sm font-medium text-[var(--n3-text-light)]">Cambios de hoy</h2>
+              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Actualizado {formatPropertyPartnersDateTime(latestDeltaAt)}</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-semibold tabular-nums">{number(latestDeltaNewCandidates)}</p>
-              <p className="text-[11px] text-[var(--n3-text-muted)]">nuevas hoy</p>
+              <p className="text-[11px] text-[var(--n3-text-muted)]">nuevas</p>
             </div>
           </div>
 
@@ -210,7 +198,16 @@ export default async function MarketOfferPage() {
           El snapshot completo no contiene publicaciones vigentes.
         </div>
       ) : (
-        <section className="mt-6">
+        <details className="mt-7 border-t border-[var(--n3-line)] pt-4">
+          <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
+            Ver inventario completo ({number(total)})
+          </summary>
+          {total != null && total > inventory.length ? (
+            <p className="mb-4 text-[11px] text-[var(--n3-text-muted)]">
+              Mostrando {inventory.length.toLocaleString('es-CL')} de {total.toLocaleString('es-CL')} publicaciones.
+            </p>
+          ) : null}
+          <section>
           <div className="grid border-b border-[var(--n3-line)] pb-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)] md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_140px_160px_32px]">
             <span>Publicación</span>
             <span>Dirección</span>
@@ -247,7 +244,8 @@ export default async function MarketOfferPage() {
               )
             })}
           </div>
-        </section>
+          </section>
+        </details>
       )}
 
       <div className="mt-6">
