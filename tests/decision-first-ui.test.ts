@@ -4,6 +4,7 @@ import { test } from 'node:test'
 
 test('core product surfaces keep decision content first and technical detail disclosed', () => {
   const ceo = readFileSync('components/management/ceo-dashboard-command.tsx', 'utf8')
+  const august = readFileSync('components/management/august-board-reading.tsx', 'utf8')
   const market = readFileSync('app/dashboard/market/page.tsx', 'utf8')
   const valuations = readFileSync('app/dashboard/valuations/page.tsx', 'utf8')
   const management = readFileSync('app/dashboard/control/operations/page.tsx', 'utf8')
@@ -16,6 +17,9 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(ceo, /Requiere atención/)
   assert.match(ceo, /Ver todas las oficinas/)
   assert.match(ceo, /Ver calidad de datos/)
+
+  assert.doesNotMatch(august, /SYS \/ CONTROL DE GESTIÓN/)
+  assert.match(august, /Ver análisis de agosto/)
 
   assert.match(market, /Inventario verificado/)
   assert.match(market, /Nuevas hoy/)
