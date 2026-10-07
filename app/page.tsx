@@ -44,7 +44,7 @@ export default function HomePage() {
               Conoce un rango referencial para tu casa.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-[var(--n3-text-muted)] sm:mt-7 sm:text-lg">
-              Rango estimado con oferta activa de casas en Vitacura. Sin registro ni datos personales.
+              Rango estimado con oferta activa de casas en Vitacura.
             </p>
 
           </div>
