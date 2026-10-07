@@ -32,6 +32,7 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(reports, /Informe actual/)
   assert.match(reports, /Ver trazabilidad/)
   assert.match(reports, /Ver historial/)
+  assert.match(reports, /Ver calidad de datos/)
 
   assert.match(properties, /Requiere decisión/)
   assert.match(properties, /Ver calidad de datos/)
