@@ -22,6 +22,12 @@ test('Portal automatic refresh is Firecrawl-free', () => {
   assert.doesNotMatch(delta,/firecrawl/i)
   assert.match(delta,/brightdata-portal-collector/)
   assert.match(vercel,/\/api\/cron\/market-delta/)
+  assert.match(vercel,/\/api\/cron\/market-refresh/)
+  assert.match(vercel,/0 11,12 \* \* 0,3/)
+  assert.match(refresh,/scheduledInventoryDataset/)
+  assert.match(refresh,/local\.weekday === 'Sun'.*portal_houses/s)
+  assert.match(refresh,/local\.weekday === 'Wed'.*portal_apartments/s)
+  assert.match(refresh,/maintenance/)
   assert.equal(existsSync('lib/firecrawl-portal-collector.ts'), false)
 })
 
