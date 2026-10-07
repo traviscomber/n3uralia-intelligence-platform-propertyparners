@@ -222,7 +222,6 @@ export default async function MarketOfferPage() {
                 <div key={item.sourceListingId} className="grid gap-2 py-4 text-sm md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_140px_160px_32px] md:items-center">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[var(--n3-text-light)]">{detail?.title || `Publicación Portal ${item.sourceListingId}`}</p>
-                    <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">ID {item.sourceListingId}</p>
                   </div>
                   <p className="min-w-0 truncate text-[var(--n3-text-muted)]">{detail?.raw_address || 'Dirección no disponible'}</p>
                   <p className="tabular-nums">{moneyUf(detail?.price_uf == null ? null : Number(detail.price_uf))}</p>
