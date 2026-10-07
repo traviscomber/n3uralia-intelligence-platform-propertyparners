@@ -227,7 +227,7 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(ceoReportCron, /getCronAuthorizationFailure/)
   assert.match(ceoReportCron, /generateLatestCeoIntelligenceDraft/)
   assert.match(vercel, /\/api\/cron\/ceo-intelligence-draft/)
-  assert.match(vercel, /15 12 2 \* \*/)
+  assert.match(vercel, /15 13 \* \* \*/)
 
   assert.match(reportDelivery, /Generación y entrega de informes/)
   assert.match(reportDelivery, /Entrega por correo/)
