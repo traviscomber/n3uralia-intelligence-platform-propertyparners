@@ -28,6 +28,7 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(ceo, /Requiere atención/)
   assert.match(ceo, /Ver todas las oficinas/)
   assert.match(ceo, /Ver calidad de datos/)
+  assert.doesNotMatch(ceo, /Cargando datos canónicos/)
 
   assert.doesNotMatch(august, /SYS \/ CONTROL DE GESTIÓN/)
   assert.match(august, /Ver análisis de agosto/)
@@ -59,6 +60,8 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(reports, /Ver trazabilidad/)
   assert.match(reports, /Ver historial/)
   assert.match(reports, /Ver calidad de datos/)
+  assert.doesNotMatch(reports, /informes canónicos falló/)
+  assert.doesNotMatch(reports, /informe canónico listo/)
 
   assert.match(properties, /Requiere decisión/)
   assert.match(properties, /Ver calidad de datos/)
@@ -90,6 +93,7 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(partner, /Mi desempeño/)
   assert.match(partner, /Ver detalle/)
   assert.doesNotMatch(partner, /Corte canónico vigente/)
+  assert.doesNotMatch(partner, /Cargando datos canónicos/)
 
   assert.match(valuation, /title="Nueva valorización"/)
   assert.match(valuation, /Revisar estado/)
@@ -97,6 +101,9 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(valuation, /Referencia Champion v5/)
   assert.doesNotMatch(valuation, /Funcionalidad V2 habilitada para N3uralia/)
   assert.doesNotMatch(valuation, /property-partners-valuation-v2/)
+  assert.doesNotMatch(valuation, /Barrio canónico/)
+  assert.doesNotMatch(valuation, /Dato canónico/)
+  assert.doesNotMatch(valuation, /superficie canónica completa/)
 
   assert.doesNotMatch(sidebar, /Intelligence Platform/)
 
