@@ -144,21 +144,21 @@ export default async function MarketPage() {
     market.highConfidenceIdentityCandidates !== null && market.highConfidenceIdentityCandidates > 0 ? {
       label: 'Validar candidato fuerte de identidad',
       value: number(market.highConfidenceIdentityCandidates),
-      reason: 'Existe evidencia suficiente para proponer una vinculación, pero la identidad canónica aún requiere confirmación explícita.',
+      reason: 'Existe evidencia suficiente para proponer una vinculación, pero la identidad aún requiere confirmación explícita.',
       href: '/dashboard/market/identidades',
       critical: false,
     } : null,
     market.newLiveIdentityCases !== null && market.newLiveIdentityCases > 0 ? {
-      label: 'Resolver avisos live sin identidad previa',
+      label: 'Resolver avisos activos sin identidad',
       value: number(market.newLiveIdentityCases),
-      reason: 'Son avisos activos que todavía no pueden relacionarse con una propiedad canónica conocida.',
+      reason: 'Son avisos activos que todavía no pueden relacionarse con una propiedad conocida.',
       href: '/dashboard/market/identidades',
       critical: false,
     } : null,
     market.pendingUniqueTerritorySuggestions !== null && market.pendingUniqueTerritorySuggestions > 0 ? {
       label: 'Revisar territorio sugerido',
       value: number(market.pendingUniqueTerritorySuggestions),
-      reason: 'El resolver encontró una señal territorial única, pero el caso permanece abierto porque aún no cumple las condiciones automáticas de publicación.',
+      reason: 'El análisis encontró una señal territorial única, pero el caso permanece abierto hasta confirmar la evidencia.',
       href: '/dashboard/market/revisar-barrios',
       critical: false,
     } : null,
@@ -170,9 +170,9 @@ export default async function MarketPage() {
       critical: false,
     } : null,
     market.missingNeighborhoods !== null && market.missingNeighborhoods > 0 ? {
-      label: 'Completar barrios canónicos V1',
+      label: 'Completar barrios pendientes',
       value: number(market.missingNeighborhoods),
-      reason: 'Existen propiedades canónicas V1 sin barrio publicado y deben reconciliarse con evidencia territorial antes de usarlas en análisis por zona.',
+      reason: 'Existen propiedades sin barrio confirmado y deben revisarse con evidencia territorial antes de usarlas en análisis por zona.',
       href: '/dashboard/market/reconciliacion',
       critical: false,
     } : null,
@@ -343,7 +343,7 @@ export default async function MarketPage() {
           {authority ? <details className="mt-3 border-b border-[var(--n3-line)] pb-3">
             <summary className="flex min-h-10 cursor-pointer items-center justify-between gap-4 text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
               <span>Fuentes de información</span>
-              <span className="text-[10px] uppercase tracking-[0.12em]">Autoridad</span>
+              <span className="text-[10px] uppercase tracking-[0.12em]">Fuentes</span>
             </summary>
             <div className="mt-3 grid gap-5 text-xs leading-5 lg:grid-cols-3">
               <div>
@@ -366,7 +366,7 @@ export default async function MarketPage() {
               </div>
             </div>
           </details> : null}
-          {authorityResult.error ? <p className="mt-3 text-[11px] text-[#f0c96a]">No fue posible consultar el registro de fuentes canónicas; no se muestran cifras de autoridad.</p> : null}
+          {authorityResult.error ? <p className="mt-3 text-[11px] text-[#f0c96a]">No fue posible consultar el registro de fuentes; no se muestran cifras de respaldo.</p> : null}
         </section>
 
 
@@ -649,10 +649,10 @@ export default async function MarketPage() {
             <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Calidad de evidencia</h2>
             <div className="mt-2 grid border-y border-[var(--n3-line)] sm:grid-cols-2 xl:grid-cols-4">
               {[
-                ['Territorio V1 físico', percent(territorialCoverage), `${number((market.canonicalProperties ?? 0) - (market.missingNeighborhoods ?? 0))} de ${number(market.canonicalProperties)}`],
-                ['Territorio V1 lógico', percent(logicalTerritorialCoverage), `${number(market.logicalComponentsWithNeighborhood)} de ${number(market.logicalHouseComponents)}`],
-                ['Identidad live vinculada', percent(liveIdentityCoverage), `${number(market.liveLinkedHouses)} vinculadas · ${number(market.pendingMatches)} pendientes`],
-                ['Limpieza de universo', number(market.outOfScopeLegacyHouses), `${number(market.physicalHouseRows)} legacy → ${number(market.canonicalProperties)} V1 → ${number(market.logicalHouseComponents)} lógicas`],
+                ['Cobertura territorial', percent(territorialCoverage), `${number((market.canonicalProperties ?? 0) - (market.missingNeighborhoods ?? 0))} de ${number(market.canonicalProperties)}`],
+                ['Cobertura consolidada', percent(logicalTerritorialCoverage), `${number(market.logicalComponentsWithNeighborhood)} de ${number(market.logicalHouseComponents)}`],
+                ['Avisos vinculados', percent(liveIdentityCoverage), `${number(market.liveLinkedHouses)} vinculadas · ${number(market.pendingMatches)} pendientes`],
+                ['Registros fuera de alcance', number(market.outOfScopeLegacyHouses), `${number(market.physicalHouseRows)} registros de origen · ${number(market.logicalHouseComponents)} propiedades consolidadas`],
               ].map(([label, value, detail], index) => (
                 <div key={label} className={`py-4 ${index > 0 ? 'sm:border-l sm:border-[var(--n3-line)] sm:px-4' : 'pr-4'}`}>
                   <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{label}</p>
@@ -662,7 +662,7 @@ export default async function MarketPage() {
               ))}
             </div>
             <p className="mt-3 max-w-4xl text-xs leading-5 text-[var(--n3-text-muted)]">
-              Las filas fuera de Vitacura se conservan como evidencia legacy pero no participan en V1. Las relaciones de duplicado confirmadas forman una proyección lógica sin borrar registros. Las colisiones de identidad live siguen bloqueadas hasta revisión explícita.
+              Los registros fuera de Vitacura se conservan como evidencia pero no participan en el análisis vigente. Los duplicados confirmados se consolidan sin borrar registros. Las colisiones de identidad quedan bloqueadas hasta revisión.
             </p>
           </section>
 
@@ -670,13 +670,13 @@ export default async function MarketPage() {
             <section>
               <div className="border-b border-[var(--n3-line)] pb-2">
                 <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Portal Inmobiliario · casas</h2>
-                <p className="mt-1 text-xs text-[var(--n3-text-muted)]">El live corresponde a Vitacura. La referencia histórica disponible tiene alcance {houseReference.scope}; se conserva sólo como contexto y no como benchmark territorial equivalente.</p>
+                <p className="mt-1 text-xs text-[var(--n3-text-muted)]">La oferta actual corresponde a Vitacura. La referencia histórica disponible tiene alcance {houseReference.scope}; se conserva sólo como contexto y no como referencia territorial equivalente.</p>
               </div>
               <div className="grid gap-4 py-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Listings live Vitacura</p><p className="mt-1 text-lg font-semibold">{number(houseLive?.listingCount ?? null)}</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {number(houseReference.listingCount)}</p></div>
-                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Mediana UF live</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianPriceUf ?? null, 0)}</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {decimal(houseReference.medianPriceUf, 0)}</p></div>
-                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">UF/m² live</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianUfM2 ?? null, 1)}</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {decimal(houseReference.medianUfM2, 1)}</p></div>
-                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Superficie live</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianAreaM2 ?? null, 0)} m²</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {decimal(houseReference.medianAreaM2, 0)} m²</p></div>
+                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Avisos vigentes</p><p className="mt-1 text-lg font-semibold">{number(houseLive?.listingCount ?? null)}</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {number(houseReference.listingCount)}</p></div>
+                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Mediana publicada</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianPriceUf ?? null, 0)}</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {decimal(houseReference.medianPriceUf, 0)}</p></div>
+                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Mediana UF/m²</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianUfM2 ?? null, 1)}</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {decimal(houseReference.medianUfM2, 1)}</p></div>
+                <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Superficie mediana</p><p className="mt-1 text-lg font-semibold">{decimal(houseLive?.medianAreaM2 ?? null, 0)} m²</p><p className="text-[11px] text-[var(--n3-text-muted)]">Ref. {houseReference.scope}: {decimal(houseReference.medianAreaM2, 0)} m²</p></div>
               </div>
             </section>
           ) : null}
@@ -703,7 +703,7 @@ export default async function MarketPage() {
               <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Corte fuente</p><p className="mt-1 text-lg font-semibold">{shortDate(market.latestClientSaleSourcePeriodEnd)}</p></div>
               <div><p className="text-[10px] uppercase text-[var(--n3-text-muted)]">Archivos trazados</p><p className="mt-1 text-lg font-semibold">{number(market.clientSaleSignalSourceFiles)}</p></div>
             </div>
-            <p className="text-xs leading-5 text-[var(--n3-text-muted)]">Estas señales prueban que el CRM observó propiedades en estado Vendida durante el corte, pero no aportan fecha de cierre. Por diseño no alimentan ventas confirmadas, velocidad de venta ni absorción.</p>
+            <p className="text-xs leading-5 text-[var(--n3-text-muted)]">Estas señales muestran propiedades marcadas como Vendida, pero no incluyen fecha de cierre. Por eso no se usan como ventas confirmadas, velocidad de venta ni absorción.</p>
           </section>
 
           <section>
@@ -723,7 +723,7 @@ export default async function MarketPage() {
 
           <DataStatusBar
             cutoff={market.latestDeltaAt ? `Actualizado ${date(market.latestDeltaAt)}` : `Inventario ${date(market.latestObservedAt)}`}
-            coverage={`${number(market.liveLinkedHouses)} de ${number(market.liveHouseCount)} casas live vinculadas · ${number(market.logicalHouseComponents)} propiedades consolidadas V1 · ${number(market.outOfScopeLegacyHouses)} legacy fuera de alcance aisladas`}
+            coverage={`${number(market.liveLinkedHouses)} de ${number(market.liveHouseCount)} casas activas vinculadas · ${number(market.logicalHouseComponents)} propiedades consolidadas · ${number(market.outOfScopeLegacyHouses)} registros fuera de alcance`}
             issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (market.confirmedSales === null ? 1 : 0) + (territory.error ? 1 : 0) + (portalReference.error ? 1 : 0) + territoryExceptions + (market.identityCollisions ?? 0) + (market.duplicateComponents ?? 0)}
             status={dataStatus}
           />
