@@ -12,6 +12,10 @@ test('core product surfaces keep decision content first and technical detail dis
   const properties = readFileSync('app/dashboard/properties/page.tsx', 'utf8')
   const offer = readFileSync('app/dashboard/market/oferta/page.tsx', 'utf8')
   const pedro = readFileSync('components/intelligence/pedro-pablo-workspace-v2.tsx', 'utf8')
+  const director = readFileSync('components/management/director-dashboard-v3.tsx', 'utf8')
+  const partner = readFileSync('components/management/partner-performance-summary.tsx', 'utf8')
+  const valuation = readFileSync('app/dashboard/valuation/page.tsx', 'utf8')
+  const sidebar = readFileSync('components/layout/sidebar.tsx', 'utf8')
 
   assert.doesNotMatch(ceo, /Control Tower/)
   assert.match(ceo, /Requiere atención/)
@@ -46,6 +50,23 @@ test('core product surfaces keep decision content first and technical detail dis
 
   assert.match(pedro, /Decisiones con datos verificados/)
   assert.match(pedro, /Ver detalle/)
+
+  assert.match(director, /eyebrow="Hoy"/)
+  assert.match(director, /Ver seguimiento y análisis/)
+  assert.doesNotMatch(director, /01 · Pulso de la oficina/)
+
+  assert.match(partner, /Mi desempeño/)
+  assert.match(partner, /Ver detalle/)
+  assert.doesNotMatch(partner, /Corte canónico vigente/)
+
+  assert.match(valuation, /title="Nueva valorización"/)
+  assert.match(valuation, /Revisar estado/)
+  assert.match(valuation, /Referencia sugerida confirmada/)
+  assert.doesNotMatch(valuation, /Referencia Champion v5/)
+  assert.doesNotMatch(valuation, /Funcionalidad V2 habilitada para N3uralia/)
+  assert.doesNotMatch(valuation, /property-partners-valuation-v2/)
+
+  assert.doesNotMatch(sidebar, /Intelligence Platform/)
 })
 
 test('shared workspace metadata is sentence case and freshness is explicit', () => {
