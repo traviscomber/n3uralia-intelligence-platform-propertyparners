@@ -93,6 +93,22 @@ type ActionExecution = {
 
 type HistoryItem = { query: string; response: AssistantResponse }
 
+function evidenceSourceLabel(value:string){
+  if(value.includes('market_ingestion_runs') || value.includes('market_current_listings')) return value.includes('inventario completo') ? 'Portal Inmobiliario · inventario verificado' : 'Portal Inmobiliario · actualización diaria'
+  if(value.includes('management_tasks')) return 'Tareas autorizadas'
+  if(value.includes('valuation_cases')) return 'Valorizaciones autorizadas'
+  if(value.includes('valuation_comparables')) return 'Comparables autorizados'
+  if(value.includes('property_assignments') || value.includes('market_properties')) return 'Cartera autorizada'
+  if(value.includes('report_deliveries')) return 'Entregas de informes'
+  if(value.includes('client-response-pedro-pablo')) return 'Criterio Property Partners · Vitacura'
+  return value
+}
+
+function evidenceCutoffLabel(value:string){
+  const parsed=new Date(value)
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-CL')
+}
+
 const starters = [
   { label: 'Mercado hoy', prompt: '¿Qué cambió esta mañana en el mercado?' },
   { label: 'Prioridades', prompt: '¿Qué requiere mi atención hoy?' },
@@ -327,7 +343,7 @@ export function PedroPabloWorkspaceV2() {
 
         {history.length ? <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><History aria-hidden="true" size={14} /> Sesión actual</div><div className="mt-4 space-y-3">{history.slice().reverse().map((item, index) => <button key={`${item.query}-${index}`} type="button" onClick={() => { setResponse(item.response); setLastQuery(item.query); setActionPreview(null); setActionError(null); setActionSuccess(null) }} className="block w-full border-t border-[var(--n3-line)] pt-3 text-left first:border-t-0 first:pt-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"><div className="text-xs leading-5 text-[var(--n3-text-light)]">{item.query}</div><div className="mt-1 text-[10px] text-[var(--n3-text-muted)]">{item.response.title}</div></button>)}</div></div> : null}
 
-        <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Database aria-hidden="true" size={14} /> Evidencia</div>{response ? <div className="mt-4 space-y-4">{evidence.length ? evidence.map((item, index) => <div key={`${item.label}-${index}`} className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0"><div className="flex items-start justify-between gap-3"><div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div>{item.domain ? <span className="text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">{item.domain}</span> : null}</div><div className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{item.source}</div>{item.reference ? <div className="mt-1 text-[11px] leading-4 text-[var(--n3-text-muted)]">{item.reference}</div> : null}{item.cutoff ? <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-teal-soft)]">Corte {item.cutoff}</div> : null}</div>) : <div className="mt-4 text-sm text-[var(--n3-text-muted)]">Sin evidencia adicional disponible.</div>}</div> : <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La procedencia aparecerá junto a cada lectura evaluable.</p>}</div>
+        <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Database aria-hidden="true" size={14} /> Evidencia</div>{response ? <div className="mt-4 space-y-4">{evidence.length ? evidence.map((item, index) => <div key={`${item.label}-${index}`} className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0"><div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div><div className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{evidenceSourceLabel(item.source)}</div>{item.cutoff ? <div className="mt-1 text-[10px] text-[var(--n3-teal-soft)]">Actualizado {evidenceCutoffLabel(item.cutoff)}</div> : null}</div>) : <div className="mt-4 text-sm text-[var(--n3-text-muted)]">Sin evidencia adicional disponible.</div>}</div> : <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La procedencia aparecerá junto a cada lectura evaluable.</p>}</div>
 
         <div className="border border-[var(--n3-line)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Scale aria-hidden="true" size={14} /> Criterio del asistente</div><div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]"><div><span className="text-[var(--n3-text-light)]">Objetivo:</span> ayudar a decidir con evidencia autorizada.</div><div><span className="text-[var(--n3-text-light)]">Evidencia:</span> muestra fuente y vigencia cuando están disponibles.</div><div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se declaran; no se completan ni estiman.</div><div><span className="text-[var(--n3-text-light)]">Acciones:</span> {canCreateTask ? 'puede preparar una tarea y sólo ejecutarla después de confirmación humana.' : 'este rol no puede ejecutar cambios desde el asistente.'}</div></div></div>
         </aside>
