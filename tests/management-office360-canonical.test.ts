@@ -20,53 +20,57 @@ type Period = {
 const periods = periodsData.periods as Period[]
 const offices = ['Santa María','Nueva Costanera','Lo Beltrán']
 
-test('Office 360 uses the complete Pedro Jan-Aug 2026 management series', () => {
-  assert.deepEqual(periods.map((item)=>item.period), ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08'])
+test('Office 360 uses the complete Jan-Sep 2026 canonical management series', () => {
+  assert.deepEqual(periods.map((item)=>item.period), [
+    '2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09',
+  ])
+
   for (const period of periods) {
     assert.deepEqual(period.offices.map((office)=>office.name), offices)
-    assert.equal(period.authority.file, 'Ago_Directorio.pptx')
     assert.ok(period.authority.sha256)
   }
+
+  assert.ok(periods.slice(0, 8).every((period) => period.authority.file === 'Ago_Directorio.pptx'))
+  assert.equal(periods.at(-1)?.authority.file, 'September 2026 canonical CRM set')
 })
 
-test('latest Office 360 values reconcile to Pedro August authority', () => {
-  const august = periods.at(-1)
-  assert.equal(august?.period, '2026-08')
-  const byName = new Map(august?.offices.map((office)=>[office.name,office]) ?? [])
-  assert.deepEqual(byName.get('Santa María'), {
-    name:'Santa María',creditedClosings:3.5,creditedSalesUf:76800,canonicalClosingTarget:2.3,
-    managementScore:67.4,portfolioScore:65.1,followUpScore:68.4,conversionScore:69.5,
-    stock:134,activeLeads:532,requirements:150,scheduledVisits:94,realizedVisits:65,
-  })
-  assert.deepEqual(byName.get('Nueva Costanera'), {
-    name:'Nueva Costanera',creditedClosings:2,creditedSalesUf:26650,canonicalClosingTarget:2.8,
-    managementScore:67.5,portfolioScore:69.1,followUpScore:66.4,conversionScore:66.6,
-    stock:95,activeLeads:373,requirements:165,scheduledVisits:118,realizedVisits:62,
-  })
-  assert.deepEqual(byName.get('Lo Beltrán'), {
-    name:'Lo Beltrán',creditedClosings:2.5,creditedSalesUf:38200,canonicalClosingTarget:3.1,
-    managementScore:67.9,portfolioScore:64.4,followUpScore:76.8,conversionScore:63.6,
-    stock:95,activeLeads:323,requirements:153,scheduledVisits:112,realizedVisits:62,
-  })
+test('latest Office 360 values reconcile to the September canonical close without inventing unpublished scores or office targets', () => {
+  const september = periods.at(-1)
+  assert.equal(september?.period, '2026-09')
+  const byName = new Map(september?.offices.map((office)=>[office.name,office]) ?? [])
+
+  assert.deepEqual(
+    ['Santa María','Nueva Costanera','Lo Beltrán'].map((name) => ({
+      name,
+      closings: byName.get(name)?.creditedClosings,
+      uf: byName.get(name)?.creditedSalesUf,
+      target: byName.get(name)?.canonicalClosingTarget,
+      managementScore: byName.get(name)?.managementScore,
+    })),
+    [
+      { name:'Santa María', closings:0, uf:0, target:null, managementScore:null },
+      { name:'Nueva Costanera', closings:4, uf:48360, target:null, managementScore:null },
+      { name:'Lo Beltrán', closings:1, uf:1200, target:null, managementScore:null },
+    ],
+  )
 })
 
 test('Office 360 does not manufacture office-level 2025 YoY', () => {
   assert.ok(periods.every((period)=>period.period.startsWith('2026-')))
 })
 
-
-test('canonical office entities expose Jan-Aug evolution for CEO drill-down', async () => {
+test('canonical office entities expose Jan-Sep evolution for CEO drill-down', async () => {
   const mod = await import('../lib/management-canonical-periods')
   const entities = mod.getCanonicalManagementDashboardEntities()
   for (const officeName of offices) {
     const office = entities.find((entity) => entity.entityType === 'branch' && entity.name === officeName)
     assert.ok(office, `missing ${officeName}`)
-    assert.equal(office?.evolution?.length, 8)
-    assert.equal(office?.evolution?.at(-1)?.period, '2026-08')
+    assert.equal(office?.evolution?.length, 9)
+    assert.equal(office?.evolution?.at(-1)?.period, '2026-09')
     assert.equal(office?.evolution?.at(-1)?.metrics?.management_credited_sales, office?.evolution?.at(-1)?.sales)
+    assert.equal(office?.evolution?.at(-1)?.metrics?.management_score, null)
   }
 })
-
 
 test('August board extract preserves Pedro report semantics and values', async () => {
   const mod = await import('../lib/management-august-board')
