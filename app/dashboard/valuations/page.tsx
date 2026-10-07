@@ -117,7 +117,7 @@ export default function ValuationRegistryPage() {
       <WorkspaceHeader
         eyebrow={isReviewer ? 'Valorizaciones · Dirección' : 'Valorizaciones'}
         title={isReviewer ? 'Qué requiere revisión' : 'Qué necesita avanzar'}
-        meta={actionCount > 0 ? `${actionCount} requieren acción` : undefined}
+        meta={cases.length ? `${actionCount > 0 ? `${actionCount} requieren acción · ` : ''}Actualizado ${new Date(cases[0].updated_at).toLocaleString('es-CL')}` : undefined}
         actions={[
           { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
           ...(viewerScope === 'self'
@@ -166,11 +166,7 @@ export default function ValuationRegistryPage() {
                   ? 'No hay valorizaciones pendientes de revisión.'
                   : 'No hay valorizaciones que requieran una acción inmediata.'}
             </p>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-              {isReviewer
-                ? 'Cuando un expediente sea enviado a revisión aparecerá aquí con su valor propuesto, comparables y evidencia para decidir.'
-                : 'Puedes iniciar una nueva valorización o continuar un borrador desde el listado.'}
-            </p>
+
           </div>
         </section>
       )}
@@ -211,14 +207,17 @@ export default function ValuationRegistryPage() {
         </div>
       </details>
 
-      <DataStatusBar
-        cutoff={cases.length ? new Date(cases[0].updated_at).toLocaleString('es-CL') : '—'}
-        coverage={isReviewer
-          ? `${counts.review} pendientes de revisión · ${evidenceReadyCount} con evidencia base completa`
-          : `${evidenceReadyCount} de ${cases.length} expedientes con evidencia base completa`}
-        issues={Math.max(0, cases.length - evidenceReadyCount)}
-        status={cases.length === 0 ? 'ready' : evidenceReadyCount === cases.length ? 'ready' : 'partial'}
-      />
+      <details className="mt-7 border-t border-[var(--n3-line)] pt-4">
+        <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver calidad de datos</summary>
+        <DataStatusBar
+          cutoff={cases.length ? new Date(cases[0].updated_at).toLocaleString('es-CL') : '—'}
+          coverage={isReviewer
+            ? `${counts.review} pendientes de revisión · ${evidenceReadyCount} con evidencia base completa`
+            : `${evidenceReadyCount} de ${cases.length} expedientes con evidencia base completa`}
+          issues={Math.max(0, cases.length - evidenceReadyCount)}
+          status={cases.length === 0 ? 'ready' : evidenceReadyCount === cases.length ? 'ready' : 'partial'}
+        />
+      </details>
     </WorkspaceShell>
   )
 }
