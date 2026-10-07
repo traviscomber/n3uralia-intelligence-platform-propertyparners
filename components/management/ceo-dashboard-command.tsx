@@ -129,7 +129,7 @@ export function CeoDashboardCommand() {
     let action = weakest ? `Revisar ${weakest.key.toLowerCase()}` : 'Revisar evidencia'
     let riskScore = -1
 
-    if (staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical) { risk = 'high'; action = 'Intervenir backlog'; riskScore = 100 + staleRatio }
+    if (staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical) { risk = 'high'; action = 'Priorizar leads +90 días'; riskScore = 100 + staleRatio }
     else if (visitRate != null && visitRate < DECISION_THRESHOLDS.visitsCritical) { risk = 'high'; action = 'Mejorar visitas'; riskScore = 95 + (DECISION_THRESHOLDS.visitsCritical - visitRate) }
     else if (suspendedRatio != null && suspendedRatio >= DECISION_THRESHOLDS.suspendedCritical) { risk = 'high'; action = 'Revisar cartera'; riskScore = 90 + suspendedRatio }
     else if ((staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogWatch) || (visitRate != null && visitRate < DECISION_THRESHOLDS.visitsWatch) || (suspendedRatio != null && suspendedRatio >= DECISION_THRESHOLDS.suspendedWatch)) { risk = 'medium'; action = 'Monitorear'; riskScore = 50 + Math.max(staleRatio ?? 0, suspendedRatio ?? 0, visitRate == null ? 0 : DECISION_THRESHOLDS.visitsWatch - visitRate) }
@@ -179,7 +179,7 @@ export function CeoDashboardCommand() {
     const unclassifiedRatio = ratio(unclassified, active)
     const suspendedRatio = ratio(suspended, stock)
 
-    if (stale90 != null && staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogAction) items.push({ label: 'Backlog +90 días', value: n(stale90), detail: `${pct(staleRatio)} de leads activos`, href: '/dashboard/control/operations', priority: staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical ? 100 : 88, critical: staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical })
+    if (stale90 != null && staleRatio != null && staleRatio >= DECISION_THRESHOLDS.leadBacklogAction) items.push({ label: 'Leads con más de 90 días', value: n(stale90), detail: `${pct(staleRatio)} de leads activos`, href: '/dashboard/control/operations', priority: staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical ? 100 : 88, critical: staleRatio >= DECISION_THRESHOLDS.leadBacklogCritical })
     if (visitRate != null && visitRate < DECISION_THRESHOLDS.visitsAction) items.push({ label: 'Ejecución de visitas', value: pct(visitRate), detail: `${n(realized)} de ${n(scheduled)} realizadas`, href: '/dashboard/control/operations', priority: visitRate < DECISION_THRESHOLDS.visitsCritical ? 98 : 90, critical: visitRate < DECISION_THRESHOLDS.visitsCritical })
     if (unclassified != null && unclassifiedRatio != null && unclassifiedRatio >= DECISION_THRESHOLDS.unclassifiedWatch) items.push({ label: 'Leads sin clasificar', value: n(unclassified), detail: `${pct(unclassifiedRatio)} de leads activos`, href: '/dashboard/control/operations', priority: unclassifiedRatio >= DECISION_THRESHOLDS.unclassifiedCritical ? 94 : 82, critical: unclassifiedRatio >= DECISION_THRESHOLDS.unclassifiedCritical })
     if (suspended != null && suspendedRatio != null && suspendedRatio >= DECISION_THRESHOLDS.suspendedWatch) items.push({ label: 'Cartera suspendida', value: n(suspended), detail: `${pct(suspendedRatio)} del stock`, href: '/dashboard/properties', priority: suspendedRatio >= DECISION_THRESHOLDS.suspendedCritical ? 92 : 76, critical: suspendedRatio >= DECISION_THRESHOLDS.suspendedCritical })
