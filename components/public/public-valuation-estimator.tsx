@@ -52,7 +52,8 @@ export default function PublicValuationEstimator() {
         if (!active) return
         const options = payload.coverage ?? []
         setCoverage(options)
-        setNeighborhood(options[0]?.neighborhood ?? '')
+        const preferred = options.find((option) => option.coverageLevel === 'sector') ?? options[0]
+        setNeighborhood(preferred?.neighborhood ?? '')
       })
       .catch((error: unknown) => {
         if (!active) return
