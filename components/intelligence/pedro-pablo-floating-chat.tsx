@@ -2,7 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Bot, RotateCcw, Send, Sparkles, X } from 'lucide-react'
+import { Bot, RotateCcw, Send, X } from 'lucide-react'
 
 type Evidence = {
   label: string
@@ -226,26 +226,24 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
         onClick={() => setOpen(true)}
         aria-label="Abrir Asistente de IA"
         title="Asistente de IA"
-        className={`fixed bottom-5 right-4 z-[70] grid h-16 w-16 place-items-center rounded-full border border-[var(--primary)] bg-[var(--n3-black)] text-[var(--n3-text-light)] shadow-xl transition-all hover:-translate-y-0.5 hover:bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] md:right-6 ${open ? 'pointer-events-none scale-95 opacity-0' : ''}`}
+        className={`fixed bottom-5 right-4 z-[70] grid h-16 w-16 place-items-center border border-[var(--primary)] bg-[var(--n3-black)] text-[var(--n3-text-light)] transition-colors hover:bg-[var(--n3-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] md:right-6 ${open ? 'pointer-events-none opacity-0' : ''}`}
       >
         <Bot size={27} aria-hidden="true" />
-        <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full border border-[var(--n3-black)] bg-[var(--n3-teal-soft)]" aria-hidden="true" />
       </button>
 
       {open ? (
         <section
           aria-label="Asistente de IA"
-          className="fixed inset-x-3 bottom-3 z-[70] flex h-[min(720px,calc(100vh-1.5rem))] flex-col overflow-hidden rounded-xl border border-[var(--n3-line)] bg-[var(--n3-black)] shadow-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(460px,calc(100vw-2rem))]"
+          className="fixed inset-x-3 bottom-3 z-[70] flex h-[min(720px,calc(100vh-1.5rem))] flex-col overflow-hidden border border-[var(--n3-line)] bg-[var(--n3-black)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(460px,calc(100vw-2rem))]"
         >
           <header className="border-b border-[var(--n3-line)] bg-[var(--n3-deep)] px-4 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--primary)] bg-[var(--n3-black)]">
+                <div className="grid h-10 w-10 shrink-0 place-items-center border border-[var(--primary)] bg-[var(--n3-black)]">
                   <Bot size={20} aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">
-                    <Sparkles size={12} aria-hidden="true" />
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">
                     Apoyo para la decisión
                   </div>
                   <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">{isDirectorSupport ? 'Asistente de Dirección' : 'Pedro Pablo'}</div>
@@ -259,7 +257,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                   disabled={loading || messages.length === 0}
                   aria-label="Nueva conversación"
                   title="Nueva conversación"
-                  className="grid h-9 w-9 place-items-center rounded-md text-[var(--n3-text-muted)] transition-colors hover:bg-white/[0.04] hover:text-[var(--n3-text-light)] disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                  className="grid h-9 w-9 place-items-center text-[var(--n3-text-muted)] transition-colors hover:bg-white/[0.04] hover:text-[var(--n3-text-light)] disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                 >
                   <RotateCcw size={15} aria-hidden="true" />
                 </button>
@@ -267,7 +265,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label="Cerrar asistente"
-                  className="grid h-9 w-9 place-items-center rounded-md text-[var(--n3-text-muted)] transition-colors hover:bg-white/[0.04] hover:text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                  className="grid h-9 w-9 place-items-center text-[var(--n3-text-muted)] transition-colors hover:bg-white/[0.04] hover:text-[var(--n3-text-light)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                 >
                   <X size={16} aria-hidden="true" />
                 </button>
@@ -281,7 +279,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 <div className="text-sm font-medium text-[var(--n3-text-light)]">¿Qué quieres revisar?</div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {contextualStarterSections.map((section) => (
-                    <div key={section.label} className="rounded-lg border border-[var(--n3-line)] p-3">
+                    <div key={section.label} className="border border-[var(--n3-line)] p-3">
                       <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
                         {section.label}
                       </div>
@@ -291,7 +289,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                             key={question}
                             type="button"
                             onClick={() => setPrompt(question)}
-                            className="block w-full rounded-md px-2 py-1.5 text-left text-[11px] leading-4 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                            className="block w-full px-2 py-1.5 text-left text-[11px] leading-4 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                           >
                             {question}
                           </button>
@@ -307,7 +305,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
               <div className="space-y-4">
                 {messages.map((message) => (
                   <article key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[92%] rounded-xl px-3.5 py-3 text-sm leading-6 ${message.role === 'user' ? 'bg-[var(--primary)] text-[var(--n3-text-light)]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-light)]'}`}>
+                    <div className={`max-w-[92%] px-3.5 py-3 text-sm leading-6 ${message.role === 'user' ? 'bg-[var(--primary)] text-[var(--n3-text-light)]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-light)]'}`}>
                       {message.role === 'assistant' && message.confidence === 'medium' ? (
                         <div className="mb-2 text-[9px] uppercase tracking-[0.12em] text-[var(--chart-4)]">Confianza media</div>
                       ) : null}
@@ -333,7 +331,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                               key={question}
                               type="button"
                               onClick={() => void ask(question)}
-                              className="block w-full rounded-md border border-[var(--n3-line)] px-2.5 py-2 text-left text-[11px] leading-4 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                              className="block w-full border border-[var(--n3-line)] px-2.5 py-2 text-left text-[11px] leading-4 text-[var(--n3-text-light)] transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
                             >
                               {question}
                             </button>
@@ -345,7 +343,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 ))}
                 {loading ? (
                   <div className="flex justify-start">
-                    <div className="rounded-xl border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3.5 py-3 text-sm text-[var(--n3-text-muted)]">
+                    <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3.5 py-3 text-sm text-[var(--n3-text-muted)]">
                       Revisando información…
                     </div>
                   </div>
@@ -355,7 +353,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
             ) : null}
 
             {error ? (
-              <div className="mt-3 rounded-md border border-[var(--destructive)]/30 bg-[var(--destructive)]/5 px-3 py-2 text-xs text-[var(--destructive)]" role="alert">
+              <div className="mt-3 border border-[var(--destructive)]/30 bg-[var(--destructive)]/5 px-3 py-2 text-xs text-[var(--destructive)]" role="alert">
                 {error}
               </div>
             ) : null}
@@ -371,13 +369,13 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 rows={2}
                 maxLength={800}
                 placeholder="Pregunta sobre tu oficina o un expediente…"
-                className="min-h-[54px] max-h-36 flex-1 resize-none rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 py-2 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                className="min-h-[54px] max-h-36 flex-1 resize-none border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 py-2 text-sm text-[var(--n3-text-light)] outline-none placeholder:text-[var(--n3-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
               />
               <button
                 type="submit"
                 disabled={loading || !prompt.trim()}
                 aria-label="Enviar consulta"
-                className="grid h-[54px] w-[54px] place-items-center rounded-lg border border-[var(--primary)] text-[var(--n3-text-light)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                className="grid h-[54px] w-[54px] place-items-center border border-[var(--primary)] text-[var(--n3-text-light)] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
               >
                 <Send size={17} aria-hidden="true" />
               </button>
