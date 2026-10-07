@@ -2,7 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Bot, Database, RotateCcw, Send, ShieldCheck, Sparkles, X } from 'lucide-react'
+import { Bot, RotateCcw, Send, Sparkles, X } from 'lucide-react'
 
 type Evidence = {
   label: string
@@ -248,8 +248,8 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                     <Sparkles size={12} aria-hidden="true" />
                     Apoyo para la decisión
                   </div>
-                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">{isDirectorSupport ? 'Asistente de Dirección' : 'Asistente de IA'}</div>
-                  <div className="truncate text-[11px] text-[var(--n3-text-muted)]">{isDirectorSupport ? `Property Partners · criterio senior${team ? ` · ${team}` : ''}` : 'Property Partners · apoyo contextual'}</div>
+                  <div className="mt-0.5 truncate text-sm font-semibold text-[var(--n3-text-light)]">{isDirectorSupport ? 'Asistente de Dirección' : 'Pedro Pablo'}</div>
+                  {team ? <div className="truncate text-[11px] text-[var(--n3-text-muted)]">{team}</div> : null}
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -273,30 +273,12 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 </button>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><Database size={11} aria-hidden="true" />Datos verificados</span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--n3-line)] px-2 py-1"><ShieldCheck size={11} aria-hidden="true" />Control humano</span>
-            </div>
           </header>
 
           <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--n3-black)] px-4 py-4">
             {messages.length === 0 && !loading ? (
               <div className="space-y-4">
-                <div className="rounded-lg border border-[var(--n3-line)] bg-[var(--n3-deep)] p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-[var(--n3-text-light)]">
-                    <Sparkles size={15} className="text-[var(--n3-teal-soft)]" aria-hidden="true" />
-                    ¿Qué quieres revisar?
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">
-                    {valuationCaseId
-                      ? (isDirectorSupport
-                        ? 'Estoy revisando este expediente contigo. Puedo ayudarte a validar comparables, detectar alertas y decidir si corresponde aceptar o devolver.'
-                        : 'Estoy viendo este expediente contigo. Puedo explicar el valor, los comparables y qué conviene revisar antes de enviarlo.')
-                      : (isDirectorSupport
-                        ? 'Puedo ayudarte a priorizar lo pendiente de tu oficina, revisar valorizaciones y preparar devoluciones con razones objetivas.'
-                        : 'Puedes escribir directamente o partir por una de estas áreas. Después, las siguientes preguntas se adaptan a tu consulta.')}
-                  </p>
-                </div>
+                <div className="text-sm font-medium text-[var(--n3-text-light)]">¿Qué quieres revisar?</div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {contextualStarterSections.map((section) => (
                     <div key={section.label} className="rounded-lg border border-[var(--n3-line)] p-3">
@@ -326,22 +308,22 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 {messages.map((message) => (
                   <article key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[92%] rounded-xl px-3.5 py-3 text-sm leading-6 ${message.role === 'user' ? 'bg-[var(--primary)] text-[var(--n3-text-light)]' : 'border border-[var(--n3-line)] bg-[var(--n3-deep)] text-[var(--n3-text-light)]'}`}>
-                      {message.role === 'assistant' && message.routing ? (
-                        <div className="mb-2 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">
-                          <span>{message.confidence === 'high' ? 'Confianza alta' : 'Confianza media'}</span>
-                        </div>
+                      {message.role === 'assistant' && message.confidence === 'medium' ? (
+                        <div className="mb-2 text-[9px] uppercase tracking-[0.12em] text-[var(--chart-4)]">Confianza media</div>
                       ) : null}
                       {message.role === 'assistant' && message.title ? <div className="mb-1 font-semibold">{message.title}</div> : null}
                       <div className="whitespace-pre-wrap break-words">{message.content}</div>
                       {message.role === 'assistant' && message.evidence?.length ? (
-                        <div className="mt-3 border-t border-[var(--n3-line)] pt-2">
-                          <div className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Evidencia</div>
-                          {message.evidence.slice(0, 3).map((item, index) => (
-                            <div key={`${message.id}-evidence-${index}`} className="text-[10px] leading-4 text-[var(--n3-text-muted)]">
-                              <span className="text-[var(--n3-text-light)]">{item.label}</span> · {item.source}
-                            </div>
-                          ))}
-                        </div>
+                        <details className="mt-3 border-t border-[var(--n3-line)] pt-2">
+                          <summary className="cursor-pointer text-[10px] text-[var(--n3-text-muted)]">Ver fuentes</summary>
+                          <div className="mt-2 space-y-1">
+                            {message.evidence.slice(0, 3).map((item, index) => (
+                              <div key={`${message.id}-evidence-${index}`} className="text-[10px] leading-4 text-[var(--n3-text-muted)]">
+                                <span className="text-[var(--n3-text-light)]">{item.label}</span> · {item.source}
+                              </div>
+                            ))}
+                          </div>
+                        </details>
                       ) : null}
                       {message.role === 'assistant' && message.suggestedQuestions?.length ? (
                         <div className="mt-3 space-y-1.5 border-t border-[var(--n3-line)] pt-2">
@@ -400,7 +382,6 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                 <Send size={17} aria-hidden="true" />
               </button>
             </form>
-            <p className="mt-2 text-[10px] leading-4 text-[var(--n3-text-muted)]">Enter envía · Shift+Enter agrega línea. {isDirectorSupport ? 'Sólo utilizo información disponible para tu oficina.' : 'El asistente no sustituye los flujos contractuales.'} Las decisiones y cambios siguen bajo tu control.</p>
           </footer>
         </section>
       ) : null}
