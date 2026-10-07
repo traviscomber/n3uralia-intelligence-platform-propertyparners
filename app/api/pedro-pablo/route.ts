@@ -245,8 +245,8 @@ function answerMarket(context: ContextPack): PedroPabloResponse {
   const pending = market.pendingMatches ?? 0
   const newToday = market.latestDeltaNewCandidates ?? 0
   const parsedToday = market.latestDeltaParsedDetails ?? 0
-  const fullInventoryAt = market.latestIngestionAt
-    ? fullInventoryAt
+  const fullInventoryAt: string = market.latestIngestionAt
+    ? formatPropertyPartnersDateTime(market.latestIngestionAt)
     : 'fecha no disponible'
 
   const lines = market.latestDeltaAt
