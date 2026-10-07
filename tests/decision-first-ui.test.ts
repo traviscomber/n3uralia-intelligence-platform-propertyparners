@@ -38,6 +38,12 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(market, /Ver evolución y gestión/)
   assert.doesNotMatch(market, /cron automático/)
   assert.doesNotMatch(market, /El KML es la autoridad territorial/)
+  assert.doesNotMatch(market, /Territorio V1/)
+  assert.doesNotMatch(market, /avisos live/)
+  assert.doesNotMatch(market, /legacy →/)
+  assert.doesNotMatch(market, /benchmark territorial/)
+  assert.match(market, /Cobertura territorial/)
+  assert.match(market, /Avisos vigentes/)
 
   assert.match(valuations, /Actualizado/)
   assert.match(valuations, /Ver calidad de datos/)
@@ -61,6 +67,9 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(offer, /Ver inventario completo/)
   assert.doesNotMatch(offer, /snapshot diario/i)
   assert.doesNotMatch(offer, /snapshot completo/i)
+  assert.doesNotMatch(offer, />ID \{item\.sourceListingId\}<\/p>/)
+  assert.match(offer, /Detalle disponible/)
+  assert.match(offer, /Publicación vigente/)
 
   assert.match(pedro, /Decisiones con datos verificados/)
   assert.match(pedro, /Ver detalle/)
