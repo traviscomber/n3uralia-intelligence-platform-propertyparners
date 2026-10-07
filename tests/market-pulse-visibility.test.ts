@@ -25,3 +25,15 @@ test('market offer surfaces pulse listings without redefining the full inventory
   assert.match(page, /portal_inventory_discovery_v1/)
   assert.match(page, /portal_daily_delta_v1/)
 })
+
+test('Pedro Pablo market answers use the latest daily update without presenting stale removals as today', () => {
+  const route = readFileSync('app/api/pedro-pablo/route.ts', 'utf8')
+  const support = readFileSync('app/api/pedro-pablo/decision-support/route.ts', 'utf8')
+
+  assert.match(route, /latestDeltaAt/)
+  assert.match(route, /latestDeltaNewCandidates/)
+  assert.match(route, /Actualizado/)
+  assert.match(route, /Las bajas sólo se confirman en un inventario completo/)
+  assert.doesNotMatch(route, /El barrido completo de esta mañana/)
+  assert.match(support, /La actualización de mercado muestra un cambio verificable/)
+})
