@@ -727,7 +727,7 @@ export default function ValuationPage() {
 
     {message ? <div role="status" className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm text-[#ff9a93]">{message}</div> : null}
 
-    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-3 backdrop-blur md:py-4">
+    <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[var(--n3-black)] px-2 py-3 md:py-4">
       <div className="flex items-center justify-between gap-1.5 md:gap-3">
         <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-30 md:gap-2 md:px-4"><ArrowLeft size={14} /><span className="hidden sm:inline">Anterior</span></button>
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
