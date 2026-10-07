@@ -80,7 +80,7 @@ export default async function CanonicalClientReportsPage(){
     </details>
 
     <details className="mt-8 max-w-5xl">
-      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Estado de datos</summary>
+      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver calidad de datos</summary>
       <DataStatusBar cutoff={cutoff} coverage={reports.length?`${deliverableCount}/${reports.length} entregables con período y PDF`:'Sin informes'} issues={incomplete.length} status={status}/>
     </details>
   </WorkspaceShell>
