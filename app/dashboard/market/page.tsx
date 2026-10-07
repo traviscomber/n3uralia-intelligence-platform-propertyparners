@@ -5,9 +5,9 @@ import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/c
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
-import { getPortalReferencecorte } from '@/lib/portal-reference-intelligence'
+import { getPortalReferenceSnapshot } from '@/lib/portal-reference-intelligence'
 import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
-import { getVitacuraNeighborhoodcorte } from '@/lib/vitacura-neighborhoods'
+import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
 import { getExecutiveDashboardSnapshot } from '@/lib/executive-dashboard-snapshot'
 import { comparisonPeriod, verifiedChange } from '@/lib/executive-dashboard-comparisons'
 import { getCanonicalMarketAuthority } from '@/lib/market-canonical-authority'
@@ -251,9 +251,9 @@ export default async function MarketPage() {
       <MetricStrip items={[
         {
           label: 'Inventario verificado',
-          value: market.latestIngestionFullcorte ? number(market.activeInventory) : '—',
-          detail: market.latestIngestionFullcorte ? `Al ${date(market.latestIngestionAt)}` : 'Pendiente de inventario completo',
-          tone: market.latestIngestionFullcorte ? 'default' : 'warning',
+          value: market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—',
+          detail: market.latestIngestionFullSnapshot ? `Al ${date(market.latestIngestionAt)}` : 'Pendiente de inventario completo',
+          tone: market.latestIngestionFullSnapshot ? 'default' : 'warning',
         },
         {
           label: 'Nuevas hoy',
@@ -380,9 +380,9 @@ export default async function MarketPage() {
         <MetricStrip items={[
           {
             label: 'Oferta activa',
-            value: market.latestIngestionFullcorte ? number(market.activeInventory) : '—',
-            detail: market.latestIngestionFullcorte ? 'Corte completo verificado' : 'Cobertura parcial · total aún no confirmado',
-            tone: market.latestIngestionFullcorte ? 'default' : 'warning',
+            value: market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—',
+            detail: market.latestIngestionFullSnapshot ? 'Corte completo verificado' : 'Cobertura parcial · total aún no confirmado',
+            tone: market.latestIngestionFullSnapshot ? 'default' : 'warning',
           },
           {
             label: 'Ventas confirmadas',
@@ -517,7 +517,7 @@ export default async function MarketPage() {
             </div>
             <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
               {[
-                ['Mercado', 'Cobertura Portal', percent(market.latestInventoryCoverageRatio), market.latestIngestionFullcorte ? 'Verificado' : 'Parcial'],
+                ['Mercado', 'Cobertura Portal', percent(market.latestInventoryCoverageRatio), market.latestIngestionFullSnapshot ? 'Verificado' : 'Parcial'],
                 ['Financiero', 'Margen / P&L', 'Pendiente fuente PP', 'Sin dato disponible'],
                 ['Comercial', 'Calidad de conversión', executive.latest.conversionScore === null ? '—' : decimal(executive.latest.conversionScore, 1), executive.latest.conversionScore === null ? 'Sin dato' : 'Verificado'],
                 ['Procesos', 'Calidad de seguimiento', executive.latest.followUpScore === null ? '—' : decimal(executive.latest.followUpScore, 1), executive.latest.followUpScore === null ? 'Sin dato' : 'Verificado'],
