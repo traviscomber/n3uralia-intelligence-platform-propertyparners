@@ -249,7 +249,7 @@ function rateAnchorLabel(anchor: RateAnchor) {
     cbrs_average: 'Promedio CBRS seleccionado',
     portal_median: 'Mediana Portal seleccionada',
     portal_average: 'Promedio Portal seleccionado',
-    champion_v5: 'Referencia Champion v5 confirmada',
+    champion_v5: 'Referencia sugerida confirmada',
     manual: 'Definido por valorizador',
   }
   return anchor ? labels[anchor] : 'Pendiente de confirmación'
@@ -469,7 +469,7 @@ export default function ValuationPage() {
     updateSubject('builtRateUfM2', houseRecommendation.builtRateUfM2)
     updateSubject('landRateUfM2', houseRecommendation.landRateUfM2)
     setRateAnchor('champion_v5')
-    setMessage('Referencia aplicada. Puedes ajustarla manualmente si corresponde.')
+    setMessage('Referencia sugerida aplicada. Puedes ajustarla si corresponde.')
   }
 
   function draftProfessionalJustification() {
@@ -534,11 +534,11 @@ export default function ValuationPage() {
 
   return <IntelligencePage>
     <IntelligenceHeader
-      eyebrow="Módulo II · Valorización"
-      title="Valorizador Property Partners"
-      description="Busca la propiedad y obtén un valor defendible para trabajar con el cliente. La evidencia queda disponible para revisar y ajustar cuando corresponda."
+      eyebrow="Valorizaciones"
+      title="Nueva valorización"
+      description="Busca la propiedad, revisa la evidencia y define el valor para trabajar con el cliente."
       actions={[{ label: 'Registro de valorizaciones', href: '/dashboard/valuations' }, { label: 'Inteligencia de mercado', href: '/dashboard/market' }]}
-      meta={<div className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]">property-partners-valuation-v2</div>}
+
     />
 
     <Stepper step={step} onBackTo={setStep} />
@@ -546,8 +546,8 @@ export default function ValuationPage() {
     {step === 1 ? <section className="space-y-4">
       <QuickSubjectLookup />
       <div className="text-center"><button type="button" onClick={() => setManualOpen((value) => !value)} className="text-xs text-[var(--n3-text-muted)] underline underline-offset-4 hover:text-white">{manualOpen ? 'Ocultar ingreso manual' : 'Ingreso manual'}</button></div>
-      {manualOpen ? <IntelligencePanel eyebrow="Alternativa" title="Ingreso manual" description="Si no está en la base."><div className="grid gap-4 p-5 md:grid-cols-2">
-        <div className="block"><FieldLabel>Tipo</FieldLabel><div className="grid grid-cols-2 border border-[var(--n3-line)] bg-[#080d0d]" aria-label="Tipo de propiedad"><button type="button" aria-pressed={subject.propertyType === 'Casa'} onClick={() => updateSubject('propertyType', 'Casa')} className={`${subject.propertyType === 'Casa' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} px-3 py-3 text-sm font-semibold`}>Casa</button><button type="button" disabled={!v2Unlocked} aria-disabled={!v2Unlocked} aria-pressed={subject.propertyType === 'Departamento'} title={v2Unlocked ? 'Funcionalidad V2 habilitada para N3uralia' : 'Disponible en la versión 2'} onClick={() => v2Unlocked && updateSubject('propertyType', 'Departamento')} className={`${subject.propertyType === 'Departamento' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} ${v2Unlocked ? 'hover:text-white' : 'cursor-not-allowed opacity-60'} border-l border-[var(--n3-line)] px-3 py-3 text-sm`}>Departamento <span className="ml-1 text-[10px] uppercase tracking-[0.12em]">{v2Unlocked ? 'Desbloqueado' : 'V2'}</span></button></div></div>
+      {manualOpen ? <IntelligencePanel eyebrow="Alternativa" title="Ingreso manual" description="Úsalo sólo si la propiedad no aparece en la búsqueda."><div className="grid gap-4 p-5 md:grid-cols-2">
+        <div className="block"><FieldLabel>Tipo</FieldLabel><div className={`grid ${v2Unlocked ? 'grid-cols-2' : 'grid-cols-1'} border border-[var(--n3-line)] bg-[#080d0d]`} aria-label="Tipo de propiedad"><button type="button" aria-pressed={subject.propertyType === 'Casa'} onClick={() => updateSubject('propertyType', 'Casa')} className={`${subject.propertyType === 'Casa' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)]'} px-3 py-3 text-sm font-semibold`}>Casa</button>{v2Unlocked ? <button type="button" aria-pressed={subject.propertyType === 'Departamento'} onClick={() => updateSubject('propertyType', 'Departamento')} className={`${subject.propertyType === 'Departamento' ? 'bg-[#d7332b] text-white' : 'text-[var(--n3-text-muted)] hover:text-white'} border-l border-[var(--n3-line)] px-3 py-3 text-sm`}>Departamento</button> : null}</div></div>
         <TextField label="Dirección" value={subject.address} onChange={(value) => updateSubject('address', value)} placeholder="Calle y número" />
         <TextField label="Barrio / sector" value={subject.neighborhood} onChange={(value) => updateSubject('neighborhood', value)} placeholder="Barrio canónico" />
         <TextField label="ROL si existe" value={subject.rol} onChange={(value) => updateSubject('rol', value)} />
@@ -710,7 +710,7 @@ export default function ValuationPage() {
       <IntelligencePanel eyebrow="Paso 5 · Tu valorización" title={result && selectedComparables.length >= 3 ? 'Valor listo para trabajar' : 'Revisión final'} description="Confirma el valor que usarás con el cliente y deja la evidencia lista para dirección."><div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="border border-[var(--n3-line)] p-4 xl:col-span-2"><FieldLabel>Propiedad</FieldLabel><strong className="text-sm">{subject.address}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.neighborhood} · {subject.propertyType} · ROL {subject.rol || 'no disponible'}</p></div>
         <div className="border border-[var(--n3-line)] p-4"><FieldLabel>Evidencia</FieldLabel><strong className="text-xl">{selectedComparables.length}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{cbrsEvidence.count} ventas · {portalEvidence.count} ofertas</p></div>
-        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor sugerido</FieldLabel><strong className="text-2xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia Champion v5 confirmada por la ejecutiva' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
+        <div className="border border-[#d7332b] bg-[#130d0d] p-4"><FieldLabel>Valor sugerido</FieldLabel><strong className="text-2xl">{result ? `${result.adjustedValueUf.toLocaleString('es-CL', { maximumFractionDigits: 0 })} UF` : '—'}</strong><p className="mt-2 text-xs text-[var(--n3-text-muted)]">{subject.propertyType === 'Departamento' ? rateAnchorLabel(rateAnchor) : rateAnchor === 'champion_v5' ? 'Referencia sugerida confirmada' : 'Tasa profesional ajustada por la ejecutiva'}</p></div>
       </div>
       {currentStateNotes.trim() ? <div className="border-t border-[var(--n3-line)] p-5"><FieldLabel>Estado actual declarado</FieldLabel><p className="text-sm leading-6 text-[var(--n3-text-muted)]">{currentStateNotes}</p></div> : null}
       </IntelligencePanel>
@@ -722,7 +722,7 @@ export default function ValuationPage() {
         </div>
         <TextAreaField label="Justificación profesional" value={professionalJustification} onChange={setProfessionalJustification} placeholder="Ej.: se privilegian ventas recientes de superficie y ubicación comparables..." />
       </div></IntelligencePanel>
-      <MethodologyNote>Portal: oferta. CBRS: ventas. Property Partners decide.</MethodologyNote>
+      <MethodologyNote>Oferta publicada y ventas registradas respaldan la decisión. Property Partners confirma el valor.</MethodologyNote>
     </section> : null}
 
     {message ? <div role="status" className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm text-[#ff9a93]">{message}</div> : null}
