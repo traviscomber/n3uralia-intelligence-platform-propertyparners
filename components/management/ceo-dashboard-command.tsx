@@ -259,7 +259,7 @@ export function CeoDashboardCommand() {
     <section className="mt-6">
       <div className="flex items-center justify-between border-b border-[var(--n3-line)] pb-2">
         <h2 className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Oficinas a revisar</h2>
-        <span className="text-xs text-[var(--n3-text-muted)]">${offices.length} oficinas</span>
+        <span className="text-xs text-[var(--n3-text-muted)]">{offices.length} oficinas</span>
       </div>
       <div className="divide-y divide-[var(--n3-line)]">
         {offices.slice(0, 3).map((item) => (
