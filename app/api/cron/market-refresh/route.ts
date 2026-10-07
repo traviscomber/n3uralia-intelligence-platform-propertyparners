@@ -687,6 +687,7 @@ export async function GET(request: Request) {
   const force = url.searchParams.get('force') === '1'
   const fullSweep = url.searchParams.get('full') === '1'
   const detailsOnly = url.searchParams.get('details_only') === '1'
+  const maintenance = url.searchParams.get('maintenance') === '1'
   const brightDataOnly = url.searchParams.get('provider') === 'brightdata'
   const skipPostprocess = url.searchParams.get('postprocess') === '0'
   const requestedDataset = url.searchParams.get('dataset')
@@ -701,7 +702,7 @@ export async function GET(request: Request) {
     if (!access.allowed) return NextResponse.json({ error: 'Acceso restringido.' }, { status: access.status })
   } else {
     if (!authorized(request)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    if (!detailsOnly && !scheduledWindow()) {
+    if (!detailsOnly && !maintenance && !scheduledWindow()) {
       return NextResponse.json({
         ok: true,
         skipped: true,
