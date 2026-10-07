@@ -8,10 +8,6 @@ import {
   portalListingIdFromUrl,
 } from '@/lib/portal-inmobiliario-collector'
 import {
-  collectPortalListingDetailsViaFirecrawl,
-  discoverPortalVitacuraViaFirecrawl,
-} from '@/lib/firecrawl-portal-collector'
-import {
   collectPortalListingDetailsViaBrightData,
   discoverPortalVitacuraViaBrightData,
 } from '@/lib/brightdata-portal-collector'
@@ -72,7 +68,7 @@ function getServiceClient() {
   })
 }
 
-type CollectorProvider = 'brightdata' | 'firecrawl' | 'browser'
+type CollectorProvider = 'brightdata' | 'browser'
 
 async function discoverPortalWithFallback(args: {
   datasetKind: PortalDatasetKind
@@ -83,20 +79,8 @@ async function discoverPortalWithFallback(args: {
 }) {
   const failures: Array<{ provider: CollectorProvider; error: string }> = []
 
-  // Full-universe discovery is materially faster and cheaper through Firecrawl batch scraping.
-  // Bright Data remains the primary detail enricher and the discovery fallback.
-  if (process.env.FIRECRAWL_API_KEY) {
-    try {
-      return {
-        result: await discoverPortalVitacuraViaFirecrawl(args),
-        provider: 'firecrawl' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
+  // Portal acquisition prefers Bright Data.
+  // The in-house browser collector is the only bounded fallback.
   if (process.env.BRIGHTDATA_API_KEY) {
     try {
       return {
@@ -135,21 +119,6 @@ async function collectPortalDetailsWithFallback(args: {
       }
     } catch (error) {
       failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
-  if (process.env.FIRECRAWL_API_KEY) {
-    try {
-      return {
-        result: await collectPortalListingDetailsViaFirecrawl({
-          datasetKind: args.datasetKind,
-          listingUrls: args.listingUrls,
-        }),
-        provider: 'firecrawl' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -1028,16 +997,8 @@ export async function GET(request: Request) {
       ok,
       fullSnapshot: completeInventories === selectedDatasets.length,
       collectorPreference: {
-        inventory: process.env.FIRECRAWL_API_KEY
-          ? 'firecrawl'
-          : process.env.BRIGHTDATA_API_KEY
-            ? 'brightdata'
-            : 'browser',
-        details: process.env.BRIGHTDATA_API_KEY
-          ? 'brightdata'
-          : process.env.FIRECRAWL_API_KEY
-            ? 'firecrawl'
-            : 'browser',
+        inventory: process.env.BRIGHTDATA_API_KEY ? 'brightdata' : 'browser',
+        details: process.env.BRIGHTDATA_API_KEY ? 'brightdata' : 'browser',
       },
       inventoryPipeline: 'portal_inventory_discovery_v1',
       detailPipeline: 'unit_portal_listing_v2',
