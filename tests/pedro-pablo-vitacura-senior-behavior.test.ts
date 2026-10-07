@@ -56,7 +56,7 @@ test('assistant follow-up questions are contextual instead of static starters', 
   assert.match(route, /¿Qué comparables sostienen mejor esta valorización\?/)
   assert.match(route, /¿Qué antecedente falta verificar antes de avanzar\?/)
   assert.match(chat, /message\.suggestedQuestions/)
-  assert.match(chat, /Después, las siguientes preguntas se adaptan a tu consulta/)
+  assert.match(chat, /¿Qué quieres revisar\?/)
   assert.doesNotMatch(chat, /const starters =/)
 })
 
@@ -66,6 +66,6 @@ test('assistant opens with useful sections and keeps follow-ups contextual', asy
   for (const label of ['Mercado Vitacura', 'Valorizaciones', 'Propiedades y antecedentes', 'Gestión y reportes']) {
     assert.match(chat, new RegExp(label))
   }
-  assert.match(chat, /Después, las siguientes preguntas se adaptan a tu consulta/)
+  assert.match(chat, /¿Qué quieres revisar\?/)
   assert.match(chat, /onClick=\{\(\) => setPrompt\(question\)\}/)
 })
