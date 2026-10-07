@@ -137,14 +137,14 @@ export default async function MarketPage() {
     market.identityCollisions !== null && market.identityCollisions > 0 ? {
       label: 'Resolver identidad duplicada',
       value: number(market.identityCollisions),
-      reason: 'Un mismo identificador externo apunta a más de una identidad posible y el sistema no debe vincularlas automáticamente.',
+      reason: 'La misma referencia podría corresponder a más de una propiedad. Requiere confirmación antes de vincular.',
       href: '/dashboard/market/identidades',
       critical: true,
     } : null,
     market.highConfidenceIdentityCandidates !== null && market.highConfidenceIdentityCandidates > 0 ? {
       label: 'Confirmar identidad sugerida',
       value: number(market.highConfidenceIdentityCandidates),
-      reason: 'Existe evidencia suficiente para proponer una vinculación, pero la identidad aún requiere confirmación explícita.',
+      reason: 'La evidencia apunta a una propiedad, pero falta confirmarla antes de vincular el aviso.',
       href: '/dashboard/market/identidades',
       critical: false,
     } : null,
@@ -156,16 +156,16 @@ export default async function MarketPage() {
       critical: false,
     } : null,
     market.pendingUniqueTerritorySuggestions !== null && market.pendingUniqueTerritorySuggestions > 0 ? {
-      label: 'Revisar territorio sugerido',
+      label: 'Confirmar barrio sugerido',
       value: number(market.pendingUniqueTerritorySuggestions),
-      reason: 'El análisis encontró una señal territorial única, pero el caso permanece abierto hasta confirmar la evidencia.',
+      reason: 'La evidencia apunta a un barrio, pero el caso permanece abierto hasta confirmarlo.',
       href: '/dashboard/market/revisar-barrios',
       critical: false,
     } : null,
     territoryExceptions > 0 ? {
-      label: 'Resolver territorio sin evidencia suficiente',
+      label: 'Revisar barrio sin evidencia suficiente',
       value: number(territoryExceptions),
-      reason: 'Las fuentes territoriales disponibles no convergen; el sistema mantiene estos casos abiertos para evitar asignaciones forzadas.',
+      reason: 'La evidencia disponible no coincide en un barrio; el caso permanece abierto para evitar una asignación incorrecta.',
       href: '/dashboard/market/revisar-barrios',
       critical: false,
     } : null,
@@ -304,8 +304,8 @@ export default async function MarketPage() {
             <div className="border-t border-[var(--n3-line)] pt-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base Property Partners</p>
-                  <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">Identidad consolidada</p>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Propiedades consolidadas</p>
+                  <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">Base depurada</p>
                 </div>
                 <Link href="/dashboard/market/identidades" className="text-xs text-[var(--n3-teal-soft)]">Ver duplicados</Link>
               </div>
@@ -410,7 +410,7 @@ export default async function MarketPage() {
           <div className="mt-3 divide-y divide-[var(--n3-line)] text-xs leading-5">
             {[
               ['Oferta activa', 'Portal Inmobiliario · casas usadas en venta · Vitacura', 'Publicaciones únicas vigentes del corte completo', number(market.activeInventory)],
-              ['Propiedades consolidadas PP', 'Base Property Partners', `${number(market.canonicalProperties)} registros − ${number(market.confirmedDuplicateRows)} duplicados confirmados`, number(market.logicalHouseComponents)],
+              ['Propiedades consolidadas PP', 'Propiedades consolidadas', `${number(market.canonicalProperties)} registros − ${number(market.confirmedDuplicateRows)} duplicados confirmados`, number(market.logicalHouseComponents)],
               ['Ventas confirmadas', 'Compraventas verificadas de casas', 'Sólo operaciones con evidencia transaccional confirmada', number(market.confirmedSales)],
               ['Absorción', 'Oferta comparable + ventas confirmadas', 'ventas confirmadas / oferta comparable', percent(market.absorptionRate)],
             ].map(([label, source, formula, result]) => (
