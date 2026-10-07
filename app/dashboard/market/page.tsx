@@ -8,7 +8,7 @@ import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/
 import { getPortalReferencecorte } from '@/lib/portal-reference-intelligence'
 import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 import { getVitacuraNeighborhoodcorte } from '@/lib/vitacura-neighborhoods'
-import { getExecutiveDashboardcorte } from '@/lib/executive-dashboard-snapshot'
+import { getExecutiveDashboardSnapshot } from '@/lib/executive-dashboard-snapshot'
 import { comparisonPeriod, verifiedChange } from '@/lib/executive-dashboard-comparisons'
 import { getCanonicalMarketAuthority } from '@/lib/market-canonical-authority'
 
