@@ -23,6 +23,7 @@ test('core product surfaces keep decision content first and technical detail dis
   const publicHome = readFileSync('app/page.tsx', 'utf8')
   const publicEstimator = readFileSync('components/public/public-valuation-estimator.tsx', 'utf8')
   const login = readFileSync('app/auth/login/page.tsx', 'utf8')
+  const globals = readFileSync('app/globals.css', 'utf8')
 
   assert.doesNotMatch(ceo, /Control Tower/)
   assert.match(ceo, /Requiere atención/)
@@ -152,4 +153,11 @@ test('shared workspace metadata is sentence case and freshness is explicit', () 
   assert.doesNotMatch(workspace, /meta \? <div className="[^"]*uppercase/)
   assert.match(workspace, /Actualizado/)
   assert.match(workspace, /Sin observaciones/)
+})
+
+
+test('global product canvas remains flat and non-decorative', () => {
+  const globals = readFileSync('app/globals.css', 'utf8')
+  assert.doesNotMatch(globals, /gradient\(/)
+  assert.match(globals, /background: var\(--background\)/)
 })
