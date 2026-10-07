@@ -128,13 +128,13 @@ export default async function MarketOfferPage() {
       <WorkspaceHeader
         eyebrow="Mercado · Portal"
         title="Casas en oferta"
-        meta={latestDeltaAt ? `Vitacura · Actualizado ${formatPropertyPartnersDateTime(latestDeltaAt)}` : `Vitacura · Inventario ${observedAt ? formatPropertyPartnersDateTime(observedAt) : '—'}`}
+        meta={latestDeltaAt ? `Vitacura · Cambios actualizados ${formatPropertyPartnersDateTime(latestDeltaAt)}` : `Vitacura · Último inventario ${observedAt ? formatPropertyPartnersDateTime(observedAt) : '—'}`}
         actions={[{ label: 'Volver a Mercado', href: '/dashboard/market' }]}
       />
 
       <MetricStrip items={[
         {
-          label: 'Inventario verificado',
+          label: 'Último inventario completo',
           value: number(error ? null : total),
           detail: observedAt ? formatPropertyPartnersDateTime(observedAt) : 'Sin inventario completo',
         },
@@ -186,7 +186,7 @@ export default async function MarketOfferPage() {
 
       {error ? (
         <div className="mt-6 border border-[#ff8d87]/50 p-4 text-sm text-[#ff8d87]">
-          No fue posible cargar el inventario vigente completo.
+          No fue posible cargar el último inventario completo.
         </div>
       ) : !inventoryRun ? (
         <div className="mt-6 border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">
@@ -227,7 +227,7 @@ export default async function MarketOfferPage() {
                   <p className="tabular-nums">{moneyUf(detail?.price_uf == null ? null : Number(detail.price_uf))}</p>
                   <div>
                     <p className={detail ? 'text-[var(--n3-teal-soft)]' : 'text-[var(--n3-text-muted)]'}>
-                      {detail ? 'Detalle disponible' : 'Publicación vigente'}
+                      {detail ? 'Detalle disponible' : 'En inventario completo'}
                     </p>
                     <p className="mt-1 text-[10px] text-[var(--n3-text-muted)]">
                       {detailObservedAt ? formatPropertyPartnersDateTime(detailObservedAt) : 'Inventario diario'}
