@@ -44,6 +44,12 @@ export type OperationalMarketSnapshot = {
   latestIngestionUpdated: number | null
   latestIngestionUnchanged: number | null
   latestIngestionRemoved: number | null
+  latestDeltaAt: string | null
+  latestDeltaStatus: string | null
+  latestDeltaNewCandidates: number | null
+  latestDeltaDiscoveredListings: number | null
+  latestDeltaRequestedDetails: number | null
+  latestDeltaParsedDetails: number | null
   latestDiscoveryRawCandidates: number | null
   latestDiscoveryUniqueListings: number | null
   latestDiscoveryDuplicateCandidates: number | null
@@ -155,6 +161,12 @@ const emptySnapshot: OperationalMarketSnapshot = {
   latestIngestionUpdated: null,
   latestIngestionUnchanged: null,
   latestIngestionRemoved: null,
+  latestDeltaAt: null,
+  latestDeltaStatus: null,
+  latestDeltaNewCandidates: null,
+  latestDeltaDiscoveredListings: null,
+  latestDeltaRequestedDetails: null,
+  latestDeltaParsedDetails: null,
   latestDiscoveryRawCandidates: null,
   latestDiscoveryUniqueListings: null,
   latestDiscoveryDuplicateCandidates: null,
@@ -190,7 +202,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
   try {
     const supabase = await createClient()
     const service = createServiceClient()
-    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestInventoryRunResult, latestDetailRunResult, latestAttemptRunResult, ingestionRuns] = await Promise.all([
+    const [houseSummaryResult, territoryProgressResult, identityProgressResult, scopeSummaryResult, highIdentityCandidates, clientSaleSignalsResult, confirmedSalesResult, latestMetric, latestInventoryRunResult, latestDetailRunResult, latestDeltaRunResult, latestAttemptRunResult, ingestionRuns] = await Promise.all([
       supabase.rpc('get_market_house_delivery_summary_v1').maybeSingle(),
       supabase.rpc('get_market_house_territory_progress_v1').maybeSingle(),
       supabase.rpc('get_market_house_identity_progress_v1').maybeSingle(),
@@ -233,6 +245,15 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
         .maybeSingle(),
       service
         .from('market_ingestion_runs')
+        .select('id,status,accepted_rows,rejected_rows,completed_at,started_at,metadata')
+        .eq('dataset_kind', 'portal_houses')
+        .eq('status', 'completed')
+        .contains('metadata', { pipeline: 'portal_daily_delta_v1' })
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      service
+        .from('market_ingestion_runs')
         .select('id,status,accepted_rows,rejected_rows,completed_at,started_at,error_message,metadata')
         .eq('dataset_kind', 'portal_houses')
         .order('started_at', { ascending: false })
@@ -255,6 +276,7 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestMetric.error,
       latestInventoryRunResult.error,
       latestDetailRunResult.error,
+      latestDeltaRunResult.error,
       latestAttemptRunResult.error,
       ingestionRuns.error,
     ].filter(Boolean)
@@ -267,12 +289,16 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
     const metric = latestMetric.data
     const inventoryRun = latestInventoryRunResult.data ?? null
     const detailRun = latestDetailRunResult.data ?? null
+    const deltaRun = latestDeltaRunResult.data ?? null
     const attemptRun = latestAttemptRunResult.data ?? null
     const inventoryMetadata = inventoryRun?.metadata && typeof inventoryRun.metadata === 'object'
       ? inventoryRun.metadata as Record<string, unknown>
       : null
     const detailMetadata = detailRun?.metadata && typeof detailRun.metadata === 'object'
       ? detailRun.metadata as Record<string, unknown>
+      : null
+    const deltaMetadata = deltaRun?.metadata && typeof deltaRun.metadata === 'object'
+      ? deltaRun.metadata as Record<string, unknown>
       : null
     const inventoryCount = inventoryMetadata?.discovery_unique_listings == null
       ? null
@@ -336,6 +362,12 @@ export async function getOperationalMarketSnapshot(): Promise<OperationalMarketS
       latestIngestionUpdated: (latestInventoryRunResult.error || latestDetailRunResult.error) || detailMetadata?.updated_listings == null ? null : Number(detailMetadata.updated_listings),
       latestIngestionUnchanged: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.unchanged_listings == null ? null : Number(inventoryMetadata.unchanged_listings),
       latestIngestionRemoved: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.removed_listings == null ? null : Number(inventoryMetadata.removed_listings),
+      latestDeltaAt: latestDeltaRunResult.error ? null : deltaRun?.completed_at ?? deltaRun?.started_at ?? null,
+      latestDeltaStatus: latestDeltaRunResult.error ? null : deltaRun?.status ?? null,
+      latestDeltaNewCandidates: latestDeltaRunResult.error || deltaMetadata?.new_candidates == null ? null : Number(deltaMetadata.new_candidates),
+      latestDeltaDiscoveredListings: latestDeltaRunResult.error || deltaMetadata?.discovery_unique_listings == null ? null : Number(deltaMetadata.discovery_unique_listings),
+      latestDeltaRequestedDetails: latestDeltaRunResult.error || deltaMetadata?.requested_details == null ? null : Number(deltaMetadata.requested_details),
+      latestDeltaParsedDetails: latestDeltaRunResult.error || deltaMetadata?.parsed_details == null ? null : Number(deltaMetadata.parsed_details),
       latestDiscoveryRawCandidates: (latestInventoryRunResult.error || latestDetailRunResult.error) || inventoryMetadata?.discovery_raw_candidates == null
         ? null
         : Number(inventoryMetadata.discovery_raw_candidates),
