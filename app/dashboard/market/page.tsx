@@ -135,21 +135,21 @@ export default async function MarketPage() {
       critical: true,
     } : null,
     market.identityCollisions !== null && market.identityCollisions > 0 ? {
-      label: 'Resolver colisión de identidad externa',
+      label: 'Resolver identidad duplicada',
       value: number(market.identityCollisions),
       reason: 'Un mismo identificador externo apunta a más de una identidad posible y el sistema no debe vincularlas automáticamente.',
       href: '/dashboard/market/identidades',
       critical: true,
     } : null,
     market.highConfidenceIdentityCandidates !== null && market.highConfidenceIdentityCandidates > 0 ? {
-      label: 'Validar candidato fuerte de identidad',
+      label: 'Confirmar identidad sugerida',
       value: number(market.highConfidenceIdentityCandidates),
       reason: 'Existe evidencia suficiente para proponer una vinculación, pero la identidad aún requiere confirmación explícita.',
       href: '/dashboard/market/identidades',
       critical: false,
     } : null,
     market.newLiveIdentityCases !== null && market.newLiveIdentityCases > 0 ? {
-      label: 'Resolver avisos activos sin identidad',
+      label: 'Resolver avisos sin propiedad vinculada',
       value: number(market.newLiveIdentityCases),
       reason: 'Son avisos activos que todavía no pueden relacionarse con una propiedad conocida.',
       href: '/dashboard/market/identidades',
@@ -304,7 +304,7 @@ export default async function MarketPage() {
             <div className="border-t border-[var(--n3-line)] pt-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base consolidada PP</p>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base Property Partners</p>
                   <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">Identidad consolidada</p>
                 </div>
                 <Link href="/dashboard/market/identidades" className="text-xs text-[var(--n3-teal-soft)]">Ver duplicados</Link>
@@ -410,7 +410,7 @@ export default async function MarketPage() {
           <div className="mt-3 divide-y divide-[var(--n3-line)] text-xs leading-5">
             {[
               ['Oferta activa', 'Portal Inmobiliario · casas usadas en venta · Vitacura', 'Publicaciones únicas vigentes del corte completo', number(market.activeInventory)],
-              ['Propiedades consolidadas PP', 'Base consolidada PP', `${number(market.canonicalProperties)} registros − ${number(market.confirmedDuplicateRows)} duplicados confirmados`, number(market.logicalHouseComponents)],
+              ['Propiedades consolidadas PP', 'Base Property Partners', `${number(market.canonicalProperties)} registros − ${number(market.confirmedDuplicateRows)} duplicados confirmados`, number(market.logicalHouseComponents)],
               ['Ventas confirmadas', 'Compraventas verificadas de casas', 'Sólo operaciones con evidencia transaccional confirmada', number(market.confirmedSales)],
               ['Absorción', 'Oferta comparable + ventas confirmadas', 'ventas confirmadas / oferta comparable', percent(market.absorptionRate)],
             ].map(([label, source, formula, result]) => (
@@ -435,7 +435,7 @@ export default async function MarketPage() {
           <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">04 · Evolución</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Evolución</p>
                 <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">3–4 años de mercado</h2>
                 <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
                   Historia registral CBRS para casas. La serie comercial se extenderá hacia atrás cuando Pedro entregue los períodos adicionales.
@@ -486,7 +486,7 @@ export default async function MarketPage() {
 
           <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">05 · Último mes verificado</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Último mes verificado</p>
               <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">{monthLabel(executive.verifiedPeriodEnd)}</h2>
               <p className="mt-1 text-xs text-[var(--n3-text-muted)]">MoM y YoY requieren el período calendario exacto y la misma versión de fórmula verificada.</p>
             </div>
@@ -512,7 +512,7 @@ export default async function MarketPage() {
 
           <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">06 · Balanced Scorecard</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Indicadores de gestión</p>
               <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Control ejecutivo</h2>
             </div>
             <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
@@ -534,7 +534,7 @@ export default async function MarketPage() {
 
           <section className="mt-10 border-t border-[var(--n3-line)] pt-6">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">07 · Proceso comercial</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">Proceso comercial</p>
               <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Leads → visitas → cierres</h2>
             </div>
             <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-center">
