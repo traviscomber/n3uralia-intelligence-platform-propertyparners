@@ -53,14 +53,14 @@ export function CanonicalLatestReportGenerator() {
   }
 
   return <IntelligencePanel
-    eyebrow="Reportin · entrega contractual"
+    eyebrow="Entrega contractual"
     title="Avance de implementación N3uralia"
-    description="Documento separado para trazabilidad de entrega, capacidades, dependencias y cierre contractual. No corresponde al informe mensual de negocio para el CEO."
+    description="Documento separado para seguimiento de entrega, capacidades, dependencias y cierre contractual. No corresponde al informe mensual de negocio."
   >
     <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 text-xs text-[var(--n3-text-muted)]">
-        <p>Fuente: gestión canónica + registro de capacidades.</p>
-        <p className="mt-1">Uso: seguimiento de entrega y UAT. No se envía automáticamente.</p>
+        <p>Fuentes: gestión aprobada y registro de capacidades.</p>
+        <p className="mt-1">Uso: seguimiento de entrega y validación del proyecto. No se envía automáticamente.</p>
       </div>
       <button
         type="button"
@@ -69,15 +69,15 @@ export function CanonicalLatestReportGenerator() {
         className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[var(--n3-line)] px-4 py-2 text-sm font-semibold disabled:opacity-50"
       >
         {loading ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
-        {loading ? 'Generando contractual…' : 'Generar contractual'}
+        {loading ? 'Generando avance…' : 'Generar avance contractual'}
       </button>
     </div>
 
     {result?.id ? <div role="status" className="border-t border-[var(--n3-line)] p-5 text-sm">
-      <p className="font-medium text-[#65c780]">{result.reused ? 'Informe contractual existente recuperado.' : 'Borrador contractual generado.'}</p>
+      <p className="font-medium text-[#65c780]">{result.reused ? 'Avance contractual existente recuperado.' : 'Borrador de avance contractual generado.'}</p>
       <p className="mt-2 break-words text-[var(--n3-text-muted)]">{result.title || 'Informe contractual'}</p>
       {result.sourceSnapshot ? <p className="mt-1 text-xs text-[var(--n3-text-muted)]">
-        {result.sourceSnapshot.periodStart} – {result.sourceSnapshot.periodEnd} · corte {result.sourceSnapshot.sourceCutoff} · {result.sourceSnapshot.evidenceCount ?? 0} evidencias
+        Período {result.sourceSnapshot.periodStart} – {result.sourceSnapshot.periodEnd} · actualizado {result.sourceSnapshot.sourceCutoff} · {result.sourceSnapshot.evidenceCount ?? 0} fuentes
       </p> : null}
       <div className="mt-4 flex flex-wrap gap-2">
         <Link href="/dashboard/reportes/canonicos" className="inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 py-2 text-sm">Revisar informe</Link>
