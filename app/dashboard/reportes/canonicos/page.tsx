@@ -67,7 +67,7 @@ export default async function CanonicalClientReportsPage(){
         <div><p className="uppercase tracking-[0.12em]">Fuentes</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.sourceCount||'—'}</p></div>
         <div><p className="uppercase tracking-[0.12em]">Modelo</p><p className="mt-1 break-words text-sm text-[var(--n3-text-light)]">{current.model||'—'}</p></div>
         <div><p className="uppercase tracking-[0.12em]">Versión</p><p className="mt-1 break-words text-sm text-[var(--n3-text-light)]">{current.promptVersion||'—'}</p></div>
-        <div><p className="uppercase tracking-[0.12em]">Costo técnico</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.costUsd==null?'—':`US$ ${current.costUsd.toFixed(4)}`}</p></div>
+        <div><p className="uppercase tracking-[0.12em]">Costo de generación</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.costUsd==null?'—':`US$ ${current.costUsd.toFixed(4)}`}</p></div>
       </div>
     </details>:null}
 
