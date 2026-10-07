@@ -37,6 +37,10 @@ test('core product surfaces keep decision content first and technical detail dis
   const globals = readFileSync('app/globals.css', 'utf8')
 
   assert.doesNotMatch(ceo, /Control Tower/)
+  assert.match(ceo, /Leads con más de 90 días/)
+  assert.match(ceo, /Priorizar leads \+90 días/)
+  assert.doesNotMatch(ceo, /Backlog \+90 días/)
+  assert.doesNotMatch(ceo, /Intervenir backlog/)
   assert.match(ceo, /Requiere atención/)
   assert.match(ceo, /Ver todas las oficinas/)
   assert.match(ceo, /Ver calidad de datos/)
