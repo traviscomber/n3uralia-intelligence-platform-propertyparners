@@ -76,6 +76,27 @@ function freshness(status: MarketFreshnessStatus, ageDays: number | null) {
   return '—'
 }
 
+
+function marketSourceLabel(value: string | null) {
+  if (!value) return 'Fuente no indicada'
+  const normalized = value.toLowerCase()
+  if (normalized.includes('portal_inmobiliario') || normalized === 'portal') return 'Portal Inmobiliario'
+  if (normalized.includes('toctoc')) return 'TocToc'
+  if (normalized.includes('cbrs')) return 'CBRS'
+  return value.replaceAll('_', ' ')
+}
+
+function alertSeverityLabel(value: string) {
+  const labels: Record<string, string> = {
+    critical: 'Crítica',
+    high: 'Alta',
+    medium: 'Media',
+    low: 'Baja',
+    warning: 'Atención',
+  }
+  return labels[value.toLowerCase()] ?? value
+}
+
 export default async function MarketPage() {
   const scope = await requireUserScope()
   const canManage = hasCapability(scope.role, 'management.global.read') || hasCapability(scope.role, 'management.office.read')
@@ -243,16 +264,16 @@ export default async function MarketPage() {
             Se conserva el último corte completo verificado del {date(market.latestIngestionAt)} y no se publica una actualización vacía como vigente.
           </p>
           <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">
-            Último intento: {date(market.latestAttemptAt)} · estado {market.latestAttemptStatus ?? '—'}{market.latestAttemptError ? ` · ${market.latestAttemptError}` : ''}
+            Último intento: {date(market.latestAttemptAt)}
           </p>
         </div>
       ) : null}
 
       <MetricStrip items={[
         {
-          label: 'Inventario verificado',
+          label: 'Último inventario completo',
           value: market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—',
-          detail: market.latestIngestionFullSnapshot ? `Al ${date(market.latestIngestionAt)}` : 'Pendiente de inventario completo',
+          detail: market.latestIngestionFullSnapshot ? date(market.latestIngestionAt) : 'Pendiente de inventario completo',
           tone: market.latestIngestionFullSnapshot ? 'default' : 'warning',
         },
         {
@@ -379,9 +400,9 @@ export default async function MarketPage() {
         </div>
         <MetricStrip items={[
           {
-            label: 'Oferta activa',
+            label: 'Último inventario completo',
             value: market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—',
-            detail: market.latestIngestionFullSnapshot ? 'Corte completo verificado' : 'Cobertura parcial · total aún no confirmado',
+            detail: market.latestIngestionFullSnapshot ? `Corte ${date(market.latestIngestionAt)}` : 'Cobertura parcial · total aún no confirmado',
             tone: market.latestIngestionFullSnapshot ? 'default' : 'warning',
           },
           {
@@ -409,7 +430,7 @@ export default async function MarketPage() {
           </summary>
           <div className="mt-3 divide-y divide-[var(--n3-line)] text-xs leading-5">
             {[
-              ['Oferta activa', 'Portal Inmobiliario · casas usadas en venta · Vitacura', 'Publicaciones únicas vigentes del corte completo', number(market.activeInventory)],
+              ['Inventario completo', 'Portal Inmobiliario · casas usadas en venta · Vitacura', 'Publicaciones únicas del último corte completo verificado', number(market.activeInventory)],
               ['Propiedades consolidadas PP', 'Propiedades consolidadas', `${number(market.canonicalProperties)} registros − ${number(market.confirmedDuplicateRows)} duplicados confirmados`, number(market.logicalHouseComponents)],
               ['Ventas confirmadas', 'Compraventas verificadas de casas', 'Sólo operaciones con evidencia transaccional confirmada', number(market.confirmedSales)],
               ['Absorción', 'Oferta comparable + ventas confirmadas', 'ventas confirmadas / oferta comparable', percent(market.absorptionRate)],
@@ -569,7 +590,7 @@ export default async function MarketPage() {
                 <div key={alert.id} className="py-3">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium">{alert.title}</p>
-                    <span className="text-[10px] uppercase tracking-[0.12em] text-[#f0c96a]">{alert.severity}</span>
+                    <span className="text-[10px] uppercase tracking-[0.12em] text-[#f0c96a]">{alertSeverityLabel(alert.severity)}</span>
                   </div>
                   <p className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{alert.detail}</p>
                 </div>
@@ -578,7 +599,7 @@ export default async function MarketPage() {
           ) : (
             <div className="mt-4 border-y border-[var(--n3-line)] py-5">
               <p className="text-sm font-medium text-[var(--n3-text-light)]">{verifiedMonth ? 'Sin alertas abiertas para este período' : 'Sin período mensual verificado'}</p>
-              <p className="mt-1 text-xs text-[var(--n3-text-muted)]">{verifiedMonth ? 'No hay alertas abiertas en el período mostrado.' : 'Las alertas aparecerán cuando exista un período verificado.'}</p>
+              {!verifiedMonth ? <p className="mt-1 text-xs text-[var(--n3-text-muted)]">Las alertas aparecerán cuando exista un período verificado.</p> : null}
             </div>
           )}
         </div>
@@ -591,7 +612,7 @@ export default async function MarketPage() {
               <Link key={property.id} href={`/dashboard/properties/${property.id}`} className="grid gap-2 py-3 text-sm hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_110px_90px] sm:items-center">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{property.address || 'Propiedad sin dirección'}</p>
-                  <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{property.neighborhood || 'Sin barrio'} · {property.source || 'fuente no indicada'}</p>
+                  <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">{property.neighborhood || 'Sin barrio'} · {marketSourceLabel(property.source)}</p>
                 </div>
                 <p className="tabular-nums">{property.price_uf == null ? '—' : `UF ${number(Number(property.price_uf))}`}</p>
                 <p className="text-xs text-[var(--n3-text-muted)]">{property.days_on_market == null ? '—' : `${property.days_on_market} días`}</p>
