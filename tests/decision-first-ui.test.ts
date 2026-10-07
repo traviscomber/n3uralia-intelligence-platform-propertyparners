@@ -19,6 +19,8 @@ test('core product surfaces keep decision content first and technical detail dis
   const dataLayer = readFileSync('components/management/data-layer-legend.tsx', 'utf8')
   const directorOps = readFileSync('components/management/director-operational-workspace.tsx', 'utf8')
   const partnerOps = readFileSync('components/management/partner-operational-workspace.tsx', 'utf8')
+  const publicHome = readFileSync('app/page.tsx', 'utf8')
+  const publicEstimator = readFileSync('components/public/public-valuation-estimator.tsx', 'utf8')
 
   assert.doesNotMatch(ceo, /Control Tower/)
   assert.match(ceo, /Requiere atención/)
@@ -82,6 +84,14 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(partnerOps, /RLS al alcance personal/)
   assert.match(partnerOps, /statusLabel/)
   assert.match(partnerOps, /En curso/)
+
+  assert.match(publicHome, /Cómo se calcula/)
+  assert.doesNotMatch(publicHome, /KML/)
+  assert.doesNotMatch(publicHome, /Piso mínimo de evidencia/)
+  assert.match(publicEstimator, /Rango referencial/)
+  assert.match(publicEstimator, /Ver detalle del cálculo/)
+  assert.match(publicEstimator, /Referencia central/)
+  assert.match(publicEstimator, /options\.find\(\(option\) => option\.coverageLevel === 'sector'\)/)
 })
 
 test('shared workspace metadata is sentence case and freshness is explicit', () => {
