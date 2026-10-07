@@ -105,8 +105,10 @@ function evidenceSourceLabel(value:string){
 }
 
 function evidenceCutoffLabel(value:string){
+  const dateOnly=value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if(dateOnly) return `${dateOnly[3]}-${dateOnly[2]}-${dateOnly[1]}`
   const parsed=new Date(value)
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-CL')
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-CL',{timeZone:'America/Santiago'})
 }
 
 const starters = [
