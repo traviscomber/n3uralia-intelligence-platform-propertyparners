@@ -130,6 +130,31 @@ function CoverageItem({ label, value, detail, unavailable = false }: { label: st
   </div>
 }
 
+function domainLabel(domain: ActionProposal['domain']) {
+  const labels: Record<string, string> = {
+    management: 'Gestión',
+    tasks: 'Tareas',
+    valuations: 'Valorizaciones',
+    properties: 'Propiedades',
+    reports: 'Informes',
+    market: 'Mercado',
+    'cross-domain': 'General',
+  }
+  return labels[domain] ?? 'General'
+}
+
+function taskSeverityLabel(value: string) {
+  const labels: Record<string, string> = {
+    info: 'Informativa',
+    warning: 'Atención',
+    critical: 'Crítica',
+    low: 'Baja',
+    medium: 'Media',
+    high: 'Alta',
+  }
+  return labels[value] ?? value
+}
+
 function priorityLabel(priority: ActionProposal['priority']) {
   if (priority === 'critical') return 'Crítica'
   if (priority === 'high') return 'Alta'
@@ -284,9 +309,9 @@ export function PedroPabloWorkspaceV2() {
 
               <div className="mt-4 grid gap-px border border-[var(--n3-line)] bg-[var(--n3-line)] md:grid-cols-2">
                 {proposals.map((proposal, index) => <div key={proposal.id} className="bg-[var(--n3-black)] p-4">
-                  <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.14em]"><span className="text-[var(--n3-text-muted)]">Acción {index + 1} · {proposal.domain}</span><span className={priorityClass(proposal.priority)}>{priorityLabel(proposal.priority)}</span></div>
+                  <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.14em]"><span className="text-[var(--n3-text-muted)]">Acción {index + 1} · {domainLabel(proposal.domain)}</span><span className={priorityClass(proposal.priority)}>{priorityLabel(proposal.priority)}</span></div>
                   <div className="mt-2 text-sm font-medium text-[var(--n3-text-light)]">{proposal.action}</div>
-                  <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Objeto: {proposal.objectLabel}</div>
+                  <div className="mt-1 text-xs text-[var(--n3-text-muted)]">Sobre: {proposal.objectLabel}</div>
                   <p className="mt-3 text-xs leading-5 text-[var(--n3-text-muted)]">{proposal.reason}</p>
 
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -300,9 +325,8 @@ export function PedroPabloWorkspaceV2() {
                 <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">Confirmar acción</div>
                 <div className="mt-3 text-sm font-semibold text-[var(--n3-text-light)]">Crear tarea: {actionPreview.taskDraft.title}</div>
                 <div className="mt-2 grid gap-1 text-xs leading-5 text-[var(--n3-text-muted)]">
-                  <div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {actionPreview.taskDraft.priority}</div>
-                  <div><span className="text-[var(--n3-text-light)]">Severidad:</span> {actionPreview.taskDraft.severity}</div>
-                  <div><span className="text-[var(--n3-text-light)]">Origen:</span> {actionPreview.taskDraft.sourceKey}</div>
+                  <div><span className="text-[var(--n3-text-light)]">Prioridad:</span> {taskSeverityLabel(actionPreview.taskDraft.priority)}</div>
+                  <div><span className="text-[var(--n3-text-light)]">Nivel:</span> {taskSeverityLabel(actionPreview.taskDraft.severity)}</div>
                   <div className="mt-1"><span className="text-[var(--n3-text-light)]">Detalle:</span> {actionPreview.taskDraft.detail}</div>
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -333,13 +357,13 @@ export function PedroPabloWorkspaceV2() {
         </summary>
         <aside className="mt-4 grid gap-4 lg:grid-cols-2">
         {response ? <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5">
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><ListChecks aria-hidden="true" size={14} /> Cobertura operativa</div>
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><ListChecks aria-hidden="true" size={14} /> Datos disponibles</div>
           <div className="mt-4 space-y-3">
-            <CoverageItem label="Gestión" value={`${response.coverage.management.entities} entidades`} detail={`${response.coverage.management.alerts} alertas visibles`} />
-            <CoverageItem label="Tareas" value={response.coverage.tasks.available ? `${response.coverage.tasks.active} activas` : 'No disponible'} detail={response.coverage.tasks.available ? `${response.coverage.tasks.overdue} vencidas · ${response.coverage.tasks.total} visibles` : 'El rol no expone este módulo'} unavailable={!response.coverage.tasks.available} />
-            <CoverageItem label="Valorizaciones" value={response.coverage.valuations.available ? `${response.coverage.valuations.total} casos` : 'No disponible'} detail={response.coverage.valuations.available ? `${response.coverage.valuations.review} revisión · ${response.coverage.valuations.drafts} borrador · ${response.coverage.valuations.approved} aprobadas/emitidas` : 'El rol no expone este módulo'} unavailable={!response.coverage.valuations.available} />
-            <CoverageItem label="Propiedades" value={response.coverage.properties.available ? `${response.coverage.properties.total} asignadas` : 'No disponible'} detail={response.coverage.properties.available ? `${response.coverage.properties.pendingIdentity} identidad pendiente · ${response.coverage.properties.stale} sin vigencia reciente · ${response.coverage.properties.attention} requieren atención` : 'El rol no expone este módulo'} unavailable={!response.coverage.properties.available} />
-            <CoverageItem label="Reportes" value={response.coverage.reports.available ? `${response.coverage.reports.total} entregas recientes` : 'No disponible'} detail={response.coverage.reports.available ? `${response.coverage.reports.sent} enviadas/escaladas · ${response.coverage.reports.failed} fallidas · ${response.coverage.reports.queued} en cola` : 'El rol o la fuente no exponen telemetría de entregas'} unavailable={!response.coverage.reports.available} />
+            <CoverageItem label="Gestión" value={`${response.coverage.management.entities} ámbitos`} detail={`${response.coverage.management.alerts} alertas visibles`} />
+            <CoverageItem label="Tareas" value={response.coverage.tasks.available ? `${response.coverage.tasks.active} activas` : 'No disponible'} detail={response.coverage.tasks.available ? `${response.coverage.tasks.overdue} vencidas · ${response.coverage.tasks.total} visibles` : 'No disponible para tu acceso'} unavailable={!response.coverage.tasks.available} />
+            <CoverageItem label="Valorizaciones" value={response.coverage.valuations.available ? `${response.coverage.valuations.total} casos` : 'No disponible'} detail={response.coverage.valuations.available ? `${response.coverage.valuations.review} revisión · ${response.coverage.valuations.drafts} borrador · ${response.coverage.valuations.approved} aprobadas/emitidas` : 'No disponible para tu acceso'} unavailable={!response.coverage.valuations.available} />
+            <CoverageItem label="Propiedades" value={response.coverage.properties.available ? `${response.coverage.properties.total} asignadas` : 'No disponible'} detail={response.coverage.properties.available ? `${response.coverage.properties.pendingIdentity} identidad pendiente · ${response.coverage.properties.stale} sin vigencia reciente · ${response.coverage.properties.attention} requieren atención` : 'No disponible para tu acceso'} unavailable={!response.coverage.properties.available} />
+            <CoverageItem label="Reportes" value={response.coverage.reports.available ? `${response.coverage.reports.total} entregas recientes` : 'No disponible'} detail={response.coverage.reports.available ? `${response.coverage.reports.sent} enviadas · ${response.coverage.reports.failed} fallidas · ${response.coverage.reports.queued} en cola` : 'No hay información de entregas disponible'} unavailable={!response.coverage.reports.available} />
           </div>
         </div> : null}
 
@@ -347,7 +371,7 @@ export function PedroPabloWorkspaceV2() {
 
         <div className="border border-[var(--n3-line)] bg-[var(--n3-deep)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Database aria-hidden="true" size={14} /> Evidencia</div>{response ? <div className="mt-4 space-y-4">{evidence.length ? evidence.map((item, index) => <div key={`${item.label}-${index}`} className="border-t border-[var(--n3-line)] pt-3 first:border-t-0 first:pt-0"><div className="text-sm font-medium text-[var(--n3-text-light)]">{item.label}</div><div className="mt-1 text-xs leading-5 text-[var(--n3-text-muted)]">{evidenceSourceLabel(item.source)}</div>{item.cutoff ? <div className="mt-1 text-[10px] text-[var(--n3-teal-soft)]">Actualizado {evidenceCutoffLabel(item.cutoff)}</div> : null}</div>) : <div className="mt-4 text-sm text-[var(--n3-text-muted)]">Sin evidencia adicional disponible.</div>}</div> : <p className="mt-3 text-sm leading-6 text-[var(--n3-text-muted)]">La procedencia aparecerá junto a cada lectura evaluable.</p>}</div>
 
-        <div className="border border-[var(--n3-line)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Scale aria-hidden="true" size={14} /> Criterio del asistente</div><div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]"><div><span className="text-[var(--n3-text-light)]">Objetivo:</span> ayudar a decidir con evidencia autorizada.</div><div><span className="text-[var(--n3-text-light)]">Evidencia:</span> muestra fuente y vigencia cuando están disponibles.</div><div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se declaran; no se completan ni estiman.</div><div><span className="text-[var(--n3-text-light)]">Acciones:</span> {canCreateTask ? 'puede preparar una tarea y sólo ejecutarla después de confirmación humana.' : 'este rol no puede ejecutar cambios desde el asistente.'}</div></div></div>
+        <div className="border border-[var(--n3-line)] p-5"><div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]"><Scale aria-hidden="true" size={14} /> Cómo decide Pedro Pablo</div><div className="mt-3 grid gap-3 text-xs leading-5 text-[var(--n3-text-muted)]"><div><span className="text-[var(--n3-text-light)]">Objetivo:</span> ayudar a decidir con evidencia autorizada.</div><div><span className="text-[var(--n3-text-light)]">Evidencia:</span> muestra fuente y vigencia cuando están disponibles.</div><div><span className="text-[var(--n3-text-light)]">Vacíos:</span> se declaran; no se completan ni estiman.</div><div><span className="text-[var(--n3-text-light)]">Acciones:</span> {canCreateTask ? 'puede preparar una tarea y sólo ejecutarla después de confirmación humana.' : 'este rol no puede ejecutar cambios desde el asistente.'}</div></div></div>
         </aside>
       </details>
     </div>
