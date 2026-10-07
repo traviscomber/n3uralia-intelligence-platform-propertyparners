@@ -191,11 +191,11 @@ export default async function MarketOfferPage() {
         </div>
       ) : !inventoryRun ? (
         <div className="mt-6 border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">
-          Aún no existe un snapshot diario completo. El sistema no mostrará una muestra parcial como si fuera toda la oferta.
+          Aún no existe un inventario diario completo. El sistema no mostrará una muestra parcial como si fuera toda la oferta.
         </div>
       ) : inventory.length === 0 ? (
         <div className="mt-6 border border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">
-          El snapshot completo no contiene publicaciones vigentes.
+          El inventario completo no contiene publicaciones vigentes.
         </div>
       ) : (
         <details className="mt-7 border-t border-[var(--n3-line)] pt-4">
@@ -232,7 +232,7 @@ export default async function MarketOfferPage() {
                       {detail ? 'Enriquecida' : 'Presencia confirmada'}
                     </p>
                     <p className="mt-1 text-[10px] text-[var(--n3-text-muted)]">
-                      {detailObservedAt ? formatPropertyPartnersDateTime(detailObservedAt) : 'Snapshot diario'}
+                      {detailObservedAt ? formatPropertyPartnersDateTime(detailObservedAt) : 'Inventario diario'}
                     </p>
                   </div>
                   {item.url ? (
