@@ -45,6 +45,9 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(market, /benchmark territorial/)
   assert.match(market, /Cobertura territorial/)
   assert.match(market, /Avisos vigentes/)
+  assert.doesNotMatch(market, /referencias técnicas repetidas/)
+  assert.doesNotMatch(market, /repeticiones técnicas/)
+  assert.doesNotMatch(market, /IDs únicos/)
 
   assert.match(valuations, /Actualizado/)
   assert.match(valuations, /Ver calidad de datos/)
@@ -62,9 +65,13 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(reports, /Ver calidad de datos/)
   assert.doesNotMatch(reports, /informes canónicos falló/)
   assert.doesNotMatch(reports, /informe canónico listo/)
+  assert.doesNotMatch(reports, /Costo técnico/)
+  assert.match(reports, /Costo de generación/)
 
   assert.match(properties, /Requiere decisión/)
   assert.match(properties, /Ver calidad de datos/)
+  assert.doesNotMatch(properties, /Sin casas live verificables/)
+  assert.doesNotMatch(properties, /Corte live/)
 
   assert.match(offer, /Cambios de hoy/)
   assert.match(offer, /Ver inventario completo/)
@@ -73,6 +80,7 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(offer, />ID \{item\.sourceListingId\}<\/p>/)
   assert.match(offer, /Detalle disponible/)
   assert.match(offer, /Publicación vigente/)
+  assert.doesNotMatch(offer, /Publicación Portal \$\{item\.sourceListingId\}/)
 
   assert.match(pedro, /Decisiones con datos verificados/)
   assert.match(pedro, /Ver detalle/)
@@ -81,10 +89,15 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(pedro, /usuario autenticado \+ capabilities \+ RLS/)
   assert.doesNotMatch(pedro, /\{item\.domain \?/)
   assert.doesNotMatch(pedro, /\{item\.reference \?/)
+  assert.doesNotMatch(pedro, /¿Qué cambió esta mañana en el mercado\?/)
+  assert.doesNotMatch(pedro, /Tarea creada y registrada · \$\{execution\.task\.id\}/)
 
   assert.doesNotMatch(floatingPedro, /rounded-(?:full|xl|lg|md)/)
   assert.doesNotMatch(floatingPedro, /shadow-(?:xl|2xl)/)
   assert.doesNotMatch(floatingPedro, /hover:-translate-y/)
+  assert.match(floatingPedro, /visibleEvidenceSource/)
+  assert.doesNotMatch(floatingPedro, /\{item\.label\}<\/span> · \{item\.source\}/)
+  assert.doesNotMatch(floatingPedro, /¿Qué cambió esta mañana en el mercado\?/)
 
   assert.match(director, /eyebrow="Hoy"/)
   assert.match(director, /Ver seguimiento y análisis/)
