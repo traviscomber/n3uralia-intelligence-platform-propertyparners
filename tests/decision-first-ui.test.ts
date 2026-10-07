@@ -21,6 +21,7 @@ test('core product surfaces keep decision content first and technical detail dis
   const partnerOps = readFileSync('components/management/partner-operational-workspace.tsx', 'utf8')
   const publicHome = readFileSync('app/page.tsx', 'utf8')
   const publicEstimator = readFileSync('components/public/public-valuation-estimator.tsx', 'utf8')
+  const login = readFileSync('app/auth/login/page.tsx', 'utf8')
 
   assert.doesNotMatch(ceo, /Control Tower/)
   assert.match(ceo, /Requiere atención/)
@@ -93,6 +94,10 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(publicEstimator, /Referencia central/)
   assert.match(publicEstimator, /Actualizado \{dateTime\.format\(new Date\(result\.newestObservation\)\)\}/)
   assert.match(publicEstimator, /options\.find\(\(option\) => option\.coverageLevel === 'sector'\)/)
+
+  assert.match(login, /Ingresa con tu cuenta de Property Partners/)
+  assert.doesNotMatch(login, /Acceso administrado internamente/)
+  assert.doesNotMatch(login, /Inteligencia de mercado Vitacura/)
 })
 
 test('shared workspace metadata is sentence case and freshness is explicit', () => {
