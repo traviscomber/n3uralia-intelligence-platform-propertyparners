@@ -91,6 +91,7 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(publicEstimator, /Rango referencial/)
   assert.match(publicEstimator, /Ver detalle del cálculo/)
   assert.match(publicEstimator, /Referencia central/)
+  assert.match(publicEstimator, /Actualizado \{dateTime\.format\(new Date\(result\.newestObservation\)\)\}/)
   assert.match(publicEstimator, /options\.find\(\(option\) => option\.coverageLevel === 'sector'\)/)
 })
 
