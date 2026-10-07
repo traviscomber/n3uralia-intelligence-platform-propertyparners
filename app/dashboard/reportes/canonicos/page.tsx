@@ -64,10 +64,10 @@ export default async function CanonicalClientReportsPage(){
     {current?<details className="mt-5 max-w-5xl border-b border-[var(--n3-line)] pb-5">
       <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver trazabilidad</summary>
       <div className="mt-4 grid gap-4 text-xs text-[var(--n3-text-muted)] sm:grid-cols-2 lg:grid-cols-4">
+        <div><p className="uppercase tracking-[0.12em]">Tipo</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.kind}</p></div>
         <div><p className="uppercase tracking-[0.12em]">Fuentes</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.sourceCount||'—'}</p></div>
-        <div><p className="uppercase tracking-[0.12em]">Modelo</p><p className="mt-1 break-words text-sm text-[var(--n3-text-light)]">{current.model||'—'}</p></div>
-        <div><p className="uppercase tracking-[0.12em]">Versión</p><p className="mt-1 break-words text-sm text-[var(--n3-text-light)]">{current.promptVersion||'—'}</p></div>
-        <div><p className="uppercase tracking-[0.12em]">Costo de generación</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.costUsd==null?'—':`US$ ${current.costUsd.toFixed(4)}`}</p></div>
+        <div><p className="uppercase tracking-[0.12em]">Estado</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.status}</p></div>
+        <div><p className="uppercase tracking-[0.12em]">Actualizado</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{formatDate(current.createdAt)}</p></div>
       </div>
     </details>:null}
 
