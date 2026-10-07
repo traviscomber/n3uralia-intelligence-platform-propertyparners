@@ -77,7 +77,11 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(dataLayer, /último período aprobado disponible/)
 
   assert.doesNotMatch(directorOps, /alcance central/)
+  assert.match(directorOps, /statusLabel/)
+  assert.match(directorOps, /En revisión/)
   assert.doesNotMatch(partnerOps, /RLS al alcance personal/)
+  assert.match(partnerOps, /statusLabel/)
+  assert.match(partnerOps, /En curso/)
 })
 
 test('shared workspace metadata is sentence case and freshness is explicit', () => {
