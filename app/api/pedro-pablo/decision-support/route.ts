@@ -280,7 +280,7 @@ function proposalReason(response: BaseResponse, domain: ProposalDomain) {
   if (domain === 'valuations') return 'Hay un caso de valorización visible que requiere revisión dentro del alcance autorizado.'
   if (domain === 'properties') return 'La evidencia visible muestra identidad o vigencia pendiente de verificación.'
   if (domain === 'reports') return 'La telemetría autorizada de reportes muestra un estado que requiere revisión operativa.'
-  if (domain === 'market') return 'El snapshot completo de mercado muestra un cambio diario verificable que requiere revisión.'
+  if (domain === 'market') return 'La actualización de mercado muestra un cambio verificable que requiere revisión.'
   if (domain === 'management') return 'La evidencia visible muestra una prioridad, tarea o brecha de gestión que requiere revisión.'
   return 'La propuesta deriva de evidencia autorizada y de la política de priorización vigente.'
 }
