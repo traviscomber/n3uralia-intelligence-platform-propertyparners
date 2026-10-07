@@ -12,6 +12,7 @@ test('core product surfaces keep decision content first and technical detail dis
   const properties = readFileSync('app/dashboard/properties/page.tsx', 'utf8')
   const offer = readFileSync('app/dashboard/market/oferta/page.tsx', 'utf8')
   const pedro = readFileSync('components/intelligence/pedro-pablo-workspace-v2.tsx', 'utf8')
+  const floatingPedro = readFileSync('components/intelligence/pedro-pablo-floating-chat.tsx', 'utf8')
   const director = readFileSync('components/management/director-dashboard-v3.tsx', 'utf8')
   const partner = readFileSync('components/management/partner-performance-summary.tsx', 'utf8')
   const valuation = readFileSync('app/dashboard/valuation/page.tsx', 'utf8')
@@ -35,6 +36,8 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(market, /Nuevas hoy/)
   assert.match(market, /Ver detalle de datos/)
   assert.match(market, /Ver evolución y gestión/)
+  assert.doesNotMatch(market, /cron automático/)
+  assert.doesNotMatch(market, /El KML es la autoridad territorial/)
 
   assert.match(valuations, /Actualizado/)
   assert.match(valuations, /Ver calidad de datos/)
@@ -42,6 +45,9 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(management, /Qué falta para cerrar/)
   assert.match(management, /Actualizado/)
   assert.match(management, /Ver calidad de datos/)
+  assert.match(management, /reportTypeLabel/)
+  assert.match(management, /statusLabel/)
+  assert.match(management, />Datos y cargas<\/summary>/)
 
   assert.match(reports, /Informe actual/)
   assert.match(reports, /Ver trazabilidad/)
@@ -53,9 +59,20 @@ test('core product surfaces keep decision content first and technical detail dis
 
   assert.match(offer, /Cambios de hoy/)
   assert.match(offer, /Ver inventario completo/)
+  assert.doesNotMatch(offer, /snapshot diario/i)
+  assert.doesNotMatch(offer, /snapshot completo/i)
 
   assert.match(pedro, /Decisiones con datos verificados/)
   assert.match(pedro, /Ver detalle/)
+  assert.match(pedro, /evidenceSourceLabel/)
+  assert.match(pedro, /Actualizado \{evidenceCutoffLabel\(item\.cutoff\)\}/)
+  assert.doesNotMatch(pedro, /usuario autenticado \+ capabilities \+ RLS/)
+  assert.doesNotMatch(pedro, /\{item\.domain \?/)
+  assert.doesNotMatch(pedro, /\{item\.reference \?/)
+
+  assert.doesNotMatch(floatingPedro, /rounded-(?:full|xl|lg|md)/)
+  assert.doesNotMatch(floatingPedro, /shadow-(?:xl|2xl)/)
+  assert.doesNotMatch(floatingPedro, /hover:-translate-y/)
 
   assert.match(director, /eyebrow="Hoy"/)
   assert.match(director, /Ver seguimiento y análisis/)
