@@ -108,6 +108,7 @@ export default function ManagementOperationsPage() {
   const rejected = currentRuns.reduce((sum, run) => sum + Number(run.rows_rejected || 0), 0)
   const latestReport = currentReports[0] ?? null
   const inserted = currentRuns.reduce((sum, run) => sum + Number(run.rows_inserted || 0), 0)
+  const latestUpdate = currentRuns[0]?.created_at ? new Date(currentRuns[0].created_at).toLocaleString('es-CL') : '—'
   const nextStep = rejected > 0
     ? { title: 'Revisar observaciones antes de cerrar', detail: `${rejected} filas fueron rechazadas en las cargas del período.`, label: 'Revisar reconciliación', href: '/dashboard/control/reconciliacion' }
     : currentRuns.length === 0
@@ -124,16 +125,16 @@ export default function ManagementOperationsPage() {
       <WorkspaceHeader
         eyebrow="Gestión"
         title="Qué falta para cerrar"
-        meta={rejected ? `${rejected} observaciones de datos requieren revisión` : latestReport ? 'Reporte mensual disponible' : currentRuns.length ? 'Período con evidencia · cierre aún no emitido' : 'Sin evidencia cargada para el período'}
+        meta={`Actualizado ${latestUpdate}`}
         controls={<div><label htmlFor="management-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><input id="management-period" type="month" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-sm" /></div>}
         actions={[{ label: 'Metas y alertas', href: '/dashboard/control/admin' }]}
       />
 
       <MetricStrip items={[
-        { label: 'Cargas', value: currentRuns.length || '—', detail: currentRuns.length ? undefined : 'Sin evidencia del período' },
-        { label: 'Filas incorporadas', value: currentRuns.length ? inserted : '—', detail: currentRuns.length ? undefined : 'No evaluable sin carga' },
-        { label: 'Observaciones', value: currentRuns.length ? rejected : '—', detail: currentRuns.length ? undefined : 'No evaluable sin carga', tone: currentRuns.length ? (rejected ? 'warning' : 'success') : 'default' },
-        { label: 'Reportes', value: currentRuns.length ? currentReports.length : '—', detail: currentRuns.length && !currentReports.length ? 'Cierre pendiente' : undefined, tone: currentReports.length ? 'success' : 'default' },
+        { label: 'Estado', value: currentRuns.length === 0 ? 'Sin datos' : rejected > 0 ? 'Pendiente' : latestReport ? 'Cerrado' : 'Listo', tone: currentRuns.length === 0 ? 'default' : rejected > 0 ? 'warning' : latestReport ? 'success' : 'default' },
+        { label: 'Observaciones', value: currentRuns.length ? rejected : '—', tone: currentRuns.length ? (rejected ? 'warning' : 'success') : 'default' },
+        { label: 'Reportes', value: currentRuns.length ? currentReports.length : '—', detail: currentRuns.length && !currentReports.length ? 'Pendiente de generar' : undefined, tone: currentReports.length ? 'success' : 'default' },
+        { label: 'Datos incorporados', value: currentRuns.length ? inserted : '—' },
       ]} />
 
       <section className="mt-7 max-w-5xl">
@@ -167,12 +168,15 @@ export default function ManagementOperationsPage() {
         </div>
       </details>
 
-      <DataStatusBar
-        cutoff={currentRuns[0]?.created_at ? new Date(currentRuns[0].created_at).toLocaleString('es-CL') : '—'}
-        coverage={currentRuns.length ? `${inserted} filas incorporadas · ${currentRuns.length} carga${currentRuns.length === 1 ? '' : 's'}` : 'Sin evidencia cargada para el período'}
-        issues={currentRuns.length === 0 ? 1 : rejected}
-        status={currentRuns.length === 0 ? 'blocked' : rejected > 0 ? 'partial' : 'ready'}
-      />
+      <details className="mt-7 max-w-5xl border-t border-[var(--n3-line)] pt-4">
+        <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver calidad de datos</summary>
+        <DataStatusBar
+          cutoff={latestUpdate}
+          coverage={currentRuns.length ? `${inserted} filas incorporadas · ${currentRuns.length} carga${currentRuns.length === 1 ? '' : 's'}` : 'Sin evidencia cargada para el período'}
+          issues={currentRuns.length === 0 ? 1 : rejected}
+          status={currentRuns.length === 0 ? 'blocked' : rejected > 0 ? 'partial' : 'ready'}
+        />
+      </details>
     </WorkspaceShell>
   )
 }
