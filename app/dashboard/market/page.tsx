@@ -293,11 +293,11 @@ export default async function MarketPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-semibold tabular-nums">{number(market.latestDiscoveryUniqueListings)}</p>
-                  <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">IDs únicos capturados</p>
+                  <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Avisos únicos</p>
                 </div>
               </div>
               <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">
-                {number(market.latestDiscoveryDuplicateCandidates)} referencias técnicas repetidas fueron descartadas durante el recorrido. No representan propiedades adicionales.
+                {number(market.latestDiscoveryDuplicateCandidates)} referencias repetidas fueron descartadas. No representan propiedades adicionales.
               </p>
             </div>
 
@@ -335,7 +335,7 @@ export default async function MarketPage() {
               <span className="text-[10px] uppercase tracking-[0.12em]">Detalle</span>
             </summary>
             <div className="space-y-1 pt-3 font-mono text-[11px] leading-5 text-[var(--n3-text-muted)]">
-              <p>Captura Portal: {number(market.latestDiscoveryRawCandidates)} referencias observadas − {number(market.latestDiscoveryDuplicateCandidates)} repeticiones técnicas = {number(market.latestDiscoveryUniqueListings)} IDs únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</p>
+              <p>Portal: {number(market.latestDiscoveryRawCandidates)} referencias observadas − {number(market.latestDiscoveryDuplicateCandidates)} repetidas = {number(market.latestDiscoveryUniqueListings)} avisos únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</p>
               <p>Base PP: {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades consolidadas</p>
             </div>
           </details>
