@@ -245,15 +245,18 @@ function answerMarket(context: ContextPack): PedroPabloResponse {
   const pending = market.pendingMatches ?? 0
   const newToday = market.latestDeltaNewCandidates ?? 0
   const parsedToday = market.latestDeltaParsedDetails ?? 0
+  const fullInventoryAt = market.latestIngestionAt
+    ? fullInventoryAt
+    : 'fecha no disponible'
 
   const lines = market.latestDeltaAt
     ? [
         `Actualizado ${formatPropertyPartnersDateTime(market.latestDeltaAt)}. Se detectaron ${newToday.toLocaleString('es-CL')} publicaciones nuevas y se actualizaron ${parsedToday.toLocaleString('es-CL')} fichas.`,
-        `Inventario completo verificado: ${market.activeInventory.toLocaleString('es-CL')} casas al ${formatPropertyPartnersDateTime(market.latestIngestionAt)}. Las bajas sólo se confirman en un inventario completo.`,
+        `Inventario completo verificado: ${market.activeInventory.toLocaleString('es-CL')} casas al ${fullInventoryAt}. Las bajas sólo se confirman en un inventario completo.`,
         `Identidad PP: ${linked.toLocaleString('es-CL')} publicaciones vinculadas y ${pending.toLocaleString('es-CL')} pendientes de resolución.`,
       ]
     : [
-        `Inventario completo verificado: ${market.activeInventory.toLocaleString('es-CL')} casas al ${formatPropertyPartnersDateTime(market.latestIngestionAt)}.`,
+        `Inventario completo verificado: ${market.activeInventory.toLocaleString('es-CL')} casas al ${fullInventoryAt}.`,
         'No hay una actualización diaria posterior disponible.',
         `Identidad PP: ${linked.toLocaleString('es-CL')} publicaciones vinculadas y ${pending.toLocaleString('es-CL')} pendientes de resolución.`,
       ]
