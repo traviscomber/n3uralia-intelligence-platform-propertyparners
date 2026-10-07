@@ -133,8 +133,7 @@ export default function ManagementOperationsPage() {
       <MetricStrip items={[
         { label: 'Estado', value: currentRuns.length === 0 ? 'Sin datos' : rejected > 0 ? 'Pendiente' : latestReport ? 'Cerrado' : 'Listo', tone: currentRuns.length === 0 ? 'default' : rejected > 0 ? 'warning' : latestReport ? 'success' : 'default' },
         { label: 'Observaciones', value: currentRuns.length ? rejected : '—', tone: currentRuns.length ? (rejected ? 'warning' : 'success') : 'default' },
-        { label: 'Reportes', value: currentRuns.length ? currentReports.length : '—', detail: currentRuns.length && !currentReports.length ? 'Pendiente de generar' : undefined, tone: currentReports.length ? 'success' : 'default' },
-        { label: 'Datos incorporados', value: currentRuns.length ? inserted : '—' },
+        { label: 'Reporte', value: latestReport ? 'Disponible' : currentRuns.length ? 'Pendiente' : '—', tone: latestReport ? 'success' : 'default' },
       ]} />
 
       <section className="mt-7 max-w-5xl">
