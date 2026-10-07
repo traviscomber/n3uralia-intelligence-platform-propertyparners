@@ -133,6 +133,43 @@ const dateLabel = (value: string) => {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('es-CL')
 }
 
+const entityTypeLabel = (value: string | undefined) => {
+  const labels: Record<string, string> = {
+    company: 'Compañía',
+    branch: 'Oficina',
+    office: 'Oficina',
+    partner: 'Partner',
+    seller: 'Partner',
+  }
+  return value ? (labels[value] ?? value.replaceAll('_', ' ')) : 'n/d'
+}
+
+const qualityLabel = (value: string | undefined) => {
+  const labels: Record<string, string> = {
+    verified: 'Verificado',
+    valid: 'Verificado',
+    approved: 'Aprobado',
+    partial: 'Parcial',
+    provisional: 'Provisional',
+    stale: 'Desactualizado',
+    rejected: 'Rechazado',
+    missing: 'Sin dato',
+  }
+  return value ? (labels[value] ?? value.replaceAll('_', ' ')) : 'Sin dato'
+}
+
+const severityLabel = (value: string) => {
+  const labels: Record<string, string> = {
+    info: 'Información',
+    warning: 'Atención',
+    critical: 'Crítica',
+    high: 'Alta',
+    medium: 'Media',
+    low: 'Baja',
+  }
+  return labels[value] ?? value.replaceAll('_', ' ')
+}
+
 
 export default function PrintableManagementReportPage() {
   const params = useParams<{ id: string }>()
@@ -214,7 +251,7 @@ export default function PrintableManagementReportPage() {
 
       <header className="mb-8 border-b-2 border-black pb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d7332b]">Property Partners</p>
-        <h1 className="mt-3 font-serif text-5xl">Reporte {reportTypeLabel(report.report_type)}</h1>
+        <h1 className="mt-3 font-serif text-5xl">{reportTypeLabel(report.report_type)}</h1>
         <div className="mt-5 grid gap-2 text-sm sm:grid-cols-3">
           <p><strong>Período:</strong> {dateLabel(report.period_start)} — {dateLabel(report.period_end)}</p>
           <p><strong>Estado:</strong> {statusLabel(report.status)}</p>
@@ -245,7 +282,7 @@ export default function PrintableManagementReportPage() {
           <div className="border border-black p-5">
             <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Vs. mes anterior · cierres</p>
             <p className="mt-3 font-serif text-4xl">{comparisons?.mom?.status === 'exact' ? signed(momDelta) : 'n/d'}</p>
-            <p className="mt-2 text-xs text-neutral-600">{comparisons?.mom?.status === 'exact' ? `${format(momClosures?.previous)} → ${format(momClosures?.current)} cierres vs ${comparisons.mom.previousPeriod}` : 'Sin mes anterior canónico comparable'}</p>
+            <p className="mt-2 text-xs text-neutral-600">{comparisons?.mom?.status === 'exact' ? `${format(momClosures?.previous)} → ${format(momClosures?.current)} cierres vs ${comparisons.mom.previousPeriod}` : 'Sin mes anterior comparable'}</p>
           </div>
           <div className="border border-black p-5">
             <p className="text-xs uppercase tracking-[0.12em] text-neutral-500">Acumulado del año</p>
@@ -261,7 +298,7 @@ export default function PrintableManagementReportPage() {
                   <p className="text-2xl font-semibold">{signed(yoyClosures?.delta?.value)} <span className="text-sm font-normal text-neutral-500">cierres</span></p>
                   <p className="mt-1 text-neutral-700">{format(yoyClosures?.previous)} → {format(yoyClosures?.current)} vs {comparisons.yoy.period}</p>
                   <p className="mt-1 text-neutral-600">{signed(yoySalesUf?.delta?.value)} UF · {format(yoySalesUf?.previous,0)} → {format(yoySalesUf?.current,0)} UF</p>
-                  <p className="mt-2 text-xs text-neutral-500">Comparación operacional. El crédito de gestión 2025 no existe como dimensión histórica equivalente.</p>
+                  <p className="mt-2 text-xs text-neutral-500">La comparación usa cierres. El crédito de gestión 2025 no tiene un equivalente histórico.</p>
                 </div>
               : <p className="mt-2 text-neutral-600">Sin período comparable disponible. No se infiere una variación desde datos no equivalentes.</p>}
           </div>
@@ -298,11 +335,11 @@ export default function PrintableManagementReportPage() {
               {entities.flatMap((entity) => (entity.metrics ?? []).map((metric) => (
                 <tr key={`${entity.id}-${metric.code ?? metric.label ?? 'metric'}`}>
                   <td className="border border-black p-2">{entity.name}</td>
-                  <td className="border border-black p-2">{entity.entityType ?? entity.entity_type ?? 'n/d'}</td>
+                  <td className="border border-black p-2">{entityTypeLabel(entity.entityType ?? entity.entity_type)}</td>
                   <td className="border border-black p-2">{metric.label ?? metric.code ?? 'n/d'}</td>
                   <td className="border border-black p-2">{metric.value ?? 'n/d'}</td>
                   <td className="border border-black p-2">{metric.sourceName ?? metric.source_name ?? 'Pendiente'}</td>
-                  <td className="border border-black p-2">{metric.qualityStatus ?? metric.quality_status ?? 'sin datos'}</td>
+                  <td className="border border-black p-2">{qualityLabel(metric.qualityStatus ?? metric.quality_status)}</td>
                 </tr>
               )))}
             </tbody>
@@ -316,7 +353,7 @@ export default function PrintableManagementReportPage() {
           <div className="space-y-3">
             {alerts.map((alert) => (
               <article key={alert.id} className="border border-black p-4">
-                <div className="flex justify-between gap-4"><strong>{alert.title}</strong><span className="uppercase">{alert.severity}</span></div>
+                <div className="flex justify-between gap-4"><strong>{alert.title}</strong><span>{severityLabel(alert.severity)}</span></div>
                 <p className="mt-2 text-sm">{alert.detail}</p>
               </article>
             ))}
