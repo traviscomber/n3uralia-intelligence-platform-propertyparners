@@ -5,9 +5,12 @@ on:
     branches: [main]
     paths:
       - 'lib/portal-inmobiliario-collector.ts'
+      - 'lib/brightdata-portal-collector.ts'
+      - 'app/api/cron/market-delta/route.ts'
       - 'app/api/cron/market-refresh/route.ts'
       - 'app/api/internal/portal-collector-smoke/route.ts'
-      - 'scripts/smoke-portal-inventory.ts'
+      - 'tests/portal-snapshot-policy.test.ts'
+      - 'tests/market-refresh-release-scope.test.ts'
       - '.github/workflows/portal-inventory-smoke.yml'
   workflow_dispatch:
 
@@ -40,5 +43,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify full Portal inventory coverage
-        run: node --import tsx scripts/smoke-portal-inventory.ts
+      - name: Verify production Portal acquisition contract
+        run: node --import tsx --test tests/portal-snapshot-policy.test.ts tests/market-refresh-release-scope.test.ts
