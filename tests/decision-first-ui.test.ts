@@ -8,6 +8,8 @@ test('core product surfaces keep decision content first and technical detail dis
   const valuations = readFileSync('app/dashboard/valuations/page.tsx', 'utf8')
   const management = readFileSync('app/dashboard/control/operations/page.tsx', 'utf8')
   const reports = readFileSync('app/dashboard/reportes/canonicos/page.tsx', 'utf8')
+  const properties = readFileSync('app/dashboard/properties/page.tsx', 'utf8')
+  const offer = readFileSync('app/dashboard/market/oferta/page.tsx', 'utf8')
   const pedro = readFileSync('components/intelligence/pedro-pablo-workspace-v2.tsx', 'utf8')
 
   assert.doesNotMatch(ceo, /Control Tower/)
@@ -30,6 +32,12 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(reports, /Informe actual/)
   assert.match(reports, /Ver trazabilidad/)
   assert.match(reports, /Ver historial/)
+
+  assert.match(properties, /Requiere decisión/)
+  assert.match(properties, /Ver calidad de datos/)
+
+  assert.match(offer, /Cambios de hoy/)
+  assert.match(offer, /Ver inventario completo/)
 
   assert.match(pedro, /Decisiones con datos verificados/)
   assert.match(pedro, /Ver detalle/)
