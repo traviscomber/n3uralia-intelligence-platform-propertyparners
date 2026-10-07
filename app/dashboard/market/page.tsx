@@ -5,10 +5,10 @@ import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/c
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
-import { getPortalReferenceSnapshot } from '@/lib/portal-reference-intelligence'
+import { getPortalReferencecorte } from '@/lib/portal-reference-intelligence'
 import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
-import { getVitacuraNeighborhoodSnapshot } from '@/lib/vitacura-neighborhoods'
-import { getExecutiveDashboardSnapshot } from '@/lib/executive-dashboard-snapshot'
+import { getVitacuraNeighborhoodcorte } from '@/lib/vitacura-neighborhoods'
+import { getExecutiveDashboardcorte } from '@/lib/executive-dashboard-snapshot'
 import { comparisonPeriod, verifiedChange } from '@/lib/executive-dashboard-comparisons'
 import { getCanonicalMarketAuthority } from '@/lib/market-canonical-authority'
 
@@ -239,7 +239,7 @@ export default async function MarketPage() {
         <div className="mt-4 border border-[#8a5a20] bg-[#2a1d0f] px-4 py-3 text-xs leading-5 text-[#f0c96a]">
           <p className="font-semibold">Portal Inmobiliario · fuente temporalmente degradada</p>
           <p className="mt-1">
-            El cron automático continúa ejecutándose, pero la captura más reciente fue rechazada porque Portal no entregó inventario utilizable.
+            La actualización automática continúa ejecutándose, pero la captura más reciente fue rechazada porque Portal no entregó inventario utilizable.
             Se conserva el último corte completo verificado del {date(market.latestIngestionAt)} y no se publica una actualización vacía como vigente.
           </p>
           <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">
@@ -251,9 +251,9 @@ export default async function MarketPage() {
       <MetricStrip items={[
         {
           label: 'Inventario verificado',
-          value: market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—',
-          detail: market.latestIngestionFullSnapshot ? `Al ${date(market.latestIngestionAt)}` : 'Pendiente de inventario completo',
-          tone: market.latestIngestionFullSnapshot ? 'default' : 'warning',
+          value: market.latestIngestionFullcorte ? number(market.activeInventory) : '—',
+          detail: market.latestIngestionFullcorte ? `Al ${date(market.latestIngestionAt)}` : 'Pendiente de inventario completo',
+          tone: market.latestIngestionFullcorte ? 'default' : 'warning',
         },
         {
           label: 'Nuevas hoy',
@@ -355,14 +355,14 @@ export default async function MarketPage() {
               <div>
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Portal · referencia</p>
                 <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{number(authority.portalReference.houses)} casas · {number(authority.portalReference.apartments)} deptos.</p>
-                <p className="mt-1 text-[var(--n3-text-muted)]">{number(authority.portalReference.projects)} proyectos · snapshot {shortDate(authority.portalReference.observedAt)}</p>
+                <p className="mt-1 text-[var(--n3-text-muted)]">{number(authority.portalReference.projects)} proyectos · corte {shortDate(authority.portalReference.observedAt)}</p>
                 <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Referencia histórica entregada por Property Partners; no equivale a la oferta vigente de hoy.</p>
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Territorio</p>
                 <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">{number(authority.territory.neighborhoods)} barrios oficiales</p>
-                <p className="mt-1 text-[var(--n3-text-muted)]">{authority.territory.sourceFile ?? 'KML Property Partners'}</p>
-                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">El KML es la autoridad territorial; el mapa sólo representa esa geometría.</p>
+                <p className="mt-1 text-[var(--n3-text-muted)]">{authority.territory.sourceFile ?? 'Archivo territorial Property Partners'}</p>
+                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">El archivo territorial define los sectores; el mapa representa esa geometría.</p>
               </div>
             </div>
           </details> : null}
@@ -380,9 +380,9 @@ export default async function MarketPage() {
         <MetricStrip items={[
           {
             label: 'Oferta activa',
-            value: market.latestIngestionFullSnapshot ? number(market.activeInventory) : '—',
-            detail: market.latestIngestionFullSnapshot ? 'Corte completo verificado' : 'Cobertura parcial · total aún no confirmado',
-            tone: market.latestIngestionFullSnapshot ? 'default' : 'warning',
+            value: market.latestIngestionFullcorte ? number(market.activeInventory) : '—',
+            detail: market.latestIngestionFullcorte ? 'Corte completo verificado' : 'Cobertura parcial · total aún no confirmado',
+            tone: market.latestIngestionFullcorte ? 'default' : 'warning',
           },
           {
             label: 'Ventas confirmadas',
@@ -517,7 +517,7 @@ export default async function MarketPage() {
             </div>
             <div className="mt-4 divide-y divide-[var(--n3-line)] border-y border-[var(--n3-line)]">
               {[
-                ['Mercado', 'Cobertura Portal', percent(market.latestInventoryCoverageRatio), market.latestIngestionFullSnapshot ? 'Verificado' : 'Parcial'],
+                ['Mercado', 'Cobertura Portal', percent(market.latestInventoryCoverageRatio), market.latestIngestionFullcorte ? 'Verificado' : 'Parcial'],
                 ['Financiero', 'Margen / P&L', 'Pendiente fuente PP', 'Sin dato disponible'],
                 ['Comercial', 'Calidad de conversión', executive.latest.conversionScore === null ? '—' : decimal(executive.latest.conversionScore, 1), executive.latest.conversionScore === null ? 'Sin dato' : 'Verificado'],
                 ['Procesos', 'Calidad de seguimiento', executive.latest.followUpScore === null ? '—' : decimal(executive.latest.followUpScore, 1), executive.latest.followUpScore === null ? 'Sin dato' : 'Verificado'],
