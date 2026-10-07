@@ -25,6 +25,17 @@ type AssistantResponse = {
   suggestedQuestions?: string[]
 }
 
+function visibleEvidenceSource(value: string) {
+  if (value.includes('market_ingestion_runs') || value.includes('market_current_listings')) return value.includes('inventario completo') ? 'Portal Inmobiliario · inventario verificado' : 'Portal Inmobiliario · actualización diaria'
+  if (value.includes('management_tasks')) return 'Tareas autorizadas'
+  if (value.includes('valuation_cases')) return 'Valorizaciones autorizadas'
+  if (value.includes('valuation_comparables')) return 'Comparables autorizados'
+  if (value.includes('property_assignments') || value.includes('market_properties')) return 'Cartera autorizada'
+  if (value.includes('report_deliveries')) return 'Entregas de informes'
+  if (value.includes('client-response-pedro-pablo')) return 'Criterio Property Partners · Vitacura'
+  return value
+}
+
 type ChatMessage = {
   id: string
   role: 'user' | 'assistant'
@@ -317,7 +328,7 @@ export function PedroPabloFloatingChat({ role, team }: { role: string | null; te
                           <div className="mt-2 space-y-1">
                             {message.evidence.slice(0, 3).map((item, index) => (
                               <div key={`${message.id}-evidence-${index}`} className="text-[10px] leading-4 text-[var(--n3-text-muted)]">
-                                <span className="text-[var(--n3-text-light)]">{item.label}</span> · {item.source}
+                                <span className="text-[var(--n3-text-light)]">{item.label}</span> · {visibleEvidenceSource(item.source)}
                               </div>
                             ))}
                           </div>
