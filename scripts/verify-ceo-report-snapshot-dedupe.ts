@@ -30,8 +30,12 @@ assert.equal(isReusableCeoIntelligenceDocument({
 
 assert.equal(isReusableCeoIntelligenceDocument({ ...base, content: '{invalid-json' }, currentSnapshot), false)
 
+const serviceSource = readFileSync('lib/ceo-intelligence-report-service.ts', 'utf8')
 const routeSource = readFileSync('app/api/management/reports/ceo-intelligence/latest/route.ts', 'utf8')
-assert.ok(routeSource.includes("select('id,title,created_at,tags,content')"), 'CEO report candidates must load persisted content for snapshot comparison')
-assert.ok(routeSource.includes('isReusableCeoIntelligenceDocument(document, input.sourceSnapshotId)'), 'CEO report route must dedupe by the current immutable source snapshot')
+const cronSource = readFileSync('app/api/cron/ceo-intelligence-draft/route.ts', 'utf8')
+assert.ok(serviceSource.includes("select('id,title,created_at,tags,content')"), 'CEO report candidates must load persisted content for snapshot comparison')
+assert.ok(serviceSource.includes('isReusableCeoIntelligenceDocument(document, input.sourceSnapshotId)'), 'CEO report service must dedupe by the current immutable source snapshot')
+assert.ok(routeSource.includes('generateLatestCeoIntelligenceDraft'), 'Interactive CEO report generation must use the shared draft service')
+assert.ok(cronSource.includes('generateLatestCeoIntelligenceDraft'), 'Scheduled CEO draft generation must use the shared draft service')
 
 console.log(JSON.stringify({ ok: true, currentSnapshot, oldSnapshot, staleReportReused: false }, null, 2))
