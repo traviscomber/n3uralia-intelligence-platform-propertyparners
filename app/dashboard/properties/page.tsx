@@ -86,7 +86,7 @@ export default async function PropertiesPage(){
       <details className="mt-7 border-t border-[var(--n3-line)] pt-4">
         <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver calidad de datos</summary>
         <DataStatusBar
-          cutoff="Actualizado en vivo"
+          cutoff="Actualizado al consultar"
           coverage={active?`${resolved} de ${active} casas con barrio resuelto`:'Sin casas activas verificables'}
           issues={rows.length+(errors.length?1:0)}
           status={errors.length?'blocked':rows.length?'partial':'ready'}
@@ -135,7 +135,7 @@ export default async function PropertiesPage(){
             ? <div className="divide-y divide-[var(--n3-line)] border-b border-[var(--n3-line)]">{reviewAssignments.map(assignment=>{const property=assignment.market_properties[0]??null;const area=property?.useful_area_m2??property?.built_area_m2??null;const ageDays=property?.last_seen_at?propertyPartnersCalendarDayAge(property.last_seen_at):null;const freshness=ageDays===null?'Sin evidencia':ageDays===0?'Hoy':ageDays<=7?`${ageDays} d`:`Revisar · ${ageDays} d`;return <Link key={assignment.id} href={property?`/dashboard/properties/${property.id}`:'#'} className="grid gap-3 py-4 md:grid-cols-[minmax(0,1.4fr)_170px_130px_auto] md:items-center"><div><p className="text-sm font-semibold">{property?.normalized_address||'Sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{property?.property_type||'Sin tipo'}{property?.bedrooms!=null?` · ${property.bedrooms} dorm.`:''}{area!=null?` · ${area} m²`:''}</p></div><span className="text-xs text-[var(--n3-text-muted)]">{profileNames.get(assignment.assigned_to)||'Equipo'}</span><span className={`text-xs ${ageDays===null||ageDays>7?'text-[#f0c96a]':'text-[var(--n3-text-muted)]'}`}>{freshness}</span><span className="text-xs font-semibold text-[var(--n3-teal-soft)]">Abrir</span></Link>})}</div>
             : <OperationalState kind="empty" title="Sin propiedades por resolver" description="No hay propiedades de tu oficina con identidad pendiente o vigencia vencida."/>}
       </section>
-      <details className="mt-8 max-w-6xl"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ver calidad de datos</summary><DataStatusBar cutoff="Actualizado en vivo" coverage={assignments.length?`${confirmedIdentity} de ${assignments.length} asignaciones con identidad confirmada`:'Sin asignaciones activas'} issues={issues} status={issues?'partial':'ready'}/></details>
+      <details className="mt-8 max-w-6xl"><summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)]">Ver calidad de datos</summary><DataStatusBar cutoff="Actualizado al consultar" coverage={assignments.length?`${confirmedIdentity} de ${assignments.length} asignaciones con identidad confirmada`:'Sin asignaciones activas'} issues={issues} status={issues?'partial':'ready'}/></details>
     </WorkspaceShell>
   }
 
