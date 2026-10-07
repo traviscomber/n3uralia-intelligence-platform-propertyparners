@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Plus, RefreshCw } from 'lucide-react'
 import { DataStatusBar, MetricStrip, WorkspaceField, WorkspaceHeader, WorkspaceSelect, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
+import { formatPropertyPartnersDateTime } from '@/lib/property-partners-time'
 
 type ValuationCase = {
   id: string
@@ -70,6 +71,11 @@ export default function ValuationRegistryPage() {
     issued: cases.filter((item) => item.status === 'issued').length,
   }), [cases])
 
+  const latestCaseUpdate = useMemo(() => cases.reduce<string | null>((latest, item) => {
+    if (!latest) return item.updated_at
+    return new Date(item.updated_at).getTime() > new Date(latest).getTime() ? item.updated_at : latest
+  }, null), [cases])
+
   const filtered = useMemo(() => cases.filter((item) => {
     const text = `${item.address || ''} ${item.neighborhood || ''} ${item.property_type || ''} ${item.id}`.toLowerCase()
     return (status === 'all' || item.status === status) && text.includes(query.trim().toLowerCase())
@@ -117,9 +123,9 @@ export default function ValuationRegistryPage() {
       <WorkspaceHeader
         eyebrow={isReviewer ? 'Valorizaciones · Dirección' : 'Valorizaciones'}
         title={isReviewer ? 'Qué requiere revisión' : 'Qué necesita avanzar'}
-        meta={cases.length ? `${actionCount > 0 ? `${actionCount} requieren acción · ` : ''}Actualizado ${new Date(cases[0].updated_at).toLocaleString('es-CL')}` : undefined}
+        meta={latestCaseUpdate ? `${actionCount > 0 ? `${actionCount} requieren acción · ` : ''}Último movimiento ${formatPropertyPartnersDateTime(latestCaseUpdate)}` : undefined}
         actions={[
-          { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
+          { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Volver a consultar valorizaciones' },
           ...(viewerScope === 'self'
             ? [{ label: 'Nueva valorización', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> }]
             : []),
@@ -210,7 +216,7 @@ export default function ValuationRegistryPage() {
       <details className="mt-7 border-t border-[var(--n3-line)] pt-4">
         <summary className="min-h-11 cursor-pointer py-3 text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver calidad de datos</summary>
         <DataStatusBar
-          cutoff={cases.length ? new Date(cases[0].updated_at).toLocaleString('es-CL') : '—'}
+          cutoff={latestCaseUpdate ? formatPropertyPartnersDateTime(latestCaseUpdate) : '—'}
           coverage={isReviewer
             ? `${counts.review} pendientes de revisión · ${evidenceReadyCount} con evidencia base completa`
             : `${evidenceReadyCount} de ${cases.length} expedientes con evidencia base completa`}
