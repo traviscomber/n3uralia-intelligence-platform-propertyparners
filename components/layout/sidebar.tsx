@@ -112,7 +112,6 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
                   borderLeftColor: active ? 'var(--primary)' : 'transparent',
                 }}
               >
-                <span aria-hidden="true" className="h-2 w-2 border border-current" />
                 <span className="truncate text-[13px]">{item.label}</span>
               </Link>
             </li>
@@ -126,12 +125,19 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     <>
       <div className="border-b border-[var(--n3-line)] px-5 py-5">
         <PPLogo className="w-full" priority />
-        {profile?.role !== 'ceo' ? <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Intelligence Platform</p> : null}
       </div>
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
         {navigationSections.map((section, index) => {
           const sectionActive = section.items.some((item) => isActive(item.href, item.exact))
           const collapsible = index > 0
+
+          if (navigationSections.length === 1 && section.label === 'Principal') {
+            return (
+              <div key={section.label} className="mb-5">
+                {sectionItems(section)}
+              </div>
+            )
+          }
 
           if (collapsible) {
             return (
