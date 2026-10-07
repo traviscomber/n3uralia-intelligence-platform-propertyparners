@@ -10,6 +10,8 @@ test('core product surfaces keep decision content first and technical detail dis
   const management = readFileSync('app/dashboard/control/operations/page.tsx', 'utf8')
   const reports = readFileSync('app/dashboard/reportes/canonicos/page.tsx', 'utf8')
   const properties = readFileSync('app/dashboard/properties/page.tsx', 'utf8')
+  const propertyReview = readFileSync('components/properties/property-review-inbox.tsx', 'utf8')
+  const navigation = readFileSync('lib/navigation.ts', 'utf8')
   const offer = readFileSync('app/dashboard/market/oferta/page.tsx', 'utf8')
   const pedro = readFileSync('components/intelligence/pedro-pablo-workspace-v2.tsx', 'utf8')
   const floatingPedro = readFileSync('components/intelligence/pedro-pablo-floating-chat.tsx', 'utf8')
@@ -39,7 +41,9 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(august, /SYS \/ CONTROL DE GESTIÓN/)
   assert.match(august, /Ver análisis de agosto/)
 
-  assert.match(market, /Inventario verificado/)
+  assert.match(market, /Último inventario completo/)
+  assert.match(market, /marketSourceLabel/)
+  assert.match(market, /alertSeverityLabel/)
   assert.match(market, /Nuevas hoy/)
   assert.match(market, /Ver detalle de datos/)
   assert.match(market, /Ver evolución y gestión/)
@@ -64,7 +68,8 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(market, /Confirmar barrio sugerido/)
   assert.match(market, /Propiedades consolidadas/)
 
-  assert.match(valuations, /Actualizado/)
+  assert.match(valuations, /Último movimiento/)
+  assert.match(valuations, /latestCaseUpdate/)
   assert.match(valuations, /Ver calidad de datos/)
 
   assert.match(management, /Qué falta para cerrar/)
@@ -74,7 +79,10 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.match(management, /statusLabel/)
   assert.match(management, />Datos y cargas<\/summary>/)
 
-  assert.match(reports, /Informe actual/)
+  assert.match(reports, /Último informe disponible/)
+  assert.match(reports, /reportPeriodLabel/)
+  assert.match(reports, /reportTitleLabel/)
+  assert.doesNotMatch(reports, /propertyPartnersTimeZoneLabel/)
   assert.match(reports, /Ver trazabilidad/)
   assert.match(reports, /Ver historial/)
   assert.match(reports, /Ver calidad de datos/)
@@ -93,6 +101,18 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(properties, /Corte live/)
   assert.doesNotMatch(properties, /Actualizado en vivo/)
   assert.match(properties, /Actualizado al consultar/)
+
+  assert.match(propertyReview, /Listas/)
+  assert.match(propertyReview, /Sin coincidencia/)
+  assert.match(propertyReview, /Mostrar más/)
+  assert.match(propertyReview, /Referencia Portal/)
+  assert.doesNotMatch(propertyReview, /Sin match/)
+  assert.doesNotMatch(propertyReview, />48 h/)
+  assert.doesNotMatch(propertyReview, /Candidato KML único/)
+  assert.doesNotMatch(propertyReview, /señal territorial determinística/)
+
+  assert.match(navigation, /label: 'Propiedades', href: '\/dashboard\/properties'/)
+  assert.doesNotMatch(navigation, /label: 'Por resolver', href: '\/dashboard\/properties'/)
 
   assert.match(offer, /Cambios de hoy/)
   assert.match(offer, /Ver inventario completo/)
