@@ -227,7 +227,7 @@ export function CeoDashboardCommand() {
     const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `ceo-${period}.csv`; link.click(); URL.revokeObjectURL(url)
   }
 
-  if (loading) return <WorkspaceShell><div role="status" aria-busy="true" className="py-8 text-sm text-[var(--n3-text-muted)]">Cargando datos canónicos…</div></WorkspaceShell>
+  if (loading) return <WorkspaceShell><div role="status" aria-busy="true" className="py-8 text-sm text-[var(--n3-text-muted)]">Cargando información…</div></WorkspaceShell>
   if (failed || !summary || !operations) return <WorkspaceShell><button onClick={() => void load()} className="inline-flex min-h-10 items-center gap-2 bg-[var(--primary)] px-4 text-sm font-semibold"><RefreshCw size={16} /> Reintentar</button></WorkspaceShell>
 
   const dates = [summary.generatedAt, operations.generatedAt].map((value) => value ? new Date(value) : null).filter((value): value is Date => Boolean(value && !Number.isNaN(value.getTime())))
