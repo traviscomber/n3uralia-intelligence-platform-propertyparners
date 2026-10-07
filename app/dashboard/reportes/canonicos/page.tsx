@@ -40,7 +40,7 @@ export default async function CanonicalClientReportsPage(){
   if(error){
     return <WorkspaceShell>
       <WorkspaceHeader eyebrow="Informes" title="Informe actual" meta="Consulta no disponible" actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
-      <div className="mt-6 max-w-5xl"><OperationalState kind="error" title="No fue posible consultar informes" description="La consulta de informes canónicos falló. No se interpreta este estado como ausencia de informes; reintenta más tarde o revisa la operación de reportes." /></div>
+      <div className="mt-6 max-w-5xl"><OperationalState kind="error" title="No fue posible consultar informes" description="La consulta de informes falló. No se interpreta este estado como ausencia de informes; reintenta más tarde o revisa la operación de reportes." /></div>
     </WorkspaceShell>
   }
 
@@ -58,7 +58,7 @@ export default async function CanonicalClientReportsPage(){
           {current.pdfUrl?<Link href={current.pdfUrl} target="_blank" className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs"><ExternalLink size={14}/>Abrir</Link>:null}
           {current.downloadUrl?<Link href={current.downloadUrl} className="inline-flex min-h-11 items-center gap-2 bg-[var(--primary)] px-4 text-xs font-semibold text-white"><Download size={14}/>Descargar PDF</Link>:null}
         </div>
-      </article>:<OperationalState compact kind="empty" title="Sin informe listo para entrega" description="Aún no hay un informe canónico listo para entrega. Los borradores incompletos quedan en el historial."/>}
+      </article>:<OperationalState compact kind="empty" title="Sin informe listo para entrega" description="Aún no hay un informe listo para entrega. Los borradores incompletos quedan en el historial."/>}
     </section>
 
     {current?<details className="mt-5 max-w-5xl border-b border-[var(--n3-line)] pb-5">
