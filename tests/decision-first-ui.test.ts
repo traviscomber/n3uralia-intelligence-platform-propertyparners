@@ -124,7 +124,11 @@ test('core product surfaces keep decision content first and technical detail dis
   assert.doesNotMatch(offer, /snapshot completo/i)
   assert.doesNotMatch(offer, />ID \{item\.sourceListingId\}<\/p>/)
   assert.match(offer, /Detalle disponible/)
-  assert.match(offer, /Publicación vigente/)
+  assert.match(offer, /Último inventario completo/)
+  assert.match(offer, /Cambios actualizados/)
+  assert.match(offer, /En inventario completo/)
+  assert.doesNotMatch(offer, /Inventario verificado/)
+  assert.doesNotMatch(offer, /Publicación vigente/)
   assert.doesNotMatch(offer, /Publicación Portal \$\{item\.sourceListingId\}/)
 
   assert.match(pedro, /Decisiones con datos verificados/)
