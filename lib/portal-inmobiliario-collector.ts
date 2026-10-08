@@ -475,12 +475,15 @@ async function gotoWithRetry(page: Page, url: string, label: string, attempts = 
       if (status === 404) return { response, status, exhausted: true }
       if (!response?.ok()) {
         const error = new Error(`${label} returned HTTP ${status ?? 'unknown'}`)
-        if (status !== 403 && status !== 429 && status !== 500 && status !== 502 && status !== 503 && status !== 504) throw error
+        // Respect provider access controls: stop rather than retrying denied or rate-limited requests.
+        if (status === 403 || status === 429) throw new Error(`PORTAL_ACCESS_RESTRICTED_HTTP_${status}`)
+        if (status !== 500 && status !== 502 && status !== 503 && status !== 504) throw error
         lastError = error
       } else {
         return { response, status, exhausted: false }
       }
     } catch (error) {
+      if (error instanceof Error && error.message.startsWith('PORTAL_ACCESS_RESTRICTED_HTTP_')) throw error
       lastError = error
     }
     if (attempt < attempts) {
@@ -504,7 +507,8 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   let rawListingCandidates = 0
   let reportedResultCount: number | null = null
   let exhausted = false
-  const concurrency = 2
+  // One search request at a time: never fan out when access is restricted.
+  const concurrency = 1
 
   for (let start = 0; start < searchUrls.length && !exhausted; start += concurrency) {
     const batch = searchUrls.slice(start, start + concurrency)
@@ -540,6 +544,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
 
     for (const result of pageResults) {
       if (result.blocked && result.pageCandidates.length === 0) {
+        // The page is a provider challenge, not an empty listing page.
         throw new Error('PORTAL_SUSPICIOUS_TRAFFIC')
       }
       if (reportedResultCount == null) {
