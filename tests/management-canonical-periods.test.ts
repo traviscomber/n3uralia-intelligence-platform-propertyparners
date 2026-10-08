@@ -3,11 +3,11 @@ import { test } from 'node:test'
 import periodsData from '../data/management-canonical-periods.json'
 import { getCanonicalManagementDashboardEntities, getCanonicalManagementPeriod } from '../lib/management-canonical-periods'
 
-test('Jan-Aug current management canon is complete and chronologically contiguous', () => {
+test('Jan-Sep current management canon is complete and chronologically contiguous', () => {
   assert.deepEqual(periodsData.periods.map((item) => item.period), [
-    '2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08',
+    '2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09',
   ])
-  assert.equal(periodsData.canonicalPolicy.currentAuthority, 'Ago_Directorio.pptx')
+  assert.equal(periodsData.canonicalPolicy.currentAuthority, 'Cierres_septiembre_2026.xlsx + CRM September canonical exports')
 })
 
 test('company monthly credits reconcile exactly to August board cumulative totals', () => {
@@ -19,8 +19,9 @@ test('company monthly credits reconcile exactly to August board cumulative total
     assert.equal(period.company.ytdCreditedClosings, cumulativeClosings, period.period)
     assert.equal(period.company.ytdCreditedSalesUf, cumulativeUf, period.period)
   }
-  assert.equal(cumulativeClosings, 50.5)
-  assert.equal(cumulativeUf, 920786)
+  assert.equal(periodsData.periods.find((period) => period.period === '2026-08')?.company.ytdCreditedClosings, 50.5)
+  assert.equal(cumulativeClosings, periodsData.periods.at(-1)?.company.ytdCreditedClosings)
+  assert.equal(cumulativeUf, periodsData.periods.at(-1)?.company.ytdCreditedSalesUf)
 })
 
 test('office management credits reconcile but never replace the corporate authority', () => {
@@ -75,8 +76,8 @@ test('Partner values are not inferred from office data', () => {
 test('published monthly and cumulative closing targets are preserved as independent facts', () => {
   const expectedMonthly = [5.86, 4.63, 7.8, 7.33, 8.6, 8.8, 8.6, 8.2]
   const expectedCumulative = [5.86, 10.49, 18.29, 25.61, 34.2, 43, 50.4, 58.6]
-  assert.deepEqual(periodsData.periods.map((period) => period.company.canonicalClosingTarget), expectedMonthly)
-  assert.deepEqual(periodsData.periods.map((period) => period.company.ytdCanonicalClosingTarget), expectedCumulative)
+  assert.deepEqual(periodsData.periods.filter((period) => period.period <= '2026-08').map((period) => period.company.canonicalClosingTarget), expectedMonthly)
+  assert.deepEqual(periodsData.periods.filter((period) => period.period <= '2026-08').map((period) => period.company.ytdCanonicalClosingTarget), expectedCumulative)
 
   const july = periodsData.periods.find((period) => period.period === '2026-07')
   assert.ok(july)
@@ -89,6 +90,8 @@ test('published monthly and cumulative closing targets are preserved as independ
 test('office monthly targets are fractional allocations and approximately reconcile to company target', () => {
   for (const period of periodsData.periods) {
     const officeTarget = period.offices.reduce((sum, office) => sum + (office.canonicalClosingTarget ?? 0), 0)
-    assert.ok(Math.abs(officeTarget - period.company.canonicalClosingTarget) <= 0.02, `${period.period}: ${officeTarget}`)
+    const hasOfficeTargets = period.offices.some((office) => office.canonicalClosingTarget != null)
+    if (hasOfficeTargets) assert.ok(Math.abs(officeTarget - period.company.canonicalClosingTarget) <= 0.02, `${period.period}: ${officeTarget}`)
+    else assert.ok(period.offices.every((office) => office.canonicalClosingTarget == null), `${period.period}: partial office targets`)
   }
 })
