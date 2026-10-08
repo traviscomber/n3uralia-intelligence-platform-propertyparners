@@ -75,16 +75,9 @@ export default function ValuationRegistryPage() {
     return (status === 'all' || item.status === status) && text.includes(query.trim().toLowerCase())
   }), [cases, query, status])
 
-  const isOfficeReviewer = viewerScope === 'office'
-  const isGlobalReviewer = viewerScope === 'global'
-  const isReviewer = isOfficeReviewer || isGlobalReviewer
+  const isReviewer = viewerScope !== 'self'
   const nextReview = cases.find((item) => item.status === 'review')
   const nextDraft = viewerScope === 'self' ? cases.find((item) => item.status === 'draft') : undefined
-  const evidenceReadyCount = cases.filter((item) =>
-    Boolean(item.subject_property_id) &&
-    item.condition_status !== 'not_evaluable' &&
-    (item.accepted_comparable_count ?? 0) >= 3
-  ).length
   const actionCount = isReviewer ? counts.review : counts.review + counts.draft
 
   if (loading && cases.length === 0) {
