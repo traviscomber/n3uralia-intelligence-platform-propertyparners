@@ -39,3 +39,31 @@ test('house formula sums built and land components without unintended adjustment
 test('missing department valuation rate cannot produce a result', () => {
   assert.throws(() => calculateContractualValuation(subject({usefulRateUfM2:undefined}), [comparable('1'),comparable('2'),comparable('3')],factors),/se requieren m² útiles/)
 })
+
+test('terrace changes publication UF/m² comparison but not department base price', () => {
+  const withTerrace = calculateContractualValuation(subject({terraceAreaM2:40}), [comparable('1'), comparable('2'), comparable('3')], factors)
+  const withoutTerrace = calculateContractualValuation(subject({terraceAreaM2:0}), [comparable('1'), comparable('2'), comparable('3')], factors)
+  assert.equal(withTerrace.baseValueUf, withoutTerrace.baseValueUf)
+  assert.equal(withTerrace.baseValueUf, 10_000)
+  assert.equal(withTerrace.publicationScenarios[0].suggestedUfM2, 10_000/120)
+  assert.equal(withoutTerrace.publicationScenarios[0].suggestedUfM2, 100)
+})
+test('CBRS and Portal area conventions cannot silently overwrite each other', () => {
+  const portal = comparable('portal', {usefulAreaM2:80,totalAreaM2:100,priceUf:9_000})
+  const cbrs = comparable('cbrs', {sourceType:'CBRS',usefulAreaM2:undefined,builtAreaM2:100,priceUf:9_000})
+  assert.equal(calculateCanonicalComparableUfM2(portal),100)
+  assert.equal(calculateCanonicalComparableUfM2(cbrs),90)
+})
+test('qualitative factors and similarity evidence never apply hidden economic adjustments', () => {
+  const alteredFactors = {...factors, condition: -20, remodeling: 15, view: 10}
+  const comparisons=[comparable('1',{similarityScore:0.1,adjustmentPct:35}),comparable('2'),comparable('3')]
+  const result=calculateContractualValuation(subject(),comparisons,alteredFactors)
+  assert.equal(result.baseValueUf,10_000)
+  assert.equal(result.adjustedValueUf,10_000)
+  assert.equal(result.qualitativeAdjustmentPct,0)
+})
+test('three selected comparable identities and missing priced evidence are validated', () => {
+  assert.throws(() => calculateContractualValuation(subject(),[comparable('1'),comparable('2'),comparable('3',{priceUf:0})],factors),/al menos tres comparables seleccionados/)
+  const result=calculateContractualValuation(subject(),[comparable('1'),comparable('2'),comparable('3'),comparable('4',{selected:false})],factors)
+  assert.equal(result.comparableCount,3)
+})
