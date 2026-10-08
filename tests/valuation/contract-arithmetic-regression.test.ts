@@ -67,3 +67,14 @@ test('three selected comparable identities and missing priced evidence are valid
   const result=calculateContractualValuation(subject(),[comparable('1'),comparable('2'),comparable('3'),comparable('4',{selected:false})],factors)
   assert.equal(result.comparableCount,3)
 })
+
+test('mixed house and department evidence cannot enter the same valuation', () => {
+  assert.throws(() => calculateContractualValuation(subject(), [
+    comparable('1'), comparable('2'), comparable('3', { propertyType: 'Casa', builtAreaM2: 100, landAreaM2: 100 }),
+  ], factors), /mismo tipo de propiedad/)
+})
+test('same source publication cannot count twice towards minimum sample', () => {
+  assert.throws(() => calculateContractualValuation(subject(), [
+    comparable('1'), comparable('2', { sourceReference: '1' }), comparable('3'),
+  ], factors), /misma referencia/)
+})
