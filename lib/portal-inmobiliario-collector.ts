@@ -22,6 +22,9 @@ export type PortalDiscoveryResult = {
     newListingsPerPage: number[]
     rawListingCandidates: number
     duplicateListingCandidates: number
+    repeatedHtmlReferences?: number
+    repeatedAcrossPages?: number
+    uniqueListingIdentities?: number
     uniqueListings: number
     reportedResultCount: number | null
     exhausted: boolean
