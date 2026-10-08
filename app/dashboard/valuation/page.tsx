@@ -310,6 +310,7 @@ export default function ValuationPage() {
   const [suggestionNotes, setSuggestionNotes] = useState<string[]>([])
   const [suggesting, setSuggesting] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [temporaryMode, setTemporaryMode] = useState(true)
   const [message, setMessage] = useState<string | null>(null)
   const [v2Unlocked, setV2Unlocked] = useState(false)
 
@@ -725,6 +726,7 @@ export default function ValuationPage() {
       <MethodologyNote>Portal: oferta. CBRS: ventas. Property Partners decide.</MethodologyNote>
     </section> : null}
 
+    <div role="note" className="border border-[var(--n3-line)] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Modo de consulta: puedes calcular y revisar el valor sin guardar datos. La estimación no constituye una valorización aprobada.</div>
     {message ? <div role="status" className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm text-[#ff9a93]">{message}</div> : null}
 
     <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-3 backdrop-blur md:py-4">
@@ -732,8 +734,8 @@ export default function ValuationPage() {
         <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-30 md:gap-2 md:px-4"><ArrowLeft size={14} /><span className="hidden sm:inline">Anterior</span></button>
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
         <div className="flex items-center gap-1.5 md:gap-2">
-          {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
-          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización'}</button>}
+          {!temporaryMode && step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
+          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : !temporaryMode ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización'}</button> : <button type="button" onClick={() => setTemporaryMode(false)} className="inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold">Habilitar guardado</button>}
         </div>
       </div>
     </div>
