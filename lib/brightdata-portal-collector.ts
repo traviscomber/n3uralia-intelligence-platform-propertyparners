@@ -156,6 +156,9 @@ export async function discoverPortalVitacuraViaBrightData(
   const newListingsPerPage: number[] = []
   let rawListingCandidates = 0
   let duplicateListingCandidates = 0
+  let repeatedHtmlReferences = 0
+  let repeatedAcrossPages = 0
+  const identities = new Set<string>()
   let exhausted = false
 
   const discoveryConcurrency = 4
@@ -176,12 +179,29 @@ export async function discoverPortalVitacuraViaBrightData(
       const candidates = extractListingUrls(htmlPages[index], datasetKind)
       rawListingCandidates += candidates.length
 
-      const before = listingUrls.size
+      // Distinguish repeated HTML references from repeated listings on later pages.
+      const pageIdentities = new Set<string>()
+      const pageUrls = new Map<string, string>()
       for (const url of candidates) {
-        if (listingUrls.has(url)) duplicateListingCandidates += 1
+        const identity = portalListingIdFromUrl(url, datasetKind) ?? url
+        if (pageIdentities.has(identity)) {
+          repeatedHtmlReferences += 1
+          continue
+        }
+        pageIdentities.add(identity)
+        pageUrls.set(identity, url)
+      }
+      const before = listingUrls.size
+      for (const [identity, url] of pageUrls) {
+        if (identities.has(identity)) {
+          repeatedAcrossPages += 1
+          continue
+        }
+        identities.add(identity)
         listingUrls.add(url)
       }
       const added = listingUrls.size - before
+      duplicateListingCandidates = repeatedHtmlReferences + repeatedAcrossPages
       newListingsPerPage.push(added)
 
       // Cost guard: stop processing as soon as Portal clearly signals exhaustion.
@@ -204,6 +224,9 @@ export async function discoverPortalVitacuraViaBrightData(
       newListingsPerPage,
       rawListingCandidates,
       duplicateListingCandidates,
+      repeatedHtmlReferences,
+      repeatedAcrossPages,
+      uniqueListingIdentities: identities.size,
       uniqueListings: listingUrls.size,
       reportedResultCount: null,
       exhausted,
