@@ -126,8 +126,8 @@ export async function GET() {
       status: ok ? 200 : 503,
       headers: { 'Cache-Control': 'no-store' },
     })
-  } catch (error) {
-    console.error('[portal-brightdata-smoke] collection failed', error)
+  } catch {
+    console.error('[portal-brightdata-smoke] collection failed')
     return NextResponse.json({
       ok: false,
       mode: 'brightdata_bounded_smoke',
