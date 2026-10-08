@@ -10,8 +10,8 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 // Redeploy marker: Bright Data preview env refreshed.
 
-const VALIDATION_BRANCH = 'feat/brightdata-vitacura-smoke-20261002'
-const TOTAL_DETAIL_BUDGET = 10
+const VALIDATION_BRANCH = 'fix/valuation-visible-by-role-20261008'
+const TOTAL_DETAIL_BUDGET = 4
 const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
 
 export async function GET() {
@@ -58,7 +58,7 @@ export async function GET() {
           requested: detailUrls.length,
           parsed: details.rows.length,
           failures: details.failures.length,
-          sample: details.rows.map((row) => ({
+          sample: details.rows.slice(0, 1).map((row) => ({
             source_listing_id: row.source_listing_id,
             property_type: row.property_type,
             title: row.title,
