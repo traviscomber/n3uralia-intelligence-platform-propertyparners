@@ -83,35 +83,24 @@ async function discoverPortalWithFallback(args: {
 }) {
   const failures: Array<{ provider: CollectorProvider; error: string }> = []
 
-  // Full-universe discovery is materially faster and cheaper through Firecrawl batch scraping.
-  // Bright Data remains the primary detail enricher and the discovery fallback.
-  if (process.env.FIRECRAWL_API_KEY) {
-    try {
-      return {
-        result: await discoverPortalVitacuraViaFirecrawl(args),
-        provider: 'firecrawl' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
+  // Use the low-cost direct collector first. Bright Data is an authorized fallback
+  // when the source restricts access; never escalate to repeated direct requests.
+  try {
+    return {
+      result: await discoverPortalVitacuraUniverse(args),
+      provider: 'browser' as CollectorProvider,
+      failures,
     }
+  } catch (error) {
+    const reason = classifyCollectorFailure(error)
+    failures.push({ provider: 'browser', error: reason })
+    if (!['COLLECTOR_SOURCE_ANTI_BOT', 'COLLECTOR_SOURCE_FORBIDDEN', 'COLLECTOR_SOURCE_RATE_LIMITED'].includes(reason)) throw error
   }
 
-  if (process.env.BRIGHTDATA_API_KEY) {
-    try {
-      return {
-        result: await discoverPortalVitacuraViaBrightData(args),
-        provider: 'brightdata' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
+  if (!process.env.BRIGHTDATA_API_KEY) throw new Error('PORTAL_ACCESS_RESTRICTED_BRIGHTDATA_UNAVAILABLE')
   return {
-    result: await discoverPortalVitacuraUniverse(args),
-    provider: 'browser' as CollectorProvider,
+    result: await discoverPortalVitacuraViaBrightData(args),
+    provider: 'brightdata' as CollectorProvider,
     failures,
   }
 }
@@ -172,6 +161,8 @@ function classifyCollectorFailure(cause: unknown) {
   if (message.includes('failed to launch') || message.includes('browser launch')) return 'COLLECTOR_BROWSER_LAUNCH_FAILED'
   if (message.includes('portal_suspicious_traffic') || message.includes('suspicious traffic')) return 'COLLECTOR_SOURCE_ANTI_BOT'
   if (message.includes('collector_empty_discovery')) return 'COLLECTOR_EMPTY_DISCOVERY'
+  if (message.includes('portal_access_restricted_http_403')) return 'COLLECTOR_SOURCE_FORBIDDEN'
+  if (message.includes('portal_access_restricted_http_429')) return 'COLLECTOR_SOURCE_RATE_LIMITED'
   if (message.includes('http 403')) return 'COLLECTOR_SOURCE_FORBIDDEN'
   if (message.includes('http 429')) return 'COLLECTOR_SOURCE_RATE_LIMITED'
   if (message.includes('timeout') || message.includes('timed out')) return 'COLLECTOR_SOURCE_TIMEOUT'
