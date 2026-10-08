@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Plus, RefreshCw } from 'lucide-react'
-import { DataStatusBar, MetricStrip, WorkspaceField, WorkspaceHeader, WorkspaceSelect, WorkspaceShell } from '@/components/ui/workspace'
+import { WorkspaceField, WorkspaceHeader, WorkspaceSelect, WorkspaceShell } from '@/components/ui/workspace'
 import { OperationalState } from '@/components/ui/operational-state'
 
 type ValuationCase = {
@@ -85,24 +85,7 @@ export default function ValuationRegistryPage() {
     item.condition_status !== 'not_evaluable' &&
     (item.accepted_comparable_count ?? 0) >= 3
   ).length
-  const unlinkedCount = cases.filter((item) => !item.subject_property_id).length
-  const conditionBlockedCount = cases.filter((item) => item.condition_status === 'not_evaluable').length
   const actionCount = isReviewer ? counts.review : counts.review + counts.draft
-  const actionMetrics = isReviewer
-    ? [
-        { label: 'Pendientes de revisión', value: counts.review, tone: counts.review ? 'warning' as const : 'default' as const },
-        { label: 'Borradores de la oficina', value: counts.draft },
-        { label: 'Aprobadas', value: counts.approved },
-        { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' as const : 'default' as const },
-      ]
-    : [
-        ...(counts.review > 0 ? [{ label: 'En revisión', value: counts.review }] : []),
-        ...(counts.draft > 0 ? [{ label: 'Borradores', value: counts.draft }] : []),
-        ...(unlinkedCount > 0 ? [{ label: 'Sin vínculo', value: unlinkedCount, tone: 'warning' as const }] : []),
-        ...(conditionBlockedCount > 0 ? [{ label: 'Estado no evaluable', value: conditionBlockedCount, tone: 'danger' as const }] : []),
-        { label: 'Aprobadas', value: counts.approved },
-        { label: 'Emitidas', value: counts.issued, tone: counts.issued ? 'success' as const : 'default' as const },
-      ]
 
   if (loading && cases.length === 0) {
     return <WorkspaceShell><OperationalState kind="loading" title="Cargando valorizaciones" description="Consultando expedientes, estados y valores autorizados." /></WorkspaceShell>
@@ -116,19 +99,17 @@ export default function ValuationRegistryPage() {
     <WorkspaceShell>
       <WorkspaceHeader
         eyebrow={isReviewer ? 'Valorizaciones · Dirección' : 'Valorizaciones'}
-        title={isReviewer ? 'Qué requiere revisión' : 'Qué necesita avanzar'}
-        meta={actionCount > 0 ? `${actionCount} requieren acción` : undefined}
+        title="Valorizaciones"
+        meta={actionCount > 0 ? `${actionCount} por atender` : undefined}
         actions={[
           { label: '', onClick: () => void load(), disabled: loading, icon: <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />, ariaLabel: 'Actualizar valorizaciones' },
-          ...(viewerScope === 'self'
-            ? [{ label: 'Nueva valorización', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> }]
-            : []),
+          { label: 'Nueva valorización', href: '/dashboard/valuation', primary: true, icon: <Plus className="h-4 w-4" /> },
         ]}
       />
 
       {error ? <div role="alert" className="mt-4 border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-200">No se pudo actualizar. Se mantienen los últimos datos visibles. {error}</div> : null}
 
-      <MetricStrip items={actionMetrics} />
+
 
       {nextReview || nextDraft ? (
         <section className="mt-7 max-w-5xl">
@@ -167,9 +148,7 @@ export default function ValuationRegistryPage() {
                   : 'No hay valorizaciones que requieran una acción inmediata.'}
             </p>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-              {isReviewer
-                ? 'Cuando un expediente sea enviado a revisión aparecerá aquí con su valor propuesto, comparables y evidencia para decidir.'
-                : 'Puedes iniciar una nueva valorización o continuar un borrador desde el listado.'}
+              {isReviewer ? 'Puedes iniciar una valorización o consultar los expedientes existentes.' : 'Inicia una valorización o continúa un borrador.'}
             </p>
           </div>
         </section>
@@ -177,7 +156,7 @@ export default function ValuationRegistryPage() {
 
       <details className="mt-9 border-t border-[var(--n3-line)] pt-4">
         <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
-          Ver todas las valorizaciones ({cases.length})
+          Todas las valorizaciones ({cases.length})
         </summary>
         <div className="mt-5">
           <div className="flex flex-col gap-3 border-y border-[var(--n3-line)] py-3 md:flex-row">
@@ -196,10 +175,8 @@ export default function ValuationRegistryPage() {
               <Link key={item.id} href={`/dashboard/valuations/${item.id}`} className="grid gap-2 py-4 hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-medium sm:truncate">{item.address || 'Sin dirección'}</p>
-                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'} · {item.accepted_comparable_count ?? 0} comparables aceptados</p>
-                  <p className={`mt-1 text-[11px] ${(item.accepted_comparable_count ?? 0) >= 3 ? 'text-[#9fd0c8]' : 'text-[#f0c96a]'}`}>
-                    {(item.accepted_comparable_count ?? 0) >= 3 ? 'Evidencia comparable completa' : 'Evidencia comparable incompleta'}
-                  </p>
+                  <p className="mt-1 break-words text-xs text-[var(--n3-text-muted)] sm:truncate">{item.neighborhood || 'Sin barrio'} · {item.property_type || 'Sin tipo'}</p>
+    
                 </div>
                 <span className="text-xs uppercase tracking-wide text-[var(--n3-text-muted)]">{statusLabels[item.status] || item.status}</span>
                 <span className="text-sm font-medium tabular-nums">{item.estimated_value_uf == null ? '—' : `${money.format(item.estimated_value_uf)} UF`}</span>
@@ -211,14 +188,7 @@ export default function ValuationRegistryPage() {
         </div>
       </details>
 
-      <DataStatusBar
-        cutoff={cases.length ? new Date(cases[0].updated_at).toLocaleString('es-CL') : '—'}
-        coverage={isReviewer
-          ? `${counts.review} pendientes de revisión · ${evidenceReadyCount} con evidencia base completa`
-          : `${evidenceReadyCount} de ${cases.length} expedientes con evidencia base completa`}
-        issues={Math.max(0, cases.length - evidenceReadyCount)}
-        status={cases.length === 0 ? 'ready' : evidenceReadyCount === cases.length ? 'ready' : 'partial'}
-      />
+
     </WorkspaceShell>
   )
 }
