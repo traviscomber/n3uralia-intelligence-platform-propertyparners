@@ -75,7 +75,9 @@ export default function ValuationRegistryPage() {
     return (status === 'all' || item.status === status) && text.includes(query.trim().toLowerCase())
   }), [cases, query, status])
 
-  const isReviewer = viewerScope !== 'self'
+  const isOfficeReviewer = viewerScope === 'office'
+  const isGlobalReviewer = viewerScope === 'global'
+  const isReviewer = isOfficeReviewer || isGlobalReviewer
   const nextReview = cases.find((item) => item.status === 'review')
   const nextDraft = viewerScope === 'self' ? cases.find((item) => item.status === 'draft') : undefined
   const actionCount = isReviewer ? counts.review : counts.review + counts.draft
