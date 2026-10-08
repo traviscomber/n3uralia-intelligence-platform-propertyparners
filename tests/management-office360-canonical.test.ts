@@ -24,7 +24,7 @@ test('Office 360 contains the canonical Jan-Sep 2026 management series', () => {
   assert.deepEqual(periods.map((item)=>item.period), ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09'])
   for (const period of periods) {
     assert.deepEqual(period.offices.map((office)=>office.name), offices)
-    assert.equal(period.authority.file, period.period === '2026-09' ? 'Cierres_septiembre_2026.xlsx' : 'Ago_Directorio.pptx')
+    assert.equal(period.authority.file, period.period === '2026-09' ? 'September 2026 canonical CRM set' : 'Ago_Directorio.pptx')
     assert.ok(period.authority.sha256)
   }
 })
