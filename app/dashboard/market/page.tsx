@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { FileText, TrendingUp } from 'lucide-react'
 import { PublicErrorNotice } from '@/components/feedback/public-error-notice'
-import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
+import { MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
 import { getOperationalMarketSnapshot, type MarketFreshnessStatus } from '@/lib/market-operational'
@@ -226,7 +226,7 @@ export default async function MarketPage() {
       <WorkspaceHeader
         eyebrow="Mercado"
         title="Vitacura · Casas"
-        meta={`Corte ${date(market.latestObservedAt)} · ${freshness(market.freshnessStatus, market.observationAgeDays)}`}
+        meta={market.error || portalSourceDegraded || market.freshnessStatus === 'stale' ? `Actualización pendiente · Últimos datos ${date(market.latestObservedAt)}` : `Actualizado ${date(market.latestObservedAt)}`}
         actions={[
           { label: 'Ver casas en oferta', href: '/dashboard/market/oferta', primary: true, icon: <TrendingUp size={15} /> },
           { label: 'Informe', href: '/dashboard/market/export', icon: <FileText size={15} /> },
@@ -235,21 +235,9 @@ export default async function MarketPage() {
 
       {market.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar toda la información de mercado." /></div> : null}
       {executiveResult.error ? <div className="mt-4"><PublicErrorNotice compact message="No fue posible consultar el control ejecutivo; sus indicadores no se muestran." /></div> : null}
-      {portalSourceDegraded ? (
-        <div className="mt-4 border border-[#8a5a20] bg-[#2a1d0f] px-4 py-3 text-xs leading-5 text-[#f0c96a]">
-          <p className="font-semibold">Portal Inmobiliario · fuente temporalmente degradada</p>
-          <p className="mt-1">
-            El cron automático continúa ejecutándose, pero la captura más reciente fue rechazada porque Portal no entregó inventario utilizable.
-            Se conserva el último corte completo verificado del {date(market.latestIngestionAt)} y no se publica una actualización vacía como vigente.
-          </p>
-          <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">
-            Último intento: {date(market.latestAttemptAt)} · estado {market.latestAttemptStatus ?? '—'}{market.latestAttemptError ? ` · ${market.latestAttemptError}` : ''}
-          </p>
-        </div>
-      ) : null}
 
       <section className="mt-6 border-y border-[var(--n3-line)] py-7">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.7fr)] lg:items-end">
+        <div className="grid gap-8 lg:grid-cols-1 lg:items-end">
           <div>
             <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">01 · Mercado hoy</p>
             <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
@@ -261,21 +249,11 @@ export default async function MarketPage() {
               </p>
             </div>
             <p className="mt-3 max-w-2xl text-xs leading-5 text-[var(--n3-text-muted)]">
-              Inventario vigente observado en Portal Inmobiliario. El número sólo se publica como mercado completo cuando la captura demuestra cobertura suficiente contra el total informado por Portal.
+              Propiedades disponibles según la última información verificada.
             </p>
           </div>
 
-          <div className="border-l border-[var(--n3-line)] pl-5">
-            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Cobertura del corte</p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums">{percent(market.latestInventoryCoverageRatio)}</p>
-            <p className="mt-1 text-xs text-[var(--n3-text-muted)]">
-              Portal reporta {number(market.latestPortalReportedCount)} · N3uralia captura {number(market.latestDiscoveryUniqueListings)} IDs únicos
-            </p>
-            <p className={`mt-3 text-xs ${market.latestIngestionFullSnapshot ? 'text-[var(--n3-teal-soft)]' : 'text-[#f0c96a]'}`}>
-              {market.latestIngestionFullSnapshot ? 'Corte completo verificado' : 'Cobertura parcial · retiros aún no confirmados'}
-            </p>
-            <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Corte {date(market.latestIngestionAt)}</p>
-          </div>
+
         </div>
 
         <div className="mt-7 grid gap-px bg-[var(--n3-line)] sm:grid-cols-2 lg:grid-cols-4">
@@ -738,12 +716,7 @@ export default async function MarketPage() {
             </div>
           </section>
 
-          <DataStatusBar
-            cutoff={date(market.latestObservedAt)}
-            coverage={`${number(market.liveLinkedHouses)} de ${number(market.liveHouseCount)} casas live vinculadas · ${number(market.logicalHouseComponents)} propiedades consolidadas V1 · ${number(market.outOfScopeLegacyHouses)} legacy fuera de alcance aisladas`}
-            issues={(market.error ? 1 : 0) + (market.freshnessStatus === 'stale' ? 1 : 0) + (market.confirmedSales === null ? 1 : 0) + (territory.error ? 1 : 0) + (portalReference.error ? 1 : 0) + territoryExceptions + (market.identityCollisions ?? 0) + (market.duplicateComponents ?? 0)}
-            status={dataStatus}
-          />
+
 
           <div className="flex flex-wrap gap-2 text-xs">
             <a href="/api/market/export?dataset=listings&format=xlsx" className="inline-flex min-h-11 items-center px-2 text-[var(--n3-teal-soft)]">Exportar XLSX</a>
