@@ -113,7 +113,6 @@ export default async function MarketPage() {
   )
   const portalSourceDegraded = latestAttemptIsNewer && market.latestAttemptStatus === 'failed'
 
-  const dataStatus = market.error || market.freshnessStatus === 'stale' || portalSourceDegraded
     ? 'blocked'
     : liveIdentityCoverage !== null && liveIdentityCoverage >= 0.8 && liveTerritorialCoverage !== null && liveTerritorialCoverage >= 0.8 && market.confirmedSales !== null
       ? 'ready'
@@ -277,72 +276,9 @@ export default async function MarketPage() {
           <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--n3-text-muted)]">02 · Cobertura y limpieza</p>
           <h2 className="mt-1 text-lg font-medium text-[var(--n3-text-light)]">Qué capturamos y qué consolidamos</h2>
           <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">
-            La oferta observada y la base consolidada de Property Partners cumplen funciones distintas. Se muestran por separado para evitar dobles conteos.
+            Propiedades verificadas y listas para consultar.
           </p>
         </div>
-
-        <div className="mt-5 grid gap-6 lg:grid-cols-2">
-          <div className="border-t border-[var(--n3-line)] pt-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Oferta observada · Portal</p>
-                <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">Cobertura diaria</p>
-              </div>
-              <span className="text-xs text-[var(--n3-teal-soft)]">{percent(market.latestInventoryCoverageRatio)}</span>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-2xl font-semibold tabular-nums">{number(market.latestPortalReportedCount)}</p>
-                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">Portal reporta</p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tabular-nums">{number(market.latestDiscoveryUniqueListings)}</p>
-                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">IDs únicos capturados</p>
-              </div>
-            </div>
-            <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">
-              {number(market.latestDiscoveryDuplicateCandidates)} referencias técnicas repetidas fueron descartadas durante el recorrido. No representan propiedades adicionales.
-            </p>
-          </div>
-
-          <div className="border-t border-[var(--n3-line)] pt-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)]">Base consolidada PP</p>
-                <p className="mt-1 text-sm font-medium text-[var(--n3-text-light)]">Identidad consolidada</p>
-              </div>
-              <Link href="/dashboard/market/identidades" className="text-xs text-[var(--n3-teal-soft)]">Ver duplicados</Link>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-2xl font-semibold tabular-nums">{number(market.canonicalProperties)}</p>
-                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">propiedades registradas</p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tabular-nums text-[var(--n3-teal-soft)]">−{number(market.confirmedDuplicateRows)}</p>
-                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">duplicados</p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tabular-nums">{number(market.logicalHouseComponents)}</p>
-                <p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">propiedades consolidadas</p>
-              </div>
-            </div>
-            <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">
-              Esta base se usa para identidad, territorio y valorización. No representa por sí sola el total de casas actualmente publicadas en Portal.
-            </p>
-          </div>
-        </div>
-
-        <details className="mt-5 border-y border-[var(--n3-line)] py-3">
-          <summary className="flex min-h-10 cursor-pointer items-center justify-between gap-4 text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
-            <span>Ver detalle de consolidación</span>
-            <span className="text-[10px] uppercase tracking-[0.12em]">Detalle</span>
-          </summary>
-          <div className="space-y-1 pt-3 font-mono text-[11px] leading-5 text-[var(--n3-text-muted)]">
-            <p>Captura Portal: {number(market.latestDiscoveryRawCandidates)} referencias observadas − {number(market.latestDiscoveryDuplicateCandidates)} repeticiones técnicas = {number(market.latestDiscoveryUniqueListings)} IDs únicos · cobertura {percent(market.latestInventoryCoverageRatio)}</p>
-            <p>Base PP: {number(market.canonicalProperties)} registros − {number(market.confirmedDuplicateRows)} duplicados confirmados = {number(market.logicalHouseComponents)} propiedades consolidadas</p>
-          </div>
-        </details>
 
         {authority ? <details className="mt-3 border-b border-[var(--n3-line)] pb-3">
           <summary className="flex min-h-10 cursor-pointer items-center justify-between gap-4 text-xs text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">
