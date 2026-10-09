@@ -30,3 +30,20 @@ test('authenticated QA checks three actual role-specific primary navigation link
  assert.match(code,/three-pillar-navigation/)
  assert.match(code,/if \(navigationAudit\.status === 'failed'\) throw/)
 })
+
+test('visual QA waits for real login completion instead of unrelated global alerts', () => {
+ const code=readFileSync('scripts/run-authenticated-visual-qa.mjs','utf8')
+ assert.match(code,/main section \[role="alert"\]/)
+ assert.doesNotMatch(code,/Promise\.race\(\[\s*page\.waitForFunction/)
+ assert.match(code,/timeout: 45000/)
+ assert.match(code,/sign-in-diagnostics\.json/)
+ assert.match(code,/authResponses/)
+})
+test('visual QA synchronizes React-controlled inputs before login submit', () => {
+ const code=readFileSync('scripts/run-authenticated-visual-qa.mjs','utf8')
+ assert.match(code,/page\.type\(selector, email, \{ delay: 20 \}\)/)
+ assert.match(code,/password, \{ delay: 20 \}\)/)
+ assert.match(code,/emailField\?\.value === expectedEmail/)
+ assert.match(code,/await waitForAuthenticatedState\(page, contextDir, authResponses\)/)
+ assert.doesNotMatch(code,/passwordField\?\.value === password/)
+})

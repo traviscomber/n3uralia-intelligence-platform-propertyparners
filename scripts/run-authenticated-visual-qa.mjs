@@ -50,23 +50,49 @@ async function launchBrowser() {
   })
 }
 
-async function waitForAuthenticatedState(page) {
-  await Promise.race([
-    page.waitForFunction(() => !window.location.pathname.startsWith('/auth/login'), { timeout: 30000 }),
-    page.waitForSelector('[role="alert"]', { timeout: 30000 }),
-  ]).catch(() => null)
+async function waitForAuthenticatedState(page, contextDir, authResponses) {
+  // A global role="alert" can exist before login. It must not win the race.
+  let timedOut = false
+  try {
+    await page.waitForFunction(() => {
+      if (!window.location.pathname.startsWith('/auth/login')) return true
+      return Boolean(document.querySelector('main section [role="alert"]')?.textContent?.trim())
+    }, { timeout: 45000 })
+  } catch {
+    timedOut = true
+  }
 
   const state = await page.evaluate(() => ({
     pathname: window.location.pathname,
-    alert: document.querySelector('[role="alert"]')?.textContent?.trim() || null,
+    alert: document.querySelector('main section [role="alert"]')?.textContent?.trim() || null,
+    emailLength: document.querySelector('input[type="email"]')?.value?.length ?? null,
+    passwordPresent: Boolean(document.querySelector('input[type="password"]')?.value?.length),
+    submitDisabled: Boolean(document.querySelector('button[type="submit"]')?.disabled),
   }))
-  if (state.pathname.startsWith('/auth/login')) throw new Error(state.alert || 'Authentication did not leave the login page.')
+  if (state.pathname.startsWith('/auth/login')) {
+    // Never save typed credentials or identifying form values in evidence.
+    await fs.writeFile(path.join(contextDir, 'sign-in-diagnostics.json'), JSON.stringify({
+      ...state, authResponses,
+    }, null, 2))
+    throw new Error(state.alert || (timedOut
+      ? 'Login route change timed out after 45 seconds.'
+      : 'Authentication did not leave the login page.'))
+  }
 }
 
 // Capture only public response metadata and DOM diagnostics. Never save credentials.
 async function login(page, email, password, contextDir) {
   const responses = []
+  const authResponses = []
   page.on('response', (response) => {
+    // Record only the status of Auth's token endpoint, never the response body.
+    try {
+      if (new URL(response.url()).pathname === '/auth/v1/token') {
+        authResponses.push({ path: '/auth/v1/token', status: response.status() })
+      }
+    } catch {
+      // Ignore malformed third-party URLs.
+    }
     if (response.url().startsWith(baseUrl) && responses.length < 25) {
       responses.push({ path: new URL(response.url()).pathname, status: response.status() })
     }
@@ -96,10 +122,20 @@ async function login(page, email, password, contextDir) {
       ? 'External Cloudflare bot challenge, HTTP 403. Keep its protection enabled and use the official Vercel production alias for authenticated UI QA.'
       : `Login fields unavailable, HTTP ${navigation?.status() ?? 'unknown'}, path ${diagnostics.pathname}; see redacted diagnostics artifact.`)
   }
-  await page.type(selector, email)
-  await page.type('input[type="password"], input[name="password"]', password)
+  // React-controlled inputs require onChange to settle before submission.
+  // Without pacing, headless Chromium can send an empty email to Supabase.
+  await page.type(selector, email, { delay: 20 })
+  await page.type('input[type="password"], input[name="password"]', password, { delay: 20 })
+  await page.waitForFunction((expectedEmail) => {
+    const emailField = document.querySelector('input[type="email"], input[name="email"]')
+    const passwordField = document.querySelector('input[type="password"]')
+    const submit = document.querySelector('button[type="submit"]')
+    return emailField?.value === expectedEmail
+      && Boolean(passwordField?.value?.length)
+      && submit && !submit.disabled
+  }, { timeout: 12000 }, email)
   await page.click('button[type="submit"]')
-  await waitForAuthenticatedState(page)
+  await waitForAuthenticatedState(page, contextDir, authResponses)
 }
 
 const expectedPrimaryLabels = ['Mercado', 'Valorizador', 'Reportes']
