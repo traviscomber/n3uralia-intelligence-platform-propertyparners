@@ -10,6 +10,9 @@ on:
       - 'lib/portal-offer-day.ts'
       - 'lib/portal-offer-service.ts'
       - 'lib/market-pedro-history.ts'
+      - 'lib/market-cbrs-chart.ts'
+      - 'components/market/cbrs-comparison-bars.tsx'
+      - 'tests/market/market-cbrs-chart.test.ts'
       - 'lib/market-pedro-overview.ts'
       - 'app/dashboard/market/page.tsx'
       - 'app/dashboard/market/layout.tsx'
@@ -71,6 +74,7 @@ jobs:
           tests/market/portal-inventory-scheduler.test.ts
           tests/market/portal-offer-day.test.ts
           tests/market/market-pedro-home.test.ts
+          tests/market/market-cbrs-chart.test.ts
           tests/market/market-comparables-authorization.test.ts
           tests/market/market-pedro-report.test.ts
 
