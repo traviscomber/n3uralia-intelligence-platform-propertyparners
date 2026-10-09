@@ -9,6 +9,11 @@ on:
       - 'lib/portal-inventory-scheduler.ts'
       - 'lib/portal-offer-day.ts'
       - 'lib/portal-offer-service.ts'
+      - 'lib/market-pedro-history.ts'
+      - 'lib/market-pedro-overview.ts'
+      - 'app/dashboard/market/page.tsx'
+      - 'app/dashboard/market/layout.tsx'
+      - 'tests/market/market-pedro-home.test.ts'
       - 'app/dashboard/market/oferta/page.tsx'
       - 'tests/market/portal-offer-day.test.ts'
       - 'lib/brightdata-portal-collector.ts'
@@ -59,6 +64,7 @@ jobs:
           tests/market/portal-discovery-evidence.test.ts
           tests/market/portal-inventory-scheduler.test.ts
           tests/market/portal-offer-day.test.ts
+          tests/market/market-pedro-home.test.ts
 
       - name: Explain separate live-source release gate
         if: github.event_name == 'pull_request'

@@ -183,7 +183,7 @@ async function inventoryPage(client: Client, selected: OfferGroup, requestPage: 
   }
 }
 
-export async function loadPortalOffer(args: { selected: OfferType; page: number; now?: Date }): Promise<OfferView> {
+export async function loadPortalOffer(args: { selected: OfferType; page: number; now?: Date; includeInventory?: boolean }): Promise<OfferView> {
   const client = createServiceClient()
   const today = portalChileToday(args.now)
   const sources = await client.from('market_sources').select('id,code').in('code',TYPES.map((type) => type.code)).limit(TYPES.length)
@@ -192,6 +192,8 @@ export async function loadPortalOffer(args: { selected: OfferType; page: number;
     client,type,sources.error ? null : ids.get(type.code) ?? null,today.start,today.end,
   )))
   const selected = groups.find((item) => item.type === args.selected) ?? groups[0]
-  const page = await inventoryPage(client,selected,args.page)
+  const page = args.includeInventory === false
+    ? { page: 1, pages: 1, inventory: [] as OfferListing[], inventoryUnavailable: false }
+    : await inventoryPage(client,selected,args.page)
   return {date:today.day,groups,selected:selected.type,...page}
 }
