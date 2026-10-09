@@ -132,14 +132,14 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   const navigation = (
     <>
       <div className="border-b border-[var(--n3-line)] px-5 py-5">
-        <PPLogo className="w-full" priority />
+        <Link href="/dashboard" onClick={closeMobileNavigation} aria-label="Ir al inicio de Property Partners" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"><PPLogo className="w-full" priority /></Link>
         {profile?.role !== 'ceo' ? <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">Intelligence Platform</p> : null}
       </div>
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
         {navigationSections.map((section, index) => {
           const sectionActive = section.items.some((item) => isActive(item.href, item.exact))
-          // A landing page should not automatically expand the secondary tools.
-          // On a nested working route, reveal the active item for orientation.
+          // Keep supplementary navigation closed on each role's landing page.
+          // Reveal it automatically on nested work routes.
           const todayActive = section.items.some((item) => item.label === 'Hoy' && isActive(item.href, item.exact))
           const collapsible = index > 0
           const initiallyOpen = collapsible && sectionActive && !todayActive
@@ -147,7 +147,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
           if (collapsible) {
             return (
               <details key={section.label} className="group mb-5" open={initiallyOpen || undefined}>
-                <summary className="mb-1.5 flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
+                <summary className="mb-1.5 flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
                   <span>{section.label}</span>
                   <div className="h-px flex-1 bg-[var(--n3-line)]" />
                   <ChevronDown aria-hidden="true" size={13} className="transition-transform group-open:rotate-180" />
@@ -158,9 +158,9 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
           }
 
           return (
-            <div key={section.label} className="mb-5">
+            <div key={section.label} className="mb-6 border-b border-[var(--n3-line)] pb-4">
               <div className="mb-1.5 flex items-center gap-2 px-3">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)]">{section.label}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">{section.label}</span>
                 <div className="h-px flex-1 bg-[var(--n3-line)]" />
               </div>
               {sectionItems(section)}

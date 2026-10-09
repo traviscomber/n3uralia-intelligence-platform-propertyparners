@@ -61,30 +61,36 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   }
 }
 
-// Approved top-level architecture. Each role sees only these three pillars.
-// All previous destinations remain available under a single collapsed section.
-const expectedReportRoute: Record<string, string> = {
+const expectedLabels = ['Mercado', 'Valorizador', 'Reportes']
+const reportPillarByRole = {
   ceo: '/dashboard/reportes/canonicos',
   admin: '/dashboard/reportes/canonicos',
   director: '/dashboard/director/reporte',
   subdirector: '/dashboard/director/reporte',
   seller: '/dashboard/reportes/audiencias/ejecutivo',
-}
+} as const
+const expectedRoutes = {
+  ceo: ['/dashboard/ceo', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/control/operations', '/dashboard/properties', '/dashboard/reportes/canonicos'],
+  admin: ['/dashboard', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/reportes/canonicos', '/dashboard/control/operations', '/dashboard/control/admin', '/dashboard/properties/admin', '/dashboard/market/fuentes', '/dashboard/settings'],
+  director: ['/dashboard/director', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/director/reporte', '/dashboard/control/operations', '/dashboard/control/admin', '/dashboard/properties/admin'],
+  subdirector: ['/dashboard/director', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/director/reporte', '/dashboard/control/operations', '/dashboard/control/admin', '/dashboard/properties/admin'],
+  seller: ['/dashboard/partner', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/reportes/audiencias/ejecutivo'],
+} as const
+
 for (const [role, sections] of Object.entries(navigationByRole)) {
-  assert.equal(sections.length, 2, `${role} must have two navigation sections`)
-  assert.equal(sections[0]?.label, 'Tres pilares')
-  assert.deepEqual(sections[0]?.items.map((item) => item.label), ['Mercado', 'Valorizador', 'Reportes'])
-  assert.deepEqual(sections[0]?.items.map((item) => item.href), [
+  assert.equal(sections.length, 2, role + ': unexpected extra navigation section')
+  assert.equal(sections[0].label, 'Tres pilares', role)
+  assert.deepEqual(sections[0].items.map((item) => item.label), expectedLabels, role)
+  assert.deepEqual(sections[0].items.map((item) => item.href), [
     '/dashboard/market',
     '/dashboard/valuation',
-    expectedReportRoute[role],
-  ])
-  assert.equal(sections[1]?.label, 'Más herramientas')
-  assert.ok(sections[1].items.length > 0)
-  assert.ok(sections[1].items.every((item) => Boolean(item.group)), `${role} has ungrouped secondary links`)
-  assert.equal(sections[1].items[0]?.label, 'Hoy')
-  const hrefs = sections.flatMap((section) => section.items.map((item) => item.href))
-  assert.equal(new Set(hrefs).size, hrefs.length, `${role} has duplicate navigation destinations`)
+    reportPillarByRole[role as keyof typeof reportPillarByRole],
+  ], role)
+  assert.equal(sections[1]?.label, 'Más herramientas', role)
+  assert.ok(sections[1].items.every((item) => Boolean(item.group)), role + ': secondary tool missing group')
+  assert.equal(sections[1].items[0].label, 'Hoy')
+  const routes = sections.flatMap((section) => section.items.map((item) => item.href))
+  assert.equal(new Set(routes).size, routes.length, role + ': route duplicated')
+  assert.deepEqual(new Set(routes), new Set(expectedRoutes[role as keyof typeof expectedRoutes]), role + ': missing route')
 }
-
-console.log('Dashboard access and the three approved pillars (Mercado, Valorizador, Reportes) verified for all five roles; secondary tools retain existing scopes.')
+console.log('Dashboard role navigation verified: Mercado, Valorizador and Reportes with all previous authorized routes retained.')
