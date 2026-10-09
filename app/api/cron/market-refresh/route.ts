@@ -4,7 +4,6 @@ import { requireExecutiveAccess } from '@/lib/api-access'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import {
   collectPortalListingDetails,
-  discoverPortalVitacuraUniverse,
   portalListingIdFromUrl,
 } from '@/lib/portal-inmobiliario-collector'
 import {
@@ -12,6 +11,7 @@ import {
   discoverPortalVitacuraViaBrightData,
 } from '@/lib/brightdata-portal-collector'
 import { normalizePortalListingRows, portalListingMatchesVitacuraScope, type PortalDatasetKind } from '@/lib/market-source-import'
+import { nextOverduePortalDataset, withinPortalInventoryWindow } from '@/lib/portal-inventory-scheduler'
 import { evaluatePortalInventoryCompleteness } from '@/lib/portal-inventory-policy'
 
 export const runtime = 'nodejs'
@@ -49,8 +49,7 @@ function chileClock(now = new Date()) {
 }
 
 function scheduledWindow() {
-  const local = chileClock()
-  return local.hour === 7 && local.minute === 30
+  return withinPortalInventoryWindow()
 }
 
 
@@ -77,27 +76,13 @@ async function discoverPortalWithFallback(args: {
   maxPages: number
   waitMs: number
 }) {
-  const failures: Array<{ provider: CollectorProvider; error: string }> = []
-
-  // Use the low-cost direct collector first. Bright Data is an authorized fallback
-  // when the source restricts access; never escalate to repeated direct requests.
-  try {
-    return {
-      result: await discoverPortalVitacuraUniverse(args),
-      provider: 'browser' as CollectorProvider,
-      failures,
-    }
-  } catch (error) {
-    const reason = classifyCollectorFailure(error)
-    failures.push({ provider: 'browser', error: reason })
-    if (!['COLLECTOR_SOURCE_ANTI_BOT', 'COLLECTOR_SOURCE_FORBIDDEN', 'COLLECTOR_SOURCE_RATE_LIMITED'].includes(reason)) throw error
-  }
-
-  if (!process.env.BRIGHTDATA_API_KEY) throw new Error('PORTAL_ACCESS_RESTRICTED_BRIGHTDATA_UNAVAILABLE')
+  // Direct browser access is consistently blocked by Portal; avoid speculative
+  // retries and use the existing paid provider once, with fail-closed semantics.
+  if (!process.env.BRIGHTDATA_API_KEY) throw new Error('BRIGHTDATA_API_KEY_MISSING')
   return {
     result: await discoverPortalVitacuraViaBrightData(args),
     provider: 'brightdata' as CollectorProvider,
-    failures,
+    failures: [] as Array<{ provider: CollectorProvider; error: string }>,
   }
 }
 
@@ -696,7 +681,7 @@ export async function GET(request: Request) {
   if (requestedDataset && !DATASETS.includes(requestedDataset as PortalDatasetKind)) {
     return NextResponse.json({ error: 'Dataset no soportado.' }, { status: 400 })
   }
-  const selectedDatasets: PortalDatasetKind[] = requestedDataset
+  let selectedDatasets: PortalDatasetKind[] = requestedDataset
     ? [requestedDataset as PortalDatasetKind]
     : DATASETS
   if (force) {
@@ -708,7 +693,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         ok: true,
         skipped: true,
-        reason: 'outside_0730_america_santiago',
+        reason: 'outside_0800_america_santiago',
         timeZone: CHILE_TIME_ZONE,
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
@@ -716,6 +701,24 @@ export async function GET(request: Request) {
 
   const startedAt = Date.now()
   const supabase = getServiceClient()
+
+  if (!force && !detailsOnly) {
+    const [houses, apartments] = await Promise.all([
+      latestCompleteInventoryRun(supabase, 'portal_houses'),
+      latestCompleteInventoryRun(supabase, 'portal_apartments'),
+    ])
+    const due = nextOverduePortalDataset(new Date(), {
+      portal_houses: houses?.started_at ?? null,
+      portal_apartments: apartments?.started_at ?? null,
+    })
+    if (!due) return NextResponse.json({
+      ok: true, skipped: true, reason: 'verified_inventories_recent',
+    }, { headers: { 'Cache-Control': 'no-store' } })
+    if (requestedDataset && requestedDataset !== due) {
+      return NextResponse.json({ error: 'La fuente solicitada no está pendiente.' }, { status: 409 })
+    }
+    selectedDatasets = [due]
+  }
 
   if (detailsOnly) {
     try {
@@ -986,12 +989,18 @@ export async function GET(request: Request) {
     && !identityIntelligenceError
     && !prospectPipelineError
 
+  console.info('[portal-inventory-reconciliation]', {
+    datasets: selectedDatasets,
+    completed: completeInventories,
+    failed: totalFailures,
+    runtimeMs: Date.now() - startedAt,
+  })
   return NextResponse.json(
     {
       ok,
       fullSnapshot: completeInventories === selectedDatasets.length,
       collectorPreference: {
-        inventory: process.env.BRIGHTDATA_API_KEY ? 'browser_then_brightdata' : 'browser',
+        inventory: 'brightdata',
         details: process.env.BRIGHTDATA_API_KEY ? 'brightdata_then_browser' : 'browser',
       },
       inventoryPipeline: 'portal_inventory_discovery_v1',

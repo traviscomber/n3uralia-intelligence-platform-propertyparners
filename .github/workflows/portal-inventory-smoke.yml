@@ -1,10 +1,16 @@
-name: Portal Inventory Smoke
+name: Portal Inventory Policy CI
 
 on:
   pull_request:
     branches: [main]
     paths:
       - 'lib/portal-inmobiliario-collector.ts'
+      - 'lib/portal-discovery-evidence.ts'
+      - 'lib/portal-inventory-scheduler.ts'
+      - 'lib/brightdata-portal-collector.ts'
+      - 'app/api/cron/market-delta/route.ts'
+      - 'vercel.json'
+      - 'tests/market/*.test.ts'
       - 'lib/portal-inventory-policy.ts'
       - 'app/api/cron/market-refresh/route.ts'
       - 'app/api/internal/portal-collector-smoke/route.ts'
@@ -43,7 +49,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Verify inventory acceptance and duplicate controls (deterministic)
-        run: node --import tsx --test tests/market/portal-inventory-policy.test.ts
+        run: >-
+          node --import tsx --test
+          tests/market/portal-inventory-policy.test.ts
+          tests/market/portal-discovery-evidence.test.ts
+          tests/market/portal-inventory-scheduler.test.ts
 
       - name: Explain separate live-source release gate
         if: github.event_name == 'pull_request'
