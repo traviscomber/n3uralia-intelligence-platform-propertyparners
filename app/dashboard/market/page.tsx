@@ -84,14 +84,33 @@ function YearlyTrend({
       <h3 className="text-lg font-semibold">{name}</h3>
       <p className="text-xs text-[var(--n3-text-muted)]">Variación anual <strong className="ml-1 font-semibold text-[var(--n3-text-light)]">{signedPercent(salesChange)}</strong></p>
     </div>
-    <div className="mt-5 space-y-3" role="img" aria-label={'Compraventas anuales CBRS, ' + name.toLowerCase() + ': ' + years.map((row) => row.year + ' ' + (row.transactions === null ? 'sin datos' : row.transactions)).join(', ')}>
-      {years.map((row) => <div key={row.year} className="grid grid-cols-[40px_minmax(0,1fr)_55px] items-center gap-3">
-        <span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{row.year}</span>
-        <div className="h-2.5 w-full bg-white/[0.07]">
-          {row.transactions !== null && largest > 0 ? <div className={'h-full ' + (type === 'Casa' ? 'bg-[var(--n3-text-light)]' : 'bg-[var(--n3-teal-soft)]')} style={{ width: Math.max(0, row.transactions / largest * 100) + '%' }} /> : null}
-        </div>
-        <span className="text-right text-xs font-medium tabular-nums">{count(row.transactions)}</span>
-      </div>)}
+    <div className="mt-5" role="img" aria-label={'Evolución anual de compraventas CBRS, ' + name.toLowerCase() + ': ' + years.map((row) => row.year + ' ' + (row.transactions === null ? 'sin datos' : row.transactions)).join(', ')}>
+      <svg viewBox="0 0 480 138" className="h-auto w-full" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <line x1="30" y1="118" x2="452" y2="118" stroke="var(--n3-line)" strokeWidth="1" />
+        <line x1="30" y1="72" x2="452" y2="72" stroke="var(--n3-line)" strokeWidth="1" strokeDasharray="4 7" />
+        {years.map((row, index) => {
+          const previous = index > 0 ? years[index - 1] : null
+          const x = 42 + index * 130
+          const previousX = x - 130
+          const y = row.transactions !== null && largest > 0
+            ? 118 - (row.transactions / largest) * 94
+            : null
+          const previousY = previous?.transactions !== null && previous?.transactions !== undefined && largest > 0
+            ? 118 - (previous.transactions / largest) * 94
+            : null
+          const color = type === 'Casa' ? 'var(--n3-text-light)' : 'var(--n3-teal-soft)'
+          return <g key={row.year}>
+            {previous && y !== null && previousY !== null ? <line x1={previousX} y1={previousY} x2={x} y2={y} stroke={color} strokeWidth="2.4" strokeLinecap="round" /> : null}
+            {y !== null ? <circle cx={x} cy={y} r="5" stroke="var(--n3-black)" strokeWidth="2" fill={color} /> : null}
+          </g>
+        })}
+      </svg>
+      <div className="grid grid-cols-4 gap-2">
+        {years.map((row) => <div key={row.year} className="min-w-0">
+          <p className="text-[11px] tabular-nums text-[var(--n3-text-muted)]">{row.year}</p>
+          <p className="mt-1 text-sm font-semibold tabular-nums">{count(row.transactions)}</p>
+        </div>)}
+      </div>
     </div>
     <div className="mt-6 border-t border-[var(--n3-line)] pt-4">
       <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Mediana de precio de cierre · {lastYear}</p>
@@ -243,7 +262,7 @@ export default async function MarketPage() {
           <YearlyTrend type="Departamento" name="Departamentos" rows={market.cbrsHistory} lastYear={latestYear} />
         </div>
       )}
-      <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">Las barras se escalan por separado dentro de cada tipo de propiedad. No se comparan sus alturas entre categorías.</p>
+      <p className="mt-4 text-[11px] leading-5 text-[var(--n3-text-muted)]">Las líneas muestran la evolución anual de cada tipo de inmueble con escala propia. No se comparan sus alturas entre categorías.</p>
     </section>
 
     <section id="barrios" aria-labelledby="barrios-title" className="mt-12 scroll-mt-6 border-y border-[var(--n3-line)] py-6">
