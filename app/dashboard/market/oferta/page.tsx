@@ -131,16 +131,16 @@ export default async function MarketOfferPage({
           : data.inventory.length === 0
             ? <p role="status" className="mt-5 border border-[var(--n3-line)] p-5 text-sm text-[var(--n3-text-muted)]">Sin publicaciones en esta página.</p>
             : <>
-                <div className="mt-4 hidden grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_130px_140px_44px] border-b border-[var(--n3-line)] pb-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)] md:grid">
+                <div className="mt-4 hidden grid-cols-[minmax(0,1.65fr)_minmax(0,1.3fr)_110px_110px_44px] border-b border-[var(--n3-line)] pb-2 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)] xl:grid">
                   <span>Publicación</span><span>Dirección</span><span>Precio</span><span>Detalle</span><span />
                 </div>
                 <div className="divide-y divide-[var(--n3-line)]">
-                  {data.inventory.map((row) => <div key={row.id} className="grid min-w-0 gap-2 py-4 text-sm md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_130px_140px_44px] md:items-center">
-                    <div className="min-w-0"><p className="break-words font-medium">{row.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">ID {row.id}</p></div>
-                    <p className="break-words text-xs text-[var(--n3-text-muted)]">{row.address || 'Dirección pendiente'}</p>
-                    <p className="tabular-nums">{formatPrice(row.priceUf)}</p>
-                    <p className="text-xs text-[var(--n3-text-muted)]">{row.hasDetail ? 'Con detalle' : 'Presencia confirmada'}</p>
-                    <OfferLink row={row} />
+                  {data.inventory.map((row) => <div key={row.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_44px] gap-x-4 gap-y-2 py-4 text-sm xl:grid-cols-[minmax(0,1.65fr)_minmax(0,1.3fr)_110px_110px_44px] xl:items-center">
+                    <div className="col-start-1 min-w-0 xl:col-auto"><p className="break-words font-medium">{row.title}</p><p className="mt-1 text-[11px] text-[var(--n3-text-muted)]">ID {row.id}</p></div>
+                    <p className="col-start-1 break-words text-xs text-[var(--n3-text-muted)] xl:col-auto">{row.address || 'Dirección pendiente'}</p>
+                    <p className="col-start-1 tabular-nums xl:col-auto">{formatPrice(row.priceUf)}</p>
+                    <p className="col-start-1 text-xs text-[var(--n3-text-muted)] xl:col-auto">{row.hasDetail ? 'Con detalle' : 'Presencia confirmada'}</p>
+                    <div className="col-start-2 row-span-3 row-start-1 flex items-start justify-end xl:col-auto xl:row-span-1 xl:row-start-auto"><OfferLink row={row} /></div>
                   </div>)}
                 </div>
                 <nav aria-label="Páginas del inventario" className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--n3-line)] pt-4">
