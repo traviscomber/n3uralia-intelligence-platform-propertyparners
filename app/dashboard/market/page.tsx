@@ -227,7 +227,7 @@ export default async function MarketPage() {
         title="Vitacura · Casas"
         meta={market.error || portalSourceDegraded || market.freshnessStatus === 'stale' ? `Actualización pendiente · Últimos datos ${date(market.latestObservedAt)}` : `Actualizado ${date(market.latestObservedAt)}`}
         actions={[
-          { label: 'Ver casas en oferta', href: '/dashboard/market/oferta', primary: true, icon: <TrendingUp size={15} /> },
+          { label: 'Ver casas y departamentos', href: '/dashboard/market/oferta', primary: true, icon: <TrendingUp size={15} /> },
           { label: 'Informe', href: '/dashboard/market/export', icon: <FileText size={15} /> },
         ]}
       />

@@ -7,6 +7,10 @@ on:
       - 'lib/portal-inmobiliario-collector.ts'
       - 'lib/portal-discovery-evidence.ts'
       - 'lib/portal-inventory-scheduler.ts'
+      - 'lib/portal-offer-day.ts'
+      - 'lib/portal-offer-service.ts'
+      - 'app/dashboard/market/oferta/page.tsx'
+      - 'tests/market/portal-offer-day.test.ts'
       - 'lib/brightdata-portal-collector.ts'
       - 'app/api/cron/market-delta/route.ts'
       - 'vercel.json'
@@ -54,6 +58,7 @@ jobs:
           tests/market/portal-inventory-policy.test.ts
           tests/market/portal-discovery-evidence.test.ts
           tests/market/portal-inventory-scheduler.test.ts
+          tests/market/portal-offer-day.test.ts
 
       - name: Explain separate live-source release gate
         if: github.event_name == 'pull_request'
