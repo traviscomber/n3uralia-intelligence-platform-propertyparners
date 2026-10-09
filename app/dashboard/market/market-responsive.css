@@ -1,0 +1,19 @@
+/* Scope overflow containment to Market only. The dashboard's scroll pane has
+ * overflow-y:auto; without an explicit x policy, overflow-x computes to auto
+ * and exposes a viewport-wide horizontal scrollbar at tablet widths.
+ * Keep overflow on full-width listings confined to their own scroller.
+ */
+@media screen {
+  .dashboard-shell:has(.market-responsive-shell) {
+    width: 100%;
+    max-width: 100vw;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .dashboard-shell:has(.market-responsive-shell) .dashboard-content {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+}

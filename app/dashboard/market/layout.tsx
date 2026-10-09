@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import './market-responsive.css'
 
 /**
  * The dashboard shell has an independently scrollable content pane.

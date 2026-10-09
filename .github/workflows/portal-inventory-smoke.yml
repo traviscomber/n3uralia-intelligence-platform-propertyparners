@@ -16,6 +16,7 @@ on:
       - 'lib/market-pedro-overview.ts'
       - 'app/dashboard/market/page.tsx'
       - 'app/dashboard/market/layout.tsx'
+      - 'app/dashboard/market/market-responsive.css'
       - 'tests/market/market-responsive-layout.test.ts'
       - 'tests/market/market-pedro-home.test.ts'
       - 'app/api/market/comparables/route.ts'

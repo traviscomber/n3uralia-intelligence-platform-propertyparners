@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
 const marketLayout = readFileSync('app/dashboard/market/layout.tsx','utf8')
+const marketCss = readFileSync('app/dashboard/market/market-responsive.css','utf8')
 const marketPage = readFileSync('app/dashboard/market/page.tsx','utf8')
 const chart = readFileSync('components/market/cbrs-comparison-bars.tsx','utf8')
 const offer = readFileSync('app/dashboard/market/oferta/page.tsx','utf8')
@@ -29,4 +30,14 @@ test('market charts and listing rows shrink within their available content colum
   assert.match(chart, /minmax\(0,1fr\)/)
   assert.match(marketPage, /xl:grid-cols-2/)
   assert.match(offer, /grid-cols-\[minmax\(0,1fr\)_44px\]/)
+})
+
+test('vertical dashboard scroller never exposes a global horizontal scrollbar in Mercado', () => {
+  assert.match(marketLayout, /import '\.\/market-responsive\.css'/)
+  assert.match(marketCss, /@media screen/)
+  assert.match(marketCss, /\.dashboard-shell:has\(\.market-responsive-shell\)/)
+  assert.match(marketCss, /\.dashboard-content\s*\{/)
+  assert.match(marketCss, /overflow-x:\s*clip/)
+  assert.match(marketCss, /max-width:\s*100vw/)
+  assert.doesNotMatch(marketCss, /overflow-y:\s*hidden/)
 })
