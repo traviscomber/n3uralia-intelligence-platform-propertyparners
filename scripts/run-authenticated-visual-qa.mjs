@@ -61,15 +61,38 @@ async function waitForAuthenticatedState(page) {
   if (state.pathname.startsWith('/auth/login')) throw new Error(state.alert || 'Authentication did not leave the login page.')
 }
 
-async function login(page, email, password) {
-  await page.goto(`${baseUrl}/auth/login`, { waitUntil: 'networkidle2' })
-  const emailInput = await page.$('input[type="email"], input[name="email"]')
-  const passwordInput = await page.$('input[type="password"], input[name="password"]')
-  if (!emailInput || !passwordInput) throw new Error('Login form fields were not found.')
-  await emailInput.click({ clickCount: 3 })
-  await emailInput.type(email)
-  await passwordInput.click({ clickCount: 3 })
-  await passwordInput.type(password)
+// Capture only public response metadata and DOM diagnostics. Never save credentials.
+async function login(page, email, password, contextDir) {
+  const responses = []
+  page.on('response', (response) => {
+    if (response.url().startsWith(baseUrl) && responses.length < 25) {
+      responses.push({ path: new URL(response.url()).pathname, status: response.status() })
+    }
+  })
+  const navigation = await page.goto(`${baseUrl}/auth/login`, { waitUntil: 'domcontentloaded', timeout: 45000 })
+  const selector = 'input[type="email"], input[name="email"]'
+  try {
+    await page.waitForSelector(selector, { visible: true, timeout: 25000 })
+    await page.waitForSelector('input[type="password"], input[name="password"]', { visible: true, timeout: 10000 })
+  } catch {
+    const diagnostics = await page.evaluate(() => ({
+      title: document.title,
+      pathname: window.location.pathname,
+      text: (document.body?.innerText || '').slice(0, 450),
+      emailFields: document.querySelectorAll('input[type="email"]').length,
+      passwordFields: document.querySelectorAll('input[type="password"]').length,
+      challenge: Boolean(document.querySelector('[id*="challenge"], [class*="challenge"], iframe[src*="challenge"]')),
+    }))
+    await fs.writeFile(path.join(contextDir, 'login-diagnostics.json'), JSON.stringify({
+      navigationStatus: navigation?.status() ?? null,
+      ...diagnostics,
+      responses,
+    }, null, 2))
+    await page.screenshot({ path: path.join(contextDir, 'login-failure.png') }).catch(() => null)
+    throw new Error(`Login fields unavailable, HTTP ${navigation?.status() ?? 'unknown'}, path ${diagnostics.pathname}; see redacted diagnostics artifact.`)
+  }
+  await page.type(selector, email)
+  await page.type('input[type="password"], input[name="password"]', password)
   await page.click('button[type="submit"]')
   await waitForAuthenticatedState(page)
 }
@@ -122,7 +145,7 @@ for (const profile of profiles) {
   page.on('console', (message) => { if (message.type() === 'error') browserErrors.push(message.text()) })
 
   try {
-    await login(page, profile.email, profile.password)
+    await login(page, profile.email, profile.password, contextDir)
 
     const routes = [profile.start, ...protectedVisualRoutes]
     for (const route of routes) {
