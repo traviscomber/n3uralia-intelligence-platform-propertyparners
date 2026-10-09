@@ -16,6 +16,7 @@ on:
       - 'lib/market-pedro-overview.ts'
       - 'app/dashboard/market/page.tsx'
       - 'app/dashboard/market/layout.tsx'
+      - 'tests/market/market-responsive-layout.test.ts'
       - 'tests/market/market-pedro-home.test.ts'
       - 'app/api/market/comparables/route.ts'
       - 'app/api/market/export/route.ts'
@@ -75,6 +76,7 @@ jobs:
           tests/market/portal-offer-day.test.ts
           tests/market/market-pedro-home.test.ts
           tests/market/market-cbrs-chart.test.ts
+          tests/market/market-responsive-layout.test.ts
           tests/market/market-comparables-authorization.test.ts
           tests/market/market-pedro-report.test.ts
 

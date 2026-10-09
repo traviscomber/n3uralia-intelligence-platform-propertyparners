@@ -81,7 +81,7 @@ export default async function MarketPage() {
   const yearRange = (market.lastCompleteYear - 3) + '–' + market.lastCompleteYear
   const latestYear = market.lastCompleteYear
 
-  return <WorkspaceShell contentClassName="max-w-[1250px]">
+  return <WorkspaceShell contentClassName="w-full min-w-0 max-w-[1250px]">
     <WorkspaceHeader
       eyebrow="Inteligencia inmobiliaria"
       title="Mercado de Vitacura"
