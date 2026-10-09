@@ -22,6 +22,9 @@ export type PortalDiscoveryResult = {
     newListingsPerPage: number[]
     rawListingCandidates: number
     duplicateListingCandidates: number
+    repeatedHtmlReferences?: number
+    repeatedAcrossPages?: number
+    uniqueListingIdentities?: number
     uniqueListings: number
     reportedResultCount: number | null
     exhausted: boolean
@@ -475,12 +478,15 @@ async function gotoWithRetry(page: Page, url: string, label: string, attempts = 
       if (status === 404) return { response, status, exhausted: true }
       if (!response?.ok()) {
         const error = new Error(`${label} returned HTTP ${status ?? 'unknown'}`)
-        if (status !== 403 && status !== 429 && status !== 500 && status !== 502 && status !== 503 && status !== 504) throw error
+        // Respect provider access controls: stop rather than retrying denied or rate-limited requests.
+        if (status === 403 || status === 429) throw new Error(`PORTAL_ACCESS_RESTRICTED_HTTP_${status}`)
+        if (status !== 500 && status !== 502 && status !== 503 && status !== 504) throw error
         lastError = error
       } else {
         return { response, status, exhausted: false }
       }
     } catch (error) {
+      if (error instanceof Error && error.message.startsWith('PORTAL_ACCESS_RESTRICTED_HTTP_')) throw error
       lastError = error
     }
     if (attempt < attempts) {
@@ -499,12 +505,14 @@ async function waitForPrimaryDetail(page: Page, waitMs: number) {
 }
 
 async function discoverListingUrls(browser: Browser, searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
-  const urls = new Set<string>()
+  // Same MLC listing can have multiple canonical URL forms; dedupe by source identity.
+  const urls = new Map<string, string>()
   const newListingsPerPage: number[] = []
   let rawListingCandidates = 0
   let reportedResultCount: number | null = null
   let exhausted = false
-  const concurrency = 2
+  // One search request at a time: never fan out when access is restricted.
+  const concurrency = 1
 
   for (let start = 0; start < searchUrls.length && !exhausted; start += concurrency) {
     const batch = searchUrls.slice(start, start + concurrency)
@@ -540,6 +548,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
 
     for (const result of pageResults) {
       if (result.blocked && result.pageCandidates.length === 0) {
+        // The page is a provider challenge, not an empty listing page.
         throw new Error('PORTAL_SUSPICIOUS_TRAFFIC')
       }
       if (reportedResultCount == null) {
@@ -554,8 +563,9 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const pageUrls = unique(result.pageCandidates)
       let newCount = 0
       for (const href of pageUrls) {
-        if (urls.has(href)) continue
-        urls.add(href)
+        const identity = portalListingIdFromUrl(href, datasetKind) ?? href
+        if (urls.has(identity)) continue
+        urls.set(identity, href)
         newCount += 1
       }
       newListingsPerPage.push(newCount)
@@ -568,7 +578,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   }
 
   return {
-    urls: [...urls],
+    urls: [...urls.values()],
     newListingsPerPage,
     rawListingCandidates,
     duplicateListingCandidates: Math.max(rawListingCandidates - urls.size, 0),

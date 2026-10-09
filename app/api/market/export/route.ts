@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import { requireCapability, accessErrorResponse } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
-import { getOperationalMarketSnapshot } from '@/lib/market-operational'
+import { createServiceClient } from '@/lib/supabase/service'
+import { loadPedroMarketOverview, type PedroMarketOverview } from '@/lib/market-pedro-overview'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -41,12 +42,24 @@ function metadataRows(metadata: Record<string, string | number | boolean | null>
 }
 
 async function fetchListings() {
-  const supabase = await createClient()
+  // Read-only privileged access after requireCapability('market.read') in GET.
+  // Restrict to the two approved public Portal sources, never tenant CRM data.
+  const supabase = createServiceClient()
+  const sources = await supabase.from('market_sources').select('id').in('code', [
+    'portal-inmobiliario-vitacura-portal-houses',
+    'portal-inmobiliario-vitacura-portal-apartments',
+  ]).limit(2)
+  if (sources.error) throw sources.error
+  const ids = (sources.data ?? []).map((source) => source.id)
   const rows: ExportRow[] = []
+  if (!ids.length) return { rows, truncated: false }
   for (let offset = 0; offset < MAX_ROWS; offset += PAGE_SIZE) {
     const { data, error } = await supabase
       .from('market_current_listings')
       .select('source_listing_id,property_id,operation,status,url,title,raw_address,normalized_address,latitude,longitude,price_clp,price_uf,price_uf_m2,published_at,observed_at,removed_at')
+      .in('source_id', ids)
+      .eq('status', 'active')
+      .is('removed_at', null)
       .order('observed_at', { ascending: false })
       .range(offset, offset + PAGE_SIZE - 1)
     if (error) throw error
@@ -74,19 +87,41 @@ async function fetchTransactions() {
   return { rows, truncated: rows.length >= MAX_ROWS }
 }
 
-function summaryRows(snapshot: Awaited<ReturnType<typeof getOperationalMarketSnapshot>>): ExportRow[] {
-  return [
-    { metric: 'canonical_properties', label: 'Registros canónicos candidatos', value: snapshot.canonicalProperties, methodology: 'Conteo de market_properties visibles por RLS' },
-    { metric: 'confirmed_properties', label: 'Identidades confirmadas', value: snapshot.confirmedProperties, methodology: 'identity_status = confirmed' },
-    { metric: 'active_inventory', label: 'Publicaciones activas del último corte', value: snapshot.activeInventory, methodology: 'Snapshot canónico o publicaciones activas observadas' },
-    { metric: 'confirmed_sales', label: 'Ventas confirmadas', value: snapshot.confirmedSales, methodology: 'Transacciones persistidas y vinculadas' },
-    { metric: 'pending_matches', label: 'Señales pendientes de revisión', value: snapshot.pendingMatches, methodology: 'Identidades y coincidencias candidatas; no necesariamente propiedades únicas' },
-    { metric: 'missing_neighborhoods', label: 'Registros sin barrio', value: snapshot.missingNeighborhoods, methodology: 'Propiedades sin neighborhood_id' },
-    { metric: 'median_days_on_market', label: 'Mediana de días en mercado', value: snapshot.medianDaysOnMarket, methodology: 'No se calcula sin ventas confirmadas vinculadas' },
-    { metric: 'absorption_rate', label: 'Tasa de absorción', value: snapshot.absorptionRate, methodology: 'Inventario y ventas del mismo período' },
-    { metric: 'offer_to_sales_ratio', label: 'Oferta versus ventas', value: snapshot.offerToSalesRatio, methodology: 'Relación materializada en snapshot canónico' },
-    { metric: 'ingestion_runs', label: 'Ejecuciones registradas', value: snapshot.ingestionRuns, methodology: 'Backfills e importaciones canónicas almacenadas' },
-  ]
+function summaryRows(snapshot: PedroMarketOverview): ExportRow[] {
+  const records: ExportRow[] = []
+  for (const category of snapshot.categories) {
+    records.push({
+      source: 'Portal Inmobiliario',
+      property_type: category.name,
+      period: 'último inventario completo',
+      metric: 'inventory_verified',
+      value: category.group?.inventoryCount ?? null,
+      last_verified_at: category.group?.inventoryAt ?? null,
+      methodology: 'Recuento del último recorrido completo, sin extrapolar deltas',
+    })
+    records.push({
+      source: 'Portal Inmobiliario',
+      property_type: category.name,
+      period: snapshot.day,
+      metric: 'first_seen_today',
+      value: category.group?.addedTodayCount ?? null,
+      last_verified_at: category.daily.updatedAt,
+      methodology: 'Primera aparición de ID de fuente, no reobservaciones',
+    })
+  }
+  for (const year of snapshot.cbrsHistory) {
+    records.push({
+      source: 'CBRS Vitacura',
+      property_type: year.propertyType,
+      period: String(year.year),
+      metric: 'registered_residential_sales',
+      value: year.transactions,
+      median_price_uf: year.medianPriceUf,
+      median_price_uf_m2: year.medianUfM2,
+      methodology: 'Evento único de compraventa residencial por inscripción canónica',
+    })
+  }
+  return records
 }
 
 export async function GET(request: NextRequest) {
@@ -100,11 +135,11 @@ export async function GET(request: NextRequest) {
     const dataset = parseDataset(request.nextUrl.searchParams.get('dataset'))
     const format = parseFormat(request.nextUrl.searchParams.get('format'))
     const generatedAt = new Date().toISOString()
-    const snapshot = await getOperationalMarketSnapshot()
-    if (snapshot.error) {
-      console.error('MARKET_EXPORT_SNAPSHOT_UNAVAILABLE')
-      return NextResponse.json({ error: 'Los datos de mercado no están disponibles para exportación.' }, { status: 503 })
-    }
+    const snapshot = await loadPedroMarketOverview()
+    const observedThrough = snapshot.categories
+      .flatMap((category) => [category.daily.updatedAt, category.group?.inventoryAt])
+      .filter((value): value is string => Boolean(value))
+      .sort().at(-1) ?? null
 
     let rows: ExportRow[]
     let truncated = false
@@ -123,19 +158,18 @@ export async function GET(request: NextRequest) {
     const metadata = {
       dataset,
       generated_at: generatedAt,
-      observed_through: snapshot.latestObservedAt,
-      latest_period: snapshot.latestPeriod,
-      freshness_status: snapshot.freshnessStatus,
-      observation_age_days: snapshot.observationAgeDays,
-      source_scope: 'Supabase operational records visible to the authenticated role through RLS',
-      methodology: 'Export uses the same operational sources as /dashboard/market and does not impute missing values',
+      observed_through: observedThrough,
+      latest_period: String(snapshot.lastCompleteYear),
+      freshness_status: snapshot.categories.every((category) => category.daily.current) ? 'daily_updated' : 'daily_pending',
+      source_scope: 'Authorized read-only Vitacura Portal listings and verified annual CBRS metrics',
+      methodology: 'Canonical Portal full inventory and first-seen deltas are distinct; CBRS annual residential events are independently verified',
       row_count: rows.length,
       truncated,
       max_rows: MAX_ROWS,
     }
     const enrichedRows = rows.map((row) => ({
       export_generated_at: generatedAt,
-      export_observed_through: snapshot.latestObservedAt,
+      export_observed_through: observedThrough,
       export_dataset: dataset,
       ...row,
     }))

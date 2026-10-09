@@ -288,7 +288,7 @@ function isSubjectCbrs(payload: SuggestPayload, row: CbrsRow) {
 function scorePortal(payload: SuggestPayload, row: PortalRow) {
   const areaScore = relativeSimilarity(
     payload.propertyType === 'Casa' ? num(payload.builtAreaM2) : num(payload.usefulAreaM2),
-    payload.propertyType === 'Casa' ? num(row.built_area_m2) : num(row.useful_area_m2 || row.built_area_m2),
+    payload.propertyType === 'Casa' ? num(row.built_area_m2) : num(row.useful_area_m2),
   )
   const landScore = payload.propertyType === 'Casa' ? relativeSimilarity(num(payload.landAreaM2), num(row.land_area_m2)) : 1
   let score = payload.propertyType === 'Casa' ? areaScore * 0.4 + landScore * 0.25 : areaScore * 0.65
@@ -410,6 +410,13 @@ export async function POST(request: Request) {
       const land = num(item.land_area_m2)
       const price = num(item.price_uf)
       if (price <= 0) return null
+      // Do not compare a department's useful m² against total/built area.
+      // Keep unknown or physically dissimilar listings out of automatic suggestions.
+      if (payload.propertyType === 'Departamento' && num(payload.usefulAreaM2) > 0) {
+        if (useful <= 0) return null
+        const usefulRatio = useful / num(payload.usefulAreaM2)
+        if (usefulRatio < 0.75 || usefulRatio > 1.33) return null
+      }
       const latitude = num(item.latitude) || undefined
       const longitude = num(item.longitude) || undefined
       const distanceMeters = payload.latitude && payload.longitude && latitude && longitude ? Math.round(haversineMeters(payload.latitude, payload.longitude, latitude, longitude)) : undefined

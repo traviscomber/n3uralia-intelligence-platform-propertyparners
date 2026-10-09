@@ -43,6 +43,11 @@ test('canonical monthly snapshot handles calendar month ends and refuses unpubli
   assert.ok(february)
   assert.equal(february.period.end, '2026-02-28')
 
-  assert.equal(buildCanonicalMonthlySnapshot('2026-09', '2026-10-01T12:00:00.000Z', 'cron'), null)
+  const september = buildCanonicalMonthlySnapshot('2026-09', '2026-10-01T12:00:00.000Z', 'cron')
+  assert.ok(september)
+  assert.equal(september.period.end, '2026-09-30')
+  assert.equal(september.company.cierresAcreditados, 5)
+  assert.equal(september.company.cierresYtd, 55.5)
+  assert.equal(buildCanonicalMonthlySnapshot('2026-10', '2026-11-01T12:00:00.000Z', 'cron'), null)
   assert.equal(buildCanonicalMonthlySnapshot('invalid', '2026-10-01T12:00:00.000Z', 'cron'), null)
 })

@@ -4,18 +4,15 @@ import { requireExecutiveAccess } from '@/lib/api-access'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import {
   collectPortalListingDetails,
-  discoverPortalVitacuraUniverse,
   portalListingIdFromUrl,
 } from '@/lib/portal-inmobiliario-collector'
-import {
-  collectPortalListingDetailsViaFirecrawl,
-  discoverPortalVitacuraViaFirecrawl,
-} from '@/lib/firecrawl-portal-collector'
 import {
   collectPortalListingDetailsViaBrightData,
   discoverPortalVitacuraViaBrightData,
 } from '@/lib/brightdata-portal-collector'
 import { normalizePortalListingRows, portalListingMatchesVitacuraScope, type PortalDatasetKind } from '@/lib/market-source-import'
+import { nextOverduePortalDataset, withinPortalInventoryWindow } from '@/lib/portal-inventory-scheduler'
+import { evaluatePortalInventoryCompleteness } from '@/lib/portal-inventory-policy'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -34,27 +31,12 @@ function maxDiscoveryPagesFor(datasetKind: PortalDatasetKind) {
 const MAX_DETAIL_LISTINGS_PER_RUN = 16
 const DISCOVERY_WAIT_MS = 150
 const DETAIL_WAIT_MS = 300
-const MIN_COMPLETE_INVENTORY_LISTINGS = 30
 const DETAIL_RUNTIME_GUARD_MS = 210_000
 const RAW_INSERT_CHUNK = 400
 const CHILE_TIME_ZONE = 'America/Santiago'
 
-function chileClock(now = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: CHILE_TIME_ZONE,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now)
-  return {
-    hour: Number(parts.find((part) => part.type === 'hour')?.value ?? '-1'),
-    minute: Number(parts.find((part) => part.type === 'minute')?.value ?? '-1'),
-  }
-}
-
 function scheduledWindow() {
-  const local = chileClock()
-  return local.hour === 7 && local.minute === 30
+  return withinPortalInventoryWindow()
 }
 
 
@@ -72,7 +54,7 @@ function getServiceClient() {
   })
 }
 
-type CollectorProvider = 'brightdata' | 'firecrawl' | 'browser'
+type CollectorProvider = 'brightdata' | 'browser'
 
 async function discoverPortalWithFallback(args: {
   datasetKind: PortalDatasetKind
@@ -81,38 +63,13 @@ async function discoverPortalWithFallback(args: {
   maxPages: number
   waitMs: number
 }) {
-  const failures: Array<{ provider: CollectorProvider; error: string }> = []
-
-  // Full-universe discovery is materially faster and cheaper through Firecrawl batch scraping.
-  // Bright Data remains the primary detail enricher and the discovery fallback.
-  if (process.env.FIRECRAWL_API_KEY) {
-    try {
-      return {
-        result: await discoverPortalVitacuraViaFirecrawl(args),
-        provider: 'firecrawl' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
-  if (process.env.BRIGHTDATA_API_KEY) {
-    try {
-      return {
-        result: await discoverPortalVitacuraViaBrightData(args),
-        provider: 'brightdata' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'brightdata', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
+  // Direct browser access is consistently blocked by Portal; avoid speculative
+  // retries and use the existing paid provider once, with fail-closed semantics.
+  if (!process.env.BRIGHTDATA_API_KEY) throw new Error('BRIGHTDATA_API_KEY_MISSING')
   return {
-    result: await discoverPortalVitacuraUniverse(args),
-    provider: 'browser' as CollectorProvider,
-    failures,
+    result: await discoverPortalVitacuraViaBrightData(args),
+    provider: 'brightdata' as CollectorProvider,
+    failures: [] as Array<{ provider: CollectorProvider; error: string }>,
   }
 }
 
@@ -138,21 +95,6 @@ async function collectPortalDetailsWithFallback(args: {
     }
   }
 
-  if (process.env.FIRECRAWL_API_KEY) {
-    try {
-      return {
-        result: await collectPortalListingDetailsViaFirecrawl({
-          datasetKind: args.datasetKind,
-          listingUrls: args.listingUrls,
-        }),
-        provider: 'firecrawl' as CollectorProvider,
-        failures,
-      }
-    } catch (error) {
-      failures.push({ provider: 'firecrawl', error: error instanceof Error ? error.message : String(error) })
-    }
-  }
-
   return {
     result: await collectPortalListingDetails({
       datasetKind: args.datasetKind,
@@ -172,6 +114,8 @@ function classifyCollectorFailure(cause: unknown) {
   if (message.includes('failed to launch') || message.includes('browser launch')) return 'COLLECTOR_BROWSER_LAUNCH_FAILED'
   if (message.includes('portal_suspicious_traffic') || message.includes('suspicious traffic')) return 'COLLECTOR_SOURCE_ANTI_BOT'
   if (message.includes('collector_empty_discovery')) return 'COLLECTOR_EMPTY_DISCOVERY'
+  if (message.includes('portal_access_restricted_http_403')) return 'COLLECTOR_SOURCE_FORBIDDEN'
+  if (message.includes('portal_access_restricted_http_429')) return 'COLLECTOR_SOURCE_RATE_LIMITED'
   if (message.includes('http 403')) return 'COLLECTOR_SOURCE_FORBIDDEN'
   if (message.includes('http 429')) return 'COLLECTOR_SOURCE_RATE_LIMITED'
   if (message.includes('timeout') || message.includes('timed out')) return 'COLLECTOR_SOURCE_TIMEOUT'
@@ -724,7 +668,7 @@ export async function GET(request: Request) {
   if (requestedDataset && !DATASETS.includes(requestedDataset as PortalDatasetKind)) {
     return NextResponse.json({ error: 'Dataset no soportado.' }, { status: 400 })
   }
-  const selectedDatasets: PortalDatasetKind[] = requestedDataset
+  let selectedDatasets: PortalDatasetKind[] = requestedDataset
     ? [requestedDataset as PortalDatasetKind]
     : DATASETS
   if (force) {
@@ -736,7 +680,7 @@ export async function GET(request: Request) {
       return NextResponse.json({
         ok: true,
         skipped: true,
-        reason: 'outside_0730_america_santiago',
+        reason: 'outside_0800_america_santiago',
         timeZone: CHILE_TIME_ZONE,
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
@@ -744,6 +688,24 @@ export async function GET(request: Request) {
 
   const startedAt = Date.now()
   const supabase = getServiceClient()
+
+  if (!force && !detailsOnly) {
+    const [houses, apartments] = await Promise.all([
+      latestCompleteInventoryRun(supabase, 'portal_houses'),
+      latestCompleteInventoryRun(supabase, 'portal_apartments'),
+    ])
+    const due = nextOverduePortalDataset(new Date(), {
+      portal_houses: houses?.started_at ?? null,
+      portal_apartments: apartments?.started_at ?? null,
+    })
+    if (!due) return NextResponse.json({
+      ok: true, skipped: true, reason: 'verified_inventories_recent',
+    }, { headers: { 'Cache-Control': 'no-store' } })
+    if (requestedDataset && requestedDataset !== due) {
+      return NextResponse.json({ error: 'La fuente solicitada no está pendiente.' }, { status: 409 })
+    }
+    selectedDatasets = [due]
+  }
 
   if (detailsOnly) {
     try {
@@ -841,27 +803,18 @@ export async function GET(request: Request) {
         throw new Error('COLLECTOR_EMPTY_DISCOVERY')
       }
 
-      const coverageRatio = inventory.discovery.reportedResultCount && inventory.discovery.reportedResultCount > 0
-        ? inventory.listingUrls.length / inventory.discovery.reportedResultCount
-        : null
       const previousCount = Number(
         (previousCompleteRun?.metadata as Record<string, unknown> | null | undefined)?.discovery_unique_listings ?? 0,
       )
-      const baselineFloor = previousCount > 0
-        ? Math.max(MIN_COMPLETE_INVENTORY_LISTINGS, Math.floor(previousCount * 0.85))
-        : MIN_COMPLETE_INVENTORY_LISTINGS
-      const countSanityPass = inventory.listingUrls.length >= baselineFloor
-      const coveragePass = coverageRatio == null || (coverageRatio >= 0.97 && coverageRatio <= 1.05)
-      const discoverySequence = inventory.discovery.newListingsPerPage
-      const firstZeroPage = discoverySequence.findIndex((count) => count === 0)
-      const discoverySequencePass = firstZeroPage < 0
-        || discoverySequence.slice(firstZeroPage + 1).every((count) => count === 0)
-      const fullSnapshot = inventory.discovery.exhausted
-        && !inventory.discovery.capped
-        && inventory.listingUrls.length >= MIN_COMPLETE_INVENTORY_LISTINGS
-        && countSanityPass
-        && coveragePass
-        && discoverySequencePass
+      const { coverageRatio, baselineFloor, discoverySequencePass, fullSnapshot } =
+        evaluatePortalInventoryCompleteness({
+          uniqueListings: inventory.listingUrls.length,
+          reportedResultCount: inventory.discovery.reportedResultCount,
+          previousVerifiedInventoryCount: previousCount,
+          exhausted: inventory.discovery.exhausted,
+          capped: inventory.discovery.capped,
+          newListingsPerPage: inventory.discovery.newListingsPerPage,
+        })
 
       const persistedInventory = await persistInventoryRun({
         supabase,
@@ -1023,21 +976,19 @@ export async function GET(request: Request) {
     && !identityIntelligenceError
     && !prospectPipelineError
 
+  console.info('[portal-inventory-reconciliation]', {
+    datasets: selectedDatasets,
+    completed: completeInventories,
+    failed: totalFailures,
+    runtimeMs: Date.now() - startedAt,
+  })
   return NextResponse.json(
     {
       ok,
       fullSnapshot: completeInventories === selectedDatasets.length,
       collectorPreference: {
-        inventory: process.env.FIRECRAWL_API_KEY
-          ? 'firecrawl'
-          : process.env.BRIGHTDATA_API_KEY
-            ? 'brightdata'
-            : 'browser',
-        details: process.env.BRIGHTDATA_API_KEY
-          ? 'brightdata'
-          : process.env.FIRECRAWL_API_KEY
-            ? 'firecrawl'
-            : 'browser',
+        inventory: 'brightdata',
+        details: process.env.BRIGHTDATA_API_KEY ? 'brightdata_then_browser' : 'browser',
       },
       inventoryPipeline: 'portal_inventory_discovery_v1',
       detailPipeline: 'unit_portal_listing_v2',
@@ -1045,7 +996,7 @@ export async function GET(request: Request) {
         portal_houses: MAX_DISCOVERY_PAGES_HOUSES,
         portal_apartments: MAX_DISCOVERY_PAGES_APARTMENTS,
       },
-      maxDetailListingsPerRun: fullSweep ? 'all_discovered' : MAX_DETAIL_LISTINGS_PER_RUN,
+      maxDetailListingsPerRun: MAX_DETAIL_LISTINGS_PER_RUN,
       fullSweep,
       completeInventories,
       expectedDatasets: selectedDatasets.length,

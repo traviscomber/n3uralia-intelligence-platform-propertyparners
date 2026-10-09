@@ -6,6 +6,12 @@ import {
   type PortalCollectorOptions,
   type PortalDiscoveryResult,
 } from '@/lib/portal-inmobiliario-collector'
+import {
+  decidePortalPageCompletion,
+  extractPortalReportedCount,
+  portalChallengeDetected,
+  portalExplicitNoResults,
+} from '@/lib/portal-discovery-evidence'
 
 const PORTAL_ORIGIN = 'https://www.portalinmobiliario.com'
 const DEFAULT_COMMUNE = 'vitacura-metropolitana'
@@ -147,7 +153,7 @@ export async function discoverPortalVitacuraViaBrightData(
   const datasetKind = options.datasetKind
   const commune = options.commune ?? DEFAULT_COMMUNE
   const operation = options.operation ?? 'venta'
-  const maxPages = Math.min(Math.max(options.maxPages ?? 1, 1), 40)
+  const maxPages = Math.min(Math.max(options.maxPages ?? 1, 1), 80)
   const pageSize = datasetKind === 'portal_projects' ? 20 : 48
   const base = buildSearchBase(datasetKind, operation, commune)
 
@@ -156,7 +162,11 @@ export async function discoverPortalVitacuraViaBrightData(
   const newListingsPerPage: number[] = []
   let rawListingCandidates = 0
   let duplicateListingCandidates = 0
+  let repeatedHtmlReferences = 0
+  let repeatedAcrossPages = 0
+  const identities = new Set<string>()
   let exhausted = false
+  let reportedResultCount: number | null = null
 
   const discoveryConcurrency = 4
 
@@ -173,20 +183,46 @@ export async function discoverPortalVitacuraViaBrightData(
       const searchUrl = urls[index]
       searchUrls.push(searchUrl)
 
-      const candidates = extractListingUrls(htmlPages[index], datasetKind)
+      const html = htmlPages[index]
+      const candidates = extractListingUrls(html, datasetKind)
+      if (reportedResultCount === null) reportedResultCount = extractPortalReportedCount(html)
       rawListingCandidates += candidates.length
 
-      const before = listingUrls.size
+      // Distinguish repeated HTML references from repeated listings on later pages.
+      const pageIdentities = new Set<string>()
+      const pageUrls = new Map<string, string>()
       for (const url of candidates) {
-        if (listingUrls.has(url)) duplicateListingCandidates += 1
+        const identity = portalListingIdFromUrl(url, datasetKind) ?? url
+        if (pageIdentities.has(identity)) {
+          repeatedHtmlReferences += 1
+          continue
+        }
+        pageIdentities.add(identity)
+        pageUrls.set(identity, url)
+      }
+      const before = listingUrls.size
+      for (const [identity, url] of pageUrls) {
+        if (identities.has(identity)) {
+          repeatedAcrossPages += 1
+          continue
+        }
+        identities.add(identity)
         listingUrls.add(url)
       }
       const added = listingUrls.size - before
+      duplicateListingCandidates = repeatedHtmlReferences + repeatedAcrossPages
       newListingsPerPage.push(added)
 
-      // Cost guard: stop processing as soon as Portal clearly signals exhaustion.
-      // A concurrent batch can overfetch at most three search pages.
-      if (candidates.length === 0 || added === 0 || candidates.length < pageSize) {
+      const decision = decidePortalPageCompletion({
+        candidateCount: pageIdentities.size,
+        newlyDiscovered: added,
+        uniqueTotal: identities.size,
+        publishedTotal: reportedResultCount,
+        pageSize,
+        challenge: portalChallengeDetected(html),
+        explicitNoResults: portalExplicitNoResults(html),
+      })
+      if (decision === 'exhausted') {
         exhausted = true
         shouldStop = true
         break
@@ -204,8 +240,11 @@ export async function discoverPortalVitacuraViaBrightData(
       newListingsPerPage,
       rawListingCandidates,
       duplicateListingCandidates,
+      repeatedHtmlReferences,
+      repeatedAcrossPages,
+      uniqueListingIdentities: identities.size,
       uniqueListings: listingUrls.size,
-      reportedResultCount: null,
+      reportedResultCount,
       exhausted,
       capped: !exhausted && searchUrls.length >= maxPages,
     },

@@ -16,14 +16,25 @@ export function MarketComparableConnector(){
   const [query,setQuery]=useState('')
   const [busy,setBusy]=useState<string|null>(null)
   const [message,setMessage]=useState<string|null>(null)
+  const [loading,setLoading]=useState(true)
+  const [loadError,setLoadError]=useState<string|null>(null)
 
   async function load(){
     setMessage(null)
-    const response=await fetch('/api/market/comparables',{cache:'no-store'})
-    const payload=await response.json() as Payload
-    if(!response.ok){setMessage(payload.error||'No fue posible cargar la conexión.');return}
-    setData(payload)
-    if(!caseId&&payload.valuationCases[0])setCaseId(payload.valuationCases[0].id)
+    setLoadError(null)
+    setLoading(true)
+    try {
+      const response=await fetch('/api/market/comparables',{cache:'no-store'})
+      const payload=await response.json() as Payload
+      if(!response.ok)throw new Error(payload.error||'No fue posible cargar la conexión.')
+      setData(payload)
+      setCaseId(previous=>previous||payload.valuationCases[0]?.id||'')
+    }catch(error){
+      setData(null)
+      setLoadError(error instanceof Error?error.message:'No fue posible consultar las publicaciones.')
+    }finally{
+      setLoading(false)
+    }
   }
   useEffect(()=>{void load()},[])
 
@@ -56,6 +67,9 @@ export function MarketComparableConnector(){
         </select>
         {caseId?<Link href={`/dashboard/valuations/${caseId}`} className="inline-flex items-center justify-center gap-2 border border-[var(--n3-line)] px-4 py-3 text-sm">Abrir expediente<ArrowRight size={14}/></Link>:null}
       </div>
+      {!loading && !loadError && data && data.valuationCases.length === 0
+        ? <p className="mt-3 text-xs text-[var(--n3-text-muted)]">No hay valorizaciones en borrador. <Link href="/dashboard/valuation" className="text-[#ff766f] underline">Abrir Valorizador</Link> para preparar un expediente.</p>
+        : null}
     </section>
 
     <section>
@@ -65,12 +79,15 @@ export function MarketComparableConnector(){
       </div>
       {message?<div role="status" className="mt-4 border border-[var(--n3-line)] p-4 text-sm">{message}</div>:null}
       <div className="mt-4 grid gap-3 xl:grid-cols-2">
-        {listings.map(item=><article key={item.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-4">
+        {!loading && !loadError && listings.map(item=><article key={item.id} className="border border-[var(--n3-line)] bg-[#0c1111] p-4">
           <div className="flex items-start justify-between gap-4"><div><p className="font-semibold">{item.normalized_address||item.title||'Publicación sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">Observada: {item.observed_at?new Date(item.observed_at).toLocaleString('es-CL'):'sin fecha'} · estado {item.status||'n/d'}</p></div><p className="whitespace-nowrap text-lg font-semibold">{item.price_uf==null?'UF n/d':`UF ${nf.format(item.price_uf)}`}</p></div>
           <p className="mt-2 text-xs text-[var(--n3-text-muted)]">{item.price_uf_m2==null?'UF/m² n/d':`${item.price_uf_m2.toLocaleString('es-CL',{maximumFractionDigits:1})} UF/m²`}</p>
           <div className="mt-4 flex flex-wrap gap-2"><button disabled={busy===item.id||!caseId} onClick={()=>void attach(item.id)} className="border border-[#d7332b] px-3 py-2 text-xs text-[#ff766f] disabled:opacity-40">{busy===item.id?'Vinculando…':'Agregar como candidato'}</button>{item.url?<a href={item.url} target="_blank" rel="noreferrer" className="border border-[var(--n3-line)] px-3 py-2 text-xs">Abrir fuente</a>:null}</div>
         </article>)}
-        {!listings.length?<div className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">No existen publicaciones con precio para el filtro actual.</div>:null}
+        {loading ? <p role="status" className="p-5 text-sm text-[var(--n3-text-muted)]">Cargando publicaciones…</p>
+        : loadError ? <p role="alert" className="p-5 text-sm text-[#ff766f]">No se pudieron consultar las publicaciones: {loadError}</p>
+        : !listings.length ? <p className="border border-dashed border-[var(--n3-line)] p-6 text-sm text-[var(--n3-text-muted)]">{query.trim() ? 'No hay resultados para esta búsqueda.' : 'No existen publicaciones con precio disponibles para este corte.'}</p>
+        : null}
       </div>
     </section>
   </div>

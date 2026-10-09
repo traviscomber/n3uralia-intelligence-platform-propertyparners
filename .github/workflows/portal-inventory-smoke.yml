@@ -1,12 +1,40 @@
-name: Portal Inventory Smoke
+name: Portal Inventory Policy CI
 
 on:
   pull_request:
     branches: [main]
     paths:
       - 'lib/portal-inmobiliario-collector.ts'
+      - 'lib/portal-discovery-evidence.ts'
+      - 'lib/portal-inventory-scheduler.ts'
+      - 'lib/portal-offer-day.ts'
+      - 'lib/portal-offer-service.ts'
+      - 'lib/market-pedro-history.ts'
+      - 'lib/market-cbrs-chart.ts'
+      - 'components/market/cbrs-comparison-bars.tsx'
+      - 'tests/market/market-cbrs-chart.test.ts'
+      - 'lib/market-pedro-overview.ts'
+      - 'app/dashboard/market/page.tsx'
+      - 'app/dashboard/market/layout.tsx'
+      - 'app/dashboard/market/market-responsive.css'
+      - 'tests/market/market-responsive-layout.test.ts'
+      - 'tests/market/market-pedro-home.test.ts'
+      - 'app/api/market/comparables/route.ts'
+      - 'app/api/market/export/route.ts'
+      - 'app/dashboard/market/export/page.tsx'
+      - 'tests/market/market-pedro-report.test.ts'
+      - 'components/market/market-comparable-connector.tsx'
+      - 'tests/market/market-comparables-authorization.test.ts'
+      - 'app/dashboard/market/oferta/page.tsx'
+      - 'tests/market/portal-offer-day.test.ts'
+      - 'lib/brightdata-portal-collector.ts'
+      - 'app/api/cron/market-delta/route.ts'
+      - 'vercel.json'
+      - 'tests/market/*.test.ts'
+      - 'lib/portal-inventory-policy.ts'
       - 'app/api/cron/market-refresh/route.ts'
       - 'app/api/internal/portal-collector-smoke/route.ts'
+      - 'tests/market/portal-inventory-policy.test.ts'
       - 'scripts/smoke-portal-inventory.ts'
       - '.github/workflows/portal-inventory-smoke.yml'
   workflow_dispatch:
@@ -40,5 +68,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify full Portal inventory coverage
+      - name: Verify inventory acceptance and duplicate controls (deterministic)
+        run: >-
+          node --import tsx --test
+          tests/market/portal-inventory-policy.test.ts
+          tests/market/portal-discovery-evidence.test.ts
+          tests/market/portal-inventory-scheduler.test.ts
+          tests/market/portal-offer-day.test.ts
+          tests/market/market-pedro-home.test.ts
+          tests/market/market-cbrs-chart.test.ts
+          tests/market/market-responsive-layout.test.ts
+          tests/market/market-comparables-authorization.test.ts
+          tests/market/market-pedro-report.test.ts
+
+      - name: Explain separate live-source release gate
+        if: github.event_name == 'pull_request'
+        run: echo "::notice::Contract passed offline only. Live Portal connectivity and full inventory reconciliation must be verified separately before release."
+
+      - name: Verify live full Portal inventory coverage (manual external gate)
+        if: github.event_name == 'workflow_dispatch'
         run: node --import tsx scripts/smoke-portal-inventory.ts

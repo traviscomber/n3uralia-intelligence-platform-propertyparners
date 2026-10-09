@@ -20,6 +20,7 @@ export const CEO_NAVIGATION: NavigationSection[] = [
     items: [
       { label: 'Hoy', href: '/dashboard/ceo', anyCapabilities: ['dashboard.global.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Valorizador', href: '/dashboard/valuation', anyCapabilities: ['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
       { label: 'Gestión', href: '/dashboard/control/operations', anyCapabilities: ['management.global.read'] },
       { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
@@ -34,6 +35,7 @@ export const ADMIN_NAVIGATION: NavigationSection[] = [
     items: [
       { label: 'Hoy', href: '/dashboard', exact: true, anyCapabilities: ['dashboard.global.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Valorizador', href: '/dashboard/valuation', anyCapabilities: ['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.global.read'] },
       { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.global.read'] },
       { label: 'Informes', href: '/dashboard/reportes/canonicos', anyCapabilities: ['reports.global.read'] },
@@ -57,6 +59,7 @@ export const DIRECTOR_NAVIGATION: NavigationSection[] = [
     items: [
       { label: 'Hoy', href: '/dashboard/director', anyCapabilities: ['dashboard.office.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Valorizador', href: '/dashboard/valuation', anyCapabilities: ['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.office.read'] },
       { label: 'Por resolver', href: '/dashboard/properties', anyCapabilities: ['properties.office.read'] },
       { label: 'Informes', href: '/dashboard/director/reporte', anyCapabilities: ['reports.office.read'] },
@@ -78,6 +81,7 @@ export const SELLER_NAVIGATION: NavigationSection[] = [
     items: [
       { label: 'Hoy', href: '/dashboard/partner', anyCapabilities: ['dashboard.self.read'] },
       { label: 'Mercado', href: '/dashboard/market', anyCapabilities: ['market.read'] },
+      { label: 'Valorizador', href: '/dashboard/valuation', anyCapabilities: ['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'] },
       { label: 'Valorizaciones', href: '/dashboard/valuations', anyCapabilities: ['valuations.self.read'] },
       { label: 'Propiedades', href: '/dashboard/properties', anyCapabilities: ['properties.self.read'] },
       { label: 'Mi reporte', href: '/dashboard/reportes/audiencias/ejecutivo', anyCapabilities: ['reports.self.read'] },

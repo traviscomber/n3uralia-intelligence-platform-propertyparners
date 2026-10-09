@@ -194,6 +194,13 @@ export function calculateContractualValuation(
 ): ValuationResult {
   const selected = comparables.filter((item) => item.selected && item.priceUf > 0)
   if (selected.length < MIN_SELECTED_COMPARABLES) throw new Error('Se requieren al menos tres comparables seleccionados.')
+  if (selected.some((item) => item.propertyType !== subject.propertyType)) {
+    throw new Error('Los comparables seleccionados deben corresponder al mismo tipo de propiedad.')
+  }
+  const referenced = selected.map((item) => item.sourceReference.trim()).filter(Boolean)
+  if (new Set(referenced).size !== referenced.length) {
+    throw new Error('Una misma referencia no puede contarse como dos comparables.')
+  }
 
   const normalized = selected
     .map((item) => ({ item, ufM2: calculateCanonicalComparableUfM2(item) }))

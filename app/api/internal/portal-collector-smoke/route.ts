@@ -10,12 +10,17 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 // Redeploy marker: Bright Data preview env refreshed.
 
-const VALIDATION_BRANCH = 'feat/brightdata-vitacura-smoke-20261002'
-const TOTAL_DETAIL_BUDGET = 10
+const VALIDATION_BRANCH = 'fix/valuation-visible-by-role-20261008'
+const TOTAL_DETAIL_BUDGET = 4
 const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
 
-export async function GET() {
-  if (process.env.VERCEL_GIT_COMMIT_REF !== VALIDATION_BRANCH) {
+export async function GET(request: Request) {
+  // Protect billable provider calls even on a branch-specific preview URL.
+  const secret = process.env.CRON_SECRET
+  if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
+  }
+  if (process.env.VERCEL_ENV !== 'preview' || process.env.VERCEL_GIT_COMMIT_REF !== VALIDATION_BRANCH) {
     return new NextResponse(null, { status: 404 })
   }
 
@@ -51,6 +56,9 @@ export async function GET() {
           pagesVisited: discovery.discovery.pagesVisited,
           rawCandidates: discovery.discovery.rawListingCandidates,
           duplicates: discovery.discovery.duplicateListingCandidates,
+          repeatedHtmlReferences: discovery.discovery.repeatedHtmlReferences ?? null,
+          repeatedAcrossPages: discovery.discovery.repeatedAcrossPages ?? null,
+          uniqueListingIdentities: discovery.discovery.uniqueListingIdentities ?? null,
           uniqueListings: discovery.discovery.uniqueListings,
           capped: discovery.discovery.capped,
         },
@@ -58,7 +66,7 @@ export async function GET() {
           requested: detailUrls.length,
           parsed: details.rows.length,
           failures: details.failures.length,
-          sample: details.rows.map((row) => ({
+          sample: details.rows.slice(0, 1).map((row) => ({
             source_listing_id: row.source_listing_id,
             property_type: row.property_type,
             title: row.title,
@@ -79,25 +87,6 @@ export async function GET() {
     const ok = requestedDetails === TOTAL_DETAIL_BUDGET
       && parsedDetails > 0
       && totalFailures === 0
-
-    console.info('[portal-brightdata-smoke-summary]', JSON.stringify({
-      ok,
-      requestedDetails,
-      parsedDetails,
-      totalFailures,
-      results: results.map((result) => ({
-        datasetKind: result.datasetKind,
-        discovery: result.discovery,
-        details: result.details && typeof result.details === 'object'
-          ? {
-              requested: (result.details as Record<string, unknown>).requested,
-              parsed: (result.details as Record<string, unknown>).parsed,
-              failures: (result.details as Record<string, unknown>).failures,
-            }
-          : null,
-      })),
-      runtimeMs: Date.now() - startedAt,
-    }))
 
     return NextResponse.json({
       ok,
@@ -126,8 +115,8 @@ export async function GET() {
       status: ok ? 200 : 503,
       headers: { 'Cache-Control': 'no-store' },
     })
-  } catch (error) {
-    console.error('[portal-brightdata-smoke] collection failed', error)
+  } catch {
+    console.error('[portal-brightdata-smoke] collection failed')
     return NextResponse.json({
       ok: false,
       mode: 'brightdata_bounded_smoke',

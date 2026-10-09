@@ -32,7 +32,16 @@ function chileClock(now = new Date()) {
 
 function scheduledWindow() {
   const local = chileClock()
-  return local.hour === 7 && local.minute === 30
+  return local.hour === 7 && (local.minute === 30 || local.minute === 45)
+}
+
+function chileDayKey(now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: CHILE_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now)
 }
 
 function authorized(request: Request) {
@@ -130,6 +139,8 @@ async function recordDeltaRun(args: {
   parsedDetails: number
   scopeRejected: number
   failures: number
+  deferredNewCandidates: number
+  localDay: string
 }) {
   const { error } = await args.supabase.from('market_ingestion_runs').insert({
     source_system: 'portal_inmobiliario',
@@ -139,10 +150,12 @@ async function recordDeltaRun(args: {
     received_rows: args.discovered,
     accepted_rows: args.parsedDetails,
     rejected_rows: args.failures,
-    status: args.failures === 0 ? 'completed' : 'partial',
+    status: args.failures === 0 && args.deferredNewCandidates === 0 ? 'completed' : 'partial',
     completed_at: args.observedAt,
     metadata: {
       pipeline: 'portal_daily_delta_v1',
+      local_day: args.localDay,
+      deferred_new_candidates: args.deferredNewCandidates,
       collector_provider: 'brightdata',
       full_snapshot: false,
       discovery_pages: DISCOVERY_PAGES_PER_DATASET,
@@ -167,11 +180,10 @@ async function recordDeltaRun(args: {
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const dryRun = url.searchParams.get('dry_run') === '1'
-  const previewDryRun = dryRun
-    && process.env.VERCEL_ENV === 'preview'
-    && process.env.VERCEL_GIT_COMMIT_REF === 'feat/brightdata-daily-delta-20261002'
+  // Provider requests cost money; preview dry-runs still require CRON_SECRET.
+  const previewDryRun = dryRun && process.env.VERCEL_ENV === 'preview'
 
-  if (!authorized(request) && !previewDryRun) {
+  if (!authorized(request)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
@@ -189,6 +201,7 @@ export async function GET(request: Request) {
   }
 
   const startedAt = Date.now()
+  const localDay = chileDayKey()
   const supabase = getServiceClient()
   const results: Array<Record<string, unknown>> = []
   let totalFailures = 0
@@ -196,6 +209,21 @@ export async function GET(request: Request) {
 
   for (const datasetKind of DATASETS) {
     try {
+      if (!previewDryRun) {
+        const { data: alreadyComplete, error: checkError } = await supabase
+          .from('market_ingestion_runs')
+          .select('id')
+          .eq('source_system', 'portal_inmobiliario')
+          .eq('dataset_kind', datasetKind)
+          .eq('status', 'completed')
+          .contains('metadata', { pipeline: 'portal_daily_delta_v1', local_day: localDay })
+          .limit(1)
+        if (checkError) throw checkError
+        if (alreadyComplete?.length) {
+          results.push({ datasetKind, status: 'completed', skipped: 'already_updated_today' })
+          continue
+        }
+      }
       const baseline = await latestFullInventoryRun(supabase, datasetKind)
       if (!baseline?.id || !baseline?.started_at) throw new Error('NO_FULL_INVENTORY_BASELINE')
 
@@ -259,6 +287,7 @@ export async function GET(request: Request) {
         ingestion = data ?? null
       }
 
+      const deferredNewCandidates = Math.max(newUrls.length - MAX_NEW_DETAILS_PER_DATASET, 0)
       if (!previewDryRun) await recordDeltaRun({
         supabase,
         datasetKind,
@@ -272,14 +301,18 @@ export async function GET(request: Request) {
         parsedDetails: validRows.length,
         scopeRejected: scopeRejectedRows.length,
         failures: details.failures.length,
+        deferredNewCandidates,
+        localDay,
       })
 
       const requestUpperBound = DISCOVERY_PAGES_PER_DATASET + detailUrls.length * 2
       totalProviderRequestsUpperBound += requestUpperBound
 
+      const completeDelta = details.failures.length === 0 && deferredNewCandidates === 0
+      if (!completeDelta) totalFailures += 1
       results.push({
         datasetKind,
-        status: details.failures.length === 0 ? 'completed' : 'partial',
+        status: completeDelta ? 'completed' : 'partial',
         provider: 'brightdata',
         baselineRunId: baseline.id,
         baselineStartedAt: baseline.started_at,
@@ -293,7 +326,7 @@ export async function GET(request: Request) {
         scopeRejected: scopeRejectedRows.length,
         scopeRejectedIds: scopeRejectedRows.map((row) => row.source_listing_id),
         detailFailures: details.failures.length,
-        deferredNewCandidates: Math.max(newUrls.length - MAX_NEW_DETAILS_PER_DATASET, 0),
+        deferredNewCandidates,
         requestUpperBound,
         ingestion,
       })
@@ -307,6 +340,12 @@ export async function GET(request: Request) {
     }
   }
 
+  console.info('[portal-daily-delta]', {
+    localDay,
+    completed: results.filter((item) => item.status === 'completed').length,
+    partialOrFailed: totalFailures,
+    runtimeMs: Date.now() - startedAt,
+  })
   return NextResponse.json({
     ok: totalFailures === 0,
     mode: 'brightdata_daily_delta',

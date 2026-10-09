@@ -310,6 +310,7 @@ export default function ValuationPage() {
   const [suggestionNotes, setSuggestionNotes] = useState<string[]>([])
   const [suggesting, setSuggesting] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [temporaryMode, setTemporaryMode] = useState(true)
   const [message, setMessage] = useState<string | null>(null)
   const [v2Unlocked, setV2Unlocked] = useState(false)
 
@@ -625,7 +626,7 @@ export default function ValuationPage() {
         const suggested = item as SuggestedComparable
         const canonicalUfM2 = calculateCanonicalComparableUfM2(item)
         const referenceOnly = suggested.quality === 'reference_only'
-        const sourceArea = item.propertyType === 'Casa' ? item.builtAreaM2 : (item.builtAreaM2 ?? item.usefulAreaM2)
+        const sourceArea = item.propertyType === 'Casa' ? item.builtAreaM2 : (item.sourceType === 'CBRS' ? item.builtAreaM2 : item.usefulAreaM2)
         const manual = item.id.startsWith('cmp-')
         const isOutlier = methodologySummary.outlierIds.includes(item.id)
         const recommended = recommendedComparableIds.includes(item.id)
@@ -633,9 +634,11 @@ export default function ValuationPage() {
           <div className="flex flex-wrap items-center gap-4 p-4">
             <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={referenceOnly} checked={referenceOnly ? false : item.selected} onChange={(event) => updateComparable(index, { selected: event.target.checked })} />{referenceOnly ? 'Solo referencia' : 'Usar como comparable'}{recommended && !referenceOnly ? <span className="border border-[#5f8f82]/50 px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-[#9fd0c8]">Sugerido</span> : null}</label>
             <div className="min-w-[220px] flex-1"><p className="text-sm font-semibold">{item.address || 'Comparable sin dirección'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{item.sourceType === 'CBRS' ? 'Venta registrada' : item.sourceType === 'Portal' || item.sourceType === 'TocToc' ? 'Oferta publicada' : item.sourceType} · {item.transactionDate || (suggested.observedAt ? `observado ${formatObservedAt(suggested.observedAt)}` : 'fecha no disponible')}</p></div>
-            <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m²` : ''}</p></div>
+            <div className="text-right"><p className="text-sm font-semibold">{item.priceUf > 0 ? `${item.priceUf.toLocaleString('es-CL')} UF` : 'Precio pendiente'}</p><p className="mt-1 text-xs text-[var(--n3-text-muted)]">{canonicalUfM2 > 0 ? `${canonicalUfM2.toLocaleString('es-CL', { maximumFractionDigits: 6 })} UF/m²` : suggested.sourceReportedUfM2 ? `${suggested.sourceReportedUfM2.toLocaleString('es-CL')} UF/m² fuente` : 'UF/m² pendiente'}{sourceArea ? ` · ${sourceArea} m² ${item.propertyType === 'Casa' ? 'construidos' : item.sourceType === 'CBRS' ? 'registrados CBRS' : 'útiles'}` : ''}</p></div>
             <div className="text-right text-xs text-[var(--n3-text-muted)]">{item.distanceMeters !== undefined ? `${item.distanceMeters.toLocaleString('es-CL')} m` : 'distancia —'}<br />coincidencia {Math.round(item.similarityScore * 100)}%</div>
           </div>
+          {item.propertyType === 'Departamento' && subject.propertyType === 'Departamento' && Number(subject.usefulAreaM2) > 0 && Number(item.usefulAreaM2) > 0 && (Number(item.usefulAreaM2) / Number(subject.usefulAreaM2) < 0.75 || Number(item.usefulAreaM2) / Number(subject.usefulAreaM2) > 1.33) ? <div className="border-t border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-xs text-[#e0c87f]">Superficie útil muy diferente. Revisa esta referencia antes de usarla.</div> : null}
+          {item.propertyType === 'Departamento' && item.sourceType === 'CBRS' ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Superficie CBRS registrada: no está acreditada como superficie útil.</div> : null}
           {isOutlier ? <div className="border-t border-[#c4ae70]/40 bg-[#17140c] px-4 py-3 text-xs text-[#e0c87f]">Revisar: este valor se aleja más de 25% de la mediana seleccionada.</div> : null}
           {referenceOnly ? <div className="border-t border-[var(--n3-line)] px-4 py-3 text-xs text-[#c4ae70]">Referencia sin superficie canónica completa.</div> : null}
           {item.selected ? <div className="border-t border-[var(--n3-line)] p-4"><TextField label="Por qué usar este comparable" value={item.adjustmentNotes} onChange={(value) => updateComparable(index, { adjustmentNotes: value })} placeholder="Ej.: venta reciente, misma zona, tamaño y programa similares." /></div> : null}
@@ -725,6 +728,7 @@ export default function ValuationPage() {
       <MethodologyNote>Portal: oferta. CBRS: ventas. Property Partners decide.</MethodologyNote>
     </section> : null}
 
+    <div role="note" className="border border-[var(--n3-line)] px-4 py-3 text-xs text-[var(--n3-text-muted)]">Modo de consulta: puedes calcular y revisar el valor sin guardar datos. La estimación no constituye una valorización aprobada.</div>
     {message ? <div role="status" className="border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-sm text-[#ff9a93]">{message}</div> : null}
 
     <div className="sticky bottom-0 z-20 -mx-2 mt-2 border-t border-[var(--n3-line)] bg-[#050808]/95 px-2 py-3 backdrop-blur md:py-4">
@@ -732,8 +736,8 @@ export default function ValuationPage() {
         <button type="button" disabled={step === 1} onClick={goBack} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-30 md:gap-2 md:px-4"><ArrowLeft size={14} /><span className="hidden sm:inline">Anterior</span></button>
         <div className="hidden text-center text-xs text-[var(--n3-text-muted)] md:block">Paso {step} de 5 · {VALUATION_WIZARD_STEPS.find((item) => item.step === step)?.label}</div>
         <div className="flex items-center gap-1.5 md:gap-2">
-          {step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
-          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización'}</button>}
+          {!temporaryMode && step > 1 && step < 5 ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-1.5 border border-[var(--n3-line)] px-3 py-2.5 text-xs font-semibold disabled:opacity-50 md:gap-2 md:px-4"><Save size={14} /><span>{saving ? 'Guardando…' : <><span className="sm:hidden">Guardar</span><span className="hidden sm:inline">Guardar borrador</span></>}</span></button> : null}
+          {step < 5 ? <button type="button" onClick={goNext} className="inline-flex min-h-11 items-center gap-1.5 bg-[#d7332b] px-3 py-2.5 text-xs font-semibold text-white md:gap-2 md:px-4"><span>Continuar</span><ArrowRight size={14} /></button> : !temporaryMode ? <button type="button" disabled={saving} onClick={() => void saveDraft()} className="inline-flex min-h-11 items-center gap-2 bg-[#d7332b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50 md:px-5"><Save size={15} />{saving ? 'Guardando…' : 'Guardar valorización'}</button> : <button type="button" onClick={() => setTemporaryMode(false)} className="inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 py-2.5 text-xs font-semibold">Habilitar guardado</button>}
         </div>
       </div>
     </div>

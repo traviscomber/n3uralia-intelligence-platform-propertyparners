@@ -20,17 +20,17 @@ type Period = {
 const periods = periodsData.periods as Period[]
 const offices = ['Santa María','Nueva Costanera','Lo Beltrán']
 
-test('Office 360 uses the complete Pedro Jan-Aug 2026 management series', () => {
-  assert.deepEqual(periods.map((item)=>item.period), ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08'])
+test('Office 360 contains the canonical Jan-Sep 2026 management series', () => {
+  assert.deepEqual(periods.map((item)=>item.period), ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09'])
   for (const period of periods) {
     assert.deepEqual(period.offices.map((office)=>office.name), offices)
-    assert.equal(period.authority.file, 'Ago_Directorio.pptx')
+    assert.equal(period.authority.file, period.period === '2026-09' ? 'September 2026 canonical CRM set' : 'Ago_Directorio.pptx')
     assert.ok(period.authority.sha256)
   }
 })
 
 test('latest Office 360 values reconcile to Pedro August authority', () => {
-  const august = periods.at(-1)
+  const august = periods.find((item) => item.period === '2026-08')
   assert.equal(august?.period, '2026-08')
   const byName = new Map(august?.offices.map((office)=>[office.name,office]) ?? [])
   assert.deepEqual(byName.get('Santa María'), {
@@ -55,14 +55,14 @@ test('Office 360 does not manufacture office-level 2025 YoY', () => {
 })
 
 
-test('canonical office entities expose Jan-Aug evolution for CEO drill-down', async () => {
+test('canonical office entities expose Jan-Sep evolution for CEO drill-down', async () => {
   const mod = await import('../lib/management-canonical-periods')
   const entities = mod.getCanonicalManagementDashboardEntities()
   for (const officeName of offices) {
     const office = entities.find((entity) => entity.entityType === 'branch' && entity.name === officeName)
     assert.ok(office, `missing ${officeName}`)
-    assert.equal(office?.evolution?.length, 8)
-    assert.equal(office?.evolution?.at(-1)?.period, '2026-08')
+    assert.equal(office?.evolution?.length, 9)
+    assert.equal(office?.evolution?.at(-1)?.period, '2026-09')
     assert.equal(office?.evolution?.at(-1)?.metrics?.management_credited_sales, office?.evolution?.at(-1)?.sales)
   }
 })
