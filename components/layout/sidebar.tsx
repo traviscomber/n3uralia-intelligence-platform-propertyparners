@@ -138,11 +138,15 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-2 py-5">
         {navigationSections.map((section, index) => {
           const sectionActive = section.items.some((item) => isActive(item.href, item.exact))
+          // A landing page should not automatically expand the secondary tools.
+          // On a nested working route, reveal the active item for orientation.
+          const todayActive = section.items.some((item) => item.label === 'Hoy' && isActive(item.href, item.exact))
           const collapsible = index > 0
+          const initiallyOpen = collapsible && sectionActive && !todayActive
 
           if (collapsible) {
             return (
-              <details key={section.label} className="group mb-5" open={sectionActive || undefined}>
+              <details key={section.label} className="group mb-5" open={initiallyOpen || undefined}>
                 <summary className="mb-1.5 flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[var(--n3-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] [&::-webkit-details-marker]:hidden">
                   <span>{section.label}</span>
                   <div className="h-px flex-1 bg-[var(--n3-line)]" />
