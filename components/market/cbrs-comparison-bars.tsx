@@ -41,7 +41,11 @@ export function CbrsComparisonBars({
         No hay observaciones verificadas para mostrar este gráfico.
       </p>
     ) : <>
-      <table className="sr-only">
+      {/* A table's intrinsic min-content width overrides sr-only width on the
+          table element itself. The positioned, clipped WRAPPER keeps the
+          semantic table accessible without widening the browser viewport. */}
+      <div className="sr-only overflow-hidden" data-testid="cbrs-accessible-table">
+      <table className="w-full table-fixed">
         <caption>{heading}. {description}. Mismo eje desde cero para ambas categorías.</caption>
         <thead><tr><th scope="col">Año</th><th scope="col">Casas</th><th scope="col">Departamentos</th></tr></thead>
         <tbody>{data.years.map((entry) => <tr key={entry.year}>
@@ -50,6 +54,7 @@ export function CbrsComparisonBars({
           <td>{display(entry.values.Departamento, metric)}</td>
         </tr>)}</tbody>
       </table>
+      </div>
 
       <div className="mt-7" aria-hidden="true">
         <div className="grid grid-cols-[2.9rem_minmax(0,1fr)_4.25rem] items-end gap-x-2 sm:grid-cols-[3.4rem_minmax(0,1fr)_5rem] sm:gap-x-3">
