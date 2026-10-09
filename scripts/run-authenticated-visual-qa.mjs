@@ -2,7 +2,9 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 
-const baseUrl = process.env.QA_BASE_URL || 'https://ppartnersgroup.app'
+// Audit the live, production-tagged deployment without triggering the separate
+// Cloudflare browser-challenge gate on the customer-facing domain.
+const baseUrl = (process.env.QA_BASE_URL || 'https://n3uralia-intelligence-platform.vercel.app').replace(/\/$/, '')
 const outputRoot = path.resolve(process.env.QA_OUTPUT_DIR || 'artifacts/visual-qa')
 const sharedPassword = process.env.QA_PASSWORD || null
 
@@ -89,12 +91,62 @@ async function login(page, email, password, contextDir) {
       responses,
     }, null, 2))
     await page.screenshot({ path: path.join(contextDir, 'login-failure.png') }).catch(() => null)
-    throw new Error(`Login fields unavailable, HTTP ${navigation?.status() ?? 'unknown'}, path ${diagnostics.pathname}; see redacted diagnostics artifact.`)
+    const cloudflareChallenge = navigation?.status() === 403 && /Just a moment|security service|Cloudflare|bot/i.test(`${diagnostics.title} ${diagnostics.text}`)
+    throw new Error(cloudflareChallenge
+      ? 'External Cloudflare bot challenge, HTTP 403. Keep its protection enabled and use the official Vercel production alias for authenticated UI QA.'
+      : `Login fields unavailable, HTTP ${navigation?.status() ?? 'unknown'}, path ${diagnostics.pathname}; see redacted diagnostics artifact.`)
   }
   await page.type(selector, email)
   await page.type('input[type="password"], input[name="password"]', password)
   await page.click('button[type="submit"]')
   await waitForAuthenticatedState(page)
+}
+
+const expectedPrimaryLabels = ['Mercado', 'Valorizador', 'Reportes']
+const reportRoutes = {
+  ceo: '/dashboard/reportes/canonicos',
+  director: '/dashboard/director/reporte',
+  subdirector: '/dashboard/director/reporte',
+  'lo-beltran': '/dashboard/reportes/audiencias/ejecutivo',
+  'nueva-costanera': '/dashboard/reportes/audiencias/ejecutivo',
+  'santa-maria': '/dashboard/reportes/audiencias/ejecutivo',
+}
+
+async function auditPrimaryNavigation(page, profile) {
+  const nav = await page.evaluate(() => {
+    const visible = [...document.querySelectorAll('nav[aria-label="Navegación principal"]')]
+      .find((element) => element.getClientRects().length > 0)
+    if (!visible) return { error: 'Navegación no visible' }
+    const primary = visible.querySelector(':scope > div ul')
+    const links = primary
+      ? [...primary.querySelectorAll('a[href]')].map((link) => ({
+          label: link.textContent?.trim() || '',
+          path: new URL(link.href).pathname,
+        }))
+      : []
+    const secondary = visible.querySelector(':scope > details')
+    return {
+      links,
+      secondaryLabel: secondary?.querySelector('summary')?.textContent?.trim() || null,
+      secondaryClosed: secondary ? !secondary.open : false,
+      secondaryHasLinks: Boolean(secondary?.querySelector('a[href]')),
+    }
+  })
+  const expectedPaths = ['/dashboard/market', '/dashboard/valuation', reportRoutes[profile.key]]
+  const valid = Array.isArray(nav.links)
+    && nav.links.length === 3
+    && nav.links.every((link, index) => link.label === expectedPrimaryLabels[index] && link.path === expectedPaths[index])
+    && nav.secondaryLabel?.toLowerCase().includes('más herramientas')
+    && nav.secondaryClosed
+    && nav.secondaryHasLinks
+  return {
+    profile: profile.key,
+    route: profile.start,
+    check: 'three-pillar-navigation',
+    status: valid ? 'passed' : 'failed',
+    // Navigation evidence contains only routes and labels; never user identifiers.
+    ...nav,
+  }
 }
 
 async function collectAccessibilitySignals(page) {
@@ -146,6 +198,10 @@ for (const profile of profiles) {
 
   try {
     await login(page, profile.email, profile.password, contextDir)
+    await page.goto(`${baseUrl}${profile.start}`, { waitUntil: 'networkidle2' })
+    const navigationAudit = await auditPrimaryNavigation(page, profile)
+    results.push(navigationAudit)
+    if (navigationAudit.status === 'failed') throw new Error('Primary navigation contract failed for this role.')
 
     const routes = [profile.start, ...protectedVisualRoutes]
     for (const route of routes) {
