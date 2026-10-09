@@ -20,11 +20,12 @@ export function nextOverduePortalDataset(now: Date, latest: FullInventoryTimesta
   const entries: Array<{ dataset: PortalDatasetKind; timestamp: number }> = [
     { dataset: 'portal_houses', timestamp: Date.parse(latest.portal_houses ?? '') },
     { dataset: 'portal_apartments', timestamp: Date.parse(latest.portal_apartments ?? '') },
-  ].map((item) => ({
-    ...item,
-    timestamp: Number.isFinite(item.timestamp) ? item.timestamp : 0,
-  }))
+  ]
   return entries
+    .map((item) => ({
+      ...item,
+      timestamp: Number.isFinite(item.timestamp) ? item.timestamp : 0,
+    }))
     .filter((item) => now.getTime() - item.timestamp >= MAX_VERIFIED_AGE_MS)
     .sort((a, b) => a.timestamp - b.timestamp)[0]?.dataset ?? null
 }
