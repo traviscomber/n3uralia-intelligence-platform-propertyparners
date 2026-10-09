@@ -505,7 +505,8 @@ async function waitForPrimaryDetail(page: Page, waitMs: number) {
 }
 
 async function discoverListingUrls(browser: Browser, searchUrls: string[], datasetKind: PortalDatasetKind, waitMs: number) {
-  const urls = new Set<string>()
+  // Same MLC listing can have multiple canonical URL forms; dedupe by source identity.
+  const urls = new Map<string, string>()
   const newListingsPerPage: number[] = []
   let rawListingCandidates = 0
   let reportedResultCount: number | null = null
@@ -562,8 +563,9 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
       const pageUrls = unique(result.pageCandidates)
       let newCount = 0
       for (const href of pageUrls) {
-        if (urls.has(href)) continue
-        urls.add(href)
+        const identity = portalListingIdFromUrl(href, datasetKind) ?? href
+        if (urls.has(identity)) continue
+        urls.set(identity, href)
         newCount += 1
       }
       newListingsPerPage.push(newCount)
@@ -576,7 +578,7 @@ async function discoverListingUrls(browser: Browser, searchUrls: string[], datas
   }
 
   return {
-    urls: [...urls],
+    urls: [...urls.values()],
     newListingsPerPage,
     rawListingCandidates,
     duplicateListingCandidates: Math.max(rawListingCandidates - urls.size, 0),

@@ -14,8 +14,13 @@ const VALIDATION_BRANCH = 'fix/valuation-visible-by-role-20261008'
 const TOTAL_DETAIL_BUDGET = 4
 const DATASETS: PortalDatasetKind[] = ['portal_houses', 'portal_apartments']
 
-export async function GET() {
-  if (process.env.VERCEL_GIT_COMMIT_REF !== VALIDATION_BRANCH) {
+export async function GET(request: Request) {
+  // Protect billable provider calls even on a branch-specific preview URL.
+  const secret = process.env.CRON_SECRET
+  if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
+  }
+  if (process.env.VERCEL_ENV !== 'preview' || process.env.VERCEL_GIT_COMMIT_REF !== VALIDATION_BRANCH) {
     return new NextResponse(null, { status: 404 })
   }
 
