@@ -271,6 +271,10 @@ export default async function MarketPage() {
         <div><p className="font-semibold text-[var(--n3-text-light)]">CBRS Vitacura</p><p>Compraventas residenciales efectivamente inscritas. Último año completo visualizado: {latestYear}. {market.cbrsSourceEnd ? 'Fuente entregada hasta ' + market.cbrsSourceEnd.slice(0, 10) + '.' : 'Última fecha documental no disponible.'}</p></div>
         <div><p className="font-semibold text-[var(--n3-text-light)]">Barrios Property Partners</p><p>Delimitación conforme al KML canónico de Vitacura. Sin equivalencias geográficas ni asignaciones inferidas.</p></div>
       </div>
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 border-t border-[var(--n3-line)] pt-3">
+        <a href="/api/market/export?dataset=listings&format=xlsx" className="inline-flex min-h-11 items-center text-xs font-semibold text-[var(--n3-teal-soft)] hover:underline">Descargar inventario XLSX</a>
+        <Link href="/dashboard/market/export" className="inline-flex min-h-11 items-center text-xs text-[var(--n3-text-light)] hover:underline">Abrir informe para imprimir</Link>
+      </div>
     </details>
   </WorkspaceShell>
 }
