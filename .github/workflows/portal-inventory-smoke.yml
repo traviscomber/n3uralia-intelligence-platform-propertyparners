@@ -15,6 +15,9 @@ on:
       - 'app/dashboard/market/layout.tsx'
       - 'tests/market/market-pedro-home.test.ts'
       - 'app/api/market/comparables/route.ts'
+      - 'app/api/market/export/route.ts'
+      - 'app/dashboard/market/export/page.tsx'
+      - 'tests/market/market-pedro-report.test.ts'
       - 'components/market/market-comparable-connector.tsx'
       - 'tests/market/market-comparables-authorization.test.ts'
       - 'app/dashboard/market/oferta/page.tsx'
@@ -69,6 +72,7 @@ jobs:
           tests/market/portal-offer-day.test.ts
           tests/market/market-pedro-home.test.ts
           tests/market/market-comparables-authorization.test.ts
+          tests/market/market-pedro-report.test.ts
 
       - name: Explain separate live-source release gate
         if: github.event_name == 'pull_request'
