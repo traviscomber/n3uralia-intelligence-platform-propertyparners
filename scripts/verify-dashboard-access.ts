@@ -61,7 +61,14 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   }
 }
 
-const expectedLabels = ['Control de gestión', 'Inteligencia de mercado', 'Valorizador']
+const expectedLabels = ['Mercado', 'Valorizador', 'Reportes']
+const reportPillarByRole = {
+  ceo: '/dashboard/reportes/canonicos',
+  admin: '/dashboard/reportes/canonicos',
+  director: '/dashboard/director/reporte',
+  subdirector: '/dashboard/director/reporte',
+  seller: '/dashboard/reportes/audiencias/ejecutivo',
+} as const
 const expectedRoutes = {
   ceo: ['/dashboard/ceo', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/control/operations', '/dashboard/properties', '/dashboard/reportes/canonicos'],
   admin: ['/dashboard', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/reportes/canonicos', '/dashboard/control/operations', '/dashboard/control/admin', '/dashboard/properties/admin', '/dashboard/market/fuentes', '/dashboard/settings'],
@@ -71,13 +78,19 @@ const expectedRoutes = {
 } as const
 
 for (const [role, sections] of Object.entries(navigationByRole)) {
+  assert.equal(sections.length, 2, role + ': unexpected extra navigation section')
   assert.equal(sections[0].label, 'Tres pilares', role)
   assert.deepEqual(sections[0].items.map((item) => item.label), expectedLabels, role)
-  assert.equal(sections[0].items.length, 3, role)
+  assert.deepEqual(sections[0].items.map((item) => item.href), [
+    '/dashboard/market',
+    '/dashboard/valuation',
+    reportPillarByRole[role as keyof typeof reportPillarByRole],
+  ], role)
   assert.equal(sections[1]?.label, 'Más herramientas', role)
-  assert.equal(sections.slice(1).filter((section) => section.label === 'Tres pilares').length, 0, role)
+  assert.ok(sections[1].items.every((item) => Boolean(item.group)), role + ': secondary tool missing group')
+  assert.equal(sections[1].items[0].label, 'Hoy')
   const routes = sections.flatMap((section) => section.items.map((item) => item.href))
   assert.equal(new Set(routes).size, routes.length, role + ': route duplicated')
   assert.deepEqual(new Set(routes), new Set(expectedRoutes[role as keyof typeof expectedRoutes]), role + ': missing route')
 }
-console.log('Dashboard role navigation verified: three pillars and all previous authorized routes retained.')
+console.log('Dashboard role navigation verified: Mercado, Valorizador and Reportes with all previous authorized routes retained.')
