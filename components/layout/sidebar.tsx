@@ -94,26 +94,33 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
   }
 
   function sectionItems(section: NavigationSection) {
+    const primary = section.label === 'Tres pilares'
     return (
       <ul className="flex flex-col gap-0.5">
-        {section.items.map((item) => {
+        {section.items.map((item, index) => {
           const active = isActive(item.href, item.exact)
+          const groupStart = !primary && item.group && item.group !== section.items[index - 1]?.group
           return (
             <li key={`${item.label}-${item.href}`}>
+              {groupStart ? (
+                <p className="px-3 pb-1 pt-3 text-[9px] font-semibold uppercase tracking-[0.13em] text-[var(--n3-text-muted)]">
+                  {item.group}
+                </p>
+              ) : null}
               <Link
                 href={item.href}
                 prefetch={false}
                 onClick={closeMobileNavigation}
                 aria-current={active ? 'page' : undefined}
-                className="flex min-h-11 items-center gap-2.5 border-l-2 px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]"
+                className={`flex items-center gap-2.5 border-l-2 px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)] ${primary ? 'min-h-12 font-semibold' : 'min-h-11'}`}
                 style={{
                   color: active ? 'var(--n3-text-light)' : 'var(--n3-text-muted)',
                   background: active ? 'rgba(255,255,255,0.035)' : 'transparent',
                   borderLeftColor: active ? 'var(--primary)' : 'transparent',
                 }}
               >
-                <span aria-hidden="true" className="h-2 w-2 border border-current" />
-                <span className="truncate text-[13px]">{item.label}</span>
+                <span aria-hidden="true" className="h-2 w-2 shrink-0 border border-current" />
+                <span className={primary ? 'min-w-0 text-[14px]' : 'min-w-0 truncate text-[13px]'}>{item.label}</span>
               </Link>
             </li>
           )

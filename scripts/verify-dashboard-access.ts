@@ -61,10 +61,30 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   }
 }
 
-assert.equal(CEO_NAVIGATION.length, 1)
-assert.equal(CEO_NAVIGATION[0]?.items.length, 7)
-assert.equal(ADMIN_NAVIGATION[0]?.items.length, 6)
-assert.equal(DIRECTOR_NAVIGATION[0]?.items.length, 6)
-assert.equal(SELLER_NAVIGATION[0]?.items.length, 6)
+// Approved top-level architecture. Each role sees only these three pillars.
+// All previous destinations remain available under a single collapsed section.
+const expectedReportRoute: Record<string, string> = {
+  ceo: '/dashboard/reportes/canonicos',
+  admin: '/dashboard/reportes/canonicos',
+  director: '/dashboard/director/reporte',
+  subdirector: '/dashboard/director/reporte',
+  seller: '/dashboard/reportes/audiencias/ejecutivo',
+}
+for (const [role, sections] of Object.entries(navigationByRole)) {
+  assert.equal(sections.length, 2, `${role} must have two navigation sections`)
+  assert.equal(sections[0]?.label, 'Tres pilares')
+  assert.deepEqual(sections[0]?.items.map((item) => item.label), ['Mercado', 'Valorizador', 'Reportes'])
+  assert.deepEqual(sections[0]?.items.map((item) => item.href), [
+    '/dashboard/market',
+    '/dashboard/valuation',
+    expectedReportRoute[role],
+  ])
+  assert.equal(sections[1]?.label, 'Más herramientas')
+  assert.ok(sections[1].items.length > 0)
+  assert.ok(sections[1].items.every((item) => Boolean(item.group)), `${role} has ungrouped secondary links`)
+  assert.equal(sections[1].items[0]?.label, 'Hoy')
+  const hrefs = sections.flatMap((section) => section.items.map((item) => item.href))
+  assert.equal(new Set(hrefs).size, hrefs.length, `${role} has duplicate navigation destinations`)
+}
 
-console.log('Dashboard access and simplified role navigation verified for CEO, admin, director, subdirector and seller. CEO surface remains business-only.')
+console.log('Dashboard access and the three approved pillars (Mercado, Valorizador, Reportes) verified for all five roles; secondary tools retain existing scopes.')
