@@ -87,7 +87,7 @@ export default async function MarketExportPage() {
       </Link>
       <div className="flex flex-wrap gap-2">
         <Link href="/api/market/export?dataset=listings&format=xlsx" className="inline-flex min-h-11 items-center gap-2 border border-neutral-300 px-4 py-2 text-sm font-semibold">
-          <Download size={16} aria-hidden="true" /> Inventario XLSX
+          <Download size={16} aria-hidden="true" /> Avisos observados XLSX
         </Link>
         <Link href="/api/market/export?dataset=summary&format=xlsx" className="inline-flex min-h-11 items-center gap-2 border border-neutral-300 px-4 py-2 text-sm font-semibold">
           <Download size={16} aria-hidden="true" /> Indicadores XLSX
@@ -124,7 +124,7 @@ export default async function MarketExportPage() {
       </div>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         {market.categories.map((category) => <div key={category.type} className="min-w-0">
-          <h3 className="border-b border-neutral-300 pb-2 text-sm font-semibold">Nuevas {category.name.toLowerCase()}</h3>
+          <h3 className="border-b border-neutral-300 pb-2 text-sm font-semibold">{category.type === 'casas' ? 'Nuevas casas' : 'Nuevos departamentos'}</h3>
           {category.group?.additionsUnavailable || !category.group
             ? <p className="py-3 text-sm text-neutral-600">Sin verificación del día.</p>
             : category.group.addedToday.length === 0
@@ -164,7 +164,7 @@ export default async function MarketExportPage() {
 
     <section className="mt-8">
       <h2 className="text-xl font-semibold">3. Publicaciones observadas recientemente</h2>
-      <p className="mt-2 text-sm text-neutral-600">Hasta 25 publicaciones activas con precio por tipo de propiedad. La descarga XLSX permite consultar un inventario más amplio sin mezclar casas y departamentos.</p>
+      <p className="mt-2 text-sm text-neutral-600">Hasta 25 publicaciones activas con precio por tipo de propiedad. El XLSX descarga registros activos observados, que pueden diferir del último inventario completo verificado. No se mezclan casas y departamentos.</p>
       {published.error ? <p role="alert" className="mt-4 text-sm text-red-700">No se pudo consultar el detalle. Los datos incompletos no se presentan como definitivos.</p> : null}
       {published.categories.map((category) => <div key={category.label} className="mt-5">
         <h3 className="text-base font-semibold">{category.label}</h3>
