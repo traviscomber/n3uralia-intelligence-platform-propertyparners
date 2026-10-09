@@ -61,10 +61,23 @@ for (const [role, sections] of Object.entries(navigationByRole)) {
   }
 }
 
-assert.equal(CEO_NAVIGATION.length, 1)
-assert.equal(CEO_NAVIGATION[0]?.items.length, 7)
-assert.equal(ADMIN_NAVIGATION[0]?.items.length, 6)
-assert.equal(DIRECTOR_NAVIGATION[0]?.items.length, 6)
-assert.equal(SELLER_NAVIGATION[0]?.items.length, 6)
+const expectedLabels = ['Control de gestión', 'Inteligencia de mercado', 'Valorizador']
+const expectedRoutes = {
+  ceo: ['/dashboard/ceo', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/control/operations', '/dashboard/properties', '/dashboard/reportes/canonicos'],
+  admin: ['/dashboard', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/reportes/canonicos', '/dashboard/control/operations', '/dashboard/control/admin', '/dashboard/properties/admin', '/dashboard/market/fuentes', '/dashboard/settings'],
+  director: ['/dashboard/director', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/director/reporte', '/dashboard/control/operations', '/dashboard/control/admin', '/dashboard/properties/admin'],
+  subdirector: ['/dashboard/director', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/director/reporte', '/dashboard/control/operations', '/dashboard/control/admin', '/dashboard/properties/admin'],
+  seller: ['/dashboard/partner', '/dashboard/market', '/dashboard/valuation', '/dashboard/valuations', '/dashboard/properties', '/dashboard/reportes/audiencias/ejecutivo'],
+} as const
 
-console.log('Dashboard access and simplified role navigation verified for CEO, admin, director, subdirector and seller. CEO surface remains business-only.')
+for (const [role, sections] of Object.entries(navigationByRole)) {
+  assert.equal(sections[0].label, 'Tres pilares', role)
+  assert.deepEqual(sections[0].items.map((item) => item.label), expectedLabels, role)
+  assert.equal(sections[0].items.length, 3, role)
+  assert.equal(sections[1]?.label, 'Más herramientas', role)
+  assert.equal(sections.slice(1).filter((section) => section.label === 'Tres pilares').length, 0, role)
+  const routes = sections.flatMap((section) => section.items.map((item) => item.href))
+  assert.equal(new Set(routes).size, routes.length, role + ': route duplicated')
+  assert.deepEqual(new Set(routes), new Set(expectedRoutes[role as keyof typeof expectedRoutes]), role + ': missing route')
+}
+console.log('Dashboard role navigation verified: three pillars and all previous authorized routes retained.')
