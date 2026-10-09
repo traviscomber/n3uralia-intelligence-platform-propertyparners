@@ -213,5 +213,8 @@ jobs:
       - name: Verify dashboard access
         run: pnpm access:verify
 
+      - name: Verify authenticated visual QA contract
+        run: node --import tsx --test tests/market/visual-qa-login-contract.test.ts
+
       - name: Build application
         run: pnpm build

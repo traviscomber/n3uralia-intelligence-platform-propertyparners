@@ -6,7 +6,7 @@ on:
       base_url:
         description: Production or preview URL to audit
         required: false
-        default: https://ppartnersgroup.app
+        default: https://n3uralia-intelligence-platform.vercel.app
   push:
     branches: [main]
 
@@ -23,7 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      QA_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.base_url || 'https://ppartnersgroup.app' }}
+      # QA uses the exact live Vercel production alias. Cloudflare's public-domain
+      # bot challenge is left intact; it does not represent an application login.
+      QA_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.base_url || 'https://n3uralia-intelligence-platform.vercel.app' }}
       QA_RELEASE_BASE_URL: https://n3uralia-intelligence-platform.vercel.app
       QA_EXPECTED_SHA: ${{ github.sha }}
       QA_OUTPUT_DIR: artifacts/visual-qa
