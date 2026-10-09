@@ -35,19 +35,6 @@ const DETAIL_RUNTIME_GUARD_MS = 210_000
 const RAW_INSERT_CHUNK = 400
 const CHILE_TIME_ZONE = 'America/Santiago'
 
-function chileClock(now = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: CHILE_TIME_ZONE,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now)
-  return {
-    hour: Number(parts.find((part) => part.type === 'hour')?.value ?? '-1'),
-    minute: Number(parts.find((part) => part.type === 'minute')?.value ?? '-1'),
-  }
-}
-
 function scheduledWindow() {
   return withinPortalInventoryWindow()
 }
