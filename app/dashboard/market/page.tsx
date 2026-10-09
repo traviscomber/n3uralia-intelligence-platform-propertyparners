@@ -35,11 +35,9 @@ function PortalTypeCard({
   const typeLabel = category.type
   const offer = category.group
   return <article className="flex min-w-0 flex-col border-t border-[var(--n3-line)] pt-5">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <h3 className="text-xl font-semibold tracking-tight text-[var(--n3-text-light)]">{category.name}</h3>
-      <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">Portal Inmobiliario · Venta</span>
-    </div>
-    <p className="mt-6 text-[clamp(2.4rem,5vw,3.65rem)] font-semibold leading-none tabular-nums tracking-tight">
+    <h3 className="text-xl font-semibold tracking-tight text-[var(--n3-text-light)]">{category.name}</h3>
+    <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[var(--n3-text-muted)]">En venta · Portal</p>
+    <p className="mt-5 text-[clamp(2.4rem,5vw,3.65rem)] font-semibold leading-none tabular-nums tracking-tight">
       {count(offer?.inventoryCount)}
     </p>
     <p className="mt-2 text-xs text-[var(--n3-text-muted)]">Avisos del último inventario completo verificado</p>
@@ -54,7 +52,7 @@ function PortalTypeCard({
     <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--n3-line)] pt-4">
       <a href="#nuevos-hoy" className="inline-flex min-h-11 items-center gap-2 text-sm text-[var(--n3-text-light)] hover:text-[var(--n3-teal-soft)]">
         <strong className="text-xl font-semibold tabular-nums">{count(offer?.addedTodayCount)}</strong>
-        <span className="text-xs">nuevos hoy</span>
+        <span className="text-xs">{offer?.addedTodayCount === 1 ? 'nuevo hoy' : 'nuevos hoy'}</span>
       </a>
       {allowInventory ? <Link href={'/dashboard/market/oferta?tipo=' + typeLabel + '#inventario'} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-[var(--n3-teal-soft)] hover:underline">
         Ver {category.name.toLowerCase()} <ArrowRight size={15} aria-hidden="true" />
@@ -189,10 +187,10 @@ export default async function MarketPage() {
         </div>
       </div>
       <div className="grid gap-x-9 gap-y-8 pt-4 md:grid-cols-2">
-        {market.categories.map((category) => <section key={category.type} aria-label={'Nuevas ' + category.name.toLowerCase()} className="min-w-0">
+        {market.categories.map((category) => <section key={category.type} aria-label={'Nuevos avisos: ' + category.name.toLowerCase()} className="min-w-0">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h3 className="text-base font-semibold">{category.name}</h3>
-            <span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{count(category.group?.addedTodayCount)} nuevas</span>
+            <span className="text-xs tabular-nums text-[var(--n3-text-muted)]">{count(category.group?.addedTodayCount)} {category.group?.addedTodayCount === 1 ? 'nuevo' : 'nuevos'}</span>
           </div>
           {!category.group || category.group.additionsUnavailable
             ? <p role="status" className="mt-4 border-t border-[var(--n3-line)] py-4 text-sm text-[var(--n3-text-muted)]">No fue posible verificar las incorporaciones de hoy.</p>

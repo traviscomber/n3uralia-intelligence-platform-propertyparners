@@ -1,16 +1,48 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { accessErrorResponse, assertProfileVisible, requireAnyCapability } from '@/lib/access-guards'
+
+// Portal's approved Vitacura market evidence is shared across commercial roles.
+// The authenticated Supabase user cannot query the underlying market_listings
+// table in this view, so only these public-market reads use a server service
+// client *after* the application capability check. All valuation writes retain
+// the authenticated user and RLS checks.
+const APPROVED_PORTAL_SOURCES = [
+  'portal-inmobiliario-vitacura-portal-houses',
+  'portal-inmobiliario-vitacura-portal-apartments',
+] as const
+
+async function approvedPortalSourceIds(service: ReturnType<typeof createServiceClient>): Promise<string[]> {
+  const { data, error } = await service
+    .from('market_sources')
+    .select('id')
+    .in('code', [...APPROVED_PORTAL_SOURCES])
+    .limit(APPROVED_PORTAL_SOURCES.length)
+  if (error) throw new Error('PORTAL_COMPARABLE_SOURCES_UNAVAILABLE')
+  return (data ?? []).map((row) => String(row.id))
+}
 
 export async function GET() {
   try {
     const scope = await requireAnyCapability(['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'])
     const supabase = await createClient()
+    const service = createServiceClient()
+    const approvedSourceIds = await approvedPortalSourceIds(service)
     let cases = supabase.from('valuation_cases').select('id,address,property_type,status,requested_by').eq('status', 'draft').limit(50)
     if (scope.scope !== 'global') cases = cases.in('requested_by', scope.visibleProfileIds)
     const [caseResult, listingResult] = await Promise.all([
       cases,
-      supabase.from('market_current_listings').select('id,property_id,source_listing_id,status,url,title,normalized_address,price_uf,price_uf_m2,observed_at,published_at').not('price_uf', 'is', null).order('observed_at', { ascending: false }).limit(80),
+      approvedSourceIds.length
+        ? service.from('market_current_listings')
+            .select('id,property_id,source_listing_id,status,url,title,normalized_address,price_uf,price_uf_m2,observed_at,published_at')
+            .in('source_id', approvedSourceIds)
+            .eq('status', 'active')
+            .is('removed_at', null)
+            .gt('price_uf', 0)
+            .order('observed_at', { ascending: false })
+            .limit(80)
+        : Promise.resolve({ data: [], error: null }),
     ])
     if (caseResult.error || listingResult.error) return NextResponse.json({ error: caseResult.error?.message || listingResult.error?.message }, { status: 500 })
     return NextResponse.json({ valuationCases: caseResult.data ?? [], listings: listingResult.data ?? [] }, { headers: { 'Cache-Control': 'no-store' } })
@@ -23,6 +55,9 @@ export async function POST(request: Request) {
   try {
     const scope = await requireAnyCapability(['valuations.self.create', 'valuations.office.review', 'valuations.global.approve'])
     const supabase = await createClient()
+    const service = createServiceClient()
+    const approvedSourceIds = await approvedPortalSourceIds(service)
+    if (!approvedSourceIds.length) return NextResponse.json({ error: 'No hay fuentes Portal verificadas.' }, { status: 503 })
     const body = await request.json().catch(() => null)
     const valuationCaseId = String(body?.valuationCaseId ?? '')
     const listingId = String(body?.listingId ?? '')
@@ -30,7 +65,14 @@ export async function POST(request: Request) {
 
     const [{ data: valuationCase, error: caseError }, { data: listing, error: listingError }] = await Promise.all([
       supabase.from('valuation_cases').select('id,status,requested_by').eq('id', valuationCaseId).maybeSingle(),
-      supabase.from('market_current_listings').select('id,property_id,source_listing_id,status,url,title,normalized_address,price_uf,price_uf_m2,observed_at,published_at').eq('id', listingId).maybeSingle(),
+      service.from('market_current_listings')
+        .select('id,property_id,source_listing_id,status,url,title,normalized_address,price_uf,price_uf_m2,observed_at,published_at')
+        .eq('id', listingId)
+        .in('source_id', approvedSourceIds)
+        .eq('status', 'active')
+        .is('removed_at', null)
+        .gt('price_uf', 0)
+        .maybeSingle(),
     ])
     if (caseError || listingError) return NextResponse.json({ error: caseError?.message || listingError?.message }, { status: 500 })
     if (!valuationCase || !listing) return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 })
