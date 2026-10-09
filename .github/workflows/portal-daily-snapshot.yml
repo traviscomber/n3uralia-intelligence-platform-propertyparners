@@ -1,15 +1,11 @@
 name: Portal Daily Snapshot
 
 on:
+  # The direct Chrome/GitHub collector is a legacy manual diagnostic.
+  # It is blocked by Portal anti-bot protection in GitHub runners.
+  # Production updates use Bright Data /api/cron/market-delta and the
+  # verified /api/cron/market-refresh instead.
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'lib/serverless-browser.ts'
-      - 'lib/portal-inmobiliario-collector.ts'
-      - 'scripts/run-portal-external-snapshot.ts'
-      - 'app/api/internal/portal-github-ingest/route.ts'
-      - '.github/workflows/portal-daily-snapshot.yml'
 
 permissions:
   contents: read
