@@ -1,4 +1,6 @@
 import periodsData from '@/data/management-canonical-periods.json'
+import crmIntelligence from '@/data/crm-intelligence.json'
+import baseline2025Events from '@/data/management-baseline-2025-events.json'
 import type { DashboardEntity, DashboardMetric } from '@/lib/management-persisted-overlay'
 
 type OfficeSnapshot = {
@@ -72,6 +74,33 @@ type CanonicalPeriod = {
 }
 
 const canonicalPeriods = periodsData.periods as CanonicalPeriod[]
+
+function historical2025CompanyEvolution() {
+  let cumulativeSales = 0
+  const eventsByPeriod = new Map(
+    baseline2025Events.months.map((month) => [month.period, month]),
+  )
+  return crmIntelligence.baseline2025.months.map((month) => {
+    cumulativeSales += month.salesCount
+    const events = eventsByPeriod.get(month.period)
+    return {
+      period: month.period,
+      sales: month.salesCount,
+      salesTarget: null,
+      salesUf: month.salesUf,
+      salesUfTarget: null,
+      cumulativeSales,
+      cumulativeSalesTarget: null,
+      metrics: {
+        leads: events?.leadsCreated ?? null,
+        requirements: events?.requirementsCreated ?? null,
+        scheduled_visits: events?.visitsScheduledUnique ?? null,
+        realized_visits: events?.visitsRealizedUnique ?? null,
+      },
+      targets: {},
+    }
+  })
+}
 
 const percent = (value: number | null, target: number | null) =>
   value !== null && target !== null && target !== 0 ? (value / target) * 100 : null
@@ -232,7 +261,9 @@ export function getCanonicalManagementDashboardEntities(period = getLatestCanoni
       metric('follow_up_score', 'Seguimiento', 'score', company.followUpScore, sourceName, sourceReference, period.period, 70),
       metric('conversion', 'Conversión', 'score', company.conversionScore, sourceName, sourceReference, period.period, 70),
     ].filter((item) => item.value !== null),
-    evolution: canonicalPeriods.map((item) => ({
+    evolution: [
+      ...historical2025CompanyEvolution(),
+      ...canonicalPeriods.map((item) => ({
       period: item.period,
       sales: item.company.creditedClosings,
       salesTarget: item.company.canonicalClosingTarget,
@@ -258,6 +289,7 @@ export function getCanonicalManagementDashboardEntities(period = getLatestCanoni
         realized_visits: item.company.realizedVisits ?? null,
       },
     })),
+    ],
   }
 
   return [companyEntity, ...period.offices.map((office) => officeEntity(period, office))]
