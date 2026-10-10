@@ -224,3 +224,12 @@ test('director office PDF route is permissioned and rejects unscoped company dat
   assert.match(route,/officeVerified/)
   assert.match(route,/DIRECTOR_OFFICE_CANONICAL_SOURCE_REQUIRED/)
 })
+
+test('full partner editorial export reconciles signed nominal totals with canonical company totals', () => {
+  const route=source('app/api/management/reports/[id]/partner-editorial/route.ts')
+  assert.match(route,/PARTNER_SIGNED_TOTAL_MISSING/)
+  assert.match(route,/PARTNER_SIGNED_TOTAL_MISMATCH/)
+  assert.match(route,/checked\.netClosures/)
+  assert.match(route,/checked\.netUf/)
+  assert.match(route,/requireCapability\('reports\.global\.read'\)/)
+})
