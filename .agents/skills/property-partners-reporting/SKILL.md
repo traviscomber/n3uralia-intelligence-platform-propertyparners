@@ -31,3 +31,6 @@ Apply to every monthly report, PDF, export, report preview, report design review
 
 ## Runtime note
 Skill text in Git does not execute by itself. Production gates belong in executable validation modules and CI tests; this document defines their required behavior.
+
+## Mandatory delivery shape — Pedro Pablo
+Generate **three separate PDF artifacts**, never one consolidated cross-audience PDF: (1) CEO / Directorio, (2) Directoras, and (3) Partners. A ZIP is permitted only as a convenience containing the three individually named PDFs. Directoras access must remain office-scoped for individual authorized recipients, without exposing other offices. Shared design tokens do not imply shared PDF contents.
