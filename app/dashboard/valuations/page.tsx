@@ -83,7 +83,7 @@ export default function ValuationRegistryPage() {
   const actionCount = isReviewer ? counts.review : counts.review + counts.draft
 
   if (loading && cases.length === 0) {
-    return <WorkspaceShell><OperationalState kind="loading" title="Cargando valorizaciones" description="Consultando expedientes, estados y valores autorizados." /></WorkspaceShell>
+    return <WorkspaceShell><OperationalState kind="loading" title="Cargando valorizaciones" description="Estamos buscando tus casos." /></WorkspaceShell>
   }
 
   if (error && cases.length === 0) {

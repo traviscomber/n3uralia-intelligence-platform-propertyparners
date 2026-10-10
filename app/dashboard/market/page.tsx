@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, ExternalLink, FileText, MapPinned } from 'lucide-react'
+import { ArrowRight, ExternalLink, MapPinned } from 'lucide-react'
 import { WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { hasCapability } from '@/lib/access-control'
 import { requireUserScope } from '@/lib/access-guards'
@@ -83,12 +83,12 @@ export default async function MarketPage() {
 
   return <WorkspaceShell contentClassName="w-full min-w-0 max-w-[1250px]">
     <WorkspaceHeader
-      eyebrow="Inteligencia inmobiliaria"
+      eyebrow="Mercado"
       title="Mercado de Vitacura"
       meta="Casas y departamentos · Propiedades en venta"
       actions={[
         ...(canExploreInventory ? [{ label: 'Explorar oferta', href: '/dashboard/market/oferta', primary: true }] : []),
-        { label: 'Informe de mercado', href: '/dashboard/market/export', icon: <FileText size={15} aria-hidden="true" /> },
+
       ]}
     />
 
@@ -260,7 +260,7 @@ export default async function MarketPage() {
     </section>
 
     <details className="mt-7 border-b border-[var(--n3-line)] pb-4 text-xs">
-      <summary className="flex min-h-11 cursor-pointer items-center text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Fuentes y alcance de los datos</summary>
+      <summary className="flex min-h-11 cursor-pointer items-center text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver fuentes y fechas</summary>
       <div className="mt-3 grid gap-5 pb-3 leading-6 text-[var(--n3-text-muted)] sm:grid-cols-3">
         <div><p className="font-semibold text-[var(--n3-text-light)]">Portal Inmobiliario</p><p>Oferta de casas y departamentos en venta en Vitacura. Las novedades son avisos incorporados hoy, no todos los anuncios modificados. Las revisiones completas y diarias se informan por separado.</p></div>
         <div><p className="font-semibold text-[var(--n3-text-light)]">CBRS Vitacura</p><p>Compraventas residenciales efectivamente inscritas. Último año completo visualizado: {latestYear}. {market.cbrsSourceEnd ? 'Fuente entregada hasta ' + market.cbrsSourceEnd.slice(0, 10) + '.' : 'Última fecha documental no disponible.'}</p></div>
