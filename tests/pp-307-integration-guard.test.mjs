@@ -82,3 +82,14 @@ test('automatic CEO draft job stays disabled until source, dedupe and access gat
   const vercel = source('vercel.json')
   assert.doesNotMatch(vercel, /\/api\/cron\/ceo-intelligence-draft/)
 })
+
+test('canonical PDF invokes PDFino brand and document preflight on every export', () => {
+  const generator = source('lib/reportin-canonical-pdf.ts')
+  const qa = source('lib/pdfino-report-quality.ts')
+  assert.match(generator, /public\/brand\/property-partners-vitacura\.png/)
+  assert.match(generator, /pdf\.embedPng\(logoBytes\)/)
+  assert.match(generator, /pdf\.save\(\)/)
+  assert.match(generator, /await verifyPdfinoReport\(bytes/)
+  assert.match(qa, /PDFINO_PAGE_SIZE_INVALID/)
+  assert.match(qa, /PDFINO_TITLE_MISMATCH/)
+})
