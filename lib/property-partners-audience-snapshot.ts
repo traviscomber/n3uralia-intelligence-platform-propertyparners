@@ -50,3 +50,30 @@ export function verifyAudienceSnapshot(snapshot: AudienceSnapshot): Reconciliati
   if (netClosures !== officeClosures || netUf !== officeUf) throw new Error('REPORT_OFFICE_CLOSURE_RECONCILIATION_FAILED')
   return { period: start.slice(0, 7), netClosures, netUf, officeClosures, officeUf }
 }
+
+/** Detail gate for a full audience export. Do not invoke on summary-only legacy reports. */
+export type SignedOperation = {
+  partner: string
+  office: string
+  closureCount: number
+  uf: number
+  originPeriod: string
+  adjustment: boolean
+}
+export function verifyAudienceOperations(
+  period: string,
+  operations: SignedOperation[],
+  totals: Pick<ReconciliationResult, 'netClosures' | 'netUf'>,
+): void {
+  if (!operations.length) throw new Error('REPORT_OPERATIONS_MISSING')
+  for (const op of operations) {
+    if (!op.partner.trim() || !OFFICES.includes(op.office as typeof OFFICES[number])) throw new Error('REPORT_OPERATION_IDENTITY_MISSING')
+    if (!Number.isInteger(op.closureCount) || !Number.isFinite(op.uf)) throw new Error('REPORT_OPERATION_INVALID_VALUE')
+    if (!/^\d{4}-\d{2}$/.test(op.originPeriod)) throw new Error('REPORT_OPERATION_ORIGIN_MISSING')
+    if (op.adjustment && (op.closureCount >= 0 || op.uf >= 0 || op.originPeriod >= period)) throw new Error('REPORT_OPERATION_ADJUSTMENT_INVALID')
+    if (!op.adjustment && (op.closureCount <= 0 || op.uf <= 0 || op.originPeriod !== period)) throw new Error('REPORT_OPERATION_PERIOD_MISMATCH')
+  }
+  const sumCount = operations.reduce((s, op) => s + op.closureCount, 0)
+  const sumUf = operations.reduce((s, op) => s + op.uf, 0)
+  if (sumCount !== totals.netClosures || sumUf !== totals.netUf) throw new Error('REPORT_OPERATIONS_RECONCILIATION_FAILED')
+}
