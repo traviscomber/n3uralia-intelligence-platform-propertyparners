@@ -83,7 +83,7 @@ export default async function MarketPage() {
 
   return <WorkspaceShell contentClassName="w-full min-w-0 max-w-[1250px]">
     <WorkspaceHeader
-      eyebrow="Inteligencia inmobiliaria"
+      eyebrow="Mercado"
       title="Mercado de Vitacura"
       meta="Casas y departamentos · Propiedades en venta"
       actions={[
@@ -165,7 +165,7 @@ export default async function MarketPage() {
     <section id="ventas" aria-labelledby="sales-title" className="mt-12 scroll-mt-6">
       <div className="border-b border-[var(--n3-line)] pb-4">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">03 · Oferta y compraventas</p>
-        <h2 id="sales-title" className="mt-2 text-2xl font-semibold tracking-tight">Lo publicado no es lo vendido</h2>
+        <h2 id="sales-title" className="mt-2 text-2xl font-semibold tracking-tight">Oferta y ventas reales</h2>
         <p className="mt-2 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Portal registra precios pedidos y publicaciones; CBRS registra inscripciones de compraventa. Los períodos son distintos y no se calcula absorción con estas cifras.</p>
       </div>
       <div className="mt-4 hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] border-b border-[var(--n3-line)] pb-3 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)] sm:grid">
@@ -260,7 +260,7 @@ export default async function MarketPage() {
     </section>
 
     <details className="mt-7 border-b border-[var(--n3-line)] pb-4 text-xs">
-      <summary className="flex min-h-11 cursor-pointer items-center text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Fuentes y alcance de los datos</summary>
+      <summary className="flex min-h-11 cursor-pointer items-center text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver fuentes y fechas</summary>
       <div className="mt-3 grid gap-5 pb-3 leading-6 text-[var(--n3-text-muted)] sm:grid-cols-3">
         <div><p className="font-semibold text-[var(--n3-text-light)]">Portal Inmobiliario</p><p>Oferta de casas y departamentos en venta en Vitacura. Las novedades son avisos incorporados hoy, no todos los anuncios modificados. Las revisiones completas y diarias se informan por separado.</p></div>
         <div><p className="font-semibold text-[var(--n3-text-light)]">CBRS Vitacura</p><p>Compraventas residenciales efectivamente inscritas. Último año completo visualizado: {latestYear}. {market.cbrsSourceEnd ? 'Fuente entregada hasta ' + market.cbrsSourceEnd.slice(0, 10) + '.' : 'Última fecha documental no disponible.'}</p></div>
