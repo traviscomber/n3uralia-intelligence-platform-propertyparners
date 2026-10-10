@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAnyCapability, accessErrorResponse } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 import { verifyDirectorOfficeReportScope } from '@/lib/property-partners-director-report-scope'
-import { buildManagementReportPdf, type ManagementReportRecord } from '@/lib/management-report-artifact'
+import { buildDirectorOfficeEditorialPdf, type DirectorOfficeEditorial } from '@/lib/property-partners-director-editorial-pdf'
 
 export const runtime='nodejs'
 /** Office-scoped document. Never falls back to a corporate/global snapshot. */
@@ -28,7 +28,10 @@ export async function GET(_request:Request,context:{params:Promise<{id:string}>}
     // must be issued from an office-only source, never filtered after rendering.
     if(snap.audiencePartnerRows || snap.audienceOperations || snap.offices || !snap.officeVerified)
       throw new Error('DIRECTOR_OFFICE_CANONICAL_SOURCE_REQUIRED')
-    const artifact=await buildManagementReportPdf(data as ManagementReportRecord)
+    const editorial=snap.officeEditorial as DirectorOfficeEditorial | undefined
+    if(!editorial || editorial.office!==scope.officeName || editorial.period!==data.period_start.slice(0,7) || editorial.sourceId!==snap.sourceSnapshotId)
+      throw new Error('DIRECTOR_EDITORIAL_SOURCE_MISMATCH')
+    const artifact=await buildDirectorOfficeEditorialPdf(editorial)
     return new Response(Buffer.from(artifact.bytes),{headers:{
       'Content-Type':'application/pdf',
       'Content-Disposition':`attachment; filename="${artifact.filename}"`,
