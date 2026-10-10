@@ -93,3 +93,11 @@ test('canonical PDF invokes PDFino brand and document preflight on every export'
   assert.match(qa, /PDFINO_PAGE_SIZE_INVALID/)
   assert.match(qa, /PDFINO_TITLE_MISMATCH/)
 })
+
+test('CEO intelligence PDF uses the same approved brand and preflight', () => {
+  const generator = source('lib/reportin-ceo-intelligence-pdf.ts')
+  assert.match(generator, /public\/brand\/property-partners-vitacura\.png/)
+  assert.match(generator, /pdf\.embedPng\(logoBytes\)/)
+  assert.match(generator, /await verifyPdfinoReport\(bytes/)
+  assert.match(generator, /minPages: 8/)
+})
