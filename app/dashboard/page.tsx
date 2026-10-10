@@ -10,19 +10,19 @@ const modules = [
   {
     number: '01',
     title: 'Inteligencia de Mercado',
-    description: 'Oferta activa, fuentes, barrios, calidad y trazabilidad. Las ventas registrales CBRS se mantienen separadas de la oferta y las métricas recientes quedan N/D cuando no existe evidencia suficiente.',
+    description: 'Revisa la oferta, los barrios y los cambios recientes del mercado.',
     href: '/dashboard/market',
   },
   {
     number: '02',
     title: 'Valorización de Propiedades',
-    description: 'Creación de casos en borrador, comparables documentados, ajustes, revisión, aprobación, expediente y registro de decisiones.',
+    description: 'Prepara, revisa y aprueba valorizaciones de propiedades.',
     href: '/dashboard/valuations',
   },
   {
     number: '03',
     title: 'Control de Gestión Comercial',
-    description: 'Métricas persistidas, reconciliación, alertas y reportes por rol. Metas, rankings y automatización recurrente sólo se activan con definiciones aprobadas por Property Partners.',
+    description: 'Consulta resultados, alertas y tareas del equipo.',
     href: '/dashboard/control',
   },
 ]
