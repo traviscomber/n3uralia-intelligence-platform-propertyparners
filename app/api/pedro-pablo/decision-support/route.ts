@@ -6,6 +6,7 @@ import { PEDRO_PABLO_EXECUTIVE_PROFILE } from '@/lib/pedro-pablo/executive-profi
 import { routePedroPabloPrompt } from '@/lib/pedro-pablo/agentic-router'
 import { PEDRO_PABLO_ALIGNMENT_CONTRACT, PEDRO_PABLO_VITACURA_EXPERTISE, detectOutOfScopeMarket, expertiseCardsForPrompt } from '@/lib/pedro-pablo/vitacura-expertise'
 import { getMarketOpportunityPulse, type MarketOpportunityPulse } from '@/lib/market-opportunity-intelligence'
+import { evaluateDataReadiness, type DataEvidenceRef } from '@/lib/intelligence/data-readiness'
 
 type Evidence = {
   label: string
@@ -631,6 +632,52 @@ export async function POST(request: NextRequest) {
   const proposals = buildProposals(response)
   const scope = await requireUserScope()
   const canCreateTask = hasCapability(scope.role, 'tasks.global.manage') || hasCapability(scope.role, 'tasks.office.manage')
+  const readinessEvidence: DataEvidenceRef[] = response.evidence.map((item, index) => {
+    const source = item.source || 'unknown-source'
+    const sourceLower = source.toLowerCase()
+    const authority = sourceLower.includes('valuation_cases') ||
+      sourceLower.includes('valuation_comparables') ||
+      sourceLower.includes('alcance autorizado') ||
+      sourceLower.includes('approved')
+      ? 'canonical'
+      : sourceLower.includes('portal inmobiliario') || sourceLower.includes('cbrs')
+        ? 'official'
+        : 'external'
+    return {
+      id: `pedro-pablo:${index}`,
+      source,
+      sourceRef: item.reference || `${source}:${item.label}`,
+      subjectType: valuationCaseId ? 'valuation_case' : 'authorized_operating_context',
+      subjectId: valuationCaseId || 'pedro-pablo-authorized-context',
+      field: item.domain || 'evidence',
+      authority,
+      observedAt: item.cutoff || null,
+      verificationStatus: authority === 'canonical' ? 'verified' : 'unverified',
+      valuePresent: true,
+      valueKey: item.label,
+    }
+  })
+  const dataReadiness = evaluateDataReadiness(
+    {
+      canonicalEntityId: valuationCaseId || 'pedro-pablo-authorized-context',
+      authorizationChecked: true,
+      canonicalSelectionChecked: response.evidence.length > 0,
+      evidence: readinessEvidence,
+      decisionTime: new Date().toISOString(),
+    },
+    {
+      version: 'property-partners-pedro-pablo-observe-v1',
+      minEvidence: 1,
+      requireCanonicalIdentity: true,
+      requireAuthorization: true,
+      requireCanonicalSelection: true,
+      requireProvenance: true,
+      requireVerifiedEvidence: false,
+      blockOnMissingRequired: true,
+      blockOnContradiction: true,
+      blockOnStale: false,
+    },
+  )
   const directorSupport = scope.role === 'director' || scope.role === 'subdirector'
   const assistantProfile = directorSupport
     ? {
@@ -663,6 +710,7 @@ export async function POST(request: NextRequest) {
     proposalPolicy: 'pedro-pablo-proposal-contract-v4-reports-aware',
     executionPolicy: 'human-confirmation-required',
     executableWrites: 0,
+    dataReadiness: { mode: 'observe', ...dataReadiness },
     routing,
     seniorRealEstate: {
       active: seniorExpertise.length > 0,
