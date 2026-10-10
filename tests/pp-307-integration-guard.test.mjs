@@ -126,3 +126,10 @@ test('embedded reporting skill follows canonical DESIGN.md and protects all thre
     assert.ok(skill.includes(requirement), 'missing reporting skill requirement: ' + requirement)
   }
 })
+
+test('legacy management PDF uses approved logo bytes instead of invented monogram', () => {
+  const generator = source('lib/management-report-artifact.ts')
+  assert.match(generator, /public\/brand\/property-partners-vitacura\.png/)
+  assert.match(generator, /page\.drawImage\(approvedLogo/)
+  assert.doesNotMatch(generator, /page\.drawText\('P', \{ x, y, size/)
+})
