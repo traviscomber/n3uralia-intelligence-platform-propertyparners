@@ -8,6 +8,7 @@ async function makePdf(audience: string) {
   const doc = await PDFDocument.create()
   for (let i = 0; i < 4; i++) doc.addPage([595.28, 841.89])
   doc.setTitle('Canonical ' + audience)
+  doc.setSubject(`PP_REPORT|${audience}|2026-09|pedro-septiembre-approved`)
   const bytes = await doc.save({ useObjectStreams: false })
   const padded = new Uint8Array(Math.max(1600, bytes.length))
   padded.set(bytes)
@@ -81,4 +82,13 @@ test('release rejects audience PDF generated from different month or evidence ve
   const wrongSnapshot = fixture()
   wrongSnapshot.artifacts[2].sourceEvidenceVersion = 'other-snapshot'
   await assert.rejects(() => verifyMonthlyReportRelease(wrongSnapshot), /SOURCE_VERSION_MISMATCH/)
+})
+
+test('release rejects a PDF whose embedded identity contradicts its manifest', async () => {
+  pdfs = Object.fromEntries(await Promise.all(['ceo','directoras','partners'].map(async audience => [audience, await makePdf(audience)] as const)))
+  const p = fixture()
+  const altered = await PDFDocument.load(p.artifacts[0].bytes)
+  altered.setSubject('PP_REPORT|ceo|2026-08|pedro-septiembre-approved')
+  p.artifacts[0].bytes = await altered.save()
+  await assert.rejects(() => verifyMonthlyReportRelease(p), /EMBEDDED_EVIDENCE_MISMATCH/)
 })
