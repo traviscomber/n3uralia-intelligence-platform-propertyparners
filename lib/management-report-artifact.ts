@@ -517,12 +517,14 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
       page.drawText(period, { x: M, y: 724, size: 10, font: regular, color: PP_MUTED })
       page.drawText('Partner / agente', { x: M, y: 680, size: 8, font: bold, color: PP_TEXT })
       page.drawText('Oficina', { x: 285, y: 680, size: 8, font: bold, color: PP_TEXT })
-      page.drawText('UF netas', { x: 475, y: 680, size: 8, font: bold, color: PP_TEXT })
+      page.drawText('Cierres', { x: 424, y: 680, size: 8, font: bold, color: PP_TEXT })
+      page.drawText('UF netas', { x: 485, y: 680, size: 8, font: bold, color: PP_TEXT })
       for (const [index, op] of operations.slice(n * perPage, (n + 1) * perPage).entries()) {
         const y = 653 - index * 32
         drawWrapped(page, op.partner, M, y, 244, { size: 8, maxLines: 2, leading: 9 })
-        drawWrapped(page, op.office, 285, y, 165, { size: 7.5, maxLines: 2, leading: 9 })
-        page.drawText(format(op.uf), { x: 475, y, size: 9, font: bold, color: op.uf < 0 ? PP_RED_SOFT : PP_TEXT })
+        drawWrapped(page, op.office, 285, y, 125, { size: 7.5, maxLines: 2, leading: 9 })
+        page.drawText(format(op.closureCount), { x: 424, y, size: 8.5, font: bold, color: op.closureCount < 0 ? PP_RED_SOFT : PP_TEXT })
+        page.drawText(format(op.uf), { x: 485, y, size: 9, font: bold, color: op.uf < 0 ? PP_RED_SOFT : PP_TEXT })
         if (op.adjustment) page.drawText('AJUSTE HISTÓRICO ' + op.originPeriod, { x: M, y: y - 13, size: 6.5, font: regular, color: PP_RED_SOFT })
       }
       footer(page, `${n + 4}/${3 + totalPages}`)
