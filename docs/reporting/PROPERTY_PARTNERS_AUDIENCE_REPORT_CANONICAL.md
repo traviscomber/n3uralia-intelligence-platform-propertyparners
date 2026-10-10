@@ -39,3 +39,20 @@ Este contrato prevalece sobre versiones resumidas de cuatro páginas. No sustitu
 Los builders, cron y endpoints de exportación deben consultar este documento y usar un esquema versionado de secciones y evidencia. Validar por audiencia que están todas las secciones y filas antes de generar PDF; rechazar exportaciones que omitan puente histórico, detalle nominal o fuentes. Generación PDF invoca `verifyPdfinoReport`, pero ese preflight estructural por sí solo NO valida semántica ni legibilidad: se requiere test de dataset representativo y render visual en CI. No crear nuevos formatos simplificados al margen de este contrato.
 
 **Nota**: las tres plantillas de octubre 1 son precedentes editoriales auditados; la estructura se reutiliza, pero ninguna cifra de septiembre se debe copiar a meses futuros.
+
+## 5. Identidad visual de informes — DESIGN.md obligatorio
+
+**La página ppartnersgroup.app es referencia de producto, pero la autoridad ejecutable reside en los recursos aprobados y en DESIGN.md.** No usar capturas generadas por IA ni mockups sintéticos como contenido del informe: pueden inventar cierres, oficinas líderes, agentes, comparativos y fotografías. El generador debe usar exclusivamente imágenes de marca aprobadas en el repositorio, nunca recrear logos por IA.
+
+- Página editorial A4 blanca; portada e interiores comparten retícula, familia tipográfica del proyecto, márgenes, rojo estructural y blanco/negro de DESIGN.md. La portada puede tener recursos editoriales autorizados; **no** asumir fotografía inmobiliaria genérica como imagen oficial.
+- Rediseñar secciones completas, no adjuntar páginas de otro estilo ni duplicar anexos para simular profundidad.
+- CEO: mantener conciliación bruto + suspensión histórica + neto; tabla de siete operaciones, y tabla completa de seguimiento de tres oficinas **en contexto**; comparar agosto y septiembre con unidades, procedencia, y no confundir stock/flujo.
+- Directoras: por cada oficina, una misma gramática visual con denominadores explícitos, tabla MoM, seguimiento A >15 días y >90 días; exportación por perfil siempre acotada por RBAC en servidor.
+- Partners: conservar todas las 37 filas del **ejemplo septiembre**, con nombre y cifras exactas (el número de personas en otros períodos es variable); nombres legibles y una tabla por oficina con cabeceras claras; los ceros verificados y cifras negativas no se omiten.
+- Escala de tipografía legible en impresión A4; no comprimir tablas hasta volverlas ilegibles. Usar más páginas cuando sea necesario para preservar tamaño de letra y desglose.
+- En toda página: período y corte, numeración real, entidad autorizada, estados N/D, y enlace/sección de trazabilidad a fuentes; no inventar porcentajes MoM ni conclusiones como «stock más sano» sin evidencia.
+- **Release gate**: pruebas semánticas de cobertura por audiencia más render-to-PNG de todas las páginas; comparación contra el set canónico y control visual de tipografía, no solo pdf-lib y build verde.
+
+### Evidencia mínima para aprobar cada versión
+
+El manifiesto de validación debe registrar: versión del snapshot, período, archivos/evidencias, listado de secciones por audiencia, cantidad de filas de operaciones y de partners, conciliación UF y de cierres, resultado del test de RBAC, inventario de páginas renderizadas e inspección visual. Si falta cualquiera, estado HOLD; no enviar al cliente.
