@@ -55,7 +55,7 @@
     "management:comparisons:verify": "node --import tsx scripts/verify-management-report-comparisons.ts",
     "management:sources:verify": "node --import tsx scripts/verify-management-source-contracts-2025.ts",
     "management:2025:prepare": "node --import tsx scripts/prepare-2025-granular-import.ts",
-    "management:report-release:verify": "node --import tsx --test tests/property-partners-report-release.test.ts tests/property-partners-audience-snapshot.test.ts && node --import tsx scripts/verify-ceo-editorial-pdf.ts",
+    "management:report-release:verify": "node --import tsx --test tests/property-partners-report-release.test.ts tests/property-partners-audience-snapshot.test.ts tests/property-partners-director-report-scope.test.ts && node --import tsx scripts/verify-ceo-editorial-pdf.ts",
     "management:gate": "pnpm management:report-release:verify && pnpm access:verify && pnpm management:scoring:verify && pnpm management:reports:verify && pnpm management:persisted:verify && pnpm management:reconciliation:verify && pnpm management:delivery:verify && pnpm management:semantics:verify && pnpm management:comparisons:verify && pnpm management:sources:verify",
     "reportin:verify": "tsx --tsconfig scripts/tsconfig.reportin.json scripts/verify-reportin-canonical-pdf.ts",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
