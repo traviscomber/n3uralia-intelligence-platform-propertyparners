@@ -158,6 +158,8 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold)
 
   const snapshot = record(report.snapshot) ?? {}
+  const nominalAppendixPages = Array.isArray(snapshot.audienceOperations) ? Math.ceil(snapshot.audienceOperations.length / 18) : 0
+  const finalPageCount = 3 + nominalAppendixPages
   const company = record(snapshot.company) ?? {}
   const completeness = record(snapshot.completeness) ?? {}
   const provenance = record(snapshot.provenance) ?? {}
@@ -303,7 +305,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   p1.drawText('Leads   |   Captaciones   |   Visitas   |   Requerimientos online   |   Cierres   |   Cartera   |   Suspendidas', { x: 44, y: 151, size: 6.8, font: regular, color: MUTED })
   const generatedLabel = generatedAt ? `Generado: ${generatedAt}` : 'Snapshot persistido del sistema de control de gestión'
   drawWrapped(p1, `${generatedLabel}  ·  ID: ${report.id}`, 44, 130, W - 88, { size: 6.3, color: MUTED, leading: 8, maxLines: 2 })
-  footer(p1, '1/3', false)
+  footer(p1, `1/${finalPageCount}`, false)
 
   // PAGE 2 — premium commercial performance
   const p2 = pdf.addPage([W, H])
@@ -420,7 +422,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     ? 'La serie de visitas no está disponible de forma canónica para este período; el reporte conserva esos campos como n/d y no infiere valores.'
     : `Se registran ${format(company.visitasAgendadas)} visitas agendadas y ${format(company.visitasRealizadas)} realizadas, equivalentes a ${format(company.cumplimientoVisitas, '%')} de cumplimiento.`
   drawWrapped(p2, visitNarrative, M + 58, 105, W - M * 2 - 76, { size: 7.8, color: PP_MUTED, leading: 11, maxLines: 4 })
-  footer(p2, '2/3')
+  footer(p2, `2/${finalPageCount}`)
 
   // PAGE 3 — premium evidence, quality and methodology
   const p3 = pdf.addPage([W, H])
@@ -492,7 +494,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     p3.drawText('Archivos fuente', { x: methodX, y: 94, size: 6.5, font: bold, color: PP_TEXT })
     drawWrapped(p3, sources.join(' · '), methodX, 81, methodW, { size: 5.2, color: PP_MUTED, leading: 6.8, maxLines: 3 })
   }
-  footer(p3, '3/3')
+  footer(p3, `3/${finalPageCount}`)
 
   // Optional full-detail appendix: show only audited nominal operations supplied by the
   // canonical audience export. Never infer operations from aggregate management KPIs.
