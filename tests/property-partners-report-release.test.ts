@@ -28,6 +28,8 @@ function fixture() {
       brandVerified: true,
       accessScopeVerified: true,
       visualInspectionVerified: true,
+      sourcePeriod: '2026-09',
+      sourceEvidenceVersion: 'pedro-septiembre-approved',
     })),
   }
 }
@@ -69,4 +71,14 @@ test('release rejects a report filename assigned to another period', async () =>
   const p = fixture()
   p.artifacts[1].filename = 'directoras-2026-08.pdf'
   await assert.rejects(() => verifyMonthlyReportRelease(p), /PERIOD_NOT_IN_FILENAME/)
+})
+
+test('release rejects audience PDF generated from different month or evidence version', async () => {
+  pdfs = Object.fromEntries(await Promise.all(['ceo','directoras','partners'].map(async audience => [audience, await makePdf(audience)] as const)))
+  const wrongMonth = fixture()
+  wrongMonth.artifacts[1].sourcePeriod = '2026-08'
+  await assert.rejects(() => verifyMonthlyReportRelease(wrongMonth), /SOURCE_PERIOD_MISMATCH/)
+  const wrongSnapshot = fixture()
+  wrongSnapshot.artifacts[2].sourceEvidenceVersion = 'other-snapshot'
+  await assert.rejects(() => verifyMonthlyReportRelease(wrongSnapshot), /SOURCE_VERSION_MISMATCH/)
 })
