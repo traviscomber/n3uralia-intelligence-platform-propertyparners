@@ -34,3 +34,9 @@ Skill text in Git does not execute by itself. Production gates belong in executa
 
 ## Mandatory delivery shape — Pedro Pablo
 Generate **three separate PDF artifacts**, never one consolidated cross-audience PDF: (1) CEO / Directorio, (2) Directoras, and (3) Partners. A ZIP is permitted only as a convenience containing the three individually named PDFs. Directoras access must remain office-scoped for individual authorized recipients, without exposing other offices. Shared design tokens do not imply shared PDF contents.
+
+## Excelencia documental 9.7 — acceptance scorecard (binding workflow)
+Score out of 100: complete original numeric, nominal and narrative coverage (30); reconciliation, source period and lineage (20); approved DESIGN.md visual design, readability, tables/charts, logo, pagination (20); decision value by audience (10); RBAC and safe distribution (10); rendered-page inspection and repeatable QA (10).
+Approve only at >=97/100 and with zero omissions, fake figures, wrong signed corrections, unauthorized office exposure or uninspected pages. Otherwise HOLD/BLOCK regardless of build status.
+For each of the three separately delivered PDFs, produce a section-by-section source-to-output inventory: original file/page/section, original row count, output page, preserved/changed/omitted status and evidence. Never replace 37 nominal partner rows (September example) with summary-only charts. Keep the July -22,000 UF correction and its signed attribution. Other reporting months use their own canonical data.
+PDF-embedded audience/period/snapshot checks and code tests are necessary but not sufficient. Link the release gate to the real export flow, render and inspect every page, and prove the contents against the approved source documents. A skill file alone does not execute runtime gates.
