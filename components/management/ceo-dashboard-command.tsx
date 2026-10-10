@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Download, FileText, RefreshCw } from 'lucide-react'
+import { ArrowRight, RefreshCw } from 'lucide-react'
 import { DataStatusBar, MetricStrip, WorkspaceHeader, WorkspaceShell } from '@/components/ui/workspace'
 import { getDecisionThreshold } from '@/lib/management-decision-policy'
 import { AugustBoardReading, type AugustBoardEntity } from '@/components/management/august-board-reading'
@@ -37,7 +37,6 @@ const uf = (value: number | null | undefined) => value == null ? '—' : `${n(va
 const ratio = (value: number | null | undefined, target: number | null | undefined) => value != null && target != null && target !== 0 ? value / target * 100 : null
 const tone = (value: number | null | undefined): 'default' | 'success' | 'warning' | 'danger' => value == null ? 'default' : value >= 100 ? 'success' : value >= 80 ? 'warning' : 'danger'
 const periodName = (period: string) => { const [year, month] = period.split('-').map(Number); return new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, 1))) }
-const csv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`
 const metric = (point: Point | undefined, code: string) => point?.metrics?.[code] ?? null
 const riskLabel = (risk: Risk) => risk === 'high' ? 'Alto' : risk === 'medium' ? 'Medio' : risk === 'low' ? 'Bajo' : 'Sin evidencia'
 const riskClass = (risk: Risk) => risk === 'high' ? 'text-[#ff8d87]' : risk === 'medium' ? 'text-[#f0c96a]' : risk === 'low' ? 'text-[#78d59a]' : 'text-[var(--n3-text-muted)]'
@@ -199,33 +198,6 @@ export function CeoDashboardCommand() {
     return items.sort((a, b) => b.priority - a.priority).slice(0, 5)
   }, [intelligence, operations])
 
-  function exportData() {
-    if (!selected || !operations || !period) return
-    const rows = [
-      ['Periodo', period],
-      ['Operaciones corporativas', selected.sales],
-      ['Meta', selected.salesTarget],
-      ['Cumplimiento', compliance],
-      ['Brecha', gap],
-      ['UF corporativas', selected.salesUf],
-      ['Crédito comercial', selectedMetrics.management_credited_sales],
-      ['Operaciones en alcance', selectedMetrics.sales_operations_in_scope],
-      ['UF acreditadas', selectedMetrics.management_credited_sales_uf],
-      ['Leads activos', selectedMetrics.active_leads_snapshot],
-      ['Leads +90 días', selectedMetrics.stale_90_leads],
-      ['Leads sin clasificar', selectedMetrics.unclassified_leads],
-      ['Visitas agendadas', selectedMetrics.scheduled_visits],
-      ['Visitas realizadas', selectedMetrics.realized_visits],
-      ['Stock', selectedMetrics.stock],
-      ['Suspendidas', selectedMetrics.suspended_listings],
-      ['Acumulado', cumulativeSales],
-      ['Meta acumulada', cumulativeSalesTarget],
-      ['Tareas vencidas', operations.tasks.overdue],
-      ['Tareas urgentes', operations.tasks.urgent],
-    ]
-    const blob = new Blob([rows.map((row) => row.map(csv).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `ceo-${period}.csv`; link.click(); URL.revokeObjectURL(url)
-  }
 
   if (loading) return <WorkspaceShell><div role="status" aria-busy="true" className="py-8 text-sm text-[var(--n3-text-muted)]">Cargando datos canónicos…</div></WorkspaceShell>
   if (failed || !summary || !operations) return <WorkspaceShell><button onClick={() => void load()} className="inline-flex min-h-10 items-center gap-2 bg-[var(--primary)] px-4 text-sm font-semibold"><RefreshCw size={16} /> Reintentar</button></WorkspaceShell>
@@ -246,7 +218,7 @@ export function CeoDashboardCommand() {
   const coverageLabel = `${identityCoverage === null ? 'Identidad —' : `Identidad ${n(identityCoverage, 1)}%`} · Aprobadas ${n(approvedMetricCount)}`
 
   return <WorkspaceShell contentClassName="max-w-[1480px]">
-    <WorkspaceHeader eyebrow="Control Tower" title="Cierre de gestión" controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }, { label: 'Informe', href: `/dashboard/reportes/operacion?period=${encodeURIComponent(period)}`, primary: true, icon: <FileText size={14} /> }, { label: 'Exportar', onClick: exportData, icon: <Download size={14} />, ariaLabel: 'Exportar' }]} />
+    <WorkspaceHeader eyebrow="Control Tower" title="Cierre de gestión" controls={<div><label htmlFor="ceo-period" className="text-[10px] uppercase tracking-[0.16em] text-[var(--n3-text-muted)]">Período</label><select id="ceo-period" value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block min-h-11 min-w-56 border border-[var(--n3-line)] bg-[var(--n3-deep)] px-3 text-base font-semibold capitalize text-[var(--n3-text-light)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--n3-teal-soft)]">{periods.map((item) => <option key={item} value={item}>{periodName(item)}</option>)}</select></div>} meta={`Corte ${freshness}`} actions={[{ label: 'Actualizar', onClick: () => void load(), icon: <RefreshCw size={14} />, ariaLabel: 'Actualizar' }]} />
     {period === '2026-08' && augustCompany
       ? <AugustBoardReading entity={augustCompany} sourceFile={augustBoard?.source.file ?? 'Ago_Directorio.pptx'} />
       : <MetricStrip items={[{ label: 'Resultado', value: <>{n(selected?.sales)} <span className="text-base text-[var(--n3-text-muted)]">/ {n(selected?.salesTarget)}</span></>, detail: creditedDetail }, { label: 'Cumplimiento', value: pct(compliance), tone: tone(compliance) }, { label: 'UF', value: uf(selected?.salesUf), detail: usesCommercialCredit ? `${uf(selectedMetrics.management_credited_sales_uf)} acreditadas` : undefined }, { label: 'Acumulado', value: n(cumulativeSales), detail: pct(cumulativeCompliance), tone: tone(cumulativeCompliance) }]} />}
