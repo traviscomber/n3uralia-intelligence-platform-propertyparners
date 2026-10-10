@@ -143,3 +143,12 @@ test('management PDF embeds actual report dates and a SHA-256 fingerprint of its
   assert.match(generator, /report\.period_start/)
   assert.match(generator, /report\.period_end/)
 })
+
+test('download route verifies PDF subject and source snapshot hash before response', () => {
+  const route = source('app/api/management/reports/[id]/artifact/route.ts')
+  assert.match(route, /PDFDocument\.load\(artifact\.bytes\)/)
+  assert.match(route, /createHash\('sha256'\)/)
+  assert.match(route, /JSON\.stringify\(normalized\.snapshot\)/)
+  assert.match(route, /document\.getSubject\(\) !== expectedSubject/)
+  assert.match(route, /REPORT_ARTIFACT_SOURCE_MISMATCH/)
+})
