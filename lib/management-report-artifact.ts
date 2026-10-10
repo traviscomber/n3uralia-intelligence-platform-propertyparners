@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { verifyPdfinoReport } from './pdfino-report-quality'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
@@ -139,6 +141,10 @@ function blockerLabel(code: string) {
 
 export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const pdf = await PDFDocument.create()
+  const logoBytes = await readFile(join(process.cwd(), 'public/brand/property-partners-vitacura.png'))
+  const approvedLogo = logoBytes[0] === 0xff && logoBytes[1] === 0xd8
+    ? await pdf.embedJpg(logoBytes)
+    : await pdf.embedPng(logoBytes)
   pdf.setTitle(`Property Partners - ${report.report_type} - ${report.period_start} a ${report.period_end}`)
   const regular = await pdf.embedFont(StandardFonts.Helvetica)
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
@@ -214,7 +220,8 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   }
 
   function ppMark(page: PDFPage, x: number, y: number, size: number) {
-    page.drawText('P', { x, y, size, font: serifBold, color: PP_RED_SOFT })
+    const dimensions = approvedLogo.scaleToFit(size, size)
+    page.drawImage(approvedLogo, { x, y, width: dimensions.width, height: dimensions.height })
   }
 
   function decorativeBuilding(page: PDFPage, x: number, y: number, width: number, height: number) {
