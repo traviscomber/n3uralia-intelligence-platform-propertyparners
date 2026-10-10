@@ -20,7 +20,7 @@ function fixture() {
     reconciliationVerified: true,
     artifacts: (['ceo','directoras','partners'] as const).map((audience) => ({
       audience,
-      filename: audience + '.pdf',
+      filename: audience + '-2026-09.pdf',
       bytes: pdfs[audience],
       pageCount: 4,
       reviewedPageCount: 4,
@@ -50,7 +50,7 @@ test('release fails closed without complete visual and canonical review', async 
 test('release rejects duplicate names and unverified reconciliation', async () => {
   pdfs = Object.fromEntries(await Promise.all(['ceo','directoras','partners'].map(async audience => [audience, await makePdf(audience)] as const)))
   const p = fixture()
-  p.artifacts[2].filename = 'ceo.pdf'
+  p.artifacts[2].filename = 'ceo-2026-09.pdf'
   await assert.rejects(() => verifyMonthlyReportRelease(p), /FILENAME/)
   const q = fixture()
   q.reconciliationVerified = false
@@ -62,4 +62,11 @@ test('release rejects identical PDF content under different audience labels', as
   const p = fixture()
   p.artifacts[1].bytes = p.artifacts[0].bytes
   await assert.rejects(() => verifyMonthlyReportRelease(p), /DUPLICATE_PDF_CONTENT/)
+})
+
+test('release rejects a report filename assigned to another period', async () => {
+  pdfs = Object.fromEntries(await Promise.all(['ceo','directoras','partners'].map(async audience => [audience, await makePdf(audience)] as const)))
+  const p = fixture()
+  p.artifacts[1].filename = 'directoras-2026-08.pdf'
+  await assert.rejects(() => verifyMonthlyReportRelease(p), /PERIOD_NOT_IN_FILENAME/)
 })
