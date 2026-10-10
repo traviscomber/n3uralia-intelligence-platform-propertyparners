@@ -1,4 +1,7 @@
 import 'server-only'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { verifyPdfinoReport } from '@/lib/pdfino-report-quality'
 import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont, type RGB } from 'pdf-lib'
 import type {
   CeoKpi,
@@ -265,6 +268,8 @@ export async function buildCeoIntelligencePdf(report: PropertyPartnersCeoIntelli
   if (report.canonical_metadata.source_policy !== 'canonical_input_only') throw new Error('REPORTIN_INVALID_SOURCE_POLICY')
 
   const pdf = await PDFDocument.create()
+  const logoBytes = await readFile(join(process.cwd(), 'public/brand/property-partners-vitacura.png'))
+  const clientLogo = await pdf.embedPng(logoBytes)
   const fonts: Fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
     bold: await pdf.embedFont(StandardFonts.HelveticaBold),
@@ -280,6 +285,11 @@ export async function buildCeoIntelligencePdf(report: PropertyPartnersCeoIntelli
   const cover = pdf.addPage([W, H])
   cover.drawRectangle({ x: 0, y: 0, width: W, height: H, color: C.ink })
   cover.drawRectangle({ x: 0, y: H - 14, width: W, height: 14, color: C.red })
+  const logoScale = Math.min(216 / clientLogo.width, 60 / clientLogo.height)
+  const logoWidth = clientLogo.width * logoScale
+  const logoHeight = clientLogo.height * logoScale
+  cover.drawRectangle({ x: 54, y: 751 - logoHeight - 9, width: logoWidth + 18, height: logoHeight + 18, color: C.paper })
+  cover.drawImage(clientLogo, { x: 63, y: 751 - logoHeight, width: logoWidth, height: logoHeight })
   cover.drawText('PROPERTY PARTNERS VITACURA', { x: 54, y: 700, size: 9, font: fonts.bold, color: C.red })
   cover.drawText('CEO', { x: 54, y: 622, size: 48, font: fonts.bold, color: C.paper })
   cover.drawText('INTELLIGENCE', { x: 54, y: 570, size: 38, font: fonts.bold, color: C.paper })
@@ -435,6 +445,7 @@ export async function buildCeoIntelligencePdf(report: PropertyPartnersCeoIntelli
   footer(sources, fonts, 8)
 
   const bytes = await pdf.save()
+  await verifyPdfinoReport(bytes, { title: report.title, minPages: 8, requireA4: true })
   const filename = `${filePart(report.title || 'ceo-intelligence')}-${report.period.end}.pdf`
   return { bytes, filename, reportinVersion: REPORTIN_VERSION }
 }
