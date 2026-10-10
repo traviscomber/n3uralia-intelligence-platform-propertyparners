@@ -50,12 +50,14 @@ export async function verifyMonthlyReportRelease(value: MonthlyReportRelease): P
     try {
       const doc = await PDFDocument.load(item.bytes)
       actualPages = doc.getPageCount()
+      const expectedSubject = `PP_REPORT|${item.audience}|${value.period}|${value.evidenceVersion}`
+      if (doc.getSubject() !== expectedSubject) throw new Error('REPORT_EMBEDDED_EVIDENCE_MISMATCH')
       if (!doc.getPages().every((page) => {
         const { width, height } = page.getSize()
         return Math.abs(width - 595.28) <= 1 && Math.abs(height - 841.89) <= 1
       })) throw new Error('REPORT_INVALID_PAGE_SIZE')
     } catch (error) {
-      if (error instanceof Error && error.message === 'REPORT_INVALID_PAGE_SIZE') throw error
+      if (error instanceof Error && ['REPORT_INVALID_PAGE_SIZE', 'REPORT_EMBEDDED_EVIDENCE_MISMATCH'].includes(error.message)) throw error
       throw new Error('REPORT_INVALID_PDF_STRUCTURE')
     }
     if (actualPages < 1 || item.pageCount !== actualPages || item.reviewedPageCount !== actualPages) throw new Error('REPORT_VISUAL_REVIEW_INCOMPLETE')
