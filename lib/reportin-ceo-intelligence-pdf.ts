@@ -292,9 +292,9 @@ export async function buildCeoIntelligencePdf(report: PropertyPartnersCeoIntelli
   const logoHeight = clientLogo.height * logoScale
   cover.drawRectangle({ x: 54, y: 751 - logoHeight - 9, width: logoWidth + 18, height: logoHeight + 18, color: C.paper })
   cover.drawImage(clientLogo, { x: 63, y: 751 - logoHeight, width: logoWidth, height: logoHeight })
-  cover.drawText('PROPERTY PARTNERS VITACURA', { x: 54, y: 700, size: 9, font: fonts.bold, color: C.red })
-  cover.drawText('CEO', { x: 54, y: 622, size: 48, font: fonts.bold, color: C.paper })
-  cover.drawText('INTELLIGENCE', { x: 54, y: 570, size: 38, font: fonts.bold, color: C.paper })
+  // Client identity is already present in the approved logo; do not overlay it with duplicate text.
+  cover.drawText('INFORME EJECUTIVO', { x: 54, y: 622, size: 33, font: fonts.bold, color: C.paper })
+  cover.drawText('SEPTIEMBRE 2026', { x: 54, y: 574, size: 27, font: fonts.bold, color: C.paper })
   cover.drawText('Mercado · Operación · Conversión · Micromercados · Decisiones', { x: 54, y: 526, size: 10.5, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
   cover.drawText(`Período comercial ${report.period.start} — ${report.period.end}`, { x: 54, y: 470, size: 10, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
   cover.drawText(`Corte de gestión ${report.period.source_cutoff}`, { x: 54, y: 448, size: 10, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
