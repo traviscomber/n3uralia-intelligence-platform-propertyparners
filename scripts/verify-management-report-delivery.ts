@@ -159,6 +159,33 @@ async function main() {
     /REPORT_PARTNER_SCOPE_INVALID/,
   )
 
+  const completeRoster = {
+    'Santa María': Array.from({ length: 15 }, (_, i) => 'Santa Maria Partner ' + (i + 1)),
+    'Nueva Costanera': Array.from({ length: 13 }, (_, i) => 'Nueva Costanera Partner ' + (i + 1)),
+    'Lo Beltrán': Array.from({ length: 9 }, (_, i) => 'Lo Beltran Partner ' + (i + 1)),
+  }
+  // Structural stress test only: actual names and figures must be sourced from
+  // the signed canonical September partner report before client delivery.
+  const allPartnerRows = Object.entries(completeRoster).flatMap(([office, names]) =>
+    names.map(name => ({ ...samplePartner(name), office })),
+  )
+  assert.equal(allPartnerRows.length, 37)
+  const fullReport = {
+    ...partnerReport,
+    snapshot: {
+      ...partnerReport.snapshot,
+      audiencePartnerRoster: completeRoster,
+      audiencePartnerRows: allPartnerRows,
+    },
+  }
+  const fullArtifact = await buildManagementReportPdf(fullReport)
+  const fullPdf = await PDFDocument.load(fullArtifact.bytes)
+  assert.equal(fullPdf.getPageCount(), 7, '37 partner rows must paginate across four appendix pages')
+  assert.ok(fullPdf.getPages().every(page => {
+    const { width, height } = page.getSize()
+    return Math.abs(width - 595.28) <= 1 && Math.abs(height - 841.89) <= 1
+  }))
+
   console.log('Management report delivery verification passed.')
 }
 
