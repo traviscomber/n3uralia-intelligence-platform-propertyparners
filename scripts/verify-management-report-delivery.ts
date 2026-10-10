@@ -140,6 +140,10 @@ async function main() {
       audiencePartnerRows: [samplePartner('Agente Alfa'), samplePartner('Agente Beta')],
     },
   }
+  await assert.rejects(
+    () => buildManagementReportPdf({ ...partnerReport, snapshot: { ...report.snapshot } }),
+    /REPORT_PARTNER_CANONICAL_ROWS_REQUIRED/,
+  )
   const partnerPdf = await buildManagementReportPdf(partnerReport)
   const partnerDocument = await PDFDocument.load(partnerPdf.bytes)
   assert.equal(partnerDocument.getPageCount(), 4, 'Two audited partner rows require a real appendix page')
