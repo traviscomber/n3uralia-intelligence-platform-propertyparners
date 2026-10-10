@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import { requireAnyCapability, accessErrorResponse } from '@/lib/access-guards'
 import { createClient } from '@/lib/supabase/server'
 import { verifyDirectorOfficeReportScope } from '@/lib/property-partners-director-report-scope'
-import { buildDirectorOfficeEditorialPdf, type DirectorOfficeEditorial } from '@/lib/property-partners-director-editorial-pdf'
+import { buildDirectorOfficeEditorialPdf } from '@/lib/property-partners-director-editorial-pdf'
+import { mapVerifiedDirectorOffice } from '@/lib/property-partners-director-canonical-mapper'
+import { verifyAudienceSnapshot, type AudienceSnapshot } from '@/lib/property-partners-audience-snapshot'
 
 export const runtime='nodejs'
 /** Office-scoped document. Never falls back to a corporate/global snapshot. */
@@ -28,9 +30,19 @@ export async function GET(_request:Request,context:{params:Promise<{id:string}>}
     // must be issued from an office-only source, never filtered after rendering.
     if(snap.audiencePartnerRows || snap.audienceOperations || snap.offices || !snap.officeVerified)
       throw new Error('DIRECTOR_OFFICE_CANONICAL_SOURCE_REQUIRED')
-    const editorial=snap.officeEditorial as DirectorOfficeEditorial | undefined
-    if(!editorial || (scope.scope!=='global' && editorial.office!==scope.officeName) || editorial.period!==data.period_start.slice(0,7) || editorial.sourceId!==snap.sourceSnapshotId)
-      throw new Error('DIRECTOR_EDITORIAL_SOURCE_MISMATCH')
+    if(!Array.isArray(snap.metrics)||!Array.isArray(snap.evidence)||!snap.period||!snap.sourceSnapshotId)
+      throw new Error('DIRECTOR_CANONICAL_SNAPSHOT_MISSING')
+    const verified=verifyAudienceSnapshot(snap as unknown as AudienceSnapshot)
+    if(verified.period!==data.period_start.slice(0,7))throw new Error('DIRECTOR_PERIOD_MISMATCH')
+    const office=typeof snap.officeName==='string'?snap.officeName:null
+    if(!office||(scope.scope!=='global' && office!==scope.officeName))throw new Error('DIRECTOR_OFFICE_NAME_MISMATCH')
+    const comparisons=snap.officePreviousVerified
+    if(!comparisons||typeof comparisons!=='object'||Array.isArray(comparisons))
+      throw new Error('DIRECTOR_PREVIOUS_COMPARISONS_MISSING')
+    const editorial=mapVerifiedDirectorOffice(
+      snap as unknown as AudienceSnapshot & {sourceSnapshotId:string},
+      office,comparisons as {leads:number;stock:number;visitsScheduled:number;visitsRealized:number},
+    )
     const artifact=await buildDirectorOfficeEditorialPdf(editorial)
     return new Response(Buffer.from(artifact.bytes),{headers:{
       'Content-Type':'application/pdf',
