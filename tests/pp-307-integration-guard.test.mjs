@@ -176,3 +176,12 @@ test('signed closure count is visible next to UF on the real nominal PDF appendi
   assert.match(generator, /page\.drawText\(format\(op\.closureCount\)/)
   assert.match(generator, /op\.closureCount < 0/)
 })
+
+test('partner export renders only validated roster, scoped to partner audience', () => {
+  const generator = source('lib/management-report-artifact.ts')
+  assert.match(generator, /report\.report_type !== 'partner'/)
+  assert.match(generator, /verifyPartnerReportRows\(/)
+  assert.match(generator, /REPORT_PARTNER_COVERAGE_INCOMPLETE/)
+  assert.match(generator, /Actividad nominal por oficina/)
+  assert.match(generator, /partnerAppendixPages/)
+})
