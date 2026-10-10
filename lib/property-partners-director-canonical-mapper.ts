@@ -7,7 +7,7 @@ type VerifiedPrevious={leads:number;stock:number;visitsScheduled:number;visitsRe
 export function mapVerifiedDirectorOffice(
  snapshot:AudienceSnapshot & {sourceSnapshotId?:string},
  office:string, previous:VerifiedPrevious,
- gradeA:{total:number;stale15:number},
+ 
 ):DirectorOfficeEditorial {
  if(!OFFICES.includes(office as typeof OFFICES[number]))throw new Error('DIRECTOR_INVALID_OFFICE')
  const metrics=new Map(snapshot.metrics.map(m=>[m.id,m]))
@@ -18,7 +18,7 @@ export function mapVerifiedDirectorOffice(
   return record.value
  }
  if(!snapshot.sourceSnapshotId)throw new Error('DIRECTOR_SOURCE_MISSING')
- const numbers=[...Object.values(previous),gradeA.total,gradeA.stale15]
+ const numbers=Object.values(previous)
  if(numbers.some(n=>!Number.isFinite(n)))throw new Error('DIRECTOR_COMPARISON_MISSING')
  return {
   period:snapshot.period.start.slice(0,7),cutoff:snapshot.period.end,
@@ -26,7 +26,7 @@ export function mapVerifiedDirectorOffice(
   closures:get('sales'),uf:get('sales_uf'),leads:get('active'),
   stock:get('stock'),classified:get('classified'),stale90:get('stale90'),
   visitsRealized:get('realized'),visitsScheduled:get('scheduled'),
-  captures:get('captured'),suspended:get('suspended'),
-  gradeATotal:gradeA.total,gradeAStale15:gradeA.stale15,previous,
+  captures:get('captures'),suspended:get('suspended'),
+  gradeATotal:get('activeA'),gradeAStale15:get('stale15A'),previous,
  }
 }
