@@ -205,3 +205,13 @@ test('CEO canonical mapper rejects missing source metrics and unsupported previo
   assert.match(mapper, /CEO_OPERATION_TOTAL_MISMATCH/)
   assert.match(mapper, /CEO_CANONICAL_SOURCE_INVALID/)
 })
+
+test('CEO editorial download has global read capability and fails closed on incomplete canonical data', () => {
+  const route = source('app/api/management/reports/[id]/ceo-editorial/route.ts')
+  assert.match(route, /requireCapability\('reports\.global\.read'\)/)
+  assert.match(route, /verifyAudienceSnapshot\(canonical\)/)
+  assert.match(route, /mapCanonicalCeoSnapshot\(/)
+  assert.match(route, /buildCeoEditorialPdf\(/)
+  assert.match(route, /status:422/)
+  assert.doesNotMatch(route, /service_role|SUPABASE_SERVICE_ROLE_KEY/)
+})
