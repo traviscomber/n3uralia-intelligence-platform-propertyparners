@@ -117,3 +117,12 @@ test('legacy management PDF export runs mandatory PDFino A4 preflight', () => {
   assert.match(generator, /requireA4: true/)
   assert.match(generator, /pdf\.setTitle\(/)
 })
+
+test('embedded reporting skill follows canonical DESIGN.md and protects all three audiences', () => {
+  const skill = source('.agents/skills/property-partners-reporting/SKILL.md')
+  for (const requirement of ['DESIGN.md', 'PROPERTY_PARTNERS_AUDIENCE_REPORT_CANONICAL.md',
+    'CEO:', 'Directors:', 'Partners:', '37 September partner rows', 'every',
+    'Server-side RBAC', 'HOLD', 'CI']) {
+    assert.ok(skill.includes(requirement), 'missing reporting skill requirement: ' + requirement)
+  }
+})
