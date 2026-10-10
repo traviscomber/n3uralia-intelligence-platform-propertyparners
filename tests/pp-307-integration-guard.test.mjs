@@ -215,3 +215,12 @@ test('CEO editorial download has global read capability and fails closed on inco
   assert.match(route, /status:422/)
   assert.doesNotMatch(route, /service_role|SUPABASE_SERVICE_ROLE_KEY/)
 })
+
+test('director office PDF route is permissioned and rejects unscoped company data', () => {
+  const route=source('app/api/management/reports/[id]/director-office/route.ts')
+  assert.match(route,/requireAnyCapability\(\['reports\.office\.read','reports\.global\.read'\]\)/)
+  assert.match(route,/verifyDirectorOfficeReportScope\(/)
+  assert.match(route,/officeEntityId/)
+  assert.match(route,/officeVerified/)
+  assert.match(route,/DIRECTOR_OFFICE_CANONICAL_SOURCE_REQUIRED/)
+})
