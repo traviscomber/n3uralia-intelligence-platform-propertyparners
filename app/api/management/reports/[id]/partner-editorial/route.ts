@@ -30,7 +30,7 @@ export async function GET(_request:Request,context:{params:Promise<{id:string}>}
   const period=(snap.period as {end:string}).end
   const output=await buildPartnerEditorialPdf({
    period:checked.period,cutoff:period,sourceId:String(snap.sourceSnapshotId),
-   rows:snap.audiencePartnerRows as PartnerReportRow[],
+   rows,
    roster:snap.audiencePartnerRoster as Record<string,string[]>,sources:evidence,
   })
   return new Response(Buffer.from(output.bytes),{headers:{
