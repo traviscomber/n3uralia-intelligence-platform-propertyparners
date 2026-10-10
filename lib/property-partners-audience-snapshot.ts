@@ -32,7 +32,7 @@ export function verifyAudienceSnapshot(snapshot: AudienceSnapshot): Reconciliati
   for (const metric of snapshot.metrics) {
     if (metrics.has(metric.id)) throw new Error('REPORT_DUPLICATE_METRIC')
     metrics.set(metric.id, metric)
-    if (metric.status !== 'verified' || !Number.isFinite(metric.value) || !metric.evidenceRefs?.length) throw new Error('REPORT_METRIC_NOT_VERIFIED')
+    if (metric.status !== 'verified' || (typeof metric.value !== 'number' || !Number.isFinite(metric.value)) || !metric.evidenceRefs?.length) throw new Error('REPORT_METRIC_NOT_VERIFIED')
     for (const ref of metric.evidenceRefs) {
       const ev = evidence.get(ref)
       if (!ev || ev.status !== 'verified' || !ev.source?.includes('sha256=')) throw new Error('REPORT_EVIDENCE_INVALID')
