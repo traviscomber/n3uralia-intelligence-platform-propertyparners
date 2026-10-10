@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { PDFDocument } from 'pdf-lib'
 import { verifyMonthlyReportRelease } from '../lib/property-partners-report-release'
 
-const pdf = new Uint8Array(1600)
-pdf.set([37,80,68,70])
+let pdf: Uint8Array
+async function makePdf() {
+  const doc = await PDFDocument.create()
+  for (let i = 0; i < 4; i++) doc.addPage([595.28, 841.89])
+  doc.setTitle('Canonical report')
+  const bytes = await doc.save({ useObjectStreams: false })
+  const padded = new Uint8Array(Math.max(1600, bytes.length))
+  padded.set(bytes)
+  return bytes.length >= 1600 ? bytes : padded
+}
 function fixture() {
   return {
     period: '2026-09',
@@ -22,25 +31,28 @@ function fixture() {
     })),
   }
 }
-test('three separate monthly PDF deliverables are required', () => {
-  assert.doesNotThrow(() => verifyMonthlyReportRelease(fixture()))
+test('three separate monthly PDF deliverables are required', async () => {
+  pdf = await makePdf()
+  await assert.doesNotReject(() => verifyMonthlyReportRelease(fixture()))
   const one = fixture()
   one.artifacts.pop()
-  assert.throws(() => verifyMonthlyReportRelease(one), /THREE_SEPARATE/)
+  await assert.rejects(() => verifyMonthlyReportRelease(one), /THREE_SEPARATE/)
 })
-test('release fails closed without complete visual and canonical review', () => {
+test('release fails closed without complete visual and canonical review', async () => {
+  pdf = await makePdf()
   const p = fixture()
   p.artifacts[1].reviewedPageCount = 3
-  assert.throws(() => verifyMonthlyReportRelease(p), /VISUAL_REVIEW/)
+  await assert.rejects(() => verifyMonthlyReportRelease(p), /VISUAL_REVIEW/)
   const q = fixture()
   q.artifacts[2].canonicalCoverageVerified = false
-  assert.throws(() => verifyMonthlyReportRelease(q), /QUALITY_GATE/)
+  await assert.rejects(() => verifyMonthlyReportRelease(q), /QUALITY_GATE/)
 })
-test('release rejects duplicate names and unverified reconciliation', () => {
+test('release rejects duplicate names and unverified reconciliation', async () => {
+  pdf = await makePdf()
   const p = fixture()
   p.artifacts[2].filename = 'ceo.pdf'
-  assert.throws(() => verifyMonthlyReportRelease(p), /FILENAME/)
+  await assert.rejects(() => verifyMonthlyReportRelease(p), /FILENAME/)
   const q = fixture()
   q.reconciliationVerified = false
-  assert.throws(() => verifyMonthlyReportRelease(q), /RECONCILIATION/)
+  await assert.rejects(() => verifyMonthlyReportRelease(q), /RECONCILIATION/)
 })
