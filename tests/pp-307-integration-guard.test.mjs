@@ -159,3 +159,13 @@ test('canonical audience snapshots are reconciled before real PDF export', () =>
   assert.match(route, /REPORT_PERIOD_SNAPSHOT_MISMATCH/)
   assert.match(route, /Array\.isArray\(canonical\.metrics\)/)
 })
+
+test('management PDF includes canonical audited nominal appendix only when operations are present', () => {
+  const generator = source('lib/management-report-artifact.ts')
+  assert.match(generator, /snapshot\.audienceOperations/)
+  assert.match(generator, /verifyAudienceOperations\(/)
+  assert.match(generator, /REPORT_OPERATIONS_TOTALS_MISSING/)
+  assert.match(generator, /Operaciones nominales/)
+  assert.match(generator, /AJUSTE HISTÓRICO/)
+  assert.match(generator, /finalPageCount/)
+})
