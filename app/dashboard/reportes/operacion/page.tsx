@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { CeoIntelligenceReportGenerator } from '@/components/management/ceo-intelligence-report-generator'
 import { CanonicalLatestReportGenerator } from '@/components/management/canonical-latest-report-generator'
 import { ReportDeliveryConsole } from '@/components/management/report-delivery-console'
@@ -26,7 +27,7 @@ export default async function ReportOperationsPage() {
         <h2 className="mt-2 text-lg font-semibold">{period.label}</h2>
         <p className="mt-1 text-sm">{period.start} — {period.end}</p>
         <p className="mt-3 text-sm text-[var(--n3-text-muted)]">Para descargar, elige un informe aprobado. Si faltan datos, consulta el último cerrado.</p>
-        <a className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline" href="/dashboard/reportes/canonicos">Consultar informes</a>
+        <Link className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline" href="/dashboard/reportes/canonicos">Consultar informes</Link>
       </article>)}
     </section>
     {canOperate ? <CeoIntelligenceReportGenerator /> : null}
