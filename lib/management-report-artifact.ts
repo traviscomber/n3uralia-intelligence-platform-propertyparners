@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { verifyPdfinoReport } from './pdfino-report-quality'
-import { verifyAudienceOperations, type SignedOperation } from './property-partners-audience-snapshot'
+import { verifyAudienceOperations, type SignedOperation, verifyPartnerReportRows, type PartnerReportRow } from './property-partners-audience-snapshot'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
 export type ManagementReportRecord = {
@@ -158,8 +158,17 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold)
 
   const snapshot = record(report.snapshot) ?? {}
+  const partnerRows = snapshot.audiencePartnerRows
+  const partnerRoster = snapshot.audiencePartnerRoster
+  if ((partnerRows !== undefined || partnerRoster !== undefined) && report.report_type !== 'partner') throw new Error('REPORT_PARTNER_SCOPE_INVALID')
+  if ((partnerRows === undefined) !== (partnerRoster === undefined)) throw new Error('REPORT_PARTNER_COVERAGE_INCOMPLETE')
+  if (partnerRows !== undefined) {
+    if (!Array.isArray(partnerRows) || !partnerRoster || typeof partnerRoster !== 'object' || Array.isArray(partnerRoster)) throw new Error('REPORT_PARTNER_PAYLOAD_INVALID')
+    verifyPartnerReportRows(partnerRows as PartnerReportRow[], partnerRoster as Record<string, string[]>)
+  }
   const nominalAppendixPages = Array.isArray(snapshot.audienceOperations) ? Math.ceil(snapshot.audienceOperations.length / 18) : 0
-  const finalPageCount = 3 + nominalAppendixPages
+  const partnerAppendixPages = Array.isArray(partnerRows) ? Math.ceil(partnerRows.length / 12) : 0
+  const finalPageCount = 3 + nominalAppendixPages + partnerAppendixPages
   const company = record(snapshot.company) ?? {}
   const completeness = record(snapshot.completeness) ?? {}
   const provenance = record(snapshot.provenance) ?? {}
@@ -527,7 +536,33 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
         page.drawText(format(op.uf), { x: 485, y, size: 9, font: bold, color: op.uf < 0 ? PP_RED_SOFT : PP_TEXT })
         if (op.adjustment) page.drawText('AJUSTE HISTÓRICO ' + op.originPeriod, { x: M, y: y - 13, size: 6.5, font: regular, color: PP_RED_SOFT })
       }
-      footer(page, `${n + 4}/${3 + totalPages}`)
+      footer(page, `${n + 4}/${finalPageCount}`)
+    }
+  }
+
+  if (Array.isArray(partnerRows)) {
+    const rows = partnerRows as PartnerReportRow[]
+    for (let n = 0; n < partnerAppendixPages; n++) {
+      const page = pdf.addPage([W, H])
+      darkPage(page)
+      page.drawText('PARTNERS / DETALLE CANÓNICO', { x: M, y: 794, size: 10, font: bold, color: PP_RED_SOFT })
+      page.drawText('Actividad nominal por oficina', { x: M, y: 750, size: 23, font: serif, color: PP_TEXT })
+      page.drawText(period, { x: M, y: 723, size: 10, font: regular, color: PP_MUTED })
+      const first = n * 12
+      for (const [index, row] of rows.slice(first, first + 12).entries()) {
+        const y = 674 - index * 51
+        const office = row.office + ' / ' + row.name
+        drawWrapped(page, office, M, y, W - M * 2, { size: 9, font: bold, maxLines: 1 })
+        const details = [
+          'Leads ' + format(row.leads), 'Clasif. ' + format(row.classifiedPercent, '%'),
+          '>90d ' + format(row.stale90), 'Visitas ' + format(row.visitsRealized) + '/' + format(row.visitsScheduled),
+          'Stock ' + format(row.stock), 'Capt. ' + format(row.captures), 'Susp. ' + format(row.suspended),
+          'Cierres ' + format(row.netClosures), 'UF ' + format(row.netUf),
+        ].join('   |   ')
+        drawWrapped(page, details, M, y - 15, W - M * 2, { size: 7.2, maxLines: 2, leading: 10 })
+        page.drawLine({ start: { x: M, y: y - 33 }, end: { x: W - M, y: y - 33 }, color: PP_LINE, thickness: 0.35 })
+      }
+      footer(page, `${4 + nominalAppendixPages + n}/${finalPageCount}`)
     }
   }
 
