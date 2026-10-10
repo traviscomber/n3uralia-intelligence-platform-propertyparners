@@ -23,15 +23,19 @@ const DELIVERABLE_STATUSES=new Set(['Aprobado','Enviado','Reenviado','Acusado re
 function hasArtifact(report:ReportRecord){return Boolean(report.pdfUrl||report.downloadUrl)}
 function isDeliverable(report:ReportRecord){return report.period!=='Sin período'&&hasArtifact(report)&&DELIVERABLE_STATUSES.has(report.status)}
 
-export default async function CanonicalClientReportsPage(){
+export default async function CanonicalClientReportsPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }){
+  const { mes } = await searchParams
+  const selectedMonth = typeof mes === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(mes) ? mes : null
   const scope=await requirePageCapability('reports.global.read')
   const canReview=scope.role==='admin'||scope.role==='ceo'
   const supabase=createAdminClient()
   const {data,error}=await supabase.from('knowledge_documents').select('id,title,content,doc_type,tags,created_at').contains('tags',['n3uralia-client-report']).order('created_at',{ascending:false}).limit(48)
   const documents=(error?[]:(data||[]) as CanonicalDocumentRow[]).filter(isClientCanonical)
   const reports:ReportRecord[]=documents.map(document=>{const parsed=parseCanonicalReportContent(document.content);const trace=extractCanonicalReportTrace(parsed);const metadata={docType:document.doc_type,tags:document.tags};return{id:document.id,title:document.title,kind:canonicalReportKind(parsed),period:formatCanonicalReportPeriod(parsed),status:normalizeCanonicalReportStatus(parsed,document.tags),createdAt:document.created_at,pdfUrl:resolveCanonicalReportArtifactUrl(parsed,'pdf',document.id,metadata),downloadUrl:resolveCanonicalReportArtifactUrl(parsed,'download',document.id,metadata),...trace}})
-  const current=reports.find(isDeliverable)??null
-  const history=reports.filter(report=>report.id!==current?.id)
+  const availableMonths = [...new Set(reports.map(report => report.period.match(/^\d{4}-(0[1-9]|1[0-2])/)?.[0]).filter((value): value is string => Boolean(value)))].sort().reverse()
+  const visibleReports = selectedMonth ? reports.filter(report => report.period.startsWith(selectedMonth)) : reports
+  const current=visibleReports.find(isDeliverable)??null
+  const history=visibleReports.filter(report=>report.id!==current?.id)
   const incomplete=reports.filter(report=>!isDeliverable(report))
   const deliverableCount=reports.filter(isDeliverable).length
   const status=reports.length===0?'blocked':incomplete.length>0?'partial':'ready'
@@ -45,8 +49,17 @@ export default async function CanonicalClientReportsPage(){
   }
 
   return <WorkspaceShell>
-    <WorkspaceHeader eyebrow="Informes" title="Último informe entregable" meta={current?`${current.kind} · ${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+    <WorkspaceHeader eyebrow="Informes" title="Informes" meta={current?`${current.kind} · ${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
 
+    <section className="mt-6 max-w-5xl border-y border-[var(--n3-line)] py-5" aria-label="Seleccionar período">
+      <h2 className="text-base font-semibold">¿Qué período quieres consultar?</h2>
+      <p className="mt-1 text-sm text-[var(--n3-text-muted)]">Selecciona un mes. Solo los informes aprobados se consideran cerrados.</p>
+      <nav aria-label="Meses disponibles" className="mt-4 flex flex-wrap gap-2">
+        <Link href="/dashboard/reportes/canonicos" aria-current={!selectedMonth ? 'page' : undefined} className={!selectedMonth ? 'inline-flex min-h-11 items-center border border-[var(--primary)] bg-[var(--primary)] px-4 text-sm text-white' : 'inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 text-sm'}>Todos</Link>
+        {availableMonths.map(month => <Link key={month} href={'/dashboard/reportes/canonicos?mes=' + month} aria-current={selectedMonth === month ? 'page' : undefined} className={selectedMonth === month ? 'inline-flex min-h-11 items-center border border-[var(--primary)] bg-[var(--primary)] px-4 text-sm text-white' : 'inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 text-sm'}>{new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'))}</Link>)}
+      </nav>
+      <p className="mt-4 text-sm text-[var(--n3-text-muted)]">¿Quieres revisar una semana? <Link href="/dashboard/reportes/operacion" className="font-medium text-[var(--n3-text-light)] underline">Ver informes semanales</Link></p>
+    </section>
     <section className="mt-6 max-w-5xl">
       {current?<article className="grid gap-6 border-y border-[var(--n3-line)] py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div className="min-w-0">
@@ -59,7 +72,7 @@ export default async function CanonicalClientReportsPage(){
           {current.pdfUrl?<Link href={current.pdfUrl} target="_blank" className="inline-flex min-h-11 items-center gap-2 border border-[var(--n3-line)] px-4 text-xs"><ExternalLink size={14}/>Abrir</Link>:null}
           {current.downloadUrl?<Link href={current.downloadUrl} className="inline-flex min-h-11 items-center gap-2 bg-[var(--primary)] px-4 text-xs font-semibold text-white"><Download size={14}/>Descargar PDF</Link>:null}
         </div>
-      </article>:<OperationalState compact kind="empty" title="Sin informe listo para entrega" description="Aún no hay un informe canónico listo para entrega. Los borradores incompletos quedan en el historial."/>}
+      </article>:<OperationalState compact kind="empty" title="Sin informe listo para entrega" description="Puedes seleccionar otro mes. Los borradores no se presentan como informes cerrados."/>}
     </section>
 
     {current?<details className="mt-5 max-w-5xl border-b border-[var(--n3-line)] pb-5">
