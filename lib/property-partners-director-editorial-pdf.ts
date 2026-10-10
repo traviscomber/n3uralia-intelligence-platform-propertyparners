@@ -24,7 +24,7 @@ export async function buildDirectorOfficeEditorialPdf(d:DirectorOfficeEditorial)
  const pdf=await PDFDocument.create(),font=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold)
  const b=await readFile(join(process.cwd(),'public/brand/property-partners-vitacura.png'))
  const logo=b[0]===255&&b[1]===216?await pdf.embedJpg(b):await pdf.embedPng(b)
- pdf.setTitle('Property Partners / Directora / '+d.office+' / '+d.period)
+ pdf.setTitle('Directora '+d.office+' '+d.period)
  pdf.setSubject('PP_DIRECTOR|'+d.period+'|'+d.office+'|'+d.sourceId)
  function write(p:PDFPage,s:string,x:number,y:number,z=10,heavy=false,col=K){p.drawText(plain(s),{x,y,size:z,font:heavy?bold:font,color:col})}
  function page(n:number){
