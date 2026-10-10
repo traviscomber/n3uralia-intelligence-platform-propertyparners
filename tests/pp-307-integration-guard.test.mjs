@@ -185,3 +185,15 @@ test('partner export renders only validated roster, scoped to partner audience',
   assert.match(generator, /Actividad nominal por oficina/)
   assert.match(generator, /partnerAppendixPages/)
 })
+
+test('dedicated five-page CEO editorial renderer preserves approved design, operations and sources', () => {
+  const code = source('lib/property-partners-ceo-editorial-pdf.ts')
+  assert.match(code, /public\/brand\/property-partners-vitacura\.png/)
+  assert.match(code, /verifyAudienceOperations\(/)
+  assert.match(code, /const net=d\.closuresActive\+d\.closuresAdjustment/)
+  assert.match(code, /Comparacion por oficina/)
+  assert.match(code, /Detalle de operaciones/)
+  assert.match(code, /Fuentes y metodologia/)
+  assert.match(code, /verifyPdfinoReport\(bytes/)
+  assert.match(code, /minPages:5/)
+})
