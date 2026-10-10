@@ -27,6 +27,14 @@ export async function GET(_request:Request,context:{params:Promise<{id:string}>}
    if(e.status!=='verified'||!match)throw new Error('PARTNER_EVIDENCE_INVALID')
    return {name:match[1],sha256:match[2]}
   })
+  const rows=snap.audiencePartnerRows as PartnerReportRow[]
+  const sum=(field:'netClosures'|'netUf')=>rows.reduce((total,row)=>{
+   const value=row[field]
+   if(typeof value!=='number'||!Number.isFinite(value))throw new Error('PARTNER_SIGNED_TOTAL_MISSING')
+   return total+value
+  },0)
+  if(sum('netClosures')!==checked.netClosures||sum('netUf')!==checked.netUf)
+   throw new Error('PARTNER_SIGNED_TOTAL_MISMATCH')
   const period=(snap.period as {end:string}).end
   const output=await buildPartnerEditorialPdf({
    period:checked.period,cutoff:period,sourceId:String(snap.sourceSnapshotId),
