@@ -34,6 +34,8 @@ export async function verifyMonthlyReportRelease(value: MonthlyReportRelease): P
     if (!REQUIRED.includes(item.audience) || audiences.has(item.audience)) throw new Error('REPORT_AUDIENCE_MISSING_OR_DUPLICATE')
     audiences.add(item.audience)
     if (!item.filename.toLowerCase().endsWith('.pdf') || names.has(item.filename)) throw new Error('REPORT_FILENAME_NOT_UNIQUE_PDF')
+    const expectedPeriod = value.period.replace('-', '')
+    if (!item.filename.includes(value.period) && !item.filename.includes(expectedPeriod)) throw new Error('REPORT_PERIOD_NOT_IN_FILENAME')
     names.add(item.filename)
     const digest = createHash('sha256').update(item.bytes).digest('hex')
     if (contentHashes.has(digest)) throw new Error('REPORT_DUPLICATE_PDF_CONTENT')
