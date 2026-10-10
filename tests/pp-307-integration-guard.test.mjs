@@ -67,3 +67,18 @@ test('executive report is visibly a draft pending review', () => {
   assert.match(report, /Revisar informe/)
   assert.doesNotMatch(report, /Generar CEO Intelligence/)
 })
+
+test('CEO report generation remains role restricted and persists draft only', () => {
+  const route = source('app/api/management/reports/ceo-intelligence/latest/route.ts')
+  assert.match(route, /requireRoleAccess\(\['admin', 'ceo'\]\)/)
+  assert.match(route, /isReusableCeoIntelligenceDocument/)
+  assert.match(route, /sourceSnapshotId/)
+  assert.match(route, /'draft'/)
+  assert.doesNotMatch(route, /'approved'/)
+  assert.doesNotMatch(route, /sendEmail|sendReport|resend\.emails\.send/)
+})
+
+test('automatic CEO draft job stays disabled until source, dedupe and access gates are reviewed', () => {
+  const vercel = source('vercel.json')
+  assert.doesNotMatch(vercel, /\/api\/cron\/ceo-intelligence-draft/)
+})
