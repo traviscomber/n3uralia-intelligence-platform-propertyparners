@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { verifyAudienceSnapshot, type AudienceSnapshot } from '../lib/property-partners-audience-snapshot'
+import { verifyAudienceSnapshot, verifyAudienceOperations, type AudienceSnapshot } from '../lib/property-partners-audience-snapshot'
 
 const closure = (entity: string, sales: number, uf: number) => [
   {id: entity + '_sales', label:'sales', value:sales, status:'verified', evidenceRefs:['ev_closures']},
@@ -34,4 +34,23 @@ test('missing verified provenance prevents release', () => {
 test('missing a required office prevents release', () => {
   const s=snapshot();s.metrics=s.metrics.filter(m=>m.id!=='Santa María_sales')
   assert.throws(()=>verifyAudienceSnapshot(s),/METRIC_MISSING/)
+})
+
+test('the seven September signed operations reconcile to five closures and 49,560 UF', () => {
+  const operations = [
+    ['Soledad Fernandez','Nueva Costanera',16400,false],
+    ['María Ignacia Labbé Krinfokai','Nueva Costanera',15100,false],
+    ['Jorge Zurob','Lo Beltrán',11800,false],
+    ['Mary Canale Montenegro','Lo Beltrán',11400,false],
+    ['María Ignacia Labbé Krinfokai','Nueva Costanera',8860,false],
+    ['Sebastián Zlatar Ayuso','Nueva Costanera',8000,false],
+    ['Maria de los angeles Carcavilla','Lo Beltrán',-22000,true],
+  ].map(([partner,office,uf,adjustment]) => ({
+    partner: String(partner), office: String(office), uf: Number(uf),
+    closureCount: adjustment ? -1 : 1, originPeriod: adjustment ? '2026-07' : '2026-09',
+    adjustment: Boolean(adjustment),
+  }))
+  assert.doesNotThrow(() => verifyAudienceOperations('2026-09',operations,{netClosures:5,netUf:49560}))
+  operations.pop()
+  assert.throws(() => verifyAudienceOperations('2026-09',operations,{netClosures:5,netUf:49560}),/RECONCILIATION_FAILED/)
 })
