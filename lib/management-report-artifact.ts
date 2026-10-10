@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { verifyPdfinoReport } from './pdfino-report-quality'
@@ -146,6 +147,10 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     ? await pdf.embedJpg(logoBytes)
     : await pdf.embedPng(logoBytes)
   pdf.setTitle(`Property Partners - ${report.report_type} - ${report.period_start} a ${report.period_end}`)
+  const snapshotDigest = createHash('sha256').update(JSON.stringify(report.snapshot)).digest('hex')
+  pdf.setSubject(`PP_MANAGEMENT|${report.report_type}|${report.period_start}|${report.period_end}|sha256:${snapshotDigest}`)
+  pdf.setKeywords(['Property Partners Vitacura', 'reporte de gestión', `origen:${report.id}`, `snapshot:${snapshotDigest}`])
+  pdf.setProducer('Property Partners Vitacura / Reportin')
   const regular = await pdf.embedFont(StandardFonts.Helvetica)
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
   const serif = await pdf.embedFont(StandardFonts.TimesRoman)
