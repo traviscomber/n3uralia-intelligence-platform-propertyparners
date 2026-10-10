@@ -48,3 +48,14 @@ test('partner sees four decision metrics first and optional secondary context', 
   assert.match(partner, /Ver detalle/)
   assert.doesNotMatch(partner, /Corte canónico vigente/)
 })
+
+test('director home prioritizes office results without losing actions', () => {
+  const director = source('components/management/director-dashboard-v3.tsx')
+  assert.match(director, /eyebrow="Hoy"/)
+  assert.match(director, /eyebrow="Resultado"/)
+  assert.match(director, /eyebrow="Prioridades"/)
+  assert.match(director, /Actualizado/)
+  assert.match(director, /Asignar propiedades/)
+  assert.match(director, /Revisar valorizaciones/)
+  assert.doesNotMatch(director, /BarChart3/)
+})
