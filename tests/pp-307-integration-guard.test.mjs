@@ -133,3 +133,13 @@ test('legacy management PDF uses approved logo bytes instead of invented monogra
   assert.match(generator, /page\.drawImage\(approvedLogo/)
   assert.doesNotMatch(generator, /page\.drawText\('P', \{ x, y, size/)
 })
+
+test('management PDF embeds actual report dates and a SHA-256 fingerprint of its source snapshot', () => {
+  const generator = source('lib/management-report-artifact.ts')
+  assert.match(generator, /createHash\('sha256'\)/)
+  assert.match(generator, /JSON\.stringify\(report\.snapshot\)/)
+  assert.match(generator, /pdf\.setSubject\(/)
+  assert.match(generator, /pdf\.setKeywords\(/)
+  assert.match(generator, /report\.period_start/)
+  assert.match(generator, /report\.period_end/)
+})
