@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "pnpm ai:senior:verify && pnpm valuation:gate && pnpm management:gate",
+    "prebuild": "node scripts/verify-property-partners-pdf-governance.mjs && pnpm ai:senior:verify && pnpm valuation:gate && pnpm management:gate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

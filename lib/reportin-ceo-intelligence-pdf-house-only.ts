@@ -15,8 +15,8 @@ const TOP = 786
 
 const C = {
   ink: rgb(0.055, 0.067, 0.067),
-  red: rgb(0.91, 0.19, 0.16),
-  teal: rgb(0.16, 0.43, 0.40),
+  red: rgb(215 / 255, 51 / 255, 43 / 255),
+  teal: rgb(0.055, 0.067, 0.067),
   amber: rgb(0.72, 0.48, 0.18),
   gray: rgb(0.47, 0.49, 0.48),
   line: rgb(0.84, 0.84, 0.82),
@@ -161,6 +161,10 @@ function rebuildMarketMapPage(page: PDFPage, fonts: Fonts, report: PropertyPartn
   page.drawRectangle({ x: MX, y: panelBottom, width: W - 2 * MX, height: panelHeight, color: C.soft, borderColor: C.line, borderWidth: 0.6 })
   page.drawText('CASAS · ALCANCE CONTRACTUAL', { x: MX + 10, y: panelTop - 18, size: 7.4, font: fonts.bold, color: C.ink })
   drawHouseMap(page, report.snapshot.market.polygons, report.snapshot.market.rows, MX, panelTop, W - 2 * MX, panelHeight)
+  if (!allPoints(report.snapshot.market.polygons).length) {
+    page.drawText('Geometría cartográfica no disponible en esta exportación', { x: MX + 18, y: panelBottom + 120, size: 10, font: fonts.bold, color: C.ink })
+    page.drawText('No se representa un mapa sin coordenadas verificables.', { x: MX + 18, y: panelBottom + 98, size: 8.5, font: fonts.regular, color: C.gray })
+  }
 
   const comparableRows = report.snapshot.market.rows.filter((row) => row.propertyType === 'Casa' && row.gapPct !== null)
   page.drawText('Alcance: ventas de casas en Vitacura.', { x: MX, y: 425, size: 7.6, font: fonts.bold, color: C.red })
@@ -190,6 +194,14 @@ function rebuildBenchmarkPage(page: PDFPage, fonts: Fonts, report: PropertyPartn
   if (!rows.length) {
     page.drawRectangle({ x: MX, y: 652, width: W - 2 * MX, height: 34, color: C.soft, borderColor: C.line, borderWidth: 0.5 })
     page.drawText('N/D · Sin benchmark comparable de oferta para casas; no se reconstruyen referencias ausentes.', { x: MX + 10, y: 665, size: 7.4, font: fonts.regular, color: C.gray })
+    page.drawText('ESTADO DE LA EVIDENCIA', { x: MX, y: 619, size: 9, font: fonts.bold, color: C.ink })
+    drawWrapped(page, fonts.regular, 'No hay una pareja contemporánea y comparable de oferta Portal y transacciones CBRS para calcular diferencias de precio por micromercado.', MX, 595, W - 2 * MX, 10, C.ink, 5)
+    page.drawText('DECISIÓN RECOMENDADA', { x: MX, y: 520, size: 9, font: fonts.bold, color: C.ink })
+    drawWrapped(page, fonts.regular, 'No publicar rankings de sobreprecio ni usar señales antiguas como justificación de valorización. Solicitar cortes de mercado actuales y validar comparables antes de emitir conclusiones.', MX, 497, W - 2 * MX, 10, C.ink, 6)
+    page.drawRectangle({ x: MX, y: 320, width: W - 2 * MX, height: 92, color: C.soft, borderColor: C.line, borderWidth: 0.5 })
+    page.drawText('COBERTURA DECLARADA', { x: MX + 12, y: 389, size: 8, font: fonts.bold, color: C.ink })
+    page.drawText('Portal: ' + (report.snapshot.market.portalCutoff || 'N/D'), { x: MX + 12, y: 367, size: 9, font: fonts.regular, color: C.ink })
+    page.drawText('CBRS: ' + (report.snapshot.market.cbrsCutoff || 'N/D'), { x: MX + 12, y: 349, size: 9, font: fonts.regular, color: C.ink })
     footer(page, fonts, 4)
     return
   }

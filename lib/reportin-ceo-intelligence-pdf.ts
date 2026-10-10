@@ -20,8 +20,8 @@ const REPORTIN_VERSION = '1.1'
 const C = {
   ink: rgb(0.055, 0.067, 0.067),
   charcoal: rgb(0.075, 0.095, 0.092),
-  red: rgb(0.91, 0.19, 0.16),
-  teal: rgb(0.16, 0.43, 0.40),
+  red: rgb(215 / 255, 51 / 255, 43 / 255),
+  teal: rgb(0.055, 0.067, 0.067),
   amber: rgb(0.72, 0.48, 0.18),
   gray: rgb(0.47, 0.49, 0.48),
   line: rgb(0.84, 0.84, 0.82),
@@ -292,15 +292,15 @@ export async function buildCeoIntelligencePdf(report: PropertyPartnersCeoIntelli
   const logoHeight = clientLogo.height * logoScale
   cover.drawRectangle({ x: 54, y: 751 - logoHeight - 9, width: logoWidth + 18, height: logoHeight + 18, color: C.paper })
   cover.drawImage(clientLogo, { x: 63, y: 751 - logoHeight, width: logoWidth, height: logoHeight })
-  cover.drawText('PROPERTY PARTNERS VITACURA', { x: 54, y: 700, size: 9, font: fonts.bold, color: C.red })
-  cover.drawText('CEO', { x: 54, y: 622, size: 48, font: fonts.bold, color: C.paper })
-  cover.drawText('INTELLIGENCE', { x: 54, y: 570, size: 38, font: fonts.bold, color: C.paper })
+  // Client identity is already present in the approved logo; do not overlay it with duplicate text.
+  cover.drawText('INFORME EJECUTIVO', { x: 54, y: 622, size: 33, font: fonts.bold, color: C.paper })
+  cover.drawText(new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(report.period.start + 'T12:00:00Z')).replace(/^./, (letter) => letter.toUpperCase()), { x: 54, y: 574, size: 27, font: fonts.bold, color: C.paper })
   cover.drawText('Mercado · Operación · Conversión · Micromercados · Decisiones', { x: 54, y: 526, size: 10.5, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
   cover.drawText(`Período comercial ${report.period.start} — ${report.period.end}`, { x: 54, y: 470, size: 10, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
   cover.drawText(`Corte de gestión ${report.period.source_cutoff}`, { x: 54, y: 448, size: 10, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
   cover.drawLine({ start: { x: 54, y: 360 }, end: { x: W - 54, y: 360 }, thickness: 0.8, color: C.red })
-  cover.drawText('N3URALIA INTELLIGENCE PLATFORM', { x: 54, y: 338, size: 8, font: fonts.bold, color: C.red })
-  cover.drawText('Reportin · Snapshot canónico · KML Property Partners', { x: 54, y: 316, size: 10, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
+  cover.drawText('PROPERTY PARTNERS VITACURA', { x: 54, y: 338, size: 8, font: fonts.bold, color: C.red })
+  cover.drawText('Informe de gestión · Uso interno', { x: 54, y: 316, size: 10, font: fonts.regular, color: rgb(0.76, 0.77, 0.76) })
 
   // Executive summary
   const summary = pdf.addPage([W, H])
