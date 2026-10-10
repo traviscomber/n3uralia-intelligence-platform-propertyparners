@@ -17,23 +17,20 @@ export default async function ReportOperationsPage() {
     <IntelligenceHeader
       eyebrow="Informes"
       title="Generar y revisar"
-      description="Informe mensual de negocio. El informe contractual se entrega por separado; ningún borrador se envía automáticamente."
-      actions={[
-        { label: 'Ver informes', href: '/dashboard/reportes/canonicos', primary: true },
-        { label: 'Revisar programaciones', href: '/dashboard/control/admin' },
-      ]}
+      description="Consulta cómo va el negocio y descarga el último informe disponible."
+      actions={[{ label: 'Descargar último informe', href: '/dashboard/reportes/canonicos', primary: true }]}
     />
     <section className="mt-6 grid gap-3 md:grid-cols-2" aria-label="Cortes de reportes">
       {[week, month].map((period) => <article key={period.cadence} className="border border-[var(--n3-line)] p-5">
         <p className="text-xs uppercase tracking-wider text-[var(--n3-text-muted)]">{period.cadence === 'weekly' ? 'Semanal' : 'Mensual'}</p>
         <h2 className="mt-2 text-lg font-semibold">{period.label}</h2>
         <p className="mt-1 text-sm">{period.start} — {period.end}</p>
-        <p className="mt-3 text-sm text-[var(--n3-text-muted)]">El calendario está cerrado; esto no certifica la completitud de las fuentes. No se exportará como cerrado sin métricas verificadas, corte válido y aprobación.</p>
-        <a className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline" href="/dashboard/reportes/canonicos">Consultar último informe aprobado</a>
+        <p className="mt-3 text-sm text-[var(--n3-text-muted)]">Si faltan datos, te mostraremos el último informe cerrado.</p>
+        <a className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold underline" href="/dashboard/reportes/canonicos">Ver informe disponible</a>
       </article>)}
     </section>
     {canOperate ? <CeoIntelligenceReportGenerator /> : null}
-    {canOperate ? <CanonicalLatestReportGenerator /> : null}
-    <ReportDeliveryConsole canOperate={canOperate} />
+    {canOperate ? <details className="mt-6"><summary className="cursor-pointer text-sm">Otras opciones</summary><CanonicalLatestReportGenerator /></details>
+    <details className="mt-6"><summary className="cursor-pointer text-sm">Administrar envíos</summary><ReportDeliveryConsole canOperate={canOperate} /></details>
   </IntelligencePage>
 }
