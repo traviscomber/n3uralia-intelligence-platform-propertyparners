@@ -1,3 +1,4 @@
+import { verifyPdfinoReport } from './pdfino-report-quality'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
 export type ManagementReportRecord = {
@@ -138,6 +139,7 @@ function blockerLabel(code: string) {
 
 export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const pdf = await PDFDocument.create()
+  pdf.setTitle(`Property Partners - ${report.report_type} - ${report.period_start} a ${report.period_end}`)
   const regular = await pdf.embedFont(StandardFonts.Helvetica)
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
   const serif = await pdf.embedFont(StandardFonts.TimesRoman)
@@ -480,6 +482,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   footer(p3, '3/3')
 
   const bytes = await pdf.save()
+  await verifyPdfinoReport(bytes, { title: `Property Partners - ${report.report_type} - ${report.period_start} a ${report.period_end}`, minPages: 3, requireA4: true })
   return {
     bytes,
     filename: `${filenamePart(reportTypeLabel(report.report_type))}-${report.period_start}-${report.period_end}.pdf`,
