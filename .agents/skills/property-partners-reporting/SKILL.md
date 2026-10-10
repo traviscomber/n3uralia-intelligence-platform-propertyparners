@@ -40,3 +40,16 @@ Score out of 100: complete original numeric, nominal and narrative coverage (30)
 Approve only at >=97/100 and with zero omissions, fake figures, wrong signed corrections, unauthorized office exposure or uninspected pages. Otherwise HOLD/BLOCK regardless of build status.
 For each of the three separately delivered PDFs, produce a section-by-section source-to-output inventory: original file/page/section, original row count, output page, preserved/changed/omitted status and evidence. Never replace 37 nominal partner rows (September example) with summary-only charts. Keep the July -22,000 UF correction and its signed attribution. Other reporting months use their own canonical data.
 PDF-embedded audience/period/snapshot checks and code tests are necessary but not sufficient. Link the release gate to the real export flow, render and inspect every page, and prove the contents against the approved source documents. A skill file alone does not execute runtime gates.
+
+## Reglas permanentes de Pedro Pablo — semanales y mensuales
+
+- Audiencia CEO: la primera página debe identificar explícitamente informe ejecutivo, período completo en español, rango exacto de fechas y fecha de corte. No mostrar solo códigos YYYY-MM ni información técnica decorativa.
+- El logo aprobado debe estar íntegro, proporcionado, legible y sin texto superpuesto. Usar únicamente `public/brand/property-partners-vitacura.png`; no reemplazarlo con letras, símbolos sintéticos ni logos dibujados.
+- Identidad: seguir `DESIGN.md`, marca roja `#D7332B`, tinta carbón, superficies blancas para impresión. Las señales de estado pueden tener colores semánticos, sin introducir una segunda identidad visual.
+- Contenido: respetar **todos** los KPI solicitados por Pedro Pablo y las tres audiencias canónicas. La cobertura se compara sección por sección con la fuente aprobada. Ni un nuevo diseño ni un resumen pueden eliminar un indicador exigido.
+- Cortes: semana comercial lunes-domingo según America/Santiago; mensual por mes calendario. El período calendario completo no prueba completitud de la información.
+- Estado: solo "cerrado" si las cifras necesarias están verificadas, fuentes y corte corresponden al período y existe aprobación registrada. Si faltan datos, informar en lenguaje sencillo y ofrecer el último informe efectivamente cerrado del mismo ámbito y audiencia. No mezclar fuentes/meses para aparentar completitud.
+- UI CEO: preferir "Semanal", "Mensual", "Generar informe" y "Descargar último informe". El vocabulario técnico se reserva a trazabilidad o administración, no a las decisiones principales.
+- PDF: evitar páginas vacías, mapas sin información, tablas ilegibles, encabezados superpuestos y texto de tamaño insuficiente. Si faltan datos de mercado, presentar la limitación en una sección breve y útil, sin rankings ficticios.
+- Antes de entregar: renderizar las páginas reales, inspeccionar visualmente y registrar resultado. QA de código/CI no equivale a inspección editorial; sin evidencia visual final mantener HOLD.
+- No generar ni enviar automáticamente documentos incompletos bajo la etiqueta de informe cerrado. El fallback debe preservar el período y versión originales del informe aprobado.
