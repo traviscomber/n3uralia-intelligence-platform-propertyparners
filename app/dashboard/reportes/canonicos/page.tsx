@@ -58,7 +58,7 @@ export default async function CanonicalClientReportsPage({ searchParams }: { sea
         <Link href="/dashboard/reportes/canonicos" aria-current={!selectedMonth ? 'page' : undefined} className={!selectedMonth ? 'inline-flex min-h-11 items-center border border-[var(--primary)] bg-[var(--primary)] px-4 text-sm text-white' : 'inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 text-sm'}>Todos</Link>
         {availableMonths.map(month => <Link key={month} href={'/dashboard/reportes/canonicos?mes=' + month} aria-current={selectedMonth === month ? 'page' : undefined} className={selectedMonth === month ? 'inline-flex min-h-11 items-center border border-[var(--primary)] bg-[var(--primary)] px-4 text-sm text-white' : 'inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 text-sm'}>{new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'))}</Link>)}
       </nav>
-      <p className="mt-4 text-sm text-[var(--n3-text-muted)]">¿Quieres revisar una semana? <Link href="/dashboard/reportes/operacion" className="font-medium text-[var(--n3-text-light)] underline">Ver informes semanales</Link></p>
+      <p className="mt-4 text-sm text-[var(--n3-text-muted)]">¿Necesitas preparar un informe? <Link href="/dashboard/reportes/operacion" className="font-medium text-[var(--n3-text-light)] underline">Generar y revisar</Link></p>
     </section>
     <section className="mt-6 max-w-5xl">
       {current?<article className="grid gap-6 border-y border-[var(--n3-line)] py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
