@@ -59,3 +59,11 @@ test('director home prioritizes office results without losing actions', () => {
   assert.match(director, /Revisar valorizaciones/)
   assert.doesNotMatch(director, /BarChart3/)
 })
+
+test('executive report is visibly a draft pending review', () => {
+  const report = source('components/management/ceo-intelligence-report-generator.tsx')
+  assert.match(report, /Generar informe ejecutivo/)
+  assert.match(report, /Se guarda como borrador y no se envía automáticamente/)
+  assert.match(report, /Revisar informe/)
+  assert.doesNotMatch(report, /Generar CEO Intelligence/)
+})
