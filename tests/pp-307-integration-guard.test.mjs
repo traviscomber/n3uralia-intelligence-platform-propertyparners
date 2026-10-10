@@ -101,3 +101,12 @@ test('CEO intelligence PDF uses the same approved brand and preflight', () => {
   assert.match(generator, /await verifyPdfinoReport\(bytes/)
   assert.match(generator, /minPages: 8/)
 })
+
+test('monthly audience reporting policy stays canonical and complete', () => {
+  const contract = source('docs/reporting/PROPERTY_PARTNERS_AUDIENCE_REPORT_CANONICAL.md')
+  for (const requirement of [
+    'CEO/Directorio', 'Directoras', 'Partners', 'detalle nominal',
+    '−22.000 UF', 'No sustituir un informe completo', 'PDFino',
+    'render de **todas** las páginas',
+  ]) assert.ok(contract.includes(requirement), requirement)
+})
