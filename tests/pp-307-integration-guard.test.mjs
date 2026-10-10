@@ -197,3 +197,11 @@ test('dedicated five-page CEO editorial renderer preserves approved design, oper
   assert.match(code, /verifyPdfinoReport\(bytes/)
   assert.match(code, /minPages:5/)
 })
+
+test('CEO canonical mapper rejects missing source metrics and unsupported previous-month values', () => {
+  const mapper = source('lib/property-partners-ceo-canonical-mapper.ts')
+  assert.match(mapper, /CEO_CANONICAL_METRIC_MISSING/)
+  assert.match(mapper, /CEO_PREVIOUS_METRIC_MISSING/)
+  assert.match(mapper, /CEO_OPERATION_TOTAL_MISMATCH/)
+  assert.match(mapper, /CEO_CANONICAL_SOURCE_INVALID/)
+})
