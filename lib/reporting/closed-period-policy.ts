@@ -1,4 +1,4 @@
-import { propertyPartnersMonthKey } from './property-partners-time'
+import { propertyPartnersMonthKey } from '../property-partners-time'
 
 export type ReportPeriod = { start: string; end: string; label: string; cadence: 'weekly' | 'monthly' }
 
