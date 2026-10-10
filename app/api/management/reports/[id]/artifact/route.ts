@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { PDFDocument } from 'pdf-lib'
+import { verifyAudienceSnapshot, type AudienceSnapshot } from '@/lib/property-partners-audience-snapshot'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildManagementReportPdf, type ManagementReportRecord } from '@/lib/management-report-artifact'
@@ -34,6 +35,13 @@ export async function GET(
   try {
     const enriched = await addCanonicalManagementComparisons(supabase, data as ReportWithEntity)
     const normalized = normalizeManagementReportOutput(enriched)
+    // Apply the canonical audience reconciliation only to the versioned audience schema.
+    // Legacy management snapshots use a different model and must not be misread as it.
+    const canonical = normalized.snapshot as Record<string, unknown>
+    if (Array.isArray(canonical.metrics) && Array.isArray(canonical.evidence) && canonical.period && typeof canonical.period === 'object') {
+      const checked = verifyAudienceSnapshot(canonical as unknown as AudienceSnapshot)
+      if (checked.period !== normalized.period_start.slice(0, 7)) throw new Error('REPORT_PERIOD_SNAPSHOT_MISMATCH')
+    }
     const artifact = await buildManagementReportPdf(normalized)
     // Verify the actual PDF against the exact persisted/enriched snapshot used to render it.
     const document = await PDFDocument.load(artifact.bytes)
