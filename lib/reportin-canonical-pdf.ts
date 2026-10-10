@@ -11,7 +11,7 @@ const MARGIN_X = 48
 const TOP_Y = 790
 const BOTTOM_Y = 54
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2
-const REPORTIN_VERSION = '1.1-pdfino'
+const REPORTIN_VERSION = '1.0'
 
 const COLORS = {
   ink: rgb(0.055, 0.067, 0.067),
@@ -95,7 +95,9 @@ export async function buildReportinCanonicalPdf(report: CanonicalClientReport) {
   // The client-approved logo is embedded into the document, not reconstructed as text.
   // Fail closed if the approved asset is unavailable in the deployed artifact.
   const logoBytes = await readFile(join(process.cwd(), 'public/brand/property-partners-vitacura.png'))
-  const clientLogo = await pdf.embedPng(logoBytes)
+  const clientLogo = logoBytes[0] === 0xff && logoBytes[1] === 0xd8
+    ? await pdf.embedJpg(logoBytes)
+    : await pdf.embedPng(logoBytes)
   const fonts: Fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
     bold: await pdf.embedFont(StandardFonts.HelveticaBold),
