@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { verifyPdfinoReport } from './pdfino-report-quality'
+import { verifyAudienceOperations, type SignedOperation } from './property-partners-audience-snapshot'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
 export type ManagementReportRecord = {
@@ -492,6 +493,39 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     drawWrapped(p3, sources.join(' · '), methodX, 81, methodW, { size: 5.2, color: PP_MUTED, leading: 6.8, maxLines: 3 })
   }
   footer(p3, '3/3')
+
+  // Optional full-detail appendix: show only audited nominal operations supplied by the
+  // canonical audience export. Never infer operations from aggregate management KPIs.
+  const rawOperations = snapshot.audienceOperations
+  if (rawOperations !== undefined) {
+    if (!Array.isArray(rawOperations)) throw new Error('REPORT_OPERATIONS_INVALID_PAYLOAD')
+    const operations = rawOperations as SignedOperation[]
+    const totals = record(snapshot.audienceReconciliation)
+    const netClosures = numeric(totals?.netClosures)
+    const netUf = numeric(totals?.netUf)
+    if (netClosures === null || netUf === null) throw new Error('REPORT_OPERATIONS_TOTALS_MISSING')
+    verifyAudienceOperations(report.period_start.slice(0, 7), operations, { netClosures, netUf })
+    const perPage = 18
+    const totalPages = Math.ceil(operations.length / perPage)
+    for (let n = 0; n < totalPages; n++) {
+      const page = pdf.addPage([W, H])
+      darkPage(page)
+      page.drawText('DETALLE COMERCIAL VERIFICADO', { x: M, y: 794, size: 10, font: bold, color: PP_RED_SOFT })
+      page.drawText('Operaciones nominales', { x: M, y: 751, size: 24, font: serif, color: PP_TEXT })
+      page.drawText(period, { x: M, y: 724, size: 10, font: regular, color: PP_MUTED })
+      page.drawText('Partner / agente', { x: M, y: 680, size: 8, font: bold, color: PP_TEXT })
+      page.drawText('Oficina', { x: 285, y: 680, size: 8, font: bold, color: PP_TEXT })
+      page.drawText('UF netas', { x: 475, y: 680, size: 8, font: bold, color: PP_TEXT })
+      for (const [index, op] of operations.slice(n * perPage, (n + 1) * perPage).entries()) {
+        const y = 653 - index * 32
+        drawWrapped(page, op.partner, M, y, 244, { size: 8, maxLines: 2, leading: 9 })
+        drawWrapped(page, op.office, 285, y, 165, { size: 7.5, maxLines: 2, leading: 9 })
+        page.drawText(format(op.uf), { x: 475, y, size: 9, font: bold, color: op.uf < 0 ? PP_RED_SOFT : PP_TEXT })
+        if (op.adjustment) page.drawText('AJUSTE HISTÓRICO ' + op.originPeriod, { x: M, y: y - 13, size: 6.5, font: regular, color: PP_RED_SOFT })
+      }
+      footer(page, `${n + 4}/${3 + totalPages}`)
+    }
+  }
 
   const bytes = await pdf.save()
   await verifyPdfinoReport(bytes, { title: `Property Partners - ${report.report_type} - ${report.period_start} a ${report.period_end}`, minPages: 3, requireA4: true })
