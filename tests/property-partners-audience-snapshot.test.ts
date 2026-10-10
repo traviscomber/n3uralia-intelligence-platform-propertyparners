@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { verifyAudienceSnapshot, verifyAudienceOperations, type AudienceSnapshot } from '../lib/property-partners-audience-snapshot'
+import { verifyAudienceSnapshot, verifyAudienceOperations, verifyPartnerReportRows, type AudienceSnapshot } from '../lib/property-partners-audience-snapshot'
 
 const closure = (entity: string, sales: number, uf: number) => [
   {id: entity + '_sales', label:'sales', value:sales, status:'verified', evidenceRefs:['ev_closures']},
@@ -53,4 +53,14 @@ test('the seven September signed operations reconcile to five closures and 49,56
   assert.doesNotThrow(() => verifyAudienceOperations('2026-09',operations,{netClosures:5,netUf:49560}))
   operations.pop()
   assert.throws(() => verifyAudienceOperations('2026-09',operations,{netClosures:5,netUf:49560}),/RECONCILIATION_FAILED/)
+})
+
+test('partner export rejects omitted, extra and duplicated nominal rows', () => {
+  const roster = {'Santa María':['Partner A','Partner B'],'Nueva Costanera':['Partner C']}
+  const makeRow = (office: string,name: string) => ({name,office,leads:0,classifiedPercent:0,stale90:0,visitsRealized:0,visitsScheduled:0,stock:0,captures:0,suspended:0,netClosures:0,netUf:0})
+  const rows = [makeRow('Santa María','Partner A'),makeRow('Santa María','Partner B'),makeRow('Nueva Costanera','Partner C')]
+  assert.doesNotThrow(()=>verifyPartnerReportRows(rows,roster))
+  assert.throws(()=>verifyPartnerReportRows(rows.slice(0,2),roster),/ROW_COUNT_MISMATCH/)
+  assert.throws(()=>verifyPartnerReportRows([...rows.slice(0,2),rows[1]],roster),/DUPLICATE_ROW/)
+  assert.throws(()=>verifyPartnerReportRows([...rows.slice(0,2),makeRow('Nueva Costanera','Unknown')],roster),/UNEXPECTED_OR_DUPLICATE_ROW/)
 })
