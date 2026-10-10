@@ -110,3 +110,10 @@ test('monthly audience reporting policy stays canonical and complete', () => {
     'render de **todas** las páginas',
   ]) assert.ok(contract.includes(requirement), requirement)
 })
+
+test('legacy management PDF export runs mandatory PDFino A4 preflight', () => {
+  const generator = source('lib/management-report-artifact.ts')
+  assert.match(generator, /verifyPdfinoReport\(bytes/)
+  assert.match(generator, /requireA4: true/)
+  assert.match(generator, /pdf\.setTitle\(/)
+})
