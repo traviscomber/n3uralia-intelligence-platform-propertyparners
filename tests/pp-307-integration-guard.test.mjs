@@ -37,3 +37,14 @@ test('report delivery remains review-gated, not an automatically approved draft'
   assert.match(reports, /CanonicalReportReviewActions/)
   assert.match(reports, /Sin informe listo para entrega/)
 })
+
+test('partner sees four decision metrics first and optional secondary context', () => {
+  const partner = source('components/management/partner-performance-summary.tsx')
+  assert.match(partner, /Mi desempeño/)
+  assert.match(partner, /primaryCards/)
+  assert.match(partner, /secondaryCards/)
+  assert.match(partner, /Leads activos/)
+  assert.match(partner, /Visitas realizadas/)
+  assert.match(partner, /Ver detalle/)
+  assert.doesNotMatch(partner, /Corte canónico vigente/)
+})
