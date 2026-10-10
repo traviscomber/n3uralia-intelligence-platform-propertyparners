@@ -43,13 +43,13 @@ export default async function CanonicalClientReportsPage({ searchParams }: { sea
 
   if(error){
     return <WorkspaceShell>
-      <WorkspaceHeader eyebrow="Informes" title="Último informe" meta="Consulta no disponible" actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
-      <div className="mt-6 max-w-5xl"><OperationalState kind="error" title="No fue posible consultar informes" description="La consulta de informes canónicos falló. No se interpreta este estado como ausencia de informes; reintenta más tarde o revisa la operación de reportes." /></div>
+      <WorkspaceHeader eyebrow="Informes" title="Informes" meta="No disponible" actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+      <div className="mt-6 max-w-5xl"><OperationalState kind="error" title="No fue posible consultar informes" description="No pudimos cargar los informes. Inténtalo nuevamente." /></div>
     </WorkspaceShell>
   }
 
   return <WorkspaceShell>
-    <WorkspaceHeader eyebrow="Informes" title="Informes" meta={current?`${current.kind} · ${current.status} · ${current.period}`:'Sin informe entregable'} actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
+    <WorkspaceHeader eyebrow="Informes" title="Informes" meta={current?`${current.kind} · ${current.status} · ${current.period}`:'Sin informe aprobado'} actions={[{label:'Generar y revisar',href:'/dashboard/reportes/operacion',primary:true,icon:<Send size={15}/>}]} />
 
     <section className="mt-6 max-w-5xl border-y border-[var(--n3-line)] py-5" aria-label="Seleccionar período">
       <h2 className="text-base font-semibold">¿Qué período quieres consultar?</h2>
@@ -76,7 +76,7 @@ export default async function CanonicalClientReportsPage({ searchParams }: { sea
     </section>
 
     {current?<details className="mt-5 max-w-5xl border-b border-[var(--n3-line)] pb-5">
-      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver trazabilidad</summary>
+      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver origen y detalles</summary>
       <div className="mt-4 grid gap-4 text-xs text-[var(--n3-text-muted)] sm:grid-cols-2 lg:grid-cols-4">
         <div><p className="uppercase tracking-[0.12em]">Fuentes</p><p className="mt-1 text-sm text-[var(--n3-text-light)]">{current.sourceCount||'—'}</p></div>
         <div><p className="uppercase tracking-[0.12em]">Modelo</p><p className="mt-1 break-words text-sm text-[var(--n3-text-light)]">{current.model||'—'}</p></div>
@@ -91,7 +91,7 @@ export default async function CanonicalClientReportsPage({ searchParams }: { sea
     </section>
 
     <details className="mt-8 max-w-5xl">
-      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Estado de datos</summary>
+      <summary className="flex min-h-11 cursor-pointer items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver estado de los datos</summary>
       <DataStatusBar cutoff={cutoff} coverage={reports.length?`${deliverableCount}/${reports.length} entregables con período y PDF`:'Sin informes'} issues={incomplete.length} status={status}/>
     </details>
   </WorkspaceShell>
