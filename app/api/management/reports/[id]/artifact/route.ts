@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+import { PDFDocument } from 'pdf-lib'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildManagementReportPdf, type ManagementReportRecord } from '@/lib/management-report-artifact'
@@ -33,6 +35,13 @@ export async function GET(
     const enriched = await addCanonicalManagementComparisons(supabase, data as ReportWithEntity)
     const normalized = normalizeManagementReportOutput(enriched)
     const artifact = await buildManagementReportPdf(normalized)
+    // Verify the actual PDF against the exact persisted/enriched snapshot used to render it.
+    const document = await PDFDocument.load(artifact.bytes)
+    const digest = createHash('sha256').update(JSON.stringify(normalized.snapshot)).digest('hex')
+    const expectedSubject = `PP_MANAGEMENT|${normalized.report_type}|${normalized.period_start}|${normalized.period_end}|sha256:${digest}`
+    if (document.getSubject() !== expectedSubject || document.getPageCount() < 3) {
+      throw new Error('REPORT_ARTIFACT_SOURCE_MISMATCH')
+    }
     return new Response(Buffer.from(artifact.bytes), {
       status: 200,
       headers: {
