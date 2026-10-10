@@ -169,3 +169,10 @@ test('management PDF includes canonical audited nominal appendix only when opera
   assert.match(generator, /AJUSTE HISTÓRICO/)
   assert.match(generator, /finalPageCount/)
 })
+
+test('signed closure count is visible next to UF on the real nominal PDF appendix', () => {
+  const generator = source('lib/management-report-artifact.ts')
+  assert.match(generator, /page\.drawText\('Cierres'/)
+  assert.match(generator, /page\.drawText\(format\(op\.closureCount\)/)
+  assert.match(generator, /op\.closureCount < 0/)
+})
