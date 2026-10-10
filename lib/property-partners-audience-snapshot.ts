@@ -77,3 +77,44 @@ export function verifyAudienceOperations(
   const sumUf = operations.reduce((s, op) => s + op.uf, 0)
   if (sumCount !== totals.netClosures || sumUf !== totals.netUf) throw new Error('REPORT_OPERATIONS_RECONCILIATION_FAILED')
 }
+
+/** Complete partner-table gate; expected count is supplied by the approved source,
+ * never assumed to be 37 for months other than September 2026. */
+export type PartnerReportRow = {
+  name: string
+  office: string
+  leads: number | null
+  classifiedPercent: number | null
+  stale90: number | null
+  visitsRealized: number | null
+  visitsScheduled: number | null
+  stock: number | null
+  captures: number | null
+  suspended: number | null
+  netClosures: number | null
+  netUf: number | null
+}
+export function verifyPartnerReportRows(rows: PartnerReportRow[], expectedNamesByOffice: Record<string, string[]>): void {
+  const expected = new Set<string>()
+  for (const [office, names] of Object.entries(expectedNamesByOffice)) {
+    if (!OFFICES.includes(office as typeof OFFICES[number])) throw new Error('REPORT_PARTNER_INVALID_OFFICE')
+    for (const name of names) {
+      const key = office + '|' + name.trim().toLocaleLowerCase('es-CL')
+      if (!name.trim() || expected.has(key)) throw new Error('REPORT_PARTNER_SOURCE_DUPLICATE')
+      expected.add(key)
+    }
+  }
+  if (!expected.size || rows.length !== expected.size) throw new Error('REPORT_PARTNER_ROW_COUNT_MISMATCH')
+  const seen = new Set<string>()
+  const metrics: (keyof PartnerReportRow)[] = ['leads', 'classifiedPercent', 'stale90', 'visitsRealized', 'visitsScheduled', 'stock', 'captures', 'suspended', 'netClosures', 'netUf']
+  for (const row of rows) {
+    const key = row.office + '|' + row.name.trim().toLocaleLowerCase('es-CL')
+    if (!expected.has(key) || seen.has(key)) throw new Error('REPORT_PARTNER_UNEXPECTED_OR_DUPLICATE_ROW')
+    seen.add(key)
+    for (const field of metrics) {
+      const value = row[field]
+      if (value !== null && (typeof value !== 'number' || !Number.isFinite(value))) throw new Error('REPORT_PARTNER_INVALID_METRIC')
+    }
+    if (row.classifiedPercent !== null && (row.classifiedPercent < 0 || row.classifiedPercent > 100)) throw new Error('REPORT_PARTNER_INVALID_PERCENT')
+  }
+}
