@@ -1,4 +1,4 @@
-import { PDFDocument,StandardFonts,rgb } from 'pdf-lib'
+import { PDFDocument,StandardFonts,rgb, type PDFPage } from 'pdf-lib'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { verifyPdfinoReport } from './pdfino-report-quality'
@@ -26,7 +26,7 @@ export async function buildDirectorOfficeEditorialPdf(d:DirectorOfficeEditorial)
  const logo=b[0]===255&&b[1]===216?await pdf.embedJpg(b):await pdf.embedPng(b)
  pdf.setTitle('Property Partners / Directora / '+d.office+' / '+d.period)
  pdf.setSubject('PP_DIRECTOR|'+d.period+'|'+d.office+'|'+d.sourceId)
- function write(p:any,s:string,x:number,y:number,z=10,heavy=false,col=K){p.drawText(plain(s),{x,y,size:z,font:heavy?bold:font,color:col})}
+ function write(p:PDFPage,s:string,x:number,y:number,z=10,heavy=false,col=K){p.drawText(plain(s),{x,y,size:z,font:heavy?bold:font,color:col})}
  function page(n:number){
   const p=pdf.addPage([W,H]);p.drawRectangle({x:0,y:0,width:W,height:H,color:WHITE})
   p.drawRectangle({x:0,y:H-46,width:W,height:46,color:K})
@@ -37,7 +37,7 @@ export async function buildDirectorOfficeEditorialPdf(d:DirectorOfficeEditorial)
   write(p,String(n)+' / 2',W-80,39,8,true,G)
   return p
  }
- let p=page(1);let dims=logo.scaleToFit(145,68);p.drawImage(logo,{x:M,y:695,width:dims.width,height:dims.height})
+ let p=page(1);const dims=logo.scaleToFit(145,68);p.drawImage(logo,{x:M,y:695,width:dims.width,height:dims.height})
  write(p,'CONTROL DE GESTION / '+d.period,M,664,11,true,R)
  write(p,d.office,M,621,26,true)
  write(p,'Resultado y seguimiento verificado de la oficina',M,596,10,false,G)
