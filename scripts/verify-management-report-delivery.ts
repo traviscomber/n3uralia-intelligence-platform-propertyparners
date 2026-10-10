@@ -1,3 +1,4 @@
+import { PDFDocument } from 'pdf-lib'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
@@ -122,6 +123,41 @@ async function main() {
   assert.ok(artifact.bytes.length > 1000)
   assert.equal(Buffer.from(artifact.bytes).subarray(0, 4).toString('ascii'), '%PDF')
   assert.match(artifact.filename, /reporte-ejecutivo-2026-07-01-2026-07-31\.pdf/)
+
+  // Exercise the actual PDF builder, not a source-regex guard. These are isolated
+  // synthetic fixture values; never publish them as company results.
+  const samplePartner = (name: string) => ({
+    name, office: 'Santa María', leads: 0, classifiedPercent: 0,
+    stale90: 0, visitsRealized: 0, visitsScheduled: 0, stock: 0,
+    captures: 0, suspended: 0, netClosures: 0, netUf: 0,
+  })
+  const partnerReport = {
+    ...report,
+    report_type: 'partner',
+    snapshot: {
+      ...report.snapshot,
+      audiencePartnerRoster: { 'Santa María': ['Agente Alfa', 'Agente Beta'] },
+      audiencePartnerRows: [samplePartner('Agente Alfa'), samplePartner('Agente Beta')],
+    },
+  }
+  const partnerPdf = await buildManagementReportPdf(partnerReport)
+  const partnerDocument = await PDFDocument.load(partnerPdf.bytes)
+  assert.equal(partnerDocument.getPageCount(), 4, 'Two audited partner rows require a real appendix page')
+  assert.match(partnerPdf.filename, /reporte-individual/)
+  await assert.rejects(
+    () => buildManagementReportPdf({
+      ...partnerReport,
+      snapshot: {
+        ...partnerReport.snapshot,
+        audiencePartnerRows: [samplePartner('Agente Alfa')],
+      },
+    }),
+    /REPORT_PARTNER_ROW_COUNT_MISMATCH/,
+  )
+  await assert.rejects(
+    () => buildManagementReportPdf({ ...partnerReport, report_type: 'executive' }),
+    /REPORT_PARTNER_SCOPE_INVALID/,
+  )
 
   console.log('Management report delivery verification passed.')
 }
