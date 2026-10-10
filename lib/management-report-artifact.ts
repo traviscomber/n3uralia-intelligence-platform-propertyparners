@@ -162,6 +162,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const partnerRoster = snapshot.audiencePartnerRoster
   if ((partnerRows !== undefined || partnerRoster !== undefined) && report.report_type !== 'partner') throw new Error('REPORT_PARTNER_SCOPE_INVALID')
   if ((partnerRows === undefined) !== (partnerRoster === undefined)) throw new Error('REPORT_PARTNER_COVERAGE_INCOMPLETE')
+  if (report.report_type === 'partner' && (partnerRows === undefined || partnerRoster === undefined)) throw new Error('REPORT_PARTNER_CANONICAL_ROWS_REQUIRED')
   if (partnerRows !== undefined) {
     if (!Array.isArray(partnerRows) || !partnerRoster || typeof partnerRoster !== 'object' || Array.isArray(partnerRoster)) throw new Error('REPORT_PARTNER_PAYLOAD_INVALID')
     verifyPartnerReportRows(partnerRows as PartnerReportRow[], partnerRoster as Record<string, string[]>)
