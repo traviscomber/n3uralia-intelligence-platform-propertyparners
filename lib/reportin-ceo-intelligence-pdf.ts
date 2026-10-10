@@ -269,7 +269,9 @@ export async function buildCeoIntelligencePdf(report: PropertyPartnersCeoIntelli
 
   const pdf = await PDFDocument.create()
   const logoBytes = await readFile(join(process.cwd(), 'public/brand/property-partners-vitacura.png'))
-  const clientLogo = await pdf.embedPng(logoBytes)
+  const clientLogo = logoBytes[0] === 0xff && logoBytes[1] === 0xd8
+    ? await pdf.embedJpg(logoBytes)
+    : await pdf.embedPng(logoBytes)
   const fonts: Fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
     bold: await pdf.embedFont(StandardFonts.HelveticaBold),
