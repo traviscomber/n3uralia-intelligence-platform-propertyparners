@@ -165,7 +165,7 @@ export default async function MarketPage() {
     <section id="ventas" aria-labelledby="sales-title" className="mt-12 scroll-mt-6">
       <div className="border-b border-[var(--n3-line)] pb-4">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--n3-teal-soft)]">03 · Oferta y compraventas</p>
-        <h2 id="sales-title" className="mt-2 text-2xl font-semibold tracking-tight">Oferta y ventas reales</h2>
+        <h2 id="sales-title" className="mt-2 text-2xl font-semibold tracking-tight">Lo publicado no es lo vendido</h2>
         <p className="mt-2 max-w-3xl text-xs leading-5 text-[var(--n3-text-muted)]">Portal registra precios pedidos y publicaciones; CBRS registra inscripciones de compraventa. Los períodos son distintos y no se calcula absorción con estas cifras.</p>
       </div>
       <div className="mt-4 hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] border-b border-[var(--n3-line)] pb-3 text-[10px] uppercase tracking-[0.12em] text-[var(--n3-text-muted)] sm:grid">
