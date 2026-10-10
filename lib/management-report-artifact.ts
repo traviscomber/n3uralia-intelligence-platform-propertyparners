@@ -1,3 +1,8 @@
+import { createHash } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { verifyPdfinoReport } from './pdfino-report-quality'
+import { verifyAudienceOperations, type SignedOperation, verifyPartnerReportRows, type PartnerReportRow } from './property-partners-audience-snapshot'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
 export type ManagementReportRecord = {
@@ -138,12 +143,33 @@ function blockerLabel(code: string) {
 
 export async function buildManagementReportPdf(report: ManagementReportRecord) {
   const pdf = await PDFDocument.create()
+  const logoBytes = await readFile(join(process.cwd(), 'public/brand/property-partners-vitacura.png'))
+  const approvedLogo = logoBytes[0] === 0xff && logoBytes[1] === 0xd8
+    ? await pdf.embedJpg(logoBytes)
+    : await pdf.embedPng(logoBytes)
+  pdf.setTitle(`Property Partners - ${report.report_type} - ${report.period_start} a ${report.period_end}`)
+  const snapshotDigest = createHash('sha256').update(JSON.stringify(report.snapshot)).digest('hex')
+  pdf.setSubject(`PP_MANAGEMENT|${report.report_type}|${report.period_start}|${report.period_end}|sha256:${snapshotDigest}`)
+  pdf.setKeywords(['Property Partners Vitacura', 'reporte de gestión', `origen:${report.id}`, `snapshot:${snapshotDigest}`])
+  pdf.setProducer('Property Partners Vitacura / Reportin')
   const regular = await pdf.embedFont(StandardFonts.Helvetica)
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
   const serif = await pdf.embedFont(StandardFonts.TimesRoman)
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold)
 
   const snapshot = record(report.snapshot) ?? {}
+  const partnerRows = snapshot.audiencePartnerRows
+  const partnerRoster = snapshot.audiencePartnerRoster
+  if ((partnerRows !== undefined || partnerRoster !== undefined) && report.report_type !== 'partner') throw new Error('REPORT_PARTNER_SCOPE_INVALID')
+  if ((partnerRows === undefined) !== (partnerRoster === undefined)) throw new Error('REPORT_PARTNER_COVERAGE_INCOMPLETE')
+  if (report.report_type === 'partner' && (partnerRows === undefined || partnerRoster === undefined)) throw new Error('REPORT_PARTNER_CANONICAL_ROWS_REQUIRED')
+  if (partnerRows !== undefined) {
+    if (!Array.isArray(partnerRows) || !partnerRoster || typeof partnerRoster !== 'object' || Array.isArray(partnerRoster)) throw new Error('REPORT_PARTNER_PAYLOAD_INVALID')
+    verifyPartnerReportRows(partnerRows as PartnerReportRow[], partnerRoster as Record<string, string[]>)
+  }
+  const nominalAppendixPages = Array.isArray(snapshot.audienceOperations) ? Math.ceil(snapshot.audienceOperations.length / 18) : 0
+  const partnerAppendixPages = Array.isArray(partnerRows) ? Math.ceil(partnerRows.length / 12) : 0
+  const finalPageCount = 3 + nominalAppendixPages + partnerAppendixPages
   const company = record(snapshot.company) ?? {}
   const completeness = record(snapshot.completeness) ?? {}
   const provenance = record(snapshot.provenance) ?? {}
@@ -212,7 +238,8 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   }
 
   function ppMark(page: PDFPage, x: number, y: number, size: number) {
-    page.drawText('P', { x, y, size, font: serifBold, color: PP_RED_SOFT })
+    const dimensions = approvedLogo.scaleToFit(size, size)
+    page.drawImage(approvedLogo, { x, y, width: dimensions.width, height: dimensions.height })
   }
 
   function decorativeBuilding(page: PDFPage, x: number, y: number, width: number, height: number) {
@@ -288,7 +315,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
   p1.drawText('Leads   |   Captaciones   |   Visitas   |   Requerimientos online   |   Cierres   |   Cartera   |   Suspendidas', { x: 44, y: 151, size: 6.8, font: regular, color: MUTED })
   const generatedLabel = generatedAt ? `Generado: ${generatedAt}` : 'Snapshot persistido del sistema de control de gestión'
   drawWrapped(p1, `${generatedLabel}  ·  ID: ${report.id}`, 44, 130, W - 88, { size: 6.3, color: MUTED, leading: 8, maxLines: 2 })
-  footer(p1, '1/3', false)
+  footer(p1, `1/${finalPageCount}`, false)
 
   // PAGE 2 — premium commercial performance
   const p2 = pdf.addPage([W, H])
@@ -405,7 +432,7 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     ? 'La serie de visitas no está disponible de forma canónica para este período; el reporte conserva esos campos como n/d y no infiere valores.'
     : `Se registran ${format(company.visitasAgendadas)} visitas agendadas y ${format(company.visitasRealizadas)} realizadas, equivalentes a ${format(company.cumplimientoVisitas, '%')} de cumplimiento.`
   drawWrapped(p2, visitNarrative, M + 58, 105, W - M * 2 - 76, { size: 7.8, color: PP_MUTED, leading: 11, maxLines: 4 })
-  footer(p2, '2/3')
+  footer(p2, `2/${finalPageCount}`)
 
   // PAGE 3 — premium evidence, quality and methodology
   const p3 = pdf.addPage([W, H])
@@ -477,9 +504,71 @@ export async function buildManagementReportPdf(report: ManagementReportRecord) {
     p3.drawText('Archivos fuente', { x: methodX, y: 94, size: 6.5, font: bold, color: PP_TEXT })
     drawWrapped(p3, sources.join(' · '), methodX, 81, methodW, { size: 5.2, color: PP_MUTED, leading: 6.8, maxLines: 3 })
   }
-  footer(p3, '3/3')
+  footer(p3, `3/${finalPageCount}`)
+
+  // Optional full-detail appendix: show only audited nominal operations supplied by the
+  // canonical audience export. Never infer operations from aggregate management KPIs.
+  const rawOperations = snapshot.audienceOperations
+  if (rawOperations !== undefined) {
+    if (!Array.isArray(rawOperations)) throw new Error('REPORT_OPERATIONS_INVALID_PAYLOAD')
+    const operations = rawOperations as SignedOperation[]
+    const totals = record(snapshot.audienceReconciliation)
+    const netClosures = numeric(totals?.netClosures)
+    const netUf = numeric(totals?.netUf)
+    if (netClosures === null || netUf === null) throw new Error('REPORT_OPERATIONS_TOTALS_MISSING')
+    verifyAudienceOperations(report.period_start.slice(0, 7), operations, { netClosures, netUf })
+    const perPage = 18
+    const totalPages = Math.ceil(operations.length / perPage)
+    for (let n = 0; n < totalPages; n++) {
+      const page = pdf.addPage([W, H])
+      darkPage(page)
+      page.drawText('DETALLE COMERCIAL VERIFICADO', { x: M, y: 794, size: 10, font: bold, color: PP_RED_SOFT })
+      page.drawText('Operaciones nominales', { x: M, y: 751, size: 24, font: serif, color: PP_TEXT })
+      page.drawText(period, { x: M, y: 724, size: 10, font: regular, color: PP_MUTED })
+      page.drawText('Partner / agente', { x: M, y: 680, size: 8, font: bold, color: PP_TEXT })
+      page.drawText('Oficina', { x: 285, y: 680, size: 8, font: bold, color: PP_TEXT })
+      page.drawText('Cierres', { x: 424, y: 680, size: 8, font: bold, color: PP_TEXT })
+      page.drawText('UF netas', { x: 485, y: 680, size: 8, font: bold, color: PP_TEXT })
+      for (const [index, op] of operations.slice(n * perPage, (n + 1) * perPage).entries()) {
+        const y = 653 - index * 32
+        drawWrapped(page, op.partner, M, y, 244, { size: 8, maxLines: 2, leading: 9 })
+        drawWrapped(page, op.office, 285, y, 125, { size: 7.5, maxLines: 2, leading: 9 })
+        page.drawText(format(op.closureCount), { x: 424, y, size: 8.5, font: bold, color: op.closureCount < 0 ? PP_RED_SOFT : PP_TEXT })
+        page.drawText(format(op.uf), { x: 485, y, size: 9, font: bold, color: op.uf < 0 ? PP_RED_SOFT : PP_TEXT })
+        if (op.adjustment) page.drawText('AJUSTE HISTÓRICO ' + op.originPeriod, { x: M, y: y - 13, size: 6.5, font: regular, color: PP_RED_SOFT })
+      }
+      footer(page, `${n + 4}/${finalPageCount}`)
+    }
+  }
+
+  if (Array.isArray(partnerRows)) {
+    const rows = partnerRows as PartnerReportRow[]
+    for (let n = 0; n < partnerAppendixPages; n++) {
+      const page = pdf.addPage([W, H])
+      darkPage(page)
+      page.drawText('PARTNERS / DETALLE CANÓNICO', { x: M, y: 794, size: 10, font: bold, color: PP_RED_SOFT })
+      page.drawText('Actividad nominal por oficina', { x: M, y: 750, size: 23, font: serif, color: PP_TEXT })
+      page.drawText(period, { x: M, y: 723, size: 10, font: regular, color: PP_MUTED })
+      const first = n * 12
+      for (const [index, row] of rows.slice(first, first + 12).entries()) {
+        const y = 674 - index * 51
+        const office = row.office + ' / ' + row.name
+        drawWrapped(page, office, M, y, W - M * 2, { size: 9, font: bold, maxLines: 1 })
+        const details = [
+          'Leads ' + format(row.leads), 'Clasif. ' + format(row.classifiedPercent, '%'),
+          '>90d ' + format(row.stale90), 'Visitas ' + format(row.visitsRealized) + '/' + format(row.visitsScheduled),
+          'Stock ' + format(row.stock), 'Capt. ' + format(row.captures), 'Susp. ' + format(row.suspended),
+          'Cierres ' + format(row.netClosures), 'UF ' + format(row.netUf),
+        ].join('   |   ')
+        drawWrapped(page, details, M, y - 15, W - M * 2, { size: 7.2, maxLines: 2, leading: 10 })
+        page.drawLine({ start: { x: M, y: y - 33 }, end: { x: W - M, y: y - 33 }, color: PP_LINE, thickness: 0.35 })
+      }
+      footer(page, `${4 + nominalAppendixPages + n}/${finalPageCount}`)
+    }
+  }
 
   const bytes = await pdf.save()
+  await verifyPdfinoReport(bytes, { title: `Property Partners - ${report.report_type} - ${report.period_start} a ${report.period_end}`, minPages: 3, requireA4: true })
   return {
     bytes,
     filename: `${filenamePart(reportTypeLabel(report.report_type))}-${report.period_start}-${report.period_end}.pdf`,

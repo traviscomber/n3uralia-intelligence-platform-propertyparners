@@ -55,7 +55,8 @@
     "management:comparisons:verify": "node --import tsx scripts/verify-management-report-comparisons.ts",
     "management:sources:verify": "node --import tsx scripts/verify-management-source-contracts-2025.ts",
     "management:2025:prepare": "node --import tsx scripts/prepare-2025-granular-import.ts",
-    "management:gate": "pnpm access:verify && pnpm management:scoring:verify && pnpm management:reports:verify && pnpm management:persisted:verify && pnpm management:reconciliation:verify && pnpm management:delivery:verify && pnpm management:semantics:verify && pnpm management:comparisons:verify && pnpm management:sources:verify",
+    "management:report-release:verify": "node --import tsx --test tests/property-partners-report-release.test.ts tests/property-partners-audience-snapshot.test.ts tests/property-partners-director-report-scope.test.ts tests/property-partners-director-september-canonical.test.ts && node --import tsx scripts/verify-ceo-editorial-pdf.ts && node --import tsx scripts/verify-director-editorial-pdfs.ts && node --import tsx scripts/verify-partner-editorial-pdf.ts",
+    "management:gate": "pnpm management:report-release:verify && pnpm access:verify && pnpm management:scoring:verify && pnpm management:reports:verify && pnpm management:persisted:verify && pnpm management:reconciliation:verify && pnpm management:delivery:verify && pnpm management:semantics:verify && pnpm management:comparisons:verify && pnpm management:sources:verify",
     "reportin:verify": "tsx --tsconfig scripts/tsconfig.reportin.json scripts/verify-reportin-canonical-pdf.ts",
     "market-sources:build": "node scripts/build-market-source-intelligence.mjs",
     "market-sources:verify": "node scripts/verify-market-source-intelligence.mjs",
@@ -76,7 +77,7 @@
     "qa:visual": "node scripts/run-authenticated-visual-qa.mjs",
     "qa:roles": "node scripts/run-authenticated-role-qa.mjs",
     "qa:technical": "node scripts/run-technical-acceptance.mjs",
-    "ai:senior:verify": "node --import tsx --test tests/pedro-pablo-vitacura-senior-behavior.test.ts && node --test tests/pedro-pablo-vitacura-senior-expertise.test.mjs",
+    "ai:senior:verify": "node --import tsx --test tests/pedro-pablo-vitacura-senior-behavior.test.ts && node --test tests/pedro-pablo-vitacura-senior-expertise.test.mjs && node --test tests/pp-307-integration-guard.test.mjs",
     "security:secdef-contract": "node scripts/verify-security-definer-contract.mjs"
   },
   "pnpm": {

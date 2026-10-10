@@ -1,3 +1,4 @@
+import { PDFDocument } from 'pdf-lib'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
@@ -122,6 +123,72 @@ async function main() {
   assert.ok(artifact.bytes.length > 1000)
   assert.equal(Buffer.from(artifact.bytes).subarray(0, 4).toString('ascii'), '%PDF')
   assert.match(artifact.filename, /reporte-ejecutivo-2026-07-01-2026-07-31\.pdf/)
+
+  // Exercise the actual PDF builder, not a source-regex guard. These are isolated
+  // synthetic fixture values; never publish them as company results.
+  const samplePartner = (name: string) => ({
+    name, office: 'Santa María', leads: 0, classifiedPercent: 0,
+    stale90: 0, visitsRealized: 0, visitsScheduled: 0, stock: 0,
+    captures: 0, suspended: 0, netClosures: 0, netUf: 0,
+  })
+  const partnerReport = {
+    ...report,
+    report_type: 'partner',
+    snapshot: {
+      ...report.snapshot,
+      audiencePartnerRoster: { 'Santa María': ['Agente Alfa', 'Agente Beta'] },
+      audiencePartnerRows: [samplePartner('Agente Alfa'), samplePartner('Agente Beta')],
+    },
+  }
+  await assert.rejects(
+    () => buildManagementReportPdf({ ...partnerReport, snapshot: { ...report.snapshot } }),
+    /REPORT_PARTNER_CANONICAL_ROWS_REQUIRED/,
+  )
+  const partnerPdf = await buildManagementReportPdf(partnerReport)
+  const partnerDocument = await PDFDocument.load(partnerPdf.bytes)
+  assert.equal(partnerDocument.getPageCount(), 4, 'Two audited partner rows require a real appendix page')
+  assert.match(partnerPdf.filename, /reporte-individual/)
+  await assert.rejects(
+    () => buildManagementReportPdf({
+      ...partnerReport,
+      snapshot: {
+        ...partnerReport.snapshot,
+        audiencePartnerRows: [samplePartner('Agente Alfa')],
+      },
+    }),
+    /REPORT_PARTNER_ROW_COUNT_MISMATCH/,
+  )
+  await assert.rejects(
+    () => buildManagementReportPdf({ ...partnerReport, report_type: 'executive' }),
+    /REPORT_PARTNER_SCOPE_INVALID/,
+  )
+
+  const completeRoster = {
+    'Santa María': Array.from({ length: 15 }, (_, i) => 'Santa Maria Partner ' + (i + 1)),
+    'Nueva Costanera': Array.from({ length: 13 }, (_, i) => 'Nueva Costanera Partner ' + (i + 1)),
+    'Lo Beltrán': Array.from({ length: 9 }, (_, i) => 'Lo Beltran Partner ' + (i + 1)),
+  }
+  // Structural stress test only: actual names and figures must be sourced from
+  // the signed canonical September partner report before client delivery.
+  const allPartnerRows = Object.entries(completeRoster).flatMap(([office, names]) =>
+    names.map(name => ({ ...samplePartner(name), office })),
+  )
+  assert.equal(allPartnerRows.length, 37)
+  const fullReport = {
+    ...partnerReport,
+    snapshot: {
+      ...partnerReport.snapshot,
+      audiencePartnerRoster: completeRoster,
+      audiencePartnerRows: allPartnerRows,
+    },
+  }
+  const fullArtifact = await buildManagementReportPdf(fullReport)
+  const fullPdf = await PDFDocument.load(fullArtifact.bytes)
+  assert.equal(fullPdf.getPageCount(), 7, '37 partner rows must paginate across four appendix pages')
+  assert.ok(fullPdf.getPages().every(page => {
+    const { width, height } = page.getSize()
+    return Math.abs(width - 595.28) <= 1 && Math.abs(height - 841.89) <= 1
+  }))
 
   console.log('Management report delivery verification passed.')
 }

@@ -47,21 +47,21 @@ export function CeoIntelligenceReportGenerator() {
       if (!payload) throw new Error(gatewayErrorMessage(response.status))
       setResult(payload)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No fue posible generar el CEO Intelligence Report.')
+      setError(cause instanceof Error ? cause.message : 'No fue posible generar el informe ejecutivo.')
     } finally {
       setLoading(false)
     }
   }
 
   return <IntelligencePanel
-    eyebrow="Reportin · CEO Intelligence"
+    eyebrow="Informe ejecutivo"
     title="Informe ejecutivo para Pedro Pablo"
-    description="Cruza gestión comercial, oficinas, funnel, KML de Vitacura, benchmark por micromercado y actividad de valorización. Se guarda como borrador y no se envía automáticamente."
+    description="Cruza gestión comercial, oficinas, conversión, mercado por sector y actividad de valorización. Se guarda como borrador y no se envía automáticamente."
   >
     <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 text-xs text-[var(--n3-text-muted)]">
-        <p>Salida: CEO snapshot · mapa KML · micromercados · conversión · oficinas · decisiones.</p>
-        <p className="mt-1">Protección: N/D se conserva; Portal y CBRS mantienen su propio corte de referencia.</p>
+        <p>Incluye: resultados, oficinas, mercado, conversión, valorizaciones y decisiones.</p>
+        <p className="mt-1">Los datos no disponibles se mantienen como N/D y cada fuente conserva su fecha.</p>
       </div>
       <button
         type="button"
@@ -70,15 +70,15 @@ export function CeoIntelligenceReportGenerator() {
         className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
       >
         {loading ? <Loader2 size={15} className="animate-spin" /> : <FileBarChart2 size={15} />}
-        {loading ? 'Generando CEO Intelligence…' : 'Generar CEO Intelligence'}
+        {loading ? 'Generando informe…' : 'Generar informe ejecutivo'}
       </button>
     </div>
 
     {result?.id ? <div role="status" className="border-t border-[var(--n3-line)] p-5 text-sm">
-      <p className="font-medium text-[#65c780]">{result.reused ? 'Informe CEO existente recuperado.' : 'Borrador CEO Intelligence generado.'}</p>
-      <p className="mt-2 break-words text-[var(--n3-text-muted)]">{result.title || 'CEO Intelligence Report'}</p>
+      <p className="font-medium text-[#65c780]">{result.reused ? 'Informe ejecutivo existente recuperado.' : 'Borrador ejecutivo generado.'}</p>
+      <p className="mt-2 break-words text-[var(--n3-text-muted)]">{result.title || 'Informe ejecutivo'}</p>
       {result.sourceSnapshot ? <p className="mt-1 text-xs text-[var(--n3-text-muted)]">
-        {result.sourceSnapshot.periodStart} – {result.sourceSnapshot.periodEnd} · corte {result.sourceSnapshot.sourceCutoff} · {result.sourceSnapshot.evidenceCount ?? 0} evidencias · {result.sourceSnapshot.kmlPolygonCount ?? 0} polígonos KML · {result.sourceSnapshot.marketRows ?? 0} benchmarks
+        Período {result.sourceSnapshot.periodStart} – {result.sourceSnapshot.periodEnd} · actualizado {result.sourceSnapshot.sourceCutoff} · {result.sourceSnapshot.evidenceCount ?? 0} fuentes
       </p> : null}
       <div className="mt-4 flex flex-wrap gap-2">
         <Link href="/dashboard/reportes/canonicos" className="inline-flex min-h-11 items-center border border-[var(--n3-line)] px-4 py-2 text-sm">Revisar informe</Link>

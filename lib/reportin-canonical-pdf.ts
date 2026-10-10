@@ -1,4 +1,7 @@
 import 'server-only'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { verifyPdfinoReport } from '@/lib/pdfino-report-quality'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 import type { CanonicalClientReport } from '@/lib/n3uralia-canonical-client-report'
 
@@ -89,6 +92,12 @@ export async function buildReportinCanonicalPdf(report: CanonicalClientReport) {
   if (report.canonical_metadata.source_policy !== 'canonical_input_only') throw new Error('REPORTIN_INVALID_SOURCE_POLICY')
 
   const pdf = await PDFDocument.create()
+  // The client-approved logo is embedded into the document, not reconstructed as text.
+  // Fail closed if the approved asset is unavailable in the deployed artifact.
+  const logoBytes = await readFile(join(process.cwd(), 'public/brand/property-partners-vitacura.png'))
+  const clientLogo = logoBytes[0] === 0xff && logoBytes[1] === 0xd8
+    ? await pdf.embedJpg(logoBytes)
+    : await pdf.embedPng(logoBytes)
   const fonts: Fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
     bold: await pdf.embedFont(StandardFonts.HelveticaBold),
@@ -202,6 +211,11 @@ export async function buildReportinCanonicalPdf(report: CanonicalClientReport) {
   // Cover
   cursor.page.drawRectangle({ x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT, color: COLORS.ink })
   cursor.page.drawRectangle({ x: 0, y: PAGE_HEIGHT - 14, width: PAGE_WIDTH, height: 14, color: COLORS.red })
+  const logoScale = Math.min(216 / clientLogo.width, 60 / clientLogo.height)
+  const logoWidth = clientLogo.width * logoScale
+  const logoHeight = clientLogo.height * logoScale
+  cursor.page.drawRectangle({ x: 54, y: 751 - logoHeight - 9, width: logoWidth + 18, height: logoHeight + 18, color: COLORS.paper })
+  cursor.page.drawImage(clientLogo, { x: 63, y: 751 - logoHeight, width: logoWidth, height: logoHeight })
   cursor.page.drawText(report.client.toUpperCase(), { x: 54, y: 690, size: 9, font: fonts.bold, color: COLORS.red })
   const coverTitleLines = wrapText(fonts.bold, report.title, 28, PAGE_WIDTH - 108)
   let coverY = 645
@@ -269,6 +283,7 @@ export async function buildReportinCanonicalPdf(report: CanonicalClientReport) {
   })
 
   const bytes = await pdf.save()
+  await verifyPdfinoReport(bytes, { title: report.title, minPages: 3, requireA4: true })
   const filename = `${filePart(report.title || 'informe-canonico')}-${report.period.end}.pdf`
   return { bytes, filename, reportinVersion: REPORTIN_VERSION }
 }
