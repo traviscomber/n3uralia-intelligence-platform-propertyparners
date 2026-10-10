@@ -30,7 +30,7 @@ export default async function ReportOperationsPage() {
       </article>)}
     </section>
     {canOperate ? <CeoIntelligenceReportGenerator /> : null}
-    {canOperate ? <details className="mt-6"><summary className="cursor-pointer text-sm">Otras opciones</summary><CanonicalLatestReportGenerator /></details>
+    {canOperate ? <details className="mt-6"><summary className="cursor-pointer text-sm">Otras opciones</summary><CanonicalLatestReportGenerator /></details> : null}
     <details className="mt-6"><summary className="cursor-pointer text-sm">Administrar envíos</summary><ReportDeliveryConsole canOperate={canOperate} /></details>
   </IntelligencePage>
 }
