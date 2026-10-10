@@ -90,7 +90,10 @@ test('release rejects a PDF whose embedded identity contradicts its manifest', a
   const p = fixture()
   const altered = await PDFDocument.load(p.artifacts[0].bytes)
   altered.setSubject('PP_REPORT|ceo|2026-08|pedro-septiembre-approved')
-  p.artifacts[0].bytes = await altered.save()
+  const changed = await altered.save()
+  const padded = new Uint8Array(Math.max(1600, changed.length))
+  padded.set(changed)
+  p.artifacts[0].bytes = padded
   await assert.rejects(() => verifyMonthlyReportRelease(p), /EMBEDDED_EVIDENCE_MISMATCH/)
 })
 
