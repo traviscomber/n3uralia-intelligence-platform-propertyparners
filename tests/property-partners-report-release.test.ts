@@ -31,6 +31,7 @@ function fixture() {
       visualInspectionVerified: true,
       sourcePeriod: '2026-09',
       sourceEvidenceVersion: 'pedro-septiembre-approved',
+      embeddedIdentityVerified: true,
     })),
   }
 }
@@ -91,4 +92,11 @@ test('release rejects a PDF whose embedded identity contradicts its manifest', a
   altered.setSubject('PP_REPORT|ceo|2026-08|pedro-septiembre-approved')
   p.artifacts[0].bytes = await altered.save()
   await assert.rejects(() => verifyMonthlyReportRelease(p), /EMBEDDED_EVIDENCE_MISMATCH/)
+})
+
+test('delivery is held when embedded identity was not verified', async () => {
+  pdfs = Object.fromEntries(await Promise.all(['ceo','directoras','partners'].map(async audience => [audience, await makePdf(audience)] as const)))
+  const p = fixture()
+  p.artifacts[0].embeddedIdentityVerified = false
+  await assert.rejects(() => verifyMonthlyReportRelease(p), /EMBEDDED_IDENTITY_NOT_VERIFIED/)
 })
