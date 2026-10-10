@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { PDFDocument } from 'pdf-lib'
 import { verifyMonthlyReportRelease } from '../lib/property-partners-report-release'
@@ -102,4 +103,13 @@ test('delivery is held when embedded identity was not verified', async () => {
   const p = fixture()
   p.artifacts[0].embeddedIdentityVerified = false
   await assert.rejects(() => verifyMonthlyReportRelease(p), /EMBEDDED_IDENTITY_NOT_VERIFIED/)
+})
+
+test('Vercel prebuild requires the versioned Property Partners reporting skill and DESIGN.md', () => {
+  const skill = readFileSync('.agents/skills/property-partners-reporting/SKILL.md', 'utf8')
+  const design = readFileSync('DESIGN.md', 'utf8')
+  assert.match(skill, /Excelencia documental 9\.7/)
+  assert.match(skill, /97\/100/)
+  assert.match(skill, /three separately delivered PDFs/)
+  assert.match(design, /Property Partners Vitacura/)
 })
