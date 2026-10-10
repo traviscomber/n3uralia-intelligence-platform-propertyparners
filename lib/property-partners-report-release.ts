@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { PDFDocument } from 'pdf-lib'
 /** Fail-closed release checks for Property Partners monthly reports.
  * A passed bundle check does not replace per-page visual inspection.
@@ -28,11 +29,15 @@ export async function verifyMonthlyReportRelease(value: MonthlyReportRelease): P
   if (value.artifacts.length !== 3) throw new Error('REPORT_THREE_SEPARATE_ARTIFACTS_REQUIRED')
   const names = new Set<string>()
   const audiences = new Set<Audience>()
+  const contentHashes = new Set<string>()
   for (const item of value.artifacts) {
     if (!REQUIRED.includes(item.audience) || audiences.has(item.audience)) throw new Error('REPORT_AUDIENCE_MISSING_OR_DUPLICATE')
     audiences.add(item.audience)
     if (!item.filename.toLowerCase().endsWith('.pdf') || names.has(item.filename)) throw new Error('REPORT_FILENAME_NOT_UNIQUE_PDF')
     names.add(item.filename)
+    const digest = createHash('sha256').update(item.bytes).digest('hex')
+    if (contentHashes.has(digest)) throw new Error('REPORT_DUPLICATE_PDF_CONTENT')
+    contentHashes.add(digest)
     if (item.bytes.length < 1500 || item.bytes[0] !== 37 || item.bytes[1] !== 80 || item.bytes[2] !== 68 || item.bytes[3] !== 70) throw new Error('REPORT_INVALID_PDF')
     let actualPages: number
     try {
