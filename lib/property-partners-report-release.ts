@@ -1,3 +1,4 @@
+import { PDFDocument } from 'pdf-lib'
 /** Fail-closed release checks for Property Partners monthly reports.
  * A passed bundle check does not replace per-page visual inspection.
  */
@@ -20,7 +21,7 @@ export type MonthlyReportRelease = {
   evidenceVersion: string
 }
 const REQUIRED: Audience[] = ['ceo', 'directoras', 'partners']
-export function verifyMonthlyReportRelease(value: MonthlyReportRelease): void {
+export async function verifyMonthlyReportRelease(value: MonthlyReportRelease): Promise<void> {
   if (!/^\d{4}-\d{2}$/.test(value.period)) throw new Error('REPORT_INVALID_PERIOD')
   if (!value.evidenceVersion.trim()) throw new Error('REPORT_MISSING_EVIDENCE')
   if (!value.reconciliationVerified) throw new Error('REPORT_RECONCILIATION_NOT_VERIFIED')
@@ -33,7 +34,19 @@ export function verifyMonthlyReportRelease(value: MonthlyReportRelease): void {
     if (!item.filename.toLowerCase().endsWith('.pdf') || names.has(item.filename)) throw new Error('REPORT_FILENAME_NOT_UNIQUE_PDF')
     names.add(item.filename)
     if (item.bytes.length < 1500 || item.bytes[0] !== 37 || item.bytes[1] !== 80 || item.bytes[2] !== 68 || item.bytes[3] !== 70) throw new Error('REPORT_INVALID_PDF')
-    if (item.pageCount < 1 || item.reviewedPageCount !== item.pageCount) throw new Error('REPORT_VISUAL_REVIEW_INCOMPLETE')
+    let actualPages: number
+    try {
+      const doc = await PDFDocument.load(item.bytes)
+      actualPages = doc.getPageCount()
+      if (!doc.getPages().every((page) => {
+        const { width, height } = page.getSize()
+        return Math.abs(width - 595.28) <= 1 && Math.abs(height - 841.89) <= 1
+      })) throw new Error('REPORT_INVALID_PAGE_SIZE')
+    } catch (error) {
+      if (error instanceof Error && error.message === 'REPORT_INVALID_PAGE_SIZE') throw error
+      throw new Error('REPORT_INVALID_PDF_STRUCTURE')
+    }
+    if (actualPages < 1 || item.pageCount !== actualPages || item.reviewedPageCount !== actualPages) throw new Error('REPORT_VISUAL_REVIEW_INCOMPLETE')
     if (!item.canonicalCoverageVerified || !item.brandVerified || !item.accessScopeVerified || !item.visualInspectionVerified) throw new Error('REPORT_QUALITY_GATE_INCOMPLETE')
   }
 }
