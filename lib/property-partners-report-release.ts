@@ -14,6 +14,9 @@ export type AudienceArtifact = {
   brandVerified: boolean
   accessScopeVerified: boolean
   visualInspectionVerified: boolean
+  /** Month and source identity from the canonical snapshot used to render this artifact. */
+  sourcePeriod: string
+  sourceEvidenceVersion: string
 }
 export type MonthlyReportRelease = {
   period: string
@@ -36,6 +39,8 @@ export async function verifyMonthlyReportRelease(value: MonthlyReportRelease): P
     if (!item.filename.toLowerCase().endsWith('.pdf') || names.has(item.filename)) throw new Error('REPORT_FILENAME_NOT_UNIQUE_PDF')
     const expectedPeriod = value.period.replace('-', '')
     if (!item.filename.includes(value.period) && !item.filename.includes(expectedPeriod)) throw new Error('REPORT_PERIOD_NOT_IN_FILENAME')
+    if (item.sourcePeriod !== value.period) throw new Error('REPORT_SOURCE_PERIOD_MISMATCH')
+    if (!item.sourceEvidenceVersion.trim() || item.sourceEvidenceVersion !== value.evidenceVersion) throw new Error('REPORT_SOURCE_VERSION_MISMATCH')
     names.add(item.filename)
     const digest = createHash('sha256').update(item.bytes).digest('hex')
     if (contentHashes.has(digest)) throw new Error('REPORT_DUPLICATE_PDF_CONTENT')
