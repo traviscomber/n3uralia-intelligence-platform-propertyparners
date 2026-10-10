@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, BarChart3, CheckCircle2, ClipboardPlus, RefreshCw, UserRound } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ClipboardPlus, RefreshCw, UserRound } from 'lucide-react'
 import { IntelligenceHeader, IntelligencePage, MethodologyNote, MetricCard, MetricGrid, SectionHeading } from '@/components/intelligence/design-system'
 
 type Metric = { code: string; label: string; unit: 'count'|'uf'|'percent'|'days'|'score'; value: number|null; target: number|null; compliance: number|null; mom: number|null; yoy?: number|null; comparisonPeriod?: string|null }
@@ -83,13 +83,13 @@ export function DirectorDashboardV3() {
   ]
 
   return <IntelligencePage>
-    <IntelligenceHeader eyebrow="Dirección · Oficina" title={`Oficina ${payload?.scopeLabel??''}`} description={`Resultado, equipo, pendientes y decisiones. Corte: ${period}.`} actions={headerActions} meta={<div className="flex items-center gap-2 border border-[var(--n3-line)] bg-[#0c1111] px-4 py-3 text-xs text-[var(--n3-text-muted)]"><BarChart3 size={15}/>{period}</div>}/>
+    <IntelligenceHeader eyebrow="Hoy" title={`Oficina ${payload?.scopeLabel??''}`} description={`Resultados, prioridades y decisiones · ${period}`} actions={headerActions} meta={payload?.generatedAt?<div className="text-xs text-[var(--n3-text-muted)]">Actualizado {new Date(payload.generatedAt).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}</div>:undefined}/>
     {loading?<div role="status" className="border border-[var(--n3-line)] p-8 text-sm text-[var(--n3-text-muted)]">Cargando indicadores, alertas y tareas…</div>:null}
     {error?<div role="alert" className="border border-[#d7332b] p-5 text-sm text-[#ff766f]"><p>{error}</p><button onClick={()=>void load()} className="mt-3 flex items-center gap-2 border border-[var(--n3-line)] px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]"><RefreshCw size={14}/>Reintentar</button></div>:null}
     {!loading&&payload? <>
-      <section><SectionHeading eyebrow="01 · Pulso de la oficina" title="Resultado contra meta" description={`Indicadores del corte ${period}, con objetivo y cumplimiento disponible.`}/><MetricGrid columns={4}>{headline.map((item)=><MetricCard key={item.code} label={item.label} value={format(item)} detail={`${item.target==null?'Meta —':`Meta ${item.target.toLocaleString('es-CL')}`} · ${item.compliance==null?'Cumplimiento —':`${item.compliance.toFixed(1)}%`}`}/>)}</MetricGrid></section>
+      <section><SectionHeading eyebrow="Resultado" title="Resultado contra meta" description={`Indicadores del corte ${period}, con objetivo y cumplimiento disponible.`}/><MetricGrid columns={4}>{headline.map((item)=><MetricCard key={item.code} label={item.label} value={format(item)} detail={`${item.target==null?'Meta —':`Meta ${item.target.toLocaleString('es-CL')}`} · ${item.compliance==null?'Cumplimiento —':`${item.compliance.toFixed(1)}%`}`}/>)}</MetricGrid></section>
       {payload.alerts.length?<section>
-        <SectionHeading eyebrow="02 · Prioridades" title="Qué requiere atención" description="Las tres señales más importantes del corte actual."/>
+        <SectionHeading eyebrow="Prioridades" title="Qué requiere atención" description="Las tres señales más importantes del corte actual."/>
         <div className="space-y-3">{payload.alerts.slice(0,3).map((alert)=>{const exists=openTasks.some((task)=>task.source_key===alert.id);return <article key={alert.id} className={`border bg-[#0c1111] p-4 ${alert.severity==='critical'?'border-[#d7332b]':'border-[#a77a22]'}`}><div className="flex flex-col gap-3 sm:flex-row sm:items-start"><AlertTriangle size={18} className={alert.severity==='critical'?'text-[#ff766f]':'text-[#f6c453]'}/><div className="min-w-0 flex-1"><p className="font-semibold">{alert.entityName} · {alert.title}</p><p className="mt-2 text-sm leading-6 text-[var(--n3-text-muted)]">{alert.detail}</p></div>{exists?<span className="inline-flex items-center gap-1 text-xs text-[#65c780]"><CheckCircle2 size={14}/>Tarea abierta</span>:<button disabled={working===alert.id} onClick={()=>void createTask(alert)} className="inline-flex items-center justify-center gap-2 border border-[var(--n3-line)] px-3 py-2 text-xs hover:border-[#d7332b] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff766f]"><ClipboardPlus size={14}/>Crear tarea</button>}</div></article>})}</div>
         {payload.alerts.length>3?<Link href="/dashboard/director/tareas" className="mt-3 inline-flex min-h-11 items-center text-xs font-medium text-[var(--n3-text-muted)] hover:text-[var(--n3-text-light)]">Ver las demás señales →</Link>:null}
       </section>:null}
