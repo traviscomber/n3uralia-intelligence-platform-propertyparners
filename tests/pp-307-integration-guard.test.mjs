@@ -152,3 +152,10 @@ test('download route verifies PDF subject and source snapshot hash before respon
   assert.match(route, /document\.getSubject\(\) !== expectedSubject/)
   assert.match(route, /REPORT_ARTIFACT_SOURCE_MISMATCH/)
 })
+
+test('canonical audience snapshots are reconciled before real PDF export', () => {
+  const route = source('app/api/management/reports/[id]/artifact/route.ts')
+  assert.match(route, /verifyAudienceSnapshot\(canonical as unknown as AudienceSnapshot\)/)
+  assert.match(route, /REPORT_PERIOD_SNAPSHOT_MISMATCH/)
+  assert.match(route, /Array\.isArray\(canonical\.metrics\)/)
+})
